@@ -90,6 +90,18 @@ app.get(/^\/(\d+\.\d+\.\d+)$/, (req, res) => {
 
 app.get('/ru', ru_page);
 
+app.get('/en/about', (req, res) => {
+    res.redirect(`/about#description`);
+});
+
+app.get('/about', (req, res) => {
+    res.render('about_en'); 
+});
+
+app.get('/ru/about', (req, res) => {
+    res.render('about_ru'); 
+});
+
 app.get('/:lang/:name', (req, res) => {
     const {
         lang,
