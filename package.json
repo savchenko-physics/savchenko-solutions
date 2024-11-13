@@ -9,6 +9,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "body-parser": "^1.20.3",
     "csv-parser": "^3.0.0",
     "ejs": "^3.1.10",
     "express": "^4.21.1",

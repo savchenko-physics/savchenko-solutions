@@ -1,65 +1,80 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="content-language" content="en">
-    <meta name="keywords" content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda">
-    <meta name="description" content="<%= title %>">
-    <meta name="author" content="Aliaksandr Melnichenka">
-    <meta name="date" content="2023-10" scheme="YYYY-MM">
-    <meta property="og:title" content="<%= title %>">
-    <meta property="og:image" content="img/logo.png">
-    <meta property="og:description" content="<%= title %>">
-    <meta name="yandex-verification" content="6cfda41f74038368">
-    <title><%= title %></title>
-    <link rel="stylesheet" href="https://savchenkosolutions.com/css/css-latex/style.css">
-    <link rel="icon" href="https://savchenkosolutions.com/img/logo.png" type="image/png">
-    <script src="https://savchenkosolutions.com/js/jquery-1.10.1.min.js"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-        <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
-    </script>
-
-  </head>
-  <body style="">
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="content-language" content="en">
+      <meta name="keywords" content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda">
+      <meta name="description" content="<%= title %>">
+      <meta name="author" content="Aliaksandr Melnichenka">
+      <meta name="date" content="2023-10" scheme="YYYY-MM">
+      <meta property="og:title" content="<%= title %>">
+      <meta property="og:image" content="img/logo.png">
+      <meta property="og:description" content="<%= title %>">
+      <meta name="yandex-verification" content="6cfda41f74038368">
+      <title><%= title %></title>
+      <link rel="stylesheet" href="../../css/css-latex/style.css">
+      <link rel="icon" href="../../img/logo.png" type="image/png">
+      <script src="../../js/jquery-1.10.1.min.js"></script>
+      <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      <script type="text/x-mathjax-config">
+         MathJax.Hub.Config({
+             extensions: ['tex2jax.js'],
+             jax: ['input/TeX', 'output/HTML-CSS'],
+             tex2jax: {
+                 inlineMath: [['$', '$'], ['\\(', '\\)']],
+                 processEscapes: true,
+                 processClass: 'tex2jax',
+                 ignoreClass: 'html'
+             },
+             showProcessingMessages: false,
+             messageStyle: 'none'
+         });
+      </script>
+   </head>
+   <body style="">
       <header style="text-align:center;">
-       <a href="../../" style="text-decoration: none;">
+         <a href="../../" style="text-decoration: none;">
             <div id="logo">
-                <span><img src="https://savchenkosolutions.com/img/book.png"></span><span>Savchenko Solutions</span>
+               <span><img src="https://savchenkosolutions.com/img/book.png"></span><span>Savchenko Solutions</span>
             </div>
-        </a>
-        <p class="author">
+         </a>
+         <p class="author">
             Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br>
             <i><b>knowledge must be free</b></i>
-        </p>
-  </header>
-
-    <div class="container">
-        <h3 id="back-link"><a href="../../#<%= pageRef %>">$\leftarrow$Back</a></h3>
-        <%- content %>
-    </div>
-
-    <footer class="row container">
-      <br>
-        <p>
+         </p>
+      </header>
+      <div class="container">
+         <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="back-link"><a href="../../#<%= pageRef %>">$\leftarrow$Back</a></h3>
+            <h4 id="back-link">
+               <a href="/en/edit/<%= problemRef %>" style="text-decoration: underline; display: flex; align-items: center;">
+                  <svg id="svg" width="22" height="22" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                     <!-- Simplified SVG for demonstration -->
+                     <g id="svgg" transform="translate(21.496006,11.5322)" style="fill:#a80000;fill-opacity:1">
+                        <path
+                           id="path0"
+                           d="m 286.719,38.658 c -19.216,4.281 -12.936,-1.312 -128.2,114.186 L 57.273,254.297 47.379,300.781 c -5.441,25.567 -9.889,48.067 -9.883,50 0.02,6.885 5.041,11.711 12.189,11.716 5.64,0.004 94.576,-19.229 97.562,-21.099 3.559,-2.228 201.397,-200.623 204.105,-204.679 21.694,-32.497 10.986,-75.923 -22.836,-92.615 -12.212,-6.026 -29.234,-8.244 -41.797,-5.446 m 23.035,25.825 c 23.566,6.138 34.6,34.662 21.434,55.413 -1.354,2.134 -8.837,10.319 -16.63,18.19 L 300.391,152.397 274.219,126.18 248.047,99.963 263.672,84.477 c 21.053,-20.865 29.187,-24.395 46.082,-19.994 m -53.696,80.246 25.97,25.98 -74.033,74.03 -74.033,74.031 -33.054,7.095 c -18.179,3.902 -33.213,6.935 -33.408,6.739 -0.195,-0.195 2.793,-15.056 6.641,-33.023 l 6.996,-32.668 74.079,-74.082 c 40.743,-40.744 74.256,-74.081 74.474,-74.081 0.218,0 12.084,11.691 26.368,25.979"
+                           stroke="none"
+                           fill="#000000"
+                           fill-rule="evenodd"
+                           style="fill:#a80000;fill-opacity:1" />
+                     </g>
+                  </svg>
+                  <span style="margin-left: 3px;">Edit</span>
+               </a>
+            </h4>
+         </div>
+         <%- content %>
+      </div>
+      <footer class="row container">
+         <br>
+         <p>
             <small> © <strong>Savchenko Solutions</strong>, 2023-2024 <br></small>
-        </p>
-        <p>
+         </p>
+         <p>
             <small>All rights belong to the authors. <br> Commercial use of materials - with the written permission of the authors. <br> aliaksandr@melnichenka.com <br></small>
-        </p>
-    </footer>
-  </body>
-
+         </p>
+      </footer>
+   </body>
 </html>

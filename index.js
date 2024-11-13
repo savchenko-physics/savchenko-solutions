@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const ejs = require('ejs');
 const fs = require('fs'); // Import fs module
+const bodyParser = require('body-parser');
 const {
     parseMarkdown,
     getMarkdownFiles,
@@ -62,6 +63,8 @@ const transformImageMarkdown = (htmlContent) => {
 
 //.replace(/\n/g, '').replace(/\$/g, '').replace('\\', '')
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'posts')));
@@ -135,6 +138,7 @@ app.get('/:lang/:name', (req, res) => {
 
         res.render(lang === 'ru' ? 'post_ru' : 'post_en', {
             pageRef,
+            problemRef: name,
             title: name+'. '+titleContent,
             content: html
         });
@@ -143,6 +147,52 @@ app.get('/:lang/:name', (req, res) => {
             pageUrl: req.originalUrl
         })
     }
+});
+
+app.get('/:lang/edit/:name', (req, res) => {
+    const { lang, name } = req.params;
+    const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
+
+    if (fs.existsSync(filePath)) {
+        let fileContents = fs.readFileSync(filePath, 'utf8');
+        res.render('edit_post', { lang, name, content: fileContents });
+    } else {
+        res.status(404).render('404', { pageUrl: req.originalUrl });
+    }
+});
+
+// Route for saving edited content
+app.post('/:lang/save/:name', (req, res) => {
+    const { lang, name } = req.params;
+    const { content } = req.body;
+    const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
+    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, '-')}.md`);
+    // Backup the original file before overwriting
+    fs.copyFile(filePath, backupFilePath, (err) => {
+        if (err) {
+            console.error("Error creating backup:", err);
+            return res.status(500).send('Error creating backup');
+        }
+
+        // Now, overwrite the original file with the new content
+        fs.writeFile(filePath, content, 'utf8', (err) => {
+            if (err) {
+                console.error("Error saving file:", err);
+                return res.status(500).send('Error saving file');
+            } else {
+                res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
+            }
+        });
+    });
+
+    // fs.writeFile(filePath, content, 'utf8', (err) => {
+    //     if (err) {
+    //         console.error(err);
+    //         res.status(500).send('Error saving file');
+    //     } else {
+    //         res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
+    //     }
+    // });
 });
 
 
