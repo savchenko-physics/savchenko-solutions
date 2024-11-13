@@ -292,7 +292,7 @@ function ru_page(req, res) {
             <small> © <strong>Savchenko Solutions</strong>, 2023-2024 <br></small>
         </p>
         <p>
-            <small>Все права принадлежат авторам. <br> Коммерческое использование материалов — с письменного разрешения авторов. <br> alex@savchenkosolutions.com <br></small>
+            <small>Все права принадлежат авторам. <br> Коммерческое использование материалов — с письменного разрешения авторов. <br> aliaksandr@melnichenka.com <br></small>
         </p>
     </footer>
   </body>
