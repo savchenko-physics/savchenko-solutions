@@ -195,6 +195,57 @@ app.post('/:lang/save/:name', (req, res) => {
     // });
 });
 
+const https = require('https'); // Use Node.js built-in https module
+
+
+app.get('/user-info', (req, res) => {
+    const userInfo = {
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        language: req.headers['accept-language'],
+        referrer: req.headers['referer'] || 'No referrer',
+    };
+
+    const ip = req.ip === "::1" ? "8.8.8.8" : req.ip; // Handle localhost by using a public IP
+
+    // Call ip-api.com for location data
+    https.get(`https://ip-api.com/json/${ip}`, (response) => {
+        let data = '';
+        
+        // Receive data in chunks
+        response.on('data', chunk => {
+            data += chunk;
+        });
+
+        // Process the response
+        response.on('end', () => {
+            try {
+                const locationData = JSON.parse(data);
+                if (locationData.status === "success") {
+                    userInfo.location = {
+                        country: locationData.country,
+                        region: locationData.regionName,
+                        city: locationData.city,
+                        lat: locationData.lat,
+                        lon: locationData.lon,
+                        timezone: locationData.timezone,
+                    };
+                } else {
+                    userInfo.location = "Location not available";
+                }
+            } catch (error) {
+                console.error("Error parsing location data:", error);
+                userInfo.location = "Location not available";
+            }
+
+            res.json(userInfo); // Send user information as a JSON response
+        });
+    }).on('error', (error) => {
+        console.error("Error fetching IP location data:", error);
+        userInfo.location = "Location not available";
+        res.json(userInfo); // Send user information with no location
+    });
+});
 
 // Start the server
 app.listen(PORT, () => {
