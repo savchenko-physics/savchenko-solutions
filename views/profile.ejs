@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Profile</title>
+      <link rel="stylesheet" href="/css/style.css">
+      <style>
+         * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         font-family: Arial, sans-serif;
+         }
+         body {
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         min-height: 100vh;
+         background-color: #f0f2f5;
+         color: #333;
+         }
+         .container {
+         text-align: center;
+         background-color: #ffffff;
+         padding: 2rem;
+         border-radius: 8px;
+         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+         width: 100%;
+         max-width: 400px;
+         }
+         h2 {
+         font-size: 1.8rem;
+         color: #333;
+         margin-bottom: 1rem;
+         }
+         p {
+         font-size: 1rem;
+         margin-bottom: 1.5rem;
+         color: #555;
+         }
+         a {
+         text-decoration: none;
+         color: #007bff;
+         font-weight: bold;
+         transition: color 0.3s ease;
+         }
+         a:hover {
+         color: #0056b3;
+         }
+      </style>
+   </head>
+   <body>
+      <div class="container">
+         <h2>Welcome, <%= username %>!</h2>
+         <p>This is your profile page.</p>
+         <a href="/logout">Logout</a>
+      </div>
+   </body>
+</html>

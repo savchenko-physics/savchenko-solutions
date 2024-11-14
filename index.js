@@ -6,7 +6,8 @@ const bodyParser = require('body-parser');
 const {
     parseMarkdown,
     getMarkdownFiles,
-    getLineStatement
+    getLineStatement,
+    transformImageMarkdown
 } = require('./utils'); // Importing functions from utils.js
 const {
     eng_page
@@ -15,56 +16,24 @@ const {
 const {
     ru_page
 } = require('./parents_ru'); // generating content for the main russian page
-
+const bcrypt = require('bcrypt');
+const session = require('express-session'); // Import express-session for session management
+const { Pool } = require('pg');
+require('dotenv').config();
 
 const app = express();
 const PORT = 3000;
 
-
-const transformImageMarkdown = (htmlContent) => {
-    // Regular expression for YouTube URL format, e.g., ![](https://www.youtube.com/embed/VIDEO_ID)
-    const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+)\)/g;
-    
-    // Replace YouTube URL format with video container HTML
-    htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
-        return `<div class="video-container">
-                    <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
-                </div>`;
-    });
-
-    // Regular expression to match image markdown with dimensions and scale, e.g., ![alt text|widthxheight,scale%](path)
-    const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
-
-    return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
-        // Extract width, height, and scale if provided
-        let width = "auto",
-            height = "auto";
-        let scalePercentage = "100%"; // Default scale
-
-        if (dimensions) {
-            const [w, h] = dimensions.split("x");
-            width = w ? `${w}px` : "auto";
-            height = h ? `${h.replace('\\, ','')}px` : "auto";
-        }
-        if (scale) {
-            scalePercentage = scale;
-        }
-
-        return `<center>
-      <figure>
-        <img src="..\\..\\img\\${folder}\\${filename}"
-          loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
-        <figcaption>${altText}</figcaption>
-      </figure>
-      </center>`;
-    });
-};
-
-
-//.replace(/\n/g, '').replace(/\$/g, '').replace('\\', '')
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(
+    session({
+        secret: 'your_secret_key', // Replace with a strong secret
+        resave: false,
+        saveUninitialized: true,
+        cookie: { secure: false }, // Set to true if using HTTPS
+    })
+);
 
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'posts')));
@@ -77,6 +46,94 @@ app.use(express.static(path.join(__dirname, 'src')));
 app.use('/en/savchenko_en.pdf', express.static(path.join(__dirname, 'pdf/savchenko_en.pdf')));
 app.use('/savchenko.pdf', express.static(path.join(__dirname, 'pdf/savchenko.pdf')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
+
+// PostgreSQL setup
+const pool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' }
+});
+
+app.get('/login', (req, res) => {
+    res.render('login', {
+        error: req.query.error || '',  // Provide a default empty string if no error
+        success: req.query.success || '' // Provide a default empty string if no success message
+    });
+});
+
+app.get('/register', (req, res) => {
+    res.render('register', {
+        error: req.query.error || '',  // Provide a default empty string if no error
+        success: req.query.success || '' // Provide a default empty string if no success message
+    });
+});
+
+
+// Registration Route
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.redirect('/register?error=Username and password are required');
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', [username, hashedPassword]);
+        res.redirect('/login?success=Registration successful');
+    } catch (error) {
+        console.error(error);
+        res.redirect('/register?error=Username already taken');
+    }
+});
+
+// Login Route
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    if (!username || !password) {
+        return res.redirect('/login?error=Username and password are required');
+    }
+
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (result.rows.length === 0 || !(await bcrypt.compare(password, result.rows[0].password))) {
+            return res.redirect('/login?error=Invalid credentials');
+        }
+
+        // Set session variables
+        req.session.userId = result.rows[0].id;
+        req.session.username = result.rows[0].username;
+        
+        // Redirect to profile page
+        res.redirect('/profile');
+    } catch (error) {
+        console.error(error);
+        res.redirect('/login?error=Something went wrong');
+    }
+});
+
+
+app.get('/profile', (req, res) => {
+    if (!req.session.userId) {
+        return res.redirect('/login?error=Please log in to access your profile');
+    }
+
+    // Render the profile page with the user's information
+    res.render('profile', { username: req.session.username });
+});
+
+// Logout Route
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.redirect('/profile');
+        }
+        res.redirect('/login?success=Logged out successfully');
+    });
+});
+
 
 // Home route to list all posts
 app.get('/', eng_page);
@@ -127,12 +184,10 @@ app.get('/:lang/:name', (req, res) => {
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
         console.log(titleContent)
-        // console.log(getLineStatement(fileContents.replace('\^\\\*','').replace('$','')));//.replace('.$','.')
-        // console.log(fileContents.replace('\^\\\*','').replace('$','').replace('.$','.'))
+
         let html = parseMarkdown(fileContents); // Convert Markdown to HTML
         html = html.replace(/<em>/g, '_').replace(/<\/em>/g, '_');
         html = html.replace(/\\\*/g, '*');
-
 
         const pageRef = name.split('.').slice(0, 2).join('.');
 
@@ -188,15 +243,6 @@ app.post('/:lang/save/:name', (req, res) => {
             }
         });
     });
-
-    // fs.writeFile(filePath, content, 'utf8', (err) => {
-    //     if (err) {
-    //         console.error(err);
-    //         res.status(500).send('Error saving file');
-    //     } else {
-    //         res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
-    //     }
-    // });
 });
 
 
@@ -254,9 +300,6 @@ app.get('/file-list', (req, res) => {
     // Render the details in the EJS template
     res.render('file_list', { fileDetails });
 });
-
-
-
 
 
 

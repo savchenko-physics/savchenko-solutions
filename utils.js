@@ -130,8 +130,48 @@ function getLineStatement(text) {
     return match ? convertLatexToPlainText(match[1]) : null;
 }
 
+const transformImageMarkdown = (htmlContent) => {
+    // Regular expression for YouTube URL format, e.g., ![](https://www.youtube.com/embed/VIDEO_ID)
+    const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+)\)/g;
+    
+    // Replace YouTube URL format with video container HTML
+    htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
+        return `<div class="video-container">
+                    <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
+                </div>`;
+    });
+
+    // Regular expression to match image markdown with dimensions and scale, e.g., ![alt text|widthxheight,scale%](path)
+    const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
+
+    return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
+        // Extract width, height, and scale if provided
+        let width = "auto",
+            height = "auto";
+        let scalePercentage = "100%"; // Default scale
+
+        if (dimensions) {
+            const [w, h] = dimensions.split("x");
+            width = w ? `${w}px` : "auto";
+            height = h ? `${h.replace('\\, ','')}px` : "auto";
+        }
+        if (scale) {
+            scalePercentage = scale;
+        }
+
+        return `<center>
+      <figure>
+        <img src="..\\..\\img\\${folder}\\${filename}"
+          loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
+        <figcaption>${altText}</figcaption>
+      </figure>
+      </center>`;
+    });
+};
+
 module.exports = {
     parseMarkdown,
     getMarkdownFiles,
-    getLineStatement
+    getLineStatement,
+    transformImageMarkdown
 };

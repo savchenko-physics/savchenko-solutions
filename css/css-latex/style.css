@@ -925,3 +925,12 @@ a[href$='.pdf']:focus, a[href$='.pdf']:hover {
 #back-link{
 margin-top:1rem;
 }
+
+
+ button {
+    padding: 5px 10px; /* Padding for the button */
+    font-size: 16px; /* Font size */
+    font-weight: bold; /* Bold text */
+    border-radius: 10px; /* Rounded corners */
+    cursor: pointer; /* Pointer cursor on hover */
+}
