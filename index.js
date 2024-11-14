@@ -169,7 +169,7 @@ app.post('/:lang/save/:name', (req, res) => {
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
     const clientIp = req.headers['x-forwarded-for'] || req.ip;
 
-    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString()}_${clientIp}.md`.replace(/[:.]/g, '-'));
+    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, '-')}_${clientIp.replace(/[:.]/g, '-')}.md`);
     // Backup the original file before overwriting
     fs.copyFile(filePath, backupFilePath, (err) => {
         if (err) {
