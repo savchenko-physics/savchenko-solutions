@@ -101,6 +101,27 @@ function ru_page(req, res) {
         return problemsHtml;
     }
 
+    function countUniquePosts() {
+        const ruDirectory = path.join(__dirname, 'posts', 'ru');
+        const enDirectory = path.join(__dirname, 'posts', 'en');
+        
+        // Helper function to get file names without extensions
+        function getMarkdownFilesWithoutExtension(directory) {
+            return fs.readdirSync(directory)
+                .filter(file => file.endsWith('.md'))
+                .map(file => path.parse(file).name);
+        }
+        
+        const ruFiles = getMarkdownFilesWithoutExtension(ruDirectory);
+        const enFiles = getMarkdownFilesWithoutExtension(enDirectory);
+        
+        const uniqueFiles = new Set([...ruFiles, ...enFiles]);
+
+        return uniqueFiles.size; 
+    }
+
+
+
     let BaseHtml = `<!DOCTYPE html>
 <html lang="ru">
 
@@ -153,7 +174,7 @@ function ru_page(req, res) {
 
         <p class="description" id="description">
         Сборник задач по физике под редакцией О.Я. Савченко - один из самых популярных ресурсов для подготовки к олимпиадам по физике в странах постсоветского пространства. За более чем 30 лет, прошедших с момента его первого издания, не было создано ни одного полного руководства по решению задач из него.<br>
-        На этом сайте вы можете наблюдать попытку создания первого решебника этого сборника с оформлением решений <a href="about#team">разных авторов</a>. Всего было опубликовано 745 решений из 2,023 задач. В 2023 году был запущен проект, который активно развивается на русском и английском языках. Если хотите поучаствовать, пишите <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
+        На этом сайте вы можете наблюдать попытку создания первого решебника этого сборника с оформлением решений <a href="about#team">разных авторов</a>. Всего было опубликовано ${countUniquePosts()} решений из 2,023 задач. В 2023 году был запущен проект, который активно развивается на русском и английском языках. Если хотите поучаствовать, пишите <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
         </p>
     </header>
 

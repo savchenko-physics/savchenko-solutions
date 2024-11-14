@@ -150,6 +150,7 @@ app.get('/:lang/:name', (req, res) => {
 });
 
 app.get('/:lang/edit/:name', (req, res) => {
+    const clientIp = req.headers['x-forwarded-for'] || req.ip; 
     const { lang, name } = req.params;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
 
@@ -166,7 +167,9 @@ app.post('/:lang/save/:name', (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
-    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, '-')}.md`);
+    const clientIp = req.headers['x-forwarded-for'] || req.ip;
+
+    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString()}_${clientIp}.md`.replace(/[:.]/g, '-'));
     // Backup the original file before overwriting
     fs.copyFile(filePath, backupFilePath, (err) => {
         if (err) {
@@ -193,13 +196,6 @@ app.post('/:lang/save/:name', (req, res) => {
     //         res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
     //     }
     // });
-});
-
-app.get('/user-info', (req, res) => {
-    const clientIp = req.headers['x-forwarded-for'] || req.ip; // Get the client's IP
-
-    // Respond with the IP address in JSON format
-    res.json({ ip: clientIp });
 });
 
 
