@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File List</title>
+    <link rel="stylesheet" href="css/css-latex/style.css"> <!-- Link to your CSS if needed -->
+</head>
+<body style="max-width: 100%;">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px; /* Add padding inside cells */
+            text-align: left;
+            border: 1px solid #ddd; /* Border for cells */
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Optional: different background for even rows */
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+    </style>
+
+    <h1>List of Files in Directory</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Language</th>
+                <th>Number</th>
+                <th>IP Address</th>
+                <th>Size (Bytes)</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% fileDetails.forEach(file => { %>
+                <tr>
+                    <td><%= file.name %></td>
+                    <td><%= file.language %></td>
+                    <td><%= file.version %></td>
+                    <td><%= file.ipAddress !== 'Unknown IP' ? file.ipAddress : 'Invalid or Missing IP' %></td>
+                    <td><%= file.size %></td>
+                    <td><%= file.date %></td>
+                    <td><%= file.time %></td>
+                </tr>
+            <% }); %>
+        </tbody>
+    </table>
+</body>
+</html>
