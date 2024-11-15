@@ -1,86 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Register</title>
-      <link rel="stylesheet" href="/css/css-latex/style.css">
-      <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: Arial, sans-serif;
-        }
-
-        .container {
-            width: 330px;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .form-group label {
-            font-size: 14px;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 8px;
-            font-size: 14px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        p {
-            font-size: 14px;
-        }
-
-        .error {
-            color: red;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .success {
-            color: green;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-      </style>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="content-language" content="en">
+        <meta name="keywords" content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda">
+        <meta name="description" content="Contributors of Savchenko Solutions">
+        <meta name="author" content="Aliaksandr Melnichenka">
+        <meta name="date" content="2023-10" scheme="YYYY-MM">
+        <meta property="og:title" content="Contributors of Savchenko Solutions">
+        <meta property="og:image" content="img/logo.png">
+        <meta property="og:description" content="Contributors of Savchenko Solutions">
+        <meta name="yandex-verification" content="6cfda41f74038368">
+        <title>Create a new account</title>
+        <link rel="stylesheet" href="/css/css-latex/style.css">
+        <link rel="stylesheet" href="/css/css-latex/login.css">
+        <link rel="icon" href="../../img/logo.png" type="image/png">
+        <script src="../../js/jquery-1.10.1.min.js"></script>
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+                extensions: ['tex2jax.js'],
+                jax: ['input/TeX', 'output/HTML-CSS'],
+                tex2jax: {
+                    inlineMath: [['$', '$'], ['$', '$']],
+                    processEscapes: true,
+                    processClass: 'tex2jax',
+                    ignoreClass: 'html'
+                },
+                showProcessingMessages: false,
+                messageStyle: 'none'
+            });
+        </script>
+      <title></title>
    </head>
    <body>
-      <div class="container">
-         <h2>Register</h2>
+      <header style="text-align:center;">
+         <a href="../../" style="text-decoration: none;">
+            <div id="logo">
+               <span><img src="https://savchenkosolutions.com/img/book.png"></span><span>Savchenko Solutions</span>
+            </div>
+         </a>
+         <p class="author">
+            Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br>
+            <i><b>knowledge must be free</b></i>
+         </p>
+      </header>
+      <div class="container1">
+         <h2>Create a new account</h2>
          <% if (error) { %>
          <p class="error"><%= error %></p>
          <% } %>
@@ -100,5 +67,15 @@
          </form>
          <p>Already have an account? <a href="/login">Login here</a></p>
       </div>
+
+    <footer class="row container">
+      <br>
+        <p>
+            <small> © <strong>Savchenko Solutions</strong>, 2023-2024 <br></small>
+        </p>
+        <p>
+            <small>All rights belong to the authors. <br> Commercial use of materials - with the written permission of the authors. <br> aliaksandr@melnichenka.com <br></small>
+        </p>
+    </footer>
    </body>
 </html>
