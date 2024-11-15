@@ -1,59 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Edit Post - <%= name %></title>
-      <!-- <link rel="stylesheet" href="/css/style.css"> -->
-      <link rel="stylesheet" href="../../css/css-latex/style.css">
-      <style>
-         /* Set a code editor font for the textarea */
-         .CodeMirror {
-             border: 1px solid #ddd;
-             font-family: Consolas, "Courier New", monospace;
-             font-size: 14px;
-             line-height: 1.5;
-         }
-      </style>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/elegant.min.css">
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
-   </head>
-   <body style="max-width: 120ch; padding-top: 0;">
-      <header style="text-align:center;">
-         <a href="../../" style="text-decoration: none;">
-            <div id="logo">
-               <span><img src="https://savchenkosolutions.com/img/book.png"></span><span>Savchenko Solutions</span>
-            </div>
-         </a>
-         <p class="author">
-            Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br>
-            <i><b>knowledge must be free</b></i>
-         </p>
-      </header>
-      <h2 style="text-align: left; margin-top: 2ch;">Edit Post:     <a href="/<%= lang %>/<%= name %>"><%= lang %>-<%= name %></a></h2>
-      <form action="/<%= lang %>/save/<%= name %>" method="POST">
-         <textarea name="content" id="markdown-editor" rows="20" style="width: 100%;"><%= content %></textarea>
-         <button style="margin-top: 2ch;" type="submit">Save Changes</button>
-      </form>
-      <footer class="row container">
-         <br>
-         <p>
-            <small> © <strong>Savchenko Solutions</strong>, 2023-2024 <br></small>
-         </p>
-         <p>
-            <small>All rights belong to the authors. <br> Commercial use of materials - with the written permission of the authors. <br> aliaksandr@melnichenka.com <br></small>
-         </p>
-      </footer>
-      <script>
-         const editor = CodeMirror.fromTextArea(document.getElementById("markdown-editor"), {
-             mode: "markdown",
-             theme: "elegant",
-             lineNumbers: true,
-             lineWrapping: true,
-             viewportMargin: Infinity
-         });
-      </script>
-   </body>
+    <head>
+        <%- include('default/head_en.ejs') %>
+
+        <title>Edit Post - <%= name %></title>
+        <style>
+            /* Set a code editor font for the textarea */
+            .CodeMirror {
+                border: 1px solid #ddd;
+                font-family: Consolas, "Courier New", monospace;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/elegant.min.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
+    </head>
+    <body style="max-width: 120ch; padding-top: 0;">
+        <%- include('default/header.ejs') %>
+
+        <h2 style="text-align: left; margin-top: 2ch;">Edit Post: <a href="/<%= lang %>/<%= name %>"><%= lang %>-<%= name %></a></h2>
+        <form action="/<%= lang %>/save/<%= name %>" method="POST">
+            <textarea name="content" id="markdown-editor" rows="20" style="width: 100%;"><%= content %></textarea>
+            <button style="margin-top: 2ch;" type="submit">Save Changes</button>
+        </form>
+
+        <%- include('default/footer_en.ejs') %>
+        <script>
+            const editor = CodeMirror.fromTextArea(document.getElementById("markdown-editor"), {
+                mode: "markdown",
+                theme: "elegant",
+                lineNumbers: true,
+                lineWrapping: true,
+                viewportMargin: Infinity,
+            });
+        </script>
+    </body>
 </html>
