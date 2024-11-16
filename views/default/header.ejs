@@ -1,11 +1,351 @@
-<header style="text-align: center;">
-    <a href="../../" style="text-decoration: none;">
-        <div id="logo">
-            <span><img src="../../img/book.png" /></span><span>Savchenko Solutions</span>
+<link rel="stylesheet" href="/css/css-latex/header.css" />
+
+<style>
+    input,
+    button,
+    textarea,
+    select {
+        font: initial;
+    }
+/*    li#pt-login-2::before {
+        content: none;
+    }
+
+    li#pt-createaccount-2::before {
+        content: none;
+    }
+    li#n-mainpage-description::before {
+        content: none;
+    }
+*/
+nav li:before {
+    content: none; /* Disable content */
+    counter-increment: none; /* Reset counter */
+    padding-right: 0; /* Reset padding */
+}
+
+    .vector-header-container {
+        position: relative; /* Ensure it stays positioned */
+        width: 80vw; /* Set to 80% of the viewport width */
+        margin-left: calc(-40vw + 50%); /* Center the container */
+
+/*            height: 100px;  Optional: Set a height */
+    }
+        .vector-dropdown .vector-dropdown-checkbox:checked ~ .vector-dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+        }
+        .vector-dropdown .vector-dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: -1px;
+            opacity: 0;
+            height: 0;
+            visibility: hidden;
+            overflow: hidden auto;
+            z-index: 50;
+            background-color: var(--background-color-base, #fff);
+            padding: 16px 16px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+            transition-property: opacity;
+            transition-duration: 100ms;
+            width: max-content;
+            max-width: 200px;
+            max-height: 75vh;
+        }
+        .vector-dropdown .vector-dropdown-checkbox:checked ~ .vector-dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            height: auto;
+        }
+        .vector-feature-custom-font-size-clientpref-1 {
+            --font-size-medium: 1rem;
+            --line-height-medium: 1.6;
+        }
+        .vector-pinnable-element {
+            font-size: 0.875rem;
+        }
+        .vector-pinnable-header {
+            padding-bottom: 6px;
+            margin-bottom: 6px;
+            border-bottom: 1px solid var(--background-color-interactive, #eaecf0);
+            line-height: 1.6;
+        }
+
+        .vector-main-menu #p-navigation .vector-menu-heading {
+            display: none;
+        }
+
+        .vector-pinnable-element .vector-menu-heading {
+            color: var(--color-subtle, #54595d);
+            font-weight: normal;
+            cursor: default;
+            padding: 6px 0;
+            margin: 6px 0;
+            border-bottom: 1px solid var(--background-color-interactive, #eaecf0);
+        }
+
+        .vector-dropdown .vector-dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: -1px;
+            opacity: 0;
+            height: 0;
+            visibility: hidden;
+            overflow: hidden auto;
+            z-index: 50;
+            background-color: var(--background-color-base, #fff);
+            padding: 16px 16px;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+            transition-property: opacity;
+            transition-duration: 100ms;
+            width: max-content;
+            max-width: 200px;
+            max-height: 75vh;
+        }
+    }
+    .vector-dropdown .vector-dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: -1px;
+    opacity: 0;
+    height: 0;
+    visibility: hidden;
+    overflow: hidden auto;
+    z-index: 50;
+    background-color: var(--background-color-base, #fff);
+    padding: 16px 16px;
+    font-size: 0.875rem;
+    box-shadow: 0 2px 6px -1px rgba(0, 0, 0, 0.2);
+    transition-property: opacity;
+    transition-duration: 100ms;
+    width: max-content;
+    max-width: 200px;
+    max-height: 75vh;
+}
+</style>
+<a class="mw-jump-link" href="#bodyContent">Jump to content</a>
+<div class="vector-header-container">
+    <header class="vector-header mw-header">
+        <div class="vector-header-start">
+            <nav class="vector-main-menu-landmark" aria-label="Site">
+                <div id="vector-main-menu-dropdown" class="vector-dropdown vector-main-menu-dropdown vector-button-flush-left vector-button-flush-right">
+                    <input type="checkbox" id="vector-main-menu-dropdown-checkbox" role="button" aria-haspopup="true" data-event-name="ui.dropdown-vector-main-menu-dropdown" class="vector-dropdown-checkbox" aria-label="Main menu" />
+                    <label
+                        id="vector-main-menu-dropdown-label"
+                        for="vector-main-menu-dropdown-checkbox"
+                        class="vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only"
+                        aria-hidden="true"
+                    >
+                        <span class="vector-icon mw-ui-icon-menu mw-ui-icon-wikimedia-menu"></span>
+
+                        <span class="vector-dropdown-label-text">Main menu</span>
+                    </label>
+                    <div class="vector-dropdown-content">
+                        <div id="vector-main-menu-unpinned-container" class="vector-unpinned-container">
+                            <div id="vector-main-menu" class="vector-main-menu vector-pinnable-element">
+                                <!-- Main Menu Header -->
+                                <div class="vector-pinnable-header" data-feature-name="main-menu-pinned">
+                                    <div class="vector-pinnable-header-label">Main menu</div>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="pin">move to sidebar</button>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="unpin">hide</button>
+                                </div>
+
+                                <!-- Navigation Section -->
+                                <div id="p-navigation" class="vector-menu mw-portlet">
+                                    <div class="vector-menu-heading">Navigation</div>
+                                    <ul class="vector-menu-content-list">
+                                        <li><a href="https://en.wikipedia.org/wiki/Main_Page" title="Main page [alt-shift-z]">Main page</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Wikipedia:Contents" title="Guides to browsing Wikipedia">Contents</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Portal:Current_events" title="Articles related to current events">Current events</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Special:Random" title="Visit a randomly selected article [alt-shift-x]">Random article</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Wikipedia:About" title="Learn about Savchenko Solutions">About Savchenko Solutions</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Wikipedia:Contact_us" title="How to contact Wikipedia">Contact us</a></li>
+                                    </ul>
+                                </div>
+
+                                <!-- Contribute Section -->
+                                <div id="p-interaction" class="vector-menu mw-portlet">
+                                    <div class="vector-menu-heading">Contribute</div>
+                                    <ul class="vector-menu-content-list">
+                                        <li><a href="https://en.wikipedia.org/wiki/Help:Contents" title="Guidance on how to use and edit Wikipedia">Help</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Help:Introduction" title="Learn how to edit Wikipedia">Learn to edit</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Wikipedia:Community_portal" title="The hub for editors">Community portal</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Special:RecentChanges" title="A list of recent changes to Wikipedia [alt-shift-r]">Recent changes</a></li>
+                                        <li><a href="https://en.wikipedia.org/wiki/Wikipedia:File_upload_wizard" title="Add images or other media">Upload file</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <a href="https://en.wikipedia.org/wiki/Main_Page" class="mw-logo">
+                <img class="mw-logo-icon" src="https://savchenkosolutions.com/img/book.png" alt="" aria-hidden="true" height="80" width="80" />
+                <span class="mw-logo-container skin-invert">
+                    <img class="mw-logo-wordmark" alt="Wikipedia" src="../img/savchenko-wordmark-en.svg" style="width: 13.625em; height: 2.125em;" />
+                    <img class="mw-logo-tagline" alt="The Free Encyclopedia" src="../img/savchenko-tagline-en.svg" width="230" height="17" style="width: 13.225em; height: 1em; margin-top: 0px;" />
+                </span>
+            </a>
         </div>
-    </a>
-    <p class="author">
-        Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
-        <i><b>knowledge must be free</b></i>
-    </p>
-</header>
+        <div class="vector-header-end">
+            <div id="p-search" role="search" class="vector-search-box-vue vector-search-box-collapses vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+                <a
+                    href="https://en.wikipedia.org/wiki/Special:Search"
+                    class="cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only search-toggle"
+                    title="Search Savchenko Solutions [alt-shift-f]"
+                    accesskey="f"
+                >
+                    <span class="vector-icon mw-ui-icon-search mw-ui-icon-wikimedia-search"></span>
+
+                    <span>Search</span>
+                </a>
+                <div class="vector-typeahead-search-container">
+                    <div class="cdx-typeahead-search cdx-typeahead-search--show-thumbnail cdx-typeahead-search--auto-expand-width">
+                        <form action="/w/index.php" id="searchform" class="cdx-search-input cdx-search-input--has-end-button">
+                            <div id="simpleSearch" class="cdx-search-input__input-wrapper" data-search-loc="header-moved">
+                                <div class="cdx-text-input cdx-text-input--has-start-icon">
+                                    <input
+                                        class="cdx-text-input__input"
+                                        type="search"
+                                        name="search"
+                                        placeholder="Search Savchenko Solutions"
+                                        aria-label="Search Savchenko Solutions"
+                                        autocapitalize="sentences"
+                                        title="Search Savchenko Solutions [alt-shift-f]"
+                                        accesskey="f"
+                                        id="searchInput"
+                                        autocomplete="off"
+                                    />
+                                    <span class="cdx-text-input__icon cdx-text-input__start-icon"></span>
+                                </div>
+                                <input type="hidden" name="title" value="Special:Search" />
+                            </div>
+                            <button class="cdx-button cdx-search-input__end-button">Search</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="vector-user-links vector-user-links-wide" aria-label="Personal tools">
+                <div class="vector-user-links-main">
+                    <div id="p-vector-user-menu-preferences" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <div id="p-vector-user-menu-userpage" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <div id="p-vector-user-menu-notifications" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list" style="list-style: none;">
+                                <!--                               <li id="pt-sitesupport-2" class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                 <a
+                                    data-mw="interface"
+                                    href="https://en.wikipedia.orghttps://donate.wikimedia.org/wiki/Special:FundraiserRedirector?utm_source=donate&amp;utm_medium=sidebar&amp;utm_campaign=C13_en.wikipedia.org&amp;uselang=en"
+                                    class=""
+                                 >
+                                    <span>Donate</span>
+                                 </a>
+                              </li> -->
+                                <li id="pt-createaccount-2" class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                    <a
+                                        data-mw="interface"
+                                        href="https://en.wikipedia.org/w/index.php?title=Special:CreateAccount&amp;returnto=Archbishop+of+Canterbury"
+                                        title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                        class=""
+                                    >
+                                        <span>Create account</span>
+                                    </a>
+                                </li>
+                                <li id="pt-login-2" class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                    <a
+                                        data-mw="interface"
+                                        href="https://en.wikipedia.org/w/index.php?title=Special:UserLogin&amp;returnto=Archbishop+of+Canterbury"
+                                        title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
+                                        accesskey="o"
+                                        class=""
+                                    >
+                                        <span>Log in</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="vector-user-links-dropdown" class="vector-dropdown vector-user-menu vector-button-flush-right vector-user-menu-logged-out" title="Log in and more options">
+                    <input type="checkbox" id="vector-user-links-dropdown-checkbox" role="button" aria-haspopup="true" data-event-name="ui.dropdown-vector-user-links-dropdown" class="vector-dropdown-checkbox" aria-label="Personal tools" />
+                    <label
+                        id="vector-user-links-dropdown-label"
+                        for="vector-user-links-dropdown-checkbox"
+                        class="vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only"
+                        aria-hidden="true"
+                    >
+                        <span class="vector-icon mw-ui-icon-ellipsis mw-ui-icon-wikimedia-ellipsis"></span>
+
+                        <span class="vector-dropdown-label-text">Personal tools</span>
+                    </label>
+                    <div class="vector-dropdown-content">
+                        <div id="p-personal" class="vector-menu mw-portlet mw-portlet-personal user-links-collapsible-item" title="User menu">
+                            <div class="vector-menu-content">
+                                <ul class="vector-menu-content-list">
+                                    <!--                                  <li id="pt-sitesupport" class="user-links-collapsible-item mw-list-item">
+                                    <a href="https://en.wikipedia.orghttps://donate.wikimedia.org/wiki/Special:FundraiserRedirector?utm_source=donate&amp;utm_medium=sidebar&amp;utm_campaign=C13_en.wikipedia.org&amp;uselang=en">
+                                       <span>Donate</span>
+                                    </a>
+                                 </li> -->
+                                    <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
+                                        <a
+                                            href="https://en.wikipedia.org/w/index.php?title=Special:CreateAccount&amp;returnto=Archbishop+of+Canterbury"
+                                            title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                        >
+                                            <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span> <span>Create account</span>
+                                        </a>
+                                    </li>
+                                    <li id="pt-login" class="user-links-collapsible-item mw-list-item">
+                                        <a
+                                            href="https://en.wikipedia.org/w/index.php?title=Special:UserLogin&amp;returnto=Archbishop+of+Canterbury"
+                                            title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
+                                            accesskey="o"
+                                        >
+                                            <span class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span> <span>Log in</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div id="p-user-menu-anon-editor" class="vector-menu mw-portlet mw-portlet-user-menu-anon-editor">
+                            <!--                            <div class="vector-menu-heading">
+                              Pages for logged out editors <a href="https://en.wikipedia.org/wiki/Help:Introduction" aria-label="Learn more about editing"><span>learn more</span></a>
+                           </div>
+                           <div class="vector-menu-content">
+                              <ul class="vector-menu-content-list">
+                                 <li id="pt-anoncontribs" class="mw-list-item">
+                                    <a href="https://en.wikipedia.org/wiki/Special:MyContributions" title="A list of edits made from this IP address [alt-shift-y]" accesskey="y"><span>Contributions</span></a>
+                                 </li>
+                              </ul>
+                           </div> -->
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+</div>

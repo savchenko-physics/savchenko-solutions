@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+</head>
+<body>
+    <h1>Search Results for "<%= query %>"</h1>
+
+    <% if (results.length > 0) { %>
+        <ul>
+            <% results.forEach(result => { %>
+                <li>
+                    <a href="/<%= result.lang %>/<%= result.name %>"><%= result.name %> (<%= result.lang %>)</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p>No results found.</p>
+    <% } %>
+</body>
+</html>

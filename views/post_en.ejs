@@ -13,7 +13,7 @@
         <meta property="og:description" content="<%= title %>" />
         <meta name="yandex-verification" content="6cfda41f74038368" />
         <title><%= title %></title>
-        <link rel="stylesheet" href="../../css/css-latex/style.css" />
+        <!-- <link rel="stylesheet" href="../../css/css-latex/style.css" /> -->
         <link rel="icon" href="../../img/logo.png" type="image/png" />
         <script src="../../js/jquery-1.10.1.min.js"></script>
         <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
@@ -33,10 +33,16 @@
         </script>
     </head>
     <body style="">
-        <%- include('default/header.ejs') %>
+            <%- include("default/header_mobile.ejs") %>
+
         <div class="container">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="back-link"><a href="../../#<%= pageRef %>">$\leftarrow$Back</a></h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -30px;margin-top: 20px;">
+                <h3 id="back-link">
+                <code>
+                    ./<a href="../../#<%= pageRef %>">Kinematics</a>/<a href="../../#<%= pageRef %>">Constant-speed motion</a>
+                </code>
+                </h3>
+                <!-- <h3 id="back-link"><a href="../../#<%= pageRef %>">../Kinematics/Constant-speed motion</a></h3> -->
                 <h4 id="back-link">
                     <a href="/en/edit/<%= problemRef %>" style="text-decoration: underline; display: flex; align-items: center;">
                         <svg id="svg" width="22" height="22" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -48,7 +54,7 @@
                                     stroke="none"
                                     fill="#000000"
                                     fill-rule="evenodd"
-                                    style="fill: #a80000; fill-opacity: 1;"
+                                    style="fill: #36c; fill-opacity: 1;"
                                 />
                             </g>
                         </svg>
@@ -56,6 +62,7 @@
                     </a>
                 </h4>
             </div>
+            <br><br>
             <%- content %>
         </div>
 

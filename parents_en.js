@@ -1,35 +1,28 @@
 // routes.js
-const fs = require('fs');
-const path = require('path');
-const csv = require('csv-parser');
-const {
-    getMarkdownFiles
-} = require('./utils');
-
+const fs = require("fs");
+const path = require("path");
+const csv = require("csv-parser");
+const { getMarkdownFiles } = require("./utils");
 
 function readCSV(filePath, column) {
-    const csvData = fs.readFileSync(filePath, 'utf8');
+    const csvData = fs.readFileSync(filePath, "utf8");
 
-    const lines = csvData.trim().split('\n');
+    const lines = csvData.trim().split("\n");
     const chapterNames = [];
 
     for (let i = 0; i < lines.length; i++) {
-        const columns = lines[i].split(',');
+        const columns = lines[i].split(",");
         chapterNames.push(columns[column].trim());
     }
 
     return chapterNames;
 }
 
-
-
 function eng_page(req, res) {
     const directory = __dirname;
 
-
     const MaxColumns = 3;
-    const currentDirectory = path.join(directory, 'posts', 'en');
-
+    const currentDirectory = path.join(directory, "posts", "en");
 
     function columnLen(problemsNumber) {
         const ans = Array(MaxColumns).fill(Math.floor(problemsNumber / MaxColumns));
@@ -40,9 +33,9 @@ function eng_page(req, res) {
     }
 
     function existedFolders() {
-
-        return fs.readdirSync(currentDirectory)
-            .filter(f => fs.statSync(path.join(currentDirectory, f)).isFile() && f.includes('.'))
+        return fs
+            .readdirSync(currentDirectory)
+            .filter((f) => fs.statSync(path.join(currentDirectory, f)).isFile() && f.includes("."))
 
             .sort((a, b) => {
                 const aParts = splitNumbers(a);
@@ -61,33 +54,46 @@ function eng_page(req, res) {
     }
 
     function existed_Problems(filePath, column) {
-        const existedProblems = Array.from({
-            length: 15
-        }, () => Array.from({
-            length: 15
-        }, () => []));
+        const existedProblems = Array.from(
+            {
+                length: 15,
+            },
+            () =>
+                Array.from(
+                    {
+                        length: 15,
+                    },
+                    () => []
+                )
+        );
 
         for (let problem of existedFolders()) {
-            const [chapter, section, problemNumber] = problem.split('.').map(Number);
-            existedProblems[chapter][section].push(problem.replace('.md', ''));
+            const [chapter, section, problemNumber] = problem.split(".").map(Number);
+            existedProblems[chapter][section].push(problem.replace(".md", ""));
         }
 
         return existedProblems;
     }
 
     function splitNumbers(inputString) {
-        return inputString.split('.').map(Number);
+        return inputString.split(".").map(Number);
     }
 
     function PrimeDistribution(problemsList) {
         if (!problemsList.length) return "";
 
-        return `
-            <ul class="column">` +
-            problemsList.map(problem => `
-                <li><a href="/en/${problem}">${problem}</a></li>`).join('') +
+        return (
             `
-            </ul>`;
+            <ul class="column">` +
+            problemsList
+                .map(
+                    (problem) => `
+                <li><a href="/en/${problem}">${problem}</a></li>`
+                )
+                .join("") +
+            `
+            </ul>`
+        );
     }
 
     function ProblemsDistribution(problemsList) {
@@ -100,26 +106,26 @@ function eng_page(req, res) {
         }
         return problemsHtml;
     }
-    
+
     function countUniquePosts() {
-        const ruDirectory = path.join(__dirname, 'posts', 'ru');
-        const enDirectory = path.join(__dirname, 'posts', 'en');
-        
+        const ruDirectory = path.join(__dirname, "posts", "ru");
+        const enDirectory = path.join(__dirname, "posts", "en");
+
         // Helper function to get file names without extensions
         function getMarkdownFilesWithoutExtension(directory) {
-            return fs.readdirSync(directory)
-                .filter(file => file.endsWith('.md'))
-                .map(file => path.parse(file).name);
+            return fs
+                .readdirSync(directory)
+                .filter((file) => file.endsWith(".md"))
+                .map((file) => path.parse(file).name);
         }
-        
+
         const ruFiles = getMarkdownFilesWithoutExtension(ruDirectory);
         const enFiles = getMarkdownFilesWithoutExtension(enDirectory);
-        
+
         const uniqueFiles = new Set([...ruFiles, ...enFiles]);
 
-        return uniqueFiles.size; 
+        return uniqueFiles.size;
     }
-
 
     let BaseHtml = `
 <!DOCTYPE html>
@@ -229,28 +235,27 @@ function eng_page(req, res) {
     <main>
         <article class="margin-main">`;
 
-    const chapters = readCSV('src/database/chapters.csv', 1);
-    const theory = readCSV('src/database/chapters.csv', 2);
+    const chapters = readCSV("src/database/chapters.csv", 1);
+    const theory = readCSV("src/database/chapters.csv", 2);
 
-    let sectionNumbers = readCSV('src/database/sections.csv', 0);
-    let sectionTitles = readCSV('src/database/sections.csv', 1);
+    let sectionNumbers = readCSV("src/database/sections.csv", 0);
+    let sectionTitles = readCSV("src/database/sections.csv", 1);
     let sections = sectionNumbers.map((num, index) => [num, sectionTitles[index]]);
 
     existedProblems = existed_Problems();
 
     for (let [index, chapter] of existedProblems.entries()) {
-        if (!chapter.some(sublist => sublist.length)) continue;
+        if (!chapter.some((sublist) => sublist.length)) continue;
 
-        const chapterTitle = theory[index - 1] ?
-            `
+        const chapterTitle = theory[index - 1]
+            ? `
 
-          <h2 id="${index}" style="text-align: center;">Chapter ${index}. <a href="theory/${theory[index - 1]}" target="_blank">${chapters[index - 1]}</a></h2>` :
-            `
+          <h2 id="${index}" style="text-align: center;">Chapter ${index}. <a href="theory/${theory[index - 1]}" target="_blank">${chapters[index - 1]}</a></h2>`
+            : `
 
           <h2 id="${index}" style="text-align: center;">Chapter ${index}. ${chapters[index - 1]}</h2>`;
 
         BaseHtml += chapterTitle;
-
 
         for (let [index1, section] of chapter.entries()) {
             if (!section.length) continue;
@@ -312,10 +317,9 @@ function eng_page(req, res) {
   </body>
 </html>`;
 
-
     res.send(BaseHtml);
 }
 
 module.exports = {
-    eng_page
+    eng_page,
 };

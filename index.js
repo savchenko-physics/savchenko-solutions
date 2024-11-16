@@ -1,25 +1,16 @@
-const express = require('express');
-const path = require('path');
-const ejs = require('ejs');
-const fs = require('fs'); // Import fs module
-const bodyParser = require('body-parser');
-const {
-    parseMarkdown,
-    getMarkdownFiles,
-    getLineStatement,
-    transformImageMarkdown
-} = require('./utils'); // Importing functions from utils.js
-const {
-    eng_page
-} = require('./parents_en'); // generating content for the main english page
+const express = require("express");
+const path = require("path");
+const ejs = require("ejs");
+const fs = require("fs"); // Import fs module
+const bodyParser = require("body-parser");
+const { parseMarkdown, getMarkdownFiles, getLineStatement, transformImageMarkdown } = require("./utils"); // Importing functions from utils.js
+const { eng_page } = require("./parents_en"); // generating content for the main english page
 
-const {
-    ru_page
-} = require('./parents_ru'); // generating content for the main russian page
-const bcrypt = require('bcrypt');
-const session = require('express-session'); // Import express-session for session management
-const { Pool } = require('pg');
-require('dotenv').config();
+const { ru_page } = require("./parents_ru"); // generating content for the main russian page
+const bcrypt = require("bcrypt");
+const session = require("express-session"); // Import express-session for session management
+const { Pool } = require("pg");
+require("dotenv").config();
 
 const app = express();
 const PORT = 3000;
@@ -28,24 +19,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(
     session({
-        secret: 'your_secret_key', // Replace with a strong secret
+        secret: "your_secret_key", // Replace with a strong secret
         resave: false,
         saveUninitialized: true,
         cookie: { secure: false }, // Set to true if using HTTPS
     })
 );
 
-app.set('view engine', 'ejs');
-app.use(express.static(path.join(__dirname, 'posts')));
-app.use('/img', express.static(path.join(__dirname, 'img'))); // Serve images from img folder
-app.use('/css', express.static(path.join(__dirname, 'css')));
-app.use('/en', express.static(path.join(__dirname, 'en')));
-app.use('/theory', express.static(path.join(__dirname, 'theory')));
-app.use('/ru/theory', express.static(path.join(__dirname, 'ru', 'theory')));
-app.use(express.static(path.join(__dirname, 'src')));
-app.use('/en/savchenko_en.pdf', express.static(path.join(__dirname, 'pdf/savchenko_en.pdf')));
-app.use('/savchenko.pdf', express.static(path.join(__dirname, 'pdf/savchenko.pdf')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
+app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "posts")));
+app.use("/img", express.static(path.join(__dirname, "img"))); // Serve images from img folder
+app.use("/css", express.static(path.join(__dirname, "css")));
+app.use("/en", express.static(path.join(__dirname, "en")));
+app.use("/theory", express.static(path.join(__dirname, "theory")));
+app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
+app.use(express.static(path.join(__dirname, "src")));
+app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
+app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
+app.use("/js", express.static(path.join(__dirname, "js")));
 
 // PostgreSQL setup
 const pool = new Pool({
@@ -54,92 +45,89 @@ const pool = new Pool({
     database: process.env.PG_DATABASE,
     password: process.env.PG_PASSWORD,
     port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' }
+    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
 
-app.get('/login', (req, res) => {
-    res.render('login', {
-        error: req.query.error || '',  // Provide a default empty string if no error
-        success: req.query.success || '' // Provide a default empty string if no success message
+app.get("/login", (req, res) => {
+    res.render("login", {
+        error: req.query.error || "", // Provide a default empty string if no error
+        success: req.query.success || "", // Provide a default empty string if no success message
     });
 });
 
-app.get('/register', (req, res) => {
-    res.render('register', {
-        error: req.query.error || '',  // Provide a default empty string if no error
-        success: req.query.success || '' // Provide a default empty string if no success message
+app.get("/register", (req, res) => {
+    res.render("register", {
+        error: req.query.error || "", // Provide a default empty string if no error
+        success: req.query.success || "", // Provide a default empty string if no success message
     });
 });
-
 
 // Registration Route
-app.post('/register', async (req, res) => {
+app.post("/register", async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
-        return res.redirect('/register?error=Username and password are required');
+        return res.redirect("/register?error=Username and password are required");
     }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', [username, hashedPassword]);
-        res.redirect('/login?success=Registration successful');
+        await pool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, hashedPassword]);
+        res.redirect("/login?success=Registration successful");
     } catch (error) {
         console.error(error);
-        res.redirect('/register?error=Username already taken');
+        res.redirect("/register?error=Username already taken");
     }
 });
 
 // Login Route
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
-        return res.redirect('/login?error=Username and password are required');
+        return res.redirect("/login?error=Username and password are required");
     }
 
     try {
-        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        const result = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
         if (result.rows.length === 0 || !(await bcrypt.compare(password, result.rows[0].password))) {
-            return res.redirect('/login?error=Invalid credentials');
+            return res.redirect("/login?error=Invalid credentials");
         }
 
         // Set session variables
         req.session.userId = result.rows[0].id;
         req.session.username = result.rows[0].username;
-        
+
         // Redirect to profile page
-        res.redirect('/profile');
+        res.redirect("/profile");
     } catch (error) {
         console.error(error);
-        res.redirect('/login?error=Something went wrong');
+        res.redirect("/login?error=Something went wrong");
     }
 });
 
-
-app.get('/profile', (req, res) => {
+app.get("/profile", (req, res) => {
     if (!req.session.userId) {
-        return res.redirect('/login?error=Please log in to access your profile');
+        return res.redirect("/login?error=Please log in to access your profile");
     }
 
     // Render the profile page with the user's information
-    res.render('profile', { username: req.session.username });
+    res.render("profile", { username: req.session.username });
 });
 
 // Logout Route
-app.get('/logout', (req, res) => {
+app.get("/logout", (req, res) => {
     req.session.destroy((err) => {
         if (err) {
-            return res.redirect('/profile');
+            return res.redirect("/profile");
         }
-        res.redirect('/login?success=Logged out successfully');
+        res.redirect("/login?success=Logged out successfully");
     });
 });
 
-
 // Home route to list all posts
-app.get('/', eng_page);
+app.get("/", eng_page);
 
-app.get('/en', (req, res) => {
-    res.redirect('/');
+app.get("/en", (req, res) => {
+    res.redirect("/");
 });
 
 app.get(/^\/(\d+\.\d+\.\d+)$/, (req, res) => {
@@ -147,26 +135,22 @@ app.get(/^\/(\d+\.\d+\.\d+)$/, (req, res) => {
     res.redirect(`/en/${version}`);
 });
 
+app.get("/ru", ru_page);
 
-app.get('/ru', ru_page);
-
-app.get('/en/about', (req, res) => {
+app.get("/en/about", (req, res) => {
     res.redirect(`/about#description`);
 });
 
-app.get('/about', (req, res) => {
-    res.render('about_en'); 
+app.get("/about", (req, res) => {
+    res.render("about_en");
 });
 
-app.get('/ru/about', (req, res) => {
-    res.render('about_ru'); 
+app.get("/ru/about", (req, res) => {
+    res.render("about_ru");
 });
 
-app.get('/:lang/:name', (req, res) => {
-    const {
-        lang,
-        name
-    } = req.params;
+app.get("/:lang/:name", (req, res) => {
+    const { lang, name } = req.params;
 
     if (/^(1[0-4]|[1-9])$/.test(lang)) {
         return res.redirect(`/ru/${name}`);
@@ -176,68 +160,64 @@ app.get('/:lang/:name', (req, res) => {
 
     // Check if the specified file exists
     if (fs.existsSync(filePath)) {
-        let fileContents = fs.readFileSync(filePath, 'utf8')
-            .replace(/;/g, '\\;')
-            .replace(/,/g, '\\,')
-            .replace(/\*/g, '\\*')
-            .replace(/~/g, '\\~');
+        let fileContents = fs.readFileSync(filePath, "utf8").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~");
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
-        console.log(titleContent)
+        console.log(titleContent);
 
         let html = parseMarkdown(fileContents); // Convert Markdown to HTML
-        html = html.replace(/<em>/g, '_').replace(/<\/em>/g, '_');
-        html = html.replace(/\\\*/g, '*');
+        html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
+        html = html.replace(/\\\*/g, "*");
 
-        const pageRef = name.split('.').slice(0, 2).join('.');
+        const pageRef = name.split(".").slice(0, 2).join(".");
 
-        res.render(lang === 'ru' ? 'post_ru' : 'post_en', {
+        res.render(lang === "ru" ? "post_ru" : "post_en", {
             pageRef,
             problemRef: name,
-            title: name+'. '+titleContent,
-            content: html
+            title: name + ". " + titleContent,
+            content: html,
         });
     } else {
-        res.status(404).render('404', {
-            pageUrl: req.originalUrl
-        })
+        res.status(404).render("404", {
+            pageUrl: req.originalUrl,
+        });
     }
 });
 
-app.get('/:lang/edit/:name', (req, res) => {
-    const clientIp = req.headers['x-forwarded-for'] || req.ip; 
+app.get("/:lang/edit/:name", (req, res) => {
+    const clientIp = req.headers["x-forwarded-for"] || req.ip;
     const { lang, name } = req.params;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
 
     if (fs.existsSync(filePath)) {
-        let fileContents = fs.readFileSync(filePath, 'utf8');
-        res.render('edit_post', { lang, name, content: fileContents });
+        let fileContents = fs.readFileSync(filePath, "utf8");
+        res.render("edit_post", { lang, name, content: fileContents });
     } else {
-        res.status(404).render('404', { pageUrl: req.originalUrl });
+        res.status(404).render("404", { pageUrl: req.originalUrl });
     }
 });
 
 // Route for saving edited content
-app.post('/:lang/save/:name', (req, res) => {
+app.post("/:lang/save/:name", (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
-    const clientIp = req.headers['x-forwarded-for'] || req.ip;
+    const clientIp = req.headers["x-forwarded-for"] || req.ip;
 
-    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, '-')}_${clientIp.replace(/[:.]/g, '-')}.md`);
+    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, "-")}_${clientIp.replace(/[:.]/g, "-")}.md`);
     // Backup the original file before overwriting
 
     fs.copyFile(filePath, backupFilePath, (err) => {
         if (err) {
             console.error("Error creating backup:", err);
-            return res.status(500).send('Error creating backup');
+            return res.status(500).send("Error creating backup");
         }
 
         // Now, overwrite the original file with the new content
-        fs.writeFile(filePath, content, 'utf8', (err) => {
+        fs.writeFile(filePath, content, "utf8", (err) => {
             if (err) {
                 console.error("Error saving file:", err);
-                return res.status(500).send('Error saving file');
+                return res.status(500).send("Error saving file");
             } else {
                 res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
             }
@@ -245,38 +225,36 @@ app.post('/:lang/save/:name', (req, res) => {
     });
 });
 
-
-app.get('/file-list', (req, res) => {
-    const enDirectoryPath = path.join(__dirname, 'posts-old', 'en');
-    const ruDirectoryPath = path.join(__dirname, 'posts-old', 'ru');
+app.get("/file-list", (req, res) => {
+    const enDirectoryPath = path.join(__dirname, "posts-old", "en");
+    const ruDirectoryPath = path.join(__dirname, "posts-old", "ru");
 
     // Helper function to process files from a given directory and language
     const processFiles = (directoryPath, language) => {
         const files = fs.readdirSync(directoryPath);
         return files.map((file) => {
-            const parts = file.split('_');
-            const version = parts[0] || 'N/A';
-            const ipAddress = (parts[2] && parts[2].replace('.md', '').replace(/-/g, ".")) || 'Unknown IP';
+            const parts = file.split("_");
+            const version = parts[0] || "N/A";
+            const ipAddress = (parts[2] && parts[2].replace(".md", "").replace(/-/g, ".")) || "Unknown IP";
 
             const filePath = path.join(directoryPath, file);
             const stats = fs.statSync(filePath);
 
             const lastModified = stats.mtime;
             const options = {
-                timeZone: 'America/New_York',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
+                timeZone: "America/New_York",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
             };
-            const easternTime = new Intl.DateTimeFormat('en-US', options).format(lastModified);
+            const easternTime = new Intl.DateTimeFormat("en-US", options).format(lastModified);
 
             // Split the formatted string into date and time
-            const [date, time] = easternTime.split(', ');
-
+            const [date, time] = easternTime.split(", ");
 
             return {
                 name: file,
@@ -285,22 +263,62 @@ app.get('/file-list', (req, res) => {
                 size: stats.size, // File size in bytes
                 date, // Date in YYYY-MM-DD format
                 time, // Time in HH:MM:SS format
-                language // Include the language in the file details
+                language, // Include the language in the file details
             };
         });
     };
 
     // Combine file details from both directories
-    const enFiles = processFiles(enDirectoryPath, 'English');
-    const ruFiles = processFiles(ruDirectoryPath, 'Russian');
+    const enFiles = processFiles(enDirectoryPath, "English");
+    const ruFiles = processFiles(ruDirectoryPath, "Russian");
     const fileDetails = [...enFiles, ...ruFiles];
 
     fileDetails.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
 
     // Render the details in the EJS template
-    res.render('file_list', { fileDetails });
+    res.render("file_list", { fileDetails });
 });
 
+// Search Route
+app.get("/search", (req, res) => {
+    const query = req.query.q?.toLowerCase(); // Get the search query from the query string and convert to lowercase
+
+    if (!query) {
+        return res.render("search_results", { results: [], query: "" });
+    }
+
+    const searchDirectory = path.join(__dirname, "posts");
+    const results = [];
+
+    // Recursively search for markdown files in the posts directory
+    const searchFiles = (directory) => {
+        const files = fs.readdirSync(directory);
+
+        files.forEach((file) => {
+            const fullPath = path.join(directory, file);
+
+            if (fs.statSync(fullPath).isDirectory()) {
+                // If the file is a directory, search recursively
+                searchFiles(fullPath);
+            } else if (file.endsWith(".md")) {
+                // Read and search in markdown files
+                const fileContents = fs.readFileSync(fullPath, "utf8").toLowerCase();
+
+                if (fileContents.includes(query) || file.toLowerCase().includes(query)) {
+                    const relativePath = path.relative(searchDirectory, fullPath);
+                    const lang = relativePath.split(path.sep)[0]; // Extract language from the path
+                    const name = file.replace(".md", "");
+                    results.push({ lang, name, relativePath });
+                }
+            }
+        });
+    };
+
+    searchFiles(searchDirectory);
+
+    // Render the search results
+    res.render("search_results", { results, query });
+});
 
 
 // Start the server
