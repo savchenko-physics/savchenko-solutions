@@ -282,6 +282,9 @@ button::-moz-focus-inner {
     }
 }*/
 @media screen {
+    bdi{
+        color: #36c;
+    }
     html {
         scroll-padding-top: 75px;
     }
@@ -357,6 +360,7 @@ button::-moz-focus-inner {
     a:where(:not([role="button"])):visited {
         color: var(--color-visited, #36c);
     }
+    
 
     a:where(:not([role="button"])):visited:hover {
         color: var(--color-visited, #36c);

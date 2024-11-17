@@ -150,9 +150,9 @@
                 <img class="mw-logo-icon" src="https://savchenkosolutions.com/img/book.png" alt="" aria-hidden="true"
                     height="50" width="50" />
                 <span class="mw-logo-container skin-invert">
-                    <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="../img/savchenko-wordmark-en.svg" />
+                    <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en.svg" />
                     <img class="mw-logo-tagline" alt="The Collaborative Problemsolving Platform"
-                        src="../img/savchenko-tagline-en.svg" width="230" height="17"
+                        src="/img/savchenko-tagline-en.svg" width="230" height="17"
                         style="width: 11em; height: 0.8125em; margin-top: 5px;" />
                 </span>
             </a>
@@ -171,22 +171,160 @@
                     <div
                         class="cdx-typeahead-search cdx-typeahead-search--show-thumbnail cdx-typeahead-search--auto-expand-width">
                         <form action="/w/index.php" id="searchform"
-                            class="cdx-search-input cdx-search-input--has-end-button">
+                            class="cdx-search-input cdx-search-input--has-end-button" data-gtm-form-interact-id="0">
                             <div id="simpleSearch" class="cdx-search-input__input-wrapper"
                                 data-search-loc="header-moved">
                                 <div class="cdx-text-input cdx-text-input--has-start-icon">
                                     <input class="cdx-text-input__input" type="search" name="search"
                                         placeholder="Search Savchenko Solutions" aria-label="Search Savchenko Solutions"
                                         autocapitalize="sentences" title="Search Savchenko Solutions [alt-shift-f]"
-                                        accesskey="f" id="searchInput" autocomplete="off" />
+                                        accesskey="f" id="searchInput" autocomplete="off"
+                                        data-gtm-form-interact-field-id="0">
                                     <span class="cdx-text-input__icon cdx-text-input__start-icon"></span>
                                 </div>
-                                <input type="hidden" name="title" value="Special:Search" />
+                                <input type="hidden" name="title" value="Special:Search">
                             </div>
                             <button class="cdx-button cdx-search-input__end-button">Search</button>
                         </form>
                     </div>
                 </div>
+                <div class="cdx-menu cdx-menu--has-footer cdx-typeahead-search__menu" id="searchResults"
+                    style="display: none;">
+                    <ul class="cdx-menu__listbox" role="listbox" id="cdx-typeahead-search-menu-0"
+                        aria-label="Search results"></ul>
+                </div>
+
+                <style>
+                    /* Dropdown results container */
+                    .cdx-menu {
+                        position: absolute;
+                        /* top: 100%; */
+                        /* left: calc(50vw - 300px); */
+                        width: calc(min(100vw, 430.95px));
+                        /* Matches the container's width */
+                        max-width: none;
+                        /* Removes any max-width limitations */
+                        background: #fff;
+                        border: 1px solid #ccc;
+                        /* border-radius: 5px; */
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        z-index: 1000;
+                    }
+
+                    .cdx-menu__listbox {
+                        list-style: none;
+                        padding: 0;
+                        margin: 0;
+                    }
+
+                    .cdx-menu-item {
+                        display: flex;
+                        align-items: center;
+                        padding: 10px;
+                        cursor: pointer;
+                    }
+
+                    .cdx-menu-item:hover {
+                        background-color: #f0f0f0;
+                    }
+
+                    .cdx-menu-item__content {
+                        display: flex;
+                        align-items: center;
+                        text-decoration: none;
+                        color: inherit;
+                    }
+
+                    .cdx-menu-item__text {
+                        margin-left: 10px;
+                    }
+
+                    .cdx-search-result-title bdi {
+                        font-weight: bold;
+                    }
+
+                    .cdx-menu-item__text__description bdi {
+                        font-size: 0.9em;
+                        color: #555;
+                    }
+
+                    .cdx-thumbnail {
+                        width: 60px;
+                        height: 60px;
+                        background-size: cover;
+                        background-position: center;
+                    }
+
+                    .cdx-menu-item--no-thumbnail .cdx-thumbnail {
+                        display: none;
+                    }
+                </style>
+
+
+                <script>
+                    const searchInput = document.getElementById("searchInput");
+                    const searchResults = document.getElementById("searchResults");
+                    const searchResultsList = document.querySelector("#searchResults ul");
+
+                    searchInput.addEventListener("input", async () => {
+                        const query = searchInput.value.trim();
+
+                        if (query.length === 0) {
+                            searchResults.style.display = "none";
+                            searchResultsList.innerHTML = "";
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                            const data = await response.json();
+
+                            if (data.results.length > 0) {
+                                searchResultsList.innerHTML = data.results.map((result, index) => `
+                    <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                        <a href="${result.relativePath}" class="cdx-menu-item__content">
+                            <span class="cdx-menu-item__text">
+                                <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                                <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                            </span>
+                        </a>
+                    </li>
+                `).join("");
+                                searchResults.style.display = "block";
+                            } else {
+                                searchResultsList.innerHTML = `
+                    <li class="cdx-menu-item cdx-menu-item--enabled">
+                        <span class="cdx-menu-item__content">
+                            <span class="cdx-menu-item__text">No results found.</span>
+                        </span>
+                    </li>
+                `;
+                                searchResults.style.display = "block";
+                            }
+                        } catch (err) {
+                            console.error("Error fetching search results:", err);
+                            searchResultsList.innerHTML = `
+                <li class="cdx-menu-item cdx-menu-item--enabled">
+                    <span class="cdx-menu-item__content">
+                        <span class="cdx-menu-item__text">Error loading results.</span>
+                    </span>
+                </li>
+            `;
+                            searchResults.style.display = "block";
+                        }
+                    });
+
+                    document.addEventListener("click", (event) => {
+                        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                            searchResults.style.display = "none";
+                        }
+                    });
+                </script>
+
+
+
+
+
             </div>
 
             <nav class="vector-user-links vector-user-links-wide" aria-label="Personal tools">
@@ -214,7 +352,7 @@
                             <ul class="vector-menu-content-list" style="list-style: none;">
                                 <li id="pt-createaccount-2"
                                     class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                    <a data-mw="interface" href="/reg"
+                                    <a data-mw="interface" href="/register"
                                         title="You are encouraged to create an account and log in; however, it is not mandatory"
                                         class="">
                                         <span>Create account</span>

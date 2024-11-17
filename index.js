@@ -149,6 +149,10 @@ app.get("/ru/about", (req, res) => {
     res.render("about_ru");
 });
 
+app.get("/study-guide", (req, res) => {
+    res.render("study-guide");
+});
+
 app.get("/:lang/:name", (req, res) => {
     const { lang, name } = req.params;
 
@@ -279,18 +283,40 @@ app.get("/file-list", (req, res) => {
     res.render("file_list", { fileDetails });
 });
 
-// Search Route
+
 app.get("/search", (req, res) => {
-    const query = req.query.q?.toLowerCase(); // Get the search query from the query string and convert to lowercase
+    const query = req.query.q?.toLowerCase();
 
     if (!query) {
-        return res.render("search_results", { results: [], query: "" });
+        return res.json({ results: [] }); // Return empty results for empty query
     }
 
     const searchDirectory = path.join(__dirname, "posts");
     const results = [];
+    const processedFiles = new Set(); // Track processed file names
 
-    // Recursively search for markdown files in the posts directory
+    const truncateWithHighlight = (name, text, query, maxLength = 100) => {
+        text = text.replace(name, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "");
+
+        const matchIndex = text.toLowerCase().indexOf(query);
+
+        if (matchIndex === -1) {
+            return text.slice(0, maxLength); // Fallback: return the truncated text
+        }
+
+        const start = Math.max(0, matchIndex - Math.floor((maxLength - query.length) / 2));
+        const end = Math.min(text.length, start + maxLength);
+
+        let snippet = text.slice(start, end);
+
+        // Ensure no partial words at the boundaries
+        if (start > 0) snippet = `...${snippet}`;
+        if (end < text.length) snippet = `${snippet}...`;
+
+        // Highlight the query term
+        return snippet.replace(new RegExp(query, "gi"), (match) => `<strong>${match}</strong>`);
+    };
+
     const searchFiles = (directory) => {
         const files = fs.readdirSync(directory);
 
@@ -298,26 +324,45 @@ app.get("/search", (req, res) => {
             const fullPath = path.join(directory, file);
 
             if (fs.statSync(fullPath).isDirectory()) {
-                // If the file is a directory, search recursively
-                searchFiles(fullPath);
+                searchFiles(fullPath); // Recursively search directories
             } else if (file.endsWith(".md")) {
-                // Read and search in markdown files
-                const fileContents = fs.readFileSync(fullPath, "utf8").toLowerCase();
+                if (processedFiles.has(file)) return; // Skip if file is already processed
 
-                if (fileContents.includes(query) || file.toLowerCase().includes(query)) {
-                    const relativePath = path.relative(searchDirectory, fullPath);
-                    const lang = relativePath.split(path.sep)[0]; // Extract language from the path
-                    const name = file.replace(".md", "");
-                    results.push({ lang, name, relativePath });
+                const fileContents = fs.readFileSync(fullPath, "utf8");
+                const lines = fileContents.split("\n"); // Split file into lines
+
+                for (const [index, line] of lines.entries()) {
+                    if (line.toLowerCase().includes(query)) {
+                        const relativePath = path.relative(searchDirectory, fullPath);
+                        const lang = relativePath.split(path.sep)[0];
+                        const name = file.replace(".md", "");
+
+                        // Truncate and highlight the matching line
+                        const snippet = truncateWithHighlight(name, line, query);
+
+                        results.push({
+                            lang,
+                            name,
+                            relativePath: `/${lang}/${name}`,
+                            snippet: snippet,
+                            lineNumber: index + 1
+                        });
+                        
+                        processedFiles.add(file); // Mark this file as processed
+                        break; // Stop further matches in the same file
+                    }
                 }
             }
         });
     };
 
+
     searchFiles(searchDirectory);
 
-    // Render the search results
-    res.render("search_results", { results, query });
+    // Limit to the first 10 results
+    const limitedResults = results.slice(0, 10);
+
+    res.json({ results: limitedResults });
 });
 
 

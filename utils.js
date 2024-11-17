@@ -119,7 +119,7 @@ function getLineStatement(text) {
 
     const match = text.match(regex);
 
-    return match ? convertLatexToPlainText(match[1]) : null;
+    return match ? convertLatexToPlainText(match[1]) : "Solution";
 }
 
 const transformImageMarkdown = (htmlContent) => {
@@ -166,4 +166,5 @@ module.exports = {
     getMarkdownFiles,
     getLineStatement,
     transformImageMarkdown,
+    convertLatexToPlainText
 };
