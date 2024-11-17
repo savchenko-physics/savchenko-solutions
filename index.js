@@ -48,6 +48,11 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
 
+app.use((req, res, next) => {
+    res.locals.username = req.session.username || null; // Set username globally
+    next(); // Move to the next middleware/route handler
+});
+
 app.get("/login", (req, res) => {
     res.render("login", {
         error: req.query.error || "", // Provide a default empty string if no error
@@ -64,20 +69,42 @@ app.get("/register", (req, res) => {
 
 // Registration Route
 app.post("/register", async (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) {
-        return res.redirect("/register?error=Username and password are required");
+    const { username, email, fullname, password, password2 } = req.body;
+
+    // Validate required fields
+    if (!username || !email || !fullname || !password || !password2) {
+        return res.redirect("/register?error=All fields are required");
+    }
+
+    // Check if passwords match
+    if (password !== password2) {
+        return res.redirect("/register?error=Passwords do not match");
     }
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.query("INSERT INTO users (username, password) VALUES ($1, $2)", [username, hashedPassword]);
+
+        // Insert into the database
+        await pool.query(
+            "INSERT INTO users (username, email, full_name, password) VALUES ($1, $2, $3, $4)",
+            [username, email, fullname, hashedPassword]
+        );
+
         res.redirect("/login?success=Registration successful");
+        // res.redirect("/profile");
     } catch (error) {
         console.error(error);
-        res.redirect("/register?error=Username already taken");
+
+        // Handle errors like duplicate entries
+        if (error.code === '23505') {
+            return res.redirect("/register?error=Username or email already taken");
+        }
+
+        res.redirect("/register?error=Something went wrong");
     }
 });
+
+
 
 // Login Route
 app.post("/login", async (req, res) => {
@@ -124,7 +151,11 @@ app.get("/logout", (req, res) => {
 });
 
 // Home route to list all posts
-app.get("/", eng_page);
+app.get("/", (req, res) => {
+    // Modify the eng_page function or include session data
+    eng_page(req, res);
+    console.log(req.session.username);
+});
 
 app.get("/en", (req, res) => {
     res.redirect("/");
@@ -347,7 +378,7 @@ app.get("/search", (req, res) => {
                             snippet: snippet,
                             lineNumber: index + 1
                         });
-                        
+
                         processedFiles.add(file); // Mark this file as processed
                         break; // Stop further matches in the same file
                     }

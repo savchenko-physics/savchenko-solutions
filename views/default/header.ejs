@@ -108,23 +108,45 @@
                                                 <span>Home</span>
                                             </a>
                                         </li>
-                                        <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
-                                            <a href="/register"
-                                                title="You are encouraged to create an account and log in; however, it is not mandatory">
-                                                <span
-                                                    class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
-                                                <span>Create account</span>
-                                            </a>
-                                        </li>
-                                        <li id="pt-login" class="user-links-collapsible-item mw-list-item">
-                                            <a href="/login"
-                                                title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
-                                                accesskey="o">
-                                                <span
-                                                    class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
-                                                <span>Log in</span>
-                                            </a>
-                                        </li>
+
+                                        <% if (username) { %>
+                                            <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
+                                                <a href="/profile"
+                                                    title="You are encouraged to create an account and log in; however, it is not mandatory">
+                                                    <span
+                                                        class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                    <span>Profile</span>
+                                                </a>
+                                            </li>
+                                            <li id="pt-login" class="user-links-collapsible-item mw-list-item">
+                                                <a href="/logout"
+                                                    title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
+                                                    accesskey="o">
+                                                    <span
+                                                        class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                    <span>Log out</span>
+                                                </a>
+                                            </li>
+                                            <% } else { %>
+                                                <li id="pt-createaccount"
+                                                    class="user-links-collapsible-item mw-list-item">
+                                                    <a href="/register"
+                                                        title="You are encouraged to create an account and log in; however, it is not mandatory">
+                                                        <span
+                                                            class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                        <span>Create account</span>
+                                                    </a>
+                                                </li>
+                                                <li id="pt-login" class="user-links-collapsible-item mw-list-item">
+                                                    <a href="/login"
+                                                        title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
+                                                        accesskey="o">
+                                                        <span
+                                                            class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                        <span>Log in</span>
+                                                    </a>
+                                                </li>
+                                                <% } %>
                                     </ul>
                                 </div>
 
@@ -347,28 +369,55 @@
                         </div>
                     </div>
 
-                    <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
-                        <div class="vector-menu-content">
-                            <ul class="vector-menu-content-list" style="list-style: none;">
-                                <li id="pt-createaccount-2"
-                                    class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                    <a data-mw="interface" href="/register"
-                                        title="You are encouraged to create an account and log in; however, it is not mandatory"
-                                        class="">
-                                        <span>Create account</span>
-                                    </a>
-                                </li>
-                                <li id="pt-login-2"
-                                    class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                    <a data-mw="interface" href="/login"
-                                        title="You're encouraged to log in; however, it's not mandatory." accesskey="o"
-                                        class="">
-                                        <span>Log in</span>
-                                    </a>
-                                </li>
-                            </ul>
+                    <% if (username) { %>
+                        <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
+                            <div class="vector-menu-content">
+                                <ul class="vector-menu-content-list" style="list-style: none;">
+                                    <li id="pt-createaccount-2"
+                                        class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                        <a data-mw="interface" href="/profile"
+                                            title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                            class="">
+                                            <span>
+                                                <%= username %>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li id="pt-login-2"
+                                        class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                        <a data-mw="interface" href="/logout"
+                                            title="You're encouraged to log in; however, it's not mandatory."
+                                            accesskey="o" class="">
+                                            <span>Logout</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
-                    </div>
+                        <% } else { %>
+                            <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
+                                <div class="vector-menu-content">
+                                    <ul class="vector-menu-content-list" style="list-style: none;">
+                                        <li id="pt-createaccount-2"
+                                            class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                            <a data-mw="interface" href="/register"
+                                                title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                                class="">
+                                                <span>Create account</span>
+                                            </a>
+                                        </li>
+                                        <li id="pt-login-2"
+                                            class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                            <a data-mw="interface" href="/login"
+                                                title="You're encouraged to log in; however, it's not mandatory."
+                                                accesskey="o" class="">
+                                                <span>Log in</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <% } %>
                 </div>
 
                 <div id="vector-user-links-dropdown"
