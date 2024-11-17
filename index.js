@@ -295,7 +295,7 @@ app.get("/search", (req, res) => {
     const results = [];
     const processedFiles = new Set(); // Track processed file names
 
-    const truncateWithHighlight = (name, text, query, maxLength = 100) => {
+    const truncateWithHighlight = (name, text, query, maxLength = 150) => {
         text = text.replace(name, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "");
 
         const matchIndex = text.toLowerCase().indexOf(query);
@@ -364,6 +364,27 @@ app.get("/search", (req, res) => {
 
     res.json({ results: limitedResults });
 });
+
+app.get("/global-search", async (req, res) => {
+    const query = req.query.search?.trim() || ""; // Extract the 'search' query parameter
+
+    if (!query) {
+        return res.render("search", { results: [], searchTerm: "" }); // Render with no results if no query is provided
+    }
+
+    try {
+        // Fetch results from the /search endpoint (relative URL ensures it works in any environment)
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const response = await fetch(`${baseUrl}/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        res.render("search", { results: data.results, searchTerm: query });
+    } catch (error) {
+        console.error("Error fetching search results:", error);
+        res.render("search", { results: [], searchTerm: query });
+    }
+});
+
 
 
 // Start the server

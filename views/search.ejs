@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="content-language" content="en" />
+    <meta name="keywords"
+        content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda" />
+    <meta name="description" content="Contributors of Savchenko Solutions" />
+    <meta name="author" content="Aliaksandr Melnichenka" />
+    <meta name="date" content="2023-10" scheme="YYYY-MM" />
+    <meta property="og:title" content="Contributors of Savchenko Solutions" />
+    <meta property="og:image" content="img/logo.png" />
+    <meta property="og:description" content="Contributors of Savchenko Solutions" />
+    <meta name="yandex-verification" content="6cfda41f74038368" />
+    <link rel="stylesheet" href="../../css/css-latex/style.css" />
+    <link rel="icon" href="../../img/logo.png" type="image/png" />
+    <script src="../../js/jquery-1.10.1.min.js"></script>
+    <title>Global Search</title>
+    <style>
+        /* .container {
+                max-width: 800px;
+                margin: 20px auto;
+                padding: 20px;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            } */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #search-form {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        input[type="text"] {    
+            font-family: 'Arial', 'Roboto', sans-serif;
+            width: calc(100% - 50px);
+            /* Adjust width to fit the container with space for the button */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            /* border-radius: 20px 0 0 20px; */
+
+            outline: none;
+        }
+
+
+        .result {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .result:last-child {
+            border-bottom: none;
+        }
+
+        .result h2 {
+            font-size: 18px;
+            margin: 0 0 5px 0;
+        }
+
+        .result p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .result a {
+            color: #36c;
+            text-decoration: none;
+        }
+
+        .result a:hover {
+            text-decoration: underline;
+        }
+
+        .no-results {
+            color: #999;
+        }
+
+        .submit-button {
+            font-family: 'Arial', 'Roboto', sans-serif;
+            padding: 0 20px;
+            height: 40px;
+            /* Ensure button height matches the input */
+            font-size: 16px;
+            background-color: #36c;
+            color: #fff;
+            border: none;
+            /* border-radius: 0 20px 20px 0; */
+            border-radius: 0;
+            /* Rounded corners on the right side */
+            cursor: pointer;
+            display: inline-block;
+        }
+
+
+        .submit-button:hover {
+            background-color: #36c;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('default/header.ejs') %>
+    <br>
+        <div class="container">
+            
+            <h1>Search results</h1>
+            <form id="search-form" action="/global-search" method="get">
+                <input type="text" id="search-query" name="search" placeholder="Enter search term..."
+                    value="<%= searchTerm %>" required>
+                <button type="submit" class="submit-button">Search</button>
+            </form>
+            <br>
+            <div id="results">
+                <% if (results.length===0) { %>
+                    <p class="no-results">No results found for "<%= searchTerm %>".</p>
+                    <% } else { %>
+                        <% results.forEach(result=> { %>
+                            <div class="result">
+                                <h2><a href="<%= result.relativePath %>">
+                                        <%= result.name %> (<%= result.lang %>)
+                                    </a></h2>
+                                <p>
+                                    <%= result.snippet %>
+                                </p>
+                                <p><small>Line: <%= result.lineNumber %></small></p>
+                            </div>
+                            <% }); %>
+                                <% } %>
+            </div>
+        </div>
+
+        <%- include('default/footer_en.ejs') %>
+            <script>
+                const form = document.getElementById('search-form');
+                const queryInput = document.getElementById('search-query');
+                const resultsContainer = document.getElementById('results');
+
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+
+                    const query = queryInput.value.trim();
+                    if (!query) return;
+
+                    resultsContainer.innerHTML = '<p>Loading...</p>';
+
+                    try {
+                        // Use a relative URL for fetching search results
+                        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+
+                        if (data.results.length === 0) {
+                            resultsContainer.innerHTML = `<p class="no-results">No results found for "${query}".</p>`;
+                            return;
+                        }
+
+                        resultsContainer.innerHTML = data.results.map(result => `
+                    <div class="result">
+                        <h2><a href="${result.relativePath}">${result.name} (${result.lang})</a></h2>
+                        <p>${result.snippet}</p>
+                        <p><small>Line: ${result.lineNumber}</small></p>
+                    </div>
+                `).join('');
+                    } catch (error) {
+                        resultsContainer.innerHTML = '<p class="no-results">An error occurred while fetching results. Please try again.</p>';
+                    }
+                });
+            </script>
+</body>
+
+</html>

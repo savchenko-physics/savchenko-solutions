@@ -34,10 +34,32 @@
                            <label for="password">Password:</label>
                            <input type="password" id="password" name="password" required />
                         </div>
-                        <button type="submit">Register</button>
+                        <div class="form-group">
+                           <label for="password2">Repeat password:</label>
+                           <input type="password" id="password2" name="password2" required />
+                        </div>
+                        <button type="submit" class="submit-button">Register</button>
                      </form>
                      <p>Already have an account? <a href="/login">Login here</a></p>
       </div>
+      <script>
+         document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            const password = document.getElementById('password');
+            const password2 = document.getElementById('password2');
+      
+            form.addEventListener('submit', (e) => {
+               // Check if passwords match
+               if (password.value !== password2.value) {
+                  e.preventDefault(); // Prevent form submission
+                  alert('Passwords do not match. Please try again.');
+               }
+      
+               // Additional checks can be added here, e.g., username length, forbidden characters, etc.
+            });
+         });
+      </script>
+      
       <%- include('default/footer_en.ejs') %>
 </body>
 
