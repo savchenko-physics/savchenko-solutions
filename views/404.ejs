@@ -1,32 +1,35 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <%- include('default/head_en.ejs') %>
+
+<head>
+    <%- include('default/head_en.ejs') %>
         <title>404 Error</title>
-    </head>
-    <body style="">
-        <header style="text-align: center;">
-            <a href="../../" style="text-decoration: none;">
-                <div id="logo">
-                    <span><img src="http://savchenkosolutions.com/img/book.png" /></span><span>Savchenko Solutions</span>
-                </div>
-            </a>
-            <p class="author">
-                Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
-                <i><b>knowledge must be free</b></i>
-            </p>
-        </header>
+</head>
 
-        <div class="container">
-            <center>
-                <h2 style="font-weight: bold;">Page Disappeared into a Black Hole</h2>
+<body style="">
+    <header style="text-align: center;">
+        <a href="../../" style="text-decoration: none;">
+            <div id="logo">
+                <span><img src="http://savchenkosolutions.com/img/book.png" /></span><span>Savchenko Solutions</span>
+            </div>
+        </a>
+        <p class="author">
+            Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
+            <i><b>knowledge must be free</b></i>
+        </p>
+    </header>
 
-                <br />
-                <p>The page <code><%= pageUrl %></code> you're looking for seems doesn't exist.</p>
-                <p>Perhaps, instead, you’d like to explore the fascinating world of <a href="/">Savchenko Solutions</a>?</p>
-            </center>
-        </div>
+    <div class="container">
+        <center>
+            <h2 style="font-weight: bold;">Page Disappeared into a Black Hole</h2>
 
-        <%- include('default/footer_en.ejs') %>
-    </body>
+            <br />
+            <p>The page <code><%= pageUrl %></code> you're looking for seems doesn't exist.</p>
+            <p>Perhaps, instead, you’d like to explore the fascinating world of <a href="/">Savchenko Solutions</a>?</p>
+        </center>
+    </div>
+
+    <%- include('default/footer_en.ejs') %>
+</body>
+
 </html>

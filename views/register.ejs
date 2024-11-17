@@ -1,36 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <%- include('default/head_en.ejs') %>
+
+<head>
+   <%- include('default/head_en.ejs') %>
       <link rel="stylesheet" href="/css/css-latex/login.css" />
       <title>Create a new account</title>
-   </head>
-   <body>
-      <%- include('default/header.ejs') %>
+</head>
+
+<body>
+   <%- include('default/header.ejs') %>
       <div class="container1">
          <h2>Create a new account</h2>
          <% if (error) { %>
-         <p class="error"><%= error %></p>
-         <% } %> <% if (success) { %>
-         <p class="success"><%= success %></p>
-         <% } %>
-         <form action="/register" method="POST">
-            <div class="form-group">
-               <label for="fullname">Full Name:</label>
-               <input type="text" id="fullname" name="fullname" required />
-            </div>
-            <div class="form-group">
-               <label for="username">Username:</label>
-               <input type="text" id="username" name="username" required />
-            </div>
-            <div class="form-group">
-               <label for="password">Password:</label>
-               <input type="password" id="password" name="password" required />
-            </div>
-            <button type="submit">Register</button>
-         </form>
-         <p>Already have an account? <a href="/login">Login here</a></p>
+            <p class="error">
+               <%= error %>
+            </p>
+            <% } %>
+               <% if (success) { %>
+                  <p class="success">
+                     <%= success %>
+                  </p>
+                  <% } %>
+                     <form action="/register" method="POST">
+                        <div class="form-group">
+                           <label for="fullname">Full Name:</label>
+                           <input type="text" id="fullname" name="fullname" required />
+                        </div>
+                        <div class="form-group">
+                           <label for="username">Username:</label>
+                           <input type="text" id="username" name="username" required />
+                        </div>
+                        <div class="form-group">
+                           <label for="password">Password:</label>
+                           <input type="password" id="password" name="password" required />
+                        </div>
+                        <button type="submit">Register</button>
+                     </form>
+                     <p>Already have an account? <a href="/login">Login here</a></p>
       </div>
       <%- include('default/footer_en.ejs') %>
-   </body>
+</body>
+
 </html>

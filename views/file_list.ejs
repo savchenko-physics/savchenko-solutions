@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <%- include('default/head_en.ejs') %>
+
+<head>
+    <%- include('default/head_en.ejs') %>
         <title>File List</title>
         <style>
             table {
@@ -10,62 +11,84 @@
                 margin-top: 20px;
                 margin: 0 auto;
             }
+
             th,
             td {
-                padding: 12px; /* Add padding inside cells */
+                padding: 12px;
+                /* Add padding inside cells */
                 text-align: left;
-                border: 1px solid #ddd; /* Border for cells */
+                border: 1px solid #ddd;
+                /* Border for cells */
             }
+
             tr:nth-child(even) {
-                background-color: #f9f9f9; /* Optional: different background for even rows */
+                background-color: #f9f9f9;
+                /* Optional: different background for even rows */
             }
+
             th {
                 background-color: #f2f2f2;
                 font-weight: bold;
             }
         </style>
-    </head>
-    <body style="max-width: 80%;">
-        <header style="text-align: center;">
-            <a href="../../" style="text-decoration: none;">
-                <div id="logo">
-                    <span><img src="https://savchenkosolutions.com/img/book.png" /></span><span>Savchenko Solutions</span>
-                </div>
-            </a>
-            <p class="author">
-                Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
-                <i><b>knowledge must be free</b></i>
-            </p>
-        </header>
+</head>
 
-        <h1 style="text-align: center;">List of Files in Directory</h1>
-        <table>
-            <thead>
+<body style="max-width: 80%;">
+    <header style="text-align: center;">
+        <a href="../../" style="text-decoration: none;">
+            <div id="logo">
+                <span><img src="https://savchenkosolutions.com/img/book.png" /></span><span>Savchenko Solutions</span>
+            </div>
+        </a>
+        <p class="author">
+            Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
+            <i><b>knowledge must be free</b></i>
+        </p>
+    </header>
+
+    <h1 style="text-align: center;">List of Files in Directory</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>File Name</th>
+                <th>Language</th>
+                <th>Number</th>
+                <th>IP Address</th>
+                <th>Size (Bytes)</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% fileDetails.forEach(file=> { %>
                 <tr>
-                    <th>File Name</th>
-                    <th>Language</th>
-                    <th>Number</th>
-                    <th>IP Address</th>
-                    <th>Size (Bytes)</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% fileDetails.forEach(file => { %>
-                <tr>
-                    <td><%= file.name %></td>
-                    <td><%= file.language %></td>
-                    <td><%= file.version %></td>
-                    <td><%= file.ipAddress !== 'Unknown IP' ? file.ipAddress : 'Invalid or Missing IP' %></td>
-                    <td><%= file.size %></td>
-                    <td><%= file.date %></td>
-                    <td><%= file.time %></td>
+                    <td>
+                        <%= file.name %>
+                    </td>
+                    <td>
+                        <%= file.language %>
+                    </td>
+                    <td>
+                        <%= file.version %>
+                    </td>
+                    <td>
+                        <%= file.ipAddress !=='Unknown IP' ? file.ipAddress : 'Invalid or Missing IP' %>
+                    </td>
+                    <td>
+                        <%= file.size %>
+                    </td>
+                    <td>
+                        <%= file.date %>
+                    </td>
+                    <td>
+                        <%= file.time %>
+                    </td>
                 </tr>
                 <% }); %>
-            </tbody>
-        </table>
+        </tbody>
+    </table>
 
-        <%- include('default/footer.ejs') %>
-    </body>
+    <%- include('default/footer.ejs') %>
+</body>
+
 </html>

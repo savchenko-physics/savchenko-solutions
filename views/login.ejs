@@ -1,32 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <%- include('default/head_en.ejs') %>
+
+<head>
+    <%- include('default/head_en.ejs') %>
         <link rel="stylesheet" href="/css/css-latex/login.css" />
         <title>Sign in to account</title>
-    </head>
-    <body>
-        <%- include('default/header.ejs') %>
+</head>
+
+<body>
+    <%- include('default/header.ejs') %>
         <div class="container1">
             <h2>Sign in to account</h2>
             <% if (error) { %>
-            <p class="error"><%= error %></p>
-            <% } %> <% if (success) { %>
-            <p class="success"><%= success %></p>
-            <% } %>
-            <form action="/login" method="POST">
-                <div class="form-group">
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required />
-                </div>
-                <div class="form-group">
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required />
-                </div>
-                <button type="submit">Login</button>
-            </form>
-            <p>Don't have an account? <a href="/register">Register here</a></p>
+                <p class="error">
+                    <%= error %>
+                </p>
+                <% } %>
+                    <% if (success) { %>
+                        <p class="success">
+                            <%= success %>
+                        </p>
+                        <% } %>
+                            <form action="/login" method="POST">
+                                <div class="form-group">
+                                    <label for="username">Username:</label>
+                                    <input type="text" id="username" name="username" required />
+                                </div>
+                                <div class="form-group">
+                                    <label for="password">Password:</label>
+                                    <input type="password" id="password" name="password" required />
+                                </div>
+                                <button type="submit">Login</button>
+                            </form>
+                            <p>Don't have an account? <a href="/register">Register here</a></p>
         </div>
         <%- include('default/footer_en.ejs') %>
-    </body>
+</body>
+
 </html>

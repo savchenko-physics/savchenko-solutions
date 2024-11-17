@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-   <head>
-      <%- include('default/head_en.ejs') %>
+
+<head>
+   <%- include('default/head_en.ejs') %>
       <link rel="stylesheet" href="/css/css-latex/login.css" />
       <title>Personal Profile</title>
       <style>
@@ -10,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
          }
+
          .container1 {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -20,34 +22,40 @@
             width: 100%;
             max-width: 400px;
          }
+
          h2 {
             font-size: 1.8rem;
             color: #333;
             margin-bottom: 1rem;
          }
+
          p {
             font-size: 1rem;
             margin-bottom: 1.5rem;
             color: #555;
          }
+
          a {
             text-decoration: none;
             color: #007bff;
             font-weight: bold;
             transition: color 0.3s ease;
          }
+
          a:hover {
             color: #0056b3;
          }
       </style>
-   </head>
-   <body>
-      <%- include('default/header.ejs') %>
+</head>
+
+<body>
+   <%- include('default/header.ejs') %>
       <div class="container1">
          <h2>Welcome, <%= username %>!</h2>
          <p style="text-align: center;">This is your profile page.</p>
          <a href="/logout"><button style="width: 40%; padding: 5px;">Logout</button></a>
       </div>
       <%- include('default/footer_en.ejs') %>
-   </body>
+</body>
+
 </html>

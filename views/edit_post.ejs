@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <%- include('default/head_en.ejs') %>
 
-        <title>Edit Post - <%= name %></title>
+<head>
+    <%- include('default/head_en.ejs') %>
+
+        <title>Edit Post - <%= name %>
+        </title>
         <style>
             /* Set a code editor font for the textarea */
             .CodeMirror {
@@ -17,25 +19,29 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/elegant.min.css" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
-    </head>
-    <body style="max-width: 120ch; padding-top: 0;">
-        <%- include('default/header.ejs') %>
+</head>
 
-        <h2 style="text-align: left; margin-top: 2ch;">Edit Post: <a href="/<%= lang %>/<%= name %>"><%= lang %>-<%= name %></a></h2>
+<body style="max-width: 120ch; padding-top: 0;">
+    <%- include('default/header.ejs') %>
+
+        <h2 style="text-align: left; margin-top: 2ch;">Edit Post: <a href="/<%= lang %>/<%= name %>">
+                <%= lang %>-<%= name %>
+            </a></h2>
         <form action="/<%= lang %>/save/<%= name %>" method="POST">
             <textarea name="content" id="markdown-editor" rows="20" style="width: 100%;"><%= content %></textarea>
             <button style="margin-top: 2ch;" type="submit">Save Changes</button>
         </form>
 
         <%- include('default/footer_en.ejs') %>
-        <script>
-            const editor = CodeMirror.fromTextArea(document.getElementById("markdown-editor"), {
-                mode: "markdown",
-                theme: "elegant",
-                lineNumbers: true,
-                lineWrapping: true,
-                viewportMargin: Infinity,
-            });
-        </script>
-    </body>
+            <script>
+                const editor = CodeMirror.fromTextArea(document.getElementById("markdown-editor"), {
+                    mode: "markdown",
+                    theme: "elegant",
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    viewportMargin: Infinity,
+                });
+            </script>
+</body>
+
 </html>
