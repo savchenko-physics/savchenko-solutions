@@ -53,6 +53,55 @@ app.use((req, res, next) => {
     next(); // Move to the next middleware/route handler
 });
 
+app.get("/add", (req, res) => {
+    res.render("add_markdown"); // Render a simple form for file creation
+});
+
+app.post("/add", (req, res) => {
+    const { fileName } = req.body;
+
+    // Validate fileName format
+    const isValidFileName = /^\d+\.\d+\.\d+$/.test(fileName);
+    if (!isValidFileName) {
+        return res
+            .status(400)
+            .send(`Invalid file name format. "${fileName}" does not match the expected format: 'number.number.number'.`);
+    }
+
+    // File path in the 'posts/en/' folder
+    const filePath = path.join(__dirname, "posts", "en", `${fileName}.md`);
+
+    // Check if the file already exists
+    if (fs.existsSync(filePath)) {
+        return res.status(400).send("A file with this name already exists in the 'posts/en/' folder.");
+    }
+
+    // Default content for the Markdown file
+    const defaultContent = `###  Statement 
+
+$${fileName}.$ Your statement is here
+
+#### Solution
+
+$O_1$ is the initial position of the airplane. $O_2$ is the final position of the airplane. In time $t$ the airplane will fly the distance: $$S = v_0 \\cdot t$$ We find the distance $S$ from the isosceles triangle $AO_1O_2$, where the angle $O_1AO_2 = 2^{\circ}$. Then $$S = 2R \\cdot\\sin 1^{\\circ}$$ Where $R_1=R_2=R$ $$v_0 \\cdot t = 2R \\cdot\\sin 1^{\\circ}$$ Desired speed $$v_0 = \\frac{2R \\cdot\\sin 1^{\\circ}}{t}$$ At small angle $\\sin\\alpha\\approx \\alpha$ expressed in radians, i.e. $1^{\\circ} = \\frac{\\pi}{180}$ $$\\boxed{v_0 = \\frac{2 \\cdot 10^5 \\cdot \\pi}{5 \\cdot 180} = 698\\;m/s.}$$
+
+####  Answer 
+
+$$y=x^2$$
+`;
+
+    // Write the default content to the Markdown file
+    fs.writeFile(filePath, defaultContent, "utf8", (err) => {
+        if (err) {
+            console.error("Error creating Markdown file:", err);
+            return res.status(500).send("Error creating Markdown file.");
+        }
+
+        res.redirect(`/${fileName}`); // Redirect to the newly created file's page
+    });
+});
+
+
 app.get("/login", (req, res) => {
     res.render("login", {
         error: req.query.error || "", // Provide a default empty string if no error
@@ -415,7 +464,6 @@ app.get("/global-search", async (req, res) => {
         res.render("search", { results: [], searchTerm: query });
     }
 });
-
 
 
 // Start the server

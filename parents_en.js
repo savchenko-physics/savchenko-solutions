@@ -250,10 +250,10 @@ function eng_page(req, res) {
         const chapterTitle = theory[index - 1]
             ? `
 
-          <h2 id="${index}" style="text-align: center;">Chapter ${index}. <a href="theory/${theory[index - 1]}" target="_blank">${chapters[index - 1]}</a></h2>`
+          <h2 id="${index}" style="text-align: center;">Chapter ${index}. <a href="theory/${theory[index - 1]}" target="_blank">${chapters[index - 1]}</a>    <span style="font-size: 1rem;">[<a href="/add">edit</a>]</span></h2>`
             : `
 
-          <h2 id="${index}" style="text-align: center;">Chapter ${index}. ${chapters[index - 1]}</h2>`;
+          <h2 id="${index}" style="text-align: center;">Chapter ${index}. ${chapters[index - 1]}    <span style="font-size: 1rem;">[<a href="/add">edit</a>]</span></h2>`;
 
         BaseHtml += chapterTitle;
 
