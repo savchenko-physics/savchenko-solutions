@@ -4,7 +4,7 @@ const ejs = require("ejs");
 const fs = require("fs"); // Import fs module
 const bodyParser = require("body-parser");
 const { parseMarkdown, getMarkdownFiles, getLineStatement, transformImageMarkdown } = require("./utils"); // Importing functions from utils.js
-const { eng_page } = require("./parents_en"); // generating content for the main english page
+const { getPageData } = require("./parents_en"); // generating content for the main english page
 
 const { ru_page } = require("./parents_ru"); // generating content for the main russian page
 const bcrypt = require("bcrypt");
@@ -200,11 +200,24 @@ app.get("/logout", (req, res) => {
 });
 
 // Home route to list all posts
-app.get("/", (req, res) => {
-    // Modify the eng_page function or include session data
-    eng_page(req, res);
-    console.log(req.session.username);
+// app.get("/", (req, res) => {
+//     // Modify the eng_page function or include session data
+//     eng_page(req, res);
+//     console.log(req.session.username);
+// });
+
+
+app.get("/", async (req, res) => {
+    const { chapters, theory, sections, pinnedChapters } = await getPageData();
+    res.render("eng_page", {
+        title: "Savchenko Solutions",
+        chapters,
+        theory,
+        sections,
+        pinnedChapters,
+    });
 });
+
 
 app.get("/en", (req, res) => {
     res.redirect("/");
