@@ -124,7 +124,7 @@ function getLineStatement(text) {
 
 const transformImageMarkdown = (htmlContent) => {
     // Regular expression for YouTube URL format, e.g., ![](https://www.youtube.com/embed/VIDEO_ID)
-    const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+)\)/g;
+    const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
 
     // Replace YouTube URL format with video container HTML
     htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
