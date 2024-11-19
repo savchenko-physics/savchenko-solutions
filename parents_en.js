@@ -96,16 +96,18 @@ async function getPageData() {
     const chaptersCSV = "src/database/chapters.csv";
     const sectionsCSV = "src/database/sections.csv";
 
-    // Read chapters and sections
+    // Read data from CSV
     const chapters = readCSV(chaptersCSV, 1);
     const theory = readCSV(chaptersCSV, 2);
     const sectionNumbers = readCSV(sectionsCSV, 0);
     const sectionTitles = readCSV(sectionsCSV, 1);
+    const sectionMaximum = readCSV(sectionsCSV, 2); // New column for section maximum
 
-    // Prepare sections data
+    // Combine sections data
     const sections = sectionNumbers.map((num, index) => ({
         number: num,
         title: sectionTitles[index],
+        maximum: sectionMaximum[index], // Include maximum here
     }));
 
     // Get valid markdown files
@@ -119,6 +121,7 @@ async function getPageData() {
         return {
             number: num,
             title: sectionTitles[index],
+            maximum: sectionMaximum[index], // Include maximum here
             problems: distributeProblems(sectionProblems).filter((col) => col.length > 0),
         };
     }).filter(Boolean);
@@ -145,6 +148,7 @@ async function getPageData() {
         pinnedChapters,
     };
 }
+
 
 
 
