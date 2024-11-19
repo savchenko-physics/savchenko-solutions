@@ -120,34 +120,111 @@
         window.addEventListener('scroll', checkScroll);
     </script>
     <main>
-        <article class="margin-main">
-          <% chapters.forEach((chapter, chapterIndex) => { %>
-            <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;">
-              <% if (chapter.theory) { %>
-                Chapter <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank"><%= chapter.title %></a>
-              <% } else { %>
-                Chapter <%= chapterIndex + 1 %>. <%= chapter.title %>
-              <% } %>
-              <span style="font-size: 1rem;">[<a href="/add">edit</a>]</span>
-            </h2>
+      <article class="margin-main">
+        <% chapters.forEach((chapter, chapterIndex) => { 
+          // Skip the chapter if it has no sections or all sections are empty
+          const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
+          if (hasContent) { 
+        %>
+          <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;">
+            <% if (chapter.theory) { %>
+              Chapter <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank"><%= chapter.title %></a>
+            <% } else { %>
+              Chapter <%= chapterIndex + 1 %>. <%= chapter.title %>
+            <% } %>
+            <span style="font-size: 1rem;">[<a href="#" class="edit-link" data-chapter="<%= chapterIndex + 1 %>">edit</a>]</span>
+          </h2>
       
-            <% chapter.sections.forEach((section, sectionIndex) => { %>
-              <h3 id="<%= chapterIndex + 1 %>.<%= sectionIndex + 1 %>" style="text-align: center;">
-                § <%= chapterIndex + 1 %>.<%= sectionIndex + 1 %>. <%= section.title %>
-              </h3>
+          <% chapter.sections.forEach((section, sectionIndex) => {
+            // Skip the section if it has no problems
+            const hasProblems = section.problems.some(column => column.length > 0);
+            if (hasProblems) { 
+          %>
+            <h3 id="<%= section.number %>" style="text-align: center;">
+              § <%= section.number %>.  <%= section.title %> 
+            </h3>
       
-              <div class="columns">
-                <% section.problems.forEach((column) => { %>
-                    <% if (column.length > 0) { %><ul class="column">
-                        <% column.forEach((problem) => { %><li><a href="/en/<%= problem %>"><%= problem %></a></li>
-                        <% }); %>
-                    </ul>
-                    <% } %><% }); %>
-              </div>
-            <% }); %>
-          <% }); %>
-        </article>
+            <div class="columns">
+              <% section.problems.forEach((column) => {
+                if (column.length > 0) { 
+              %>
+                <ul class="column">
+                  <% column.forEach((problem) => { %>
+                    <li><a href="/en/<%= problem %>"><%= problem %></a></li>
+                  <% }); %>
+                </ul>
+              <% }}); %>
+            </div>
+          <% }}); %>
+        <% }}); %>
+      </article>
+      
       </main>
+      
+      <!-- Pop-up Window -->
+      <div id="edit-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background:#fff; padding:20px; border:1px solid #ccc; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+        <h3>Enter the name of the problem</h3>
+        <input type="text" id="problem-name" placeholder="e.g., 13.1.19" />
+        <button id="submit-problem">Submit</button>
+        <button id="cancel-edit">Cancel</button>
+      </div>
+      
+      <!-- Overlay -->
+      <div id="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;"></div>
+      
+      <script>
+        document.addEventListener("DOMContentLoaded", () => {
+          const popup = document.getElementById("edit-popup");
+          const overlay = document.getElementById("popup-overlay");
+          const problemInput = document.getElementById("problem-name");
+          let currentChapter;
+      
+          // Open the pop-up when clicking on an edit link
+          document.querySelectorAll(".edit-link").forEach(link => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              currentChapter = link.dataset.chapter;
+              popup.style.display = "block";
+              overlay.style.display = "block";
+            });
+          });
+      
+          // Close the pop-up
+          document.getElementById("cancel-edit").addEventListener("click", () => {
+            popup.style.display = "none";
+            overlay.style.display = "none";
+            problemInput.value = "";
+          });
+      
+          // Submit the new problem
+          document.getElementById("submit-problem").addEventListener("click", () => {
+            const problemName = problemInput.value.trim();
+            if (problemName) {
+              fetch("/create-problem", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ problemName, chapter: currentChapter })
+              })
+                .then(response => response.json())
+                .then(data => {
+                  alert(data.message);
+                  popup.style.display = "none";
+                  overlay.style.display = "none";
+                  problemInput.value = "";
+                })
+                .catch(error => {
+                  console.error("Error:", error);
+                  alert("An error occurred. Please try again.");
+                });
+            } else {
+              alert("Please enter a valid problem name.");
+            }
+          });
+        });
+      </script>
+      
       
 
 

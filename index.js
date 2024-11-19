@@ -53,6 +53,74 @@ app.use((req, res, next) => {
     next(); // Move to the next middleware/route handler
 });
 
+app.post("/create-problem", async (req, res) => {
+    const { problemName, chapter } = req.body;
+
+    const { chapters } = await getPageData();
+
+    if (!problemName || !problemName.match(/^\d+\.\d+\.\d+$/)) {
+        return res.status(400).json({ message: "Invalid problem name format. Use chapter.section.problem format." });
+    }
+
+    const [chapterNumber, sectionNumber, problemNumber] = problemName.split('.').map(Number);
+
+    if (!chapterNumber || !sectionNumber || !problemNumber) {
+        return res.status(400).json({ message: "Invalid problem name format. Use chapter.section.problem format." });
+    }
+
+
+    // Validate chapter exists
+    const currentChapter = chapters[chapterNumber - 1]; // Adjust for zero-based indexing
+    if (!currentChapter) {
+        return res.status(400).json({ message: `Chapter ${chapterNumber} does not exist.` });
+    }
+
+    // Validate section exists
+    const currentSection = currentChapter.sections[sectionNumber - 1]; // Adjust for zero-based indexing
+    if (!currentSection) {
+        return res.status(400).json({ message: `Section ${chapterNumber}.${sectionNumber} does not exist.` });
+    }
+
+    // Validate problemNumber against section maximum
+    const maxProblems = currentSection.maximum;
+    if (problemNumber > maxProblems) {
+        return res.status(400).json({
+            message: `Problem number (${problemNumber}) exceeds the maximum allowed (${maxProblems}) for Section ${chapterNumber}.${sectionNumber}.`,
+        });
+    }
+
+    const problemsDir = path.join(__dirname, "posts", "en");
+    const filePath = path.join(problemsDir, `${problemName}.md`);
+
+    if (fs.existsSync(filePath)) {
+        return res.status(400).json({ message: "Problem file already exists." });
+    }
+
+    const content = `###  Statement 
+
+$${problemName}.$ Your statement is here
+
+#### Solution
+
+$O_1$ is the initial position of the airplane. $O_2$ is the final position of the airplane. In time $t$ the airplane will fly the distance: $$S = v_0 \\cdot t$$ We find the distance $S$ from the isosceles triangle $AO_1O_2$, where the angle $O_1AO_2 = 2^{\circ}$. Then $$S = 2R \\cdot\\sin 1^{\\circ}$$ Where $R_1=R_2=R$ $$v_0 \\cdot t = 2R \\cdot\\sin 1^{\\circ}$$ Desired speed $$v_0 = \\frac{2R \\cdot\\sin 1^{\\circ}}{t}$$ At small angle $\\sin\\alpha\\approx \\alpha$ expressed in radians, i.e. $1^{\\circ} = \\frac{\\pi}{180}$ $$\\boxed{v_0 = \\frac{2 \\cdot 10^5 \\cdot \\pi}{5 \\cdot 180} = 698\\;m/s.}$$
+
+####  Answer 
+
+$$y=x^2$$
+`;
+    fs.writeFile(filePath, content, (err) => {
+        if (err) {
+            console.error("Error creating file:", err);
+            return res.status(500).json({ message: "Failed to create problem file." });
+        }
+
+        res.json({ message: `Problem ${problemName} created successfully!` });
+    }
+    );
+});
+
+
+
 app.get("/add", (req, res) => {
     res.render("add_markdown"); // Render a simple form for file creation
 });
@@ -76,29 +144,6 @@ app.post("/add", (req, res) => {
         return res.status(400).send("A file with this name already exists in the 'posts/en/' folder.");
     }
 
-    // Default content for the Markdown file
-    const defaultContent = `###  Statement 
-
-$${fileName}.$ Your statement is here
-
-#### Solution
-
-$O_1$ is the initial position of the airplane. $O_2$ is the final position of the airplane. In time $t$ the airplane will fly the distance: $$S = v_0 \\cdot t$$ We find the distance $S$ from the isosceles triangle $AO_1O_2$, where the angle $O_1AO_2 = 2^{\circ}$. Then $$S = 2R \\cdot\\sin 1^{\\circ}$$ Where $R_1=R_2=R$ $$v_0 \\cdot t = 2R \\cdot\\sin 1^{\\circ}$$ Desired speed $$v_0 = \\frac{2R \\cdot\\sin 1^{\\circ}}{t}$$ At small angle $\\sin\\alpha\\approx \\alpha$ expressed in radians, i.e. $1^{\\circ} = \\frac{\\pi}{180}$ $$\\boxed{v_0 = \\frac{2 \\cdot 10^5 \\cdot \\pi}{5 \\cdot 180} = 698\\;m/s.}$$
-
-####  Answer 
-
-$$y=x^2$$
-`;
-
-    // Write the default content to the Markdown file
-    fs.writeFile(filePath, defaultContent, "utf8", (err) => {
-        if (err) {
-            console.error("Error creating Markdown file:", err);
-            return res.status(500).send("Error creating Markdown file.");
-        }
-
-        res.redirect(`/${fileName}`); // Redirect to the newly created file's page
-    });
 });
 
 
@@ -209,6 +254,7 @@ app.get("/logout", (req, res) => {
 
 app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getPageData();
+
     res.render("eng_page", {
         title: "Savchenko Solutions",
         chapters,
@@ -260,7 +306,7 @@ app.get("/:lang/:name", (req, res) => {
         let fileContents = fs.readFileSync(filePath, "utf8").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~");
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
-        console.log(titleContent);
+        // console.log(titleContent);
 
         let html = parseMarkdown(fileContents); // Convert Markdown to HTML
         html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");

@@ -36,6 +36,7 @@ function isValidMarkdownFile(fileName, sections) {
 
     // Check if the chapter.section exists in the `sections` data
     const chapterSection = `${chapter}.${section}`;
+
     return sections.some((sec) => sec.number === chapterSection);
 }
 
@@ -52,15 +53,11 @@ function existedFolders(directory, sections) {
                 isValidMarkdownFile(f, sections) // Validate filename
             );
         });
-
-    console.log("Files fetched from directory:", files); // Debug log
-
     if (!Array.isArray(files)) {
         throw new Error("Files is not an array. Received: " + typeof files);
     }
 
     const validFiles = files.map((file) => file.replace(".md", "")); // Remove .md extension
-    console.log("Valid files before sorting:", validFiles); // Debug log
 
     return sortFilesNumerically(validFiles); // Sort files numerically
 }
@@ -116,29 +113,29 @@ async function getPageData() {
     // Generate sections data
     const sectionsData = sectionNumbers.map((num, index) => {
         const sectionProblems = markdownFiles.filter((file) => file.startsWith(`${num}.`));
-        if (sectionProblems.length === 0) return null;
 
         return {
             number: num,
             title: sectionTitles[index],
             maximum: sectionMaximum[index], // Include maximum here
-            problems: distributeProblems(sectionProblems).filter((col) => col.length > 0),
+            problems: distributeProblems(sectionProblems), // Can be empty
         };
-    }).filter(Boolean);
+    });
+
 
     // Group sections under chapters
     const groupedSections = chapters.map((chapter, chapterIndex) => {
         const chapterSections = sectionsData.filter((section) =>
             section.number.startsWith(`${chapterIndex + 1}.`)
         );
-        if (chapterSections.length === 0) return null;
 
         return {
             title: chapter,
             theory: theory[chapterIndex] || null,
-            sections: chapterSections,
+            sections: chapterSections.length > 0 ? chapterSections : [], // Include empty sections
         };
-    }).filter(Boolean);
+    });
+
 
     // Create pinned chapters for the sidebar
     const pinnedChapters = groupedSections.map((chapter) => chapter.title);
