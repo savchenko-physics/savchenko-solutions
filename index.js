@@ -96,54 +96,60 @@ app.post("/create-problem", async (req, res) => {
         return res.status(400).json({ message: "Problem file already exists." });
     }
 
-    const content = `###  Statement 
+    const content = `### Statement
 
-$${problemName}.$ Your statement is here
+$${problemName}.$ [Insert problem description here]
 
-#### Solution
+__Example Statement__:
+$1.1.1.$ Determine the coordinate $x(t)$ of a body as a function of time $t$, given that its acceleration is defined as $a(t) = bt$, where $b$ is a constant. 
 
-$O_1$ is the initial position of the airplane. $O_2$ is the final position of the airplane. In time $t$ the airplane will fly the distance: $$S = v_0 \\cdot t$$ We find the distance $S$ from the isosceles triangle $AO_1O_2$, where the angle $O_1AO_2 = 2^{\circ}$. Then $$S = 2R \\cdot\\sin 1^{\\circ}$$ Where $R_1=R_2=R$ $$v_0 \\cdot t = 2R \\cdot\\sin 1^{\\circ}$$ Desired speed $$v_0 = \\frac{2R \\cdot\\sin 1^{\\circ}}{t}$$ At small angle $\\sin\\alpha\\approx \\alpha$ expressed in radians, i.e. $1^{\\circ} = \\frac{\\pi}{180}$ $$\\boxed{v_0 = \\frac{2 \\cdot 10^5 \\cdot \\pi}{5 \\cdot 180} = 698\\;m/s.}$$
 
-####  Answer 
+### Solution
 
-$$y=x^2$$
+[Your solution should be placed here]
+
+__Example Solution__:
+The acceleration of the body defined by 
+
+$$a(t) = bt$$
+
+We know that acceleration is the time derivative of velocity:
+
+$$a(t) = \\frac{d v(t)}{d t}$$
+
+To find the velocity $v(t)$, we integrate $a(t)$ with respect to time:
+
+$$v(t) = \\int a(t) \\, dt = \\int b t \\, dt$$
+
+If the initial velocity is $v(0) = 0$, then the velocity becomes:
+
+$$v(t) = \\frac{b t^2}{2}$$
+
+Likewise, integrate $v(t)$ with respect to time:
+
+$$x(t)= \\int v(t) \\, dt = \\frac{b}{2} \\int t^2 \\, dt$$
+
+From where the coordinate from time, considering the initial conditions: 
+
+$$\\boxed{x(t)=\\frac{bt^3}{6}}$$
+
+#### Answer
+
+[Insert a concise answer or boxed result, like this:]
+
+
+__Example Answer__:
+$$ x(t)=\\frac{bt^3}{6} $$
 `;
-    fs.writeFile(filePath, content, (err) => {
-        if (err) {
-            console.error("Error creating file:", err);
-            return res.status(500).json({ message: "Failed to create problem file." });
-        }
 
-        res.json({ message: `Problem ${problemName} created successfully!` });
+    try {
+        await fs.promises.writeFile(filePath, content);
+        console.log(`Problem file created: ${filePath}`);
+        res.json({ message: `Problem ${problemName} created successfully!`, redirectUrl: `/en/edit/${problemName}` });
+    } catch (err) {
+        console.error("Error creating file:", err);
+        res.status(500).json({ message: "Failed to create problem file." });
     }
-    );
-});
-
-
-
-app.get("/add", (req, res) => {
-    res.render("add_markdown"); // Render a simple form for file creation
-});
-
-app.post("/add", (req, res) => {
-    const { fileName } = req.body;
-
-    // Validate fileName format
-    const isValidFileName = /^\d+\.\d+\.\d+$/.test(fileName);
-    if (!isValidFileName) {
-        return res
-            .status(400)
-            .send(`Invalid file name format. "${fileName}" does not match the expected format: 'number.number.number'.`);
-    }
-
-    // File path in the 'posts/en/' folder
-    const filePath = path.join(__dirname, "posts", "en", `${fileName}.md`);
-
-    // Check if the file already exists
-    if (fs.existsSync(filePath)) {
-        return res.status(400).send("A file with this name already exists in the 'posts/en/' folder.");
-    }
-
 });
 
 

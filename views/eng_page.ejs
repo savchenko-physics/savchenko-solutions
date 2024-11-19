@@ -174,56 +174,56 @@
       
       <script>
         document.addEventListener("DOMContentLoaded", () => {
-          const popup = document.getElementById("edit-popup");
-          const overlay = document.getElementById("popup-overlay");
-          const problemInput = document.getElementById("problem-name");
-          let currentChapter;
-      
-          // Open the pop-up when clicking on an edit link
-          document.querySelectorAll(".edit-link").forEach(link => {
-            link.addEventListener("click", (event) => {
-              event.preventDefault();
-              currentChapter = link.dataset.chapter;
-              popup.style.display = "block";
-              overlay.style.display = "block";
-            });
-          });
-      
-          // Close the pop-up
-          document.getElementById("cancel-edit").addEventListener("click", () => {
-            popup.style.display = "none";
-            overlay.style.display = "none";
-            problemInput.value = "";
-          });
-      
-          // Submit the new problem
-          document.getElementById("submit-problem").addEventListener("click", () => {
-            const problemName = problemInput.value.trim();
-            if (problemName) {
-              fetch("/create-problem", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ problemName, chapter: currentChapter })
-              })
-                .then(response => response.json())
-                .then(data => {
-                  alert(data.message);
-                  popup.style.display = "none";
-                  overlay.style.display = "none";
-                  problemInput.value = "";
-                })
-                .catch(error => {
-                  console.error("Error:", error);
-                  alert("An error occurred. Please try again.");
+            const popup = document.getElementById("edit-popup");
+            const overlay = document.getElementById("popup-overlay");
+            const problemInput = document.getElementById("problem-name");
+            let currentChapter;
+
+            document.querySelectorAll(".edit-link").forEach(link => {
+                link.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    currentChapter = link.dataset.chapter;
+                    popup.style.display = "block";
+                    overlay.style.display = "block";
                 });
-            } else {
-              alert("Please enter a valid problem name.");
-            }
-          });
+            });
+
+            document.getElementById("cancel-edit").addEventListener("click", () => {
+                popup.style.display = "none";
+                overlay.style.display = "none";
+                problemInput.value = "";
+            });
+
+            document.getElementById("submit-problem").addEventListener("click", () => {
+                const problemName = problemInput.value.trim();
+                if (problemName) {
+                    fetch("/create-problem", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ problemName, chapter: currentChapter })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.redirectUrl) {
+                                window.location.href = data.redirectUrl;
+                            } else {
+                                alert(data.message);
+                                popup.style.display = "none";
+                                overlay.style.display = "none";
+                                problemInput.value = "";
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An error occurred. Please try again.");
+                        });
+                } else {
+                    alert("Please enter a valid problem name.");
+                }
+            });
         });
-      </script>
+    </script>
+
       
       
 

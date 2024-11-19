@@ -23,6 +23,7 @@ function sortFilesNumerically(files) {
         return 0;
     });
 }
+
 function isValidMarkdownFile(fileName, sections) {
     // Split the filename into parts based on the expected format
     const parts = fileName.replace(".md", "").split(".");
@@ -61,8 +62,6 @@ function existedFolders(directory, sections) {
 
     return sortFilesNumerically(validFiles); // Sort files numerically
 }
-
-
 
 // Function to distribute problems into columns
 function distributeProblems(problems, columns = 3) {
@@ -145,10 +144,6 @@ async function getPageData() {
         pinnedChapters,
     };
 }
-
-
-
-
 
 // Helper function to read CSV files and extract a specific column
 function readCSV(filePath, column) {
