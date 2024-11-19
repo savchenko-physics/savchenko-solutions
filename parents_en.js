@@ -23,21 +23,48 @@ function sortFilesNumerically(files) {
         return 0;
     });
 }
+function isValidMarkdownFile(fileName, sections) {
+    // Split the filename into parts based on the expected format
+    const parts = fileName.replace(".md", "").split(".");
+
+    // Ensure there are exactly three numeric parts
+    if (parts.length !== 3 || parts.some((part) => isNaN(Number(part)))) {
+        return false;
+    }
+
+    const [chapter, section] = parts.map(Number);
+
+    // Check if the chapter.section exists in the `sections` data
+    const chapterSection = `${chapter}.${section}`;
+    return sections.some((sec) => sec.number === chapterSection);
+}
+
 
 // Function to get markdown files sorted numerically
-function existedFolders(directory) {
+function existedFolders(directory, sections) {
     const files = fs
         .readdirSync(directory) // Get all files in the directory
         .filter((f) => {
             const fullPath = path.join(directory, f);
-            return fs.statSync(fullPath).isFile() && f.endsWith(".md"); // Filter only markdown files
-        })
-        .map((file) => file.replace(".md", "")); // Remove .md extension
+            return (
+                fs.statSync(fullPath).isFile() &&
+                f.endsWith(".md") &&
+                isValidMarkdownFile(f, sections) // Validate filename
+            );
+        });
 
-    const sortedFiles = sortFilesNumerically(files);
+    console.log("Files fetched from directory:", files); // Debug log
 
-    return sortedFiles;
+    if (!Array.isArray(files)) {
+        throw new Error("Files is not an array. Received: " + typeof files);
+    }
+
+    const validFiles = files.map((file) => file.replace(".md", "")); // Remove .md extension
+    console.log("Valid files before sorting:", validFiles); // Debug log
+
+    return sortFilesNumerically(validFiles); // Sort files numerically
 }
+
 
 
 // Function to distribute problems into columns
@@ -69,52 +96,56 @@ async function getPageData() {
     const chaptersCSV = "src/database/chapters.csv";
     const sectionsCSV = "src/database/sections.csv";
 
-    // Read chapters and theory from CSV
+    // Read chapters and sections
     const chapters = readCSV(chaptersCSV, 1);
     const theory = readCSV(chaptersCSV, 2);
-
-    // Read section titles and numbers
     const sectionNumbers = readCSV(sectionsCSV, 0);
     const sectionTitles = readCSV(sectionsCSV, 1);
 
-    // Get sorted markdown files (problems)
-    const markdownFiles = existedFolders(postsDir);
+    // Prepare sections data
+    const sections = sectionNumbers.map((num, index) => ({
+        number: num,
+        title: sectionTitles[index],
+    }));
+
+    // Get valid markdown files
+    const markdownFiles = existedFolders(postsDir, sections);
 
     // Generate sections data
-    const sections = sectionNumbers.map((num, index) => {
+    const sectionsData = sectionNumbers.map((num, index) => {
         const sectionProblems = markdownFiles.filter((file) => file.startsWith(`${num}.`));
-        if (sectionProblems.length === 0) return null; // Exclude empty sections
+        if (sectionProblems.length === 0) return null;
 
         return {
             number: num,
             title: sectionTitles[index],
-            problems: distributeProblems(sectionProblems).filter((col) => col.length > 0), // Exclude empty columns
+            problems: distributeProblems(sectionProblems).filter((col) => col.length > 0),
         };
-    }).filter(Boolean); // Remove null values
+    }).filter(Boolean);
 
     // Group sections under chapters
     const groupedSections = chapters.map((chapter, chapterIndex) => {
-        const chapterSections = sections.filter((section) =>
+        const chapterSections = sectionsData.filter((section) =>
             section.number.startsWith(`${chapterIndex + 1}.`)
         );
-        if (chapterSections.length === 0) return null; // Exclude empty chapters
+        if (chapterSections.length === 0) return null;
 
         return {
             title: chapter,
-            theory: theory[chapterIndex] ? theory[chapterIndex] : null, // Set theory to null if not available
+            theory: theory[chapterIndex] || null,
             sections: chapterSections,
         };
-    }).filter(Boolean); // Remove null values
+    }).filter(Boolean);
 
     // Create pinned chapters for the sidebar
     const pinnedChapters = groupedSections.map((chapter) => chapter.title);
-    console.log(sections)
 
     return {
         chapters: groupedSections,
         pinnedChapters,
     };
 }
+
 
 
 

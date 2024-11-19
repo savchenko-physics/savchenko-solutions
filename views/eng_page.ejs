@@ -139,7 +139,8 @@
               <div class="columns">
                 <% section.problems.forEach((column) => { %>
                     <% if (column.length > 0) { %><ul class="column">
-                        <% column.forEach((problem) => { %><li><a href="/en/<%= problem %>"><%= problem %></a></li><% }); %>
+                        <% column.forEach((problem) => { %><li><a href="/en/<%= problem %>"><%= problem %></a></li>
+                        <% }); %>
                     </ul>
                     <% } %><% }); %>
               </div>
