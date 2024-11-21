@@ -2,46 +2,165 @@
 <html lang="en">
 
 <head>
-    <%- include('default/head_en.ejs') %>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post - <%= name %>
+    </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
 
-        <title>Edit Post - <%= name %>
-        </title>
-        <style>
-            /* Set a code editor font for the textarea */
-            .CodeMirror {
-                border: 1px solid #ddd;
-                font-family: Consolas, "Courier New", monospace;
-                font-size: 14px;
-                line-height: 1.5;
-            }
-        </style>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/elegant.min.css" />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            extensions: ['tex2jax.js'],
+            jax: ['input/TeX', 'output/HTML-CSS'],
+            tex2jax: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                processEscapes: true,
+                processClass: 'tex2jax',
+                ignoreClass: 'html'
+            },
+            showProcessingMessages: false,
+            messageStyle: 'none'
+        });
+    </script>
+
+    <style>
+        body {
+            display: flex;
+            margin: 0;
+            height: 100vh;
+        }
+
+        #editor {
+            width: 50%;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        #preview {
+            width: 50%;
+            /* max-height: 100%; */
+            overflow-y: auto;
+            box-sizing: border-box;
+            background: #f9f9f9;
+            word-wrap: break-word;
+            padding: 1rem 3rem 1rem 3rem;
+            max-width: 100%;
+        }
+
+        #preview img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #preview pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            max-width: 100%;
+            padding: 1em;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        #preview code {
+            background: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        #resizer {
+            width: 5px;
+            background: #ccc;
+            cursor: col-resize;
+        }
+
+        /* Apply styles to CodeMirror */
+        .CodeMirror {
+            border: 1px solid #ddd;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            height: calc(100% - 0.2em);
+        }
+    </style>
+
+
 </head>
 
-<body style="max-width: 120ch; padding-top: 0;">
-    <%- include('default/header.ejs') %>
+<body>
+    <form id="save-form" method="POST" action="/<%= lang %>/save/<%= name %>">
+        <textarea name="content" id="hidden-content" style="display: none;"></textarea>
+    </form>
 
-        <h2 style="text-align: left; margin-top: 2ch;">Edit Post: <a href="/<%= lang %>/<%= name %>">
-                <%= lang %>-<%= name %>
-            </a></h2>
-        <form action="/<%= lang %>/save/<%= name %>" method="POST">
-            <textarea name="content" id="markdown-editor" rows="20" style="width: 100%;"><%= content %></textarea>
-            <button style="margin-top: 2ch;" type="submit">Save Changes</button>
-        </form>
+    <div id="editor"></div>
+    <div id="resizer"></div>
+    <div id="preview"></div>
 
-        <%- include('default/footer_en.ejs') %>
-            <script>
-                const editor = CodeMirror.fromTextArea(document.getElementById("markdown-editor"), {
-                    mode: "markdown",
-                    theme: "elegant",
-                    lineNumbers: true,
-                    lineWrapping: true,
-                    viewportMargin: Infinity,
-                });
-            </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/theme/neat.min.css">
+
+
+    <script>
+        // Initialize CodeMirror
+        const editor = CodeMirror(document.getElementById('editor'), {
+            value: String.raw`<%= content %>`,
+            mode: 'markdown',
+            lineNumbers: true,
+            lineWrapping: true,
+            theme: 'neat',
+            viewportMargin: Infinity
+        });
+
+        const preview = document.getElementById('preview');
+        const resizer = document.getElementById('resizer');
+
+        // Render Markdown and LaTeX
+        function renderPreview(content) {
+            const html = window.marked.parse(content);
+            preview.innerHTML = html;
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+        }
+
+        // Initial render
+        renderPreview(editor.getValue());
+
+        // Live preview update
+        editor.on('change', () => {
+            renderPreview(editor.getValue());
+        });
+
+        // Resizable divider logic
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const totalWidth = window.innerWidth;
+            const editorWidth = e.clientX;
+
+            if (editorWidth > 100 && editorWidth < totalWidth - 100) {
+                const previewWidth = totalWidth - editorWidth - 5; // 5px resizer width
+                document.getElementById('editor').style.width = `${editorWidth}px`;
+                document.getElementById('preview').style.width = `${previewWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+    </script>
+
 </body>
 
 </html>
