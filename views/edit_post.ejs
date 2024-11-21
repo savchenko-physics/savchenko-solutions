@@ -10,6 +10,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script type="text/x-mathjax-config">
@@ -26,8 +27,16 @@
             messageStyle: 'none'
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/mode/multiplex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/selection/active-line.min.js"></script>
 
     <style>
+        :root {
+            --font-size: 12px;
+            --source-font-family: "Lucida Console", "Source Code Pro", monospace;
+            --line-height: 1.6;
+        }
+
         body {
             display: flex;
             margin: 0;
@@ -81,10 +90,80 @@
         /* Apply styles to CodeMirror */
         .CodeMirror {
             border: 1px solid #ddd;
-            font-family: Consolas, "Courier New", monospace;
-            font-size: 14px;
-            line-height: 1.5;
+            font-family: var(--source-font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
             height: calc(100% - 0.2em);
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin: 1em 0;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* LaTeX Syntax Highlighting (Overleaf-inspired) */
+        .cm-keyword {
+            /* LaTeX commands like \begin, \end, etc */
+            color: #1a8bff;
+            font-weight: normal;
+        }
+
+        .cm-tag {
+            /* Environment names and special LaTeX keywords */
+            color: blue;
+        }
+
+        .cm-bracket {
+            /* Brackets and braces */
+            color: #444444;
+        }
+
+        .cm-math {
+            /* Math content inside $ $ and $$ $$ */
+            color: rgb(3, 106, 7);
+            /* font-weight: bold; */
+        }
+
+
+        .cm-delim {
+            /* Math delimiters ($, $$) */
+            color: rgb(3, 106, 7);
+            /* font-weight: bold; */
+        }
+
+        /* LaTeX special characters */
+        .cm-special {
+            color: red;
+        }
+
+        /* Comments */
+        .cm-comment {
+            color: red;
+            font-style: italic;
+        }
+
+        /* Active line gutter styling */
+        .CodeMirror-activeline-gutter {
+            background-color: #e8f2ff;
+        }
+
+        .cm-math-command {
+            /* LaTeX commands within math mode */
+            color: #833FBA !important;
+            /* font-weight: bold; */
         }
     </style>
 
@@ -104,14 +183,61 @@
 
 
     <script>
-        // Initialize CodeMirror
+        // Define custom mixed mode for Markdown + LaTeX
+        CodeMirror.defineMode("markdown-latex", function (config) {
+            const markdownMode = CodeMirror.getMode(config, "markdown");
+
+            // Helper function to handle LaTeX commands
+            function handleLatexCommand(stream) {
+                if (stream.match(/^\\[a-zA-Z]+/)) {
+                    return "math-command";  // New token type for LaTeX commands in math mode
+                }
+                return null;
+            }
+
+            return CodeMirror.multiplexingMode(markdownMode, {
+                open: "$$", close: "$$",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for LaTeX commands first
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\$\$/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            }, {
+                open: "$", close: "$",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for LaTeX commands first
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\$/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            });
+        });
+
         const editor = CodeMirror(document.getElementById('editor'), {
-            value: String.raw`<%= content %>`,
-            mode: 'markdown',
+            value: String.raw`<%- content %>`,
+            mode: 'markdown-latex',  // Use our custom mode
             lineNumbers: true,
             lineWrapping: true,
             theme: 'neat',
-            viewportMargin: Infinity
+            viewportMargin: Infinity,
+            styleActiveLine: true
         });
 
         const preview = document.getElementById('preview');
@@ -119,9 +245,50 @@
 
         // Render Markdown and LaTeX
         function renderPreview(content) {
-            const html = window.marked.parse(content);
+            let html = window.marked.parse(transformImageMarkdown(content.replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~")));
+            // Apply custom image and YouTube transformations
+            html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
+            html = html.replace(/\\\*/g, "*");
             preview.innerHTML = html;
             MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+        }
+
+        // Add the transformImageMarkdown function
+        function transformImageMarkdown(htmlContent) {
+            // Regular expression for YouTube URL format
+            const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
+
+            // Replace YouTube URL format with video container HTML
+            htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
+                return `<div class="video-container">
+                            <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
+                        </div>`;
+            });
+
+            // Regular expression for custom image markdown
+            const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
+
+            return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
+                let width = "auto", height = "auto";
+                let scalePercentage = "100%";
+
+                if (dimensions) {
+                    const [w, h] = dimensions.split("x");
+                    width = w ? `${w}px` : "auto";
+                    height = h ? `${h.replace("\\, ", "")}px` : "auto";
+                }
+                if (scale) {
+                    scalePercentage = scale;
+                }
+
+                return `<center>
+              <figure>
+                <img src="..\\..\\img\\${folder}\\${filename}"
+                  loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
+                <figcaption>${altText}</figcaption>
+              </figure>
+              </center>`;
+            });
         }
 
         // Initial render
