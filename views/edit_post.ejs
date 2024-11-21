@@ -83,8 +83,30 @@
 
         #resizer {
             width: 5px;
-            background: #ccc;
-            cursor: col-resize;
+            background-color: #2f3a4c;
+            cursor: ew-resize !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        #resizer::after,
+        #resizer::before {
+            content: '';
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='7' height='18'%3E%3Cpath d='M2 0h3v3H2zm0 5h3v3H2zm0 5h3v3H2zm0 5h3v3H2z' fill='%239da7b7'/%3E%3C/svg%3E");
+            position: absolute;
+            z-index: 2;
+            display: block;
+            height: 18px;
+            left: -1px;
+            width: 7px;
+        }
+
+        #resizer::after {
+            top: 25%;
+        }
+
+        #resizer::before {
+            top: 75%;
         }
 
         /* Apply styles to CodeMirror */
@@ -94,6 +116,12 @@
             font-size: var(--font-size);
             line-height: var(--line-height);
             height: calc(100% - 0.2em);
+            cursor: url(/img/cursor-editorFreeText.svg) 0 16, text;
+        }
+
+        .CodeMirror pre.CodeMirror-line,
+        .CodeMirror pre.CodeMirror-line-like {
+            padding: 0 2px 0 6px;
         }
 
         .video-container {
@@ -134,9 +162,12 @@
         .cm-math {
             /* Math content inside $ $ and $$ $$ */
             color: rgb(3, 106, 7);
-            /* font-weight: bold; */
         }
 
+        .cm-math .cm-bracket {
+            color: black !important;
+            /* Force black color for brackets in math mode */
+        }
 
         .cm-delim {
             /* Math delimiters ($, $$) */
@@ -157,13 +188,117 @@
 
         /* Active line gutter styling */
         .CodeMirror-activeline-gutter {
-            background-color: #e8f2ff;
+            background-color: #dcdcdc;
         }
 
         .cm-math-command {
             /* LaTeX commands within math mode */
             color: #833FBA !important;
             /* font-weight: bold; */
+        }
+
+        /* Active line styling */
+        .CodeMirror-activeline-background {
+            background-color: #ededed !important;
+        }
+
+        .CodeMirror-linenumber {
+            color: #333;
+            width: 20px;
+        }
+
+        .CodeMirror-gutters {
+            min-width: 35px;
+            text-align: right;
+            padding-right: 3px;
+        }
+
+        /* Add these heading styles to your existing CSS section */
+        .cm-header-1 {
+            /* # */
+            color: #2c3e50;
+            font-size: 1.4em;
+            font-weight: bold;
+        }
+
+        .cm-header-2 {
+            /* ## */
+            color: #34495e;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .cm-header-3 {
+            /* ### */
+            color: #3498db;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .cm-header-4 {
+            /* #### */
+            color: #2980b9;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .cm-header-5 {
+            /* ##### */
+            color: #1abc9c;
+            font-weight: bold;
+        }
+
+        .cm-header-6 {
+            /* ###### */
+            color: #16a085;
+            font-weight: bold;
+        }
+
+        /* Optional: Style the heading hashtags differently */
+        .cm-header {
+            position: relative;
+        }
+
+        /* Add these cursor-related styles */
+        .cm-layer {
+            position: absolute;
+            z-index: 150;
+        }
+
+        .cm-cursorLayer {
+            animation-duration: 1200ms;
+            animation-name: cm-blink;
+            pointer-events: none;
+        }
+
+        .cm-cursor {
+            border-left: 1px solid #0066cc;
+            margin-left: -1px;
+            position: absolute;
+        }
+
+        @keyframes cm-blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Update cursor styles with higher specificity */
+        .CodeMirror .CodeMirror-cursor {
+            border-left: 2px solid rgba(0, 0, 0, 0.2) !important;
+            /* black with 0.2 opacity */
+        }
+
+        .CodeMirror-focused .CodeMirror-cursor {
+            border-left: 2px solid rgba(0, 0, 0, 0.2) !important;
         }
     </style>
 
@@ -190,7 +325,15 @@
             // Helper function to handle LaTeX commands
             function handleLatexCommand(stream) {
                 if (stream.match(/^\\[a-zA-Z]+/)) {
-                    return "math-command";  // New token type for LaTeX commands in math mode
+                    return "math-command";
+                }
+                return null;
+            }
+
+            // Helper function to handle brackets in math mode
+            function handleBrackets(stream) {
+                if (stream.match(/[{}]/)) {
+                    return "math-bracket";  // New token type for brackets in math mode
                 }
                 return null;
             }
@@ -199,7 +342,11 @@
                 open: "$$", close: "$$",
                 mode: {
                     token: function (stream, state) {
-                        // Check for LaTeX commands first
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
                         const command = handleLatexCommand(stream);
                         if (command) return command;
 
@@ -215,7 +362,11 @@
                 open: "$", close: "$",
                 mode: {
                     token: function (stream, state) {
-                        // Check for LaTeX commands first
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
                         const command = handleLatexCommand(stream);
                         if (command) return command;
 
