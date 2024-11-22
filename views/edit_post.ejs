@@ -29,6 +29,8 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/mode/multiplex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/matchbrackets/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/matchbrackets.min.js"></script>
 
     <style>
         :root {
@@ -55,7 +57,7 @@
             overflow-y: auto;
             box-sizing: border-box;
             background: #f9f9f9;
-            word-wrap: break-word;
+            word-break: break-word;
             padding: 1rem 3rem 1rem 3rem;
             max-width: 100%;
         }
@@ -66,8 +68,6 @@
         }
 
         #preview pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
             overflow-x: auto;
             max-width: 100%;
             padding: 1em;
@@ -199,7 +199,7 @@
 
         /* Active line styling */
         .CodeMirror-activeline-background {
-            background-color: #ededed !important;
+            background-color: rgba(0, 0, 0, 0.07) !important;
         }
 
         .CodeMirror-linenumber {
@@ -300,6 +300,45 @@
         .CodeMirror-focused .CodeMirror-cursor {
             border-left: 2px solid rgba(0, 0, 0, 0.2) !important;
         }
+
+        /* Update these selection styles */
+        .CodeMirror-selected {
+            background-color: #b3d4fc !important;  /* Light blue color */
+        }
+        .CodeMirror-focused .CodeMirror-selected {
+            background-color: #b3d4fc !important;
+        }
+        .CodeMirror-line::selection,
+        .CodeMirror-line > span::selection,
+        .CodeMirror-line > span > span::selection {
+            background-color: #b3d4fc !important;
+        }
+        .CodeMirror-line::-moz-selection,
+        .CodeMirror-line > span::-moz-selection,
+        .CodeMirror-line > span > span::-moz-selection {
+            background-color: #b3d4fc !important;
+        }
+
+        /* Update matching bracket highlight */
+        .CodeMirror-matchingbracket {
+            background-color: #328c8252 !important;
+            color: inherit !important;
+            pointer-events: none;
+        }
+
+        /* Add non-matching bracket highlight */
+        .CodeMirror-nonmatchingbracket {
+            background-color: #bb555544 !important;
+            color: inherit !important;
+        }
+
+        /* Add line wrapping styles */
+        .CodeMirror-wrap pre.CodeMirror-line,
+        .CodeMirror-wrap pre.CodeMirror-line-like {
+            white-space: break-spaces;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
     </style>
 
 
@@ -388,7 +427,8 @@
             lineWrapping: true,
             theme: 'neat',
             viewportMargin: Infinity,
-            styleActiveLine: true
+            styleActiveLine: true,
+            matchBrackets: true
         });
 
         const preview = document.getElementById('preview');
