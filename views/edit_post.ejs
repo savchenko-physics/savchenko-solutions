@@ -348,6 +348,27 @@
             word-break: break-word;
             overflow-wrap: anywhere;
         }
+
+        /* Add this to your existing <style> section */
+        .submit-button {
+            font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            padding: 8px 16px;
+            background-color: #36c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .submit-button:hover {
+            background-color: #2b4f99;
+        }
     </style>
 
 
@@ -357,8 +378,8 @@
     <header
         style="position: fixed; top: 0; left: 0; right: 0; height: 50px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000;">
         <h1 style="margin: 0; font-size: 1.25rem;">Editing: <%= name %></h1>
-        <button id="save-button" style="padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
-            Save Changes
+        <button id="save-button" class="submit-button">
+            <span>Save Changes</span>
         </button>
     </header>
 
