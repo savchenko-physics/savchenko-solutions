@@ -29,7 +29,8 @@
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/mode/multiplex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/selection/active-line.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/matchbrackets/matchbrackets.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/matchbrackets/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/matchbrackets.min.js"></script>
 
     <style>
@@ -42,24 +43,26 @@
         body {
             display: flex;
             margin: 0;
-            height: 100vh;
+            /* height: 100vh; */
+            padding-top: 50px;
         }
 
         #editor {
             width: 50%;
-            height: 100%;
+            height: calc(100vh - 50px);
             box-sizing: border-box;
+            /* margin-top: 50px; */
         }
 
         #preview {
             width: 50%;
-            /* max-height: 100%; */
+            height: calc(100vh - 50px);
             overflow-y: auto;
             box-sizing: border-box;
             background: #f9f9f9;
             word-break: break-word;
             padding: 1rem 3rem 1rem 3rem;
-            max-width: 100%;
+            /* margin-top: 50px; */
         }
 
         #preview img {
@@ -83,10 +86,12 @@
 
         #resizer {
             width: 5px;
+            height: calc(100vh - 50px);
             background-color: #2f3a4c;
             cursor: ew-resize !important;
             position: relative;
             z-index: 1;
+            /* margin-top: 50px; */
         }
 
         #resizer::after,
@@ -303,19 +308,23 @@
 
         /* Update these selection styles */
         .CodeMirror-selected {
-            background-color: #b3d4fc !important;  /* Light blue color */
+            background-color: #b3d4fc !important;
+            /* Light blue color */
         }
+
         .CodeMirror-focused .CodeMirror-selected {
             background-color: #b3d4fc !important;
         }
+
         .CodeMirror-line::selection,
-        .CodeMirror-line > span::selection,
-        .CodeMirror-line > span > span::selection {
+        .CodeMirror-line>span::selection,
+        .CodeMirror-line>span>span::selection {
             background-color: #b3d4fc !important;
         }
+
         .CodeMirror-line::-moz-selection,
-        .CodeMirror-line > span::-moz-selection,
-        .CodeMirror-line > span > span::-moz-selection {
+        .CodeMirror-line>span::-moz-selection,
+        .CodeMirror-line>span>span::-moz-selection {
             background-color: #b3d4fc !important;
         }
 
@@ -345,6 +354,14 @@
 </head>
 
 <body>
+    <header
+        style="position: fixed; top: 0; left: 0; right: 0; height: 50px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000;">
+        <h1 style="margin: 0; font-size: 1.25rem;">Editing: <%= name %></h1>
+        <button id="save-button" style="padding: 8px 16px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Save Changes
+        </button>
+    </header>
+
     <form id="save-form" method="POST" action="/<%= lang %>/save/<%= name %>">
         <textarea name="content" id="hidden-content" style="display: none;"></textarea>
     </form>
@@ -515,6 +532,26 @@
             if (isResizing) {
                 isResizing = false;
                 document.body.style.cursor = 'default';
+            }
+        });
+
+        // Add save functionality
+        document.getElementById('save-button').addEventListener('click', () => {
+            // Get current content from editor
+            const content = editor.getValue();
+            
+            // Update hidden textarea
+            document.getElementById('hidden-content').value = content;
+            
+            // Submit the form
+            document.getElementById('save-form').submit();
+        });
+
+        // Add keyboard shortcut (Ctrl/Cmd + S)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault(); // Prevent browser's save dialog
+                document.getElementById('save-button').click();
             }
         });
     </script>
