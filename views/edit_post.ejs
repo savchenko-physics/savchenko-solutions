@@ -7,7 +7,7 @@
     <title>Edit Post - <%= name %>
     </title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
-
+    <script src="/js/jquery-1.10.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
@@ -377,10 +377,17 @@
 <body>
     <header
         style="position: fixed; top: 0; left: 0; right: 0; height: 50px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 1000;">
-        <h1 style="margin: 0; font-size: 1.25rem;">Editing: <%= name %></h1>
-        <button id="save-button" class="submit-button">
-            <span>Save Changes</span>
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="/<%= lang %>/<%= name %>" class="submit-button" style="background-color: #6c757d; text-decoration: none;">
+                <span>Go Back</span>
+            </a>
+            <h1 style="margin: 0 0 0 20px; font-size: 1.25rem;">Editing: <%= name %></h1>
+        </div>
+        <div>
+            <button id="save-button" class="submit-button">
+                <span>Save Changes</span>
+            </button>
+        </div>
     </header>
 
     <form id="save-form" method="POST" action="/<%= lang %>/save/<%= name %>">
@@ -573,6 +580,37 @@
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault(); // Prevent browser's save dialog
                 document.getElementById('save-button').click();
+            }
+        });
+
+        let hasUnsavedChanges = false;
+
+        // Track changes in the editor
+        editor.on('change', () => {
+            hasUnsavedChanges = true;
+        });
+
+        // Reset changes flag when saving
+        document.getElementById('save-button').addEventListener('click', () => {
+            hasUnsavedChanges = false;
+        });
+
+        // Add click handler to the Go Back button
+        document.querySelector('a[href="/<%= lang %>/<%= name %>"]').addEventListener('click', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                    window.location.href = '/<%= lang %>/<%= name %>';
+                }
+            }
+        });
+
+        // Handle browser navigation (optional, for better coverage)
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
             }
         });
     </script>
