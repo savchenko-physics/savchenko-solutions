@@ -438,8 +438,8 @@
         });
 
         const editor = CodeMirror(document.getElementById('editor'), {
-            value: String.raw`<%- content %>`,
-            mode: 'markdown-latex',  // Use our custom mode
+            value: `<%- content.replace(/\\/g, '\\\\').replace(/\$/g, '\\$') %>`,
+            mode: 'markdown-latex',
             lineNumbers: true,
             lineWrapping: true,
             theme: 'neat',
