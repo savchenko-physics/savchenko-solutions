@@ -415,6 +415,31 @@
                 margin-left: -30px;
             }
         }
+
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .lang-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #333;
+            transition: color 0.2s;
+        }
+
+        .lang-link:hover {
+            color: #36c;
+        }
+
+        .lang-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+        }
     </style>
     <main>
         <header class="margin-main" style="text-align:center;" id="description">
@@ -426,8 +451,11 @@
             <p class="author"><%= __('subtitle') %><br>
                 <i><b><%= __('motto') %></b></i>
             </p>
-            <h2 style="text-align: center;margin:0; font-size: 2.0rem;">
-                <a style="color: hsla(240, 100%, 33%, 1);" href="<%= __('oppositeLang') %>"><%= __('russianVersion') %></a>
+            <h2 class="language-switcher">
+                <a href="<%= __('oppositeLang') %>" class="lang-link" style="color: hsla(240, 100%, 33%, 1);">
+                    <img src="/img/language.svg" class="lang-icon" alt="Language icon">
+                    <%= __('russianVersion') %>
+                </a>
             </h2>
             <h2 style="text-align: center; margin-top: 0.9rem;">
                 <a href="<%= __('statementsLink') %>" target="_blank"><%= __('problemStatements') %></a>
