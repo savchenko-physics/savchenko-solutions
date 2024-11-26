@@ -64,42 +64,130 @@
         </p>
     </header>
     <div class="pinned-container" id="pinned-container">
+        <h2 style="margin: 0 0 20px 15px; text-align: left;">Contents</h2>
         <ol style="list-style-type:none; padding: 0;margin: 0;">
-            <li><a href="#1">Kinematics</a></li>
-            <li><a href="#2">Dynamics</a></li>
-            <li><a href="#3">Oscillations and Waves</a></li>
-            <li><a href="#4">Fluid Mechanics</a></li>
-            <li><a href="#5">Molecular Physics</a></li>
-            <li><a href="#6">Electrostatics</a></li>
-            <li><a href="#7">Particles in an electric field</a></li>
-            <li><a href="#8">Electric current</a></li>
-            <li><a href="#9">Constant magnetic field</a></li>
-            <li><a href="#10">Particles in complex fields</a></li>
-            <li><a href="#11">Electromagnetic induction</a></li>
-            <li><a href="#12">Electromagnetic waves</a></li>
-            <li><a href="#13">Optics. Quantum physics</a></li>
-            <li><a href="#14">Special theory of relativity</a></li>
+            <li><a href="#1">I. Kinematics</a></li>
+            <li><a href="#2">II. Dynamics</a></li>
+            <li><a href="#3">III. Oscillations and Waves</a></li>
+            <li><a href="#4">IV. Fluid Mechanics</a></li>
+            <li><a href="#5">V. Molecular Physics</a></li>
+            <li><a href="#6">VI. Electrostatics</a></li>
+            <li><a href="#7">VII. Particles in an electric field</a></li>
+            <li><a href="#8">VIII. Electric current</a></li>
+            <li><a href="#9">IX. Constant magnetic field</a></li>
+            <li><a href="#10">X. Particles in complex fields</a></li>
+            <li><a href="#11">XI. Electromagnetic induction</a></li>
+            <li><a href="#12">XII. Electromagnetic waves</a></li>
+            <li><a href="#13">XIII. Optics. Quantum physics</a></li>
+            <li><a href="#14">XIV. Special theory of relativity</a></li>
         </ol>
     </div>
+    <button class="toggle-sidebar" id="toggle-sidebar"><img src="/img/arrow-back.svg"></button>
     <style>
+        .pinned-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #fff;
+            padding: 30px 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: opacity 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+                transform 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+                box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+            overflow-y: auto;
+            z-index: 100;
+            width: 250px;
+            border-radius: 0;
+            scrollbar-width: thin; /* For Firefox */
+            scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* For Firefox */
+            font-family: "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
+        }
+
+        .pinned-container.collapsed {
+            transform: translateX(-250px);
+        }
+
+        .pinned-container ol {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pinned-container li {
+            margin: 12px 0;
+            transition: all 0.2s ease;
+        }
+
         .pinned-container a {
             text-decoration: none;
-            font-weight: bolder;
+            font-weight: 500;
             font-size: 1.1rem;
+            color: #333;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 0;
+            transition: all 0.2s ease;
         }
 
         .pinned-container a:hover {
-            text-decoration: underline;
+            background: #f0f4ff;
+            color: #36c;
+            transform: translateX(5px);
+            text-decoration: none;
+        }
+
+        .pinned-container a.active {
+            background: #f0f4ff;
+            color: #36c;
+            transform: translateX(5px);
+            font-weight: bold;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 250px;
+            background: rgba(51, 102, 204, 0.95);
+            color: white;
+            border: none;
+            padding: 35px 6px;
+            cursor: pointer;
+            z-index: 101;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 20px rgba(51, 102, 204, 0.2);
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0;
+            background: rgba(51, 102, 204, 0.7);
+            padding: 25px 4px;
+            box-shadow: 0 2px 10px rgba(51, 102, 204, 0.1);
+        }
+
+        .toggle-sidebar:hover {
+            background: #2b5099;
+        }
+
+        .toggle-sidebar.collapsed:hover {
+            background: rgba(43, 80, 153, 0.85);
+            padding: 30px 5px;
         }
 
         @media (min-width: 1024px) {
             .margin-main {
                 margin-left: 50px;
-                width: 100%;
+                transition: margin-left 0.3s ease;
+                min-width: 700px;
             }
 
-            .pinned-container {
-                width: auto;
+            .margin-main.expanded {
+                margin-left: -30px;
             }
         }
 
@@ -113,7 +201,7 @@
             background: #fff;
             padding: 35px;
             border-radius: 8px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
             width: 90%;
             max-width: 450px;
             font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
@@ -186,87 +274,168 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0);
+            background: rgba(0, 0, 0, 0);
             z-index: 999;
             backdrop-filter: blur(0px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         #popup-overlay.active {
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(3px);
         }
-    </style>
-    <script type="text/javascript">
-        function checkScroll() {
-            var pinnedContainer = document.getElementById('pinned-container');
 
-            if (window.scrollY > 300) {
-                pinnedContainer.classList.add('visible');
-                pinnedContainer.classList.remove('hover-disabled');
-            } else {
-                pinnedContainer.classList.remove('visible');
-                pinnedContainer.classList.add('hover-disabled');
+        /* Add smooth transition for content margin */
+        .margin-main {
+            transition: margin-left 0.3s ease, width 0.3s ease;
+        }
+
+        .toggle-sidebar img {
+            width: 16px;
+            height: auto;
+            transform: rotate(0deg);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.9;
+        }
+
+        .toggle-sidebar.collapsed img {
+            transform: rotate(180deg);
+        }
+
+        /* Add media query for mobile devices */
+        @media (max-width: 768px) {
+            .toggle-sidebar {
+                top: 20px;
+                transform: none;
+                border-radius: 0 8px 8px 0;
+                padding: 15px 6px;
+                background: rgba(51, 102, 204, 0.8);
+            }
+
+            .toggle-sidebar.collapsed {
+                padding: 12px 4px;
+            }
+
+            .toggle-sidebar.collapsed:hover {
+                padding: 15px 5px;
+            }
+
+            /* Add margin to the top of the content to prevent overlap */
+            .margin-main {
+                margin-top: 60px;
             }
         }
 
-        window.addEventListener('load', checkScroll);
-        window.addEventListener('scroll', checkScroll);
-    </script>
+        /* Webkit scrollbar styling (Chrome, Safari, Edge) */
+        .pinned-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pinned-container::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+
+        .pinned-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .pinned-container::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Add smooth hover effect for the entire scrollbar area */
+        .pinned-container:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .pinned-container h2 {
+            font-family: "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        /* Add this CSS to handle footer margin */
+        footer {
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            .margin-main, footer {
+                margin-left: 50px;
+                transition: margin-left 0.3s ease;
+                min-width: 700px;
+            }
+
+            .margin-main.expanded, footer.expanded {
+                margin-left: -30px;
+            }
+        }
+    </style>
     <main>
-      <article class="margin-main">
-        <% chapters.forEach((chapter, chapterIndex) => { 
-          // Skip the chapter if it has no sections or all sections are empty
-          const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
-          if (hasContent) { 
-        %>
-          <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;">
-            <% if (chapter.theory) { %>
-              Chapter <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank"><%= chapter.title %></a>
-            <% } else { %>
-              Chapter <%= chapterIndex + 1 %>. <%= chapter.title %>
-            <% } %>
-            <span style="font-size: 1rem;">[<a href="#" class="edit-link" data-chapter="<%= chapterIndex + 1 %>">upload</a>]</span>
-          </h2>
-      
-          <% chapter.sections.forEach((section, sectionIndex) => {
-            // Skip the section if it has no problems
-            const hasProblems = section.problems.some(column => column.length > 0);
-            if (hasProblems) { 
-          %>
-            <h3 id="<%= section.number %>" style="text-align: center;">
-              § <%= section.number %>.  <%= section.title %> 
-            </h3>
-      
-            <div class="columns">
-              <% section.problems.forEach((column) => {
-                if (column.length > 0) { 
-              %>
-                <ul class="column">
-                  <% column.forEach((problem) => { %>
-                    <li><a href="/en/<%= problem %>"><%= problem %></a></li>
-                  <% }); %>
-                </ul>
-              <% }}); %>
-            </div>
-          <% }}); %>
-        <% }}); %>
-      </article>
-      
-      </main>
-      
-      <!-- Pop-up Window -->
-      <div id="edit-popup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background:#fff; padding:20px; border:1px solid #ccc; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
+        <article class="margin-main">
+            <% chapters.forEach((chapter, chapterIndex)=> {
+                // Skip the chapter if it has no sections or all sections are empty
+                const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
+                if (hasContent) {
+                %>
+                <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;">
+                    <% if (chapter.theory) { %>
+                        Chapter <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank">
+                                <%= chapter.title %>
+                            </a>
+                            <% } else { %>
+                                Chapter <%= chapterIndex + 1 %>. <%= chapter.title %>
+                                        <% } %>
+                                            <span style="font-size: 1rem;">[<a href="#" class="edit-link"
+                                                    data-chapter="<%= chapterIndex + 1 %>">upload</a>]</span>
+                </h2>
+
+                <% chapter.sections.forEach((section, sectionIndex)=> {
+                    // Skip the section if it has no problems
+                    const hasProblems = section.problems.some(column => column.length > 0);
+                    if (hasProblems) {
+                    %>
+                    <h3 id="<%= section.number %>" style="text-align: center;">
+                        § <%= section.number %>. <%= section.title %>
+                    </h3>
+
+                    <div class="columns">
+                        <% section.problems.forEach((column)=> {
+                            if (column.length > 0) {
+                            %>
+                            <ul class="column">
+                                <% column.forEach((problem)=> { %>
+                                    <li><a href="/en/<%= problem %>">
+                                            <%= problem %>
+                                        </a></li>
+                                    <% }); %>
+                            </ul>
+                            <% }}); %>
+                    </div>
+                    <% }}); %>
+                        <% }}); %>
+        </article>
+
+    </main>
+
+    <!-- Pop-up Window -->
+    <div id="edit-popup"
+        style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background:#fff; padding:20px; border:1px solid #ccc; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
         <h3>Enter the name of the problem</h3>
         <input type="text" id="problem-name" placeholder="e.g., 13.1.19" />
         <button id="submit-problem">Submit</button>
         <button id="cancel-edit">Cancel</button>
-      </div>
-      
-      <!-- Overlay -->
-      <div id="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;"></div>
-      
-      <script>
+    </div>
+
+    <!-- Overlay -->
+    <div id="popup-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
+    </div>
+
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
             const popup = document.getElementById("edit-popup");
             const overlay = document.getElementById("popup-overlay");
@@ -335,8 +504,8 @@
         });
     </script>
 
-      
-      
+
+
 
 
     <script>
@@ -375,6 +544,75 @@
                 the authors. <br> aliaksandr@melnichenka.com <br></small>
         </p>
     </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById('pinned-container');
+            const toggleBtn = document.getElementById('toggle-sidebar');
+            const mainContent = document.querySelectorAll('.margin-main');
+            const footer = document.querySelector('footer');
+            const sidebarLinks = sidebar.getElementsByTagName('a');
+
+            // Get saved state from localStorage, default to screen size if not found
+            let isCollapsed = localStorage.getItem('sidebarCollapsed') !== null
+                ? localStorage.getItem('sidebarCollapsed') === 'true'
+                : window.innerWidth < 1024;
+            updateSidebarState();
+
+            // Add click event listeners to all sidebar links
+            Array.from(sidebarLinks).forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth < 1024) {
+                        isCollapsed = true;
+                        localStorage.setItem('sidebarCollapsed', isCollapsed);
+                        updateSidebarState();
+                    }
+                });
+            });
+
+            // Toggle sidebar on button click
+            toggleBtn.addEventListener('click', () => {
+                isCollapsed = !isCollapsed;
+                // Save state to localStorage
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+                updateSidebarState();
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (localStorage.getItem('sidebarCollapsed') === null) {
+                    isCollapsed = window.innerWidth < 1024;
+                    updateSidebarState();
+                }
+            });
+
+            function updateSidebarState() {
+                if (isCollapsed) {
+                    sidebar.classList.add('collapsed');
+                    toggleBtn.classList.add('collapsed');
+                    toggleBtn.style.left = '0px';
+                    mainContent.forEach(element => {
+                        element.classList.add('expanded');
+                    });
+                    footer.classList.add('expanded');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.style.left = '250px';
+                    mainContent.forEach(element => {
+                        element.classList.remove('expanded');
+                    });
+                    footer.classList.remove('expanded');
+                }
+            }
+        });
+    </script>
 </body>
+
+</html>
+
+</html>
+</body>
+
+</html>
 
 </html>

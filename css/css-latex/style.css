@@ -115,7 +115,8 @@
   --border-width-thick: 2.27px;
   --sidenote-target-border-color: hsl(55, 55%, 70%);
   --footnotes-border-color: hsl(0, 0%, 39%);
-  --text-indent-size: 1.463rem; /* In 12pt [Latin Modern font] LaTeX article
+  --text-indent-size: 1.463rem;
+  /* In 12pt [Latin Modern font] LaTeX article
   \parindent =~ 17.625pt; taking also into account the ratio
   1pt[LaTeX] = (72 / 72.27) * 1pt[HTML], with default 12pt/1rem LaTeX.css font
   size, the identation value in rem CSS units is: 
@@ -137,7 +138,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-   .latex-dark-auto {
+  .latex-dark-auto {
     --body-color: hsl(0, 0%, 86%);
     --body-bg-color: hsl(0, 0%, 16%);
     --link-visited: hsl(196 80% 77%);
@@ -173,6 +174,7 @@ dd {
 html {
   font-size: 1rem;
 }
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -225,9 +227,9 @@ p.no-indent {
   text-indent: 0;
 }
 
-.indent-pars h2 + p,
-.indent-pars h3 + p,
-.indent-pars h4 + p {
+.indent-pars h2+p,
+.indent-pars h3+p,
+.indent-pars h4+p {
   text-indent: 0;
 }
 
@@ -268,7 +270,7 @@ textarea {
 }
 
 /* Natural flow and rhythm in articles by default */
-article > * + * {
+article>*+* {
   margin-top: 1em;
 }
 
@@ -281,6 +283,7 @@ kbd {
   font-size: 85%;
   hyphens: none;
 }
+
 pre {
   padding: 1rem 1.4rem;
   max-width: 100%;
@@ -288,10 +291,12 @@ pre {
   border-radius: 4px;
   background: var(--pre-bg-color);
 }
+
 pre code {
   font-size: 95%;
   position: relative;
 }
+
 kbd {
   background: var(--kbd-bg-color);
   border: 1px solid var(--kbd-border-color);
@@ -309,24 +314,29 @@ table:not(.borders-custom) {
   border-top: var(--border-width-thick) solid var(--table-border-color);
   border-bottom: var(--border-width-thick) solid var(--table-border-color);
   /* display: block; */
-  overflow-x: auto; /* does not work because element is not block */
+  overflow-x: auto;
+  /* does not work because element is not block */
   /* white-space: nowrap; */
   counter-increment: caption;
 }
+
 /* add bottom border on column table headings  */
-table:not(.borders-custom) tr > th[scope='col'] {
+table:not(.borders-custom) tr>th[scope='col'] {
   border-bottom: var(--border-width-thin) solid var(--table-border-color);
 }
+
 /* add right border on row table headings  */
-table:not(.borders-custom) tr > th[scope='row'] {
+table:not(.borders-custom) tr>th[scope='row'] {
   border-right: var(--border-width-thin) solid var(--table-border-color);
 }
-table:not(.borders-custom) > tbody > tr:first-child > td,
-table:not(.borders-custom) > tbody > tr:first-child > th {
+
+table:not(.borders-custom)>tbody>tr:first-child>td,
+table:not(.borders-custom)>tbody>tr:first-child>th {
   border-top: var(--border-width-thin) solid var(--table-border-color);
 }
-table:not(.borders-custom) > tbody > tr:last-child > td,
-table:not(.borders-custom) > tbody > tr:last-child > th {
+
+table:not(.borders-custom)>tbody>tr:last-child>td,
+table:not(.borders-custom)>tbody>tr:last-child>th {
   border-bottom: var(--border-width-thin) solid var(--table-border-color);
 }
 
@@ -336,6 +346,7 @@ td {
   padding: 0.5rem;
   line-height: 1.1;
 }
+
 /* Table caption */
 caption {
   text-align: left;
@@ -358,7 +369,7 @@ caption::before {
 
 /* if a table is wrapped in a scroll wrapper,
   the table cells shouldn't wrap */
-.scroll-wrapper > table td {
+.scroll-wrapper>table td {
   white-space: nowrap;
 }
 
@@ -375,12 +386,15 @@ table.borders-custom {
 .border-top-thick {
   border-top: var(--border-width-thick) solid var(--table-border-color);
 }
+
 .border-right-thick {
   border-right: var(--border-width-thick) solid var(--table-border-color);
 }
+
 .border-bottom-thick {
   border-bottom: var(--border-width-thick) solid var(--table-border-color);
 }
+
 .border-left-thick {
   border-left: var(--border-width-thick) solid var(--table-border-color);
 }
@@ -388,57 +402,62 @@ table.borders-custom {
 .border-top-thin {
   border-top: var(--border-width-thin) solid var(--table-border-color);
 }
+
 .border-right-thin {
   border-right: var(--border-width-thin) solid var(--table-border-color);
 }
+
 .border-bottom-thin {
   border-bottom: var(--border-width-thin) solid var(--table-border-color);
 }
+
 .border-left-thin {
   border-left: var(--border-width-thin) solid var(--table-border-color);
 }
 
 /* Table column alignment */
-.col-1-l tr > :nth-child(1),
-.col-2-l tr > :nth-child(2),
-.col-3-l tr > :nth-child(3),
-.col-4-l tr > :nth-child(4),
-.col-5-l tr > :nth-child(5),
-.col-6-l tr > :nth-child(6),
-.col-7-l tr > :nth-child(7),
-.col-8-l tr > :nth-child(8),
-.col-9-l tr > :nth-child(9),
-.col-10-l tr > :nth-child(10),
-.col-11-l tr > :nth-child(11),
-.col-12-l tr > :nth-child(12) {
+.col-1-l tr> :nth-child(1),
+.col-2-l tr> :nth-child(2),
+.col-3-l tr> :nth-child(3),
+.col-4-l tr> :nth-child(4),
+.col-5-l tr> :nth-child(5),
+.col-6-l tr> :nth-child(6),
+.col-7-l tr> :nth-child(7),
+.col-8-l tr> :nth-child(8),
+.col-9-l tr> :nth-child(9),
+.col-10-l tr> :nth-child(10),
+.col-11-l tr> :nth-child(11),
+.col-12-l tr> :nth-child(12) {
   text-align: left;
 }
-.col-1-c tr > :nth-child(1),
-.col-2-c tr > :nth-child(2),
-.col-3-c tr > :nth-child(3),
-.col-4-c tr > :nth-child(4),
-.col-5-c tr > :nth-child(5),
-.col-6-c tr > :nth-child(6),
-.col-7-c tr > :nth-child(7),
-.col-8-c tr > :nth-child(8),
-.col-9-c tr > :nth-child(9),
-.col-10-c tr > :nth-child(10),
-.col-11-c tr > :nth-child(11),
-.col-12-c tr > :nth-child(12) {
+
+.col-1-c tr> :nth-child(1),
+.col-2-c tr> :nth-child(2),
+.col-3-c tr> :nth-child(3),
+.col-4-c tr> :nth-child(4),
+.col-5-c tr> :nth-child(5),
+.col-6-c tr> :nth-child(6),
+.col-7-c tr> :nth-child(7),
+.col-8-c tr> :nth-child(8),
+.col-9-c tr> :nth-child(9),
+.col-10-c tr> :nth-child(10),
+.col-11-c tr> :nth-child(11),
+.col-12-c tr> :nth-child(12) {
   text-align: center;
 }
-.col-1-r tr > :nth-child(1),
-.col-2-r tr > :nth-child(2),
-.col-3-r tr > :nth-child(3),
-.col-4-r tr > :nth-child(4),
-.col-5-r tr > :nth-child(5),
-.col-6-r tr > :nth-child(6),
-.col-7-r tr > :nth-child(7),
-.col-8-r tr > :nth-child(8),
-.col-9-r tr > :nth-child(9),
-.col-10-r tr > :nth-child(10),
-.col-11-r tr > :nth-child(11),
-.col-12-r tr > :nth-child(12) {
+
+.col-1-r tr> :nth-child(1),
+.col-2-r tr> :nth-child(2),
+.col-3-r tr> :nth-child(3),
+.col-4-r tr> :nth-child(4),
+.col-5-r tr> :nth-child(5),
+.col-6-r tr> :nth-child(6),
+.col-7-r tr> :nth-child(7),
+.col-8-r tr> :nth-child(8),
+.col-9-r tr> :nth-child(9),
+.col-10-r tr> :nth-child(10),
+.col-11-r tr> :nth-child(11),
+.col-12-r tr> :nth-child(12) {
   text-align: right;
 }
 
@@ -452,9 +471,11 @@ nav ol {
   counter-reset: item;
   padding-left: 2rem;
 }
+
 nav li {
   display: block;
 }
+
 nav li:before {
   content: counters(item, '.') ' ';
   counter-increment: item;
@@ -473,6 +494,7 @@ dl dd {
   margin: 12px 0;
   font-style: italic;
 }
+
 .theorem::before {
   content: 'Theorem ' counter(theorem) '. ';
   font-weight: bold;
@@ -486,6 +508,7 @@ dl dd {
   margin: 12px 0;
   font-style: italic;
 }
+
 .lemma::before {
   content: 'Lemma ' counter(theorem) '. ';
   font-weight: bold;
@@ -499,10 +522,12 @@ dl dd {
   font-style: normal;
   position: relative;
 }
+
 .proof::before {
   content: 'Proof. ' attr(title);
   font-style: italic;
 }
+
 .proof:after {
   content: '◾️';
   filter: var(--proof-symbol-filter);
@@ -518,6 +543,7 @@ dl dd {
   margin: 12px 0;
   font-style: normal;
 }
+
 .definition::before {
   content: 'Definition ' counter(definition) '. ';
   font-weight: bold;
@@ -529,6 +555,7 @@ dl dd {
   margin: 12px 0;
   font-style: normal;
 }
+
 .statement::before {
   content: '1.2.3*. ';
   font-weight: bold;
@@ -544,15 +571,17 @@ dl dd {
   text-align: center;
   hyphens: none;
 }
+
 .description {
   margin: auto;
   padding: 0.9rem;
   padding-bottom: 0rem;
   font-size: 0.97rem;
   line-height: 1.3;
-/*  text-align: center;*/
-  max-width:560px;
+  /*  text-align: center;*/
+  max-width: 560px;
 }
+
 /* Sidenotes */
 
 .sidenote {
@@ -599,7 +628,7 @@ dl dd {
 }
 
 /* add number in front of the sidenote */
-.sidenote-number ~ .sidenote::before {
+.sidenote-number~.sidenote::before {
   content: counter(sidenote-counter) ' ';
   font-size: 0.7rem;
   top: -0.5rem;
@@ -629,10 +658,12 @@ input.sidenote-toggle {
   label.sidenote-toggle:not(.sidenote-number) {
     display: inline;
   }
+
   .sidenote {
     display: none;
   }
-  .sidenote-toggle:checked + .sidenote {
+
+  .sidenote-toggle:checked+.sidenote {
     display: block;
     margin: 0.5rem 1.25rem 1rem 0.5rem;
     float: left;
@@ -640,6 +671,7 @@ input.sidenote-toggle {
     clear: both;
     width: 95%;
   }
+
   /* tweak indentation of sidenote inside a blockquote */
   blockquote .sidenote {
     margin-right: -25vw;
@@ -654,6 +686,7 @@ input.sidenote-toggle {
   font-size: 85%;
   margin-bottom: 0.4rem;
 }
+
 .footnotes {
   border-top: 1px solid var(--footnotes-border-color);
 }
@@ -664,10 +697,12 @@ input.sidenote-toggle {
   text-align: center;
   margin-top: 0;
 }
+
 .abstract {
   margin: 2.25rem 0;
 }
-.abstract > h2 {
+
+.abstract>h2 {
   font-size: 1rem;
   margin-bottom: -0.2rem;
 }
@@ -732,17 +767,17 @@ h6 {
   line-height: 1.625rem;
 }
 
-h1 + h2 {
+h1+h2 {
   margin-top: 1.625rem;
 }
 
-h2 + h3,
-h3 + h4,
-h4 + h5 {
+h2+h3,
+h3+h4,
+h4+h5 {
   margin-top: 0.8rem;
 }
 
-h5 + h6 {
+h5+h6 {
   margin-top: -0.8rem;
 }
 
@@ -754,183 +789,204 @@ h6 {
   margin-bottom: 0.8rem;
   font-weight: normal;
 }
+
 .columns {
-    display: flex;            
-    justify-content: flex-start;
-    justify-content: center;
-    gap: 80px;               
+  display: flex;
+  justify-content: flex-start;
+  justify-content: center;
+  gap: 80px;
 }
 
 .column {
-    list-style-type: none;   
-    padding: 0;              
-    margin: 0;  
-    font-size:1rem;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: 1rem;
 }
+
 .video-container {
-   position: relative;
-   width: 100%;
-   padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  /* 16:9 aspect ratio */
 }
+
 .video {
-   position: absolute;
-   top: 0;
-   left: 0;
-   width: 100%;
-   height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
-.exp{
+
+.exp {
   text-align: center;
 }
 
 .tooltip {
-    position: relative;
-    display: inline-block;
-}
-.tooltip .tooltiptext {
-    visibility: hidden;
-    width: 260px;
-    background-color: #f7f7f7;
-    color: #333;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%; /* Position above the link */
-    left: 50%;
-    margin-left: -150px; /* Center the tooltip */
-    opacity: 0;
-    transition: opacity 0.3s;
-    font-style: italic;
-}
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 0.95;
+  position: relative;
+  display: inline-block;
 }
 
-.margin-main{
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 260px;
+  background-color: #f7f7f7;
+  color: #333;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  /* Position above the link */
+  left: 50%;
+  margin-left: -150px;
+  /* Center the tooltip */
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-style: italic;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 0.95;
+}
+
+.margin-main {
   margin-left: 0px;
 }
-.pinned-container{
-  display: none;
-}
-@media (min-width: 1024px){
+
 .pinned-container {
-  position: fixed;
-  top: 5vh;
-  left: 5vh;
-  width: 240px;
-  line-height: 1.6;
-  
-  opacity: 0;
-  transform: scale(0.9);
-  background-color: hsl(210, 20%, 95%);
-  background: linear-gradient(145deg, hsl(210, 20%, 95%), hsl(210, 20%, 90%));
-  border: 1px solid hsl(210, 20%, 85%);
-  border-radius: 15px;
-  padding: 20px;
-  box-sizing: border-box;
-  
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05), 
-              0 4px 6px rgba(0, 0, 0, 0.03);
-
   display: block;
-
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-.pinned-container.hover-disabled {
-    pointer-events: none; 
-}
-
-.pinned-container.visible {
-  opacity: 0.6;
-  transform: scale(0.95);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1), 
-              0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.pinned-container:hover {
-  opacity: 1;
-  transform: scale(0.982); 
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 
-              0 6px 8px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #fff;
+  padding: 30px 20px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateX(0);
+  transition: opacity 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+    transform 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+  overflow-y: auto;
+  z-index: 100;
+  width: 250px;
+  border-radius: 0;
 }
 
-  .pinned-container h2, .pinned-container p {
-    margin: 0;
-    padding: 0.5rem 0;
+.pinned-container.collapsed {
+  transform: translateX(-250px);
+}
+
+@media (max-width: 1023px) {
+  .margin-main {
+    margin-left: 0;
+    transition: margin-left 0.3s ease;
+    min-width: auto;
   }
-  .margin-main{
-    margin-left: 40px;
+}
+
+#logo {
+  margin-top: 4vh;
+  text-align: center;
+  margin: 0.85rem 0;
+  margin-bottom: 0;
+}
+
+#logo img {
+  display: inline;
+  width: 70px;
+  vertical-align: middle
+}
+
+#logo span {
+  vertical-align: middle;
+  font-family: 'Courier Prime';
+  color: darkred;
+  font-size: 2.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+@media only screen and (max-width: 800px) {
+  #logo span {
+    font-size: 2.8rem
   }
-  .columns {
-    gap: 110px;             
+
+  #logo img {
+    width: 70px
+  }
+}
+
+@media only screen and (max-width: 600px) {
+  #logo span {
+    font-size: 2.6rem
   }
 
-}
-.statement{
-    max-width: 250px;
-    margin: auto;
-}
-.ScreenS{
-    max-width: min(380px, 80%);
-    margin: auto;
+  #logo img {
+    width: 60px
+  }
 }
 
-#logo {margin-top: 4vh; text-align: center; margin: 0.85rem 0; margin-bottom: 0;}
-#logo img {display: inline; width: 70px; vertical-align: middle }
-#logo span { vertical-align: middle; font-family: 'Courier Prime'; color: darkred; font-size: 2.8rem; font-weight: bold; white-space: nowrap; }
+@media only screen and (max-width: 500px) {
+  #logo span {
+    font-size: 2.3rem
+  }
 
-@media only screen and (max-width: 800px)
-{
-    #logo span { font-size: 2.8rem}
-    #logo img { width: 70px }
+  #logo img {
+    width: 50px
+  }
 }
 
-@media only screen and (max-width: 600px)
-{
-    #logo span { font-size: 2.6rem}
-    #logo img { width: 60px }
+@media only screen and (max-width: 420px) {
+  #logo span {
+    font-size: 2.0rem
+  }
+
+  #logo img {
+    width: 45px
+  }
 }
 
-@media only screen and (max-width: 500px)
-{
-    #logo span { font-size: 2.3rem}
-    #logo img { width: 50px }
-}
+@media only screen and (max-width: 360px) {
+  #logo span {
+    font-size: 1.8rem
+  }
 
-@media only screen and (max-width: 420px)
-{
-    #logo span { font-size: 2.0rem}
-    #logo img { width: 45px }
-}
-
-@media only screen and (max-width: 360px)
-{
-    #logo span { font-size: 1.8rem}
-    #logo img { width: 40px }
+  #logo img {
+    width: 40px
+  }
 }
 
 a[href$='.pdf'] {
-    background-image: url("../../img/pdf_gray.gif");
-    background-position: right;
-    background-repeat: no-repeat;
-    padding-right: 18px;
+  background-image: url("../../img/pdf_gray.gif");
+  background-position: right;
+  background-repeat: no-repeat;
+  padding-right: 18px;
 }
-a[href$='.pdf']:focus, a[href$='.pdf']:hover {
-    background-image: url("../../img/pdf.gif");
-    color: #820000;
+
+a[href$='.pdf']:focus,
+a[href$='.pdf']:hover {
+  background-image: url("../../img/pdf.gif");
+  color: #820000;
 }
-#back-link{
-margin-top:1rem;
+
+#back-link {
+  margin-top: 1rem;
 }
 
 
- button {
-    padding: 5px 10px; /* Padding for the button */
-    font-size: 16px; /* Font size */
-    font-weight: bold; /* Bold text */
-    border-radius: 10px; /* Rounded corners */
-    cursor: pointer; /* Pointer cursor on hover */
+button {
+  padding: 5px 10px;
+  /* Padding for the button */
+  font-size: 16px;
+  /* Font size */
+  font-weight: bold;
+  /* Bold text */
+  border-radius: 10px;
+  /* Rounded corners */
+  cursor: pointer;
+  /* Pointer cursor on hover */
 }
