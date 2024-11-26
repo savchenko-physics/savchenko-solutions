@@ -36,28 +36,6 @@
 </head>
 
 <body id="top">
-    <header class="margin-main" style="text-align:center;" id="description">
-        <a href="" style="text-decoration: none;">
-            <div id="logo">
-                <span><img src="/img/book.png"></span><span><%= __('title') %></span>
-            </div>
-        </a>
-        <p class="author"><%= __('subtitle') %><br>
-            <i><b><%= __('motto') %></b></i>
-        </p>
-        <h2 style="text-align: center;margin:0; font-size: 2.0rem;">
-            <a style="color: hsla(240, 100%, 33%, 1);" href="<%= __('oppositeLang') %>"><%= __('russianVersion') %></a>
-        </h2>
-        <h2 style="text-align: center; margin-top: 0.9rem;">
-            <a href="<%= __('statementsLink') %>" target="_blank"><%= __('problemStatements') %></a>
-        </h2>
-        <p class="description">
-            &nbsp;&nbsp;<%= __('description.intro') %><br>
-            &nbsp;&nbsp;<%= __('description.project') %> <a href="about#team">
-                <%= __('description.team')%></a>.
-                <%= __('description.moto') %> <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
-        </p>
-    </header>
     <div class="pinned-container" id="pinned-container">
         <h2 style="margin: 0 0 20px 15px; text-align: left;"><%= __('contents') %></h2>
         <ol style="list-style-type:none; padding: 0;margin: 0;">
@@ -374,10 +352,6 @@
 
         /* Add this new media query section */
         @media (max-width: 768px) {
-            .pinned-container:not(.collapsed) {
-                width: 100%;
-                max-width: 320px;
-            }
 
             .pinned-container:not(.collapsed) ~ main {
                 filter: blur(2px);
@@ -386,6 +360,29 @@
         }
     </style>
     <main>
+        <header class="margin-main" style="text-align:center;" id="description">
+            <a href="" style="text-decoration: none;">
+                <div id="logo">
+                    <span><img src="/img/book.png"></span><span><%= __('title') %></span>
+                </div>
+            </a>
+            <p class="author"><%= __('subtitle') %><br>
+                <i><b><%= __('motto') %></b></i>
+            </p>
+            <h2 style="text-align: center;margin:0; font-size: 2.0rem;">
+                <a style="color: hsla(240, 100%, 33%, 1);" href="<%= __('oppositeLang') %>"><%= __('russianVersion') %></a>
+            </h2>
+            <h2 style="text-align: center; margin-top: 0.9rem;">
+                <a href="<%= __('statementsLink') %>" target="_blank"><%= __('problemStatements') %></a>
+            </h2>
+            <p class="description">
+                &nbsp;&nbsp;<%= __('description.intro') %><br>
+                &nbsp;&nbsp;<%= __('description.project') %> <a href="about#team">
+                    <%= __('description.team')%></a>.
+                    <%= __('description.moto') %> <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
+            </p>
+        </header>
+
         <article class="margin-main">
             <% chapters.forEach((chapter, chapterIndex)=> {
                 // Skip the chapter if it has no sections or all sections are empty
@@ -427,7 +424,6 @@
                     <% }}); %>
                         <% }}); %>
         </article>
-
     </main>
 
     <!-- Pop-up Window -->
