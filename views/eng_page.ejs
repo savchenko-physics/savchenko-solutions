@@ -62,8 +62,10 @@
         <h2 style="margin: 0 0 20px 15px; text-align: left;"><%= __('contents') %></h2>
         <ol style="list-style-type:none; padding: 0;margin: 0;">
             <li><a href="#description"><img src="/img/info.svg" style="width: 22px; vertical-align: middle; margin-right: 5px; margin-top: -4px; display: inline;"><%= __('chapters.about') %></a></li>
-            <% for(let i = 1; i <= 14; i++) { %>
-                <li><a href="#<%= i %>"><%= i %>. <%= __(`chapters.${i}`) %></a></li>
+            <% 
+            const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV'];
+            for(let i = 1; i <= 14; i++) { %>
+                <li><a href="#<%= i %>"><%= romanNumerals[i-1] %>. <%= __(`chapters.${i}`) %></a></li>
             <% } %>
         </ol>
     </div>
@@ -473,7 +475,11 @@
                     fetch("/create-problem", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ problemName, chapter: currentChapter })
+                        body: JSON.stringify({ 
+                            problemName, 
+                            chapter: currentChapter,
+                            lang: '<%= lang %>'
+                        })
                     })
                         .then(response => response.json())
                         .then(data => {
@@ -489,7 +495,7 @@
                             alert("An error occurred. Please try again.");
                         });
                 } else {
-                    alert("Please enter a valid problem name.");
+                    alert('<%= lang === "ru" ? "Пожалуйста, введите корректное название задачи." : "Please enter a valid problem name." %>');
                 }
             });
         });
@@ -550,15 +556,26 @@
                 : window.innerWidth < 1024;
             updateSidebarState();
 
-            // Add click event listeners to all sidebar links
-            Array.from(sidebarLinks).forEach(link => {
-                link.addEventListener('click', () => {
-                    if (window.innerWidth < 1024) {
-                        isCollapsed = true;
-                        localStorage.setItem('sidebarCollapsed', isCollapsed);
-                        updateSidebarState();
-                    }
-                });
+            // Add click event listener to document
+            document.addEventListener('click', (event) => {
+                // Collapse on outside click for small screens
+                if (window.innerWidth < 1024 && 
+                    !isCollapsed && 
+                    !sidebar.contains(event.target) && 
+                    !toggleBtn.contains(event.target)) {
+                    isCollapsed = true;
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                    updateSidebarState();
+                }
+
+                // Collapse when clicking sidebar links
+                if (!isCollapsed && 
+                    sidebar.contains(event.target) && 
+                    event.target.tagName === 'A') {
+                    isCollapsed = true;
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                    updateSidebarState();
+                }
             });
 
             // Toggle sidebar on button click

@@ -55,9 +55,13 @@ app.use((req, res, next) => {
 });
 
 app.post("/create-problem", async (req, res) => {
-    const { problemName, chapter } = req.body;
+    const { problemName, chapter, lang = 'en' } = req.body;
 
-    const { chapters } = await getPageData();
+    const { chapters } = await getPageData(
+        lang === 'ru' ? "src/ru/database/chapters.csv" : "src/database/chapters.csv",
+        lang === 'ru' ? "src/ru/database/sections.csv" : "src/database/sections.csv",
+        lang
+    );
 
     if (!problemName || !problemName.match(/^\d+\.\d+\.\d+$/)) {
         return res.status(400).json({ message: "Invalid problem name format. Use chapter.section.problem format." });
@@ -90,14 +94,61 @@ app.post("/create-problem", async (req, res) => {
         });
     }
 
-    const problemsDir = path.join(__dirname, "posts", "en");
+    const problemsDir = path.join(__dirname, "posts", lang);
     const filePath = path.join(problemsDir, `${problemName}.md`);
 
     if (fs.existsSync(filePath)) {
         return res.status(400).json({ message: "Problem file already exists." });
     }
 
-    const content = `### Statement
+    const content = lang === 'ru' ? 
+        `### Условие
+
+$${problemName}.$ [Вставьте описание задачи]
+
+__Пример условия__:
+$1.1.1.$ Определите координату $x(t)$ тела как функцию времени $t$, если его ускорение задано как $a(t) = bt$, где $b$ - константа.
+
+
+### Решение
+
+[Здесь должно быть ваше решение]
+
+__Пример решения__:
+Ускорение тела задано как
+
+$$a(t) = bt$$
+
+Мы знаем, что ускорение - это производная скорости по времени:
+
+$$a(t) = \\frac{d v(t)}{d t}$$
+
+Чтобы найти скорость $v(t)$, интегрируем $a(t)$ по времени:
+
+$$v(t) = \\int a(t) \\, dt = \\int b t \\, dt$$
+
+Если начальная скорость $v(0) = 0$, то скорость становится:
+
+$$v(t) = \\frac{b t^2}{2}$$
+
+Аналогично, интегрируем $v(t)$ по времени:
+
+$$x(t)= \\int v(t) \\, dt = \\frac{b}{2} \\int t^2 \\, dt$$
+
+Откуда координата от времени, учитывая начальные условия:
+
+$$\\boxed{x(t)=\\frac{bt^3}{6}}$$
+
+#### Ответ
+
+[Вставьте краткий ответ или результат в рамке, например:]
+
+
+__Пример ответа__:
+$$ x(t)=\\frac{bt^3}{6} $$` 
+        : 
+        // Original English template
+        `### Statement
 
 $${problemName}.$ [Insert problem description here]
 
@@ -141,15 +192,24 @@ $$\\boxed{x(t)=\\frac{bt^3}{6}}$$
 
 __Example Answer__:
 $$ x(t)=\\frac{bt^3}{6} $$
-`;
+`
 
     try {
         await fs.promises.writeFile(filePath, content);
         console.log(`Problem file created: ${filePath}`);
-        res.json({ message: `Problem ${problemName} created successfully!`, redirectUrl: `/en/edit/${problemName}` });
+        res.json({ 
+            message: lang === 'ru' ? 
+                `Задача ${problemName} успешно создана!` : 
+                `Problem ${problemName} created successfully!`,
+            redirectUrl: `/${lang}/edit/${problemName}` 
+        });
     } catch (err) {
         console.error("Error creating file:", err);
-        res.status(500).json({ message: "Failed to create problem file." });
+        res.status(500).json({ 
+            message: lang === 'ru' ? 
+                "Не удалось создать файл задачи." : 
+                "Failed to create problem file." 
+        });
     }
 });
 
