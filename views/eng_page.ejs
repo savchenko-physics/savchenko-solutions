@@ -38,7 +38,7 @@
 </head>
 
 <body id="top">
-    <header class="margin-main" style="text-align:center;">
+    <header class="margin-main" style="text-align:center;" id="description">
         <a href="" style="text-decoration: none;">
             <div id="logo">
                 <span><img src="img/book.png"></span><span>Savchenko Solutions</span>
@@ -50,7 +50,7 @@
         <h2 style="text-align: center;margin:0; font-size: 2.0rem;"><a href="ru">Решения на русском</a></h2>
         <h2 style="text-align: center; margin-top: 0.9rem; "><a href="en/savchenko_en.pdf" target="_blank">Problem
                 statements</a></h2>
-        <p class="description" id="description">
+        <p class="description">
             The collection of problems in physics edited by O.Y. Savchenko is one of the most popular resources for
             preparation for physics olympiads in post-soviet countries. Some of these problems were a source of
             inspiration for Jaan Kalda’s handouts and to some NBPhO problems. You may find problems from old IPhO
@@ -66,6 +66,7 @@
     <div class="pinned-container" id="pinned-container">
         <h2 style="margin: 0 0 20px 15px; text-align: left;">Contents</h2>
         <ol style="list-style-type:none; padding: 0;margin: 0;">
+            <li><a href="#description"><img src="img/info.svg" style="width: 22px; vertical-align: middle; margin-right: 5px; margin-top: -4px; display: inline;">About</a></li>
             <li><a href="#1">I. Kinematics</a></li>
             <li><a href="#2">II. Dynamics</a></li>
             <li><a href="#3">III. Oscillations and Waves</a></li>
@@ -116,7 +117,7 @@
         }
 
         .pinned-container li {
-            margin: 12px 0;
+            margin: 6px 0;
             transition: all 0.2s ease;
         }
 
@@ -372,6 +373,16 @@
             .margin-main.expanded, footer.expanded {
                 margin-left: -30px;
             }
+        }
+
+        .pinned-container img[src="img/info.svg"] {
+            transition: content 0.2s ease;
+        }
+
+        .pinned-container a:hover img[src="img/info.svg"] {
+            content: url('img/info_pressed.svg');
+            transition-delay: 0.1s;
+            filter: brightness(0) saturate(100%) invert(23%) sepia(70%) saturate(1366%) hue-rotate(212deg) brightness(91%) contrast(87%);
         }
     </style>
     <main>

@@ -221,6 +221,15 @@ function ru_page(req, res) {
                 width:auto;
             }
         }
+        @media (max-width: 1023px) {
+            .pinned-container {
+                display: none;
+            }
+            .margin-main {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
     </style>
     <script type="text/javascript">
         function checkScroll() {
