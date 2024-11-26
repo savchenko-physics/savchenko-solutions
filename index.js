@@ -11,6 +11,7 @@ const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
 const { Pool } = require("pg");
 require("dotenv").config();
+const i18n = require('i18n');
 
 const app = express();
 const PORT = 3000;
@@ -259,17 +260,58 @@ app.get("/logout", (req, res) => {
 
 
 app.get("/", async (req, res) => {
-    const { chapters, theory, sections, pinnedChapters } = await getPageData();
+    const { chapters, theory, sections, pinnedChapters } = await getPageData(
+        "src/database/chapters.csv",
+        "src/database/sections.csv",
+        'en'
+    );
+    
+    i18n.setLocale(res, 'en');
 
     res.render("eng_page", {
-        title: "Savchenko Solutions",
+        __: i18n.__,
+        title: i18n.__('title'),
         chapters,
         theory,
         sections,
         pinnedChapters,
+        lang: 'en'
     });
 });
 
+// Configure i18n (move this before app.use statements)
+i18n.configure({
+    locales: ['en', 'ru'],
+    directory: path.join(__dirname, 'locales'),
+    defaultLocale: 'en',
+    objectNotation: true,
+    updateFiles: false,
+    cookie: 'lang'
+});
+
+// Add i18n middleware (move this before route definitions)
+app.use(i18n.init);
+
+// Update the /ru route to use i18n.setLocale instead
+app.get("/ru", async (req, res) => {
+    const { chapters, theory, sections, pinnedChapters } = await getPageData(
+        "src/ru/database/chapters.csv",
+        "src/ru/database/sections.csv",
+        'ru'
+    );
+    
+    i18n.setLocale(req, 'ru');
+
+    res.render("eng_page", {
+        __: i18n.__,
+        title: i18n.__('title'),
+        chapters,
+        theory,
+        sections,
+        pinnedChapters,
+        lang: 'ru'
+    });
+});
 
 app.get("/en", (req, res) => {
     res.redirect("/");
@@ -279,8 +321,6 @@ app.get(/^\/(\d+\.\d+\.\d+)$/, (req, res) => {
     const version = req.params[0]; // Capture the version part
     res.redirect(`/en/${version}`);
 });
-
-app.get("/ru", ru_page);
 
 app.get("/en/about", (req, res) => {
     res.redirect(`/about#description`);
@@ -529,7 +569,6 @@ app.get("/global-search", async (req, res) => {
         res.render("search", { results: [], searchTerm: query });
     }
 });
-
 
 // Start the server
 app.listen(PORT, () => {

@@ -81,18 +81,15 @@ function distributeProblems(problems, columns = 3) {
 }
 
 // Main function to generate page data
-async function getPageData() {
+async function getPageData(chaptersCSV = "src/database/chapters.csv", sectionsCSV = "src/database/sections.csv", lang = 'en') {
     const baseDir = __dirname;
-    const postsDir = path.join(baseDir, "posts", "en");
+    const postsDir = path.join(baseDir, "posts", lang);
 
     if (!fs.existsSync(postsDir)) {
         throw new Error("Posts directory does not exist: " + postsDir);
     }
 
-    const chaptersCSV = "src/database/chapters.csv";
-    const sectionsCSV = "src/database/sections.csv";
-
-    // Read data from CSV
+    // Use the passed CSV paths
     const chapters = readCSV(chaptersCSV, 1);
     const theory = readCSV(chaptersCSV, 2);
     const sectionNumbers = readCSV(sectionsCSV, 0);

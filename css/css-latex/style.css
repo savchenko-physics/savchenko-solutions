@@ -794,7 +794,13 @@ h6 {
   display: flex;
   justify-content: flex-start;
   justify-content: center;
-  gap: 80px;
+  gap: 100px;
+}
+
+@media only screen and (max-width: 600px) {
+  .columns {
+    gap: 80px;
+  }
 }
 
 .column {

@@ -5,20 +5,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="content-language" content="en">
-    <meta name="keywords"
-        content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda">
-    <meta name="description"
-        content="The largest dataset of solutions of 'Savchenko. Problems in Physics'. Savchenko’s Problems in General Physics is widely used to prepare for olympiads and it is a useful tool to master and sharpen your skills and techniques in comptetitive problem solving. Some of these problems were a source of inspiration for Jaan Kalda’s handouts and to some NBPhO problems. You may find problems from old IPhO papers.">
-    <meta name="author" content="Aliaksandr Melnichenka">
-    <meta name="date" content="2023-10" scheme="YYYY-MM">
-    <meta property="og:title" content="Savchenko Solutions">
+    <meta name="keywords" content="<%= __('meta.keywords') %>">
+    <meta name="description" content="<%= __('meta.description') %>">
+    <meta name="author" content="<%= __('meta.author') %>">
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+    <meta property="og:title" content="<%= __('title') %>">
     <meta property="og:image" content="img/logo.png">
-    <meta property="og:description" content="A website with solutions to physics problems from Savchenko Textbook">
+    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
     <meta name="yandex-verification" content="6cfda41f74038368">
-    <title>Savchenko Solutions</title>
-    <link rel="stylesheet" href="css/css-latex/style.css">
-    <link rel="icon" href="img/logo.png" type="image/png">
-    <script src="js/jquery-1.10.1.min.js"></script>
+    <title><%= __('title') %></title>
+    <link rel="stylesheet" href="/css/css-latex/style.css">
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="/js/jquery-1.10.1.min.js"></script>
     <script async
         src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script type="text/x-mathjax-config">
@@ -41,46 +39,32 @@
     <header class="margin-main" style="text-align:center;" id="description">
         <a href="" style="text-decoration: none;">
             <div id="logo">
-                <span><img src="img/book.png"></span><span>Savchenko Solutions</span>
+                <span><img src="/img/book.png"></span><span><%= __('title') %></span>
             </div>
         </a>
-        <p class="author">Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br>
-            <i><b>knowledge must be free</b></i>
+        <p class="author"><%= __('subtitle') %><br>
+            <i><b><%= __('motto') %></b></i>
         </p>
-        <h2 style="text-align: center;margin:0; font-size: 2.0rem;"><a href="ru">Решения на русском</a></h2>
-        <h2 style="text-align: center; margin-top: 0.9rem; "><a href="en/savchenko_en.pdf" target="_blank">Problem
-                statements</a></h2>
+        <h2 style="text-align: center;margin:0; font-size: 2.0rem;">
+            <a href="<%= __('oppositeLang') %>"><%= __('russianVersion') %></a>
+        </h2>
+        <h2 style="text-align: center; margin-top: 0.9rem;">
+            <a href="<%= __('statementsLink') %>" target="_blank"><%= __('problemStatements') %></a>
+        </h2>
         <p class="description">
-            The collection of problems in physics edited by O.Y. Savchenko is one of the most popular resources for
-            preparation for physics olympiads in post-soviet countries. Some of these problems were a source of
-            inspiration for Jaan Kalda’s handouts and to some NBPhO problems. You may find problems from old IPhO
-            papers. For more than 30 years since its first edition, not a single complete guide to solving problems from
-            it has been created.<br>
-            On this website, you can observe a non-profit startup creating the first wizard of this collection with the
-            design of solutions of <a href="about#team">different authors</a>. In total, 745 solutions have been
-            published, out of 2,023 problems. In 2023, the project was launched, which is actively developing in Russian
-            and English. If you'd like to contribute, feel free to email <a href="mailto:aliaksandr@melnichenka.com"
-                target="_blank">aliaksandr@melnichenka.com</a>.
+            <%= __('description.intro') %><br>
+            <%= __('description.project') %> <a href="about#team">
+                <%= __('description.team')%></a>.
+            <%= __('description.moto') %> <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
         </p>
     </header>
     <div class="pinned-container" id="pinned-container">
-        <h2 style="margin: 0 0 20px 15px; text-align: left;">Contents</h2>
+        <h2 style="margin: 0 0 20px 15px; text-align: left;"><%= __('contents') %></h2>
         <ol style="list-style-type:none; padding: 0;margin: 0;">
-            <li><a href="#description"><img src="img/info.svg" style="width: 22px; vertical-align: middle; margin-right: 5px; margin-top: -4px; display: inline;">About</a></li>
-            <li><a href="#1">I. Kinematics</a></li>
-            <li><a href="#2">II. Dynamics</a></li>
-            <li><a href="#3">III. Oscillations and Waves</a></li>
-            <li><a href="#4">IV. Fluid Mechanics</a></li>
-            <li><a href="#5">V. Molecular Physics</a></li>
-            <li><a href="#6">VI. Electrostatics</a></li>
-            <li><a href="#7">VII. Particles in an electric field</a></li>
-            <li><a href="#8">VIII. Electric current</a></li>
-            <li><a href="#9">IX. Constant magnetic field</a></li>
-            <li><a href="#10">X. Particles in complex fields</a></li>
-            <li><a href="#11">XI. Electromagnetic induction</a></li>
-            <li><a href="#12">XII. Electromagnetic waves</a></li>
-            <li><a href="#13">XIII. Optics. Quantum physics</a></li>
-            <li><a href="#14">XIV. Special theory of relativity</a></li>
+            <li><a href="#description"><img src="/img/info.svg" style="width: 22px; vertical-align: middle; margin-right: 5px; margin-top: -4px; display: inline;"><%= __('chapters.about') %></a></li>
+            <% for(let i = 1; i <= 14; i++) { %>
+                <li><a href="#<%= i %>"><%= i %>. <%= __(`chapters.${i}`) %></a></li>
+            <% } %>
         </ol>
     </div>
     <button class="toggle-sidebar" id="toggle-sidebar"><img src="/img/arrow-back.svg"></button>
@@ -375,12 +359,12 @@
             }
         }
 
-        .pinned-container img[src="img/info.svg"] {
+        .pinned-container img[src="/img/info.svg"] {
             transition: content 0.2s ease;
         }
 
-        .pinned-container a:hover img[src="img/info.svg"] {
-            content: url('img/info_pressed.svg');
+        .pinned-container a:hover img[src="/img/info.svg"] {
+            content: url('/img/info_pressed.svg');
             transition-delay: 0.1s;
             filter: brightness(0) saturate(100%) invert(23%) sepia(70%) saturate(1366%) hue-rotate(212deg) brightness(91%) contrast(87%);
         }
@@ -392,16 +376,14 @@
                 const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
                 if (hasContent) {
                 %>
-                <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;">
+                <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;" class="chapter-title">
                     <% if (chapter.theory) { %>
-                        Chapter <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank">
-                                <%= chapter.title %>
-                            </a>
+                        <%= __('chapter') %> <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank"><%= chapter.title %></a>
                             <% } else { %>
-                                Chapter <%= chapterIndex + 1 %>. <%= chapter.title %>
+                                <%= __('chapter') %> <%= chapterIndex + 1 %>. <%= chapter.title %>
                                         <% } %>
                                             <span style="font-size: 1rem;">[<a href="#" class="edit-link"
-                                                    data-chapter="<%= chapterIndex + 1 %>">upload</a>]</span>
+                                                    data-chapter="<%= chapterIndex + 1 %>"><%= __('upload') %></a>]</span>
                 </h2>
 
                 <% chapter.sections.forEach((section, sectionIndex)=> {
@@ -419,7 +401,7 @@
                             %>
                             <ul class="column">
                                 <% column.forEach((problem)=> { %>
-                                    <li><a href="/en/<%= problem %>">
+                                    <li><a href="/<%= lang%>/<%= problem %>">
                                             <%= problem %>
                                         </a></li>
                                     <% }); %>
@@ -433,17 +415,15 @@
     </main>
 
     <!-- Pop-up Window -->
-    <div id="edit-popup"
-        style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:1000; background:#fff; padding:20px; border:1px solid #ccc; box-shadow:0 4px 8px rgba(0,0,0,0.1);">
-        <h3>Enter the name of the problem</h3>
-        <input type="text" id="problem-name" placeholder="e.g., 13.1.19" />
-        <button id="submit-problem">Submit</button>
-        <button id="cancel-edit">Cancel</button>
+    <div id="edit-popup">
+        <h3><%= __('popup.title') %></h3>
+        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>" />
+        <button id="submit-problem"><%= __('popup.submit') %></button>
+        <button id="cancel-edit"><%= __('popup.cancel') %></button>
     </div>
 
     <!-- Overlay -->
-    <div id="popup-overlay"
-        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
+    <div id="popup-overlay">
     </div>
 
     <script>
@@ -547,12 +527,13 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <footer class="row container">
         <br>
+        <p><small><%= __('footer.copyright') %><br></small></p>
         <p>
-            <small> © <strong>Savchenko Solutions</strong>, 2023-2024 <br></small>
-        </p>
-        <p>
-            <small>All rights belong to the authors. <br> Commercial use of materials - with the written permission of
-                the authors. <br> aliaksandr@melnichenka.com <br></small>
+            <small>
+                <%= __('footer.rights') %><br>
+                <%= __('footer.commercial') %><br>
+                aliaksandr@melnichenka.com<br>
+            </small>
         </p>
     </footer>
     <script>
