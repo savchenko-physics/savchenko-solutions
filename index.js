@@ -20,10 +20,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(
     session({
-        secret: "your_secret_key", // Replace with a strong secret
+        secret: process.env.SESSION_SECRET || "your_secret_key", // Better to use environment variable
         resave: false,
-        saveUninitialized: true,
-        cookie: { secure: false }, // Set to true if using HTTPS
+        saveUninitialized: false, // Changed to false for better security
+        cookie: { 
+            secure: process.env.NODE_ENV === 'production', // Only use secure in production
+            maxAge: 1000 * 60 * 60 * 24 * 365, // Session expires in a year
+            httpOnly: true, // Prevents client-side access to the cookie
+            sameSite: 'lax' // Protects against CSRF
+        },
     })
 );
 
