@@ -781,22 +781,39 @@ app.get("/search", (req, res) => {
 });
 
 app.get("/global-search", async (req, res) => {
-    const query = req.query.search?.trim() || ""; // Extract the 'search' query parameter
+    const query = req.query.search?.trim() || "";
+    const lang = req.query.lang || 'en';
+    
+    i18n.setLocale(res, lang);
 
     if (!query) {
-        return res.render("search", { results: [], searchTerm: "" }); // Render with no results if no query is provided
+        return res.render("search", { 
+            results: [], 
+            searchTerm: "",
+            __: i18n.__,
+            lang
+        });
     }
 
     try {
-        // Fetch results from the /search endpoint (relative URL ensures it works in any environment)
         const baseUrl = `${req.protocol}://${req.get('host')}`;
         const response = await fetch(`${baseUrl}/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
 
-        res.render("search", { results: data.results, searchTerm: query });
+        res.render("search", { 
+            results: data.results, 
+            searchTerm: query,
+            __: i18n.__,
+            lang
+        });
     } catch (error) {
         console.error("Error fetching search results:", error);
-        res.render("search", { results: [], searchTerm: query });
+        res.render("search", { 
+            results: [], 
+            searchTerm: query,
+            __: i18n.__,
+            lang
+        });
     }
 });
 

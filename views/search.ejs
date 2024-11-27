@@ -116,30 +116,28 @@
     <%- include('default/header.ejs') %>
         <br>
         <div class="container">
-
-            <h1>Search results</h1>
-            <form id="search-form" action="/global-search" method="get">
-                <input type="text" id="search-query" name="search" placeholder="Enter search term..."
+            <h1><%= __('menu.search') %></h1>
+            <form id="search-form" action="/<%= lang === 'ru' ? 'ru/' : '' %>global-search" method="get">
+                <input type="text" id="search-query" name="search" 
+                    placeholder="<%= __('menu.searchPlaceholder') %>"
                     value="<%= searchTerm %>" required>
-                <button type="submit" class="submit-button">Search</button>
+                <button type="submit" class="submit-button"><%= __('menu.searchButton') %></button>
             </form>
             <br>
             <div id="results">
-                <% if (results.length===0) { %>
-                    <p class="no-results">No results found for "<%= searchTerm %>".</p>
-                    <% } else { %>
-                        <% results.forEach(result=> { %>
-                            <div class="result">
-                                <h2><a href="<%= result.relativePath %>">
-                                        <%= result.name %> (<%= result.lang %>)
-                                    </a></h2>
-                                <p>
-                                    <%= result.snippet %>
-                                </p>
-                                <p><small>Line: <%= result.lineNumber %></small></p>
-                            </div>
-                            <% }); %>
-                                <% } %>
+                <% if (results.length === 0) { %>
+                    <p class="no-results"><%= __('menu.resultsNotFound') %></p>
+                <% } else { %>
+                    <% results.forEach(result => { %>
+                        <div class="result">
+                            <h2><a href="<%= result.relativePath %>">
+                                <%= result.name %>
+                            </a></h2>
+                            <p><%- result.snippet %></p>
+                            <p><small>Line: <%= result.lineNumber %></small></p>
+                        </div>
+                    <% }); %>
+                <% } %>
             </div>
         </div>
 
@@ -163,7 +161,7 @@
                         const data = await response.json();
 
                         if (data.results.length === 0) {
-                            resultsContainer.innerHTML = `<p class="no-results">No results found for "${query}".</p>`;
+                            resultsContainer.innerHTML = `<p class="no-results">${'<%= __("menu.resultsNotFound") %>'}</p>`;
                             return;
                         }
 
@@ -175,7 +173,7 @@
                     </div>
                 `).join('');
                     } catch (error) {
-                        resultsContainer.innerHTML = '<p class="no-results">An error occurred while fetching results. Please try again.</p>';
+                        resultsContainer.innerHTML = `<p class="no-results">${'<%= __("menu.errorLoadingResults") %>'}</p>`;
                     }
                 });
             </script>

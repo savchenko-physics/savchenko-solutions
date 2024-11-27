@@ -119,5 +119,18 @@
         "newPassword": "New Password:",
         "confirmPassword": "Confirm New Password:",
         "updatePassword": "Update Password"
+    },
+    "search": {
+        "title": "Search results",
+        "placeholder": "Enter search term...",
+        "searchButton": "Search",
+        "noResults": "No results found for \"{{searchTerm}}\".",
+        "loading": "Loading...",
+        "error": "An error occurred while fetching results. Please try again.",
+        "lineNumber": "Line",
+        "language": {
+            "en": "English",
+            "ru": "Russian"
+        }
     }
 }

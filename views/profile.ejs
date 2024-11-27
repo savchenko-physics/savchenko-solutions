@@ -2,116 +2,356 @@
 <html lang="<%= lang %>">
 
 <head>
-    <%- include(`default/head_${lang}.ejs`) %>
-    <link rel="stylesheet" href="/css/css-latex/profile.css" />
-    <title><%= __('profile.title') %></title>
+   <style>
+      /* Add font-family to body */
+      body {
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, sans-serif;
+         line-height: 1.6;
+      }
+
+      /* Update headings font */
+      h2 {
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, sans-serif;
+         font-weight: 600;
+      }
+
+      .container1 {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 2rem;
+      }
+
+      .profile-grid {
+         display: grid;
+         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+         gap: 2rem;
+         margin-top: 2rem;
+      }
+
+      .profile-section {
+         background: #fff;
+         border-radius: 8px;
+         padding: 1.5rem;
+         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .profile-section h2 {
+         color: #2c3e50;
+         margin-top: 1rem;
+         padding-bottom: 0.5rem;
+         border-bottom: 2px solid #eee;
+         font-weight: 600;
+      }
+
+      .contributions-list {
+         list-style: none;
+         padding: 0;
+      }
+
+      .contribution-item {
+         background: #f8f9fa;
+         border-radius: 6px;
+         padding: 1rem;
+         margin-bottom: 1rem;
+         transition: transform 0.2s;
+      }
+
+      .contribution-item:hover {
+         transform: translateY(-2px);
+      }
+
+      .view-button {
+         display: inline-block;
+         padding: 0.5rem 1rem;
+         background: #3366cc;
+         color: white;
+         border-radius: 4px;
+         text-decoration: none;
+         margin-top: 0.5rem;
+         transition: background 0.2s;
+         font-family: inherit;
+         font-weight: 500;
+      }
+
+      .view-button:hover {
+         background: #0056b3;
+      }
+
+      .form-group {
+         margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+         display: block;
+         margin-bottom: 0.5rem;
+         color: #2c3e50;
+         font-weight: 500;
+      }
+
+      .form-group input {
+         width: 100%;
+         padding: 0.8rem 0rem 0.8rem 0.8rem;
+         border: 1px solid #ddd;
+         border-radius: 4px;
+         transition: border-color 0.2s;
+         font-family: inherit;
+         font-size: 1rem;
+      }
+
+      .form-group input:focus {
+         border-color: #3498db;
+         outline: none;
+      }
+
+      .submit-button {
+         background: #3366cc;
+         color: white;
+         padding: 0.8rem 1.5rem;
+         border: none;
+         border-radius: 4px;
+         cursor: pointer;
+         transition: background 0.2s;
+         font-family: inherit;
+         font-weight: 500;
+      }
+
+      .submit-button:hover {
+         background: #0056b3;
+      }
+
+      .error,
+      .success {
+         padding: 1rem;
+         border-radius: 4px;
+         margin: 1rem 0;
+         text-align: center;
+      }
+
+      .error {
+         background: #fee2e2;
+         color: #dc2626;
+      }
+
+      .success {
+         background: #dcfce7;
+         color: #16a34a;
+      }
+
+      .vector-header-container {
+         padding: 0px 0px 0px 0px;
+         margin: 0;
+         width: 100%;
+         position: relative;
+         box-sizing: border-box;
+      }
+
+      /* Update footer styles */
+      .footer {
+         background-color: #f8f9fa;
+         padding: 1rem 0;
+         margin-top: 3rem;
+         border-top: 1px solid #dee2e6;
+      }
+
+      .footer .container {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 0 2rem;
+         text-align: center;
+      }
+
+      .footer p {
+         margin: 0.5rem 0;
+         color: #6c757d;
+      }
+
+      .footer small {
+         font-size: 0.9rem;
+         line-height: 1.4;
+      }
+
+      .footer strong {
+         color: #2c3e50;
+      }
+   </style>
+   <title>
+      <%= __('profile.title') %>
+   </title>
 </head>
 
 <body>
-    <%- include('default/header.ejs') %>
-    
-    <div class="container1">
-        <h2 style="text-align: center; font-weight: bold;"><%= __('profile.welcome') %>, <%= username %>!</h2>
+   <div style="max-width: calc(100vw - 60px);">
+      <%- include('default/header.ejs') %>
+   </div>
 
-        <% if (error) { %>
-            <p class="error"><%= error %></p>
-        <% } %>
-        <% if (success) { %>
-            <p class="success"><%= success %></p>
-        <% } %>
+   <div class="container1">
+      <h2 style="text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 2rem;">
+         <%= __('profile.welcome') %>, <%= username %>!
+      </h2>
 
-        <div class="profile-section">
-            <h2><%= __('profile.yourContributions') %></h2>
-            <% if (contributions && contributions.length > 0) { %>
-                <ul class="contributions-list">
-                    <% contributions.forEach(contribution => { %>
-                        <li>
-                            <div class="contribution-item">
-                                <strong><%= __('profile.editedProblems') %></strong> 
-                                <a href="/<%= lang %>/<%= contribution.problem_id %>"><%= contribution.problem_id %></a>
-                                <br>
-                                <span class="edit-date">
-                                    <%= __('profile.lastEdited') %> <%= new Date(contribution.edited_at).toLocaleDateString() %>
-                                </span>
-                                <a href="/<%= lang %>/<%= contribution.problem_id %>" class="view-button">
-                                    <%= __('profile.viewProblem') %>
-                                </a>
-                            </div>
-                        </li>
-                    <% }); %>
-                </ul>
-            <% } else { %>
-                <p><%= __('profile.noContributions') %></p>
-            <% } %>
-        </div>
+      <% if (error) { %>
+         <p class="error">
+            <%= error %>
+         </p>
+         <% } %>
+            <% if (success) { %>
+               <p class="success">
+                  <%= success %>
+               </p>
+               <% } %>
 
-        <div class="profile-section">
-            <h2><%= __('profile.statistics') %></h2>
-            <p><strong><%= __('profile.totalEdits') %></strong> <%= totalEdits %></p>
-            <p><strong><%= __('profile.joinedDate') %></strong> <%= joinDate.toLocaleDateString() %></p>
-        </div>
+                  <div class="profile-grid">
+                     <div class="profile-section">
+                        <h2>
+                           <%= __('profile.yourContributions') %>
+                        </h2>
+                        <% if (contributions && contributions.length> 0) { %>
+                           <ul class="contributions-list">
+                              <% contributions.forEach(contribution=> { %>
+                                 <li>
+                                    <div class="contribution-item">
+                                       <strong>
+                                          <%= __('profile.editedProblems') %>
+                                       </strong>
+                                       <a href="/<%= lang %>/<%= contribution.problem_id %>">
+                                          <%= contribution.problem_id %>
+                                       </a>
+                                       <br>
+                                       <span class="edit-date">
+                                          <%= __('profile.lastEdited') %>
+                                             <%= new Date(contribution.edited_at).toLocaleDateString() %>
+                                       </span>
+                                       <a href="/<%= lang %>/<%= contribution.problem_id %>" class="view-button">
+                                          <%= __('profile.viewProblem') %>
+                                       </a>
+                                    </div>
+                                 </li>
+                                 <% }); %>
+                           </ul>
+                           <% } else { %>
+                              <p>
+                                 <%= __('profile.noContributions') %>
+                              </p>
+                              <% } %>
+                     </div>
 
-        <div class="profile-section">
-            <h2><%= __('profile.settings') %></h2>
-            <form action="/profile/update" method="POST" class="settings-form">
-                <input type="hidden" name="lang" value="<%= lang %>">
-                
-                <div class="form-group">
-                    <label for="fullname"><%= __('profile.fullName') %></label>
-                    <input type="text" id="fullname" name="fullname" value="<%= fullName %>" required>
-                </div>
+                     <div class="profile-section">
+                        <h2>
+                           <%= __('profile.statistics') %>
+                        </h2>
+                        <p><strong>
+                              <%= __('profile.totalEdits') %>
+                           </strong>
+                           <%= totalEdits %>
+                        </p>
+                        <p><strong>
+                              <%= __('profile.joinedDate') %>
+                           </strong>
+                           <%= joinDate.toLocaleDateString() %>
+                        </p>
+                     </div>
 
-                <div class="form-group">
-                    <label for="email"><%= __('profile.email') %></label>
-                    <input type="email" id="email" name="email" value="<%= email %>" required>
-                </div>
+                     <div class="profile-section">
+                        <h2>
+                           <%= __('profile.settings') %>
+                        </h2>
+                        <form action="/profile/update" method="POST" class="settings-form">
+                           <input type="hidden" name="lang" value="<%= lang %>">
 
-                <div class="form-group">
-                    <label for="username"><%= __('profile.username') %></label>
-                    <input type="text" id="username" name="username" value="<%= username %>" readonly>
-                </div>
+                           <div class="form-group">
+                              <label for="fullname">
+                                 <%= __('profile.fullName') %>
+                              </label>
+                              <input type="text" id="fullname" name="fullname" value="<%= fullName %>" required>
+                           </div>
 
-                <button type="submit" class="submit-button"><%= __('profile.save') %></button>
-            </form>
-        </div>
+                           <div class="form-group">
+                              <label for="email">
+                                 <%= __('profile.email') %>
+                              </label>
+                              <input type="email" id="email" name="email" value="<%= email %>" required>
+                           </div>
 
-        <div class="profile-section">
-            <h2><%= __('profile.changePassword') %></h2>
-            <form action="/profile/password" method="POST" class="password-form">
-                <input type="hidden" name="lang" value="<%= lang %>">
-                
-                <div class="form-group">
-                    <label for="currentPassword"><%= __('profile.currentPassword') %></label>
-                    <input type="password" id="currentPassword" name="currentPassword" required>
-                </div>
+                           <div class="form-group">
+                              <label for="username">
+                                 <%= __('profile.username') %>
+                              </label>
+                              <input type="text" id="username" name="username" value="<%= username %>" readonly>
+                           </div>
 
-                <div class="form-group">
-                    <label for="newPassword"><%= __('profile.newPassword') %></label>
-                    <input type="password" id="newPassword" name="newPassword" required>
-                </div>
+                           <button type="submit" class="submit-button">
+                              <%= __('profile.save') %>
+                           </button>
+                        </form>
+                     </div>
 
-                <div class="form-group">
-                    <label for="confirmPassword"><%= __('profile.confirmPassword') %></label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
-                </div>
+                     <div class="profile-section">
+                        <h2>
+                           <%= __('profile.changePassword') %>
+                        </h2>
+                        <form action="/profile/password" method="POST" class="password-form">
+                           <input type="hidden" name="lang" value="<%= lang %>">
 
-                <button type="submit" class="submit-button"><%= __('profile.updatePassword') %></button>
-            </form>
-        </div>
-    </div>
+                           <div class="form-group">
+                              <label for="currentPassword">
+                                 <%= __('profile.currentPassword') %>
+                              </label>
+                              <input type="password" id="currentPassword" name="currentPassword" required>
+                           </div>
 
-    <script>
-        document.querySelector('.password-form').addEventListener('submit', function(e) {
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            if (newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('<%= __("auth.register.passwordsNoMatch") %>');
-            }
-        });
-    </script>
+                           <div class="form-group">
+                              <label for="newPassword">
+                                 <%= __('profile.newPassword') %>
+                              </label>
+                              <input type="password" id="newPassword" name="newPassword" required>
+                           </div>
 
-    <%- include(`default/footer_${lang}.ejs`) %>
+                           <div class="form-group">
+                              <label for="confirmPassword">
+                                 <%= __('profile.confirmPassword') %>
+                              </label>
+                              <input type="password" id="confirmPassword" name="confirmPassword" required>
+                           </div>
+
+                           <button type="submit" class="submit-button">
+                              <%= __('profile.updatePassword') %>
+                           </button>
+                        </form>
+                     </div>
+                  </div>
+   </div>
+
+   <script>
+      document.querySelector('.password-form').addEventListener('submit', function (e) {
+         const newPassword = document.getElementById('newPassword').value;
+         const confirmPassword = document.getElementById('confirmPassword').value;
+
+         if (newPassword !== confirmPassword) {
+            e.preventDefault();
+            alert('<%= __("auth.register.passwordsNoMatch") %>');
+         }
+      });
+   </script>
+
+   <footer class="footer">
+      <div class="row container">
+         <br />
+         <p>
+            <small>© <strong>Savchenko Solutions</strong>, 2023-2024<br /></small>
+         </p>
+         <p>
+            <small>
+
+               All rights belong to the authors. <br />
+               Commercial use of materials - with the written permission of the authors. <br />
+               aliaksandr@melnichenka.com <br />
+            </small>
+         </p>
+         <br />
+      </div>
+   </footer>
 </body>
+
 </html>
