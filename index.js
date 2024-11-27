@@ -628,31 +628,38 @@ app.get("/:lang/edit/:name", (req, res) => {
 });
 
 // Route for saving edited content
-app.post("/:lang/save/:name", (req, res) => {
+app.post("/:lang/save/:name", checkAuthenticated, async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
+    const userId = req.session.userId;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
     const clientIp = req.headers["x-forwarded-for"] || req.ip;
 
-    const backupFilePath = path.join(__dirname, `posts-old/${lang}`, `${name}_${new Date().toISOString().replace(/[:.]/g, "-")}_${clientIp.replace(/[:.]/g, "-")}.md`);
-    // Backup the original file before overwriting
+    try {
+        // Create backup with editor info
+        const backupFilePath = path.join(
+            __dirname, 
+            `posts-old/${lang}`, 
+            `${name}_${new Date().toISOString().replace(/[:.]/g, "-")}_${clientIp.replace(/[:.]/g, "-")}.md`
+        );
 
-    fs.copyFile(filePath, backupFilePath, (err) => {
-        if (err) {
-            console.error("Error creating backup:", err);
-            return res.status(500).send("Error creating backup");
-        }
+        // Backup the original file
+        await fs.promises.copyFile(filePath, backupFilePath);
 
-        // Now, overwrite the original file with the new content
-        fs.writeFile(filePath, content, "utf8", (err) => {
-            if (err) {
-                console.error("Error saving file:", err);
-                return res.status(500).send("Error saving file");
-            } else {
-                res.redirect(`/${lang}/${name}`); // Redirect to view the updated content
-            }
-        });
-    });
+        // Save the new content
+        await fs.promises.writeFile(filePath, content, "utf8");
+
+        // Record the contribution in the database
+        await pool.query(
+            "INSERT INTO contributions (user_id, problem_name, language, edited_at) VALUES ($1, $2, $3, NOW())",
+            [userId, name, lang]
+        );
+
+        res.redirect(`/${lang}/${name}`);
+    } catch (error) {
+        console.error("Error saving file:", error);
+        res.status(500).send("Error saving file");
+    }
 });
 
 app.get("/file-list", (req, res) => {
