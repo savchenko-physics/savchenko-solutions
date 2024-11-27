@@ -5,6 +5,7 @@
     "russianVersion": "Решения на русском",
     "oppositeLang": "ru",
     "statementsLink": "en/savchenko_en.pdf",
+    "langLink": "",
     "problemStatements": "Problem statements",
     "description": {
         "intro": "The collection of problems in physics edited by O.Y. Savchenko is one of the most popular resources for preparation for physics olympiads in post-soviet countries. Some of these problems were a source of inspiration for Jaan Kalda’s handouts and to some NBPhO problems. You may find problems from old IPhO papers. For more than 30 years since its first edition, not a single complete guide to solving problems from it has been created.",
@@ -49,5 +50,74 @@
         "12": "Electromagnetic waves",
         "13": "Optics. Quantum physics",
         "14": "Special theory of relativity"
+    },
+    "post": {
+        "backLink": "Main page",
+        "backLinkTag": "",
+        "edit": "Edit"
+    },
+    "menu": {
+        "main": "Main menu",
+        "moveToSidebar": "move to sidebar",
+        "hide": "hide",
+        "navigation": "Navigation",
+        "home": "Home",
+        "profile": "Profile",
+        "logout": "Log out",
+        "createAccount": "Create account",
+        "login": "Log in",
+        "contribute": "Contribute",
+        "learnToEdit": "Learn to edit",
+        "ourTeam": "Our Team",
+        "personalTools": "Personal tools",
+        "search": "Search Savchenko Solutions",
+        "searchButton": "Search",
+        "resultsNotFound": "No results found.",
+        "errorLoadingResults": "Error loading results.",
+        "searchPlaceholder": "Search Savchenko Solutions"
+    },
+    "auth": {
+        "login": {
+            "title": "Sign in to account",
+            "username": "Username:",
+            "password": "Password:",
+            "submit": "Login",
+            "noAccount": "Don't have an account?",
+            "registerHere": "Register here"
+        },
+        "register": {
+            "title": "Create a new account",
+            "username": "Username:",
+            "fullName": "Full Name:",
+            "email": "Email:",
+            "password": "Password:",
+            "repeatPassword": "Repeat password:",
+            "submit": "Register",
+            "haveAccount": "Already have an account?",
+            "loginHere": "Login here",
+            "passwordsNoMatch": "Passwords do not match. Please try again."
+        }
+    },
+    "profile": {
+        "title": "Profile",
+        "welcome": "Welcome",
+        "yourContributions": "Your Contributions",
+        "noContributions": "You haven't made any contributions yet.",
+        "editedProblems": "Problems edited:",
+        "lastEdited": "Last edited:",
+        "viewProblem": "View problem",
+        "statistics": "Statistics",
+        "totalEdits": "Total edits:",
+        "joinedDate": "Joined:",
+        "settings": "Settings",
+        "fullName": "Full Name:",
+        "email": "Email:",
+        "username": "Username:",
+        "save": "Save Changes",
+        "changePassword": "Change Password",
+        "currentPassword": "Current Password:",
+        "newPassword": "New Password:",
+        "confirmPassword": "Confirm New Password:",
+        "updatePassword": "Update Password"
     }
 }

@@ -1,40 +1,36 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 
 <head>
-    <%- include('default/head_en.ejs') %>
-        <link rel="stylesheet" href="/css/css-latex/login.css" />
-        <title>Sign in to account</title>
+    <%- include(`default/head_${lang}.ejs`) %>
+    <link rel="stylesheet" href="/css/css-latex/login.css" />
+    <title><%= __('auth.login.title') %></title>
 </head>
 
 <body>
     <%- include('default/header.ejs') %>
-        <div class="container1">
-            <h2>Sign in to account</h2>
-            <% if (error) { %>
-                <p class="error">
-                    <%= error %>
-                </p>
-                <% } %>
-                    <% if (success) { %>
-                        <p class="success">
-                            <%= success %>
-                        </p>
-                        <% } %>
-                            <form action="/login" method="POST">
-                                <div class="form-group">
-                                    <label for="username">Username:</label>
-                                    <input type="text" id="username" name="username" required />
-                                </div>
-                                <div class="form-group">
-                                    <label for="password">Password:</label>
-                                    <input type="password" id="password" name="password" required />
-                                </div>
-                                <button type="submit" class="submit-button">Login</button>
-                            </form>
-                            <p>Don't have an account? <a href="/register">Register here</a></p>
-        </div>
-        <%- include('default/footer_en.ejs') %>
+    <div class="container1">
+        <h2><%= __('auth.login.title') %></h2>
+        <% if (error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <% if (success) { %>
+            <p class="success"><%= success %></p>
+        <% } %>
+        <form action="/login" method="POST">
+            <input type="hidden" name="lang" value="<%= lang %>">
+            <div class="form-group">
+                <label for="username"><%= __('auth.login.username') %></label>
+                <input type="text" id="username" name="username" required />
+            </div>
+            <div class="form-group">
+                <label for="password"><%= __('auth.login.password') %></label>
+                <input type="password" id="password" name="password" required />
+            </div>
+            <button type="submit" class="submit-button"><%= __('auth.login.submit') %></button>
+        </form>
+        <p><%= __('auth.login.noAccount') %> <a href="/<%= lang %>/register"><%= __('auth.login.registerHere') %></a></p>
+    </div>
+    <%- include(`default/footer_${lang}.ejs`) %>
 </body>
-
 </html>

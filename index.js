@@ -54,6 +54,29 @@ app.use((req, res, next) => {
     next(); // Move to the next middleware/route handler
 });
 
+// Authentication middleware
+function checkAuthenticated(req, res, next) {
+    const lang = req.query.lang || req.body.lang || 'en';
+    i18n.setLocale(res, lang);
+
+    if (req.session.userId) {
+        return next();
+    }
+    
+    res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
+}
+
+function checkNotAuthenticated(req, res, next) {
+    const lang = req.query.lang || req.body.lang || 'en';
+    i18n.setLocale(res, lang);
+
+    if (!req.session.userId) {
+        return next();
+    }
+    
+    res.redirect(`/${lang}/profile`);
+}
+
 app.post("/create-problem", async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
 
@@ -214,32 +237,78 @@ $$ x(t)=\\frac{bt^3}{6} $$
 });
 
 
-app.get("/login", (req, res) => {
+app.get("/login", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'en'); // Default to English for login
     res.render("login", {
-        error: req.query.error || "", // Provide a default empty string if no error
-        success: req.query.success || "", // Provide a default empty string if no success message
+        __: i18n.__,
+        lang: 'en',
+        error: req.query.error || "",
+        success: req.query.success || "",
     });
 });
 
-app.get("/register", (req, res) => {
+app.get("/ru/login", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'ru');
+    res.render("login", {
+        __: i18n.__,
+        lang: 'ru',
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.get("/en/login", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'en');
+    res.render("login", {
+        __: i18n.__,
+        lang: 'en',
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.get("/register", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'en'); // Default to English for register
     res.render("register", {
-        error: req.query.error || "", // Provide a default empty string if no error
-        success: req.query.success || "", // Provide a default empty string if no success message
+        __: i18n.__,
+        lang: 'en',
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.get("/ru/register", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'ru');
+    res.render("register", {
+        __: i18n.__,
+        lang: 'ru',
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.get("/en/register", checkNotAuthenticated, (req, res) => {
+    i18n.setLocale(res, 'en');
+    res.render("register", {
+        __: i18n.__,
+        lang: 'en',
+        error: req.query.error || "",
+        success: req.query.success || "",
     });
 });
 
 // Registration Route
 app.post("/register", async (req, res) => {
-    const { username, email, fullname, password, password2 } = req.body;
+    const { username, email, fullname, password, password2, lang = 'en' } = req.body;
 
     // Validate required fields
     if (!username || !email || !fullname || !password || !password2) {
-        return res.redirect("/register?error=All fields are required");
+        return res.redirect(`/${lang}/register?error=${i18n.__('All fields are required')}`);
     }
 
     // Check if passwords match
     if (password !== password2) {
-        return res.redirect("/register?error=Passwords do not match");
+        return res.redirect(`/${lang}/register?error=${i18n.__('Passwords do not match')}`);
     }
 
     try {
@@ -251,17 +320,17 @@ app.post("/register", async (req, res) => {
             [username, email, fullname, hashedPassword]
         );
 
-        res.redirect("/login?success=Registration successful");
+        res.redirect(`/${lang}/login?success=${i18n.__('Registration successful')}`);
         // res.redirect("/profile");
     } catch (error) {
         console.error(error);
 
         // Handle errors like duplicate entries
         if (error.code === '23505') {
-            return res.redirect("/register?error=Username or email already taken");
+            return res.redirect(`/${lang}/register?error=${i18n.__('Username or email already taken')}`);
         }
 
-        res.redirect("/register?error=Something went wrong");
+        res.redirect(`/${lang}/register?error=${i18n.__('Something went wrong')}`);
     }
 });
 
@@ -269,45 +338,122 @@ app.post("/register", async (req, res) => {
 
 // Login Route
 app.post("/login", async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, lang = 'en' } = req.body;
+    
     if (!username || !password) {
-        return res.redirect("/login?error=Username and password are required");
+        return res.redirect(`/${lang}/login?error=${i18n.__('Username and password are required')}`);
     }
 
     try {
         const result = await pool.query("SELECT * FROM users WHERE username = $1", [username]);
         if (result.rows.length === 0 || !(await bcrypt.compare(password, result.rows[0].password))) {
-            return res.redirect("/login?error=Invalid credentials");
+            return res.redirect(`/${lang}/login?error=${i18n.__('Invalid credentials')}`);
         }
 
-        // Set session variables
         req.session.userId = result.rows[0].id;
         req.session.username = result.rows[0].username;
+        req.session.lang = lang; // Store language preference in session
 
-        // Redirect to profile page
-        res.redirect("/profile");
+        res.redirect(`/${lang}/profile`);
     } catch (error) {
         console.error(error);
-        res.redirect("/login?error=Something went wrong");
+        res.redirect(`/${lang}/login?error=${i18n.__('Something went wrong')}`);
     }
 });
 
-app.get("/profile", (req, res) => {
-    if (!req.session.userId) {
-        return res.redirect("/login?error=Please log in to access your profile");
-    }
+// Profile routes
+app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => {
+    const lang = req.params.lang || req.query.lang || 'en';
+    i18n.setLocale(res, lang);
 
-    // Render the profile page with the user's information
-    res.render("profile", { username: req.session.username });
+    try {
+        const userResult = await pool.query(
+            "SELECT * FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+
+        const contributionsResult = await pool.query(
+            "SELECT * FROM contributions WHERE user_id = $1 ORDER BY edited_at DESC",
+            [req.session.userId]
+        );
+
+        const user = userResult.rows[0];
+        const contributions = contributionsResult.rows;
+
+        res.render("profile", {
+            __: i18n.__,
+            lang,
+            username: user.username,
+            email: user.email,
+            fullName: user.full_name,
+            joinDate: new Date(user.created_at),
+            contributions,
+            totalEdits: contributions.length,
+            error: req.query.error || "",
+            success: req.query.success || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/login?error=${i18n.__('Something went wrong')}`);
+    }
+});
+
+// Profile update routes
+app.post(["/profile/update", "/:lang/profile/update"], checkAuthenticated, async (req, res) => {
+    const { fullname, email, lang } = req.body;
+    const language = req.params.lang || lang || 'en';
+    
+    try {
+        await pool.query(
+            "UPDATE users SET full_name = $1, email = $2 WHERE id = $3",
+            [fullname, email, req.session.userId]
+        );
+        
+        res.redirect(`/${language}/profile?success=${i18n.__('Profile updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${language}/profile?error=${i18n.__('Failed to update profile')}`);
+    }
+});
+
+// Password update routes
+app.post(["/profile/password", "/:lang/profile/password"], checkAuthenticated, async (req, res) => {
+    const { currentPassword, newPassword, lang } = req.body;
+    const language = req.params.lang || lang || 'en';
+    
+    try {
+        const result = await pool.query(
+            "SELECT password FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        
+        const validPassword = await bcrypt.compare(currentPassword, result.rows[0].password);
+        
+        if (!validPassword) {
+            return res.redirect(`/${language}/profile?error=${i18n.__('Current password is incorrect')}`);
+        }
+        
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query(
+            "UPDATE users SET password = $1 WHERE id = $2",
+            [hashedPassword, req.session.userId]
+        );
+        
+        res.redirect(`/${language}/profile?success=${i18n.__('Password updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${language}/profile?error=${i18n.__('Failed to update password')}`);
+    }
 });
 
 // Logout Route
 app.get("/logout", (req, res) => {
+    const lang = req.session.lang || 'en'; // Get language before destroying session
     req.session.destroy((err) => {
         if (err) {
-            return res.redirect("/profile");
+            return res.redirect(`/${lang}/profile`);
         }
-        res.redirect("/login?success=Logged out successfully");
+        res.redirect(`/${lang}/login?success=${i18n.__('Logged out successfully')}`);
     });
 });
 
@@ -387,11 +533,19 @@ app.get("/en/about", (req, res) => {
 });
 
 app.get("/about", (req, res) => {
-    res.render("about_en");
+    i18n.setLocale(res, 'en'); 
+    res.render("about_en", {
+        lang: 'en',
+        __: i18n.__
+    });
 });
 
 app.get("/ru/about", (req, res) => {
-    res.render("about_ru");
+    i18n.setLocale(res, 'ru'); // Set locale to Russian
+    res.render("about_ru", {
+        lang: 'ru',
+        __: i18n.__
+    });
 });
 
 app.get("/study-guide", (req, res) => {
@@ -412,37 +566,53 @@ app.get("/:lang/:name", (req, res) => {
         let fileContents = fs.readFileSync(filePath, "utf8").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~");
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
-        // console.log(titleContent);
 
-        let html = parseMarkdown(fileContents); // Convert Markdown to HTML
+        let html = parseMarkdown(fileContents);
         html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
         html = html.replace(/\\\*/g, "*");
 
         const pageRef = name.split(".").slice(0, 2).join(".");
 
-        res.render(lang === "ru" ? "post_ru" : "post_en", {
+        i18n.setLocale(res, lang);
+
+        res.render("post", {
+            __: i18n.__,
+            lang,
             pageRef,
             problemRef: name,
             title: name + ". " + titleContent,
-            content: html,
+            content: html
         });
     } else {
+        i18n.setLocale(res, lang);
         res.status(404).render("404", {
+            __: i18n.__,
             pageUrl: req.originalUrl,
+            lang
         });
     }
 });
 
 app.get("/:lang/edit/:name", (req, res) => {
-    const clientIp = req.headers["x-forwarded-for"] || req.ip;
     const { lang, name } = req.params;
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
 
     if (fs.existsSync(filePath)) {
         let fileContents = fs.readFileSync(filePath, "utf8");
-        res.render("edit_post", { lang, name, content: fileContents });
+        i18n.setLocale(res, lang);
+        res.render("edit_post", {
+            __: i18n.__,
+            lang,
+            name,
+            content: fileContents
+        });
     } else {
-        res.status(404).render("404", { pageUrl: req.originalUrl });
+        i18n.setLocale(res, lang);
+        res.status(404).render("404", {
+            __: i18n.__,
+            pageUrl: req.originalUrl,
+            lang
+        });
     }
 });
 

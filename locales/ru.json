@@ -3,8 +3,9 @@
     "subtitle": "Решения\u00A0задач Савченко\u00A0по\u00A0физике",
     "motto": "knowledge must be free",
     "russianVersion": "English solutions",
-    "oppositeLang": "/",
+    "oppositeLang": "../",
     "statementsLink": "/savchenko.pdf",
+    "langLink": "/ru",
     "problemStatements": "Условия задач",
     "description": {
         "intro": "Сборник задач по физике под редакцией О.Я. Савченко является одним из самых популярных ресурсов для подготовки к олимпиадам по физике в постсоветских странах. За более чем 30 лет с момента первого издания не было создано ни одного пособия по решению задач из него.",
@@ -49,5 +50,74 @@
         "12": "Электромагнитные волны",
         "13": "Оптика. Квантовая физика",
         "14": "Специальная теория относительности"
+    },
+    "post": {
+        "backLink": "Назад",
+        "backLinkTag": "ru",
+        "edit": "Править"
+    },
+    "menu": {
+        "main": "Главное меню",
+        "moveToSidebar": "переместить в боковую панель",
+        "hide": "скрыть",
+        "navigation": "Навигация",
+        "home": "Главная",
+        "profile": "Профиль",
+        "logout": "Выйти",
+        "createAccount": "Создать учётную запись",
+        "login": "Войти",
+        "contribute": "Участие",
+        "learnToEdit": "Научиться редактировать",
+        "ourTeam": "Наша команда",
+        "personalTools": "Персональные инструменты",
+        "search": "Поиск по Решениям Савченко",
+        "searchButton": "Поиск",
+        "resultsNotFound": "Ничего не найдено.",
+        "errorLoadingResults": "Ошибка загрузки результатов.",
+        "searchPlaceholder": "Поиск по Решениям Савченко"
+    },
+    "auth": {
+        "login": {
+            "title": "Войти в аккаунт",
+            "username": "Имя пользователя:",
+            "password": "Пароль:",
+            "submit": "Войти",
+            "noAccount": "Нет аккаунта?",
+            "registerHere": "Зарегистрироваться"
+        },
+        "register": {
+            "title": "Создать новый аккаунт",
+            "username": "Имя пользователя:",
+            "fullName": "Полное имя:",
+            "email": "Email:",
+            "password": "Пароль:",
+            "repeatPassword": "Повторите пароль:",
+            "submit": "Зарегистрироваться",
+            "haveAccount": "Уже есть аккаунт?",
+            "loginHere": "Войти",
+            "passwordsNoMatch": "Пароли не совпадают. Пожалуйста, попробуйте снова."
+        }
+    },
+    "profile": {
+        "title": "Профиль",
+        "welcome": "Добро пожаловать",
+        "yourContributions": "Ваши вклады",
+        "noContributions": "Вы еще не внесли никаких правок.",
+        "editedProblems": "Отредактированные задачи:",
+        "lastEdited": "Последнее редактирование:",
+        "viewProblem": "Просмотреть задачу",
+        "statistics": "Статистика",
+        "totalEdits": "Всего правок:",
+        "joinedDate": "Дата регистрации:",
+        "settings": "Настройки",
+        "fullName": "Полное имя:",
+        "email": "Email:",
+        "username": "Имя пользователя:",
+        "save": "Сохранить изменения",
+        "changePassword": "Изменить пароль",
+        "currentPassword": "Текущий пароль:",
+        "newPassword": "Новый пароль:",
+        "confirmPassword": "Подтвердите новый пароль:",
+        "updatePassword": "Обновить пароль"
     }
 }

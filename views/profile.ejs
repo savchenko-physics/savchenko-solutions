@@ -1,61 +1,117 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 
 <head>
-   <%- include('default/head_en.ejs') %>
-      <link rel="stylesheet" href="/css/css-latex/login.css" />
-      <title>Personal Profile</title>
-      <style>
-         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-         }
-
-         .container1 {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #ffffff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-         }
-
-         h2 {
-            font-size: 1.8rem;
-            color: #333;
-            margin-bottom: 1rem;
-         }
-
-         p {
-            font-size: 1rem;
-            margin-bottom: 1.5rem;
-            color: #555;
-         }
-
-         a {
-            text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-            transition: color 0.3s ease;
-         }
-
-         a:hover {
-            color: #0056b3;
-         }
-      </style>
+    <%- include(`default/head_${lang}.ejs`) %>
+    <link rel="stylesheet" href="/css/css-latex/profile.css" />
+    <title><%= __('profile.title') %></title>
 </head>
 
 <body>
-   <%- include('default/header.ejs') %>
-      <div class="container1">
-         <h2>Welcome, <%= username %>!</h2>
-         <p style="text-align: center;">This is your profile page.</p>
-         <a href="/logout"><button style="width: 40%; padding: 5px;">Logout</button></a>
-      </div>
-      <%- include('default/footer_en.ejs') %>
-</body>
+    <%- include('default/header.ejs') %>
+    
+    <div class="container1">
+        <h2 style="text-align: center; font-weight: bold;"><%= __('profile.welcome') %>, <%= username %>!</h2>
 
+        <% if (error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <% if (success) { %>
+            <p class="success"><%= success %></p>
+        <% } %>
+
+        <div class="profile-section">
+            <h2><%= __('profile.yourContributions') %></h2>
+            <% if (contributions && contributions.length > 0) { %>
+                <ul class="contributions-list">
+                    <% contributions.forEach(contribution => { %>
+                        <li>
+                            <div class="contribution-item">
+                                <strong><%= __('profile.editedProblems') %></strong> 
+                                <a href="/<%= lang %>/<%= contribution.problem_id %>"><%= contribution.problem_id %></a>
+                                <br>
+                                <span class="edit-date">
+                                    <%= __('profile.lastEdited') %> <%= new Date(contribution.edited_at).toLocaleDateString() %>
+                                </span>
+                                <a href="/<%= lang %>/<%= contribution.problem_id %>" class="view-button">
+                                    <%= __('profile.viewProblem') %>
+                                </a>
+                            </div>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p><%= __('profile.noContributions') %></p>
+            <% } %>
+        </div>
+
+        <div class="profile-section">
+            <h2><%= __('profile.statistics') %></h2>
+            <p><strong><%= __('profile.totalEdits') %></strong> <%= totalEdits %></p>
+            <p><strong><%= __('profile.joinedDate') %></strong> <%= joinDate.toLocaleDateString() %></p>
+        </div>
+
+        <div class="profile-section">
+            <h2><%= __('profile.settings') %></h2>
+            <form action="/profile/update" method="POST" class="settings-form">
+                <input type="hidden" name="lang" value="<%= lang %>">
+                
+                <div class="form-group">
+                    <label for="fullname"><%= __('profile.fullName') %></label>
+                    <input type="text" id="fullname" name="fullname" value="<%= fullName %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email"><%= __('profile.email') %></label>
+                    <input type="email" id="email" name="email" value="<%= email %>" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="username"><%= __('profile.username') %></label>
+                    <input type="text" id="username" name="username" value="<%= username %>" readonly>
+                </div>
+
+                <button type="submit" class="submit-button"><%= __('profile.save') %></button>
+            </form>
+        </div>
+
+        <div class="profile-section">
+            <h2><%= __('profile.changePassword') %></h2>
+            <form action="/profile/password" method="POST" class="password-form">
+                <input type="hidden" name="lang" value="<%= lang %>">
+                
+                <div class="form-group">
+                    <label for="currentPassword"><%= __('profile.currentPassword') %></label>
+                    <input type="password" id="currentPassword" name="currentPassword" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="newPassword"><%= __('profile.newPassword') %></label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword"><%= __('profile.confirmPassword') %></label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+
+                <button type="submit" class="submit-button"><%= __('profile.updatePassword') %></button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('.password-form').addEventListener('submit', function(e) {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                e.preventDefault();
+                alert('<%= __("auth.register.passwordsNoMatch") %>');
+            }
+        });
+    </script>
+
+    <%- include(`default/footer_${lang}.ejs`) %>
+</body>
 </html>

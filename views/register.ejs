@@ -1,75 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 
 <head>
-   <%- include('default/head_en.ejs') %>
-      <link rel="stylesheet" href="/css/css-latex/login.css" />
-      <title>Create a new account</title>
+    <%- include(`default/head_${lang}.ejs`) %>
+    <link rel="stylesheet" href="/css/css-latex/login.css" />
+    <title><%= __('auth.register.title') %></title>
 </head>
 
 <body>
-   <%- include('default/header.ejs') %>
-      <div class="container1">
-         <h2>Create a new account</h2>
+    <%- include('default/header.ejs') %>
+    <div class="container1">
+        <h2><%= __('auth.register.title') %></h2>
+        <% if (error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <% if (success) { %>
+            <p class="success"><%= success %></p>
+        <% } %>
+        <form action="/register" method="POST">
+            <input type="hidden" name="lang" value="<%= lang %>">
+            <div class="form-group">
+                <label for="username"><%= __('auth.register.username') %></label>
+                <input type="text" id="username" name="username" required />
+            </div>
+            <div class="form-group">
+                <label for="fullname"><%= __('auth.register.fullName') %></label>
+                <input type="text" id="fullname" name="fullname" required />
+            </div>
+            <div class="form-group">
+                <label for="email"><%= __('auth.register.email') %></label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            <div class="form-group">
+                <label for="password"><%= __('auth.register.password') %></label>
+                <input type="password" id="password" name="password" required />
+            </div>
+            <div class="form-group">
+                <label for="password2"><%= __('auth.register.repeatPassword') %></label>
+                <input type="password" id="password2" name="password2" required />
+            </div>
+            <button type="submit" class="submit-button"><%= __('auth.register.submit') %></button>
+        </form>
+        <p><%= __('auth.register.haveAccount') %> <a href="/<%= lang %>/login"><%= __('auth.register.loginHere') %></a></p>
+    </div>
 
-         <% if (error) { %>
-            <p class="error">
-               <%= error %>
-            </p>
-            <% } %>
-
-               <% if (success) { %>
-                  <p class="success">
-                     <%= success %>
-                  </p>
-                  <% } %>
-
-                     <form action="/register" method="POST">
-                        <div class="form-group">
-                           <label for="username">Username:</label>
-                           <input type="text" id="username" name="username" required />
-                        </div>
-                        <div class="form-group">
-                           <label for="fullname">Full Name:</label>
-                           <input type="text" id="fullname" name="fullname" required />
-                        </div>
-                        <div class="form-group">
-                           <label for="email">Email:</label>
-                           <input type="email" id="email" name="email" required />
-                        </div>
-                        <div class="form-group">
-                           <label for="password">Password:</label>
-                           <input type="password" id="password" name="password" required />
-                        </div>
-                        <div class="form-group">
-                           <label for="password2">Repeat password:</label>
-                           <input type="password" id="password2" name="password2" required />
-                        </div>
-                        <button type="submit" class="submit-button">Register</button>
-                     </form>
-
-                     <p>Already have an account? <a href="/login">Login here</a></p>
-      </div>
-      <!-- 
-      <script>
-         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.querySelector('form');
-            const password = document.getElementById('password');
-            const password2 = document.getElementById('password2');
-
-            form.addEventListener('submit', (e) => {
-               // Check if passwords match
-               if (password.value !== password2.value) {
-                  e.preventDefault(); // Prevent form submission
-                  alert('Passwords do not match. Please try again.');
-               }
-
-               // Additional checks can be added here, e.g., username length, forbidden characters, etc.
-            });
-         });
-      </script> -->
-      <script>
-         document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
             const form = document.querySelector('form');
             const password = document.getElementById('password');
             const password2 = document.getElementById('password2');
@@ -79,21 +55,15 @@
             form.appendChild(errorContainer);
 
             form.addEventListener('submit', (e) => {
-               errorContainer.textContent = '';
-
-               // Check if passwords match
-               if (password.value !== password2.value) {
-                  e.preventDefault(); // Prevent form submission
-                  errorContainer.textContent = 'Passwords do not match. Please try again.';
-               }
-
-               // Additional checks can be added here, e.g., password strength
+                errorContainer.textContent = '';
+                if (password.value !== password2.value) {
+                    e.preventDefault();
+                    errorContainer.textContent = '<%= __("auth.register.passwordsNoMatch") %>';
+                }
             });
-         });
-      </script>
+        });
+    </script>
 
-
-      <%- include('default/footer_en.ejs') %>
+    <%- include(`default/footer_${lang}.ejs`) %>
 </body>
-
 </html>

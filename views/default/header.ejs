@@ -76,90 +76,71 @@
                     class="vector-dropdown vector-main-menu-dropdown vector-button-flush-left vector-button-flush-right">
                     <input type="checkbox" id="vector-main-menu-dropdown-checkbox" role="button" aria-haspopup="true"
                         data-event-name="ui.dropdown-vector-main-menu-dropdown" class="vector-dropdown-checkbox"
-                        aria-label="Main menu" />
+                        aria-label="<%= __('menu.main') %>" />
                     <label id="vector-main-menu-dropdown-label" for="vector-main-menu-dropdown-checkbox"
                         class="vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only"
                         aria-hidden="true">
                         <span class="vector-icon mw-ui-icon-menu mw-ui-icon-wikimedia-menu"></span>
 
-                        <span class="vector-dropdown-label-text">Main menu</span>
+                        <span class="vector-dropdown-label-text"><%= __('menu.main') %></span>
                     </label>
                     <div class="vector-dropdown-content">
                         <div id="vector-main-menu-unpinned-container" class="vector-unpinned-container">
                             <div id="vector-main-menu" class="vector-main-menu vector-pinnable-element">
                                 <!-- Main Menu Header -->
                                 <div class="vector-pinnable-header" data-feature-name="main-menu-pinned">
-                                    <div class="vector-pinnable-header-label">Main menu</div>
-                                    <button class="vector-pinnable-header-toggle-button" data-event-name="pin">move to
-                                        sidebar</button>
-                                    <button class="vector-pinnable-header-toggle-button"
-                                        data-event-name="unpin">hide</button>
+                                    <div class="vector-pinnable-header-label"><%= __('menu.main') %></div>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="pin"><%= __('menu.moveToSidebar') %></button>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="unpin"><%= __('menu.hide') %></button>
                                 </div>
 
                                 <!-- Navigation Section -->
                                 <div id="p-navigation" class="vector-menu mw-portlet">
-                                    <div class="vector-menu-heading">Navigation</div>
+                                    <div class="vector-menu-heading"><%= __('menu.navigation') %></div>
                                     <ul class="vector-menu-content-list">
                                         <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
-                                            <a href="/"
-                                                title="You are encouraged to create an account and log in; however, it is not mandatory">
-                                                <span
-                                                    class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-Home"></span>
-                                                <span>Home</span>
+                                            <a href="<%= __('langLink') %>/">
+                                                <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-Home"></span>
+                                                <span><%= __('menu.home') %></span>
                                             </a>
                                         </li>
 
                                         <% if (username) { %>
-                                            <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
-                                                <a href="/profile"
-                                                    title="You are encouraged to create an account and log in; however, it is not mandatory">
-                                                    <span
-                                                        class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
-                                                    <span>Profile</span>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/profile">
+                                                    <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                    <span><%= __('menu.profile') %></span>
                                                 </a>
                                             </li>
-                                            <li id="pt-login" class="user-links-collapsible-item mw-list-item">
-                                                <a href="/logout"
-                                                    title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
-                                                    accesskey="o">
-                                                    <span
-                                                        class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
-                                                    <span>Log out</span>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="/logout">
+                                                    <span class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                    <span><%= __('menu.logout') %></span>
                                                 </a>
                                             </li>
-                                            <% } else { %>
-                                                <li id="pt-createaccount"
-                                                    class="user-links-collapsible-item mw-list-item">
-                                                    <a href="/register"
-                                                        title="You are encouraged to create an account and log in; however, it is not mandatory">
-                                                        <span
-                                                            class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
-                                                        <span>Create account</span>
-                                                    </a>
-                                                </li>
-                                                <li id="pt-login" class="user-links-collapsible-item mw-list-item">
-                                                    <a href="/login"
-                                                        title="You're encouraged to log in; however, it's not mandatory. [alt-shift-o]"
-                                                        accesskey="o">
-                                                        <span
-                                                            class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
-                                                        <span>Log in</span>
-                                                    </a>
-                                                </li>
-                                                <% } %>
+                                        <% } else { %>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/register">
+                                                    <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                    <span><%= __('menu.createAccount') %></span>
+                                                </a>
+                                            </li>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/login">
+                                                    <span class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                    <span><%= __('menu.login') %></span>
+                                                </a>
+                                            </li>
+                                        <% } %>
                                     </ul>
                                 </div>
 
                                 <!-- Contribute Section -->
                                 <div id="p-interaction" class="vector-menu mw-portlet">
-                                    <div class="vector-menu-heading">Contribute</div>
-                                    <ul class="vector-menu-content-list"></ul>
-                                    <!-- <li><a href="/contact"
-                                            title="How to contact Wikipedia">Contact us</a></li> -->
-                                    <li><a href="/study-guide" title="Learn how to edit Savchenko Solutions">Learn to
-                                            edit</a></li>
-                                    <li><a href="/about#team" title="Learn about Savchenko Solutions team">Our Team</a>
-                                    </li>
+                                    <div class="vector-menu-heading"><%= __('menu.contribute') %></div>
+                                    <ul class="vector-menu-content-list">
+                                        <li><a href="/study-guide"><%= __('menu.learnToEdit') %></a></li>
+                                        <li><a href="<%= __('langLink') %>/about#team"><%= __('menu.ourTeam') %></a></li>
                                     </ul>
                                 </div>
                             </div>
@@ -168,13 +149,12 @@
                 </div>
             </nav>
 
-            <a href="/" class="mw-logo">
+            <a href="<%= __('langLink') %>/" class="mw-logo">
                 <img class="mw-logo-icon" src="https://savchenkosolutions.com/img/book.png" alt="" aria-hidden="true"
                     height="50" width="50" />
                 <span class="mw-logo-container skin-invert">
-                    <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en.svg" />
-                    <img class="mw-logo-tagline" alt="The Collaborative Problemsolving Platform"
-                        src="/img/savchenko-tagline-en.svg" width="230" height="17"
+                    <img class="mw-logo-wordmark" alt="<%= __('title') %>" src="/img/savchenko-wordmark-<%= lang %>.svg" />
+                    <img class="mw-logo-tagline" alt="<%= __('subtitle') %>" src="/img/savchenko-tagline-<%= lang %>.svg" width="230" height="17"
                         style="width: 11em; height: 0.8125em; margin-top: 5px;" />
                 </span>
             </a>
@@ -184,10 +164,10 @@
                 class="vector-search-box-vue vector-search-box-collapses vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
                 <a href="/global-search"
                     class="cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only search-toggle"
-                    title="Search Savchenko Solutions [alt-shift-f]" accesskey="f">
+                    title="<%= __('menu.search') %>" accesskey="f">
                     <span class="vector-icon mw-ui-icon-search mw-ui-icon-wikimedia-search"></span>
 
-                    <span>Search</span>
+                    <span><%= __('menu.search') %></span>
                 </a>
                 <div class="vector-typeahead-search-container">
                     <div
@@ -198,15 +178,15 @@
                                 data-search-loc="header-moved">
                                 <div class="cdx-text-input cdx-text-input--has-start-icon">
                                     <input class="cdx-text-input__input" type="search" name="search"
-                                        placeholder="Search Savchenko Solutions" aria-label="Search Savchenko Solutions"
-                                        autocapitalize="sentences" title="Search Savchenko Solutions [alt-shift-f]"
+                                        placeholder="<%= __('menu.search') %>" aria-label="<%= __('menu.search') %>"
+                                        autocapitalize="sentences" title="<%= __('menu.search') %> [alt-shift-f]"
                                         accesskey="f" id="searchInput" autocomplete="off"
                                         data-gtm-form-interact-field-id="0">
                                     <span class="cdx-text-input__icon cdx-text-input__start-icon"></span>
                                 </div>
                                 <input type="hidden" name="title" value="Special:Search">
                             </div>
-                            <button class="cdx-button cdx-search-input__end-button">Search</button>
+                            <button class="cdx-button cdx-search-input__end-button"><%= __('menu.searchButton') %></button>
                         </form>
                     </div>
                 </div>
@@ -317,7 +297,7 @@
                                 searchResultsList.innerHTML = `
                     <li class="cdx-menu-item cdx-menu-item--enabled">
                         <span class="cdx-menu-item__content">
-                            <span class="cdx-menu-item__text">No results found.</span>
+                            <span class="cdx-menu-item__text"><%= __('menu.resultsNotFound') %></span>
                         </span>
                     </li>
                 `;
@@ -328,7 +308,7 @@
                             searchResultsList.innerHTML = `
                 <li class="cdx-menu-item cdx-menu-item--enabled">
                     <span class="cdx-menu-item__content">
-                        <span class="cdx-menu-item__text">Error loading results.</span>
+                        <span class="cdx-menu-item__text"><%= __('menu.errorLoadingResults') %></span>
                     </span>
                 </li>
             `;
@@ -375,7 +355,7 @@
                                 <ul class="vector-menu-content-list" style="list-style: none;">
                                     <li id="pt-createaccount-2"
                                         class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                        <a data-mw="interface" href="/profile"
+                                        <a data-mw="interface" href="<%= __('langLink') %>/profile"
                                             title="You are encouraged to create an account and log in; however, it is not mandatory"
                                             class="">
                                             <span>
@@ -388,7 +368,7 @@
                                         <a data-mw="interface" href="/logout"
                                             title="You're encouraged to log in; however, it's not mandatory."
                                             accesskey="o" class="">
-                                            <span>Logout</span>
+                                            <span><%= __('menu.logout') %></span>
                                         </a>
                                     </li>
                                 </ul>
@@ -400,18 +380,18 @@
                                     <ul class="vector-menu-content-list" style="list-style: none;">
                                         <li id="pt-createaccount-2"
                                             class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                            <a data-mw="interface" href="/register"
+                                            <a data-mw="interface" href="<%= __('langLink') %>/register"
                                                 title="You are encouraged to create an account and log in; however, it is not mandatory"
                                                 class="">
-                                                <span>Create account</span>
+                                                <span><%= __('menu.createAccount') %></span>
                                             </a>
                                         </li>
                                         <li id="pt-login-2"
                                             class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
-                                            <a data-mw="interface" href="/login"
+                                            <a data-mw="interface" href="<%= __('langLink') %>/login"
                                                 title="You're encouraged to log in; however, it's not mandatory."
                                                 accesskey="o" class="">
-                                                <span>Log in</span>
+                                                <span><%= __('menu.login') %></span>
                                             </a>
                                         </li>
                                     </ul>
@@ -431,7 +411,7 @@
                         aria-hidden="true">
                         <span class="vector-icon mw-ui-icon-ellipsis mw-ui-icon-wikimedia-ellipsis"></span>
 
-                        <span class="vector-dropdown-label-text">Personal tools</span>
+                        <span class="vector-dropdown-label-text"><%= __('menu.personalTools') %></span>
                     </label>
                     <div class="vector-dropdown-content">
                         <div id="p-personal"
@@ -440,20 +420,20 @@
                             <div class="vector-menu-content">
                                 <ul class="vector-menu-content-list">
                                     <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
-                                        <a href="/register"
+                                        <a href="<%= __('langLink') %>/register"
                                             title="You are encouraged to create an account and log in; however, it is not mandatory">
                                             <span
                                                 class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
-                                            <span>Create account</span>
+                                            <span><%= __('menu.createAccount') %></span>
                                         </a>
                                     </li>
                                     <li id="pt-login" class="user-links-collapsible-item mw-list-item">
-                                        <a href="/login"
+                                        <a href="<%= __('langLink') %>/login"
                                             title="You're encouraged to log in; however, it's not mandatory."
                                             accesskey="o">
                                             <span
                                                 class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
-                                            <span>Log in</span>
+                                            <span><%= __('menu.login') %></span>
                                         </a>
                                     </li>
                                 </ul>

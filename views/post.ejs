@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="content-language" content="<%= lang %>" />
+    <meta name="keywords" content="<%= __('meta.keywords') %>" />
+    <meta name="description" content="<%= title %>" />
+    <meta name="author" content="<%= __('meta.author') %>" />
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:image" content="img/logo.png" />
+    <meta property="og:description" content="<%= title %>" />
+    <meta name="yandex-verification" content="6cfda41f74038368" />
+    <title><%= title %></title>
+    <link rel="stylesheet" href="../../css/css-latex/style.css" />
+    <link rel="icon" href="../../img/logo.png" type="image/png" />
+    <script src="../../js/jquery-1.10.1.min.js"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            extensions: ['tex2jax.js'],
+            jax: ['input/TeX', 'output/HTML-CSS'],
+            tex2jax: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                processEscapes: true,
+                processClass: 'tex2jax',
+                ignoreClass: 'html'
+            },
+            showProcessingMessages: false,
+            messageStyle: 'none'
+        });
+    </script>
+    <style>
+        .submit-button {
+            font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            width: 100%;
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-top: 5px;
+            padding-bottom: 15px;
+            background-color: #36c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('default/header.ejs') %>
+
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -30px;margin-top: 20px;">
+            <h3 id="back-link" style="margin-top: 30px;">
+                <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>">
+                    $\leftarrow$<%= __('post.backLink') %>
+                </a>
+            </h3>
+            <h4 id="back-link">
+                <a href="/<%= lang %>/edit/<%= problemRef %>" style="text-decoration: none;">
+                    <button type="button" class="submit-button" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; padding: 8px 16px; gap: 5px; min-width: 90px; transition: background-color 0.2s">
+                        <img src="/img/edit.svg" alt="Edit" width="22" height="22">
+                        <span style="margin-left: 3px;"><%= __('post.edit') %></span>
+                    </button>
+                </a>
+            </h4>
+        </div>
+
+        <%- content %>
+    </div>
+
+    <%- include(`default/footer_${lang}.ejs`) %>
+</body>
+</html> 
