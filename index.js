@@ -548,8 +548,14 @@ app.get("/ru/about", (req, res) => {
     });
 });
 
-app.get("/study-guide", (req, res) => {
-    res.render("study-guide");
+app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
+    const lang = req.params.lang || 'en';
+    i18n.setLocale(res, lang);
+    
+    res.render("study-guide", {
+        __: i18n.__,
+        lang
+    });
 });
 
 app.get("/:lang/:name", (req, res) => {

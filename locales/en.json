@@ -1,7 +1,7 @@
 {
     "title": "Savchenko Solutions",
     "subtitle": "Solutions\u00A0of\u00A0Savchenko Problems\u00A0in\u00A0Physics",
-    "motto": "knowledge must be free",
+    "motto": "physics for everyone",
     "russianVersion": "Решения на русском",
     "oppositeLang": "ru",
     "statementsLink": "en/savchenko_en.pdf",
@@ -131,6 +131,38 @@
         "language": {
             "en": "English",
             "ru": "Russian"
+        }
+    },
+    "studyGuide": {
+        "title": "Contributors of Savchenko Solutions",
+        "backToMain": "Main page",
+        "eligibility": {
+            "title": "Eligibility Criteria",
+            "content": "Our collaborative project is dedicated to helping physics students tackle problems from the Savchenko O.Y. textbook. We welcome contributions from everyone, regardless of awards, degrees, or other credentials. Knowledge is for everyone, and together we can make it more accessible!"
+        },
+        "howToContribute": {
+            "title": "How to Contribute",
+            "intro": "You can contribute in two simple ways:",
+            "methods": {
+                "edit": {
+                    "title": "Edit the Page Directly",
+                    "content": "Every solution page includes an Edit button, allowing you to modify or enhance the content directly. Jump in and share your expertise!"
+                },
+                "email": {
+                    "title": "Email Your Contributions",
+                    "content": "Prefer a personal touch? You can email your solutions, suggestions, or helpful ideas to"
+                }
+            },
+            "valueStatement": "We value all forms of input and collaboration, big or small."
+        },
+        "registration": {
+            "title": "Is Registration Required to Contribute?",
+            "content": "No! Unregistered users can still share their insights and improve our repository. However, registration unlocks additional features:",
+            "benefits": [
+                "Your name will be displayed alongside other contributors on the solutions you edit.",
+                "You'll gain access to advanced tools to make your contributions even more impactful."
+            ],
+            "conclusion": "Your ideas matter—whether you choose to register or not, your voice can help make physics learning better for everyone!"
         }
     }
 }
