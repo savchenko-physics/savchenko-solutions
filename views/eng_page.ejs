@@ -440,6 +440,249 @@
             height: 24px;
             margin-right: 5px;
         }
+
+        .chapter-title {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .chapter-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .chapter-main {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chapter-number {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .chapter-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #36c;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .chapter-link:hover {
+            color: #2b5099;
+        }
+
+        .edit-button {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .edit-button:hover {
+            color: #36c;
+            border-color: #36c;
+            background: #f0f4ff;
+        }
+
+        .external-link-icon, .upload-icon {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 768px) {
+            .chapter-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            
+            .chapter-main {
+                flex-direction: row;
+                gap: 0.5rem;
+                font-size: 0.9em;
+            }
+
+            .chapter-number {
+                font-size: 0.85em;
+            }
+
+            .chapter-title-text {
+                font-size: 0.9em;
+            }
+
+            .edit-button {
+                padding: 0.4rem;
+                transform: scale(0.9);
+            }
+            
+            .upload-text {
+                display: none;
+            }
+
+            .chapter-title {
+                margin: 0;
+            }
+        }
+
+        .desktop-title {
+            display: none;
+        }
+
+        .mobile-title {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-title {
+                display: block;
+            }
+
+            .mobile-title {
+                display: none;
+            }
+        }
+
+        .chapter-word {
+            font-weight: normal;
+            color: #666;
+            margin-right: 0.25rem;
+        }
+
+        .section-container {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s ease;
+        }
+
+        .section-container:hover {
+            transform: translateY(-2px);
+        }
+
+        .section-header {
+            line-height: 1.2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-number {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 500;
+            white-space: nowrap;
+            padding-top: 1px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .problem-column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .problem-link {
+            display: block;
+            padding: 0.4rem 0.6rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;  
+            font-size: 0.95em;
+        }
+
+        .problem-link:hover {
+            background: #f0f4ff;
+            border-color: #36c;
+            transform: translateX(3px);
+        }
+
+        @media (max-width: 768px) {
+            .section-container {
+                padding: 1rem;
+                margin: 1.5rem 0;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .problems-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.4rem;
+            }
+
+            .problem-link {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.85em;
+            }
+        }
+
+        .section-content {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-content:last-child {
+            border-bottom: none;
+        }
+
+        .section-content .section-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .section-content {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .description {
+                font-size: 0.82rem;  /* Smaller size for mobile */
+                line-height: 1rem;   /* Improved line height for readability */
+            }
+        }
     </style>
     <main>
         <header class="margin-main" style="text-align:center;" id="description">
@@ -470,44 +713,80 @@
 
         <article class="margin-main">
             <% chapters.forEach((chapter, chapterIndex)=> {
-                // Skip the chapter if it has no sections or all sections are empty
                 const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
-                if (hasContent) {
-                %>
-                <h2 id="<%= chapterIndex + 1 %>" style="text-align: center;" class="chapter-title">
-                    <% if (chapter.theory) { %>
-                        <%= __('chapter') %> <%= chapterIndex + 1 %>. <a href="theory/<%= chapter.theory %>" target="_blank"><%= chapter.title %></a>
-                            <% } else { %>
-                                <%= __('chapter') %> <%= chapterIndex + 1 %>. <%= chapter.title %>
+                if (hasContent) { %>
+                    <div class="section-container">
+                        <div class="section-content">
+                            <h2 id="<%= chapterIndex + 1 %>" class="chapter-title">
+                                <div class="chapter-header">
+                                    <div class="chapter-main">
+                                        <% if (chapter.theory) { %>
+                                            <a href="theory/<%= chapter.theory %>" target="_blank" class="chapter-link">
+                                                <div class="desktop-title">
+                                                    <span class="chapter-number"><span class="chapter-word"><%= __('chapter') %></span> <%= chapterIndex + 1 %></span>
+                                                    <span class="chapter-title-text"><%= chapter.title %></span>
+                                                </div>
+                                                <div class="mobile-title">
+                                                    <span class="chapter-title-text"><%= chapterIndex + 1 %>. <%= chapter.title %></span>
+                                                </div>
+                                                <svg class="external-link-icon" viewBox="0 0 24 24" width="16" height="16">
+                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+                                                </svg>
+                                            </a>
+                                        <% } else { %>
+                                            <div class="desktop-title">
+                                                <span class="chapter-number"><span class="chapter-word"><%= __('chapter') %></span> <%= chapterIndex + 1 %></span>
+                                                <span class="chapter-title-text"><%= chapter.title %></span>
+                                            </div>
+                                            <div class="mobile-title">
+                                                <span class="chapter-title-text"><%= chapterIndex + 1 %>. <%= chapter.title %></span>
+                                            </div>
                                         <% } %>
-                                            <span style="font-size: 1rem;">[<a href="#" class="edit-link"
-                                                    data-chapter="<%= chapterIndex + 1 %>"><%= __('upload') %></a>]</span>
-                </h2>
+                                    </div>
+                                    <a href="#" class="edit-button" data-chapter="<%= chapterIndex + 1 %>">
+                                        <span class="upload-text"><%= __('upload') %></span>
+                                        <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </h2>
+                        </div>
 
-                <% chapter.sections.forEach((section, sectionIndex)=> {
-                    // Skip the section if it has no problems
-                    const hasProblems = section.problems.some(column => column.length > 0);
-                    if (hasProblems) {
-                    %>
-                    <h3 id="<%= section.number %>" style="text-align: center;">
-                        § <%= section.number %>. <%= section.title %>
-                    </h3>
+                        <% chapter.sections.forEach((section, sectionIndex) => {
+                            const hasProblems = section.problems.some(column => column.length > 0);
+                            if (hasProblems) { %>
+                                <div class="section-content">
+                                    <h3 id="<%= section.number %>" class="section-header">
+                                        
+                                        <div class="desktop-title">
+                                            <span class="section-number">§ <%= section.number %></span>
+                                            <span class="section-title"><%= section.title %></span>
+                                        </div>
+                                        <div class="mobile-title">
+                                            <span class="section-title">§ <%= section.number %>. <%= section.title %></span>
+                                        </div>
+                                    </h3>
 
-                    <div class="columns">
-                        <% section.problems.forEach((column)=> {
-                            if (column.length > 0) {
-                            %>
-                            <ul class="column">
-                                <% column.forEach((problem)=> { %>
-                                    <li><a href="/<%= lang%>/<%= problem %>">
-                                            <%= problem %>
-                                        </a></li>
-                                    <% }); %>
-                            </ul>
-                            <% }}); %>
+                                    <div class="problems-grid">
+                                        <% section.problems.forEach((column) => {
+                                            if (column.length > 0) { %>
+                                                <div class="problem-column">
+                                                    <% column.forEach((problem) => { %>
+                                                        <a href="/<%= lang %>/<%= problem %>" class="problem-link">
+                                                            <%= problem %>
+                                                        </a>
+                                                    <% }); %>
+                                                </div>
+                                            <% }
+                                        }); %>
+                                    </div>
+                                </div>
+                            <% }
+                        }); %>
                     </div>
-                    <% }}); %>
-                        <% }}); %>
+                <% }
+            }); %>
         </article>
     </main>
 
@@ -560,10 +839,10 @@
                 }, 300);
             }
 
-            document.querySelectorAll(".edit-link").forEach(link => {
-                link.addEventListener("click", (event) => {
+            document.querySelectorAll(".edit-button").forEach(button => {
+                button.addEventListener("click", (event) => {
                     event.preventDefault();
-                    currentChapter = link.dataset.chapter;
+                    currentChapter = button.dataset.chapter;
                     showPopup();
                 });
             });
@@ -719,11 +998,6 @@
             }
         });
     </script>
-</body>
-
-</html>
-
-</html>
 </body>
 
 </html>
