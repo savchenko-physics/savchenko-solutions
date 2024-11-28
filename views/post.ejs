@@ -47,6 +47,41 @@
             font-weight: 600;
             cursor: pointer;
         }
+        
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: inherit;
+            font-size: 0.95em;
+            font-weight: normal;
+            padding: 0.4rem 0.6rem;
+            background: #f2f4f8;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transform: translateX(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .back-link:hover {
+            background: #edf0f7;
+            border-color: #36c;
+            transform: translateX(-1px);
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .back-link svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .container > div:first-of-type {
+                margin-top: 0 !important;
+            }
+        }
     </style>
 </head>
 
@@ -55,9 +90,12 @@
 
     <div class="container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -30px;margin-top: 20px;">
-            <h3 id="back-link" style="margin-top: 30px;">
-                <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>">
-                    $\leftarrow$<%= __('post.backLink') %>
+            <h3 style="margin-top: 20px;margin-bottom: 10px;">
+                <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    <%= __('post.backLink') %>
                 </a>
             </h3>
             <h4 id="back-link">
