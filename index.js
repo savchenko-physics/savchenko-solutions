@@ -12,26 +12,42 @@ const session = require("express-session"); // Import express-session for sessio
 const { Pool } = require("pg");
 require("dotenv").config();
 const i18n = require('i18n');
+const connectPgSimple = require('connect-pg-simple'); // Add this import
 
 const app = express();
 const PORT = 3000;
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+// PostgreSQL setup (move this BEFORE session configuration)
+const pool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
+});
+
+// Session configuration (AFTER pool is created)
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || "your_secret_key", // Better to use environment variable
+        store: new (connectPgSimple(session))({
+            pool: pool,
+            tableName: 'session'
+        }),
+        secret: process.env.SESSION_SECRET || "your_secret_key",
         resave: false,
-        saveUninitialized: false, // Changed to false for better security
+        saveUninitialized: false,
         cookie: { 
-            secure: process.env.NODE_ENV === 'production', // Only use secure in production
-            maxAge: 1000 * 60 * 60 * 24 * 365, // Session expires in a year
-            httpOnly: true, // Prevents client-side access to the cookie
-            sameSite: 'lax' // Protects against CSRF
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 1000 * 60 * 60 * 24 * 365,
+            httpOnly: true,
+            sameSite: 'lax'
         },
     })
 );
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "posts")));
 app.use("/img", express.static(path.join(__dirname, "img"))); // Serve images from img folder
@@ -43,16 +59,6 @@ app.use(express.static(path.join(__dirname, "src")));
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 app.use("/js", express.static(path.join(__dirname, "js")));
-
-// PostgreSQL setup
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
 
 app.use((req, res, next) => {
     res.locals.username = req.session.username || null; // Set username globally

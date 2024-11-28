@@ -25,12 +25,52 @@
             </div>
             <div class="form-group">
                 <label for="password"><%= __('auth.login.password') %></label>
-                <input type="password" id="password" name="password" required />
+                <div class="password-container">
+                    <input type="password" id="password" name="password" required />
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')" style="display: none;">
+                        <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
+                        <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                    </button>
+                </div>
             </div>
             <button type="submit" class="submit-button"><%= __('auth.login.submit') %></button>
         </form>
         <p><%= __('auth.login.noAccount') %> <a href="/<%= lang %>/register"><%= __('auth.login.registerHere') %></a></p>
     </div>
     <%- include(`default/footer_${lang}.ejs`) %>
+    <script>
+        // Add event listener to show/hide the toggle button based on password input
+        document.getElementById('password').addEventListener('input', function() {
+            const button = this.parentElement.querySelector('.password-toggle');
+            if (this.value) {
+                button.style.visibility = 'visible';
+                button.style.opacity = '1';
+                button.style.display = 'block';
+            } else {
+                button.style.opacity = '0';
+                button.style.visibility = 'hidden';
+                setTimeout(() => {
+                    if (!this.value) button.style.display = 'none';
+                }, 200); // Match the transition duration
+            }
+        });
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const button = input.parentElement.querySelector('.password-toggle');
+            const eyeOpen = button.querySelector('.eye-open');
+            const eyeClosed = button.querySelector('.eye-closed');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeOpen.style.display = 'none';
+                eyeClosed.style.display = 'block';
+            } else {
+                input.type = 'password';
+                eyeOpen.style.display = 'block';
+                eyeClosed.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
