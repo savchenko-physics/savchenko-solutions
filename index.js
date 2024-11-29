@@ -59,6 +59,7 @@ app.use(express.static(path.join(__dirname, "src")));
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 app.use("/js", express.static(path.join(__dirname, "js")));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
     res.locals.username = req.session.username || null; // Set username globally
