@@ -581,7 +581,7 @@ app.get("/:lang/:name", (req, res) => {
 
     // Check if the specified file exists
     if (fs.existsSync(filePath)) {
-        let fileContents = fs.readFileSync(filePath, "utf8").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~");
+        let fileContents = fs.readFileSync(filePath, "utf8").replace(/\*/g, "\\*").replace(/~/g, "\\~");
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
 

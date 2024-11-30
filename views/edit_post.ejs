@@ -32,6 +32,7 @@
     <script
         src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/matchbrackets/matchbrackets.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/closebrackets.min.js"></script>
 
     <style>
         :root {
@@ -473,7 +474,8 @@
             theme: 'neat',
             viewportMargin: Infinity,
             styleActiveLine: true,
-            matchBrackets: true
+            matchBrackets: true,
+            autoCloseBrackets: true
         });
 
         const preview = document.getElementById('preview');
