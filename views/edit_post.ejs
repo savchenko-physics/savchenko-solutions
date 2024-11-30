@@ -370,6 +370,34 @@
         .submit-button:hover {
             background-color: #2b4f99;
         }
+
+        /* Add a global transition rule for all elements */
+        * {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Update specific transitions */
+        .submit-button {
+            /* ... existing styles ... */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #editor, #preview {
+            /* ... existing styles ... */
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .CodeMirror-cursor {
+            transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Update the cursor blink animation to be smooth */
+        @keyframes cm-blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 
 
@@ -610,7 +638,7 @@
         document.querySelector('a[href="/<%= lang %>/<%= name %>"]').addEventListener('click', (e) => {
             if (hasUnsavedChanges) {
                 e.preventDefault();
-                if (confirm('<%= __('post.unsavedChanges') %>')) {
+                if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
                     window.location.href = '/<%= lang %>/<%= name %>';
                 }
             }

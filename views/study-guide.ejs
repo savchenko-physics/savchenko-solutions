@@ -4,13 +4,43 @@
 <head>
     <%- include('default/head_en.ejs') %>
     <title><%= __('studyGuide.title') %></title>
+    <style>
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: #36c;
+            font-size: 0.95em;
+            font-weight: normal;
+            padding: 0.4rem 0.8rem;
+            background: #f2f4f8;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transform: translateX(0);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .back-link:hover {
+            background: #edf0f7;
+            border-color: #36c;
+            transform: translateX(-1px);
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
 </head>
 
 <body>
     <%- include('default/header.ejs') %>
 
     <h3 id="back-link" style="margin-top: 30px;">
-        <a href="../#description">$\leftarrow$<%= __('studyGuide.backToMain') %></a>
+        <a href="../#description" class="back-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            <%= __('studyGuide.backToMain') %>
+        </a>
     </h3>
 
     <h3 style="margin-top: 30px;">
