@@ -139,7 +139,7 @@
         }
     },
     "studyGuide": {
-        "title": "Contributors of Savchenko Solutions",
+        "title": "Participate in Savchenko Solutions",
         "backToMain": "Main page",
         "eligibility": {
             "title": "Eligibility Criteria",
@@ -151,7 +151,9 @@
             "methods": {
                 "edit": {
                     "title": "Edit the Page Directly",
-                    "content": "Every solution page includes an Edit button, allowing you to modify or enhance the content directly. Jump in and share your expertise!"
+                    "beforeButton": "Every solution page includes an ",
+                    "editButton": "Edit",
+                    "afterButton": " button, allowing you to modify or enhance the content directly."
                 },
                 "email": {
                     "title": "Email Your Contributions",
@@ -161,7 +163,7 @@
             "valueStatement": "We value all forms of input and collaboration, big or small."
         },
         "registration": {
-            "title": "Is Registration Required to Contribute?",
+            "title": "Is Registration Required?",
             "content": "No! Unregistered users can still share their insights and improve our repository. However, registration unlocks additional features:",
             "benefits": [
                 "Your name will be displayed alongside other contributors on the solutions you edit.",

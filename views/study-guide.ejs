@@ -3,75 +3,159 @@
 
 <head>
     <%- include('default/head_en.ejs') %>
-    <title><%= __('studyGuide.title') %></title>
-    <style>
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-            color: #36c;
-            font-size: 0.95em;
-            font-weight: normal;
-            padding: 0.4rem 0.8rem;
-            background: #f2f4f8;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transform: translateX(0);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .back-link:hover {
-            background: #edf0f7;
-            border-color: #36c;
-            transform: translateX(-1px);
-            text-decoration: none;
-            color: inherit;
-        }
-    </style>
+        <title>
+            <%= __('studyGuide.title') %>
+        </title>
+        <style>
+            .back-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                text-decoration: none;
+                color: #36c;
+                font-size: 0.95em;
+                font-weight: normal;
+                padding: 0.4rem 0.8rem;
+                background: #f2f4f8;
+                border-radius: 6px;
+                border: 1px solid transparent;
+                transform: translateX(0);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .back-link:hover {
+                background: #edf0f7;
+                border-color: #36c;
+                transform: translateX(-1px);
+                text-decoration: none;
+                color: inherit;
+            }
+
+            .submit-button {
+                font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+                width: 100%;
+                padding-left: 15px;
+                padding-right: 15px;
+                padding-top: 5px;
+                padding-bottom: 15px;
+                background-color: #36c;
+                color: #fff;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            /* Add responsive heading styles */
+            @media screen and (max-width: 768px) {
+                h1 {
+                    font-size: 1.4rem !important;
+                    margin: 1rem 0;
+                    line-height: 1.2;
+                }
+                
+                h3 {
+                    font-size: 1.2rem;
+                }
+                
+                h3 strong {
+                    font-size: 1.1rem;
+                }
+            }
+        </style>
 </head>
 
 <body>
     <%- include('default/header.ejs') %>
+        <div style="margin-top: 30px;">
+            <a href="../<%= lang %>#description" class="back-link">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
+                    fill="none">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                <%= __('studyGuide.backToMain') %>
+            </a>
+        </div>
+        
+        <h1 style="text-align: center; font-size: 1.8rem;">
+            <strong>
+                <%= __('studyGuide.title') %>
+            </strong>
+        </h1>
 
-    <h3 id="back-link" style="margin-top: 30px;">
-        <a href="../#description" class="back-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-            </svg>
-            <%= __('studyGuide.backToMain') %>
-        </a>
-    </h3>
+        <h3 style="margin-top: 30px; display: flex; align-items: center;">
+            <strong style="display: flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <%= __('studyGuide.eligibility.title') %>
+            </strong>
+        </h3>
+        <p>
+            <%= __('studyGuide.eligibility.content') %>
+        </p>
 
-    <h3 style="margin-top: 30px;">
-        <strong><%= __('studyGuide.eligibility.title') %></strong>
-    </h3>
-    <p><%= __('studyGuide.eligibility.content') %></p>
+        <h3>
+            <strong style="display: flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                <%= __('studyGuide.howToContribute.title') %>
+            </strong>
+        </h3>
+        <p>
+            <%= __('studyGuide.howToContribute.intro') %>
+        </p>
+        <ol>
+            <li><strong>
+                    <%= __('studyGuide.howToContribute.methods.edit.title') %>:
+                </strong>
+                <%= __('studyGuide.howToContribute.methods.edit.beforeButton') %>
+                <a  style="text-decoration: none; display: inline-block;">
+                    <button type="button" class="submit-button" style="margin: 0 0px; display: inline-flex; align-items: center; padding: 3px 8px; gap: 3px; min-width: unset; transition: background-color 0.2s">
+                        <img src="/img/edit.svg" alt="Edit" width="16" height="16">
+                        <span style="font-size: 14px;"><%= __('studyGuide.howToContribute.methods.edit.editButton') %></span>
+                    </button>
+                </a>
+                <%= __('studyGuide.howToContribute.methods.edit.afterButton') %>
+            </li>
+            <li><strong>
+                    <%= __('studyGuide.howToContribute.methods.email.title') %>:
+                </strong>
+                <%= __('studyGuide.howToContribute.methods.email.content') %>
+                    <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
+            </li>
+        </ol>
 
-    <h3><strong><%= __('studyGuide.howToContribute.title') %></strong></h3>
-    <p><%= __('studyGuide.howToContribute.intro') %></p>
-    <ol>
-        <li><strong><%= __('studyGuide.howToContribute.methods.edit.title') %>:</strong>
-            <%= __('studyGuide.howToContribute.methods.edit.content') %>
-        </li>
-        <li><strong><%= __('studyGuide.howToContribute.methods.email.title') %>:</strong>
-            <%= __('studyGuide.howToContribute.methods.email.content') %>
-            <a href="mailto:aliaksandr@melnichenka.com" target="_blank">aliaksandr@melnichenka.com</a>.
-        </li>
-    </ol>
+        <p>
+            <%= __('studyGuide.howToContribute.valueStatement') %>
+        </p>
 
-    <p><%= __('studyGuide.howToContribute.valueStatement') %></p>
+        <h3>
+            <strong style="display: flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <%= __('studyGuide.registration.title') %>
+            </strong>
+        </h3>
+        <p>
+            <%= __('studyGuide.registration.content') %>
+        </p>
+        <ul>
+            <% __('studyGuide.registration.benefits').forEach(function(benefit) { %>
+                <li>
+                    <%= benefit %>
+                </li>
+                <% }); %>
+        </ul>
+        <p>
+            <%= __('studyGuide.registration.conclusion') %>
+        </p>
 
-    <h3><strong><%= __('studyGuide.registration.title') %></strong></h3>
-    <p><%= __('studyGuide.registration.content') %></p>
-    <ul>
-        <% __('studyGuide.registration.benefits').forEach(function(benefit) { %>
-            <li><%= benefit %></li>
-        <% }); %>
-    </ul>
-    <p><%= __('studyGuide.registration.conclusion') %></p>
-
-    <%- include('default/footer_en.ejs') %>
+        <%- include('default/footer_en.ejs') %>
 </body>
 
 </html>
