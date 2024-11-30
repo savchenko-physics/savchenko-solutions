@@ -151,9 +151,11 @@
             "methods": {
                 "edit": {
                     "title": "Edit the Page Directly",
-                    "beforeButton": "Every solution page includes an ",
+                    "beforeButton": "Every solution page features an ",
                     "editButton": "Edit",
-                    "afterButton": " button, allowing you to modify or enhance the content directly."
+                    "beforeUpload": " button, allowing you to modify and improve the content directly. Additionally, you can use the ",
+                    "uploadButton": "Upload",
+                    "afterButton": " button to share your own solutions."
                 },
                 "email": {
                     "title": "Email Your Contributions",

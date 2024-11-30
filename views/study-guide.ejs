@@ -54,14 +54,42 @@
                     margin: 1rem 0;
                     line-height: 1.2;
                 }
-                
+
                 h3 {
                     font-size: 1.2rem;
                 }
-                
+
                 h3 strong {
                     font-size: 1.1rem;
                 }
+            }
+
+            .edit-button {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                transition: all 0.2s ease;
+                cursor: pointer;
+            }
+
+            .edit-button:hover {
+                color: #36c;
+                border-color: #36c;
+                background: #f0f4ff;
+            }
+
+            .external-link-icon,
+            .upload-icon {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
             }
         </style>
 </head>
@@ -78,7 +106,7 @@
                 <%= __('studyGuide.backToMain') %>
             </a>
         </div>
-        
+
         <h1 style="text-align: center; font-size: 1.8rem;">
             <strong>
                 <%= __('studyGuide.title') %>
@@ -87,8 +115,10 @@
 
         <h3 style="margin-top: 30px; display: flex; align-items: center;">
             <strong style="display: flex; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
+                    fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <%= __('studyGuide.eligibility.title') %>
             </strong>
@@ -99,8 +129,10 @@
 
         <h3>
             <strong style="display: flex; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
+                    fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                 </svg>
                 <%= __('studyGuide.howToContribute.title') %>
             </strong>
@@ -113,13 +145,26 @@
                     <%= __('studyGuide.howToContribute.methods.edit.title') %>:
                 </strong>
                 <%= __('studyGuide.howToContribute.methods.edit.beforeButton') %>
-                <a  style="text-decoration: none; display: inline-block;">
-                    <button type="button" class="submit-button" style="margin: 0 0px; display: inline-flex; align-items: center; padding: 3px 8px; gap: 3px; min-width: unset; transition: background-color 0.2s">
-                        <img src="/img/edit.svg" alt="Edit" width="16" height="16">
-                        <span style="font-size: 14px;"><%= __('studyGuide.howToContribute.methods.edit.editButton') %></span>
-                    </button>
-                </a>
-                <%= __('studyGuide.howToContribute.methods.edit.afterButton') %>
+                    <a style="text-decoration: none; display: inline-block;">
+                        <button type="button" class="submit-button"
+                            style="margin: 0 0px; display: inline-flex; align-items: center; padding: 3px 8px; gap: 3px; min-width: unset; transition: background-color 0.2s">
+                            <img src="/img/edit.svg" alt="Edit" width="16" height="16">
+                            <span style="font-size: 14px;">
+                                <%= __('studyGuide.howToContribute.methods.edit.editButton') %>
+                            </span>
+                        </button>
+                    </a>
+                    <%= __('studyGuide.howToContribute.methods.edit.beforeUpload') %>
+                        <a class="edit-button" style="display: inline-flex; margin: 0 4px; text-decoration: none !important; padding: 2px 6px;">
+                            <span class="upload-text" style="color: hsl(0, 100%, 33%); font-size: 14px;">
+                                <%= __('studyGuide.howToContribute.methods.edit.uploadButton') %>
+                            </span>
+                            <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14"
+                                style="stroke: hsl(0, 100%, 33%);">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                            </svg>
+                        </a>
+                        <%= __('studyGuide.howToContribute.methods.edit.afterButton') %>
             </li>
             <li><strong>
                     <%= __('studyGuide.howToContribute.methods.email.title') %>:
@@ -135,8 +180,10 @@
 
         <h3>
             <strong style="display: flex; align-items: center;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none" style="margin-right: 5px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
+                    fill="none" style="margin-right: 5px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 <%= __('studyGuide.registration.title') %>
             </strong>
