@@ -78,9 +78,9 @@
             }
 
             .edit-button:hover {
-                color: #36c;
-                border-color: #36c;
-                background: #f0f4ff;
+                color: hsla(0, 100%, 33%, 1);
+                border-color: hsla(0, 100%, 33%, 0.4);
+                background: hsla(0, 100%, 33%, 0.01);
             }
 
             .external-link-icon,
@@ -155,7 +155,8 @@
                         </button>
                     </a>
                     <%= __('studyGuide.howToContribute.methods.edit.beforeUpload') %>
-                        <a class="edit-button" style="display: inline-flex; margin: 0 4px; text-decoration: none !important; padding: 2px 6px;">
+                        <a class="edit-button"
+                            style="display: inline-flex; margin: 0 4px; text-decoration: none !important; padding: 2px 6px;">
                             <span class="upload-text" style="color: hsl(0, 100%, 33%); font-size: 14px;">
                                 <%= __('studyGuide.howToContribute.methods.edit.uploadButton') %>
                             </span>
