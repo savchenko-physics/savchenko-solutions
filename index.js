@@ -582,8 +582,18 @@ app.get("/:lang/:name", (req, res) => {
     // Check if the specified file exists
     if (fs.existsSync(filePath)) {
         let fileContents = fs.readFileSync(filePath, "utf8").replace(/\*/g, "\\*").replace(/~/g, "\\~");
+
+        // Handle both inline and display math LaTeX
+        fileContents = fileContents.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {
+            return '$$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$$';
+        });
+        fileContents = fileContents.replace(/\$([^\$\n]+?)\$/g, (match, p1) => {
+            return '$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$';
+        });
+
         fileContents = transformImageMarkdown(fileContents);
         titleContent = getLineStatement(fileContents);
+
 
         let html = parseMarkdown(fileContents);
         html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");

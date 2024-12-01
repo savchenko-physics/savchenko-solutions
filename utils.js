@@ -34,8 +34,6 @@ marked.setOptions({
 // Function to escape special markdown characters
 const escapeMarkdown = (text) => {
     return text;
-    // .replace(/~/g, '\\~')
-    // .replace(/\|/g, '\\|');
 };
 
 // Function to parse Markdown content into HTML
@@ -114,7 +112,7 @@ function convertLatexToPlainText(latexLine) {
 
 function getLineStatement(text) {
     text = text.replace("^", "").replace("{", "").replace("}", "").replace("\\*", "").replace("*", "").replace("∗", "").replace("$", "");
-    console.log(text);
+    
     const regex = /^\$?\d+\.\d+\.\d+\.\$\s+(.+)/m;
 
     const match = text.match(regex);
@@ -148,7 +146,10 @@ const transformImageMarkdown = (htmlContent) => {
             height = h ? `${h.replace("\\, ", "")}px` : "auto";
         }
         if (scale) {
-            scalePercentage = scale;
+            const percentage = parseInt(scale);
+            scalePercentage = `${Math.round(600 * (percentage/100))}px`;
+
+            console.log(scalePercentage);
         }
 
         return `<center>
