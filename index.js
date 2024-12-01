@@ -645,14 +645,17 @@ app.get("/:lang/edit/:name", (req, res) => {
 });
 
 // Route for saving edited content
-app.post("/:lang/save/:name", checkAuthenticated, async (req, res) => {
+app.post("/:lang/save/:name", async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
-    const userId = req.session.userId;
+    const userId = req.session.userId || null; // Will be null for unauthenticated users
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
     const clientIp = req.headers["x-forwarded-for"] || req.ip;
 
     try {
+        // Get original content for comparison
+        const originalContent = await fs.promises.readFile(filePath, "utf8");
+        
         // Create backup with editor info
         const backupFilePath = path.join(
             __dirname, 
@@ -666,10 +669,18 @@ app.post("/:lang/save/:name", checkAuthenticated, async (req, res) => {
         // Save the new content
         await fs.promises.writeFile(filePath, content, "utf8");
 
-        // Record the contribution in the database
+        // Record the contribution with change details
         await pool.query(
-            "INSERT INTO contributions (user_id, problem_name, language, edited_at) VALUES ($1, $2, $3, NOW())",
-            [userId, name, lang]
+            `INSERT INTO contributions (
+                user_id, 
+                problem_name, 
+                language, 
+                edited_at,
+                original_content,
+                new_content,
+                ip_address
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)`,
+            [userId, name, lang, originalContent, content, clientIp]
         );
 
         res.redirect(`/${lang}/${name}`);
@@ -849,6 +860,87 @@ app.get("/global-search", async (req, res) => {
             __: i18n.__,
             lang
         });
+    }
+});
+
+app.get("/:lang/contributions/:id", async (req, res) => {
+    const { lang, id } = req.params;
+    i18n.setLocale(res, lang);
+
+    try {
+        // Modified query to handle null user_id cases
+        const result = await pool.query(
+            `SELECT 
+                c.*, 
+                u.username,
+                u.full_name,
+                CASE 
+                    WHEN c.user_id IS NULL THEN c.ip_address
+                    ELSE u.username
+                END as editor_identifier,
+                CASE 
+                    WHEN c.user_id IS NULL THEN c.ip_address
+                    ELSE u.full_name
+                END as editor_name
+            FROM contributions c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.id = $1`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).render("404", {
+                __: i18n.__,
+                pageUrl: req.originalUrl,
+                lang
+            });
+        }
+
+        const contribution = result.rows[0];
+
+        // Create arrays of lines for comparison
+        const originalLines = contribution.original_content.split('\n');
+        const newLines = contribution.new_content.split('\n');
+
+        // Simple diff algorithm to identify changed lines
+        const changes = [];
+        const maxLength = Math.max(originalLines.length, newLines.length);
+
+        for (let i = 0; i < maxLength; i++) {
+            if (originalLines[i] !== newLines[i]) {
+                changes.push({
+                    lineNumber: i + 1,
+                    original: originalLines[i] || '',
+                    new: newLines[i] || '',
+                    type: !originalLines[i] ? 'added' : 
+                          !newLines[i] ? 'removed' : 
+                          'modified'
+                });
+            }
+        }
+
+        res.render("contribution", {
+            __: i18n.__,
+            lang,
+            contribution: {
+                ...result.rows[0],
+                isAnonymous: !result.rows[0].user_id
+            },
+            changes,
+            formatDate: (date) => {
+                return new Date(date).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+        });
+
+    } catch (error) {
+        console.error("Error fetching contribution:", error);
+        res.status(500).send("Error fetching contribution details");
     }
 });
 

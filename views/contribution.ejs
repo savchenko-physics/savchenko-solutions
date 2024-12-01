@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= __('contributions.viewChanges') %> - <%= contribution.problem_name %></title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            margin: 0;
+            padding: 2rem;
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-background);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .header {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .meta-info {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .changes {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .change-block {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .change-header {
+            padding: 0.75rem 1rem;
+            background: #f1f5f9;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .line-number {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .change-content {
+            padding: 1rem;
+        }
+
+        .removed {
+            background: #fef2f2;
+            color: var(--danger-color);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .added {
+            background: #f0fdf4;
+            color: var(--success-color);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+
+        .change-type {
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+        }
+
+        .change-type.added { 
+            background: #dcfce7;
+            color: var(--success-color);
+        }
+        
+        .change-type.removed { 
+            background: #fee2e2;
+            color: var(--danger-color);
+        }
+        
+        .change-type.modified { 
+            background: #fef3c7;
+            color: var(--warning-color);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #1d4ed8;
+        }
+
+        h1 {
+            font-size: 1.875rem;
+            margin: 0 0 1rem 0;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+        }
+
+        .change-summary {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .stat {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .added-stat {
+            color: var(--success-color);
+        }
+
+        .removed-stat {
+            color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/<%= lang %>/profile" class="back-link">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <%= __('contributions.backToProfile') %>
+        </a>
+        
+        <div class="header">
+            <h1><%= __('contributions.changesFor') %> <%= contribution.problem_name %></h1>
+            <div class="meta-info">
+                <p>
+                    <%= __('contributions.editedBy') %>: 
+                    <% if (contribution.isAnonymous) { %>
+                        <strong><%= __('contributions.anonymousUser') %></strong> 
+                        (<strong>IP: <%= contribution.editor_identifier %></strong>)
+                    <% } else { %>
+                        <strong><%= contribution.editor_name %></strong> 
+                        (<strong>@<%= contribution.editor_identifier %></strong>)
+                    <% } %>
+                </p>
+                <p><%= __('contributions.editedAt') %>: <strong><%= formatDate(contribution.edited_at) %></strong></p>
+                <p class="change-summary">
+                    <span class="stat added-stat">+<%= changes.filter(c => c.type === 'added' || c.type === 'modified').length %></span>
+                    <span class="stat removed-stat">-<%= changes.filter(c => c.type === 'removed' || c.type === 'modified').length %></span>
+                    <span><%= __('contributions.linesChanged') %></span>
+                </p>
+            </div>
+        </div>
+
+        <div class="changes">
+            <% changes.forEach(change => { %>
+                <div class="change-block">
+                    <div class="change-header">
+                        <span class="line-number"><%= __('contributions.line') %> <%= change.lineNumber %></span>
+                        <span class="change-type <%= change.type %>">
+                            <%= __(`contributions.${change.type}`) %>
+                        </span>
+                    </div>
+                    <div class="change-content">
+                        <% if (change.type === 'modified' || change.type === 'removed') { %>
+                            <div class="removed">- <%= change.original %></div>
+                        <% } %>
+                        <% if (change.type === 'modified' || change.type === 'added') { %>
+                            <div class="added">+ <%= change.new %></div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</body>
+</html> 

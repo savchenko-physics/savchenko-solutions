@@ -247,6 +247,18 @@
          width: 20px;
          height: 20px;
       }
+
+      .view-changes {
+         display: inline-block;
+         margin-left: 10px;
+         color: #3366cc;
+         text-decoration: none;
+         font-size: 0.9em;
+      }
+
+      .view-changes:hover {
+         text-decoration: underline;
+      }
    </style>
    <title>
       <%= __('profile.title') %>
@@ -308,6 +320,11 @@
                                              hour: '2-digit',
                                              minute: '2-digit'
                                           }) %>
+                                          <% if (contribution.original_content && contribution.new_content) { %>
+                                             <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="view-changes">
+                                                <%= __('profile.viewChanges') %>
+                                             </a>
+                                          <% } %>
                                        </div>
                                     </div>
                                  </li>

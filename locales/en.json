@@ -123,7 +123,8 @@
         "currentPassword": "Current Password:",
         "newPassword": "New Password:",
         "confirmPassword": "Confirm New Password:",
-        "updatePassword": "Update Password"
+        "updatePassword": "Update Password",
+        "viewChanges": "View Changes"
     },
     "search": {
         "title": "Search results",
@@ -173,5 +174,18 @@
             ],
             "conclusion": "Your ideas matter—whether you choose to register or not, your voice can help make physics learning better for everyone!"
         }
+    },
+    "contributions": {
+        "viewChanges": "View Changes",
+        "backToProfile": "Back to Profile",
+        "changesFor": "Changes for",
+        "editedBy": "Edited by",
+        "editedAt": "Edited at",
+        "added": "Added",
+        "removed": "Removed", 
+        "modified": "Modified",
+        "line": "Line",
+        "linesChanged": "lines changed",
+        "anonymousUser": "Anonymous User"
     }
 }
