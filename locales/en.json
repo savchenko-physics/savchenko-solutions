@@ -8,11 +8,11 @@
     "langLink": "",
     "problemStatements": "Problem statements",
     "description": {
-        "intro": "The collection of problems in physics edited by O.Y. Savchenko is one of the most popular resources for preparation for physics olympiads in post-soviet countries. Some of these problems were a source of inspiration for Jaan Kalda’s handouts and to some NBPhO problems. You may find problems from old IPhO papers. For more than 30 years since its first edition, not a single complete guide to solving problems from it has been created.",
-        "project": "On this website, you can observe a non-profit project creating the first wizard of this collection with the design of solutions of ",
+        "intro": "The collection of problems in physics edited by O.Y. Savchenko has remained one of the most sought-after resources for physics olympiad preparation in post-soviet countries for over 30 years. However, during this time, not a single complete solution manual for this collection has been created.",
+        "project": "This website presents a non-profit project aimed at collaboratively creating the first solution manual with solutions from ",
         "team": "different authors",
-        "moto": "In total, 745 solutions have been published, out of 2,023 problems. In 2023, the project was launched, which is actively developing in Russian and English.",
-        "contribute": "If you'd like to contribute, read ",
+        "moto": "Currently, more than 745 solutions out of 2023 problems have been published. The project, launched in 2023, is actively developing in both Russian and English. ",
+        "contribute": "If you would like to join the work, read ",
         "guide": "how-to-contribute guide"
     },
     "contents": "Contents",
@@ -88,7 +88,8 @@
             "password": "Password:",
             "submit": "Login",
             "noAccount": "Don't have an account?",
-            "registerHere": "Register here"
+            "registerHere": "Register here",
+            "forgotPassword": "Forgot password?"
         },
         "register": {
             "title": "Create a new account",
@@ -101,6 +102,30 @@
             "haveAccount": "Already have an account?",
             "loginHere": "Login here",
             "passwordsNoMatch": "Passwords do not match. Please try again."
+        },
+        "forgotPassword": {
+            "title": "Reset Password",
+            "email": "Email address:",
+            "submit": "Send Reset Link",
+            "backToLogin": "Back to login",
+            "success": "Password reset instructions sent",
+            "error": {
+                "emailNotFound": "Email not found",
+                "invalidToken": "Invalid or expired reset link",
+                "generic": "Something went wrong"
+            }
+        },
+        "resetPassword": {
+            "title": "Set New Password",
+            "newPassword": "New password:",
+            "confirmPassword": "Confirm new password:",
+            "submit": "Reset Password",
+            "success": "Password updated successfully",
+            "error": {
+                "passwordsNoMatch": "Passwords do not match",
+                "invalidToken": "Invalid or expired reset link",
+                "generic": "Something went wrong"
+            }
         }
     },
     "profile": {
