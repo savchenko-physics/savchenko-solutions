@@ -964,8 +964,21 @@ app.post('/upload-image/:name', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
+    
     const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
-    res.json({ imagePath });
+    
+    // Use a library like 'sharp' to get image dimensions
+    const sharp = require('sharp');
+    sharp(req.file.path).metadata().then(metadata => {
+        res.json({ 
+            imagePath,
+            width: metadata.width,
+            height: metadata.height
+        });
+    }).catch(err => {
+        console.error("Error getting image metadata:", err);
+        res.status(500).json({ message: 'Error processing image.' });
+    });
 });
 
 // Start the server

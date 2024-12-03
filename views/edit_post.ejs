@@ -597,12 +597,12 @@
             <div role="menu" class="list-group">
                 <button type="button" id="upload-button" class="list-group-item"><i class="fa fa-upload fa-fw"
                         aria-hidden="true"></i>Upload from computer</button>
-                <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
+                <!-- <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
                     project files</button>
                 <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
                         aria-hidden="true"></i>From another project</button>
                 <button type="button" class="list-group-item"><i class="fa fa-globe fa-fw" aria-hidden="true"></i>From
-                    URL</button>
+                    URL</button> -->
             </div>
         </div>
     </div>
@@ -845,8 +845,8 @@
         // Add functionality to insert image markdown
         document.querySelectorAll('.list-group-item').forEach(item => {
             item.addEventListener('click', function () {
-
-                document.querySelector('.popover-content').style.display = 'none';
+                // Hide the popover after an item is clicked
+                document.querySelector('.ol-cm-toolbar-button-menu-popover').style.display = 'none';
             });
         });
 
@@ -864,10 +864,20 @@
 
                 xhr.onload = function () {
                     if (xhr.status === 200) {
-                        // Assuming the server returns the path to the uploaded image
-                        const imagePath = JSON.parse(xhr.responseText).imagePath;
-                        const markdown = `![Image](${imagePath})`;
+                        // Parse the JSON response
+                        const response = JSON.parse(xhr.responseText);
+                        
+                        // Extract image path and dimensions
+                        const imagePath = response.imagePath;
+                        const width = response.width;
+                        const height = response.height;
+                        
+                        // Use the actual dimensions in the markdown
+                        const markdown = `![For problem <%= name %>|${width}x${height}, 50%](../..${imagePath})`;
                         editor.replaceSelection(markdown);
+
+                        // Reset file input to allow re-uploading the same file
+                        document.getElementById('file-input').value = '';
                     } else {
                         alert('Failed to upload image.');
                     }
