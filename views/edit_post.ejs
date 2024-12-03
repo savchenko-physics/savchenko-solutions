@@ -44,8 +44,10 @@
         body {
             display: flex;
             margin: 0;
-            /* height: 100vh; */
             padding-top: 50px;
+            font-family: Lato, sans-serif;
+            font-size: 16px;
+            line-height: 1.5625;
         }
 
         #editor {
@@ -353,7 +355,7 @@
         /* Add this to your existing <style> section */
         .submit-button {
             font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
-            padding: 8px 16px;
+            padding: 18px 16px;
             background-color: #36c;
             color: #fff;
             border: none;
@@ -505,6 +507,42 @@
             border-bottom-right-radius: 3px;
             margin-bottom: 0;
         }
+
+        .header-style {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background-color: #1b222c;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            /* padding: 0 8px; */
+            z-index: 1000;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .post-title {
+            color: #afb5c0;
+            display: inline-block;
+            font-weight: 700;
+            overflow: hidden;
+            padding: 6px;
+            text-overflow: ellipsis;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+
+        /* Add hover effect for any link in the header */
+        .header-style a:hover {
+            background-color: #2f3a4c !important;
+        }
+
+        #save-button:hover {
+            background-color: #1e6b41 !important; /* Darker green for hover effect */
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -512,11 +550,16 @@
 </head>
 
 <body>
-    <header
-        style="position: fixed; top: 0; left: 0; right: 0; height: 50px; background-color: #ffffff; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 1000; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
-        <div style="display: flex; align-items: center; gap: 16px;">
+    <header class="header-style">
+        <div style="display: flex; align-items: center; ">
+            <a href="/" class="submit-button"
+                style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-radius: 0;">
+                <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en-white.svg">
+            </a>
+
             <a href="/<%= lang %>/<%= name %>" class="submit-button"
-                style="background-color: #f3f4f6; color: #374151; text-decoration: none; border: 1px solid #e5e7eb;">
+                style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-right: 1px solid #2f3a4c; 
+                border-left: 1px solid #2f3a4c; border-radius: 0;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 7H3.83L7.41 3.41L6 2L0 8L6 14L7.41 12.59L3.83 9H15V7Z" fill="currentColor" />
                 </svg>
@@ -524,31 +567,25 @@
                     <%= __('post.backLink') %>
                 </span>
             </a>
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-                <span style="color: #6b7280; font-size: 0.875rem; font-weight: 500;">
-                    <%= __('post.editing') %>
-                </span>
-                <h1 style="margin: 0; font-size: 1.125rem; font-weight: 600; color: #111827;">
-                    <%= name %>
-                </h1>
-            </div>
         </div>
+        <span class="post-title" style="flex-grow: 1; text-align: center;">
+            <%= lang %>/<%= name %>
+        </span>
         <div>
-            <button id="save-button" class="submit-button">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                        d="M12.7 4.3L9.7 1.3C9.5 1.1 9.3 1 9 1H3C2.4 1 2 1.4 2 2V14C2 14.6 2.4 15 3 15H13C13.6 15 14 14.6 14 14V5C14 4.7 13.9 4.5 13.7 4.3L12.7 4.3ZM8 13C6.9 13 6 12.1 6 11C6 9.9 6.9 9 8 9C9.1 9 10 9.9 10 11C10 12.1 9.1 13 8 13ZM10 6H4V3H10V6Z"
-                        fill="currentColor" />
-                </svg>
-                <span>
-                    <%= __('post.saveChanges') %>
-                </span>
-            </button>
+            <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
+                <textarea id="hidden-content" name="content" style="display:none;"></textarea>
+                <button id="save-button" class="submit-button" style="font-size: 18px; color: white; opacity: 1.0; background-color: #098842; border-color: #098842; border-radius: 1px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 12px 20px;">
+                    <i class="fa fa-save" aria-hidden="true"></i>
+                    <span>
+                        <%= __('post.saveChanges') %>
+                    </span>
+                </button>
+            </form>
         </div>
     </header>
 
     <div id="toolbar"
-        style="position: fixed; top: 50px; left: 0; right: 0; height: 32px; background-color: #2f3a4c;display: flex; align-items: center; padding: 0 24px; z-index: 1000;">
+        style="position: fixed; top: 40px; left: 0; right: 0; height: 32px; background-color: #2f3a4c;display: flex; align-items: center; padding: 0 24px; z-index: 1000;">
         <button type="button" class="ol-cm-toolbar-button btn" aria-label="Insert Figure">
             <i class="fa" aria-hidden="true"></i>
         </button>
@@ -558,7 +595,7 @@
         style="position: absolute; top: 90px; left: 24px; display: none; z-index: 1001; background-color: var(--editor-toolbar-bg); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <div class="popover-content">
             <div role="menu" class="list-group">
-                <button type="button" class="list-group-item"><i class="fa fa-upload fa-fw"
+                <button type="button" id="upload-button" class="list-group-item"><i class="fa fa-upload fa-fw"
                         aria-hidden="true"></i>Upload from computer</button>
                 <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
                     project files</button>
@@ -570,7 +607,7 @@
         </div>
     </div>
 
-    <div style="display: flex; padding-top: 32px; height: calc(100vh - 32px);">
+    <div style="display: flex; padding-top: 22px; height: calc(100vh - 32px - 40px);">
         <div id="editor" style="width: 50%; height: 100%;"></div>
         <div id="resizer" style="width: 5px; height: 100%; background-color: #2f3a4c; cursor: ew-resize;"></div>
         <div id="preview"
