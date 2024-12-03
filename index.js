@@ -13,6 +13,7 @@ const { Pool } = require("pg");
 require("dotenv").config();
 const i18n = require('i18n');
 const connectPgSimple = require('connect-pg-simple'); // Add this import
+const multer = require('multer');
 
 const app = express();
 const PORT = 3000;
@@ -942,6 +943,29 @@ app.get("/:lang/contributions/:id", async (req, res) => {
         console.error("Error fetching contribution:", error);
         res.status(500).send("Error fetching contribution details");
     }
+});
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'img', req.params.name);
+        fs.mkdirSync(dir, { recursive: true }); // Ensure the directory exists
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname); // Use the original file name
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Add this route to handle image uploads
+app.post('/upload-image/:name', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+    }
+    const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
+    res.json({ imagePath });
 });
 
 // Start the server
