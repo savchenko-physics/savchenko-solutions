@@ -543,6 +543,78 @@
         #save-button:hover {
             background-color: #1e6b41 !important; /* Darker green for hover effect */
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 600px;
+            max-height: 70vh;
+            overflow-y: auto;
+            margin: 30px auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .image-list-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .image-list-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .image-thumbnail {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            margin-right: 20px;
+        }
+
+        .image-details {
+            flex-grow: 1;
+        }
+
+        .image-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .image-dimensions {
+            color: #666;
+            font-size: 0.9em;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -597,12 +669,12 @@
             <div role="menu" class="list-group">
                 <button type="button" id="upload-button" class="list-group-item"><i class="fa fa-upload fa-fw"
                         aria-hidden="true"></i>Upload from computer</button>
-                <!-- <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
+                <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
                     project files</button>
                 <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
                         aria-hidden="true"></i>From another project</button>
                 <button type="button" class="list-group-item"><i class="fa fa-globe fa-fw" aria-hidden="true"></i>From
-                    URL</button> -->
+                    URL</button>
             </div>
         </div>
     </div>
@@ -621,6 +693,23 @@
         style="display: none;">
         <input type="file" name="image" id="file-input" accept="image/*">
     </form>
+
+    <div id="imageModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="imageModalLabel">Uploaded images of <%= name %></h2>
+            <div id="imageList"></div>
+        </div>
+    </div>
+
+    <div id="urlModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-url-modal close">&times;</span>
+            <h2>Enter URL</h2>
+            <input type="text" id="urlInput" placeholder="Enter URL here" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <button id="insertUrlButton" class="submit-button" style="width: 100%;">Insert URL</button>
+        </div>
+    </div>
 
     <script>
         // Define custom mixed mode for Markdown + LaTeX
@@ -886,6 +975,113 @@
                 xhr.send(formData);
             }
         });
+
+        document.querySelector('.fa-archive').parentElement.addEventListener('click', function () {
+            const modal = document.getElementById('imageModal');
+            const imageList = document.getElementById('imageList');
+            const name = '<%= name %>';
+
+            fetch(`/img/${name}`)
+                .then(response => response.json())
+                .then(images => {
+                    imageList.innerHTML = ''; // Clear existing content
+                    
+                    images.forEach(image => {
+                        // Create a temporary image to get dimensions
+                        const img = new Image();
+                        img.src = `/img/${name}/${image}`;
+                        
+                        img.onload = function() {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'image-list-item';
+                            listItem.onclick = () => insertImageMarkdown(image);
+                            
+                            listItem.innerHTML = `
+                                <img src="/img/${name}/${image}" class="image-thumbnail" alt="${image}">
+                                <div class="image-details">
+                                    <div class="image-name">${image}</div>
+                                    <div class="image-dimensions">${this.width} × ${this.height} pixels</div>
+                                    <div class="image-size">Loading size...</div>
+                                </div>
+                            `;
+                            
+                            // Get file size
+                            fetch(`/img/${name}/${image}`)
+                                .then(response => {
+                                    const size = response.headers.get('content-length');
+                                    const sizeInKB = (size / 1024).toFixed(2);
+                                    listItem.querySelector('.image-size').textContent = `${sizeInKB} KB`;
+                                });
+                            
+                            imageList.appendChild(listItem);
+                        };
+                    });
+                    modal.style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching images:', error));
+        });
+
+        document.querySelector('.close').onclick = function () {
+            document.getElementById('imageModal').style.display = 'none';
+        };
+
+        window.onclick = function (event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        function insertImageMarkdown(image) {
+            const name = '<%= name %>';
+            const imageElement = new Image();
+            imageElement.src = `/img/${name}/${image}`;
+
+            imageElement.onload = function() {
+                const width = this.width;
+                const height = this.height;
+                const scale = '50%'; // Example scale
+
+                const markdown = `![${image}|${width}x${height}, ${scale}](../../img/${name}/${image})`;
+                editor.replaceSelection(markdown);
+                document.getElementById('imageModal').style.display = 'none';
+            };
+        }
+
+        // Show the URL modal when the "From URL" button is clicked
+        document.querySelector('.fa-globe').parentElement.addEventListener('click', function () {
+            document.getElementById('urlModal').style.display = 'block';
+        });
+
+        // Close the URL modal
+        document.querySelector('.close-url-modal').onclick = function () {
+            document.getElementById('urlModal').style.display = 'none';
+        };
+
+        // Insert the URL into the editor
+        document.getElementById('insertUrlButton').addEventListener('click', function () {
+            let url = document.getElementById('urlInput').value;
+            if (url) {
+                // Add https:// if the URL doesn't start with http:// or https://
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
+                }
+                const markdown = `![For problem <%= name %>|123x456, 50%](${url})`;
+                editor.replaceSelection(markdown);
+                document.getElementById('urlModal').style.display = 'none';
+                document.getElementById('urlInput').value = ''; // Clear the input field
+            } else {
+                alert('Please enter a valid URL.');
+            }
+        });
+
+        // Close the modal when clicking outside of it
+        window.onclick = function (event) {
+            const modal = document.getElementById('urlModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
     </script>
 
 </body>

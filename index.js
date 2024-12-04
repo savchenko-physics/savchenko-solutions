@@ -89,6 +89,18 @@ function checkNotAuthenticated(req, res, next) {
     
     res.redirect(`/${lang}/profile`);
 }
+app.get('/img/:name', (req, res) => {
+    const dirPath = path.join(__dirname, 'img', req.params.name);
+    fs.readdir(dirPath, (err, files) => {
+        if (err) {
+            console.error(`Error reading directory ${dirPath}:`, err); // Log the error
+            return res.status(500).json({ message: 'Error reading directory.' });
+        }
+        const images = files.filter(file => /\.(jpg|jpeg|png|gif|svg)$/i.test(file));
+        res.json(images);
+    });
+});
+
 
 app.post("/create-problem", async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
