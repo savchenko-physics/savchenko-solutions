@@ -376,7 +376,6 @@
         .list-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
             width: 100%;
             text-align: start;
             border: 1px solid #ddd;
@@ -453,6 +452,7 @@
             margin-bottom: -1px;
             padding: 10px 15px;
             position: relative;
+            font-size: 16px;
         }
 
         .list-group-item:hover {
@@ -465,20 +465,19 @@
             align-items: center;
             justify-content: center;
             padding: 0;
-            margin: 0 1px;
             background-color: transparent;
             border: none;
-            border-radius: 1px;
+            border-radius: 0px;
             line-height: 1;
             width: 24px;
             height: 24px;
             overflow: hidden;
             color: inherit;
+            border-left: 1px solid rgba(125, 125, 125, 0.3);
         }
 
         .ol-cm-toolbar-button:hover {
-            background-color: #3a4b5c; /* Change to desired hover color */
-            border-radius: 4px; /* Optional: Add border-radius for rounded corners */
+            background-color: #3a4b5c;
         }
 
         .ol-cm-toolbar-button i.fa {
@@ -541,7 +540,8 @@
         }
 
         #save-button:hover {
-            background-color: #1e6b41 !important; /* Darker green for hover effect */
+            background-color: #1e6b41 !important;
+            /* Darker green for hover effect */
         }
 
         .modal {
@@ -615,9 +615,164 @@
             color: #666;
             font-size: 0.9em;
         }
+
+        .ol-cm-toolbar-button-menu-popover {
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none;
+            /* Ensure it's hidden initially */
+        }
+
+        .ol-cm-toolbar-button-menu-popover.show {
+            opacity: 1;
+            color: white;
+            transform: translateY(0);
+            display: block;
+            /* Show when the class is added */
+        }
+
+        .ͼ4 .ol-cm-toolbar-button-menu-popover .list-group-item {
+            width: 100%;
+            text-align: start;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+        }
+
+        .ͼ4 .ol-cm-toolbar-button-menu-popover .list-group {
+            margin-bottom: 0;
+            background-color: var(--editor-toolbar-bg);
+            border-radius: 4px;
+        }
+
+        .list-group-item {
+            display: block;
+            margin-bottom: -1px;
+            padding: 10px 15px;
+            position: relative;
+        }
+
+        .ol-cm-toolbar-button-math {
+            font-family: "Noto Serif", serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            opacity: 0.8;
+        }
+
+        .symbol-palette-items {
+            display: none;
+            width: 50%;
+            height: 30vh;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background-color: #495365;
+            overflow-y: auto;
+            max-height: 30vh;
+        }
+
+        .symbol-palette-item {
+            align-items: center;
+            background: #2f3a4c;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            color: #fff;
+            display: inline-flex;
+            font-family: Stix Two Math, serif;
+            font-size: 24px;
+            height: 42px;
+            justify-content: center;
+            line-height: 42px;
+            margin: 5px;
+            width: 42px;
+        }
+
+        .symbol-palette-header-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .symbol-palette-close-button-outer {
+            margin-left: auto;
+        }
+
+        .symbol-palette-tab-list {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .symbol-palette-tab-list::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .symbol-palette-tab-list::-webkit-scrollbar-thumb {
+            background-color: #2f3a4c;
+            border-radius: 4px;
+        }
+
+        .symbol-palette-tab-list::-webkit-scrollbar-track {
+            background-color: #495365;
+        }
+
+        .symbol-palette-tab {
+            margin-right: 10px;
+            /* Optional: Add some space between buttons */
+        }
+
+        .symbol-palette-header-group {
+            margin-left: auto;
+            /* Pushes the close button to the right */
+        }
+
+        .symbol-palette-tab[role=tab][aria-selected=true] {
+            background: #495365;
+            color: #fff;
+        }
+
+        .symbol-palette-tab[role=tab] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background: none;
+            border: none;
+            border-bottom: 1px solid transparent;
+            color: #fff;
+            background-color: #2f3a4c;
+            cursor: pointer;
+            display: inline-block;
+            font: inherit;
+            margin: 0;
+            padding: .25em .5em;
+        }
+
+        .symbol-palette-close-button {
+            background: transparent;
+            color: #fff;
+            float: none;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            margin-left: 5px;
+            opacity: 1;
+            padding: 4px 10px;
+            text-shadow: none;
+            border: none;
+        }
+
+        .symbol-palette-close-button:hover {
+            color: white;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Stix+Two+Math&display=swap" rel="stylesheet">
 
 </head>
 
@@ -629,8 +784,7 @@
                 <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en-white.svg">
             </a>
 
-            <a href="/<%= lang %>/<%= name %>" class="submit-button"
-                style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-right: 1px solid #2f3a4c; 
+            <a href="/<%= lang %>/<%= name %>" class="submit-button" style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-right: 1px solid #2f3a4c; 
                 border-left: 1px solid #2f3a4c; border-radius: 0;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 7H3.83L7.41 3.41L6 2L0 8L6 14L7.41 12.59L3.83 9H15V7Z" fill="currentColor" />
@@ -646,7 +800,8 @@
         <div>
             <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
-                <button id="save-button" class="submit-button" style="font-size: 18px; color: white; opacity: 1.0; background-color: #098842; border-color: #098842; border-radius: 1px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 12px 20px;">
+                <button id="save-button" class="submit-button"
+                    style="font-size: 18px; color: white; opacity: 1.0; background-color: #098842; border-color: #098842; border-radius: 1px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 12px 20px;">
                     <i class="fa fa-save" aria-hidden="true"></i>
                     <span>
                         <%= __('post.saveChanges') %>
@@ -658,6 +813,8 @@
 
     <div id="toolbar"
         style="position: fixed; top: 40px; left: 0; right: 0; height: 32px; background-color: #2f3a4c;display: flex; align-items: center; padding: 0 24px; z-index: 1000;">
+        <button class="ol-cm-toolbar-button btn ol-cm-toolbar-button-math active" aria-label="Toggle Symbol Palette"
+            type="button">Ω</button>
         <button type="button" class="ol-cm-toolbar-button btn" aria-label="Insert Figure">
             <i class="fa" aria-hidden="true"></i>
         </button>
@@ -670,9 +827,9 @@
                 <button type="button" id="upload-button" class="list-group-item"><i class="fa fa-upload fa-fw"
                         aria-hidden="true"></i>Upload from computer</button>
                 <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
-                    project files</button>
+                    solution files</button>
                 <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
-                        aria-hidden="true"></i>From another project</button>
+                        aria-hidden="true"></i>From another solution</button>
                 <button type="button" class="list-group-item"><i class="fa fa-globe fa-fw" aria-hidden="true"></i>From
                     URL</button>
             </div>
@@ -687,6 +844,99 @@
         </div>
     </div>
 
+    <div class="symbol-palette-items" role="listbox" aria-label="Symbols">
+        <div role="tablist" aria-label="Symbol Categories" class="symbol-palette-tab-list">
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Greek"
+                aria-controls="symbol-palette-panel-Greek" aria-selected="true" tabindex="0">Greek</button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Arrows"
+                aria-controls="symbol-palette-panel-Arrows" aria-selected="false" tabindex="-1">Arrows</button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Operators"
+                aria-controls="symbol-palette-panel-Operators" aria-selected="false" tabindex="-1">Operators</button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Relations"
+                aria-controls="symbol-palette-panel-Relations" aria-selected="false" tabindex="-1">Relations</button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Misc"
+                aria-controls="symbol-palette-panel-Misc" aria-selected="false" tabindex="-1">Misc</button>
+
+            <div class="symbol-palette-header-group">
+                <div class="symbol-palette-close-button-outer">
+                    <button class="close symbol-palette-close-button" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Lowercase Greek letter alpha"
+            aria-selected="true" data-command="\alpha">𝛼</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter beta"
+            aria-selected="false" data-command="\beta">𝛽</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter gamma"
+            aria-selected="false" data-command="\gamma">𝛾</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter delta"
+            aria-selected="false" data-command="\delta">𝛿</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter epsilon"
+            aria-selected="false" data-command="\varepsilon">𝜀</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter zeta"
+            aria-selected="false" data-command="\zeta">𝜁</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter eta"
+            aria-selected="false" data-command="\eta">𝜂</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter theta"
+            aria-selected="false" data-command="\theta">𝜃</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter iota"
+            aria-selected="false" data-command="\iota">𝜄</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter kappa"
+            aria-selected="false" data-command="\kappa">𝜅</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter lambda"
+            aria-selected="false" data-command="\lambda">𝜆</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter mu"
+            aria-selected="false" data-command="\mu">𝜇</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter nu"
+            aria-selected="false" data-command="\nu">𝜈</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter xi"
+            aria-selected="false" data-command="\xi">𝜉</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter omicron"
+            aria-selected="false" data-command="\omicron">𝜊</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter pi"
+            aria-selected="false" data-command="\pi">𝜋</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter rho"
+            aria-selected="false" data-command="\rho">𝜌</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter sigma"
+            aria-selected="false" data-command="\sigma">𝜎</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter tau"
+            aria-selected="false" data-command="\tau">𝜏</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter upsilon"
+            aria-selected="false" data-command="\upsilon">𝜐</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter phi"
+            aria-selected="false" data-command="\phi">𝜑</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter chi"
+            aria-selected="false" data-command="\chi">𝜒</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter psi"
+            aria-selected="false" data-command="\psi">𝜓</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Lowercase Greek letter omega"
+            aria-selected="false" data-command="\omega">𝜔</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Gamma"
+            aria-selected="false" data-command="\Gamma">Γ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Delta"
+            aria-selected="false" data-command="\Delta">Δ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Theta"
+            aria-selected="false" data-command="\Theta">Θ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Lambda"
+            aria-selected="false" data-command="\Lambda">Λ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Xi"
+            aria-selected="false" data-command="\Xi">Ξ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Pi"
+            aria-selected="false" data-command="\Pi">Π</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Sigma"
+            aria-selected="false" data-command="\Sigma">Σ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Upsilon"
+            aria-selected="false" data-command="\Upsilon">Υ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Phi"
+            aria-selected="false" data-command="\Phi">Φ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Psi"
+            aria-selected="false" data-command="\Psi">Ψ</button>
+        <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Uppercase Greek letter Omega"
+            aria-selected="false" data-command="\Omega">Ω</button>
+    </div>
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/theme/neat.min.css">
 
     <form id="upload-form" action="/upload-image/<%= name %>" method="POST" enctype="multipart/form-data"
@@ -697,7 +947,8 @@
     <div id="imageModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2 id="imageModalLabel">Uploaded images of <%= name %></h2>
+            <h2 id="imageModalLabel">Uploaded images of <%= name %>
+            </h2>
             <div id="imageList"></div>
         </div>
     </div>
@@ -706,7 +957,8 @@
         <div class="modal-content">
             <span class="close-url-modal close">&times;</span>
             <h2>Enter URL</h2>
-            <input type="text" id="urlInput" placeholder="Enter URL here" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <input type="text" id="urlInput" placeholder="Enter URL here"
+                style="width: 100%; padding: 8px; margin-bottom: 10px;">
             <button id="insertUrlButton" class="submit-button" style="width: 100%;">Insert URL</button>
         </div>
     </div>
@@ -864,6 +1116,9 @@
                 const previewWidth = totalWidth - editorWidth - 5; // 5px resizer width
                 document.getElementById('editor').style.width = `${editorWidth}px`;
                 document.getElementById('preview').style.width = `${previewWidth}px`;
+
+                // Update symbol palette width to match editor width
+                document.querySelector('.symbol-palette-items').style.width = `${editorWidth}px`;
             }
         });
 
@@ -925,11 +1180,6 @@
             }
         });
 
-        // Toggle popover visibility
-        document.querySelector('.ol-cm-toolbar-button').addEventListener('click', function () {
-            const popover = document.querySelector('.ol-cm-toolbar-button-menu-popover');
-            popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
-        });
 
         // Add functionality to insert image markdown
         document.querySelectorAll('.list-group-item').forEach(item => {
@@ -955,12 +1205,12 @@
                     if (xhr.status === 200) {
                         // Parse the JSON response
                         const response = JSON.parse(xhr.responseText);
-                        
+
                         // Extract image path and dimensions
                         const imagePath = response.imagePath;
                         const width = response.width;
                         const height = response.height;
-                        
+
                         // Use the actual dimensions in the markdown
                         const markdown = `![For problem <%= name %>|${width}x${height}, 50%](../..${imagePath})`;
                         editor.replaceSelection(markdown);
@@ -985,17 +1235,17 @@
                 .then(response => response.json())
                 .then(images => {
                     imageList.innerHTML = ''; // Clear existing content
-                    
+
                     images.forEach(image => {
                         // Create a temporary image to get dimensions
                         const img = new Image();
                         img.src = `/img/${name}/${image}`;
-                        
-                        img.onload = function() {
+
+                        img.onload = function () {
                             const listItem = document.createElement('div');
                             listItem.className = 'image-list-item';
                             listItem.onclick = () => insertImageMarkdown(image);
-                            
+
                             listItem.innerHTML = `
                                 <img src="/img/${name}/${image}" class="image-thumbnail" alt="${image}">
                                 <div class="image-details">
@@ -1004,7 +1254,7 @@
                                     <div class="image-size">Loading size...</div>
                                 </div>
                             `;
-                            
+
                             // Get file size
                             fetch(`/img/${name}/${image}`)
                                 .then(response => {
@@ -1012,7 +1262,7 @@
                                     const sizeInKB = (size / 1024).toFixed(2);
                                     listItem.querySelector('.image-size').textContent = `${sizeInKB} KB`;
                                 });
-                            
+
                             imageList.appendChild(listItem);
                         };
                     });
@@ -1037,7 +1287,7 @@
             const imageElement = new Image();
             imageElement.src = `/img/${name}/${image}`;
 
-            imageElement.onload = function() {
+            imageElement.onload = function () {
                 const width = this.width;
                 const height = this.height;
                 const scale = '50%'; // Example scale
@@ -1082,6 +1332,63 @@
                 modal.style.display = 'none';
             }
         };
+
+        // Function to adjust editor height
+        function adjustEditorHeight() {
+            const symbolPalette = document.querySelector('.symbol-palette-items');
+            const editor = document.getElementById('editor');
+            const observer = new MutationObserver(() => {
+                if (symbolPalette.style.display === 'block') {
+                    editor.style.height = 'calc(100% - 30vh)'; // Reduce height by the symbol palette's height
+                } else {
+                    editor.style.height = '100%'; // Reset to full height
+                }
+            });
+
+            // Observe changes to the 'style' attribute of the symbol palette
+            observer.observe(symbolPalette, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        // Call adjustEditorHeight once to set up the observer
+        adjustEditorHeight();
+
+        // Toggle symbol palette visibility
+        document.querySelector('.ol-cm-toolbar-button-math').addEventListener('click', function () {
+            const symbolPalette = document.querySelector('.symbol-palette-items');
+            if (symbolPalette.style.display === 'none' || symbolPalette.style.display === '') {
+                symbolPalette.style.display = 'block';
+            } else {
+                symbolPalette.style.display = 'none';
+            }
+            adjustEditorHeight(); // Adjust editor height when toggling
+        });
+
+        // Toggle popover visibility for Insert Figure button
+        document.querySelector('.ol-cm-toolbar-button[aria-label="Insert Figure"]').addEventListener('click', function () {
+            const popover = document.querySelector('.ol-cm-toolbar-button-menu-popover');
+            if (popover.classList.contains('show')) {
+                popover.classList.remove('show');
+                setTimeout(() => popover.style.display = 'none', 300); // Wait for transition to complete
+            } else {
+                popover.style.display = 'block';
+                setTimeout(() => popover.classList.add('show'), 10); // Slight delay to trigger transition
+            }
+        });
+
+        // Add event listeners to symbol palette items
+        document.querySelectorAll('.symbol-palette-item').forEach(button => {
+            button.addEventListener('click', function () {
+                const command = this.getAttribute('data-command');
+                if (command) {
+                    editor.replaceSelection(command);
+                }
+            });
+        });
+
+        // Add event listener to the close button in the symbol palette
+        document.querySelector('.symbol-palette-close-button').addEventListener('click', function () {
+            document.querySelector('.symbol-palette-items').style.display = 'none';
+        });
     </script>
 
 </body>
