@@ -369,10 +369,6 @@
             gap: 5px;
         }
 
-        .submit-button:hover {
-            background-color: #2b4f99;
-        }
-
         .list-group {
             display: flex;
             flex-direction: column;
@@ -535,8 +531,11 @@
         }
 
         /* Add hover effect for any link in the header */
-        .header-style a:hover {
+        .header-left a:hover {
             background-color: #2f3a4c !important;
+        }
+        .header-right a:hover {
+            background-color: #4689d6 !important;
         }
 
         #save-button:hover {
@@ -778,14 +777,18 @@
 
 <body>
     <header class="header-style">
-        <div style="display: flex; align-items: center; ">
+        <div style="display: flex; align-items: center;" class="header-left">
             <a href="/" class="submit-button"
                 style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-radius: 0;">
                 <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en-white.svg">
             </a>
-
-            <a href="/<%= lang %>/<%= name %>" class="submit-button" style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-right: 1px solid #2f3a4c; 
-                border-left: 1px solid #2f3a4c; border-radius: 0;">
+        </div>
+        <span class="post-title" style="flex-grow: 1; text-align: center;">
+            <%= lang %>/<%= name %>
+        </span>
+        <div style="display: flex; align-items: center;" class="header-right">
+            <a href="/<%= lang %>/<%= name %>" class="submit-button" 
+                style="font-size: 16px; color: #fff; opacity: 0.9; background-color: #4a90e2; border-color: #4a90e2; border-radius: 1px; border-right: 1px solid #000; box-shadow: none; padding: 10px 18px; text-decoration: none; margin-left: 10px;">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 7H3.83L7.41 3.41L6 2L0 8L6 14L7.41 12.59L3.83 9H15V7Z" fill="currentColor" />
                 </svg>
@@ -793,15 +796,10 @@
                     <%= __('post.backLink') %>
                 </span>
             </a>
-        </div>
-        <span class="post-title" style="flex-grow: 1; text-align: center;">
-            <%= lang %>/<%= name %>
-        </span>
-        <div>
             <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
                 <button id="save-button" class="submit-button"
-                    style="font-size: 18px; color: white; opacity: 1.0; background-color: #098842; border-color: #098842; border-radius: 1px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 12px 20px;">
+                    style="font-size: 16px; color: #fff; opacity: 0.9; background-color: #007b0c; border-color: #6fae75; border-radius: 1px; box-shadow: none; padding: 10px 18px;">
                     <i class="fa fa-save" aria-hidden="true"></i>
                     <span>
                         <%= __('post.saveChanges') %>
@@ -828,8 +826,8 @@
                         aria-hidden="true"></i>Upload from computer</button>
                 <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
                     solution files</button>
-                <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
-                        aria-hidden="true"></i>From another solution</button>
+                <!-- <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
+                        aria-hidden="true"></i>From another solution</button> -->
                 <button type="button" class="list-group-item"><i class="fa fa-globe fa-fw" aria-hidden="true"></i>From
                     URL</button>
             </div>
@@ -952,8 +950,8 @@
                 aria-selected="false" data-command="\downarrow">↓</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Is implied by"
                 aria-selected="false" data-command="\Leftarrow">⇐</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Implies"
-                aria-selected="false" data-command="\Rightarrow">⇒</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Implies" aria-selected="false"
+                data-command="\Rightarrow">⇒</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left and right double arrow"
                 aria-selected="false" data-command="\Leftrightarrow">⇔</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Maps to, rightward"
@@ -977,20 +975,20 @@
             aria-labelledby="symbol-palette-tab-Operators" tabindex="0" style="display: none;">
             <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Cross product, multiplication"
                 aria-selected="true" data-command="\\times">×</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Division"
-                aria-selected="false" data-command="\\div">÷</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Division" aria-selected="false"
+                data-command="\\div">÷</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Intersection"
                 aria-selected="false" data-command="\\cap">∩</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Union"
-                aria-selected="false" data-command="\\cup">∪</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Union" aria-selected="false"
+                data-command="\\cup">∪</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Dot product, multiplication"
                 aria-selected="false" data-command="\\cdot">⋅</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Centered dots"
                 aria-selected="false" data-command="\\cdots">⋯</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Bullet"
-                aria-selected="false" data-command="\\bullet">∙</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Circle"
-                aria-selected="false" data-command="\\circ">◦</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Bullet" aria-selected="false"
+                data-command="\\bullet">∙</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Circle" aria-selected="false"
+                data-command="\\circ">◦</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Wedge, logical and"
                 aria-selected="false" data-command="\\wedge">∧</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Vee, logical or"
@@ -1018,8 +1016,8 @@
         </div>
         <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Relations"
             aria-labelledby="symbol-palette-tab-Relations" tabindex="0" style="display: none;">
-            <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Not equal"
-                aria-selected="true" data-command="\neq">≠</button>
+            <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Not equal" aria-selected="true"
+                data-command="\neq">≠</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Less than or equal"
                 aria-selected="false" data-command="\leq">≤</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Greater than or equal"
@@ -1028,63 +1026,65 @@
                 aria-selected="false" data-command="\ll">≪</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Much greater than"
                 aria-selected="false" data-command="\gg">≫</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Precedes"
-                aria-selected="false" data-command="\prec">≺</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Succeeds"
-                aria-selected="false" data-command="\succ">≻</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Precedes" aria-selected="false"
+                data-command="\prec">≺</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Succeeds" aria-selected="false"
+                data-command="\succ">≻</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Set membership"
                 aria-selected="false" data-command="\in">∈</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Negated set membership"
                 aria-selected="false" data-command="\notin">∉</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Contains"
-                aria-selected="false" data-command="\ni">∋</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Subset"
-                aria-selected="false" data-command="\subset">⊂</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Contains" aria-selected="false"
+                data-command="\ni">∋</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Subset" aria-selected="false"
+                data-command="\subset">⊂</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Subset or equals"
                 aria-selected="false" data-command="\subseteq">⊆</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Superset"
-                aria-selected="false" data-command="\supset">⊃</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Similar"
-                aria-selected="false" data-command="\sim">≃</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Superset" aria-selected="false"
+                data-command="\supset">⊃</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Similar" aria-selected="false"
+                data-command="\sim">≃</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Approximate"
                 aria-selected="false" data-command="\approx">≈</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Identical with"
                 aria-selected="false" data-command="\equiv">≡</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Congruent with"
                 aria-selected="false" data-command="\cong">≅</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Mid, divides, vertical bar, modulus, absolute value"
-                aria-selected="false" data-command="\mid">∣</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option"
+                aria-label="Mid, divides, vertical bar, modulus, absolute value" aria-selected="false"
+                data-command="\mid">∣</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Negated mid, not divides"
                 aria-selected="false" data-command="\nmid">∤</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Parallel, double vertical bar, norm"
-                aria-selected="false" data-command="\parallel">∥</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option"
+                aria-label="Parallel, double vertical bar, norm" aria-selected="false"
+                data-command="\parallel">∥</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Perpendicular"
                 aria-selected="false" data-command="\perp">⟂</button>
         </div>
         <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Misc"
             aria-labelledby="symbol-palette-tab-Misc" tabindex="0" style="display: none;">
-            <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Infinity"
-                aria-selected="true" data-command="\infty">∞</button>
+            <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Infinity" aria-selected="true"
+                data-command="\infty">∞</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Partial differential"
                 aria-selected="false" data-command="\partial">𝜕</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Nabla, del, hamilton operator"
                 aria-selected="false" data-command="\nabla">∇</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Empty set"
-                aria-selected="false" data-command="\emptyset">⌀</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="For all"
-                aria-selected="false" data-command="\forall">∀</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Empty set" aria-selected="false"
+                data-command="\emptyset">⌀</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="For all" aria-selected="false"
+                data-command="\forall">∀</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="There exists"
                 aria-selected="false" data-command="\exists">∃</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Not sign"
-                aria-selected="false" data-command="\neg">¬</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Real part"
-                aria-selected="false" data-command="\Re">ℜ</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Not sign" aria-selected="false"
+                data-command="\neg">¬</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Real part" aria-selected="false"
+                data-command="\Re">ℜ</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Imaginary part"
                 aria-selected="false" data-command="\Im">ℑ</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Square"
-                aria-selected="false" data-command="\square">□</button>
-            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Triangle"
-                aria-selected="false" data-command="\triangle">△</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Square" aria-selected="false"
+                data-command="\square">□</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Triangle" aria-selected="false"
+                data-command="\triangle">△</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Hebrew letter aleph"
                 aria-selected="false" data-command="\aleph">ℵ</button>
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Weierstrass letter p"
@@ -1106,316 +1106,316 @@
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Right angle bracket, ket"
                 aria-selected="false" data-command="\rangle">⟩</button>
         </div>
+    </div>
 
+    <form id="upload-form" action="/upload-image/<%= name %>" method="POST" enctype="multipart/form-data"
+        style="display: none;">
+        <input type="file" name="image" id="file-input" accept="image/*">
+    </form>
 
-        <form id="upload-form" action="/upload-image/<%= name %>" method="POST" enctype="multipart/form-data"
-            style="display: none;">
-            <input type="file" name="image" id="file-input" accept="image/*">
-        </form>
-
-        <div id="imageModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2 id="imageModalLabel">Uploaded images of <%= name %>
-                </h2>
-                <div id="imageList"></div>
-            </div>
+    <div id="imageModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="imageModalLabel">Uploaded images of <%= name %>
+            </h2>
+            <div id="imageList"></div>
         </div>
+    </div>
 
-        <div id="urlModal" class="modal" style="display: none;">
-            <div class="modal-content">
-                <span class="close-url-modal close">&times;</span>
-                <h2>Enter URL</h2>
-                <input type="text" id="urlInput" placeholder="Enter URL here"
-                    style="width: 100%; padding: 8px; margin-bottom: 10px;">
-                <button id="insertUrlButton" class="submit-button" style="width: 100%;">Insert URL</button>
-            </div>
+    <div id="urlModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-url-modal close">&times;</span>
+            <h2>Enter URL</h2>
+            <input type="text" id="urlInput" placeholder="Enter URL here"
+                style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            <button id="insertUrlButton" class="submit-button" style="width: 100%;">Insert URL</button>
         </div>
+    </div>
 
-        <script>
-            // Define custom mixed mode for Markdown + LaTeX
-            CodeMirror.defineMode("markdown-latex", function (config) {
-                const markdownMode = CodeMirror.getMode(config, "markdown");
+    <script>
+        // Define custom mixed mode for Markdown + LaTeX
+        CodeMirror.defineMode("markdown-latex", function (config) {
+            const markdownMode = CodeMirror.getMode(config, "markdown");
 
-                // Helper function to handle LaTeX commands
-                function handleLatexCommand(stream) {
-                    if (stream.match(/^\\[a-zA-Z]+/)) {
-                        return "math-command";
-                    }
-                    return null;
+            // Helper function to handle LaTeX commands
+            function handleLatexCommand(stream) {
+                if (stream.match(/^\\[a-zA-Z]+/)) {
+                    return "math-command";
                 }
-
-                // Helper function to handle brackets in math mode
-                function handleBrackets(stream) {
-                    if (stream.match(/[{}]/)) {
-                        return "math-bracket";  // New token type for brackets in math mode
-                    }
-                    return null;
-                }
-
-                return CodeMirror.multiplexingMode(markdownMode, {
-                    open: "$$", close: "$$",
-                    mode: {
-                        token: function (stream, state) {
-                            // Check for brackets first
-                            const bracket = handleBrackets(stream);
-                            if (bracket) return bracket;
-
-                            // Check for LaTeX commands
-                            const command = handleLatexCommand(stream);
-                            if (command) return command;
-
-                            if (stream.match(/^.*?\$\$/)) {
-                                return "math";
-                            }
-                            stream.next();
-                            return "math";
-                        }
-                    },
-                    delimStyle: "delim"
-                }, {
-                    open: "$", close: "$",
-                    mode: {
-                        token: function (stream, state) {
-                            // Check for brackets first
-                            const bracket = handleBrackets(stream);
-                            if (bracket) return bracket;
-
-                            // Check for LaTeX commands
-                            const command = handleLatexCommand(stream);
-                            if (command) return command;
-
-                            if (stream.match(/^.*?\$/)) {
-                                return "math";
-                            }
-                            stream.next();
-                            return "math";
-                        }
-                    },
-                    delimStyle: "delim"
-                });
-            });
-
-            const editor = CodeMirror(document.getElementById('editor'), {
-                value: `<%- content.replace(/\\/g, '\\\\').replace(/\$/g, '\\$') %>`,
-                mode: 'markdown-latex',
-                lineNumbers: true,
-                lineWrapping: true,
-                theme: 'neat',
-                viewportMargin: Infinity,
-                styleActiveLine: true,
-                matchBrackets: true,
-                autoCloseBrackets: true
-            });
-
-            const preview = document.getElementById('preview');
-            const resizer = document.getElementById('resizer');
-
-            // Render Markdown and LaTeX
-            function renderPreview(content) {
-                let html = window.marked.parse(transformImageMarkdown(content.replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~")));
-                // Apply custom image and YouTube transformations
-                html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
-                html = html.replace(/\\\*/g, "*");
-                preview.innerHTML = html;
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+                return null;
             }
 
-            // Add the transformImageMarkdown function
-            function transformImageMarkdown(htmlContent) {
-                // Regular expression for YouTube URL format
-                const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
+            // Helper function to handle brackets in math mode
+            function handleBrackets(stream) {
+                if (stream.match(/[{}]/)) {
+                    return "math-bracket";  // New token type for brackets in math mode
+                }
+                return null;
+            }
 
-                // Replace YouTube URL format with video container HTML
-                htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
-                    return `<div class="video-container">
+            return CodeMirror.multiplexingMode(markdownMode, {
+                open: "$$", close: "$$",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\$\$/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            }, {
+                open: "$", close: "$",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\$/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            });
+        });
+
+        const editor = CodeMirror(document.getElementById('editor'), {
+            value: `<%- content.replace(/\\/g, '\\\\').replace(/\$/g, '\\$') %>`,
+            mode: 'markdown-latex',
+            lineNumbers: true,
+            lineWrapping: true,
+            theme: 'neat',
+            viewportMargin: Infinity,
+            styleActiveLine: true,
+            matchBrackets: true,
+            autoCloseBrackets: true
+        });
+
+        const preview = document.getElementById('preview');
+        const resizer = document.getElementById('resizer');
+
+        // Render Markdown and LaTeX
+        function renderPreview(content) {
+            let html = window.marked.parse(transformImageMarkdown(content.replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~")));
+            // Apply custom image and YouTube transformations
+            html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
+            html = html.replace(/\\\*/g, "*");
+            preview.innerHTML = html;
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+        }
+
+        // Add the transformImageMarkdown function
+        function transformImageMarkdown(htmlContent) {
+            // Regular expression for YouTube URL format
+            const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
+
+            // Replace YouTube URL format with video container HTML
+            htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
+                return `<div class="video-container">
                             <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
                         </div>`;
-                });
+            });
 
-                // Regular expression for custom image markdown
-                const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
+            // Regular expression for custom image markdown
+            const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
 
-                return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
-                    let width = "auto", height = "auto";
-                    let scalePercentage = "100%";
+            return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
+                let width = "auto", height = "auto";
+                let scalePercentage = "100%";
 
-                    if (dimensions) {
-                        const [w, h] = dimensions.split("x");
-                        width = w ? `${w}px` : "auto";
-                        height = h ? `${h.replace("\\, ", "")}px` : "auto";
-                    }
-                    if (scale) {
-                        scalePercentage = scale;
-                    }
+                if (dimensions) {
+                    const [w, h] = dimensions.split("x");
+                    width = w ? `${w}px` : "auto";
+                    height = h ? `${h.replace("\\, ", "")}px` : "auto";
+                }
+                if (scale) {
+                    scalePercentage = scale;
+                }
 
-                    return `<center>
+                return `<center>
               <figure>
                 <img src="..\\..\\img\\${folder}\\${filename}"
                   loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
                 <figcaption>${altText}</figcaption>
               </figure>
               </center>`;
-                });
-            }
+            });
+        }
 
-            // Initial render
+        // Initial render
+        renderPreview(editor.getValue());
+
+        // Live preview update
+        editor.on('change', () => {
             renderPreview(editor.getValue());
+        });
 
-            // Live preview update
-            editor.on('change', () => {
-                renderPreview(editor.getValue());
-            });
+        // Resizable divider logic
+        let isResizing = false;
 
-            // Resizable divider logic
-            let isResizing = false;
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+        });
 
-            resizer.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                document.body.style.cursor = 'col-resize';
-            });
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
 
-            document.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
+            const totalWidth = window.innerWidth;
+            const editorWidth = e.clientX;
 
-                const totalWidth = window.innerWidth;
-                const editorWidth = e.clientX;
+            if (editorWidth > 100 && editorWidth < totalWidth - 100) {
+                const previewWidth = totalWidth - editorWidth - 5; // 5px resizer width
+                document.getElementById('editor').style.width = `${editorWidth}px`;
+                document.getElementById('preview').style.width = `${previewWidth}px`;
 
-                if (editorWidth > 100 && editorWidth < totalWidth - 100) {
-                    const previewWidth = totalWidth - editorWidth - 5; // 5px resizer width
-                    document.getElementById('editor').style.width = `${editorWidth}px`;
-                    document.getElementById('preview').style.width = `${previewWidth}px`;
+                // Update symbol palette width to match editor width
+                document.querySelector('.symbol-palette-items').style.width = `${editorWidth}px`;
+            }
+        });
 
-                    // Update symbol palette width to match editor width
-                    document.querySelector('.symbol-palette-items').style.width = `${editorWidth}px`;
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = 'default';
+            }
+        });
+
+        // Add save functionality
+        document.getElementById('save-button').addEventListener('click', () => {
+            // Get current content from editor
+            const content = editor.getValue();
+
+            // Update hidden textarea
+            document.getElementById('hidden-content').value = content;
+
+            // Submit the form
+            document.getElementById('save-form').submit();
+        });
+
+        // Add keyboard shortcut (Ctrl/Cmd + S)
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault(); // Prevent browser's save dialog
+                document.getElementById('save-button').click();
+            }
+        });
+
+        let hasUnsavedChanges = false;
+
+        // Track changes in the editor
+        editor.on('change', () => {
+            hasUnsavedChanges = true;
+        });
+
+        // Reset changes flag when saving
+        document.getElementById('save-button').addEventListener('click', () => {
+            hasUnsavedChanges = false;
+        });
+
+        // Add click handler to the Go Back button
+        document.querySelector('a[href="/<%= lang %>/<%= name %>"]').addEventListener('click', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                if (confirm('<%= __('post.unsavedChanges') %>')) {
+                    window.location.href = '/<%= lang %>/<%= name %>';
                 }
+            }
+        });
+
+        // Handle browser navigation (optional, for better coverage)
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+
+
+        // Add functionality to insert image markdown
+        document.querySelectorAll('.list-group-item').forEach(item => {
+            item.addEventListener('click', function () {
+                // Hide the popover after an item is clicked
+                document.querySelector('.ol-cm-toolbar-button-menu-popover').style.display = 'none';
             });
+        });
 
-            document.addEventListener('mouseup', () => {
-                if (isResizing) {
-                    isResizing = false;
-                    document.body.style.cursor = 'default';
-                }
-            });
+        // Add event listener to the button to trigger file input
+        document.getElementById('upload-button').addEventListener('click', function () {
+            document.getElementById('file-input').click();
+        });
 
-            // Add save functionality
-            document.getElementById('save-button').addEventListener('click', () => {
-                // Get current content from editor
-                const content = editor.getValue();
+        // Use AJAX to submit the form when a file is selected
+        document.getElementById('file-input').addEventListener('change', function () {
+            if (this.files.length > 0) { // Check if a file is selected
+                const formData = new FormData(document.getElementById('upload-form'));
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', document.getElementById('upload-form').action, true);
 
-                // Update hidden textarea
-                document.getElementById('hidden-content').value = content;
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        // Parse the JSON response
+                        const response = JSON.parse(xhr.responseText);
 
-                // Submit the form
-                document.getElementById('save-form').submit();
-            });
+                        // Extract image path and dimensions
+                        const imagePath = response.imagePath;
+                        const width = response.width;
+                        const height = response.height;
 
-            // Add keyboard shortcut (Ctrl/Cmd + S)
-            document.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                    e.preventDefault(); // Prevent browser's save dialog
-                    document.getElementById('save-button').click();
-                }
-            });
+                        // Use the actual dimensions in the markdown
+                        const markdown = `![For problem <%= name %>|${width}x${height}, 50%](../..${imagePath})`;
+                        editor.replaceSelection(markdown);
 
-            let hasUnsavedChanges = false;
-
-            // Track changes in the editor
-            editor.on('change', () => {
-                hasUnsavedChanges = true;
-            });
-
-            // Reset changes flag when saving
-            document.getElementById('save-button').addEventListener('click', () => {
-                hasUnsavedChanges = false;
-            });
-
-            // Add click handler to the Go Back button
-            document.querySelector('a[href="/<%= lang %>/<%= name %>"]').addEventListener('click', (e) => {
-                if (hasUnsavedChanges) {
-                    e.preventDefault();
-                    if (confirm('<%= __('post.unsavedChanges') %>')) {
-                        window.location.href = '/<%= lang %>/<%= name %>';
+                        // Reset file input to allow re-uploading the same file
+                        document.getElementById('file-input').value = '';
+                    } else {
+                        alert('Failed to upload image.');
                     }
-                }
-            });
+                };
 
-            // Handle browser navigation (optional, for better coverage)
-            window.addEventListener('beforeunload', (e) => {
-                if (hasUnsavedChanges) {
-                    e.preventDefault();
-                    e.returnValue = '';
-                    return '';
-                }
-            });
+                xhr.send(formData);
+            }
+        });
 
+        document.querySelector('.fa-archive').parentElement.addEventListener('click', function () {
+            const modal = document.getElementById('imageModal');
+            const imageList = document.getElementById('imageList');
+            const name = '<%= name %>';
 
-            // Add functionality to insert image markdown
-            document.querySelectorAll('.list-group-item').forEach(item => {
-                item.addEventListener('click', function () {
-                    // Hide the popover after an item is clicked
-                    document.querySelector('.ol-cm-toolbar-button-menu-popover').style.display = 'none';
-                });
-            });
+            fetch(`/img/${name}`)
+                .then(response => response.json())
+                .then(images => {
+                    imageList.innerHTML = ''; // Clear existing content
 
-            // Add event listener to the button to trigger file input
-            document.getElementById('upload-button').addEventListener('click', function () {
-                document.getElementById('file-input').click();
-            });
+                    images.forEach(image => {
+                        // Create a temporary image to get dimensions
+                        const img = new Image();
+                        img.src = `/img/${name}/${image}`;
 
-            // Use AJAX to submit the form when a file is selected
-            document.getElementById('file-input').addEventListener('change', function () {
-                if (this.files.length > 0) { // Check if a file is selected
-                    const formData = new FormData(document.getElementById('upload-form'));
-                    const xhr = new XMLHttpRequest();
-                    xhr.open('POST', document.getElementById('upload-form').action, true);
+                        img.onload = function () {
+                            const listItem = document.createElement('div');
+                            listItem.className = 'image-list-item';
+                            listItem.onclick = () => insertImageMarkdown(image);
 
-                    xhr.onload = function () {
-                        if (xhr.status === 200) {
-                            // Parse the JSON response
-                            const response = JSON.parse(xhr.responseText);
-
-                            // Extract image path and dimensions
-                            const imagePath = response.imagePath;
-                            const width = response.width;
-                            const height = response.height;
-
-                            // Use the actual dimensions in the markdown
-                            const markdown = `![For problem <%= name %>|${width}x${height}, 50%](../..${imagePath})`;
-                            editor.replaceSelection(markdown);
-
-                            // Reset file input to allow re-uploading the same file
-                            document.getElementById('file-input').value = '';
-                        } else {
-                            alert('Failed to upload image.');
-                        }
-                    };
-
-                    xhr.send(formData);
-                }
-            });
-
-            document.querySelector('.fa-archive').parentElement.addEventListener('click', function () {
-                const modal = document.getElementById('imageModal');
-                const imageList = document.getElementById('imageList');
-                const name = '<%= name %>';
-
-                fetch(`/img/${name}`)
-                    .then(response => response.json())
-                    .then(images => {
-                        imageList.innerHTML = ''; // Clear existing content
-
-                        images.forEach(image => {
-                            // Create a temporary image to get dimensions
-                            const img = new Image();
-                            img.src = `/img/${name}/${image}`;
-
-                            img.onload = function () {
-                                const listItem = document.createElement('div');
-                                listItem.className = 'image-list-item';
-                                listItem.onclick = () => insertImageMarkdown(image);
-
-                                listItem.innerHTML = `
+                            listItem.innerHTML = `
                                 <img src="/img/${name}/${image}" class="image-thumbnail" alt="${image}">
                                 <div class="image-details">
                                     <div class="image-name">${image}</div>
@@ -1424,163 +1424,174 @@
                                 </div>
                             `;
 
-                                // Get file size
-                                fetch(`/img/${name}/${image}`)
-                                    .then(response => {
-                                        const size = response.headers.get('content-length');
-                                        const sizeInKB = (size / 1024).toFixed(2);
-                                        listItem.querySelector('.image-size').textContent = `${sizeInKB} KB`;
-                                    });
+                            // Get file size
+                            fetch(`/img/${name}/${image}`)
+                                .then(response => {
+                                    const size = response.headers.get('content-length');
+                                    const sizeInKB = (size / 1024).toFixed(2);
+                                    listItem.querySelector('.image-size').textContent = `${sizeInKB} KB`;
+                                });
 
-                                imageList.appendChild(listItem);
-                            };
-                        });
-                        modal.style.display = 'block';
-                    })
-                    .catch(error => console.error('Error fetching images:', error));
+                            imageList.appendChild(listItem);
+                        };
+                    });
+                    modal.style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching images:', error));
+        });
+
+        document.querySelectorAll('.close').forEach(button => {
+            button.addEventListener('click', function () {
+                // Find the closest modal and hide it
+                const modal = this.closest('.modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
             });
+        });
 
-            document.querySelector('.close').onclick = function () {
+        // Close the modal when clicking outside of it
+        window.addEventListener('click', function (event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        });
+
+        function insertImageMarkdown(image) {
+            const name = '<%= name %>';
+            const imageElement = new Image();
+            imageElement.src = `/img/${name}/${image}`;
+
+            imageElement.onload = function () {
+                const width = this.width;
+                const height = this.height;
+                const scale = '50%'; // Example scale
+
+                const markdown = `![${image}|${width}x${height}, ${scale}](../../img/${name}/${image})`;
+                editor.replaceSelection(markdown);
                 document.getElementById('imageModal').style.display = 'none';
             };
+        }
 
-            window.onclick = function (event) {
-                const modal = document.getElementById('imageModal');
-                if (event.target == modal) {
-                    modal.style.display = 'none';
+        // Show the URL modal when the "From URL" button is clicked
+        document.querySelector('.fa-globe').parentElement.addEventListener('click', function () {
+            document.getElementById('urlModal').style.display = 'block';
+        });
+
+        // Close the URL modal
+        document.querySelector('.close-url-modal').onclick = function () {
+            document.getElementById('urlModal').style.display = 'none';
+        };
+
+        // Insert the URL into the editor
+        document.getElementById('insertUrlButton').addEventListener('click', function () {
+            let url = document.getElementById('urlInput').value;
+            if (url) {
+                // Add https:// if the URL doesn't start with http:// or https://
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'https://' + url;
                 }
-            };
-
-            function insertImageMarkdown(image) {
-                const name = '<%= name %>';
-                const imageElement = new Image();
-                imageElement.src = `/img/${name}/${image}`;
-
-                imageElement.onload = function () {
-                    const width = this.width;
-                    const height = this.height;
-                    const scale = '50%'; // Example scale
-
-                    const markdown = `![${image}|${width}x${height}, ${scale}](../../img/${name}/${image})`;
-                    editor.replaceSelection(markdown);
-                    document.getElementById('imageModal').style.display = 'none';
-                };
-            }
-
-            // Show the URL modal when the "From URL" button is clicked
-            document.querySelector('.fa-globe').parentElement.addEventListener('click', function () {
-                document.getElementById('urlModal').style.display = 'block';
-            });
-
-            // Close the URL modal
-            document.querySelector('.close-url-modal').onclick = function () {
+                const markdown = `![For problem <%= name %>|123x456, 50%](${url})`;
+                editor.replaceSelection(markdown);
                 document.getElementById('urlModal').style.display = 'none';
-            };
+                document.getElementById('urlInput').value = ''; // Clear the input field
+            } else {
+                alert('Please enter a valid URL.');
+            }
+        });
 
-            // Insert the URL into the editor
-            document.getElementById('insertUrlButton').addEventListener('click', function () {
-                let url = document.getElementById('urlInput').value;
-                if (url) {
-                    // Add https:// if the URL doesn't start with http:// or https://
-                    if (!/^https?:\/\//i.test(url)) {
-                        url = 'https://' + url;
-                    }
-                    const markdown = `![For problem <%= name %>|123x456, 50%](${url})`;
-                    editor.replaceSelection(markdown);
-                    document.getElementById('urlModal').style.display = 'none';
-                    document.getElementById('urlInput').value = ''; // Clear the input field
-                } else {
-                    alert('Please enter a valid URL.');
-                }
-            });
-
-            // Close the modal when clicking outside of it
-            window.onclick = function (event) {
-                const modal = document.getElementById('urlModal');
-                if (event.target == modal) {
+        // Close the modal when clicking outside of it
+        window.addEventListener('click', function (event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
                     modal.style.display = 'none';
                 }
-            };
+            });
+        });
 
-            // Function to adjust editor height
-            function adjustEditorHeight() {
-                const symbolPalette = document.querySelector('.symbol-palette-items');
-                const editor = document.getElementById('editor');
-                const observer = new MutationObserver(() => {
-                    if (symbolPalette.style.display === 'block') {
-                        editor.style.height = 'calc(100% - 30vh)'; // Reduce height by the symbol palette's height
-                    } else {
-                        editor.style.height = '100%'; // Reset to full height
-                    }
-                });
+        // Function to adjust editor height
+        function adjustEditorHeight() {
+            const symbolPalette = document.querySelector('.symbol-palette-items');
+            const editor = document.getElementById('editor');
+            const observer = new MutationObserver(() => {
+                if (symbolPalette.style.display === 'block') {
+                    editor.style.height = 'calc(100% - 30vh)'; // Reduce height by the symbol palette's height
+                } else {
+                    editor.style.height = '100%'; // Reset to full height
+                }
+            });
 
-                // Observe changes to the 'style' attribute of the symbol palette
-                observer.observe(symbolPalette, { attributes: true, attributeFilter: ['style'] });
+            // Observe changes to the 'style' attribute of the symbol palette
+            observer.observe(symbolPalette, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        // Call adjustEditorHeight once to set up the observer
+        adjustEditorHeight();
+
+        // Toggle symbol palette visibility
+        document.querySelector('.ol-cm-toolbar-button-math').addEventListener('click', function () {
+            const symbolPalette = document.querySelector('.symbol-palette-items');
+            if (symbolPalette.style.display === 'none' || symbolPalette.style.display === '') {
+                symbolPalette.style.display = 'block';
+            } else {
+                symbolPalette.style.display = 'none';
             }
+            adjustEditorHeight(); // Adjust editor height when toggling
+        });
 
-            // Call adjustEditorHeight once to set up the observer
-            adjustEditorHeight();
+        // Toggle popover visibility for Insert Figure button
+        document.querySelector('.ol-cm-toolbar-button[aria-label="Insert Figure"]').addEventListener('click', function () {
+            const popover = document.querySelector('.ol-cm-toolbar-button-menu-popover');
+            if (popover.classList.contains('show')) {
+                popover.classList.remove('show');
+                setTimeout(() => popover.style.display = 'none', 300); // Wait for transition to complete
+            } else {
+                popover.style.display = 'block';
+                setTimeout(() => popover.classList.add('show'), 10); // Slight delay to trigger transition
+            }
+        });
 
-            // Toggle symbol palette visibility
-            document.querySelector('.ol-cm-toolbar-button-math').addEventListener('click', function () {
-                const symbolPalette = document.querySelector('.symbol-palette-items');
-                if (symbolPalette.style.display === 'none' || symbolPalette.style.display === '') {
-                    symbolPalette.style.display = 'block';
-                } else {
-                    symbolPalette.style.display = 'none';
-                }
-                adjustEditorHeight(); // Adjust editor height when toggling
-            });
-
-            // Toggle popover visibility for Insert Figure button
-            document.querySelector('.ol-cm-toolbar-button[aria-label="Insert Figure"]').addEventListener('click', function () {
-                const popover = document.querySelector('.ol-cm-toolbar-button-menu-popover');
-                if (popover.classList.contains('show')) {
-                    popover.classList.remove('show');
-                    setTimeout(() => popover.style.display = 'none', 300); // Wait for transition to complete
-                } else {
-                    popover.style.display = 'block';
-                    setTimeout(() => popover.classList.add('show'), 10); // Slight delay to trigger transition
+        // Add event listeners to symbol palette items
+        document.querySelectorAll('.symbol-palette-item').forEach(button => {
+            button.addEventListener('click', function () {
+                const command = this.getAttribute('data-command');
+                if (command) {
+                    editor.replaceSelection(command);
                 }
             });
+        });
 
-            // Add event listeners to symbol palette items
-            document.querySelectorAll('.symbol-palette-item').forEach(button => {
-                button.addEventListener('click', function () {
-                    const command = this.getAttribute('data-command');
-                    if (command) {
-                        editor.replaceSelection(command);
-                    }
+        // Add event listener to the close button in the symbol palette
+        document.querySelector('.symbol-palette-close-button').addEventListener('click', function () {
+            document.querySelector('.symbol-palette-items').style.display = 'none';
+        });
+
+        document.querySelectorAll('.symbol-palette-tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                // Deselect all tabs and hide all panels
+                document.querySelectorAll('.symbol-palette-tab').forEach(t => {
+                    t.setAttribute('aria-selected', 'false');
+                    t.setAttribute('tabindex', '-1');
                 });
-            });
-
-            // Add event listener to the close button in the symbol palette
-            document.querySelector('.symbol-palette-close-button').addEventListener('click', function () {
-                document.querySelector('.symbol-palette-items').style.display = 'none';
-            });
-
-            document.querySelectorAll('.symbol-palette-tab').forEach(tab => {
-                tab.addEventListener('click', function () {
-                    // Deselect all tabs and hide all panels
-                    document.querySelectorAll('.symbol-palette-tab').forEach(t => {
-                        t.setAttribute('aria-selected', 'false');
-                        t.setAttribute('tabindex', '-1');
-                    });
-                    document.querySelectorAll('.symbol-palette-panel').forEach(panel => {
-                        panel.style.display = 'none';
-                    });
-
-                    // Select the clicked tab and show the corresponding panel
-                    this.setAttribute('aria-selected', 'true');
-                    this.setAttribute('tabindex', '0');
-                    const panelId = this.getAttribute('aria-controls');
-                    document.getElementById(panelId).style.display = 'block';
+                document.querySelectorAll('.symbol-palette-panel').forEach(panel => {
+                    panel.style.display = 'none';
                 });
-            });
 
-            // Initialize by showing the first tab and panel
-            document.querySelector('.symbol-palette-tab[aria-selected="true"]').click();
-        </script>
+                // Select the clicked tab and show the corresponding panel
+                this.setAttribute('aria-selected', 'true');
+                this.setAttribute('tabindex', '0');
+                const panelId = this.getAttribute('aria-controls');
+                document.getElementById(panelId).style.display = 'block';
+            });
+        });
+
+        // Initialize by showing the first tab and panel
+        document.querySelector('.symbol-palette-tab[aria-selected="true"]').click();
+    </script>
 
 </body>
 
