@@ -978,6 +978,9 @@ app.post('/upload-image/:name', upload.single('image'), (req, res) => {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
     
+    const dir = path.join(__dirname, 'img', req.params.name);
+    fs.mkdirSync(dir, { recursive: true }); 
+    
     const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
     
     // Use a library like 'sharp' to get image dimensions
