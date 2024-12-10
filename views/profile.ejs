@@ -2,6 +2,23 @@
 <html lang="<%= lang %>">
 
 <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <meta http-equiv="content-language" content="en">
+   <meta name="keywords" content="<%= __('meta.keywords') %>">
+   <meta name="description" content="<%= __('meta.description') %>">
+   <meta name="author" content="<%= __('meta.author') %>">
+   <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+   <meta property="og:title" content="<%= __('profile.title') %>">
+   <meta property="og:image" content="img/logo.png">
+   <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+   <meta name="yandex-verification" content="6cfda41f74038368">
+   <title>
+      <%= __('profile.title') %>
+   </title>
+   <link rel="icon" href="/img/logo.png" type="image/png">
+   <script src="/js/jquery-1.10.1.min.js"></script>
+
    <style>
       /* Add font-family to body */
       body {
@@ -217,7 +234,8 @@
          font-size: 0.9em;
       }
 
-      .settings-form, .password-form {
+      .settings-form,
+      .password-form {
          display: flex;
          flex-direction: column;
          flex: 1;
@@ -260,9 +278,6 @@
          text-decoration: underline;
       }
    </style>
-   <title>
-      <%= __('profile.title') %>
-   </title>
 </head>
 
 <body>
@@ -290,19 +305,22 @@
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.yourContributions') %>
-                           <span style="display: flex; align-items: center; font-size: 0.9em; color: #666;">
-                              <img src="/img/contributions.svg" width="18" height="18" style="margin-right: 4px;" alt="Edit icon">
-                              <%= contributions ? contributions.length : 0 %>
-                           </span>
+                              <span style="display: flex; align-items: center; font-size: 0.9em; color: #666;">
+                                 <img src="/img/contributions.svg" width="18" height="18" style="margin-right: 4px;"
+                                    alt="Edit icon">
+                                 <%= contributions ? contributions.length : 0 %>
+                              </span>
                         </h2>
-                        <% if (contributions && contributions.length > 0) { %>
+                        <% if (contributions && contributions.length> 0) { %>
                            <ul class="contributions-list">
-                              <% contributions.forEach(contribution => { %>
+                              <% contributions.forEach(contribution=> { %>
                                  <li>
                                     <div class="contribution-item">
                                        <div class="contribution-header">
                                           <div>
-                                             <strong><%= __('profile.editedProblems') %></strong>
+                                             <strong>
+                                                <%= __('profile.editedProblems') %>
+                                             </strong>
                                              <a href="/<%= contribution.language %>/<%= contribution.problem_name %>">
                                                 <%= contribution.problem_name %>
                                              </a>
@@ -312,33 +330,33 @@
                                           </span>
                                        </div>
                                        <div class="contribution-meta">
-                                          <%= __('profile.lastEdited') %> 
-                                          <%= new Date(contribution.edited_at).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
-                                             year: 'numeric',
-                                             month: 'long',
-                                             day: 'numeric',
-                                             hour: '2-digit',
-                                             minute: '2-digit'
-                                          }) %>
-                                          <% if (contribution.original_content && contribution.new_content) { %>
-                                             <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="view-changes">
-                                                <%= __('profile.viewChanges') %>
-                                             </a>
-                                          <% } %>
+                                          <%= __('profile.lastEdited') %>
+                                             <%= new Date(contribution.edited_at).toLocaleString(lang==='ru' ? 'ru-RU'
+                                                : 'en-US' , { year: 'numeric' , month: 'long' , day: 'numeric' ,
+                                                hour: '2-digit' , minute: '2-digit' }) %>
+                                                <% if (contribution.original_content && contribution.new_content) { %>
+                                                   <a href="/<%= lang %>/contributions/<%= contribution.id %>"
+                                                      class="view-changes">
+                                                      <%= __('profile.viewChanges') %>
+                                                   </a>
+                                                   <% } %>
                                        </div>
                                     </div>
                                  </li>
                                  <% }); %>
                            </ul>
                            <% } else { %>
-                              <p><%= __('profile.noContributions') %></p>
+                              <p>
+                                 <%= __('profile.noContributions') %>
+                              </p>
                               <% } %>
                      </div>
 
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.settings') %>
-                           <img src="/img/settings.svg" width="18" height="18" style="margin-left: 4px;" alt="Settings icon">
+                              <img src="/img/settings.svg" width="18" height="18" style="margin-left: 4px;"
+                                 alt="Settings icon">
                         </h2>
                         <form action="/profile/update" method="POST" class="settings-form">
                            <input type="hidden" name="lang" value="<%= lang %>">
@@ -373,7 +391,8 @@
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.changePassword') %>
-                           <img src="/img/lock.svg" width="18" height="18" style="margin-left: 4px;" alt="Password icon">
+                              <img src="/img/lock.svg" width="18" height="18" style="margin-left: 4px;"
+                                 alt="Password icon">
                         </h2>
                         <form action="/profile/password" method="POST" class="password-form">
                            <input type="hidden" name="lang" value="<%= lang %>">
@@ -383,10 +402,13 @@
                                  <%= __('profile.currentPassword') %>
                               </label>
                               <div class="password-input-wrapper">
-                                 <input type="password" id="currentPassword" name="currentPassword" required oninput="toggleEyeIcon(this)">
-                                 <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')" style="display: none;">
+                                 <input type="password" id="currentPassword" name="currentPassword" required
+                                    oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle"
+                                    onclick="togglePassword('currentPassword')" style="display: none;">
                                     <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
-                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;"
+                                       alt="Hide password">
                                  </button>
                               </div>
                            </div>
@@ -396,10 +418,13 @@
                                  <%= __('profile.newPassword') %>
                               </label>
                               <div class="password-input-wrapper">
-                                 <input type="password" id="newPassword" name="newPassword" required oninput="toggleEyeIcon(this)">
-                                 <button type="button" class="password-toggle" onclick="togglePassword('newPassword')" style="display: none;">
+                                 <input type="password" id="newPassword" name="newPassword" required
+                                    oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle" onclick="togglePassword('newPassword')"
+                                    style="display: none;">
                                     <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
-                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;"
+                                       alt="Hide password">
                                  </button>
                               </div>
                            </div>
@@ -409,10 +434,13 @@
                                  <%= __('profile.confirmPassword') %>
                               </label>
                               <div class="password-input-wrapper">
-                                 <input type="password" id="confirmPassword" name="confirmPassword" required oninput="toggleEyeIcon(this)">
-                                 <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')" style="display: none;">
+                                 <input type="password" id="confirmPassword" name="confirmPassword" required
+                                    oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle"
+                                    onclick="togglePassword('confirmPassword')" style="display: none;">
                                     <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
-                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;"
+                                       alt="Hide password">
                                  </button>
                               </div>
                            </div>
@@ -441,7 +469,7 @@
          const button = input.nextElementSibling;
          const openEye = button.querySelector('.eye-open');
          const closedEye = button.querySelector('.eye-closed');
-         
+
          if (input.type === 'password') {
             input.type = 'text';
             openEye.style.display = 'none';

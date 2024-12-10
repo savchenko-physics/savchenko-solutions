@@ -2,12 +2,22 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Post - <%= name %>
-    </title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="content-language" content="<%= lang %>" />
+    <meta name="keywords" content="<%= __('meta.keywords') %>" />
+    <meta name="description" content="<%= title %>" />
+    <meta name="author" content="<%= __('meta.author') %>" />
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:image" content="img/logo.png" />
+    <meta property="og:description" content="<%= title %>" />
+    <meta name="yandex-verification" content="6cfda41f74038368" />
+    <title><%= title %></title>
+    <link rel="icon" href="../../img/logo.png" type="image/png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
     <script src="/js/jquery-1.10.1.min.js"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
@@ -781,7 +791,7 @@
         <div style="display: flex; align-items: center;" class="header-left">
             <a href="/" class="submit-button"
                 style="background-color: #1b222c; color: #afb5c0; text-decoration: none; border-radius: 0;">
-                <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-en-white.svg">
+                <img class="mw-logo-wordmark" alt="Savchenko Solutions" src="/img/savchenko-wordmark-<%= lang %>-white.svg">
             </a>
         </div>
         <span class="post-title" style="flex-grow: 1; text-align: center;">
@@ -823,14 +833,18 @@
         style="position: absolute; top: 90px; left: 24px; display: none; z-index: 1001; background-color: var(--editor-toolbar-bg); border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
         <div class="popover-content">
             <div role="menu" class="list-group">
-                <button type="button" id="upload-button" class="list-group-item"><i class="fa fa-upload fa-fw"
-                        aria-hidden="true"></i>Upload from computer</button>
-                <button type="button" class="list-group-item"><i class="fa fa-archive fa-fw" aria-hidden="true"></i>From
-                    solution files</button>
-                <!-- <button type="button" class="list-group-item"><i class="fa fa-folder-open fa-fw"
-                        aria-hidden="true"></i>From another solution</button> -->
-                <button type="button" class="list-group-item"><i class="fa fa-globe fa-fw" aria-hidden="true"></i>From
-                    URL</button>
+                <button type="button" id="upload-button" class="list-group-item">
+                    <i class="fa fa-upload fa-fw" aria-hidden="true"></i><%= __('post.upload') %>
+                </button>
+                <button type="button" class="list-group-item">
+                    <i class="fa fa-archive fa-fw" aria-hidden="true"></i><%= __('post.fromSolutionFiles') %>
+                </button>
+                <!-- <button type="button" class="list-group-item">
+                    <i class="fa fa-folder-open fa-fw" aria-hidden="true"></i><%= __('post.fromAnotherSolution') %>
+                </button> -->
+                <button type="button" class="list-group-item">
+                    <i class="fa fa-globe fa-fw" aria-hidden="true"></i><%= __('post.fromURL') %>
+                </button>
             </div>
         </div>
     </div>
@@ -846,15 +860,15 @@
     <div class="symbol-palette-items" role="listbox" aria-label="Symbols">
         <div role="tablist" aria-label="Symbol Categories" class="symbol-palette-tab-list">
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Greek"
-                aria-controls="symbol-palette-panel-Greek" aria-selected="true" tabindex="0">Greek</button>
+                aria-controls="symbol-palette-panel-Greek" aria-selected="true" tabindex="0"><%= __('post.symbolPaletteGreek') %></button>
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Arrows"
-                aria-controls="symbol-palette-panel-Arrows" aria-selected="false" tabindex="-1">Arrows</button>
+                aria-controls="symbol-palette-panel-Arrows" aria-selected="false" tabindex="-1"><%= __('post.symbolPaletteArrows') %></button>
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Operators"
-                aria-controls="symbol-palette-panel-Operators" aria-selected="false" tabindex="-1">Operators</button>
+                aria-controls="symbol-palette-panel-Operators" aria-selected="false" tabindex="-1"><%= __('post.symbolPaletteOperators') %></button>
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Relations"
-                aria-controls="symbol-palette-panel-Relations" aria-selected="false" tabindex="-1">Relations</button>
+                aria-controls="symbol-palette-panel-Relations" aria-selected="false" tabindex="-1"><%= __('post.symbolPaletteRelations') %></button>
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Misc"
-                aria-controls="symbol-palette-panel-Misc" aria-selected="false" tabindex="-1">Misc</button>
+                aria-controls="symbol-palette-panel-Misc" aria-selected="false" tabindex="-1"><%= __('post.symbolPaletteMisc') %></button>
 
             <div class="symbol-palette-header-group">
                 <div class="symbol-palette-close-button-outer">
@@ -1119,8 +1133,7 @@
     <div id="imageModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2 id="imageModalLabel">Uploaded images of <%= name %>
-            </h2>
+            <h2 id="imageModalLabel"><%= __('post.uploadedImages') %> <%= name %></h2>
             <div id="imageList"></div>
         </div>
     </div>
@@ -1128,10 +1141,10 @@
     <div id="urlModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-url-modal close">&times;</span>
-            <h2>Enter URL</h2>
-            <input type="text" id="urlInput" placeholder="Enter URL here"
+            <h2><%= __('post.enterUrlTitle') %></h2>
+            <input type="text" id="urlInput" placeholder="<%= __('post.enterUrlPlaceholder') %>"
                 style="width: 100%; padding: 8px; margin-bottom: 10px;">
-            <button id="insertUrlButton" class="submit-button" style="width: 100%;">Insert URL</button>
+            <button id="insertUrlButton" class="submit-button" style="width: 100%;"><%= __('post.insertUrlButton') %></button>
         </div>
     </div>
 
@@ -1387,7 +1400,7 @@
                         const height = response.height;
 
                         // Use the actual dimensions in the markdown
-                        const markdown = `![For problem <%= name %>|${width}x${height}, 50%](../..${imagePath})`;
+                        const markdown = `![<%= __('post.forProblem') %> \$<%= name %>\$|${width}x${height}, 50%](../..${imagePath})`;
                         editor.replaceSelection(markdown);
 
                         // Reset file input to allow re-uploading the same file
@@ -1425,8 +1438,8 @@
                                 <img src="/img/${name}/${image}" class="image-thumbnail" alt="${image}">
                                 <div class="image-details">
                                     <div class="image-name">${image}</div>
-                                    <div class="image-dimensions">${this.width} × ${this.height} pixels</div>
-                                    <div class="image-size">Loading size...</div>
+                                    <div class="image-dimensions">${this.width} × ${this.height} <%= __('post.pixels') %></div>
+                                    <div class="image-size"><%= __('post.loadingSize') %></div>
                                 </div>
                             `;
 
@@ -1500,7 +1513,7 @@
                 if (!/^https?:\/\//i.test(url)) {
                     url = 'https://' + url;
                 }
-                const markdown = `![For problem <%= name %>|123x456, 50%](${url})`;
+                const markdown = `![<%= __('post.forProblem') %> \$<%= name %>\$|123x456, 50%](${url})`;
                 editor.replaceSelection(markdown);
                 document.getElementById('urlModal').style.display = 'none';
                 document.getElementById('urlInput').value = ''; // Clear the input field

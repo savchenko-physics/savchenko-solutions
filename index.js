@@ -645,7 +645,8 @@ app.get("/:lang/edit/:name", (req, res) => {
             __: i18n.__,
             lang,
             name,
-            content: fileContents
+            content: fileContents,
+            title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`
         });
     } else {
         i18n.setLocale(res, lang);
