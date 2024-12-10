@@ -19,6 +19,7 @@
             jax: ['input/TeX', 'output/HTML-CSS'],
             tex2jax: {
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
                 processEscapes: true,
                 processClass: 'tex2jax',
                 ignoreClass: 'html'
@@ -1214,7 +1215,10 @@
         const resizer = document.getElementById('resizer');
 
         // Render Markdown and LaTeX
-        function renderPreview(content) {
+        function renderPreview(content) {            
+            content = content.replace(/\\\[/g, '\\\\[').replace(/\\\]/g, '\\\\]');
+            content = content.replace(/\\\(/g, '\\\\(').replace(/\\\)/g, '\\\\)');
+
             let html = window.marked.parse(transformImageMarkdown(content.replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\*/g, "\\*").replace(/~/g, "\\~")));
             // Apply custom image and YouTube transformations
             html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");

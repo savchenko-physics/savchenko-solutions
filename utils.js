@@ -37,7 +37,12 @@ const escapeMarkdown = (text) => {
 };
 
 // Function to parse Markdown content into HTML
-const parseMarkdown = (markdownText) => marked(escapeMarkdown(markdownText));
+const parseMarkdown = (markdownText) => {
+    let content = escapeMarkdown(markdownText);
+    content = content.replace(/\\\[/g, '\\\\[').replace(/\\\]/g, '\\\\]');
+    content = content.replace(/\\\(/g, '\\\\(').replace(/\\\)/g, '\\\\)');
+    return marked(content);
+};
 
 // Function to get all Markdown files from the public directory
 const getMarkdownFiles = (directory) => {
