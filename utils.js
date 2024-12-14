@@ -157,10 +157,12 @@ const transformImageMarkdown = (htmlContent) => {
             console.log(scalePercentage);
         }
 
-        return `<center>
+        return `<center style="margin-top: 5px; margin-bottom: 5px;">
       <figure>
         <img src="..\\..\\img\\${folder}\\${filename}"
-          loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
+          loading="lazy" alt="${altText}" 
+          width="${scalePercentage}" 
+          style="width: min(${scalePercentage}, 100vw);" />
         <figcaption>${altText}</figcaption>
       </figure>
       </center>`;
