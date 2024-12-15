@@ -997,6 +997,12 @@ app.post('/upload-image/:name', upload.single('image'), (req, res) => {
     });
 });
 
+// Add redirection routes
+app.get(/^\/([1-9]|1[0-4])$/, (req, res) => {
+    const sectionNumber = req.params[0];
+    res.redirect(301, `/ru/#${sectionNumber}`);
+});
+
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
