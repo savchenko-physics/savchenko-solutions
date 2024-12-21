@@ -12,8 +12,12 @@ This project is a **non-profit, collaborative effort** aimed at creating the fir
 
 ## How to Contribute
 
-If you're interested in contributing to the project, check out the [how-to-contribute guide](https://savchenkosolutions.com/study-guide). Together, we can make physics education even more accessible for students and educators worldwide.
+<div align="center">
+  <a href="https://www.youtube.com/embed/d-x7Lk-mfTs">
+    <img src="https://github.com/user-attachments/assets/69bf0ec9-6371-4fa6-9ade-3f6e6ac04584" alt="Collaborative Solutions for Physics Problems: Way to Change Physics Olympiad Preparation" style="width:50%; height:auto;">
+  </a>
+</div>
 
----
+If you're interested in contributing to the project, check out the [how-to-contribute guide](https://savchenkosolutions.com/study-guide). Together, we can make physics education even more accessible for students and educators worldwide.
 
 This repository is a work in progress, and we welcome your feedback and contributions. For any suggestions or concerns: [aliaksandr@melnichenka.com](mailto:aliaksandr@melnichenka.com)
