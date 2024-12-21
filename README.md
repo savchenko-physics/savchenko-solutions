@@ -1,4 +1,4 @@
-# Savchenko Physics Problems Solutions
+t# Savchenko Physics Problems Solutions
 
 The collection of physics problems edited by **O.Y. Savchenko** has been a cornerstone resource for physics olympiad preparation in post-Soviet countries for over 30 years. Despite its widespread use, no complete solution manual for this collection has ever been created—until now.
 
@@ -13,7 +13,7 @@ This project is a **non-profit, collaborative effort** aimed at creating the fir
 ## How to Contribute
 
 <div align="center">
-  <a href="https://www.youtube.com/embed/d-x7Lk-mfTs">
+  <a href="https://youtu.be/d-x7Lk-mfTs">
     <img src="https://github.com/user-attachments/assets/69bf0ec9-6371-4fa6-9ade-3f6e6ac04584" alt="Collaborative Solutions for Physics Problems: Way to Change Physics Olympiad Preparation" style="width:50%; height:auto;">
   </a>
 </div>
