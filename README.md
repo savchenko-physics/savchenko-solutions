@@ -16,4 +16,4 @@ If you're interested in contributing to the project, check out the [how-to-contr
 
 ---
 
-This repository is a work in progress, and we welcome your feedback and contributions. For any suggestions or concerns: [mailto:aliaksandr@melnichenka.com](aliaksandr@melnichenka.com)
+This repository is a work in progress, and we welcome your feedback and contributions. For any suggestions or concerns: [aliaksandr@melnichenka.com](mailto:aliaksandr@melnichenka.com)
