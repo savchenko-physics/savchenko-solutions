@@ -4,7 +4,7 @@ The collection of physics problems edited by **O.Y. Savchenko** has been a corne
 
 ## About the Project
 
-This project is a **non-profit, collaborative effort** aimed at creating the first comprehensive solution manual for Savchenko's collection. It features contributions from [different authors](about#team) working together to make these solutions accessible.
+This project is a **non-profit, collaborative effort** aimed at creating the first comprehensive solution manual for Savchenko's collection. It features contributions from [different authors](https://savchenkosolutions.com/about#team) working together to make these solutions accessible.
 
 - **Current Progress**: Over **745 solutions** out of 2023 problems have been published.
 - **Languages**: The project is actively developed in both **Russian** and **English**.
@@ -12,7 +12,7 @@ This project is a **non-profit, collaborative effort** aimed at creating the fir
 
 ## How to Contribute
 
-If you're interested in contributing to the project, check out the [how-to-contribute guide](study-guide). Together, we can make physics education even more accessible for students and educators worldwide.
+If you're interested in contributing to the project, check out the [how-to-contribute guide](https://savchenkosolutions.com/study-guide). Together, we can make physics education even more accessible for students and educators worldwide.
 
 ---
 
