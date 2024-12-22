@@ -1,4 +1,5 @@
-t# Savchenko Physics Problems Solutions
+# Savchenko Solutions
+
 
 The collection of physics problems edited by **O.Y. Savchenko** has been a cornerstone resource for physics olympiad preparation in post-Soviet countries for over 30 years. Despite its widespread use, no complete solution manual for this collection has ever been created—until now.
 
