@@ -121,7 +121,7 @@ html {
 }
 
 body {
-  font-family: "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
+  font-family: sans-serif, "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
   line-height: 1.8;
 
   max-width: 80ch;
@@ -927,4 +927,8 @@ button {
   /* Rounded corners */
   cursor: pointer;
   /* Pointer cursor on hover */
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Linux Libertine', 'Georgia', 'Times', 'Source Serif Pro', serif;
 }
