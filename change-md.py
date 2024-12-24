@@ -31,6 +31,9 @@ def process_file(filepath):
 
     updated_content = updated_content.rstrip('\n')
 
+    # Remove repeated text after image links, including any text that follows the image link
+    updated_content = re.sub(r'(!\[.*?\s*\|\s*.*?\]\(.*?\))([^\n]*)', r'\1', updated_content)
+
     with open(filepath, 'w', encoding='utf-8') as file:
         file.write(updated_content)
 
