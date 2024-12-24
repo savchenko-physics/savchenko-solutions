@@ -7,9 +7,8 @@ const ejs = require("ejs");
 const fs = require("fs"); // Import fs module
 const bodyParser = require("body-parser");
 const { parseMarkdown, getMarkdownFiles, getLineStatement, transformImageMarkdown } = require("./utils"); // Importing functions from utils.js
-const { getPageData } = require("./parents_en"); // generating content for the main english page
+const { getLanguageData } = require("./parents"); // generating content for the main english page
 
-const { ru_page } = require("./parents_ru"); // generating content for the main russian page
 const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
 const { Pool } = require("pg");
@@ -41,7 +40,7 @@ app.use(
         secret: process.env.SESSION_SECRET || "your_secret_key",
         resave: false,
         saveUninitialized: false,
-        cookie: { 
+        cookie: {
             secure: process.env.NODE_ENV === 'production',
             maxAge: 1000 * 60 * 60 * 24 * 365,
             httpOnly: true,
@@ -78,7 +77,7 @@ function checkAuthenticated(req, res, next) {
     if (req.session.userId) {
         return next();
     }
-    
+
     res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
 }
 
@@ -89,7 +88,7 @@ function checkNotAuthenticated(req, res, next) {
     if (!req.session.userId) {
         return next();
     }
-    
+
     res.redirect(`/${lang}/profile`);
 }
 app.get('/img/:name', (req, res) => {
@@ -108,11 +107,7 @@ app.get('/img/:name', (req, res) => {
 app.post("/create-problem", async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
 
-    const { chapters } = await getPageData(
-        lang === 'ru' ? "src/ru/database/chapters.csv" : "src/database/chapters.csv",
-        lang === 'ru' ? "src/ru/database/sections.csv" : "src/database/sections.csv",
-        lang
-    );
+    const { chapters } = await getLanguageData(lang);
 
     if (!problemName || !problemName.match(/^\d+\.\d+\.\d+$/)) {
         return res.status(400).json({ message: "Invalid problem name format. Use chapter.section.problem format." });
@@ -152,7 +147,7 @@ app.post("/create-problem", async (req, res) => {
         return res.status(400).json({ message: "Problem file already exists." });
     }
 
-    const content = lang === 'ru' ? 
+    const content = lang === 'ru' ?
         `### Условие
 
 $${problemName}.$ [Вставьте описание задачи]
@@ -196,8 +191,8 @@ $$\\boxed{x(t)=\\frac{bt^3}{6}}$$
 
 
 __Пример ответа__:
-$$ x(t)=\\frac{bt^3}{6} $$` 
-        : 
+$$ x(t)=\\frac{bt^3}{6} $$`
+        :
         // Original English template
         `### Statement
 
@@ -248,18 +243,18 @@ $$ x(t)=\\frac{bt^3}{6} $$
     try {
         await fs.promises.writeFile(filePath, content);
         console.log(`Problem file created: ${filePath}`);
-        res.json({ 
-            message: lang === 'ru' ? 
-                `Задача ${problemName} успешно создана!` : 
+        res.json({
+            message: lang === 'ru' ?
+                `Задача ${problemName} успешно создана!` :
                 `Problem ${problemName} created successfully!`,
-            redirectUrl: `/${lang}/edit/${problemName}` 
+            redirectUrl: `/${lang}/edit/${problemName}`
         });
     } catch (err) {
         console.error("Error creating file:", err);
-        res.status(500).json({ 
-            message: lang === 'ru' ? 
-                "Не удалось создать файл задачи." : 
-                "Failed to create problem file." 
+        res.status(500).json({
+            message: lang === 'ru' ?
+                "Не удалось создать файл задачи." :
+                "Failed to create problem file."
         });
     }
 });
@@ -367,7 +362,7 @@ app.post("/register", async (req, res) => {
 // Login Route
 app.post("/login", async (req, res) => {
     const { username, password, lang = 'en' } = req.body;
-    
+
     if (!username || !password) {
         return res.redirect(`/${lang}/login?error=${i18n.__('Username and password are required')}`);
     }
@@ -430,13 +425,13 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
 app.post(["/profile/update", "/:lang/profile/update"], checkAuthenticated, async (req, res) => {
     const { fullname, email, lang } = req.body;
     const language = req.params.lang || lang || 'en';
-    
+
     try {
         await pool.query(
             "UPDATE users SET full_name = $1, email = $2 WHERE id = $3",
             [fullname, email, req.session.userId]
         );
-        
+
         res.redirect(`/${language}/profile?success=${i18n.__('Profile updated successfully')}`);
     } catch (error) {
         console.error(error);
@@ -448,25 +443,25 @@ app.post(["/profile/update", "/:lang/profile/update"], checkAuthenticated, async
 app.post(["/profile/password", "/:lang/profile/password"], checkAuthenticated, async (req, res) => {
     const { currentPassword, newPassword, lang } = req.body;
     const language = req.params.lang || lang || 'en';
-    
+
     try {
         const result = await pool.query(
             "SELECT password FROM users WHERE id = $1",
             [req.session.userId]
         );
-        
+
         const validPassword = await bcrypt.compare(currentPassword, result.rows[0].password);
-        
+
         if (!validPassword) {
             return res.redirect(`/${language}/profile?error=${i18n.__('Current password is incorrect')}`);
         }
-        
+
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         await pool.query(
             "UPDATE users SET password = $1 WHERE id = $2",
             [hashedPassword, req.session.userId]
         );
-        
+
         res.redirect(`/${language}/profile?success=${i18n.__('Password updated successfully')}`);
     } catch (error) {
         console.error(error);
@@ -494,12 +489,8 @@ app.get("/logout", (req, res) => {
 
 
 app.get("/", async (req, res) => {
-    const { chapters, theory, sections, pinnedChapters } = await getPageData(
-        "src/database/chapters.csv",
-        "src/database/sections.csv",
-        'en'
-    );
-    
+    const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
+
     i18n.setLocale(res, 'en');
 
     res.render("eng_page", {
@@ -528,12 +519,8 @@ app.use(i18n.init);
 
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
-    const { chapters, theory, sections, pinnedChapters } = await getPageData(
-        "src/ru/database/chapters.csv",
-        "src/ru/database/sections.csv",
-        'ru'
-    );
-    
+    const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
+
     i18n.setLocale(req, 'ru');
 
     res.render("eng_page", {
@@ -561,7 +548,7 @@ app.get("/en/about", (req, res) => {
 });
 
 app.get("/about", (req, res) => {
-    i18n.setLocale(res, 'en'); 
+    i18n.setLocale(res, 'en');
     res.render("about_en", {
         lang: 'en',
         __: i18n.__
@@ -579,7 +566,7 @@ app.get("/ru/about", (req, res) => {
 app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     const lang = req.params.lang || 'en';
     i18n.setLocale(res, lang);
-    
+
     res.render("study-guide", {
         __: i18n.__,
         lang
@@ -672,11 +659,11 @@ app.post("/:lang/save/:name", async (req, res) => {
     try {
         // Get original content for comparison
         const originalContent = await fs.promises.readFile(filePath, "utf8");
-        
+
         // Create backup with editor info
         const backupFilePath = path.join(
-            __dirname, 
-            `posts-old/${lang}`, 
+            __dirname,
+            `posts-old/${lang}`,
             `${name}_${new Date().toISOString().replace(/[:.]/g, "-")}_${clientIp.replace(/[:.]/g, "-")}.md`
         );
 
@@ -846,12 +833,12 @@ app.get("/search", (req, res) => {
 app.get("/global-search", async (req, res) => {
     const query = req.query.search?.trim() || "";
     const lang = req.query.lang || 'en';
-    
+
     i18n.setLocale(res, lang);
 
     if (!query) {
-        return res.render("search", { 
-            results: [], 
+        return res.render("search", {
+            results: [],
             searchTerm: "",
             __: i18n.__,
             lang
@@ -863,16 +850,16 @@ app.get("/global-search", async (req, res) => {
         const response = await fetch(`${baseUrl}/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
 
-        res.render("search", { 
-            results: data.results, 
+        res.render("search", {
+            results: data.results,
             searchTerm: query,
             __: i18n.__,
             lang
         });
     } catch (error) {
         console.error("Error fetching search results:", error);
-        res.render("search", { 
-            results: [], 
+        res.render("search", {
+            results: [],
             searchTerm: query,
             __: i18n.__,
             lang
@@ -929,9 +916,9 @@ app.get("/:lang/contributions/:id", async (req, res) => {
                     lineNumber: i + 1,
                     original: originalLines[i] || '',
                     new: newLines[i] || '',
-                    type: !originalLines[i] ? 'added' : 
-                          !newLines[i] ? 'removed' : 
-                          'modified'
+                    type: !originalLines[i] ? 'added' :
+                        !newLines[i] ? 'removed' :
+                            'modified'
                 });
             }
         }
@@ -980,16 +967,16 @@ app.post('/upload-image/:name', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
-    
+
     const dir = path.join(__dirname, 'img', req.params.name);
-    fs.mkdirSync(dir, { recursive: true }); 
-    
+    fs.mkdirSync(dir, { recursive: true });
+
     const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
-    
+
     // Use a library like 'sharp' to get image dimensions
     const sharp = require('sharp');
     sharp(req.file.path).metadata().then(metadata => {
-        res.json({ 
+        res.json({
             imagePath,
             width: metadata.width,
             height: metadata.height
