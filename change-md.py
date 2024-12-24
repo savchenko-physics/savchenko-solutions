@@ -34,6 +34,9 @@ def process_file(filepath):
     # Remove repeated text after image links, including any text that follows the image link
     updated_content = re.sub(r'(!\[.*?\s*\|\s*.*?\]\(.*?\))([^\n]*)', r'\1', updated_content)
 
+    # Replace \quad (1), \; (1), \, (1), (*) with \tag{1}
+    updated_content = re.sub(r'\\(?:quad|;|,)\s*\((\d+)\)', r'\\tag{\1}', updated_content)
+
     with open(filepath, 'w', encoding='utf-8') as file:
         file.write(updated_content)
 
