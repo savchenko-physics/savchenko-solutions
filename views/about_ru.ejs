@@ -3,11 +3,85 @@
 
 <head>
     <%- include('default/head_ru.ejs') %>
-        <title>Авторы Решений Задач из Савченко О.Я.</title>
+    <title>Авторы Решений Задач из Савченко О.Я.</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h3 {
+            color: #333;
+            margin-top: 1em;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            color: #36c;
+            font-size: 0.95em;
+            font-weight: normal;
+            padding: 0.4rem 0.8rem;
+            background: #f2f4f8;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            background: #edf0f7;
+            border-color: #36c;
+            transform: translateX(-1px);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .animate-img {
+            transition: transform 0.3s ease;
+        }
+
+        .animate-img:hover {
+            transform: scale(1.02);
+        }
+
+        a {
+            color: #36c;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .content_contributors ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .content_contributors li {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
 
-<body style="">
-    <%- include('default/header.ejs') %>
+<body>
+    <div class="container">
+        <%- include('default/header.ejs') %>
         <h3 id="back-link" style="color: #36c;">
             <a href="../ru#description" class="back-link" >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
@@ -27,106 +101,6 @@
                 <img src="../../img/team.png" loading="lazy" width="280" class="animate-img" />
             </figure>
         </center>
-
-        <style>
-            @font-face {
-                font-family: 'PT Serif';
-                src: url('/fonts/pt-serif-regular.woff2') format('woff2');
-                font-weight: normal;
-                font-style: normal;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'PT Serif';
-                src: url('/fonts/pt-serif-bold.woff2') format('woff2');
-                font-weight: bold;
-                font-style: normal;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'PT Serif';
-                src: url('/fonts/pt-serif-italic.woff2') format('woff2');
-                font-weight: normal;
-                font-style: italic;
-                font-display: swap;
-            }
-
-            @font-face {
-                font-family: 'PT Serif';
-                src: url('/fonts/pt-serif-bold-italic.woff2') format('woff2');
-                font-weight: bold;
-                font-style: italic;
-                font-display: swap;
-            }
-
-            body {
-                font-family: "PT Serif", Georgia, serif;
-            }
-
-            .animate-img {
-                transition: transform 0.3s cubic-bezier(0, 0, 0.5, 1);
-            }
-
-            .animate-img:hover {
-                transform: scale(1.02);
-            }
-
-            a {
-                color: #36c;
-                text-decoration: none;
-            }
-
-            a:hover {
-                text-decoration: underline;
-            }
-
-            #back-link a {
-                color: inherit;
-            }
-
-            .back-link {
-                display: inline-flex;
-                align-items: center;
-                gap: 5px;
-                text-decoration: none;
-                color: #36c;
-                font-size: 0.95em;
-                font-weight: normal;
-                padding: 0.4rem 0.8rem;
-                background: #f2f4f8;
-                border-radius: 6px;
-                border: 1px solid transparent;
-                transform: translateX(0);
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .back-link:hover {
-                background: #edf0f7;
-                border-color: #36c;
-                transform: translateX(-1px);
-                text-decoration: none;
-                color: inherit;
-            }
-
-            .content_contributors a, 
-            .content_contributors a:where(:not([role="button"])):visited {
-                color: #36c;
-                text-decoration: none;
-                font-weight: 500;
-            }
-
-            .content_contributors a:hover {
-                text-decoration: underline;
-                color: #36c !important;
-            }
-
-            #back-link a {
-                color: inherit;
-                font-weight: inherit;
-            }
-        </style>
 
         <h3>
             Наша команда
@@ -162,7 +136,9 @@
                     магнитного поля на ток" и "9.2.
                     Магнитное поле движущегося заряда. Индукция магнитного поля от линейного тока"; частичное решение
                     раздела "10.1. Движение в однородном магнитном поле"; и оформление в
-                    <span class="latex">L<span>a</span>T<span>e</span>X</span>.
+                    <span style="display: inline-flex; align-items: center;">
+                        <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20" style="transform: translateY(5px);" />
+                    </span>
                 </li>
                 <li>
                     <a href="https://www.instagram.com/jepkinsss/" target="_blank">Артём Левко</a> — бронзовый медалист
@@ -174,7 +150,9 @@
                     <a href="https://www.instagram.com/diikann_/" target="_blank">Дикан Никита</a> — предоставил решения
                     разделов "3.1. Малые отклонения от равновесия." и "3.2. Период и частота свободных колебаний", а
                     также их оформление в
-                    <span class="latex">L<span>a</span>T<span>e</span>X</span>.
+                    <span style="display: inline-flex; align-items: center;">
+                        <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20" style="transform: translateY(5px);" />
+                    </span>.
                 </li>
                 <li>
                     <a href="https://www.instagram.com/animka_nk/" target="_blank">Анастасия Козак</a> и <a
@@ -223,6 +201,7 @@
         </div>
 
         <%- include('default/footer_ru.ejs') %>
+    </div>
 </body>
 
 </html>

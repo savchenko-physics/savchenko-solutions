@@ -4,44 +4,59 @@
 <head>
     <%- include('default/head_en.ejs') %>
         <title>Contributors of Savchenko Solutions</title>
-</head>
-
-<body style="">
-    <%- include('default/header.ejs') %>
-
-        <h3 id="back-link" style="color: #36c;">
-            <a href="../#description" class="back-link">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                Back
-            </a>
-        </h3>
-
-        <h3 id="team"  style="margin-top: 1em;">
-            Thank you to the project participants
-        </h3>
-        <!--<p style="text-align: justify; font-style: italic;">Made to help olympiad takers, students of physics classes, physics enthusiasts, this project is the first and most complete collection of solutions for the Savchenko "Problems in Physics"</p>-->
-
-        <center>
-            <figure>
-                <img src="../img/team.png" loading="lazy" width="280" class="animate-img" />
-            </figure>
-        </center>
-
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <style>
+            body {
+                font-family: 'Roboto', sans-serif;
+                padding: 0;
+                background-color: #f9f9f9;
+                color: #333;
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+
+            h3 {
+                color: #333;
+                margin-top: 1em;
+            }
+
+            .back-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                text-decoration: none;
+                color: #36c;
+                font-size: 0.95em;
+                font-weight: normal;
+                padding: 0.4rem 0.8rem;
+                background: #f2f4f8;
+                border-radius: 6px;
+                border: 1px solid transparent;
+                transition: all 0.3s ease;
+            }
+
+            .back-link:hover {
+                background: #edf0f7;
+                border-color: #36c;
+                transform: translateX(-1px);
+                text-decoration: none;
+                color: inherit;
+            }
+
             .animate-img {
-                transition: transform 0.3s cubic-bezier(0, 0, 0.5, 1);
+                transition: transform 0.3s ease;
             }
 
             .animate-img:hover {
                 transform: scale(1.02);
-                /* Scale up the image on hover */
             }
 
-            /* Update the general link styling */
             a {
-                color: #36c;  /* Match the back-link color */
+                color: #36c;
                 text-decoration: none;
             }
 
@@ -49,151 +64,160 @@
                 text-decoration: underline;
             }
 
-            #back-link a {
-                color: inherit;  /* Keep the back arrow link color default */
+            .content_contributors ul {
+                list-style: none;
+                padding: 0;
             }
 
-            .back-link {
-                display: inline-flex;
-
-            align-items: center;
-            gap: 5px;
-            text-decoration: none;
-            color: #36c;
-            font-size: 0.95em;
-            font-weight: normal;
-            padding: 0.4rem 0.8rem;
-            background: #f2f4f8;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transform: translateX(0);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .back-link:hover {
-            background: #edf0f7;
-            border-color: #36c;
-            transform: translateX(-1px);
-            text-decoration: none;
-            color: inherit;
-        }
-        .content_contributors a, 
-            .content_contributors a:where(:not([role="button"])):visited {
-                color: #36c;  /* Match other blue links */
-                text-decoration: none;
-                font-weight: 600;  /* Keep the semi-bold weight */
+            .content_contributors li {
+                margin-bottom: 10px;
+                padding: 10px;
+                background: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
-
-            .content_contributors a:hover {
-                text-decoration: underline;
-                color: #36c !important;  /* Remove the red hover color */
-            }
-
-            #back-link a {
-                color: inherit;  /* Keep the back arrow link color default */
-                font-weight: inherit;  /* Reset font weight for back link */
-            }
-        
         </style>
+</head>
 
-        <h3>
-            Our team
-        </h3>
-        <div class="content_contributors">
-            <ul style="padding-bottom: 5px;">
-                <li>
-                    <a href="https://melnichenka.com/" target="_blank">Aliaksandr Melnichenka</a> — CEO and founder of
-                    the project. I'm responsible for website design, managing the content of the webpages: advanced
-                    theoretical materials,
-                    addition of new solutions, translating content.
-                </li>
-            </ul>
-            <ul>
-                <li style="padding-bottom: 5; padding-top: 5;">
-                    <a href="https://www.linkedin.com/in/luis-daniel-fern%C3%A1ndez-quintana-9684581a0"
-                        target="_blank">Luis Daniel Fernández Quintana</a>, coach for Physics Contest in Santiago de
-                    Cuba state & professor at Universidad de
-                    Oriente, for being the first to develop the english <a
-                        href="http://savchenkosolutions.com/en">section</a> and more than 35 solutions from every topic.
-                </li>
-                <li>
-                    <a href="https://www.linkedin.com/in/stefannicov/" target="_blank">Stefan Nicov</a>, a two-time IPhO
-                    medalist and Harvard student, for creating the first English translation of Savchenko problems in
-                    physics, as well as
-                    the idea of creating solutions in pdf format
-                </li>
-                <li><a href="https://t.me/ar4senN" target="_blank">Arsen Almaskhan</a> — Provided over 50 solutions from
-                    different sections, focusing primarily on advanced (asterisked) level tasks</li>
-                <li>
-                    <a href="https://www.linkedin.com/in/andrei-yersh-33b28a2a5" target="_blank">Andrei Yersh</a> — IPhO
-                    bronze medalist, for providing complete solutions to the sections
-                    <i>"9.1. Induction of the magnetic field. The effect of a magnetic field on a current"</i> and
-                    <i>"9.2. The magnetic field of a moving charge. Induction of the magnetic field from a linear
-                        current"</i>; partial solution
-                    to the section <i>"10.1. Motion in a homogeneous magnetic field"</i>; and designed in <span
-                        class="latex">L<span>a</span>T<span>e</span>X</span>
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/jepkinsss/" target="_blank">Artem Levko</a> — IPhO bronze
-                    medalist, for contributing a complete solution to the <i>"6.1. Coulomb's law. Electric field"</i>
-                    section with a detailed and
-                    humorous explanation
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/diikann_/" target="_blank">Dzikan Mikita</a> — Provided solutions
-                    to the sections <i>"3.1. Small deviations from equilibrium"</i> and
-                    <i>"3.2. Period and frequency of free oscillations"</i>; and processing them at the <span
-                        class="latex">L<span>a</span>T<span>e</span>X</span>
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/animka_nk/" target="_blank">Anastasia Kozak</a> and <a
-                        href="https://www.instagram.com/gandzyyaa/" target="_blank">Anna Kordelyuk</a> — for the idea of
-                    creating this platform and for
-                    sharing selected solutions to kinematics and dynamics problems
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/_chender_/" target="_blank">Aliaksandr Kanashenka</a> — BelPhO
-                    silver medalist, for completing solutions to <i>"3.1. Small deviations from equilibrium"</i> and
-                    <i>"3.2. Period and frequency of free oscillations"</i>, sharing alternative solutions and
-                    complementing Mikita's work.
-                </li>
-                <li>
-                    <a href="https://t.me/UzbPhysicist" target="_blank">Shukurullo Lutfulloyev</a>, student at the
-                    Faculty of Physics, National University of Uzbekistan, for providing solutions to the section "2.5.
-                    Collisions" and
-                    additional dynamics problems
-                </li>
-                <li><a href="https://www.instagram.com/_den.di__/" target="_blank">Dzikan Danila</a> — Contributed
-                    several solutions from the <i>"1.1-1.2. Constant-speed and variable-speed motion"</i> sections</li>
-            </ul>
-        </div>
-        <h3>
-            Thank you very much for granting copyright for the use of the materials
-        </h3>
-        <div class="content_contributors">
-            <ul>
-                <li>
-                    <a href="https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D1%82%D0%BE%D1%80,_%D0%9F%D0%B0%D0%B2%D0%B5%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D0%B5%D0%B5%D0%B2%D0%B8%D1%87"
-                        target="_blank">Pavel Andreevich Victor</a> — Associate
-                    Professor, Candidate of Physical and Mathematical Sciences, <a
-                        href="https://www.youtube.com/pvictor54">author</a> YouTube channel with over 1.1 million views;
-                    his solutions have been the source of inspiration for some
-                    of the challenges
-                </li>
-                <li>
-                    <a href="https://lisakov.com/about/" target="_blank">Sergey Mikhailovich Lisakov</a> — Author of a
-                    physics USE preparation <a href="https://phys.pro/">website</a>, for kindly providing detailed
-                    solutions and constructive
-                    feedback on the site’s design.
-                </li>
-                <li><a href="https://www.youtube.com/@user-sf6su9qk5h" target="_blank">Vyacheslav Gunkov</a> — PhD in
-                    Physico-Mathematical Sciences, for granting permission to publish some of his solutions.</li>
-                <li><a href="https://vk.com/yarbar2003" target="_blank">Alexander Yarenkov</a> - Student of the Moscow
-                    Institute of Physics and Technology</li>
-            </ul>
-        </div>
+<body>
+    <div class="container">
+        <%- include('default/header.ejs') %>
 
-        <%- include('default/footer_en.ejs') %>
+            <h3 id="back-link">
+                <a href="../#description" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
+                        fill="none">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                    </svg>
+                    Back
+                </a>
+            </h3>
+
+            <h3 id="team">
+                Acknowledgments and Gratitude
+            </h3>
+
+            <center>
+                <figure>
+                    <img src="../img/team.png" loading="lazy" width="280" class="animate-img" style="margin-bottom: 1em;" />
+                </figure>
+            </center>
+
+            We extend our deepest thanks to the exceptional individuals whose dedication, expertise, and creative energy
+            have propelled this initiative to new heights. Their collective contributions have shaped Savchenko
+            Solutions into an innovative platform poised to transform advanced physics education worldwide.
+
+            <h3>
+                Our team
+            </h3>
+            <div class="content_contributors">
+                <ul>
+                    <li>
+                        <strong><a href="https://melnichenka.com/" target="_blank">Aliaksandr Melnichenka</a> – Founder & CEO</strong><br>
+                        Responsible for overall vision and leadership, including platform design, content strategy,
+                        development of advanced theoretical materials, integration of new solutions, and multi-language
+                        translations.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.linkedin.com/in/luis-daniel-fern%C3%A1ndez-quintana-9684581a0"
+                            target="_blank">Luis Daniel Fernández Quintana</a></strong><br>
+                        Physics Contest coach in Santiago de Cuba and Professor at the Universidad de Oriente. Pioneered
+                        the English-language section and contributed over 35 solutions spanning key subject areas.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.linkedin.com/in/stefannicov/" target="_blank">Stefan Nicov</a></strong><br>
+                        Two-time International Physics Olympiad (IPhO) medalist and current Harvard student. Led the
+                        initial English translation of Savchenko’s physics challenges, originated the idea to offer
+                        solutions in PDF format, and guided editorial standards.
+                    </li>
+                    <li>
+                        <strong><a href="https://t.me/ar4senN" target="_blank">Arsen Almaskhan</a></strong><br>
+                        Contributed more than 50 advanced (asterisked) solutions across multiple categories, reinforcing
+                        the project’s focus on higher-level problem-solving.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.linkedin.com/in/andrei-yersh-33b28a2a5" target="_blank">Andrei Yersh</a></strong><br>
+                        IPhO bronze medalist who provided comprehensive solutions to pivotal chapters on magnetic field
+                        induction and the magnetic effects on currents and moving charges. Additionally contributed
+                        partial solutions to “10.1. Motion in a homogeneous magnetic field” and designed in
+                        <span style="display: inline-flex; align-items: center;">
+                            <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20"
+                                style="transform: translateY(5px);" />
+                        </span>
+                    </li>
+                    <li>
+                        <strong><a href="https://www.instagram.com/jepkinsss/" target="_blank">Artem Levko</a></strong><br>
+                        IPhO bronze medalist who completed a detailed and entertaining solution to “6.1. Coulomb’s
+                        Law. Electric Field,” infusing an element of humor to deepen conceptual understanding.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.instagram.com/diikann_/" target="_blank">Dzikan Mikita</a></strong><br>
+                        Developed solutions for “3.1. Small Deviations from Equilibrium” and “3.2. Period and Frequency
+                        of Free Oscillations,” processing them at the
+                        <span style="display: inline-flex; align-items: center;">
+                            <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20"
+                                style="transform: translateY(5px);" />
+                        </span>
+                    </li>
+                    <li>
+                        <strong><a href="https://www.instagram.com/animka_nk/" target="_blank">Anastasia Kozak</a> & <a
+                            href="https://www.instagram.com/gandzyyaa/" target="_blank">Anna Kordelyuk</a></strong><br>
+                        Conceived the initial idea of launching this collaborative platform and contributed selected
+                        kinematics and dynamics solutions that formed the foundation for the project’s curriculum.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.instagram.com/_chender_/" target="_blank">Aliaksandr Kanashenka</a></strong><br>
+                        BelPhO silver medalist who completed and enriched solutions for “3.1. Small Deviations from
+                        Equilibrium” and “3.2. Period and Frequency of Free Oscillations,” complementing Mikita’s work
+                        and offering alternative approaches.
+                    </li>
+                    <li>
+                        <strong><a href="https://t.me/UzbPhysicist" target="_blank">Shukurullo Lutfulloyev</a></strong><br>
+                        Physics major at the National University of Uzbekistan who authored solutions for “2.5.
+                        Collisions” and additional dynamics problems, adding a valuable international perspective.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.instagram.com/_den.di__/" target="_blank">Dzikan Danila</a></strong><br>
+                        Provided several solutions for “1.1–1.2. Constant-Speed and Variable-Speed Motion,” assisting in
+                        laying a comprehensive groundwork for introductory mechanics.
+                    </li>
+                </ul>
+            </div>
+
+            <h3>
+                Copyright Permissions and Special Thanks
+            </h3>
+            <div class="content_contributors">
+                <ul>
+                    <li>
+                        <strong><a href="https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D1%82%D0%BE%D1%80,_%D0%9F%D0%B0%D0%B2%D0%B5%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D0%B5%D0%B5%D0%B2%D0%B8%D1%87"
+                            target="_blank">Pavel Andreevich Victor</a></strong><br>
+                        Associate Professor, Candidate of Physical and Mathematical Sciences, and creator of a YouTube
+                        channel with over 1.1 million views. His published solutions and thought leadership served as a
+                        key inspiration for some of our solutions on Russian.
+
+                    </li>
+                    <li>
+                        <strong><a href="https://lisakov.com/about/" target="_blank">Sergey Mikhailovich Lisakov</a></strong><br>
+                        Renowned author of a physics USE preparation website. Contributed detailed solutions, offered
+                        constructive design feedback, and granted permission to adapt his materials.
+                    </li>
+                    <li>
+                        <strong><a href="https://www.youtube.com/@user-sf6su9qk5h" target="_blank">Vyacheslav Gunkov</a></strong><br>
+                        PhD in Physico-Mathematical Sciences. Kindly granted the rights to publish select solutions and
+                        provided technical insights crucial to our platform’s depth.
+                    </li>
+                    <li>
+                        <strong><a href="https://vk.com/yarbar2003" target="_blank">Alexander Yarenkov</a></strong><br>
+                        Student at the Moscow Institute of Physics and Technology, whose support and shared resources
+                        further enriched the project’s scholarly content.
+                    </li>
+                </ul>
+            </div>
+
+            <%- include('default/footer_en.ejs') %>
+    </div>
 </body>
 
 </html>
