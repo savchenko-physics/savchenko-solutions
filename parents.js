@@ -145,6 +145,81 @@ async function getLanguageData(lang = 'en') {
     };
 }
 
+
+async function getBothLanguages() {
+    const languages = ['en', 'ru'];
+    const results = {};
+
+    for (const lang of languages) {
+        const chaptersCSV = lang === 'ru' ? "src/ru/database/chapters.csv" : "src/database/chapters.csv";
+        const sectionsCSV = lang === 'ru' ? "src/ru/database/sections.csv" : "src/database/sections.csv";
+
+        const baseDir = __dirname;
+        const postsDir = path.join(baseDir, "posts", lang);
+
+        if (!fs.existsSync(postsDir)) {
+            throw new Error("Posts directory does not exist: " + postsDir);
+        }
+
+        // Use the passed CSV paths
+        const chapters = readCSV(chaptersCSV, 1);
+        const theory = readCSV(chaptersCSV, 2);
+        const sectionNumbers = readCSV(sectionsCSV, 0);
+        const sectionTitles = readCSV(sectionsCSV, 1);
+        const sectionMaximum = readCSV(sectionsCSV, 2); // New column for section maximum
+
+        // Combine sections data
+        const sections = sectionNumbers.map((num, index) => ({
+            number: num,
+            title: sectionTitles[index],
+            maximum: sectionMaximum[index], // Include maximum here
+        }));
+
+        // Get valid markdown files
+        const markdownFiles = existedFolders(postsDir, sections);
+
+        // Generate sections data
+        const sectionsData = sectionNumbers.map((num, index) => {
+            const sectionProblems = markdownFiles.filter((file) => file.startsWith(`${num}.`));
+
+            console.log(file);
+            
+            return {
+                number: num,
+                title: sectionTitles[index],
+                maximum: sectionMaximum[index], // Include maximum here
+                problems: distributeProblems(sectionProblems), // Can be empty
+            };
+        });
+
+        // Group sections under chapters
+        const groupedSections = chapters.map((chapter, chapterIndex) => {
+            const chapterSections = sectionsData.filter((section) =>
+                section.number.startsWith(`${chapterIndex + 1}.`)
+            );
+
+            return {
+                title: chapter,
+                theory: theory[chapterIndex] || null,
+                sections: chapterSections.length > 0 ? chapterSections : [], // Include empty sections
+            };
+        });
+
+        // Create pinned chapters for the sidebar
+        const pinnedChapters = groupedSections.map((chapter) => chapter.title);
+
+        results[lang] = {
+            chapters: groupedSections,
+            pinnedChapters,
+        };
+    }
+
+    // console.log(results);
+
+    return results;
+}
+
+
 // Helper function to read CSV files and extract a specific column
 function readCSV(filePath, column) {
     const csvData = fs.readFileSync(filePath, "utf8");
@@ -156,4 +231,5 @@ function readCSV(filePath, column) {
 
 module.exports = {
     getLanguageData,
+    getBothLanguages,
 };

@@ -7,7 +7,7 @@ const ejs = require("ejs");
 const fs = require("fs"); // Import fs module
 const bodyParser = require("body-parser");
 const { parseMarkdown, getMarkdownFiles, getLineStatement, transformImageMarkdown } = require("./utils"); // Importing functions from utils.js
-const { getLanguageData } = require("./parents"); // generating content for the main english page
+const { getLanguageData, getBothLanguages } = require("./parents"); // generating content for the main english page
 
 const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
@@ -490,6 +490,8 @@ app.get("/logout", (req, res) => {
 
 app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
+
+    const results = await getLanguageData('en');
 
     i18n.setLocale(res, 'en');
 
