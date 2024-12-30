@@ -182,7 +182,7 @@
         }
 
         .cm-math {
-            /* Math content inside $ $ and $$ $$ */
+            /* Math content inside $ $, $$ $$, \[ \], and \( \) */
             color: rgb(3, 106, 7);
         }
 
@@ -1227,6 +1227,46 @@
                         if (command) return command;
 
                         if (stream.match(/^.*?\$/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            }, {
+                open: "\\[", close: "\\]",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\\\]/)) {
+                            return "math";
+                        }
+                        stream.next();
+                        return "math";
+                    }
+                },
+                delimStyle: "delim"
+            }, {
+                open: "\\(", close: "\\)",
+                mode: {
+                    token: function (stream, state) {
+                        // Check for brackets first
+                        const bracket = handleBrackets(stream);
+                        if (bracket) return bracket;
+
+                        // Check for LaTeX commands
+                        const command = handleLatexCommand(stream);
+                        if (command) return command;
+
+                        if (stream.match(/^.*?\\\)/)) {
                             return "math";
                         }
                         stream.next();
