@@ -37,6 +37,62 @@ def process_file(filepath):
     # Replace \quad (1), \; (1), \, (1), (*) with \tag{1}
     updated_content = re.sub(r'\\(?:quad|;|,)\s*\((\d+)\)', r'\\tag{\1}', updated_content)
 
+    # Replace Greek letters with LaTeX equivalents
+    greek_replacements = {
+        'α': r'\alpha ',
+        'β': r'\beta ',
+        'γ': r'\gamma ',
+        'δ': r'\delta ',
+        'ε': r'\varepsilon ',
+        'ζ': r'\zeta ',
+        'η': r'\eta ',
+        'θ': r'\theta ',
+        'ι': r'\iota ',
+        'κ': r'\kappa ',
+        'λ': r'\lambda ',
+        'μ': r'\mu ',
+        'ν': r'\nu ',
+        'ξ': r'\xi ',
+        'ο': r'o ',  # Note: 'ο' is typically not used in LaTeX as a standalone symbol
+        'π': r'\pi ',
+        'ρ': r'\rho ',
+        'σ': r'\sigma ',
+        'τ': r'\tau ',
+        'υ': r'\upsilon ',
+        'φ': r'\phi ',
+        'χ': r'\chi ',
+        'ψ': r'\psi ',
+        'ω': r'\omega ',
+        'Α': r'A ',  # Note: Uppercase Greek letters are often the same as Latin
+        'Β': r'B ',
+        'Γ': r'\Gamma ',
+        'Δ': r'\Delta ',
+        'Ε': r'E ',
+        'Ζ': r'Z ',
+        'Η': r'H ',
+        'Θ': r'\Theta ',
+        'Ι': r'I ',
+        'Κ': r'K ',
+        'Λ': r'\Lambda ',
+        'Μ': r'M ',
+        'Ν': r'N ',
+        'Ξ': r'\Xi ',
+        'Ο': r'O ',
+        'Π': r'\Pi ',
+        'Ρ': r'P ',
+        'Σ': r'\Sigma ',
+        'Τ': r'T ',
+        'Υ': r'Y ',
+        'Φ': r'\Phi ',
+        'Χ': r'X ',
+        'Ψ': r'\Psi ',
+        'Ω': r'\Omega ',
+        '◦': r'^{\circ} ',
+    }
+    
+    for greek_letter, latex_equivalent in greek_replacements.items():
+        updated_content = updated_content.replace(greek_letter, latex_equivalent)
+
     with open(filepath, 'w', encoding='utf-8') as file:
         file.write(updated_content)
 
