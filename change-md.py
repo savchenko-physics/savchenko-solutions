@@ -88,6 +88,8 @@ def process_file(filepath):
         'Ψ': r'\Psi ',
         'Ω': r'\Omega ',
         '◦': r'^{\circ} ',
+        '²': r'^2',
+        '≈': r'\approx ',
     }
     
     for greek_letter, latex_equivalent in greek_replacements.items():
