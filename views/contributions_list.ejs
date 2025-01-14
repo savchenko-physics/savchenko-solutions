@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="UTF-8">
+    <title><%= __('Contributions for') %> <%= problemName %></title>
+    <!-- Link to a CSS framework like Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 15px;
+        }
+        strong {
+            color: #007bff;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><%= __('Contributions for') %> <%= problemName %></h1>
+        <% if (contributions.length === 0) { %>
+            <p><%= __('No previously saved records.') %></p>
+        <% } else { %>
+            <ul>
+                <% contributions.forEach(contribution => { %>
+                    <li>
+                        <strong>
+                            <%= contribution.username || contribution.full_name || contribution.ip_address || __('Anonymous') %>
+                        </strong> - 
+                        <%= formatDate(contribution.edited_at) %>
+                        <p><%= contribution.new_content ? contribution.new_content.substring(0, 100) : __('No content available') %>...</p>
+                        <% if (contribution.new_content) { %>
+                            <a href="/<%= lang %>/contributions/<%= contribution.id %>"><%= __('View Details') %></a>
+                        <% } %>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } %>
+    </div>
+</body>
+</html> 

@@ -16,6 +16,10 @@ require("dotenv").config();
 const i18n = require('i18n');
 const connectPgSimple = require('connect-pg-simple'); // Add this import
 const multer = require('multer');
+const getContributionsList = require('./contributions_list');
+const { getContribution } = require('./contributions');
+const renderFileList = require('./file-list');
+const { renderPost, getPageViewsData } = require('./post'); // Import the renderPost function
 
 const app = express();
 const PORT = 3000;
@@ -80,6 +84,17 @@ function checkAuthenticated(req, res, next) {
 
     res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
 }
+
+
+app.get("/:lang/contributions/:problemName", (req, res, next) => {
+    const { problemName } = req.params;
+    if ((problemName.match(/\./g) || []).length === 2) {
+        return getContributionsList(req, res, next);
+    } else {
+        return getContribution(req, res, next);
+    }
+});
+
 
 function checkNotAuthenticated(req, res, next) {
     const lang = req.query.lang || req.body.lang || 'en';
@@ -480,14 +495,6 @@ app.get("/logout", (req, res) => {
     });
 });
 
-// Home route to list all posts
-// app.get("/", (req, res) => {
-//     // Modify the eng_page function or include session data
-//     eng_page(req, res);
-//     console.log(req.session.username);
-// });
-
-
 app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
 
@@ -575,56 +582,7 @@ app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     });
 });
 
-app.get("/:lang/:name", (req, res) => {
-    const { lang, name } = req.params;
-
-    if (/^(1[0-4]|[1-9])$/.test(lang)) {
-        return res.redirect(`/ru/${name}`);
-    }
-
-    const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
-
-    // Check if the specified file exists
-    if (fs.existsSync(filePath)) {
-        let fileContents = fs.readFileSync(filePath, "utf8").replace(/\*/g, "\\*").replace(/~/g, "\\~");
-
-        // Handle both inline and display math LaTeX
-        fileContents = fileContents.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {
-            return '$$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$$';
-        });
-        fileContents = fileContents.replace(/\$([^\$\n]+?)\$/g, (match, p1) => {
-            return '$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$';
-        });
-
-        fileContents = transformImageMarkdown(fileContents);
-        titleContent = getLineStatement(fileContents);
-
-
-        let html = parseMarkdown(fileContents);
-        html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
-        html = html.replace(/\\\*/g, "*");
-
-        const pageRef = name.split(".").slice(0, 2).join(".");
-
-        i18n.setLocale(res, lang);
-
-        res.render("post", {
-            __: i18n.__,
-            lang,
-            pageRef,
-            problemRef: name,
-            title: name + ". " + titleContent,
-            content: html
-        });
-    } else {
-        i18n.setLocale(res, lang);
-        res.status(404).render("404", {
-            __: i18n.__,
-            pageUrl: req.originalUrl,
-            lang
-        });
-    }
-});
+app.get("/:lang/:name", renderPost); // Use the renderPost function for this route
 
 app.get("/:lang/edit/:name", (req, res) => {
     const { lang, name } = req.params;
@@ -696,60 +654,7 @@ app.post("/:lang/save/:name", async (req, res) => {
     }
 });
 
-app.get("/file-list", (req, res) => {
-    const enDirectoryPath = path.join(__dirname, "posts-old", "en");
-    const ruDirectoryPath = path.join(__dirname, "posts-old", "ru");
-
-    // Helper function to process files from a given directory and language
-    const processFiles = (directoryPath, language) => {
-        const files = fs.readdirSync(directoryPath);
-        return files.map((file) => {
-            const parts = file.split("_");
-            const version = parts[0] || "N/A";
-            const ipAddress = (parts[2] && parts[2].replace(".md", "").replace(/-/g, ".")) || "Unknown IP";
-
-            const filePath = path.join(directoryPath, file);
-            const stats = fs.statSync(filePath);
-
-            const lastModified = stats.mtime;
-            const options = {
-                timeZone: "America/New_York",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: false,
-            };
-            const easternTime = new Intl.DateTimeFormat("en-US", options).format(lastModified);
-
-            // Split the formatted string into date and time
-            const [date, time] = easternTime.split(", ");
-
-            return {
-                name: file,
-                version,
-                ipAddress,
-                size: stats.size, // File size in bytes
-                date, // Date in YYYY-MM-DD format
-                time, // Time in HH:MM:SS format
-                language, // Include the language in the file details
-            };
-        });
-    };
-
-    // Combine file details from both directories
-    const enFiles = processFiles(enDirectoryPath, "English");
-    const ruFiles = processFiles(ruDirectoryPath, "Russian");
-    const fileDetails = [...enFiles, ...ruFiles];
-
-    fileDetails.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
-
-    // Render the details in the EJS template
-    res.render("file_list", { fileDetails });
-});
-
+app.get("/file-list", renderFileList);
 
 app.get("/search", (req, res) => {
     const query = req.query.q?.toLowerCase();
@@ -869,87 +774,6 @@ app.get("/global-search", async (req, res) => {
     }
 });
 
-app.get("/:lang/contributions/:id", async (req, res) => {
-    const { lang, id } = req.params;
-    i18n.setLocale(res, lang);
-
-    try {
-        // Modified query to handle null user_id cases
-        const result = await pool.query(
-            `SELECT 
-                c.*, 
-                u.username,
-                u.full_name,
-                CASE 
-                    WHEN c.user_id IS NULL THEN c.ip_address
-                    ELSE u.username
-                END as editor_identifier,
-                CASE 
-                    WHEN c.user_id IS NULL THEN c.ip_address
-                    ELSE u.full_name
-                END as editor_name
-            FROM contributions c
-            LEFT JOIN users u ON c.user_id = u.id
-            WHERE c.id = $1`,
-            [id]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).render("404", {
-                __: i18n.__,
-                pageUrl: req.originalUrl,
-                lang
-            });
-        }
-
-        const contribution = result.rows[0];
-
-        // Create arrays of lines for comparison
-        const originalLines = contribution.original_content.split('\n');
-        const newLines = contribution.new_content.split('\n');
-
-        // Simple diff algorithm to identify changed lines
-        const changes = [];
-        const maxLength = Math.max(originalLines.length, newLines.length);
-
-        for (let i = 0; i < maxLength; i++) {
-            if (originalLines[i] !== newLines[i]) {
-                changes.push({
-                    lineNumber: i + 1,
-                    original: originalLines[i] || '',
-                    new: newLines[i] || '',
-                    type: !originalLines[i] ? 'added' :
-                        !newLines[i] ? 'removed' :
-                            'modified'
-                });
-            }
-        }
-
-        res.render("contribution", {
-            __: i18n.__,
-            lang,
-            contribution: {
-                ...result.rows[0],
-                isAnonymous: !result.rows[0].user_id
-            },
-            changes,
-            formatDate: (date) => {
-                return new Date(date).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-        });
-
-    } catch (error) {
-        console.error("Error fetching contribution:", error);
-        res.status(500).send("Error fetching contribution details");
-    }
-});
-
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -994,6 +818,9 @@ app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
     const sectionNumber = req.params[0];
     res.redirect(301, `/ru/#${sectionNumber}`);
 });
+
+// Add this route to handle page views data requests
+app.get("/api/page-views/:name", getPageViewsData);
 
 // Start the server
 app.listen(PORT, () => {
