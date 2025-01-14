@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,11 +13,14 @@
     <meta property="og:image" content="img/logo.png" />
     <meta property="og:description" content="<%= title %>" />
     <meta name="yandex-verification" content="6cfda41f74038368" />
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <link rel="stylesheet" href="../../css/css-latex/style.css" />
     <link rel="icon" href="../../img/logo.png" type="image/png" />
     <script src="../../js/jquery-1.10.1.min.js"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
             extensions: ['tex2jax.js'],
@@ -31,6 +35,8 @@
             messageStyle: 'none'
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         .submit-button {
             font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
@@ -47,7 +53,7 @@
             font-weight: 600;
             cursor: pointer;
         }
-        
+
         .back-link {
             display: flex;
             align-items: center;
@@ -63,7 +69,7 @@
             transform: translateX(0);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
+
         .back-link:hover {
             background: #edf0f7;
             border-color: #36c;
@@ -71,46 +77,439 @@
             text-decoration: none;
             color: inherit;
         }
-        
+
         .back-link svg {
             width: 20px;
             height: 20px;
         }
-        
+
         @media (max-width: 768px) {
-            .container > div:first-of-type {
+            .container>div:first-of-type {
                 margin-top: 0 !important;
+            }
+        }
+
+        .contributions-button {
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            gap: 5px;
+            min-width: 100px;
+            transition: background-color 0.3s, transform 0.2s;
+            border-radius: 8px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .contributions-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        #viewGraphButton {
+            cursor: pointer;
+        }
+
+        @keyframes d-menu-opening {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
             }
         }
     </style>
 </head>
 
-<body>
+<body style="max-width: none;">
     <%- include('default/header.ejs') %>
 
-    <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: -30px;margin-top: 20px;">
-            <h3 style="margin-top: 20px;margin-bottom: 10px;">
-                <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>" class="back-link">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                    </svg>
-                    <%= __('post.backLink') %>
-                </a>
-            </h3>
-            <h4 id="back-link">
-                <a href="/<%= lang %>/edit/<%= problemRef %>" style="text-decoration: none;">
-                    <button type="button" class="submit-button" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; padding: 8px 16px; gap: 5px; min-width: 90px; transition: background-color 0.2s">
-                        <img src="/img/edit.svg" alt="Edit" width="22" height="22">
-                        <span><%= __('post.edit') %></span>
-                    </button>
-                </a>
-            </h4>
+        <div class="container" style="display: flex; flex-wrap: wrap;">
+            <div style="flex: 0.2; height: auto;border-right: 1px dashed rgba(0, 0, 0, 0.1);"></div>
+            <div style="flex: 0.1; height: auto; margin-right: 24px;">
+            </div>
+            <div style="flex: 0.85; height: auto; ">
+                <div style="max-width: 100vh; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+                        <h3 style="margin-top: 20px; margin-bottom: 10px;">
+                            <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>" class="back-link">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                    stroke="#36c" fill="none">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                </svg>
+                                <%= __('post.backLink') %>
+                            </a>
+                        </h3>
+                        <h4 id="back-link">
+                            <a href="/<%= lang %>/edit/<%= problemRef %>" style="text-decoration: none;">
+                                <button type="button" class="submit-button"
+                                    style="margin-top: 10px; display: flex; align-items: center; justify-content: center; padding: 8px 16px; gap: 5px; min-width: 90px; transition: background-color 0.2s">
+                                    <img src="/img/edit.svg" alt="Edit" width="22" height="22">
+                                    <span>
+                                        <%= __('post.edit') %>
+                                    </span>
+                                </button>
+                            </a>
+                        </h4>
+                    </div>
+
+                    <%- content %>
+                </div>
+
+            </div>
+
+            <div style="flex: 0.1; height: auto; border-right: 1px dashed rgba(0, 0, 0, 0.1); margin-right: 0px;">
+            </div>
+            <div style="flex: 0.3; height: auto;  margin-left: 24px; line-height: 1.5; font-size: 14px;">
+
+                <style>
+                    /* ... existing styles ... */
+
+                    h2.mb-3 {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                        font-weight: var(--base-text-weight-semibold, 600) !important;
+                        margin-bottom: var(--base-size-16, 16px) !important;
+                        font-size: var(--h4-size, 16px) !important;
+                        margin-top: 2px !important;
+                    }
+
+
+                    .my-3 {
+                        margin-top: var(--base-size-16, 16px) !important;
+                        margin-bottom: var(--base-size-16, 16px) !important;
+                    }
+
+                    p {
+                        display: block;
+                        margin-block-start: 1em;
+                        margin-block-end: 1em;
+                        margin-inline-start: 0px;
+                        margin-inline-end: 0px;
+                        unicode-bidi: isolate;
+                    }
+
+                    p.f4 {
+                        display: block;
+                        margin-block-start: 1em;
+                        margin-block-end: 1em;
+                        margin-inline-start: 0px;
+                        margin-inline-end: 0px;
+                        unicode-bidi: isolate;
+                        margin-top: var(--base-size-16, 14px) !important;
+                        margin-bottom: var(--base-size-16, 14px) !important;
+                        font-size: 16px !important;
+                    }
+
+                    .mt-2 {
+                        margin-top: var(--base-size-8, 8px) !important;
+
+                    }
+
+                    .Link--muted {
+                        color: #59636e !important;
+                    }
+
+                    .Link:hover {
+                        color: #36c !important;
+                        text-decoration: none;
+                    }
+
+                    .Link:hover svg {
+                        fill: #36c !important;
+                    }
+                    .d-flex {
+                        display: flex !important;
+                    }
+                    .my-3 {
+                        margin-top: var(--base-size-16, 16px) !important;
+                        margin-bottom: var(--base-size-16, 16px) !important;
+                    }
+                    .flex-items-center {
+                        align-items: center !important;
+                    }
+
+                    /* ... existing styles ... */
+                </style>
+
+                <div class="BorderGrid-row" style="padding-bottom: 16px;margin-bottom: 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); padding-left: 12px;">
+                    <div class="BorderGrid-cell">
+
+                        <h2 class="mb-3 h4">
+                            About
+                        </h2>
+                        <p class="f4">
+                            Solution to problem <%= problemRef %>
+                        </p>
+
+                        <div class="my-3 d-flex flex-items-center">
+                            <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
+                                data-view-component="true" class="octicon octicon-link flex-shrink-0 mr-2">
+                                <path
+                                    d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z">
+                                </path>
+                            </svg>
+                            <span class="flex-auto min-width-0 css-truncate css-truncate-target width-fit" style="margin-left: 8px;">
+                                <a title="http://savchenkosolutions.com/<%= lang %>/<%= problemRef %>" role="link"
+                                    target="_blank" rel="noopener noreferrer nofollow" class="text-bold" style="color: #0969da !important;"
+                                    href="http://savchenkosolutions.com/<%= lang %>/<%= problemRef %>">savchenkosolutions.com/<%= lang %>/<%= problemRef %></a>
+                            </span>
+                        </div>
+
+
+                        <div class="mt-2">
+                            <a data-view-component="true" id="viewGraphButton"
+                                class="Link Link--muted" style="display: flex; align-items: center;">
+                                <svg aria-hidden="true" height="16" viewBox="0 0 16 16"
+                                    version="1.1" width="16" data-view-component="true"
+                                    class="octicon octicon-eye mr-2">
+                                    <path d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"></path>
+                                </svg>
+                                <strong style="margin-left: 8px;">
+                                    <%= totalViews > 1000 ? (totalViews / 1000).toFixed(1) + 'k+' : totalViews %>
+                                </strong> 
+                                <span style="margin-left: 4px;">views</span>
+                            </a>
+                        </div>
+                        
+                        <div class="mt-2">
+                           <% if (alternateFileExists) { %>
+                               <% if (lang === 'en') { %>
+                                   <a href="/ru/<%= problemRef %>" class="Link Link--muted">
+                                       Смотреть русскую версию
+                                   </a>
+                               <% } else { %>
+                                   <a href="/en/<%= problemRef %>" class="Link Link--muted">
+                                       View English version
+                                   </a>
+                               <% } %>
+                           <% } else { %>
+                                <% if (lang === 'en') { %>
+                                    <a href="/ru/<%= problemRef %>" class="Link Link--muted">
+                                        Перевести на английский
+                                    </a>
+                                <% } else { %>
+                                    <a href="/en/<%= problemRef %>" class="Link Link--muted">
+                                        Translate to Russian
+                                    </a>
+                                <% } %>
+                           <% } %>
+                        </div>
+
+                        <div class="mt-2">
+                            <a class="Link Link--muted" 
+                                href="/contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fsavchenko-physics%2Fsavchenko-solutions&amp;report=savchenko-physics+%28user%29">
+                                Report solution
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <style>
+                    .Label--success {
+                        border-color: #1a7f37;
+                        color: #1a7f37;
+                    }
+                    .Label, .label {
+                        border: 0.0625rem solid #d1d9e0;
+                        border-radius: 624.9375rem;
+                        display: inline-block;
+                        font-size: 0.75rem;
+                        font-weight: 500;
+                        line-height: 18px;
+                        padding: 0 0.375rem;
+                        white-space: nowrap;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                    }
+                    .text-bold {
+                        font-weight: 600;
+                    }
+                    .d-flex {
+                        display: flex !important;
+                    }
+                    .Link--primary {
+                        color: #1f2328 !important;
+                    }
+                    a:-webkit-any-link {
+                        cursor: pointer;
+                    }
+                    .BorderGrid-row{
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+                    }
+                </style>
+                <div class="BorderGrid-row">
+                    <div class="BorderGrid-cell" style="padding-bottom: 12px;">
+                       <h2 class="h4 mb-3" data-pjax="#repo-content-pjax-container" data-turbo-frame="repo-content-turbo-frame" style="margin-bottom: 16px;">
+                          <a href="/<%= lang %>/contributions/<%= problemRef %>" data-view-component="true" class="Link--primary no-underline Link" data-turbo-frame="repo-content-turbo-frame">History</a>
+                       </h2>
+                       <a class="Link--primary d-flex no-underline" data-pjax="#repo-content-pjax-container" data-turbo-frame="repo-content-turbo-frame" href="/<%= lang %>/contributions/<%= problemRef %>" style="text-decoration: none !important;">
+                          <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-tag flex-shrink-0 mt-1 color-fg-success" style="margin-top: 4px; ">
+                             <path d="m.427 1.927 1.215 1.215a8.002 8.002 0 1 1-1.6 5.685.75.75 0 1 1 1.493-.154 6.5 6.5 0 1 0 1.18-4.458l1.358 1.358A.25.25 0 0 1 3.896 6H.25A.25.25 0 0 1 0 5.75V2.104a.25.25 0 0 1 .427-.177ZM7.75 4a.75.75 0 0 1 .75.75v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.751.751 0 0 1 7 8.25v-3.5A.75.75 0 0 1 7.75 4Z" style="fill: #1a7f37 !important;"></path>
+                          </svg>
+                          <div class="ml-2 min-width-0" style="margin-left: 8px;">
+                             <div class="d-flex">
+                                <span class="css-truncate css-truncate-target text-bold mr-2" style="max-width: none; margin-right: 8px;">Contributions</span>
+                                <span title="Label: Latest" data-view-component="true" class="Label Label--success flex-shrink-0">
+                                Latest
+                                </span>      
+                             </div>
+                             <div class="text-small color-fg-muted">
+                                <relative-time datetime="<%= creationDate %>" class="no-wrap" style="font-size: 12px; color: #6e7781 !important;" title="<%= new Date(creationDate).toLocaleString() %>">
+                                    from <%= new Date(creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                </relative-time>
+                             </div>
+                          </div>
+                       </a>
+                    </div>
+                    
+                <div class="BorderGrid-row" style="padding-bottom: 16px;margin-bottom: 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); border-top: 1px solid rgba(0, 0, 0, 0.1); padding-left: 12px;">
+                    <div class="BorderGrid-cell">
+                        <h2 class="h4 mb-3">
+                           <a href="/savchenko-physics/savchenko-physics.github.io/graphs/contributors" data-view-component="true" class="Link--primary no-underline Link d-flex flex-items-center">Contributors
+                           <span title="4" data-view-component="true" class="Counter ml-1">4</span></a>
+                        </h2>
+                        <ul class="list-style-none ">
+                           <li class="mb-2 d-flex">
+                              <a href="https://github.com/astrosander" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/astrosander/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
+                              <img src="https://avatars.githubusercontent.com/u/69795340?s=64&amp;v=4" alt="@astrosander" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
+                              </a>
+                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
+                              <a href="https://github.com/astrosander" class="Link--primary no-underline flex-self-center">
+                              <strong>astrosander</strong>
+                              <span class="color-fg-muted">Aliaksandr Melnichenka</span>
+                              </a>
+                              </span>    
+                           </li>
+                           <li class="mb-2 d-flex">
+                              <a href="https://github.com/LuisDFQ" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/LuisDFQ/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
+                              <img src="https://avatars.githubusercontent.com/u/108282689?s=64&amp;v=4" alt="@LuisDFQ" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
+                              </a>
+                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
+                              <a href="https://github.com/LuisDFQ" class="Link--primary no-underline flex-self-center">
+                              <strong>LuisDFQ</strong>
+                              <span class="color-fg-muted">Luisito</span>
+                              </a>
+                              </span>    
+                           </li>
+                           <li class="mb-2 d-flex">
+                              <a href="https://github.com/Technoglark" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/Technoglark/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
+                              <img src="https://avatars.githubusercontent.com/u/149113870?s=64&amp;v=4" alt="@Technoglark" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
+                              </a>
+                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
+                              <a href="https://github.com/Technoglark" class="Link--primary no-underline flex-self-center">
+                              <strong>Technoglark</strong>
+                              <span class="color-fg-muted">technoglark</span>
+                              </a>
+                              </span>    
+                           </li>
+                           <li class="mb-2 d-flex">
+                              <a href="https://github.com/savchenko-physics" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/savchenko-physics/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
+                              <img src="https://avatars.githubusercontent.com/u/147443940?s=64&amp;v=4" alt="@savchenko-physics" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
+                              </a>
+                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
+                              <a href="https://github.com/savchenko-physics" class="Link--primary no-underline flex-self-center">
+                              <strong>savchenko-physics</strong>
+                              </a>
+                              </span>    
+                           </li>
+                        </ul>
+                     </div>
+                </div>
+                 </div>
+
+            </div>
+        </div>
         </div>
 
-        <%- content %>
-    </div>
+        <div id="graphPopup" style="display: none; position: fixed; background: #f9f9f9; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 300px; max-width: 90%; animation: d-menu-opening .15s ease-in; border-left: 5px solid #36c; position: relative;">
+            <div id="loadingSpinner" style="display: none; text-align: center;">
+                <h3>Loading...</h3>
+            </div>
+            <canvas id="viewsGraph" width="400" height="200"></canvas>
+            <button id="closeGraphButton" class="submit-button" style="margin-top: 10px; padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease;">
+                Close
+            </button>
+        </div>
+        
+        <%- include(`default/footer_${lang}.ejs`) %>
+        
 
-    <%- include(`default/footer_${lang}.ejs`) %>
+        <script>
+            let chartInstance; // Declare a variable to hold the chart instance
+
+            document.getElementById('viewGraphButton').addEventListener('click', async function(event) {
+                const graphPopup = document.getElementById('graphPopup');
+                const buttonRect = event.target.getBoundingClientRect();//top: 50%; left: 50%; transform: translate(-50%, -50%);
+                
+                const response = await fetch(`/api/page-views/<%= problemRef %>`);
+                const data = await response.json();
+
+                const labels = data.map(entry => entry.date);
+                const views = data.map(entry => entry.views);
+
+                const ctx = document.getElementById('viewsGraph').getContext('2d');
+                
+                // Set the position before displaying the graphPopup
+                graphPopup.style.position = 'absolute';
+                graphPopup.style.top = `${buttonRect.bottom + window.scrollY-140}px`;
+                graphPopup.style.left = `${buttonRect.right + window.scrollX-510}px`;
+                graphPopup.style.display = 'block'; // Display the graphPopup after setting the position
+
+                // Destroy the existing chart instance if it exists
+                if (chartInstance) {
+                    chartInstance.destroy();
+                }
+
+                // Create a new chart instance
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Page Views',
+                            data: views,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    stepSize: 5,
+                                    displayFormats: {
+                                        day: 'dd.MM'
+                                    }
+                                },
+                                ticks: {
+                                    source: 'auto',
+                                    autoSkip: true,
+                                    maxTicksLimit: 8
+                                }
+                            },
+                            y: {
+                                ticks: {
+                                    callback: function(value) {
+                                        return Number.isInteger(value) ? value : null;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('closeGraphButton').addEventListener('click', function() {
+                document.getElementById('graphPopup').style.display = 'none';
+            });
+        </script>
+
 </body>
-</html> 
+
+</html>
