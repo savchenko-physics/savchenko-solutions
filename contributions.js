@@ -47,21 +47,21 @@ async function getContribution(req, res) {
         const originalLines = contribution.original_content.split('\n');
         const newLines = contribution.new_content.split('\n');
         const changes = [];
-        const maxLength = Math.max(originalLines.length, newLines.length);
 
-        for (let i = 0; i < maxLength; i++) {
+        // Calculate changes
+        for (let i = 0; i < Math.max(originalLines.length, newLines.length); i++) {
             if (originalLines[i] !== newLines[i]) {
-                changes.push({
-                    lineNumber: i + 1,
-                    original: originalLines[i] || '',
-                    new: newLines[i] || '',
-                    type: !originalLines[i] ? 'added' :
-                        !newLines[i] ? 'removed' :
-                            'modified'
-                });
+                if (originalLines[i] && !newLines[i]) {
+                    changes.push({ type: 'removed', line: originalLines[i], lineNumber: i + 1 });
+                } else if (!originalLines[i] && newLines[i]) {
+                    changes.push({ type: 'added', line: newLines[i], lineNumber: i + 1 });
+                } else {
+                    changes.push({ type: 'modified', line: newLines[i], lineNumber: i + 1 });
+                }
             }
         }
 
+        // Render the EJS template with the diff HTML
         res.render("contribution", {
             __: i18n.__,
             lang,
@@ -69,7 +69,9 @@ async function getContribution(req, res) {
                 ...result.rows[0],
                 isAnonymous: !result.rows[0].user_id
             },
-            changes,
+            newContent: contribution.new_content,
+            originalContent: contribution.original_content,
+            changes, // Pass the changes array to the template
             formatDate: (date) => {
                 return new Date(date).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
                     year: 'numeric',

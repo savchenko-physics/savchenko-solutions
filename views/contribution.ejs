@@ -1,175 +1,110 @@
 <!DOCTYPE html>
-<html lang="<%= lang %>">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= __('contributions.viewChanges') %> - <%= contribution.problem_name %></title>
+    <title>Text Comparison</title>
+    <script src="/diff_match_patch.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --success-color: #059669;
-            --danger-color: #dc2626;
-            --warning-color: #d97706;
-            --background-color: #f8fafc;
-            --card-background: #ffffff;
-            --text-primary: #1f2937;
-            --text-secondary: #64748b;
-            --border-color: #e2e8f0;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.7;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
-            padding: 2rem;
-            background: var(--background-color);
-            color: var(--text-primary);
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: var(--card-background);
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-
-        .header {
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .meta-info {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            display: grid;
-            gap: 0.5rem;
-        }
-
-        .changes {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            display: grid;
-            gap: 1rem;
-        }
-
-        .change-block {
-            background: #f8fafc;
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            overflow: hidden;
-        }
-
-        .change-header {
-            padding: 0.75rem 1rem;
-            background: #f1f5f9;
-            border-bottom: 1px solid var(--border-color);
+            padding: 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.75rem;
-        }
-
-        .line-number {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        .change-content {
-            padding: 1rem;
-        }
-
-        .removed {
-            background: #fef2f2;
-            color: var(--danger-color);
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .added {
-            background: #f0fdf4;
-            color: var(--success-color);
-            padding: 0.5rem;
-            border-radius: 0.25rem;
-        }
-
-        .change-type {
-            font-size: 0.75rem;
-            font-weight: 500;
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-        }
-
-        .change-type.added { 
-            background: #dcfce7;
-            color: var(--success-color);
-        }
-        
-        .change-type.removed { 
-            background: #fee2e2;
-            color: var(--danger-color);
-        }
-        
-        .change-type.modified { 
-            background: #fef3c7;
-            color: var(--warning-color);
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-            margin-bottom: 1.5rem;
-            transition: color 0.2s;
-        }
-
-        .back-link:hover {
-            color: #1d4ed8;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #e0e7ff;
         }
 
         h1 {
-            font-size: 1.875rem;
-            margin: 0 0 1rem 0;
-            color: var(--text-primary);
+            color: #1e3a8a;
+            margin-bottom: 20px;
         }
 
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-            
-            .container {
-                padding: 1.5rem;
-            }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow-x: auto;
         }
 
-        .change-summary {
+        .back-link {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
+            align-items: center;
+            color: #3b82f6;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #2563eb;
+        }
+
+        .meta-info p {
+            margin: 5px 0;
+            color: #4b5563;
         }
 
         .stat {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
             font-weight: 500;
+            margin-right: 10px;
         }
 
         .added-stat {
-            color: var(--success-color);
+            color: #10b981;
         }
 
         .removed-stat {
-            color: var(--danger-color);
+            color: #ef4444;
+        }
+
+        code {
+            display: block;
+            padding-left: 30px;
+            position: relative;
+            white-space: pre-wrap;
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        #outputdiv {
+            width: 100%;
+            max-width: 800px;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        #outputdiv pre {
+            margin: 0;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #374151;
+        }
+
+        #outputdiv code {
+            background-color: transparent;
+            padding: 0;
         }
     </style>
 </head>
+
 <body>
+    <h1>Text Comparison</h1>
+
     <div class="container">
         <a href="/<%= lang %>/profile" class="back-link">
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,27 +134,26 @@
                 </p>
             </div>
         </div>
-
-        <div class="changes">
-            <% changes.forEach(change => { %>
-                <div class="change-block">
-                    <div class="change-header">
-                        <span class="line-number"><%= __('contributions.line') %> <%= change.lineNumber %></span>
-                        <span class="change-type <%= change.type %>">
-                            <%= __(`contributions.${change.type}`) %>
-                        </span>
-                    </div>
-                    <div class="change-content">
-                        <% if (change.type === 'modified' || change.type === 'removed') { %>
-                            <div class="removed">- <%= change.original %></div>
-                        <% } %>
-                        <% if (change.type === 'modified' || change.type === 'added') { %>
-                            <div class="added">+ <%= change.new %></div>
-                        <% } %>
-                    </div>
-                </div>
-            <% }); %>
-        </div>
     </div>
+
+    <script>
+        var dmp = new diff_match_patch();
+
+        function launch() {
+            var text1 = `<%- originalContent.replace(/\\/g, '\\\\') %>`;
+            var text2 = `<%- newContent.replace(/\\/g, '\\\\') %>`;
+            var d = dmp.diff_main(text1, text2);
+            var ds = dmp.diff_prettyHtml(d);
+            document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
+        }
+
+        window.onload = function () {
+            launch();
+        };
+    </script>
+
+    <div id="outputdiv"></div>
+
 </body>
-</html> 
+
+</html>
