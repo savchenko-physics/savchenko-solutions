@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-language" content="en">
+    <meta name="keywords" content="<%= __('meta.keywords') %>">
+    <meta name="description" content="<%= __('meta.description') %>">
+    <meta name="author" content="<%= __('meta.author') %>">
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+    <meta property="og:title" content="<%= __('profile.title') %>">
+    <meta property="og:image" content="img/logo.png">
+    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+    <meta name="yandex-verification" content="6cfda41f74038368">
+    <title>Submission Review</title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="/js/jquery-1.10.1.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            flex: 1;
+            padding: 40px;
+            max-width: 800px;
+            margin: 40px auto;
+            box-sizing: border-box;
+            background-color: #fff;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+        }
+
+        h1 {
+            color: #1a202c;
+            margin-bottom: 24px;
+            font-size: 2rem;
+        }
+
+        a {
+            color: #3182ce;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: #2b6cb0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            margin-top: 24px;
+            background: linear-gradient(135deg, #3182ce, #2b6cb0);
+            color: #fff !important;
+            border-radius: 30px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #2b6cb0, #3182ce);
+            transform: translateY(-3px);
+        }
+
+        .footer {
+            background-color: #1a202c;
+            color: #cbd5e0;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .footer-link {
+            color: #cbd5e0;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: #3182ce;
+        }
+    </style>
+    <div style="max-width: calc(100vw - 30px);">
+        <%- include('default/header.ejs') %></div>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>
+            <%= message %>
+        </h1>
+        <p>We appreciate your contribution. Our team is currently reviewing your submission and will address it
+            promptly.</p>
+        <p>If you wish to make instant changes, please log in to your account.</p>
+        <p>To learn more about our project, visit our official page at <a
+                href="https://savchenkosolutions.com/study-guide"
+                target="_blank">savchenkosolutions.com/study-guide</a>.</p>
+        <p>If you have any questions or suggestions, feel free to reach out to us at <a
+                href="mailto:aliaksandr@melnichenka.com">aliaksandr@melnichenka.com</a>.</p>
+        <a href="/<%= lang %>/register" class="btn btn-primary">Create account</a>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <p class="footer-text">
+                © <strong>Savchenko Solutions</strong>, 2023-2025
+            </p>
+            <p class="footer-text">
+                All rights belong to the authors. Commercial use of materials - with the written permission of the
+                authors.
+            </p>
+            <p class="footer-text">
+                <a href="mailto:aliaksandr@melnichenka.com" class="footer-link">aliaksandr@melnichenka.com</a>
+            </p>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -255,6 +255,9 @@ __Example Answer__:
 $$ x(t)=\\frac{bt^3}{6} $$
 `
 
+    const userId = req.session.userId || null; // Retrieve userId from session
+    const clientIp = req.headers["x-forwarded-for"] || req.ip; // Retrieve client IP address
+
     try {
         await fs.promises.writeFile(filePath, content);
         console.log(`Problem file created: ${filePath}`);
@@ -624,6 +627,21 @@ app.get("/:lang/edit/:name", (req, res) => {
     }
 });
 
+// Define a list of blocked IPs
+const blockedIPs = [
+    '88.150.230.32',
+    '176.193.25.172',
+    '77.37.146.158',
+    '79.139.132.133',
+    '178.176.78.181',
+    '65.109.58.154',
+    '83.220.238.208',
+    '178.176.77.74',
+    '109.252.153.135',
+    '176.59.207.161',
+    '5.228.81.203'
+];
+
 // Route for saving edited content
 app.post("/:lang/save/:name", async (req, res) => {
     const { lang, name } = req.params;
@@ -632,9 +650,45 @@ app.post("/:lang/save/:name", async (req, res) => {
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
     const clientIp = req.headers["x-forwarded-for"] || req.ip;
 
+    // Define originalContent before using it
+    let originalContent;
+
     try {
         // Get original content for comparison
-        const originalContent = await fs.promises.readFile(filePath, "utf8");
+        try {
+            originalContent = await fs.promises.readFile(filePath, "utf8");
+        } catch (error) {
+            console.error("Error reading original content:", error);
+            return res.status(500).send("Error reading original content");
+        }
+
+        // Check for emojis in the content
+        const emojiRegex = /[\u{1F600}-\u{1F64F}]/u; // Basic emoji range
+
+        // Check if the client's IP is blocked
+        if (blockedIPs.includes(clientIp) || emojiRegex.test(content)) {
+            // Save to a special database or table
+            await pool.query(
+                `INSERT INTO special_contributions (
+                    user_id, 
+                    problem_name, 
+                    language, 
+                    edited_at,
+                    old_content,
+                    new_content,
+                    ip_address
+                ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)`,
+                [userId, name, lang, originalContent, content, clientIp]
+            );
+
+            // Render a page indicating the submission for review
+            return res.render("review_submission", {
+                lang,
+                message: lang === 'ru' ? 
+                    "Ваши изменения были отправлены на проверку!" : 
+                    "Your edits have been successfully submitted for review!"
+            });
+        }
 
         // Determine if the content was changed
         const contentChanged = originalContent !== content;
