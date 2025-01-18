@@ -258,6 +258,22 @@ $$ x(t)=\\frac{bt^3}{6} $$
     try {
         await fs.promises.writeFile(filePath, content);
         console.log(`Problem file created: ${filePath}`);
+
+        // Record the creation in the contributions table with content_changed set to false
+        await pool.query(
+            `INSERT INTO contributions (
+                user_id, 
+                problem_name, 
+                language, 
+                edited_at,
+                original_content,
+                new_content,
+                ip_address,
+                content_changed
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)`,
+            [userId, problemName, lang, '', content, clientIp, false]
+        );
+
         res.json({
             message: lang === 'ru' ?
                 `Задача ${problemName} успешно создана!` :
@@ -620,6 +636,9 @@ app.post("/:lang/save/:name", async (req, res) => {
         // Get original content for comparison
         const originalContent = await fs.promises.readFile(filePath, "utf8");
 
+        // Determine if the content was changed
+        const contentChanged = originalContent !== content;
+
         // Create backup with editor info
         const backupFilePath = path.join(
             __dirname,
@@ -642,9 +661,10 @@ app.post("/:lang/save/:name", async (req, res) => {
                 edited_at,
                 original_content,
                 new_content,
-                ip_address
-            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6)`,
-            [userId, name, lang, originalContent, content, clientIp]
+                ip_address,
+                content_changed
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)`,
+            [userId, name, lang, originalContent, content, clientIp, contentChanged]
         );
 
         res.redirect(`/${lang}/${name}`);
