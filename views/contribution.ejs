@@ -1,11 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= lang %>">
 
 <head>
-    <title>Text Comparison</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-language" content="en">
+    <meta name="keywords" content="<%= __('meta.keywords') %>">
+    <meta name="description" content="<%= __('meta.description') %>">
+    <meta name="author" content="<%= __('meta.author') %>">
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+    <meta property="og:title" content="<%= __('profile.title') %>">
+    <meta property="og:image" content="img/logo.png">
+    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+    <meta name="yandex-verification" content="6cfda41f74038368">
+    <title><%= __('contributions.viewChanges') %> - <%= contribution.problem_name %></title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="/js/jquery-1.10.1.min.js"></script>
+
     <script src="/diff_match_patch.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --background-color: #e0e7ff;
+            --text-color: #374151;
+            --border-color: #e5e7eb;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             margin: 0;
@@ -15,21 +38,23 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #e0e7ff;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
 
         h1 {
-            color: #1e3a8a;
+            color: var(--primary-color);
             margin-bottom: 20px;
+            font-size: 2rem;
         }
 
         .container {
             width: 90%;
             max-width: 800px;
             background-color: #ffffff;
-            border: 1px solid #e5e7eb;
+            border: 1px solid var(--border-color);
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px var(--shadow-color);
             border-radius: 12px;
             overflow-x: auto;
         }
@@ -37,7 +62,7 @@
         .back-link {
             display: flex;
             align-items: center;
-            color: #3b82f6;
+            color: var(--secondary-color);
             text-decoration: none;
             margin-bottom: 20px;
             transition: color 0.3s;
@@ -81,8 +106,9 @@
             background-color: #f9fafb;
             border: 1px solid #d1d5db;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px var(--shadow-color);
             margin-top: 20px;
+            margin-bottom: 50px;
             padding: 20px;
             overflow-x: auto;
         }
@@ -92,18 +118,83 @@
             font-family: 'Roboto Mono', monospace;
             font-size: 14px;
             line-height: 1.5;
-            color: #374151;
+            color: var(--text-color);
         }
 
         #outputdiv code {
             background-color: transparent;
             padding: 0;
         }
+
+        .footer {
+            background-color: var(--background-color);
+            color: var(--primary-color);
+            padding: 20px 0;
+            text-align: center;
+            width: 100%;
+            border-top: 1px solid #cbd5e1;
+            box-shadow: 0 -2px 4px var(--shadow-color);
+        }
+
+        .footer-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer-text {
+            margin: 10px 0;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .footer-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .footer-link:hover {
+            color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .container, #outputdiv {
+                padding: 15px;
+            }
+
+            .footer-text {
+                font-size: 14px;
+            }
+        }
     </style>
+    <script>
+        var dmp = new diff_match_patch();
+
+        function launch() {
+            var text1 = `<%- originalContent.replace(/\\/g, '\\\\') %>`;
+            var text2 = `<%- newContent.replace(/\\/g, '\\\\') %>`;
+            var d = dmp.diff_main(text1, text2);
+            var ds = dmp.diff_prettyHtml(d);
+            document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
+        }
+
+        window.onload = function () {
+            launch();
+        };
+    </script>
 </head>
 
 <body>
-    <h1>Text Comparison</h1>
+    <h1><%= __('contributions.changesFor') %> #<%= contribution.id %></h1>
 
     <div class="container">
         <a href="/<%= lang %>/profile" class="back-link">
@@ -114,7 +205,7 @@
         </a>
         
         <div class="header">
-            <h1><%= __('contributions.changesFor') %> <%= contribution.problem_name %></h1>
+            <h1><%= __('contributions.changesFor') %> <%= contribution.language %>/<%= contribution.problem_name %></h1>
             <div class="meta-info">
                 <p>
                     <%= __('contributions.editedBy') %>: 
@@ -136,23 +227,21 @@
         </div>
     </div>
 
-    <script>
-        var dmp = new diff_match_patch();
-
-        function launch() {
-            var text1 = `<%- originalContent.replace(/\\/g, '\\\\') %>`;
-            var text2 = `<%- newContent.replace(/\\/g, '\\\\') %>`;
-            var d = dmp.diff_main(text1, text2);
-            var ds = dmp.diff_prettyHtml(d);
-            document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
-        }
-
-        window.onload = function () {
-            launch();
-        };
-    </script>
-
     <div id="outputdiv"></div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <p class="footer-text">
+                © <strong>Savchenko Solutions</strong>, 2023-2025
+            </p>
+            <p class="footer-text">
+                All rights belong to the authors. Commercial use of materials - with the written permission of the authors.
+            </p>
+            <p class="footer-text">
+                <a href="mailto:aliaksandr@melnichenka.com" class="footer-link">aliaksandr@melnichenka.com</a>
+            </p>
+        </div>
+    </footer>
 
 </body>
 
