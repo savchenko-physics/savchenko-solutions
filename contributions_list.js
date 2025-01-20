@@ -21,7 +21,15 @@ async function getContributionsList(req, res) {
                 c.*, 
                 u.username,
                 u.full_name
-            FROM contributions c
+            FROM (
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+                FROM github_contributions
+                UNION ALL
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+                FROM contributions
+            ) c
             LEFT JOIN users u ON c.user_id = u.id
             WHERE c.problem_name = $1 AND c.language = $2
             ORDER BY c.edited_at DESC`,

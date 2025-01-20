@@ -29,7 +29,15 @@ async function getContribution(req, res) {
                     WHEN c.user_id IS NULL THEN c.ip_address
                     ELSE u.full_name
                 END as editor_name
-            FROM contributions c
+            FROM (
+                SELECT * FROM contributions
+                UNION
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, 
+                    original_content, new_content, NULL as ip_address, 
+                    NULL as content_changed
+                FROM github_contributions
+            ) c
             LEFT JOIN users u ON c.user_id = u.id
             WHERE c.id = $1`,
             [problemName]

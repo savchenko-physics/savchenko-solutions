@@ -179,9 +179,15 @@
     <script>
         var dmp = new diff_match_patch();
 
+        function decodeHtmlEntities(str) {
+            var txt = document.createElement("textarea");
+            txt.innerHTML = str;
+            return txt.value;
+        }
+
         function launch() {
-            var text1 = `<%- originalContent.replace(/\\/g, '\\\\') %>`;
-            var text2 = `<%- newContent.replace(/\\/g, '\\\\') %>`;
+            var text1 = decodeHtmlEntities(`<%= originalContent.replace(/\\/g, '\\\\') %>`);
+            var text2 = decodeHtmlEntities(`<%= newContent.replace(/\\/g, '\\\\') %>`);
             var d = dmp.diff_main(text1, text2);
             var ds = dmp.diff_prettyHtml(d);
             document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
