@@ -119,6 +119,40 @@ app.get('/img/:name', (req, res) => {
 });
 
 
+// Add this route to handle contributions
+app.get("/api/contributions", checkAuthenticated, async (req, res) => {
+    const offset = parseInt(req.query.offset) || 0;
+    const limit = 25;
+
+    try {
+        const contributionsResult = await pool.query(
+            `SELECT 
+                c.*, 
+                u.username,
+                u.full_name
+            FROM (
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+                FROM github_contributions
+                UNION ALL
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+                FROM contributions
+            ) c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.user_id = $1
+            ORDER BY c.edited_at DESC
+            LIMIT $2 OFFSET $3`,
+            [req.session.userId, limit, offset]
+        );
+
+        res.json(contributionsResult.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch contributions' });
+    }
+});
+
 app.post("/create-problem", async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
 
@@ -429,9 +463,47 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
             [req.session.userId]
         );
 
-        const contributionsResult = await pool.query(
-            "SELECT * FROM contributions WHERE user_id = $1 ORDER BY edited_at DESC",
+        const offset = parseInt(req.query.offset) || 0;
+        const limit = 25; // Number of contributions to fetch per request
+        
+        const contributionsCountResult = await pool.query(
+            `
+              SELECT COUNT(*) AS total_contributions
+              FROM (
+                  SELECT 
+                      id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+                  FROM github_contributions
+                  UNION ALL
+                  SELECT 
+                      id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+                  FROM contributions
+              ) c
+              WHERE c.user_id = $1
+            `,
             [req.session.userId]
+          );
+          
+        const totalContributions = contributionsCountResult.rows[0].total_contributions;
+          
+        const contributionsResult = await pool.query(
+            `SELECT 
+                c.*, 
+                u.username,
+                u.full_name
+            FROM (
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+                FROM github_contributions
+                UNION ALL
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+                FROM contributions
+            ) c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.user_id = $1
+            ORDER BY c.edited_at DESC
+            LIMIT $2 OFFSET $3`,
+            [req.session.userId, limit, offset]
         );
 
         const user = userResult.rows[0];
@@ -446,6 +518,7 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
             joinDate: new Date(user.created_at),
             contributions,
             totalEdits: contributions.length,
+            totalContributions: totalContributions,
             error: req.query.error || "",
             success: req.query.success || ""
         });
@@ -895,6 +968,7 @@ app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
 
 // Add this route to handle page views data requests
 app.get("/api/page-views/:name", getPageViewsData);
+
 
 // Start the server
 app.listen(PORT, () => {
