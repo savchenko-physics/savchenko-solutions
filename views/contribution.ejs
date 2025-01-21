@@ -21,12 +21,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #1e3a8a;
-            --secondary-color: #3b82f6;
-            --background-color: #e0e7ff;
-            --text-color: #374151;
-            --border-color: #e5e7eb;
-            --shadow-color: rgba(0, 0, 0, 0.1);
+            --primary-color: #1e3a8a; /* Dark Blue */
+            --secondary-color: #3b82f6; /* Light Blue */
+            --background-color: #e0e7ff; /* Lightest Blue */
+            --text-color: #1f2937; /* Dark Gray */
+            --border-color: #cbd5e1; /* Light Gray */
+            --shadow-color: rgba(0, 0, 0, 0.1); /* Subtle Shadow */
         }
 
         body {
@@ -162,6 +162,22 @@
             transform: scale(1.05);
         }
 
+        .commit-link a {
+            display: flex;
+            align-items: center;
+            color: #0366d6;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .commit-link a:hover {
+            color: #0056b3;
+        }
+
+        .commit-link svg {
+            margin-right: 8px;
+        }
+
         @media (max-width: 600px) {
             h1 {
                 font-size: 1.5rem;
@@ -175,6 +191,35 @@
                 font-size: 14px;
             }
         }
+
+        .undertitle {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.2rem;
+            color: #49597b;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            background-color: #f3f4f6;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .problem-title {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .problem-link {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .problem-link:hover {
+            color: #2563eb;
+            transform: scale(1.05);
+        }
     </style>
     <script>
         var dmp = new diff_match_patch();
@@ -186,8 +231,8 @@
         }
 
         function launch() {
-            var text1 = decodeHtmlEntities(`<%= originalContent.replace(/\\/g, '\\\\') %>`);
-            var text2 = decodeHtmlEntities(`<%= newContent.replace(/\\/g, '\\\\') %>`);
+            var text1 = decodeHtmlEntities(`<%= originalContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`);
+            var text2 = decodeHtmlEntities(`<%= newContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`);
             var d = dmp.diff_main(text1, text2);
             var ds = dmp.diff_prettyHtml(d);
             document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
@@ -200,9 +245,9 @@
 </head>
 
 <body>
-    <h1><%= __('contributions.changesFor') %> #<%= contribution.id %></h1>
+    <h1><%= __('contributions.changesFor') %> <span style="color: var(--secondary-color);">#<%= contribution.id %></span></h1>
 
-    <div class="container">
+    <div class="container" style="padding-bottom: 5px;">
         <a href="/<%= lang %>/profile" class="back-link">
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -211,20 +256,41 @@
         </a>
         
         <div class="header">
-            <h1><%= __('contributions.changesFor') %> <%= contribution.language %>/<%= contribution.problem_name %></h1>
-            <div class="meta-info">
-                <p>
+            <h2 class="problem-title">
+                <%= __('contributions.problem') %>: 
+                <a href="/<%= lang %>/<%= contribution.problem_name %>" class="problem-link">
+                    <%= contribution.language %>/<%= contribution.problem_name %>
+                </a>
+            </h2>
+            <% if (contribution.caption) { %>
+                <h3 class="undertitle" style="font-size: 1.2rem; color: #49597b; margin-top: 10px;"><%= contribution.caption %></h3>
+            <% } %>
+            <div class="meta-info" style="margin-bottom: 20px;">
+                <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 10px;">
                     <%= __('contributions.editedBy') %>: 
                     <% if (contribution.isAnonymous) { %>
-                        <strong><%= __('contributions.anonymousUser') %></strong> 
+                        <strong style="color: #ef4444;"><%= __('contributions.anonymousUser') %></strong> 
                         (<strong>IP: <%= contribution.editor_identifier %></strong>)
                     <% } else { %>
-                        <strong><%= contribution.editor_name %></strong> 
+                        <strong style="color: #10b981;"><%= contribution.editor_name %></strong> 
                         (<strong>@<%= contribution.editor_identifier %></strong>)
                     <% } %>
                 </p>
-                <p><%= __('contributions.editedAt') %>: <strong><%= formatDate(contribution.edited_at) %></strong></p>
-                <p class="change-summary">
+                <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 10px;">
+                    <%= __('contributions.editedAt') %>: <strong><%= formatDate(contribution.edited_at) %></strong>
+                </p>
+
+                <% if (contribution.commit) { %>
+                    <p class="commit-link" style="margin-bottom: 15px;">
+                        <a href="https://github.com/savchenko-physics/savchenko-physics.github.io/commit/<%= contribution.commit %>" target="_blank" style="color: #0366d6;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                            </svg>
+                            GitHub commit: <strong><%= contribution.commit %></strong>
+                        </a>
+                    </p>
+                <% } %>
+                <p class="change-summary" style="font-size: 1.1rem;">
                     <span class="stat added-stat">+<%= changes.filter(c => c.type === 'added' || c.type === 'modified').length %></span>
                     <span class="stat removed-stat">-<%= changes.filter(c => c.type === 'removed' || c.type === 'modified').length %></span>
                     <span><%= __('contributions.linesChanged') %></span>
