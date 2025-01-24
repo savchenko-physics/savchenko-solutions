@@ -7,272 +7,21 @@
     <title>Solutions of Savchenko Problems in Physics</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        .header {
-            background-color: #f8f9fa;
-            padding: 10px 0;
-        }
-
-        .logo img {
-            width: 50px;
-        }
-
-        .logo h1 {
-            color: #d9534f;
-            font-size: 1.25rem;
-            margin: 0;
-        }
-
-        .search {
-            position: relative;
-        }
-
-        .search input {
-            border-radius: 20px;
-            padding: 5px 15px;
-            width: 300px;
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #888;
-        }
-
-        .language {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .language span {
-            margin-right: 10px;
-            font-size: 1.2rem;
-        }
-
-        .language img {
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-        }
-
-        .content {
-            background-color: #ffffff !important;
-            padding: 20px;
-            border-radius: 8px;
-        }
-
-        .d-flex {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .core-team {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .core-team a {
-            text-decoration: none;
-            color: #4464c4;
-            margin-right: 15px;
-        }
-
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .desktop-title {
-            display: none;
-        }
-
-        .mobile-title {
-            display: block;
-        }
-
-        @media (min-width: 768px) {
-            .desktop-title {
-                display: block;
-            }
-
-            .mobile-title {
-                display: none;
-            }
-        }
-
-        .problem-link {
-            display: block;
-            padding: 0.4rem 0.6rem;
-            margin: 2px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            text-decoration: none !important;
-            text-align: center;
-            color: #a52a2a;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-decoration: none;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease, box-shadow 0.2s ease;
-            width: 100%;
-            display: block;
-        }
-
-        .problem-link:hover {
-            background: #f0f4ff;
-            border-color: #36c;
-            transform: translateX(3px);
-            box-shadow: 2px 4px 8px rgba(51, 102, 204, 0.15);
-
-        }
-
-        .chapter-title {
-            color: #6c757d;
-            font-weight: bold;
-        }
-
-        .problems-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 0.5rem 1.5rem;
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-        }
-
-        .problem-item {
-            padding: 0.5rem;
-            border-radius: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            min-width: 170px;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .top-authors {
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .top-authors h3 {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .table {
-            width: 100%;
-            margin: 0 auto;
-            border-collapse: collapse;
-        }
-
-        .table th,
-        .table td {
-            padding: 10px;
-            text-align: center;
-        }
-
-        .table th {
-            background-color: #f9f9f9;
-            font-weight: bold;
-        }
-
-        .table td:first-child {
-            font-size: 1.2rem;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .table thead th {
-            background-color: #fff !important;
-            border-bottom: 2px solid #ddd !important;
-            font-weight: bold;
-        }
-
-        .table thead th,
-        .table tbody td {
-            border: none;
-            /* Remove other borders */
-        }
-
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            margin: 0;
-            padding: 0;
-        }
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 19px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background-color: #ccc;
-        }
-        .timeline-item {
-            display: flex;
-            align-items: center;
-            position: relative;
-            margin: 20px 0;
-            padding-left: 60px;
-        }
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 12px;
-            top: 18px;
-            width: 16px;
-            height: 16px;
-            background-color: white;
-            border: 2px solid #ccc;
-            border-radius: 50%;
-        }
-        .timeline-item::after {
-            content: '';
-            position: absolute;
-            left: 34px;
-            top: 26px;
-            width: 16px;
-            height: 2px;
-            background-color: #ccc;
-        }
-        .timeline-content {
-            background: #ffffff;
-            padding: 5px 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            font-size: 0.9rem;
-            font-family: 'Roboto', sans-serif;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/main_page.css">
 </head>
 
-<body>
+<body class="container nbl-bg">
     <header class="header">
-        <div class="container d-flex justify-content-between align-items-center py-3">
+        <div class="d-flex justify-content-between align-items-center py-3 col">
             <div class="logo d-flex align-items-center">
-                <img src="/img/book.png" alt="Savchenko Solutions Logo" class="mr-3" style="width: 50px;">
+                <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions Logo" style="width: 50px;">
                 <div>
-                    <h1 class="mb-0" style="color: #a52a2a; font-size: 1.75rem;">Savchenko Solutions</h1>
+                    <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;">Savchenko Solutions</p>
                     <p class="mb-0" style="color: #555; font-size: 0.9rem;">The Collaborative Problem Solving</p>
                 </div>
             </div>
-            <div class="search position-relative">
-                <input type="text" class="form-control" placeholder="Search Savchenko Solutions"
-                    style="border-radius: 25px; padding: 8px 40px 8px 20px; width: 300px;">
+            <div class="search">
+                <input type="text" class="form-control" placeholder="Search Savchenko Solutions">
             </div>
             <div class="language d-flex align-items-center">
                 <span class="me-2"><strong>EN</strong></span>
@@ -281,11 +30,11 @@
         </div>
     </header>
 
-    <main class="container my-5">
-        <h2 class="text-center mb-4">Solutions of Savchenko Problems in Physics</h2>
-        <div class="d-flex justify-content-center align-items-stretch">
+    <main class="my-5">
+        <h2 class="text-center my-5">Solutions of Savchenko Problems in Physics</h2>
+        <div class="d-flex  align-items-stretch">
             <div class="col-md-7">
-                <div class="content bg-light p-4 rounded h-100">
+                <div class="content shadow-sm br-10 p-4 h-100 bl-bg">
                     <p>The collection of problems in physics edited by O.Y. Savchenko has remained one of the most
                         sought-after resources for physics olympiad preparation in post-soviet countries for over 30
                         years. However, during this time, not a single complete solution manual for this collection has
@@ -296,23 +45,21 @@
                         Russian and English. If you would like to join the work, read how-to-contribute guide.</p>
                 </div>
             </div>
-            <div class="col-md-6 d-flex align-items-stretch">
-                <div class="video position-relative w-100 h-100" style="overflow: hidden;">
-                    <iframe src="https://www.youtube.com/embed/d-x7Lk-mfTs" frameborder="0" allowfullscreen
-                        class="position-absolute top-0 start-0 w-100 h-100"
-                        style="border: none; border-radius: 15px;"></iframe>
+            <div class="col-md-5 d-flex align-items-stretch">
+                <div class="video w-100 h-100" style="overflow: hidden;">
+                    <iframe src="https://www.youtube.com/embed/d-x7Lk-mfTs" frameborder="0" allowfullscreen="" class="top-0 start-0 h-100 w-100" style="border: none; border-radius: 10px;">
+                    </iframe>
                 </div>
             </div>
         </div>
-
-        <div class="d-flex justify-content-center align-items-stretch">
+        <div class="d-flex justify-content-between align-items-stretch">
             <div class="col-3 mt-4 d-flex align-items-stretch">
-                <div class="position-relative w-100" style="overflow: hidden;">
-                    <img src="img/team.png" alt="Core Team" class="img-fluid" style="width: 100%; height: auto;">
+                <div class="w-100" style="overflow: hidden;">
+                    <img src="http://savchenkosolutions.com/img/team.png" alt="Core Team" class="img-fluid" style="width: 100%; height: auto;">
                 </div>
             </div>
             <div class="col-9 mt-4 d-flex align-items-stretch">
-                <div class="content bg-light p-4 rounded w-100">
+                <div class="content bg-light p-4 w-100 bl-bg shadow-sm br-10">
                     <h3>Acknowledgments and Gratitude</h3>
                     <p>We extend our deepest thanks to the exceptional individuals whose dedication, expertise, and
                         creative energy have propelled this initiative to new heights. Their collective contributions
@@ -320,7 +67,7 @@
                         education worldwide.</p>
                     <h4>Core Team</h4>
                     <div class="core-team">
-                        <a href="#" style="font-size: 1.05rem;">Aliaksandr Melnichenka – Founder & CEO</a>
+                        <a href="#" style="font-size: 1.1rem;">Aliaksandr Melnichenka – Founder &amp; CEO</a>
                         <a href="#">Luis Daniel Fernández Quintana</a>
                         <a href="#">Stefan Nicov</a>
                         <a href="#">Arsen Almashkan</a>
@@ -336,24 +83,24 @@
 
     <section class="container my-5">
         <div class="row">
-            <div class="col-md-8 bg-white rounded" >
+            <div class="col-md-8 bg-white br-10 shadow-sm" >
                 <% chapters.forEach((chapter, chapterIndex)=> {
                     const hasContent = chapter.sections.some(section => section.problems.some(column => column.length >
                     0));
-                    if (hasContent) { %>
-                    <h3 class="text-center my-4 text-secondary">
-                        Chapter <%= chapterIndex + 1 %>
-                            <span class="chapter-title text-danger font-weight-bold">
-                                <%= chapter.title %>
-                            </span>
-                    </h3>
-
+                    if (hasContent) { %>                    
+                    <p class="h3 p-0 text-center my-4">
+                        <span class="text-secondary">Chapter <%= chapterIndex + 1 %></span>
+                        <span class="savchenko-color font-weight-bold">
+                            <%= chapter.title %>
+                        </span>
+                    </p>
+                    
                     <div class="col-12 col-md-11 border-top mt-3">
                         <% chapter.sections.forEach((section, sectionIndex)=> {
                             const hasProblems = section.problems.some(column => column.length > 0);
                             if (hasProblems) { %>
-                            <p class="mt-4 mb-2 font-weight-bold">§ <%= section.number %>
-                                    <%= section.title %>
+                            <p class="mt-4 mb-2 font-weight-bold">
+                                § <%= section.number %> <%= section.title %>
                             </p>
 
                             <div class="problems-grid">
@@ -370,7 +117,7 @@
                     <% } }); %>
             </div>
             <div class="col-md-4">
-                <div class="top-authors text-center">
+                <div class="top-authors text-center br-10 shadow-sm">
                     <h3 class="text-center mb-4">Top Authors</h3>
                     <table class="table table-hover mx-auto" style="width: auto;">
                         <thead class="thead-light">
@@ -434,25 +181,25 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="contributions text-center mt-5 bg-white rounded p-4">
+                <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm">
                     <h3 class="text-center mb-4">Contributions</h3>
                     <div class="contribution-history timeline">
                         <div class="timeline-item">
-                            <div class="timeline-content">
+                            <div class="timeline-content nbl-bg">
                                 <strong>12.3.4</strong> was edited by astrosander 
                                 <span style="font-size: 0.8rem; color: #888;">at 12:10 Jun 20</span>
                             </div>
                         </div>
                         <div class="timeline-item">
-                            <div class="timeline-content">
+                            <div class="timeline-content nbl-bg">
                                 <strong>15.3.1</strong> was edited by astrosander 
                                 <span style="font-size: 0.8rem; color: #888;">at 10:02 Jun 19</span>
                             </div>
                         </div>
                         <div class="timeline-item">
-                            <div class="timeline-content">
+                            <div class="timeline-content nbl-bg">
                                 <strong>17.8.4</strong> was edited by astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">at 09:12 Jun 12</span>
+                                <span style="font-size: 0.8rem; color: #888;">at 08:21 Jun 12</span>
                             </div>
                         </div>
                     </div>
