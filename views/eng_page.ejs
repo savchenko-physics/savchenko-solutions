@@ -24,8 +24,18 @@
                 <input type="text" class="form-control" placeholder="Search Savchenko Solutions">
             </div>
             <div class="language d-flex align-items-center">
-                <span class="me-2"><strong>EN</strong></span>
-                <img src="img/profile_images/astrosander.png" alt="Profile Picture" class="rounded-circle" width="40">
+                <% if (lang === 'en') { %>
+                    <span class="me-2"><strong><a href="/ru" class="text-dark text-decoration-none">EN</a></strong></span>
+                <% } else { %>
+                    <span class="me-2"><strong><a href="/en" class="text-dark text-decoration-none">RU</a></strong></span>
+                <% } %>
+                <% if (username) { %>
+                    <a href="/user/<%= username %>">
+                        <img src="/img/profile_images/<%= userId %>.png" alt="Profile Picture" class="rounded-circle" width="40">
+                    </a>
+                <% } else { %>
+                    <a href="/login" class="btn btn-outline-primary rounded-pill shadow-sm">Login</a>
+                <% } %>
             </div>
         </div>
     </header>

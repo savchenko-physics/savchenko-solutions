@@ -599,12 +599,16 @@ app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
 
     i18n.setLocale(res, 'en');
+    res.locals.username = req.session.username || null;
+    res.locals.userId = req.session.userId || null;
 
     res.render("eng_page", {
         __: i18n.__,
         title: i18n.__('title'),
         chapters,
         theory,
+        username: res.locals.username,
+        userId: res.locals.userId,
         sections,
         pinnedChapters,
         lang: 'en'
@@ -628,13 +632,17 @@ app.use(i18n.init);
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
 
-    i18n.setLocale(req, 'ru');
+    i18n.setLocale(res, 'ru');
+    res.locals.username = req.session.username || null;
+    res.locals.userId = req.session.userId || null;
 
     res.render("eng_page", {
         __: i18n.__,
         title: i18n.__('title'),
         chapters,
         theory,
+        username: res.locals.username,
+        userId: res.locals.userId,
         sections,
         pinnedChapters,
         lang: 'ru'
