@@ -71,6 +71,23 @@
         .card-contribution:hover {
             transform: translateY(-2px);
         }
+
+        .navbar-brand-container {
+            background: linear-gradient(135deg, #a3a9b564, #373c4172); /* Gradient from left to right */
+            padding: 0.5rem; /* Add some padding */
+            border-radius: 0.25rem; /* Rounded corners */
+            display: flex;
+            align-items: center;
+        }
+
+        .modern-search {
+            background-color: #343a40; /* Dark background */
+            color: #fff; /* White text */
+            border: 1px solid #495057; /* Darker border */
+        }
+        .modern-search::placeholder {
+            color: #adb5bd; /* Lighter placeholder text */
+        }
     </style>
 </head>
 
@@ -80,9 +97,12 @@
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container-fluid">
             <a class="navbar-brand ms-3" href="/">
-                <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions" width="40" height="40"
-                    class="d-inline-block align-text-center me-2" />
-                Savchenko Solutions
+                <div class="navbar-brand-container">
+                    <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions" width="40" height="40"
+                        class="d-inline-block align-text-center me-2 logo-img" />
+                        
+                        Savchenko Solutions
+                </div>
             </a>
 
             <button class="navbar-toggler text-white me-3" type="button" data-bs-toggle="collapse"
@@ -93,10 +113,21 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav ms-auto me-3 align-items-center">
                     <li class="nav-item me-3">
-                        <form class="d-flex mb-0">
-                            <input class="form-control form-control-sm" type="search"
-                                placeholder="Search Savchenko Solutions" aria-label="Search" />
-                        </form>
+                        <!-- Search Input -->
+                        <div class="search position-relative">
+                            <input type="text" id="searchInput" class="form-control form-control-sm modern-search" placeholder="Search Savchenko Solutions" aria-label="Search" />
+                            <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-lg" style="display: none; z-index: 1050; width: 100%;">
+                                <ul class="list-unstyled mb-0 p-2">
+                                    <!-- Example of a search result item -->
+                                    <li class="search-result-item py-2 px-3 mb-1 rounded hover-bg-light">
+                                        <a href="#" class="d-block text-dark text-decoration-none">
+                                            <span class="search-result-title font-weight-bold">Result Title</span>
+                                            <span class="search-result-snippet d-block text-muted small">Result snippet or description goes here...</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </li>
                     <li class="nav-item me-3">
                         <!-- Language Toggle (EJS logic) -->
@@ -115,9 +146,9 @@
                                 <% } %>
                     </li>
                     <li class="nav-item">
-                        <% if (username) { %>
-                            <a href="/user/<%= username %>" class="nav-link">
-                                <img src="/img/profile_images/<%= userId %>.png" alt="Profile Picture"
+                        <% if (usernameCurrent) { %>
+                            <a href="/user/<%= usernameCurrent %>" class="nav-link">
+                                <img src="/img/profile_images/<%= userIdCurrent %>.png" alt="Profile Picture"
                                     class="rounded-circle" width="40" height="40" />
                             </a>
                             <% } else { %>
@@ -130,6 +161,7 @@
             </div>
         </div>
     </nav>
+    
     <!-- /Top Navbar -->
 
     <!-- Hero/Profile Banner -->
@@ -374,6 +406,51 @@
                     }
                 } catch (error) {
                     console.error('Error fetching more contributions:', error);
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById("searchInput");
+            const searchResults = document.getElementById("searchResults");
+            const searchResultsList = document.querySelector("#searchResults ul");
+
+            searchInput.addEventListener("input", async () => {
+                const query = searchInput.value.trim();
+
+                if (query.length === 0) {
+                    searchResults.style.display = "none";
+                    searchResultsList.innerHTML = "";
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (data.results.length > 0) {
+                        const limitedResults = data.results.slice(0, 5);
+                        searchResultsList.innerHTML = limitedResults.map((result, index) => `
+                            <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                                <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
+                                    <span class="cdx-menu-item__text">
+                                        <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                                        <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                                    </span>
+                                </a>
+                            </li>
+                        `).join("");
+                        searchResults.style.display = "block";
+                    } else {
+                        searchResultsList.innerHTML = `
+                            <li class="cdx-menu-item cdx-menu-item--enabled">
+                                <span class="cdx-menu-item__content">
+                                    <span class="cdx-menu-item__text">No results found.</span>
+                                </span>
+                            </li>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error fetching search results:', error);
                 }
             });
         });

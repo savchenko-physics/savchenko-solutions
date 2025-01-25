@@ -56,6 +56,8 @@ async function getUserProfile(req, res) {
             __: i18n.__,
             lang: req.query.lang || 'en',
             username,
+            usernameCurrent: req.session.username,
+            userIdCurrent: req.session.userId,
             fullName: user.full_name,
             contributions,
             totalContributions,

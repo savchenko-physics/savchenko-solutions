@@ -491,6 +491,7 @@ app.get("/logout", (req, res) => {
 
 app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
+    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
 
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
@@ -505,9 +506,41 @@ app.get("/", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        lang: 'en'
+        lang: 'en',
+        recentContributions // Pass the recent contributions to the template
     });
 });
+
+async function getRecentContributions(limit) {
+    try {
+        const result = await pool.query(
+            "SELECT id, problem_name, user_id, edited_at, ip_address FROM contributions ORDER BY edited_at DESC LIMIT $1",
+            [limit]
+        );
+
+        const contributions = await Promise.all(result.rows.map(async (row) => {
+            const userResult = await pool.query("SELECT username FROM users WHERE id = $1", [row.user_id]);
+            const username = userResult.rows[0]?.username || row.ip_address; // Show ip_address if username is 'Unknown'
+
+            return {
+                version: row.problem_name,
+                editor: username, // Convert user_id to username or show ip_address
+                timestamp: new Intl.DateTimeFormat('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    month: 'short',
+                    day: '2-digit'
+                }).format(row.edited_at), // Format the timestamp
+                id: row.id
+            };
+        }));
+
+        return contributions;
+    } catch (error) {
+        console.error("Error fetching recent contributions:", error);
+        return [];
+    }
+}
 
 // Configure i18n (move this before app.use statements)
 i18n.configure({
@@ -525,7 +558,7 @@ app.use(i18n.init);
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-
+    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -539,7 +572,8 @@ app.get("/ru", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        lang: 'ru'
+        lang: 'ru',
+        recentContributions // Pass the recent contributions to the template
     });
 });
 
@@ -722,8 +756,8 @@ app.get("/search", (req, res) => {
     const results = [];
     const processedFiles = new Set(); // Track processed file names
 
-    const truncateWithHighlight = (name, text, query, maxLength = 150) => {
-        text = text.replace(name, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "");
+    const truncateWithHighlight = (name, text, query, maxLength = 50) => {
+        text = text.replace(name, "").replace(/\$/g, "").replace(/_/g, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "").replace("\ell", "l").replace("#", "");
 
         const matchIndex = text.toLowerCase().indexOf(query);
 
