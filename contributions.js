@@ -128,4 +128,127 @@ async function getContributionsByUserId(userId, limit, offset) {
     }
 }
 
-module.exports = { getContribution, getContributionsByUserId }; 
+async function getTotalContributions(userId) {
+    const result = await pool.query(
+        `
+        SELECT COUNT(*) AS total_contributions
+        FROM (
+            SELECT 
+                id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+            FROM github_contributions
+            UNION ALL
+            SELECT 
+                id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+            FROM contributions
+        ) c
+        WHERE c.user_id = $1
+        `,
+        [userId]
+    );
+    return result.rows[0].total_contributions;
+}
+
+async function getUniqueContributions(userId) {
+    const result = await pool.query(
+        `
+        SELECT COUNT(*) AS total_contributions
+        FROM (
+            SELECT 
+                id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+            FROM github_contributions
+            UNION ALL
+            SELECT 
+                id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+            FROM contributions
+        ) c
+        WHERE c.user_id = $1
+        `,
+        [userId]
+    );
+    return result.rows[0].total_contributions;
+}
+
+async function getUniqueSolutions(userId) {
+    const result = await pool.query(
+        `
+        SELECT COUNT(DISTINCT problem_name) AS unique_solutions
+        FROM (
+            SELECT 
+                problem_name
+            FROM github_contributions
+            WHERE user_id = $1
+            UNION ALL
+            SELECT 
+                problem_name
+            FROM contributions
+            WHERE user_id = $1
+        ) c
+        `,
+        [userId]
+    );
+    return result.rows[0].unique_solutions;
+}
+
+async function getTranslations(userId) {
+    const result = await pool.query(
+        `
+        SELECT COUNT(*) AS unique_translations
+        FROM (
+            (
+                SELECT problem_name
+                FROM github_contributions
+                WHERE user_id = $1 AND language = 'ru'
+                UNION ALL
+                SELECT problem_name
+                FROM contributions
+                WHERE user_id = $1 AND language = 'ru'
+            )
+            INTERSECT
+            (
+                SELECT problem_name
+                FROM github_contributions
+                WHERE user_id = $1 AND language = 'en'
+                UNION ALL
+                SELECT problem_name
+                FROM contributions
+                WHERE user_id = $1 AND language = 'en'
+            )
+        ) c
+        `,
+        [userId]
+    );
+    return result.rows[0].unique_translations;
+}
+
+async function getFrequentCollaborators(userId) {
+    const result = await pool.query(
+        `
+        SELECT 
+            u.id AS collaborator_id,
+            u.username AS collaborator_username,
+            COUNT(*) AS collaboration_count
+        FROM (
+            SELECT 
+                c1.problem_name, 
+                c2.user_id AS collaborator_id
+            FROM contributions c1
+            JOIN contributions c2 ON c1.problem_name = c2.problem_name AND c1.user_id <> c2.user_id
+            WHERE c1.user_id = $1
+            UNION ALL
+            SELECT 
+                gc1.problem_name, 
+                gc2.user_id AS collaborator_id
+            FROM github_contributions gc1
+            JOIN github_contributions gc2 ON gc1.problem_name = gc2.problem_name AND gc1.user_id <> gc2.user_id
+            WHERE gc1.user_id = $1
+        ) collaborations
+        JOIN users u ON collaborations.collaborator_id = u.id
+        GROUP BY u.id, u.username
+        ORDER BY collaboration_count DESC
+        `,
+        [userId]
+    );
+    return result.rows;
+}
+
+module.exports = { getContribution, getContributionsByUserId, getTotalContributions, getUniqueContributions, getUniqueSolutions, getTranslations, getFrequentCollaborators }; 
