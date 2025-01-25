@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solutions of Savchenko Problems in Physics</title>
+    <title><%= __('title') %></title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main_page.css">
@@ -14,14 +14,14 @@
     <header class="header">
         <div class="d-flex justify-content-between align-items-center py-3 col">
             <div class="logo d-flex align-items-center">
-                <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions Logo" style="width: 50px;">
+                <img src="https://savchenkosolutions.com/img/book.png" alt="<%= __('title') %> Logo" style="width: 50px;">
                 <div>
-                    <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;">Savchenko Solutions</p>
-                    <p class="mb-0" style="color: #555; font-size: 0.9rem;">The Collaborative Problem Solving</p>
+                    <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;"><%= __('title') %></p>
+                    <p class="mb-0" style="color: #555; font-size: 0.9rem;"><%= __('motto') %></p>
                 </div>
             </div>
             <div class="search">
-                <input type="text" class="form-control" placeholder="Search Savchenko Solutions">
+                <input type="text" class="form-control" placeholder="<%= __('menu.searchPlaceholder') %>">
             </div>
             <div class="language d-flex align-items-center">
                 <% if (lang === 'en') { %>
@@ -34,25 +34,19 @@
                         <img src="/img/profile_images/<%= userId %>.png" alt="Profile Picture" class="rounded-circle" width="40">
                     </a>
                 <% } else { %>
-                    <a href="/login" class="btn btn-outline-primary rounded-pill shadow-sm">Login</a>
+                    <a href="/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
                 <% } %>
             </div>
         </div>
     </header>
 
     <main class="my-5">
-        <h2 class="text-center my-5">Solutions of Savchenko Problems in Physics</h2>
-        <div class="d-flex  align-items-stretch">
+        <h2 class="text-center my-5"><%= __('subtitle') %></h2>
+        <div class="d-flex align-items-stretch">
             <div class="col-md-7">
                 <div class="content shadow-sm br-10 p-4 h-100 bl-bg">
-                    <p>The collection of problems in physics edited by O.Y. Savchenko has remained one of the most
-                        sought-after resources for physics olympiad preparation in post-soviet countries for over 30
-                        years. However, during this time, not a single complete solution manual for this collection has
-                        been created.</p>
-                    <p>This website presents a non-profit project aimed at collaboratively creating the first solution
-                        manual with solutions from different authors. Currently, more than 745 solutions out of 2023
-                        problems have been published. The project, launched in 2023, is actively developing in both
-                        Russian and English. If you would like to join the work, read how-to-contribute guide.</p>
+                    <p><%= __('description.intro') %></p>
+                    <p><%= __('description.project') %> <%= __('description.team') %>. <%= __('description.moto') %> <%= __('description.contribute') %> <a href="/study-guide"><%= __('description.guide') %></a>.</p>
                 </div>
             </div>
             <div class="col-md-5 d-flex align-items-stretch">
@@ -65,17 +59,14 @@
         <div class="d-flex justify-content-between align-items-stretch">
             <div class="col-3 mt-4 d-flex align-items-stretch">
                 <div class="w-100" style="overflow: hidden;">
-                    <img src="http://savchenkosolutions.com/img/team.png" alt="Core Team" class="img-fluid" style="width: 100%; height: auto;">
+                    <img src="https://savchenkosolutions.com/img/team.png" alt="<%= __('description.coreTeam') %>" class="img-fluid" style="width: 100%; height: auto;">
                 </div>
             </div>
             <div class="col-9 mt-4 d-flex align-items-stretch">
                 <div class="content bg-light p-4 w-100 bl-bg shadow-sm br-10">
-                    <h3>Acknowledgments and Gratitude</h3>
-                    <p>We extend our deepest thanks to the exceptional individuals whose dedication, expertise, and
-                        creative energy have propelled this initiative to new heights. Their collective contributions
-                        have shaped Savchenko Solutions into an innovative platform poised to transform advanced physics
-                        education worldwide.</p>
-                    <h4>Core Team</h4>
+                    <h3><%= __('description.acknowledgments') %></h3>
+                    <p><%= __('description.deepestThanks') %></p>
+                    <h4><%= __('description.coreTeam') %></h4>
                     <div class="core-team">
                         <a href="/user/astrosander/" style="font-size: 1.1rem;">Aliaksandr Melnichenka – Founder &amp; CEO</a>
                         <a href="/user/Luisito/" style="font-size: 1.1rem;">Luis Daniel Fernández Quintana</a>
@@ -99,7 +90,7 @@
                     0));
                     if (hasContent) { %>                    
                     <p class="h3 p-0 text-center my-4">
-                        <span class="text-secondary">Chapter <%= chapterIndex + 1 %></span>
+                        <span class="text-secondary"><%= __('chapter') %> <%= chapterIndex + 1 %></span>
                         <span class="savchenko-color font-weight-bold">
                             <%= chapter.title %>
                         </span>
@@ -128,13 +119,13 @@
             </div>
             <div class="col-md-4">
                 <div class="top-authors text-center br-10 shadow-sm">
-                    <h3 class="text-center mb-4">Top Authors</h3>
+                    <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
                     <table class="table table-hover mx-auto" style="width: auto;">
                         <thead class="thead-light">
                             <tr>
                                 <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
-                                <th scope="col" style="width: 45%; opacity: 0.8;">User</th>
-                                <th scope="col" style="width: 45%; opacity: 0.8;">Contrib.</th>
+                                <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
+                                <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,24 +183,24 @@
                     </table>
                 </div>
                 <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm">
-                    <h3 class="text-center mb-4">Contributions</h3>
+                    <h3 class="text-center mb-4"><%= __('description.contributions2') %></h3>
                     <div class="contribution-history timeline">
                         <div class="timeline-item">
                             <div class="timeline-content nbl-bg">
-                                <strong>12.3.4</strong> was edited by astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">at 12:10 Jun 20</span>
+                                <strong>12.3.4</strong> <%= __('description.editedBy') %> astrosander 
+                                <span style="font-size: 0.8rem; color: #888;">12:10 Jun 20</span>
                             </div>
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-content nbl-bg">
-                                <strong>15.3.1</strong> was edited by astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">at 10:02 Jun 19</span>
+                                <strong>15.3.1</strong> <%= __('description.editedBy') %> astrosander 
+                                <span style="font-size: 0.8rem; color: #888;">10:02 Jun 19</span>
                             </div>
                         </div>
                         <div class="timeline-item">
                             <div class="timeline-content nbl-bg">
-                                <strong>17.8.4</strong> was edited by astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">at 08:21 Jun 12</span>
+                                <strong>17.8.4</strong> <%= __('description.editedBy') %> astrosander 
+                                <span style="font-size: 0.8rem; color: #888;"> 08:21 Jun 12</span>
                             </div>
                         </div>
                     </div>
@@ -217,7 +208,6 @@
             </div>
         </div>
     </section>
-
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
