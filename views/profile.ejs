@@ -458,6 +458,7 @@
 
    <script>
       const lang = '<%= lang %>'; // Define lang variable at the top of your script
+      const userId = '<%= userId %>'; // Get the user ID from the session
       
       document.querySelector('.password-form').addEventListener('submit', function (e) {
          const newPassword = document.getElementById('newPassword').value;
@@ -500,14 +501,13 @@
 
       document.getElementById('show-more').addEventListener('click', async () => {
          try {
-            const response = await fetch(`/api/contributions?offset=${offset}`);
+            const response = await fetch(`/api/contributions/${userId}?offset=${offset}`);
             const newContributions = await response.json();
 
             if (newContributions.length > 0) {
                const contributionsList = document.querySelector('.contributions-list');
                newContributions.forEach(contribution => {
                   const listItem = document.createElement('li');
-                  // listItem.className = 'contribution-item';
                   listItem.innerHTML = `
                   <div class="contribution-item">
                      <div class="contribution-header">

@@ -17,7 +17,7 @@ const i18n = require('i18n');
 const connectPgSimple = require('connect-pg-simple'); // Add this import
 const multer = require('multer');
 const getContributionsList = require('./contributions_list');
-const { getContribution } = require('./contributions');
+const { getContribution, getContributionsByUserId } = require('./contributions');
 const renderFileList = require('./file-list');
 const { renderPost, getPageViewsData } = require('./post'); // Import the renderPost function
 
@@ -85,17 +85,6 @@ function checkAuthenticated(req, res, next) {
     res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
 }
 
-
-app.get("/:lang/contributions/:problemName", (req, res, next) => {
-    const { problemName } = req.params;
-    if ((problemName.match(/\./g) || []).length === 2) {
-        return getContributionsList(req, res, next);
-    } else {
-        return getContribution(req, res, next);
-    }
-});
-
-
 function checkNotAuthenticated(req, res, next) {
     const lang = req.query.lang || req.body.lang || 'en';
     i18n.setLocale(res, lang);
@@ -118,38 +107,56 @@ app.get('/img/:name', (req, res) => {
     });
 });
 
-
-// Add this route to handle contributions
-app.get("/api/contributions", checkAuthenticated, async (req, res) => {
-    const offset = parseInt(req.query.offset) || 0;
-    const limit = 25;
+// Add a new route for user profiles
+app.get("/user/:username", async (req, res) => {
+    console.log(req.params);
+    const { username } = req.params;
 
     try {
-        const contributionsResult = await pool.query(
-            `SELECT 
-                c.*, 
-                u.username,
-                u.full_name
-            FROM (
-                SELECT 
-                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
-                FROM github_contributions
-                UNION ALL
-                SELECT 
-                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
-                FROM contributions
-            ) c
-            LEFT JOIN users u ON c.user_id = u.id
-            WHERE c.user_id = $1
-            ORDER BY c.edited_at DESC
-            LIMIT $2 OFFSET $3`,
-            [req.session.userId, limit, offset]
+        // Query the database for the user's information
+        const userResult = await pool.query(
+            "SELECT id, full_name FROM users WHERE username = $1",
+            [username]
         );
 
-        res.json(contributionsResult.rows);
+        if (userResult.rows.length === 0) {
+            return res.status(404).render("404", {
+                __: i18n.__,
+                pageUrl: req.originalUrl,
+                lang: req.query.lang || 'en'
+            });
+        }
+
+        const user = userResult.rows[0];
+
+        // Query the database for the user's contributions
+        const contributionsResult = await pool.query(
+            `SELECT 
+                problem_name, 
+                language, 
+                edited_at 
+            FROM contributions 
+            WHERE user_id = $1 
+            ORDER BY edited_at DESC`,
+            [user.id]
+        );
+
+        const contributions = contributionsResult.rows;
+
+        // Render the user profile page
+        res.render("user_profile", {
+            __: i18n.__,
+            lang: req.query.lang || 'en',
+            username,
+            fullName: user.full_name,
+            contributions
+        });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to fetch contributions' });
+        console.error("Error fetching user profile:", error);
+        res.status(500).render("500", {
+            __: i18n.__,
+            lang: req.query.lang || 'en'
+        });
     }
 });
 
@@ -519,6 +526,7 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
             contributions,
             totalEdits: contributions.length,
             totalContributions: totalContributions,
+            userId: req.session.userId,
             error: req.query.error || "",
             success: req.query.success || ""
         });
@@ -589,8 +597,6 @@ app.get("/logout", (req, res) => {
 
 app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-
-    const results = await getLanguageData('en');
 
     i18n.setLocale(res, 'en');
 
@@ -960,6 +966,30 @@ app.post('/upload-image/:name', upload.single('image'), (req, res) => {
     });
 });
 
+// Update the route to handle contributions with an ID
+app.get("/api/contributions/:id", checkAuthenticated, async (req, res) => {
+    const offset = parseInt(req.query.offset) || 0;
+    const limit = 25;
+    const userId = req.params.id; // Get the user ID from the route parameter
+
+    try {
+        const contributions = await getContributionsByUserId(userId, limit, offset);
+        res.json(contributions);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch contributions' });
+    }
+});
+
+app.get("/:lang/contributions/:problemName", (req, res, next) => {
+    const { problemName } = req.params;
+    if ((problemName.match(/\./g) || []).length === 2) {
+        return getContributionsList(req, res, next);
+    } else {
+        return getContribution(req, res, next);
+    }
+});
+
 // Add redirection routes
 app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
     const sectionNumber = req.params[0];
@@ -968,7 +998,6 @@ app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
 
 // Add this route to handle page views data requests
 app.get("/api/page-views/:name", getPageViewsData);
-
 
 // Start the server
 app.listen(PORT, () => {

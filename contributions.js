@@ -99,4 +99,33 @@ async function getContribution(req, res) {
     }
 }
 
-module.exports = { getContribution }; 
+async function getContributionsByUserId(userId, limit, offset) {
+    try {
+        const result = await pool.query(
+            `SELECT 
+                c.*, 
+                u.username,
+                u.full_name
+            FROM (
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
+                FROM github_contributions
+                UNION ALL
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
+                FROM contributions
+            ) c
+            LEFT JOIN users u ON c.user_id = u.id
+            WHERE c.user_id = $1
+            ORDER BY c.edited_at DESC
+            LIMIT $2 OFFSET $3`,
+            [userId, limit, offset]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error("Error fetching contributions by user ID:", error);
+        throw error;
+    }
+}
+
+module.exports = { getContribution, getContributionsByUserId }; 
