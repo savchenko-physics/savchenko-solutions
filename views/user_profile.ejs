@@ -1,30 +1,383 @@
-<!-- views/user_profile.ejs -->
 <!DOCTYPE html>
-<html lang="<%= lang %>">
+<html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <title>
-        <%= fullName %>'s Profile
-    </title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solutions of Savchenko Problems in Physics</title>
+
+    <!-- Bootstrap 5 (via CDN) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <!-- Google Fonts: Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <!-- Optional: Bootstrap Icons for Social Links -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
+    <!-- Your Custom Styles -->
+    <link rel="stylesheet" href="/css/main_page.css" />
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        /* Example brand color, feel free to change */
+        .navbar-custom {
+            background-color: #343A40;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #fff !important;
+        }
+
+        .savchenko-color {
+            color: #007bff;
+            font-weight: 700;
+        }
+
+        .hero-profile {
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0.9),
+                    rgba(255, 255, 255, 0.95),
+                    rgba(255, 255, 255, 0.98)),
+                url('https://savchenkosolutions.com/img/book.png') no-repeat center / 20%;
+            padding: 2rem 0;
+        }
+
+        .hero-profile img {
+            max-width: 150px;
+            max-height: 150px;
+            object-fit: cover;
+            border: 3px solid #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-profile h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .section-title {
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .card-contribution {
+            transition: transform 0.2s;
+        }
+
+        .card-contribution:hover {
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 
-<body>
-    <h1>
-        <%= fullName %>'s Profile
-    </h1>
-    <h2>Contributions</h2>
-    <ul>
-        <% contributions.forEach(contribution=> { %>
-            <li>
-                <strong>
-                    <%= contribution.problem_name %>
-                </strong>
-                (<%= contribution.language %>) -
-                    <%= new Date(contribution.edited_at).toLocaleDateString() %>
-            </li>
-            <% }) %>
-    </ul>
+<body class="bg-light">
+
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand ms-3" href="/">
+                <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions" width="40" height="40"
+                    class="d-inline-block align-text-center me-2" />
+                Savchenko Solutions
+            </a>
+
+            <button class="navbar-toggler text-white me-3" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon text-white"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav ms-auto me-3 align-items-center">
+                    <li class="nav-item me-3">
+                        <form class="d-flex mb-0">
+                            <input class="form-control form-control-sm" type="search"
+                                placeholder="Search Savchenko Solutions" aria-label="Search" />
+                        </form>
+                    </li>
+                    <li class="nav-item me-3">
+                        <!-- Language Toggle (EJS logic) -->
+                        <% if (lang==='en' ) { %>
+                            <span class="text-white">
+                                <strong>
+                                    <a href="/ru" class="text-white text-decoration-none">EN</a>
+                                </strong>
+                            </span>
+                            <% } else { %>
+                                <span class="text-white">
+                                    <strong>
+                                        <a href="/en" class="text-white text-decoration-none">RU</a>
+                                    </strong>
+                                </span>
+                                <% } %>
+                    </li>
+                    <li class="nav-item">
+                        <% if (username) { %>
+                            <a href="/user/<%= username %>" class="nav-link">
+                                <img src="/img/profile_images/<%= userId %>.png" alt="Profile Picture"
+                                    class="rounded-circle" width="40" height="40" />
+                            </a>
+                            <% } else { %>
+                                <a href="/login" class="btn btn-outline-light btn-sm rounded-pill shadow-sm">
+                                    Login
+                                </a>
+                                <% } %>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- /Top Navbar -->
+
+    <!-- Hero/Profile Banner -->
+    <section class="hero-profile text-center">
+        <div class="container">
+            <!-- Display user profile picture if available -->
+            <% if (profilePicture) { %>
+                <img src="<%= profilePicture %>" alt="<%= fullName %>'s Profile Picture" class="rounded-circle mb-3" />
+                <% } else { %>
+                    <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder"
+                        class="rounded-circle mb-3" />
+                    <% } %>
+                        <h1 class="savchenko-color">
+                            <%= fullName %> (<%= username %>)
+                        </h1>
+                        <p class="mb-1 text-muted">Country: <%= countryLocation %>
+                        </p>
+                        <p class="mb-1">
+                            Verified User:
+                            <span class="<%= isVerifiedUser ? 'text-success' : 'text-danger' %>">
+                                <%= isVerifiedUser ? 'Yes' : 'No' %>
+                            </span>
+                        </p>
+                        <p class="mb-0">Bio: <%= bio %>
+                        </p>
+        </div>
+    </section>
+    <!-- /Hero/Profile Banner -->
+
+    <main class="container my-5">
+        <!-- Stats row -->
+        <div class="row mb-5">
+            <div class="col-12 col-md-6 mb-4 mb-md-0">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="section-title">Contributions</h2>
+                        <p><strong>Full Name:</strong>
+                            <%= fullName %>
+                        </p>
+                        <p><strong>Username:</strong>
+                            <%= username %>
+                        </p>
+                        <% if (totalContributions> 0) { %>
+                            <p><strong>Total Contributions:</strong>
+                                <%= totalContributions %>
+                            </p>
+                            <% } %>
+                                <% if (uniqueSolutions> 0) { %>
+                                    <p><strong>Unique Solutions:</strong>
+                                        <%= uniqueSolutions %>
+                                    </p>
+                                    <% } %>
+                                        <% if (uniqueTranslations> 0) { %>
+                                            <p><strong>Unique Translations:</strong>
+                                                <%= uniqueTranslations %>
+                                            </p>
+                                            <% } %>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h2 class="section-title">Social Links</h2>
+                        <ul class="list-unstyled mb-0">
+                            <% if (linkedin) { %>
+                                <li class="mb-2">
+                                    <i class="bi bi-linkedin me-1"></i>
+                                    <a href="<%= linkedin %>" target="_blank" class="text-decoration-none">
+                                        LinkedIn
+                                    </a>
+                                </li>
+                                <% } %>
+                                    <% if (github) { %>
+                                        <li class="mb-2">
+                                            <i class="bi bi-github me-1"></i>
+                                            <a href="<%= github %>" target="_blank" class="text-decoration-none">
+                                                GitHub
+                                            </a>
+                                        </li>
+                                        <% } %>
+                                            <% if (instagram) { %>
+                                                <li class="mb-2">
+                                                    <i class="bi bi-instagram me-1"></i>
+                                                    <a href="<%= instagram %>" target="_blank"
+                                                        class="text-decoration-none">
+                                                        Instagram
+                                                    </a>
+                                                </li>
+                                                <% } %>
+                                                    <% if (personalWebsite) { %>
+                                                        <li class="mb-2">
+                                                            <i class="bi bi-globe me-1"></i>
+                                                            <a href="<%= personalWebsite %>" target="_blank"
+                                                                class="text-decoration-none">
+                                                                Personal Website
+                                                            </a>
+                                                        </li>
+                                                        <% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /Stats row -->
+
+        <!-- Contributions and Collaborators -->
+        <div class="row">
+            <!-- Recent Contributions -->
+            <div class="col-12 col-lg-7">
+                <h2 class="section-title">Recent Contributions</h2>
+                <div class="row row-cols-1 g-3" id="contributions-list">
+                    <% contributions.forEach(contribution=> { %>
+                        <div class="col">
+                            <div class="card card-contribution shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-1">
+                                        <a href="/<%= contribution.language %>/<%= contribution.problem_name %>"
+                                            class="text-decoration-none">
+                                            <%= contribution.problem_name %>
+                                        </a>
+                                        <small class="text-muted">(<%= contribution.language %>)</small>
+                                    </h5>
+                                    <p class="card-text text-muted mb-2">
+                                        <em>
+                                            <%= new Date(contribution.edited_at).toLocaleString() %>
+                                        </em>
+                                    </p>
+                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>"
+                                        class="btn btn-sm btn-outline-primary">
+                                        View Changes
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+                </div>
+                <!-- "Show More" Button -->
+                <% if (hasMore) { %>
+                    <div class="text-center mt-3">
+                        <button id="show-more" class="btn btn-primary">Show More</button>
+                    </div>
+                    <% } %>
+            </div>
+            <!-- /Recent Contributions -->
+
+            <!-- Frequent Collaborators -->
+            <div class="col-12 col-lg-5 mt-4 mt-lg-0">
+                <h2 class="section-title">Frequent Collaborators</h2>
+                <% if (frequentCollaborators.length> 0) { %>
+                    <ul class="list-group">
+                        <% frequentCollaborators.forEach(collaborator=> { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <a href="/user/<%= collaborator.collaborator_username %>" class="text-decoration-none">
+                                    <%= collaborator.collaborator_username %>
+                                </a>
+                                <span class="badge bg-primary rounded-pill">
+                                    <%= collaborator.collaboration_count %>
+                                </span>
+                            </li>
+                            <% }) %>
+                    </ul>
+                    <% } else { %>
+                        <p class="text-muted">No frequent collaborators found.</p>
+                        <% } %>
+            </div>
+            <!-- /Frequent Collaborators -->
+        </div>
+        <!-- /Contributions and Collaborators -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4">
+        <div class="container text-center">
+            <p class="mb-0">
+                <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
+            </p>
+            <p class="mb-0">
+                <small>
+                    All rights belong to the authors.
+                    Commercial use of materials - with the written permission of the authors.
+                    aliaksandr@melnichenka.com
+                </small>
+            </p>
+        </div>
+    </footer>
+    <!-- /Footer -->
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            let offset = <%= offset %>;
+            const userId = '<%= userId %>';
+            const lang = '<%= lang %>';
+
+            $('#show-more').click(async function () {
+                try {
+                    const response = await fetch(`/api/contributions/${userId}?offset=${offset}`);
+                    const newContributions = await response.json();
+
+                    if (newContributions.length > 0) {
+                        newContributions.forEach(contribution => {
+                            $('#contributions-list').append(`
+                <div class="col">
+                  <div class="card card-contribution shadow-sm">
+                    <div class="card-body">
+                      <h5 class="card-title mb-1">
+                        <a
+                          href="/${contribution.language}/${contribution.problem_name}"
+                          class="text-decoration-none"
+                        >
+                          ${contribution.problem_name}
+                        </a>
+                        <small class="text-muted">(${contribution.language})</small>
+                      </h5>
+                      <p class="card-text text-muted mb-2">
+                        <em>${new Date(contribution.edited_at).toLocaleString()}</em>
+                      </p>
+                      <a
+                        href="/${lang}/contributions/${contribution.id}"
+                        class="btn btn-sm btn-outline-primary"
+                      >
+                        View Changes
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              `);
+                        });
+
+                        // Update the offset for the next batch
+                        offset += newContributions.length;
+
+                        // If we fetched fewer items than expected, no more remain
+                        if (newContributions.length < 25) {
+                            $('#show-more').remove();
+                        }
+                    } else {
+                        $('#show-more').remove();
+                    }
+                } catch (error) {
+                    console.error('Error fetching more contributions:', error);
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

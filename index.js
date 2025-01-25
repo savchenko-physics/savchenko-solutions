@@ -17,9 +17,10 @@ const i18n = require('i18n');
 const connectPgSimple = require('connect-pg-simple'); // Add this import
 const multer = require('multer');
 const getContributionsList = require('./contributions_list');
-const { getContribution, getContributionsByUserId } = require('./contributions');
+const { getContribution, getContributionsByUserId, getTotalContributions } = require('./contributions');
 const renderFileList = require('./file-list');
 const { renderPost, getPageViewsData } = require('./post'); // Import the renderPost function
+const getUserProfile = require('./userProfile');
 
 const app = express();
 const PORT = 3000;
@@ -108,57 +109,7 @@ app.get('/img/:name', (req, res) => {
 });
 
 // Add a new route for user profiles
-app.get("/user/:username", async (req, res) => {
-    console.log(req.params);
-    const { username } = req.params;
-
-    try {
-        // Query the database for the user's information
-        const userResult = await pool.query(
-            "SELECT id, full_name FROM users WHERE username = $1",
-            [username]
-        );
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).render("404", {
-                __: i18n.__,
-                pageUrl: req.originalUrl,
-                lang: req.query.lang || 'en'
-            });
-        }
-
-        const user = userResult.rows[0];
-
-        // Query the database for the user's contributions
-        const contributionsResult = await pool.query(
-            `SELECT 
-                problem_name, 
-                language, 
-                edited_at 
-            FROM contributions 
-            WHERE user_id = $1 
-            ORDER BY edited_at DESC`,
-            [user.id]
-        );
-
-        const contributions = contributionsResult.rows;
-
-        // Render the user profile page
-        res.render("user_profile", {
-            __: i18n.__,
-            lang: req.query.lang || 'en',
-            username,
-            fullName: user.full_name,
-            contributions
-        });
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        res.status(500).render("500", {
-            __: i18n.__,
-            lang: req.query.lang || 'en'
-        });
-    }
-});
+app.get("/user/:username", getUserProfile);
 
 app.post("/create-problem", async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
@@ -335,6 +286,7 @@ $$ x(t)=\\frac{bt^3}{6} $$
 });
 
 
+
 app.get("/login", checkNotAuthenticated, (req, res) => {
     i18n.setLocale(res, 'en'); // Default to English for login
     res.render("login", {
@@ -469,67 +421,9 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
             "SELECT * FROM users WHERE id = $1",
             [req.session.userId]
         );
-
-        const offset = parseInt(req.query.offset) || 0;
-        const limit = 25; // Number of contributions to fetch per request
-        
-        const contributionsCountResult = await pool.query(
-            `
-              SELECT COUNT(*) AS total_contributions
-              FROM (
-                  SELECT 
-                      id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
-                  FROM github_contributions
-                  UNION ALL
-                  SELECT 
-                      id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
-                  FROM contributions
-              ) c
-              WHERE c.user_id = $1
-            `,
-            [req.session.userId]
-          );
-          
-        const totalContributions = contributionsCountResult.rows[0].total_contributions;
-          
-        const contributionsResult = await pool.query(
-            `SELECT 
-                c.*, 
-                u.username,
-                u.full_name
-            FROM (
-                SELECT 
-                    id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
-                FROM github_contributions
-                UNION ALL
-                SELECT 
-                    id, user_id, edited_at, problem_name, language, original_content, new_content, ip_address, content_changed
-                FROM contributions
-            ) c
-            LEFT JOIN users u ON c.user_id = u.id
-            WHERE c.user_id = $1
-            ORDER BY c.edited_at DESC
-            LIMIT $2 OFFSET $3`,
-            [req.session.userId, limit, offset]
-        );
-
+        console.log(userResult);
         const user = userResult.rows[0];
-        const contributions = contributionsResult.rows;
-
-        res.render("profile", {
-            __: i18n.__,
-            lang,
-            username: user.username,
-            email: user.email,
-            fullName: user.full_name,
-            joinDate: new Date(user.created_at),
-            contributions,
-            totalEdits: contributions.length,
-            totalContributions: totalContributions,
-            userId: req.session.userId,
-            error: req.query.error || "",
-            success: req.query.success || ""
-        });
+        res.redirect(`/user/${user.username}`);
     } catch (error) {
         console.error(error);
         res.redirect(`/${lang}/login?error=${i18n.__('Something went wrong')}`);
