@@ -20,8 +20,11 @@
                     <p class="mb-0" style="color: #555; font-size: 0.9rem;"><%= __('motto') %></p>
                 </div>
             </div>
-            <div class="search">
-                <input type="text" class="form-control" placeholder="<%= __('menu.searchPlaceholder') %>">
+            <div class="search position-relative">
+                <input type="text" id="searchInput" class="form-control" placeholder="<%= __('menu.searchPlaceholder') %>">
+                <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-sm" style="display: none; z-index: 1000; width: 100%;">
+                    <ul class="list-unstyled mb-0"></ul>
+                </div>
             </div>
             <div class="language d-flex align-items-center">
                 <% if (lang === 'en') { %>
@@ -81,6 +84,15 @@
             </div>
         </div>
     </main>
+    <div id="edit-popup" class="" style="display: none;">
+        <h3><%= __('popup.title') %></h3>
+        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>">
+        <button id="submit-problem"><%= __('popup.submit') %></button>
+        <button id="cancel-edit"><%= __('popup.cancel') %></button>
+    </div>
+
+    <div id="popup-overlay" class="" style="display: none;">
+    </div>
 
     <section class="container my-5">
         <div class="row">
@@ -93,6 +105,14 @@
                         <span class="text-secondary"><%= __('chapter') %> <%= chapterIndex + 1 %></span>
                         <span class="savchenko-color font-weight-bold">
                             <%= chapter.title %>
+                        </span>
+                        <span>
+                            <a href="#" class="edit-button savchenko-color" data-chapter="<%= chapterIndex + 1 %>">
+                                <span class="upload-text"><%= __('upload') %></span>
+                                <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                                </svg>
+                            </a>
                         </span>
                     </p>
                     
@@ -185,33 +205,184 @@
                 <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm">
                     <h3 class="text-center mb-4"><%= __('description.contributions2') %></h3>
                     <div class="contribution-history timeline">
+                        <% recentContributions.forEach(contribution => { %>
                         <div class="timeline-item">
                             <div class="timeline-content nbl-bg">
-                                <strong>12.3.4</strong> <%= __('description.editedBy') %> astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">12:10 Jun 20</span>
+                                <strong><%= contribution.version %></strong> 
+                                <% if (lang === 'en') { %>
+                                <span class="text-muted">
+                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="text-primary text-decoration-none">
+                                        <%= lang === 'en' ? 'edited' : 'изменена' %>
+                                    </a> 
+                                    <span class="text-dark font-weight-bold"><%= contribution.editor %></span>
+                                </span>
+                                <% } else { %>
+                                <span class="text-muted">
+                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="text-primary text-decoration-none">
+                                        <%= lang === 'en' ? 'edited' : 'изменена' %>
+                                    </a> 
+                                    <span class="text-dark font-weight-bold"><%= contribution.editor %></span>
+                                </span>
+                                <% } %>
+                                <span style="font-size: 0.8rem; color: #888;"><%= contribution.timestamp %></span>
                             </div>
                         </div>
-                        <div class="timeline-item">
-                            <div class="timeline-content nbl-bg">
-                                <strong>15.3.1</strong> <%= __('description.editedBy') %> astrosander 
-                                <span style="font-size: 0.8rem; color: #888;">10:02 Jun 19</span>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-content nbl-bg">
-                                <strong>17.8.4</strong> <%= __('description.editedBy') %> astrosander 
-                                <span style="font-size: 0.8rem; color: #888;"> 08:21 Jun 12</span>
-                            </div>
-                        </div>
+                        <% }); %>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <style>
+        .search-results {
+            max-height: 200px; /* Limit the height of the results */
+            overflow-y: auto; /* Add scroll if results exceed max height */
+            font-size: 0.85rem; /* Smaller font size for search results */
+        }
+        .search-results ul {
+            padding: 0;
+            margin: 0;
+        }
+        .search-results li {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        .search-results li:hover {
+            background-color: #f1f1f1;
+        }
+    </style>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        const searchInput = document.getElementById("searchInput");
+        const searchResults = document.getElementById("searchResults");
+        const searchResultsList = document.querySelector("#searchResults ul");
+
+        searchInput.addEventListener("input", async () => {
+            const query = searchInput.value.trim();
+
+            if (query.length === 0) {
+                searchResults.style.display = "none";
+                searchResultsList.innerHTML = "";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.results.length > 0) {
+                    const limitedResults = data.results.slice(0, 5);
+                    searchResultsList.innerHTML = limitedResults.map((result, index) => `
+                        <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                            <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
+                                <span class="cdx-menu-item__text">
+                                    <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                                    <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                                </span>
+                            </a>
+                        </li>
+                    `).join("");
+                    searchResults.style.display = "block";
+                } else {
+                    searchResultsList.innerHTML = `
+                        <li class="cdx-menu-item cdx-menu-item--enabled">
+                            <span class="cdx-menu-item__content">
+                                <span class="cdx-menu-item__text">No results found.</span>
+                            </span>
+                        </li>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching search results:', error);
+            }
+        });
+    </script>
+        <!-- Add these elements somewhere in your HTML body -->
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // Add preload class to body initially
+                document.body.classList.add('preload');
+                
+                // Remove preload class after a delay
+                setTimeout(() => {
+                    document.body.classList.remove('preload');
+                }, 500);
+    
+                const popup = document.getElementById("edit-popup");
+                const overlay = document.getElementById("popup-overlay");
+                const problemInput = document.getElementById("problem-name");
+                let currentChapter;
+    
+                function showPopup() {
+                    popup.style.display = "block";
+                    overlay.style.display = "block";
+                    // Force reflow
+                    popup.offsetHeight;
+                    overlay.offsetHeight;
+                    // Add active class to trigger animations
+                    popup.classList.add("active");
+                    overlay.classList.add("active");
+                }
+    
+                function hidePopup() {
+                    popup.classList.remove("active");
+                    overlay.classList.remove("active");
+                    // Wait for animations to complete before hiding elements
+                    setTimeout(() => {
+                        popup.style.display = "none";
+                        overlay.style.display = "none";
+                        problemInput.value = "";
+                    }, 300);
+                }
+    
+                document.querySelectorAll(".edit-button").forEach(button => {
+                    button.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        currentChapter = button.dataset.chapter;
+                        showPopup();
+                    });
+                });
+    
+                document.getElementById("cancel-edit").addEventListener("click", () => {
+                    hidePopup();
+                });
+    
+                document.getElementById("submit-problem").addEventListener("click", () => {
+                    const problemName = problemInput.value.trim();
+                    if (problemName) {
+                        fetch("/create-problem", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ 
+                                problemName, 
+                                chapter: currentChapter,
+                                lang: 'en'
+                            })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.redirectUrl) {
+                                    window.location.href = data.redirectUrl;
+                                } else {
+                                    alert(data.message);
+                                    hidePopup();
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error:", error);
+                                alert("An error occurred. Please try again.");
+                            });
+                    } else {
+                        alert('Please enter a valid problem name.');
+                    }
+                });
+            });
+        </script>
+    
 </body>
 
 </html>
