@@ -248,7 +248,11 @@
     <h1><%= __('contributions.changesFor') %> <span style="color: var(--secondary-color);">#<%= contribution.id %></span></h1>
 
     <div class="container" style="padding-bottom: 5px;">
-        <a href="/<%= lang %>/profile" class="back-link">
+        <% if (contribution.editor_identifier) { %>
+            <a href="/user/<%= contribution.editor_identifier %>" class="back-link">
+        <% } else { %>
+            <a href="/" class="back-link">
+        <% } %>
             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>

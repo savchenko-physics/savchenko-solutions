@@ -2,9 +2,21 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-language" content="en">
+    <meta name="keywords" content="<%= __('meta.keywords') %>">
+    <meta name="description" content="<%= __('meta.description') %>">
+    <meta name="author" content="<%= __('meta.author') %>">
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+    <meta property="og:title" content="<%= __('title') %>">
+    <meta property="og:image" content="img/logo.png">
+    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+    <meta name="yandex-verification" content="6cfda41f74038368">
     <title><%= __('title') %></title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="/js/jquery-1.10.1.min.js"></script>
+    
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/main_page.css">
@@ -47,7 +59,7 @@
         <h2 class="text-center my-5"><%= __('subtitle') %></h2>
         <div class="d-flex align-items-stretch">
             <div class="col-md-7">
-                <div class="content shadow-sm br-10 p-4 h-100 bl-bg">
+                <div class="content shadow-sm br-10 p-4 h-100 bl-bg text-justify">
                     <p><%= __('description.intro') %></p>
                     <p><%= __('description.project') %> <%= __('description.team') %>. <%= __('description.moto') %> <%= __('description.contribute') %> <a href="/study-guide"><%= __('description.guide') %></a>.</p>
                 </div>
@@ -66,7 +78,7 @@
                 </div>
             </div>
             <div class="col-9 mt-4 d-flex align-items-stretch">
-                <div class="content bg-light p-4 w-100 bl-bg shadow-sm br-10">
+                <div class="content bg-light p-4 w-100 bl-bg shadow-sm br-10 text-justify">
                     <h3><%= __('description.acknowledgments') %></h3>
                     <p><%= __('description.deepestThanks') %></p>
                     <h4><%= __('description.coreTeam') %></h4>
@@ -78,7 +90,7 @@
                         <a href="/user/a.yersh/" style="font-size: 1.1rem;">Andrei Yersh</a>
                         <a href="/user/jepkinsss/" style="font-size: 1.1rem;">Artem Levko</a>
                         <a href="/user/diikann_/" style="font-size: 1.1rem;">Dzikan Mikita</a>
-                        <a href="/user/" style="font-size: 1.1rem;">See all...</a>
+                        <a href="/about#team" style="font-size: 1.1rem;">See all...</a>
                     </div>
                 </div>
             </div>
@@ -120,7 +132,7 @@
                         <% chapter.sections.forEach((section, sectionIndex)=> {
                             const hasProblems = section.problems.some(column => column.length > 0);
                             if (hasProblems) { %>
-                            <p class="mt-4 mb-2 font-weight-bold">
+                            <p class="mt-4 mb-2 font-weight-bold" id="<%= section.number %>">
                                 § <%= section.number %> <%= section.title %>
                             </p>
 

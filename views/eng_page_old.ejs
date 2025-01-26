@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="content-language" content="en">
+    <meta name="keywords" content="<%= __('meta.keywords') %>">
+    <meta name="description" content="<%= __('meta.description') %>">
+    <meta name="author" content="<%= __('meta.author') %>">
+    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+    <meta property="og:title" content="<%= __('title') %>">
+    <meta property="og:image" content="img/logo.png">
+    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+    <meta name="yandex-verification" content="6cfda41f74038368">
+    <title><%= __('title') %></title>
+    <link rel="stylesheet" href="/css/css-latex/style.css">
+    <link rel="icon" href="/img/logo.png" type="image/png">
+    <script src="/js/jquery-1.10.1.min.js"></script>
+    <script async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script type="text/x-mathjax-config">
+          MathJax.Hub.Config({
+              extensions: ['tex2jax.js'],
+              jax: ['input/TeX', 'output/HTML-CSS'],
+              tex2jax: {
+                  inlineMath: [['$', '$'], ['$', '$']],
+                  processEscapes: true,
+                  processClass: 'tex2jax',
+                  ignoreClass: 'html'
+              },
+              showProcessingMessages: false,
+              messageStyle: 'none'
+          });
+      </script>
+</head>
+
+<body id="top">
+    <div class="pinned-container collapsed" id="pinned-container">
+        <h2 style="margin: 0 0 20px 15px; text-align: left;"><%= __('contents') %></h2>
+        <ol style="list-style-type:none; padding: 0;margin: 0;">
+            <li><a href="#description"><img src="/img/info.svg" style="width: 22px; vertical-align: middle; margin-right: 5px; margin-top: -4px; display: inline;"><%= __('chapters.about') %></a></li>
+            <% 
+            const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV'];
+            for(let i = 1; i <= 14; i++) { %>
+                <li><a href="#<%= i %>"><%= romanNumerals[i-1] %>. <%= __(`chapters.${i}`) %></a></li>
+            <% } %>
+        </ol>
+    </div>
+    <button class="toggle-sidebar collapsed" id="toggle-sidebar" style="left: 0px;">
+        <img src="/img/arrow-back.svg">
+    </button>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById('pinned-container');
+            const toggleBtn = document.getElementById('toggle-sidebar');
+            
+            // Get saved state from localStorage, prioritizing the saved state
+            let isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            // Update UI based on the collapsed state
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
+                toggleBtn.classList.add('collapsed');
+                toggleBtn.style.left = '0px';
+                // Add expanded class to main content
+                document.querySelectorAll('.margin-main').forEach(element => {
+                    element.classList.add('expanded');
+                });
+                document.querySelector('footer')?.classList.add('expanded');
+            }
+        });
+    </script>
+    <style>
+        a[href$='.pdf'] {
+            background-image: none !important;
+        }
+
+        .pinned-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: #fff;
+            padding: 30px 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            transform: translateX(0);
+            transition: transform 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+                       opacity 0.5s cubic-bezier(0.33, 1, 0.68, 1),
+                       box-shadow 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+            overflow-y: auto;
+            z-index: 100;
+            width: 250px;
+            border-radius: 0;
+            scrollbar-width: thin; /* For Firefox */
+            scrollbar-color: rgba(0, 0, 0, 0.3) transparent; /* For Firefox */
+            font-family: "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
+            @media (max-width: 768px) {
+                background: rgba(255, 255, 255, 0.98);
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+        }
+
+        .pinned-container.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .pinned-container ol {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pinned-container li {
+            margin: 6px 0;
+            transition: all 0.2s ease;
+        }
+
+        .pinned-container a {
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #333;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 0;
+            transition: all 0.2s ease;
+        }
+
+        .pinned-container a:hover {
+            background: #f0f4ff;
+            color: #36c;
+            transform: translateX(5px);
+            text-decoration: none;
+        }
+
+        .pinned-container a.active {
+            background: #f0f4ff;
+            color: #36c;
+            transform: translateX(5px);
+            font-weight: bold;
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 250px;
+            background: rgba(51, 102, 204, 0.95);
+            color: white;
+            border: none;
+            padding: 35px 6px;
+            cursor: pointer;
+            z-index: 101;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.5s cubic-bezier(0.33, 1, 0.68, 1);
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 20px rgba(51, 102, 204, 0.2);
+        }
+
+        .toggle-sidebar.collapsed {
+            left: 0;
+            background: rgba(51, 102, 204, 0.7);
+            padding: 25px 4px;
+            box-shadow: 0 2px 10px rgba(51, 102, 204, 0.1);
+        }
+
+        .toggle-sidebar:hover {
+            background: #2b5099;
+        }
+
+        .toggle-sidebar.collapsed:hover {
+            background: rgba(43, 80, 153, 0.85);
+            padding: 30px 5px;
+        }
+
+        @media (min-width: 1024px) {
+            .margin-main {
+                margin-left: 50px;
+                min-width: 700px;
+            }
+
+            .margin-main.loaded, footer.loaded {
+                transition: margin-left 0.3s ease;
+            }
+
+            .margin-main.expanded, footer.expanded {
+                margin-left: -30px;
+            }
+        }
+
+        #edit-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            z-index: 1000;
+            background: #fff;
+            padding: 35px;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 450px;
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #edit-popup.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        #edit-popup h3 {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        #edit-popup input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 25px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        #edit-popup input:focus {
+            outline: none;
+            border-color: #36c;
+        }
+
+        #edit-popup button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        #submit-problem {
+            background-color: #36c;
+            color: #fff;
+            margin-right: 12px;
+        }
+
+        #submit-problem:hover {
+            background-color: #2b5099;
+        }
+
+        #cancel-edit {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        #cancel-edit:hover {
+            background-color: #e0e0e0;
+        }
+
+        #popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            z-index: 999;
+            backdrop-filter: blur(0px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #popup-overlay.active {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+        }
+
+        /* Add smooth transition for content margin */
+        .margin-main {
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .toggle-sidebar img {
+            width: 16px;
+            height: auto;
+            transform: rotate(0deg);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.9;
+        }
+
+        .toggle-sidebar.collapsed img {
+            transform: rotate(180deg);
+        }
+
+        /* Add media query for mobile devices */
+        @media (max-width: 768px) {
+            .toggle-sidebar {
+                top: 20px;
+                transform: none;
+                border-radius: 0 8px 8px 0;
+                padding: 15px 6px;
+                background: rgba(51, 102, 204, 0.8);
+            }
+
+            .toggle-sidebar.collapsed {
+                padding: 12px 4px;
+            }
+
+            .toggle-sidebar.collapsed:hover {
+                padding: 15px 5px;
+            }
+        }
+
+        /* Webkit scrollbar styling (Chrome, Safari, Edge) */
+        .pinned-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pinned-container::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+
+        .pinned-container::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .pinned-container::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Add smooth hover effect for the entire scrollbar area */
+        .pinned-container:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .pinned-container h2 {
+            font-family: "Latin Modern Roman", "Computer Modern", Georgia, Cambria, "Times New Roman", Times, serif;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        /* Add this CSS to handle footer margin */
+        footer {
+            transition: margin-left 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            .margin-main, footer {
+                margin-left: 50px;
+                min-width: 700px;
+            }
+
+            .margin-main.loaded, footer.loaded {
+                transition: margin-left 0.3s ease;
+            }
+
+            .margin-main.expanded, footer.expanded {
+                margin-left: -30px;
+            }
+        }
+
+        .pinned-container img[src="/img/info.svg"] {
+            transition: content 0.2s ease;
+        }
+
+        .pinned-container a:hover img[src="/img/info.svg"] {
+            content: url('/img/info_pressed.svg');
+            transition-delay: 0.1s;
+            filter: brightness(0) saturate(100%) invert(23%) sepia(70%) saturate(1366%) hue-rotate(212deg) brightness(91%) contrast(87%);
+        }
+
+        /* Add this new media query section */
+        @media (max-width: 768px) {
+
+            .pinned-container:not(.collapsed) ~ main {
+                filter: blur(2px);
+                pointer-events: none;
+            }
+        }
+
+        /* Add this class to temporarily disable transitions */
+        .preload * {
+            transition: none !important;
+        }
+
+        /* Then keep your existing transition styles */
+        .margin-main {
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @media (min-width: 1024px) {
+            .margin-main, footer {
+                margin-left: 50px;
+                min-width: 700px;
+                transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .margin-main.loaded, footer.loaded {
+                transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .margin-main.expanded, footer.expanded {
+                margin-left: -30px;
+            }
+        }
+
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .lang-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #333;
+            transition: color 0.2s;
+        }
+
+        .lang-link:hover {
+            color: #36c;
+        }
+
+        .lang-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 5px;
+        }
+
+        .chapter-title {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        .chapter-header {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .chapter-main {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chapter-number {
+            color: #666;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .chapter-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: hsla(0, 100%, 33%, 1);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .chapter-link:hover {
+            color: #2b5099;
+        }
+
+        .edit-button {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.9rem;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .edit-button:hover {
+            color: hsla(0, 100%, 33%, 1);
+            border-color: hsla(0, 100%, 33%, 0.4);
+            background: hsla(0, 100%, 33%, 0.01);
+        }
+
+        .external-link-icon, .upload-icon {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 768px) {
+            .chapter-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            
+            .chapter-main {
+                flex-direction: row;
+                gap: 0.5rem;
+                font-size: 0.9em;
+            }
+
+            .chapter-number {
+                font-size: 0.85em;
+            }
+
+            .chapter-title-text {
+                font-size: 0.9em;
+            }
+
+            .edit-button {
+                padding: 0.4rem;
+                transform: scale(0.9);
+            }
+            
+            .upload-text {
+                display: none;
+            }
+
+            .chapter-title {
+                margin: 0;
+            }
+        }
+
+        .desktop-title {
+            display: none;
+        }
+
+        .mobile-title {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .desktop-title {
+                display: block;
+            }
+
+            .mobile-title {
+                display: none;
+            }
+        }
+
+        .chapter-word {
+            font-weight: normal;
+            color: #666;
+            margin-right: 0.25rem;
+        }
+
+        .section-container {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .section-container:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .section-header {
+            line-height: 1.2rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin: 0 0 1rem 0;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-number {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 500;
+            white-space: nowrap;
+            padding-top: 1px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .problem-column {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .problem-link {
+            display: block;
+            padding: 0.4rem 0.6rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid transparent;  
+            font-size: 1.1rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .problem-link:hover {
+            background: #f0f4ff;
+            border-color: #36c;
+            transform: translateX(3px);
+            box-shadow: 2px 4px 8px rgba(51, 102, 204, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .section-container {
+                padding: 1rem;
+                margin: 1.5rem 0;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            .problems-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.4rem;
+            }
+
+            .problem-link {
+                padding: 0.3rem 0.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        .section-content {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .section-content:last-child {
+            border-bottom: none;
+        }
+
+        .section-content .section-header {
+            margin-bottom: 1rem;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .section-content {
+                padding: 1rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .description {
+                font-size: 0.95rem;  /* Increased from 0.82rem for better readability on mobile */
+                line-height: 1.1;    /* Adjusted line height for mobile */
+            }
+        }
+
+        .header-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .logo-link {
+            text-decoration: none;
+            color: inherit;
+            display: inline-block;
+            /* margin-bottom: 1.5rem; */
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            font-size: 2.2rem;
+            font-weight: 600;
+        }
+
+        .logo-image {
+            height: 4rem;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            margin: 0.2rem 0 1rem 0;
+            line-height: 1.4;
+            text-align: center;
+        }
+
+        .header-motto {
+            display: block;
+            font-style: italic;
+            font-weight: 600;
+            /* color: hsla(0, 100%, 33%, 1); */
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .lang-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: #f0f4ff;
+            border-radius: 8px;
+            color: hsl(240, 100%, 33%) !important;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .lang-switcher:hover {
+            background: #e0e8ff;
+            transform: translateY(-1px);
+        }
+
+        .lang-switcher img {
+            width: 20px;
+            height: 20px;
+        }
+
+
+        .header-description {
+            max-width: 700px;
+            margin: 1rem auto;
+            line-height: 1.4;
+            color: #444;
+        }
+
+        .description-paragraph {
+            display: block;
+            text-indent: 2em;
+            margin: 0.1em 0;
+            font-size: 0.99rem;
+        }
+
+        .description-paragraph:first-child {
+            margin-top: 0;
+        }
+
+        .description-paragraph:last-child {
+            margin-bottom: 0;
+        }
+
+        .header-description a {
+            color: hsla(0, 100%, 33%, 1);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .header-description a:hover {
+            color: hsla(0, 100%, 33%, 1);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 1.5rem 0rem 0.2rem 0rem;
+            }
+
+            .logo {
+                font-size: 1.6rem;
+                gap: 0.5rem;
+            }
+
+            .logo-image {
+                height: 3rem;
+            }
+
+            .header-subtitle {
+                font-size: 1rem;
+            }
+
+            .header-actions {
+                gap: 1rem;
+            }
+
+            .lang-switcher, .statements-link {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Add these font definitions near the top of your CSS */
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('/fonts/lmroman10-regular.woff2') format('woff2'),
+                 url('/fonts/lmroman10-regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('/fonts/lmroman10-bold.woff2') format('woff2'),
+                 url('/fonts/lmroman10-bold.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Latin Modern Roman';
+            src: url('/fonts/lmroman10-italic.woff2') format('woff2'),
+                 url('/fonts/lmroman10-italic.woff') format('woff');
+            font-weight: normal;
+            font-style: italic;
+            font-display: swap;
+        }
+
+        /* Update body font */
+        body {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Update specific element fonts */
+        .header-subtitle {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+        }
+
+        .logo-text {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+        }
+
+        .chapter-title-text {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+        }
+
+        .section-title {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+        }
+
+        /* Update problem links to use the same font */
+        .problem-link {
+            font-family: "Latin Modern Roman", Georgia, "Times New Roman", serif;
+        }
+
+        /* Keep the edit popup with a sans-serif font for better UI readability */
+        #edit-popup {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        .header-description {
+            max-width: 700px;
+            margin: 1rem auto;
+            line-height: 1.4;
+            color: #444;
+        }
+
+        .description-paragraph {
+            display: block;
+            text-indent: 2em;
+            margin: 0.1em 0;
+            font-size: 0.99rem;
+        }
+
+        /* Add these media queries for mobile optimization */
+        @media (max-width: 768px) {
+            .header-description {
+                margin: 0.75rem auto;
+                line-height: 1.2;
+                padding: 0 0.5rem;
+            }
+
+            .description-paragraph {
+                text-indent: 1.4em;
+                font-size: 0.85rem;
+                margin: 0.5em 0;
+            }
+        }
+
+        .external-author-link {
+            align-items: center;
+            gap: 0.25rem;
+            color: hsla(0, 100%, 33%, 1);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .external-author-link:hover {
+            color: #2b5099;
+        }
+
+        .external-author-link .external-link-icon {
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        @media (max-width: 768px) {
+            .external-author-link .external-link-icon {
+                width: 10px;
+                height: 10px;
+            }
+        }
+    </style>
+    <main>
+        <header class="margin-main" id="description">
+            <div class="header-container">
+                <a href="" class="logo-link">
+                    <div class="logo">
+                        <img src="/img/book.png" alt="Book logo" class="logo-image">
+                        <span class="logo-text"><%= __('title') %></span>
+                    </div>
+                </a>
+                
+                <p class="header-subtitle">
+                    <%= __('subtitle') %>
+                    <span class="header-motto"><%= __('motto') %></span>
+                </p>
+
+                <div class="header-actions">
+                    <a href="<%= __('oppositeLang') %>" class="lang-switcher">
+                        <img src="/img/language.svg" alt="Language icon">
+                        <span><%= __('russianVersion') %></span>
+                    </a>
+                    
+                    <a href="<%= __('statementsLink') %>" class="lang-switcher" target="_blank">
+                        <img src="/img/document.svg" alt="Document icon">
+                        <span><%= __('problemStatements') %></span>
+                    </a>
+                </div>
+
+                <p class="header-description">
+                    <span class="description-paragraph">
+                        <%= __('description.intro') %>
+                    </span>
+                    <span class="description-paragraph"><%= __('description.project') %><a href="about#team" class="external-author-link">
+                            <%= __('description.team')%>
+                            <svg class="external-link-icon" viewBox="0 0 24 24" width="12" height="12">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+                            </svg></a>.
+                        <%= __('description.moto') %>
+                        <%= __('description.contribute') %>
+                        <a href="study-guide" class="external-author-link">
+                            <%= __('description.guide') %>
+                            <svg class="external-link-icon" viewBox="0 0 24 24" width="12" height="12">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+                            </svg></a>.                    
+                    </span>
+                </p>
+            </div>
+        </header>
+
+        <article class="margin-main">
+            <% chapters.forEach((chapter, chapterIndex)=> {
+                const hasContent = chapter.sections.some(section => section.problems.some(column => column.length > 0));
+                if (hasContent) { %>
+                    <div class="section-container">
+                        <div class="section-content">
+                            <h2 id="<%= chapterIndex + 1 %>" class="chapter-title">
+                                <div class="chapter-header">
+                                    <div class="chapter-main">
+                                        <% if (chapter.theory) { %>
+                                            <a href="theory/<%= chapter.theory %>" target="_blank" class="chapter-link">
+                                                <div class="desktop-title">
+                                                    <span class="chapter-number"><span class="chapter-word"><%= __('chapter') %></span> <%= chapterIndex + 1 %></span>
+                                                    <span class="chapter-title-text"><%= chapter.title %></span>
+                                                </div>
+                                                <div class="mobile-title">
+                                                    <span class="chapter-title-text"><%= chapterIndex + 1 %>. <%= chapter.title %></span>
+                                                </div>
+                                                <svg class="external-link-icon" viewBox="0 0 24 24" width="16" height="16">
+                                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/>
+                                                </svg>
+                                            </a>
+                                        <% } else { %>
+                                            <div class="desktop-title">
+                                                <span class="chapter-number"><span class="chapter-word"><%= __('chapter') %></span> <%= chapterIndex + 1 %></span>
+                                                <span class="chapter-title-text"><%= chapter.title %></span>
+                                            </div>
+                                            <div class="mobile-title">
+                                                <span class="chapter-title-text"><%= chapterIndex + 1 %>. <%= chapter.title %></span>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    <a href="#" class="edit-button" data-chapter="<%= chapterIndex + 1 %>">
+                                        <span class="upload-text"><%= __('upload') %></span>
+                                        <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            </h2>
+                        </div>
+
+                        <% chapter.sections.forEach((section, sectionIndex) => {
+                            const hasProblems = section.problems.some(column => column.length > 0);
+                            if (hasProblems) { %>
+                                <div class="section-content">
+                                    <h3 id="<%= section.number %>" class="section-header">
+                                        
+                                        <div class="desktop-title">
+                                            <span class="section-number">§ <%= section.number %></span>
+                                            <span class="section-title"><%= section.title %></span>
+                                        </div>
+                                        <div class="mobile-title">
+                                            <span class="section-title">§ <%= section.number %>. <%= section.title %></span>
+                                        </div>
+                                    </h3>
+
+                                    <div class="problems-grid">
+                                        <% section.problems.forEach((column) => {
+                                            if (column.length > 0) { %>
+                                                <div class="problem-column">
+                                                    <% column.forEach((problem) => { %>
+                                                        <a href="/<%= lang %>/<%= problem %>" class="problem-link">
+                                                            <%= problem %>
+                                                        </a>
+                                                    <% }); %>
+                                                </div>
+                                            <% }
+                                        }); %>
+                                    </div>
+                                </div>
+                            <% }
+                        }); %>
+                    </div>
+                <% }
+            }); %>
+        </article>
+    </main>
+
+    <!-- Pop-up Window -->
+    <div id="edit-popup">
+        <h3><%= __('popup.title') %></h3>
+        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>" />
+        <button id="submit-problem"><%= __('popup.submit') %></button>
+        <button id="cancel-edit"><%= __('popup.cancel') %></button>
+    </div>
+
+    <!-- Overlay -->
+    <div id="popup-overlay">
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Add preload class to body initially
+            document.body.classList.add('preload');
+            
+            // Remove preload class after a delay
+            setTimeout(() => {
+                document.body.classList.remove('preload');
+            }, 500);
+
+            const popup = document.getElementById("edit-popup");
+            const overlay = document.getElementById("popup-overlay");
+            const problemInput = document.getElementById("problem-name");
+            let currentChapter;
+
+            function showPopup() {
+                popup.style.display = "block";
+                overlay.style.display = "block";
+                // Force reflow
+                popup.offsetHeight;
+                overlay.offsetHeight;
+                // Add active class to trigger animations
+                popup.classList.add("active");
+                overlay.classList.add("active");
+            }
+
+            function hidePopup() {
+                popup.classList.remove("active");
+                overlay.classList.remove("active");
+                // Wait for animations to complete before hiding elements
+                setTimeout(() => {
+                    popup.style.display = "none";
+                    overlay.style.display = "none";
+                    problemInput.value = "";
+                }, 300);
+            }
+
+            document.querySelectorAll(".edit-button").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    currentChapter = button.dataset.chapter;
+                    showPopup();
+                });
+            });
+
+            document.getElementById("cancel-edit").addEventListener("click", () => {
+                hidePopup();
+            });
+
+            document.getElementById("submit-problem").addEventListener("click", () => {
+                const problemName = problemInput.value.trim();
+                if (problemName) {
+                    fetch("/create-problem", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            problemName, 
+                            chapter: currentChapter,
+                            lang: '<%= lang %>'
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.redirectUrl) {
+                                window.location.href = data.redirectUrl;
+                            } else {
+                                alert(data.message);
+                                hidePopup();
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An error occurred. Please try again.");
+                        });
+                } else {
+                    alert('<%= lang === "ru" ? "Пожалуйста, введите корректное название задачи." : "Please enter a valid problem name." %>');
+                }
+            });
+        });
+    </script>
+
+
+
+
+
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'],],
+            },
+        }
+        const typeFaceToggle = document.getElementById('typeface-toggle')
+        const typeface = document.getElementById('typeface')
+        typeFaceToggle.addEventListener('click', () => {
+            document.body.classList.toggle('libertinus')
+            typeface.textContent = document.body.classList.contains('libertinus') ? 'Libertinus' : 'Latin Modern'
+        })
+
+        const darkModeToggle = document.getElementById('dark-mode-toggle')
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('latex-dark')
+        })
+    </script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-DDMB38YMLD');
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <footer class="row container">
+        <br>
+        <p><small><%= __('footer.copyright') %><br></small></p>
+        <p>
+            <small>
+                <%= __('footer.rights') %><br>
+                <%= __('footer.commercial') %><br>
+                aliaksandr@melnichenka.com<br>
+            </small>
+        </p>
+    </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById('pinned-container');
+            const toggleBtn = document.getElementById('toggle-sidebar');
+            const mainContent = document.querySelectorAll('.margin-main');
+            const footer = document.querySelector('footer');
+            const sidebarLinks = sidebar.getElementsByTagName('a');
+
+            // Get saved state from localStorage, default to screen size if not found
+            let isCollapsed = localStorage.getItem('sidebarCollapsed') !== null
+                ? localStorage.getItem('sidebarCollapsed') === 'true'
+                : window.innerWidth < 1024;
+            updateSidebarState();
+
+            // Add click event listener to document
+            document.addEventListener('click', (event) => {
+                // Collapse on outside click for small screens
+                if (window.innerWidth < 1024 && 
+                    !isCollapsed && 
+                    !sidebar.contains(event.target) && 
+                    !toggleBtn.contains(event.target)) {
+                    isCollapsed = true;
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                    updateSidebarState();
+                }
+
+                // Collapse when clicking any sidebar links (including the about link)
+                if (window.innerWidth < 1024 && 
+                    !isCollapsed && 
+                    sidebar.contains(event.target) && 
+                    (event.target.tagName === 'A' || event.target.closest('a'))) {
+                    isCollapsed = true;
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                    updateSidebarState();
+                }
+            });
+
+            // Toggle sidebar on button click
+            toggleBtn.addEventListener('click', () => {
+                isCollapsed = !isCollapsed;
+                // Save state to localStorage
+                localStorage.setItem('sidebarCollapsed', isCollapsed);
+                updateSidebarState();
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                if (localStorage.getItem('sidebarCollapsed') === null) {
+                    isCollapsed = window.innerWidth < 1024;
+                    updateSidebarState();
+                }
+            });
+
+            function updateSidebarState() {
+                if (isCollapsed) {
+                    sidebar.classList.add('collapsed');
+                    toggleBtn.classList.add('collapsed');
+                    toggleBtn.style.left = '0px';
+                    mainContent.forEach(element => {
+                        element.classList.add('expanded');
+                    });
+                    footer.classList.add('expanded');
+                } else {
+                    sidebar.classList.remove('collapsed');
+                    toggleBtn.classList.remove('collapsed');
+                    toggleBtn.style.left = '250px';
+                    mainContent.forEach(element => {
+                        element.classList.remove('expanded');
+                    });
+                    footer.classList.remove('expanded');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
+
+</html>

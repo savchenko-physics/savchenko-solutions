@@ -490,14 +490,22 @@ app.get("/logout", (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-    const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
+    // Determine the language from the session or the browser's Accept-Language header
+    const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
+
+    const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
     const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
 
-    i18n.setLocale(res, 'en');
+    i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
 
-    res.render("eng_page", {
+    const userAgent = req.headers['user-agent'];
+    const isMobile = /mobile/i.test(userAgent);
+
+    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    
+    res.render(working_page, {
         __: i18n.__,
         title: i18n.__('title'),
         chapters,
@@ -506,7 +514,7 @@ app.get("/", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        lang: 'en',
+        lang,
         recentContributions // Pass the recent contributions to the template
     });
 });
@@ -563,7 +571,12 @@ app.get("/ru", async (req, res) => {
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
 
-    res.render("eng_page", {
+    const userAgent = req.headers['user-agent'];
+    const isMobile = /mobile/i.test(userAgent);
+
+    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    
+    res.render(working_page, {
         __: i18n.__,
         title: i18n.__('title'),
         chapters,
@@ -577,8 +590,31 @@ app.get("/ru", async (req, res) => {
     });
 });
 
-app.get("/en", (req, res) => {
-    res.redirect("/");
+app.get("/en", async (req, res) => {
+    const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
+    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
+    i18n.setLocale(res, 'en');
+    res.locals.username = req.session.username || null;
+    res.locals.userId = req.session.userId || null;
+
+    const userAgent = req.headers['user-agent'];
+    const isMobile = /mobile/i.test(userAgent);
+    console.log(userAgent);
+
+    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    
+    res.render(working_page, {
+        __: i18n.__,
+        title: i18n.__('title'),
+        chapters,
+        theory,
+        username: res.locals.username,
+        userId: res.locals.userId,
+        sections,
+        pinnedChapters,
+        lang: 'en',
+        recentContributions // Pass the recent contributions to the template
+    });
 });
 
 app.get(/^\/(\d+\.\d+\.\d+)$/, (req, res) => {
