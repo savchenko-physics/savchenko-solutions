@@ -32,12 +32,16 @@ async function getContribution(req, res) {
                 c.caption,
                 c.commit
             FROM (
-                SELECT *, NULL as caption, NULL as commit FROM contributions
-                UNION
+                SELECT 
+                    id, user_id, edited_at, problem_name, language, 
+                    original_content, new_content, ip_address, content_changed, 
+                    NULL as caption, NULL as commit, coauthors
+                FROM contributions
+                UNION ALL
                 SELECT 
                     id, user_id, edited_at, problem_name, language, 
                     original_content, new_content, NULL as ip_address, 
-                    NULL as content_changed, caption, commit
+                    false as content_changed, caption, commit, coauthors
                 FROM github_contributions
             ) c
             LEFT JOIN users u ON c.user_id = u.id
