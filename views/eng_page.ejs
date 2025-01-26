@@ -26,11 +26,13 @@
     <header class="header">
         <div class="d-flex justify-content-between align-items-center py-3 col">
             <div class="logo d-flex align-items-center">
-                <img src="https://savchenkosolutions.com/img/book.png" alt="<%= __('title') %> Logo" style="width: 50px;">
-                <div>
-                    <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;"><%= __('title') %></p>
-                    <p class="mb-0" style="color: #555; font-size: 0.9rem;"><%= __('motto') %></p>
-                </div>
+                <a href="/<%= lang %>/" class="d-flex align-items-center" style="text-decoration: none;">
+                    <img src="https://savchenkosolutions.com/img/book.png" alt="<%= __('title') %> Logo" style="width: 50px;">
+                    <div>
+                        <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;"><%= __('title') %></p>
+                        <p class="mb-0" style="color: #555; font-size: 0.9rem;"><%= __('motto') %></p>
+                    </div>
+                </a>
             </div>
             <div class="search position-relative">
                 <input type="text" id="searchInput" class="form-control" placeholder="<%= __('menu.searchPlaceholder') %>">
@@ -96,15 +98,6 @@
             </div>
         </div>
     </main>
-    <div id="edit-popup" class="" style="display: none;">
-        <h3><%= __('popup.title') %></h3>
-        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>">
-        <button id="submit-problem"><%= __('popup.submit') %></button>
-        <button id="cancel-edit"><%= __('popup.cancel') %></button>
-    </div>
-
-    <div id="popup-overlay" class="" style="display: none;">
-    </div>
 
     <section class="container my-5">
         <div class="row">
@@ -314,86 +307,98 @@
     </script>
         <!-- Add these elements somewhere in your HTML body -->
 
-        <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                // Add preload class to body initially
-                document.body.classList.add('preload');
-                
-                // Remove preload class after a delay
+    <!-- Pop-up Window -->
+    <div id="edit-popup">
+        <h3><%= __('popup.title') %></h3>
+        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>" />
+        <button id="submit-problem"><%= __('popup.submit') %></button>
+        <button id="cancel-edit"><%= __('popup.cancel') %></button>
+    </div>
+
+    <!-- Overlay -->
+    <div id="popup-overlay">
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Add preload class to body initially
+            document.body.classList.add('preload');
+            
+            // Remove preload class after a delay
+            setTimeout(() => {
+                document.body.classList.remove('preload');
+            }, 500);
+
+            const popup = document.getElementById("edit-popup");
+            const overlay = document.getElementById("popup-overlay");
+            const problemInput = document.getElementById("problem-name");
+            let currentChapter;
+
+            function showPopup() {
+                popup.style.display = "block";
+                overlay.style.display = "block";
+                // Force reflow
+                popup.offsetHeight;
+                overlay.offsetHeight;
+                // Add active class to trigger animations
+                popup.classList.add("active");
+                overlay.classList.add("active");
+            }
+
+            function hidePopup() {
+                popup.classList.remove("active");
+                overlay.classList.remove("active");
+                // Wait for animations to complete before hiding elements
                 setTimeout(() => {
-                    document.body.classList.remove('preload');
-                }, 500);
-    
-                const popup = document.getElementById("edit-popup");
-                const overlay = document.getElementById("popup-overlay");
-                const problemInput = document.getElementById("problem-name");
-                let currentChapter;
-    
-                function showPopup() {
-                    popup.style.display = "block";
-                    overlay.style.display = "block";
-                    // Force reflow
-                    popup.offsetHeight;
-                    overlay.offsetHeight;
-                    // Add active class to trigger animations
-                    popup.classList.add("active");
-                    overlay.classList.add("active");
-                }
-    
-                function hidePopup() {
-                    popup.classList.remove("active");
-                    overlay.classList.remove("active");
-                    // Wait for animations to complete before hiding elements
-                    setTimeout(() => {
-                        popup.style.display = "none";
-                        overlay.style.display = "none";
-                        problemInput.value = "";
-                    }, 300);
-                }
-    
-                document.querySelectorAll(".edit-button").forEach(button => {
-                    button.addEventListener("click", (event) => {
-                        event.preventDefault();
-                        currentChapter = button.dataset.chapter;
-                        showPopup();
-                    });
-                });
-    
-                document.getElementById("cancel-edit").addEventListener("click", () => {
-                    hidePopup();
-                });
-    
-                document.getElementById("submit-problem").addEventListener("click", () => {
-                    const problemName = problemInput.value.trim();
-                    if (problemName) {
-                        fetch("/create-problem", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ 
-                                problemName, 
-                                chapter: currentChapter,
-                                lang: 'en'
-                            })
-                        })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.redirectUrl) {
-                                    window.location.href = data.redirectUrl;
-                                } else {
-                                    alert(data.message);
-                                    hidePopup();
-                                }
-                            })
-                            .catch(error => {
-                                console.error("Error:", error);
-                                alert("An error occurred. Please try again.");
-                            });
-                    } else {
-                        alert('Please enter a valid problem name.');
-                    }
+                    popup.style.display = "none";
+                    overlay.style.display = "none";
+                    problemInput.value = "";
+                }, 300);
+            }
+
+            document.querySelectorAll(".edit-button").forEach(button => {
+                button.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    currentChapter = button.dataset.chapter;
+                    showPopup();
                 });
             });
-        </script>
+
+            document.getElementById("cancel-edit").addEventListener("click", () => {
+                hidePopup();
+            });
+
+            document.getElementById("submit-problem").addEventListener("click", () => {
+                const problemName = problemInput.value.trim();
+                if (problemName) {
+                    fetch("/create-problem", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            problemName, 
+                            chapter: currentChapter,
+                            lang: '<%= lang %>'
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.redirectUrl) {
+                                window.location.href = data.redirectUrl;
+                            } else {
+                                alert(data.message);
+                                hidePopup();
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            alert("An error occurred. Please try again.");
+                        });
+                } else {
+                    alert('<%= lang === "ru" ? "Пожалуйста, введите корректное название задачи." : "Please enter a valid problem name." %>');
+                }
+            });
+        });
+    </script>
     
 </body>
 
