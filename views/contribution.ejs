@@ -262,7 +262,7 @@
         <div class="header">
             <h2 class="problem-title">
                 <%= __('contributions.problem') %>: 
-                <a href="/<%= lang %>/<%= contribution.problem_name %>" class="problem-link">
+                <a href="/<%= contribution.language %>/<%= contribution.problem_name %>" class="problem-link">
                     <%= contribution.language %>/<%= contribution.problem_name %>
                 </a>
             </h2>
@@ -277,7 +277,7 @@
                         (<strong>IP: <%= contribution.editor_identifier %></strong>)
                     <% } else { %>
                         <strong style="color: #10b981;"><%= contribution.editor_name %></strong> 
-                        (<strong>@<%= contribution.editor_identifier %></strong>)
+                        (<a href="/user/<%= contribution.editor_identifier %>" style="font-size: 1.1rem; color: #4b5563; text-decoration: none;"><strong>@<%= contribution.editor_identifier %></strong></a>)
                     <% } %>
                 </p>
                 <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 10px;">
