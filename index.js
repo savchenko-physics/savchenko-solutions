@@ -504,6 +504,15 @@ app.get("/", async (req, res) => {
     const isMobile = /mobile/i.test(userAgent);
 
     const working_page = isMobile ? "eng_page_old" : "eng_page";
+
+    if (req.session.userId) {
+        const userResult = await pool.query(
+            "SELECT profile_picture FROM users WHERE id = $1", // Fetch profile_picture
+            [req.session.userId]
+        );
+
+        res.locals.profilePicture = userResult.rows[0].profile_picture;
+    }
     
     res.render(working_page, {
         __: i18n.__,
@@ -514,6 +523,7 @@ app.get("/", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
+        profilePicture: res.locals.profilePicture,
         lang,
         recentContributions // Pass the recent contributions to the template
     });

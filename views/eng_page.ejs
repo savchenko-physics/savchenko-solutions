@@ -48,10 +48,10 @@
                 <% } %>
                 <% if (username) { %>
                     <a href="/user/<%= username %>">
-                        <img src="/img/profile_images/<%= userId %>.png" alt="Profile Picture" class="rounded-circle" width="40">
+                        <img src="<%= profilePicture %>" alt="Profile Picture" class="rounded-circle" width="40">
                     </a>
                 <% } else { %>
-                    <a href="/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
+                    <a href="/<%= lang %>/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
                 <% } %>
             </div>
         </div>
