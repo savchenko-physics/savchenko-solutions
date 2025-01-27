@@ -20,7 +20,8 @@ async function getContributionsList(req, res) {
             `SELECT 
                 c.*, 
                 u.username,
-                u.full_name
+                u.full_name,
+                u.profile_picture
             FROM (
                 SELECT 
                     id, user_id, edited_at, problem_name, language, original_content, new_content, NULL::text AS ip_address, false AS content_changed
@@ -53,7 +54,9 @@ async function getContributionsList(req, res) {
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-            }
+            },
+            usernameCurrent: req.session.username || null,
+            userIdCurrent: req.session.userId || null
         });
 
     } catch (error) {
