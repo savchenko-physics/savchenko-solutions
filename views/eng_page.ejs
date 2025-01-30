@@ -48,7 +48,7 @@
                 <% } %>
                 <% if (username) { %>
                     <a href="/user/<%= username %>">
-                        <img src="<%= profilePicture || '/img/profile_images/Default-placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40">
+                        <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40">
                     </a>
                 <% } else { %>
                     <a href="/<%= lang %>/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
@@ -85,9 +85,9 @@
                     <p><%= __('description.deepestThanks') %></p>
                     <h4><%= __('description.coreTeam') %></h4>
                     <div class="core-team">
-                        <a href="/user/astrosander/" style="font-size: 1.1rem;">Aliaksandr Melnichenka</a>
+                        <a href="/user/astrosander/" style="font-size: 1.2rem;">Aliaksandr Melnichenka <span style="font-size: 0.9rem; color: #6c757d;">(Founder)</span></a>
                         <a href="/user/Luisito/" style="font-size: 1.1rem;">Luis Daniel Fernández Quintana</a>
-                        <a href="/user/stefannicov/" style="font-size: 1.1rem;">Stefan Nicov</a>
+                        <a href="/user/stefan.nicov/" style="font-size: 1.1rem;">Stefan Nicov</a>
                         <a href="/user/ar4senN/" style="font-size: 1.1rem;">Arsen Almashkan</a>
                         <a href="/user/a.yersh/" style="font-size: 1.1rem;">Andrei Yersh</a>
                         <a href="/user/jepkinsss/" style="font-size: 1.1rem;">Artem Levko</a>
