@@ -490,11 +490,9 @@ app.get("/logout", (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-    // Determine the language from the session or the browser's Accept-Language header
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
-
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
-    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
+    const recentContributions = await getRecentContributions(3);
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -502,16 +500,16 @@ app.get("/", async (req, res) => {
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-
     const working_page = isMobile ? "eng_page_old" : "eng_page";
+
+    let profilePicture = null; // Initialize profilePicture
 
     if (req.session.userId) {
         const userResult = await pool.query(
-            "SELECT profile_picture FROM users WHERE id = $1", // Fetch profile_picture
+            "SELECT profile_picture FROM users WHERE id = $1",
             [req.session.userId]
         );
-
-        res.locals.profilePicture = userResult.rows[0].profile_picture;
+        profilePicture = userResult.rows[0]?.profile_picture || null;
     }
     
     res.render(working_page, {
@@ -523,9 +521,9 @@ app.get("/", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        profilePicture: res.locals.profilePicture,
+        profilePicture, // Pass profilePicture to the template
         lang,
-        recentContributions // Pass the recent contributions to the template
+        recentContributions
     });
 });
 
@@ -576,15 +574,24 @@ app.use(i18n.init);
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
+    const recentContributions = await getRecentContributions(3);
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-
     const working_page = isMobile ? "eng_page_old" : "eng_page";
+
+    let profilePicture = null; // Initialize profilePicture
+
+    if (req.session.userId) {
+        const userResult = await pool.query(
+            "SELECT profile_picture FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        profilePicture = userResult.rows[0]?.profile_picture || null;
+    }
     
     res.render(working_page, {
         __: i18n.__,
@@ -595,23 +602,32 @@ app.get("/ru", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
+        profilePicture, // Pass profilePicture to the template
         lang: 'ru',
-        recentContributions // Pass the recent contributions to the template
+        recentContributions
     });
 });
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-    const recentContributions = await getRecentContributions(3); // Fetch last 3 contributions
+    const recentContributions = await getRecentContributions(3);
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-    console.log(userAgent);
-
     const working_page = isMobile ? "eng_page_old" : "eng_page";
+
+    let profilePicture = null; // Initialize profilePicture
+
+    if (req.session.userId) {
+        const userResult = await pool.query(
+            "SELECT profile_picture FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        profilePicture = userResult.rows[0]?.profile_picture || null;
+    }
     
     res.render(working_page, {
         __: i18n.__,
@@ -622,8 +638,9 @@ app.get("/en", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
+        profilePicture, // Pass profilePicture to the template
         lang: 'en',
-        recentContributions // Pass the recent contributions to the template
+        recentContributions
     });
 });
 

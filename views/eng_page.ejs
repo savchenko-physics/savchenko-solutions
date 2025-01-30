@@ -48,7 +48,7 @@
                 <% } %>
                 <% if (username) { %>
                     <a href="/user/<%= username %>">
-                        <img src="<%= profilePicture %>" alt="Profile Picture" class="rounded-circle" width="40">
+                        <img src="<%= profilePicture || '/img/profile_images/Default-placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40">
                     </a>
                 <% } else { %>
                     <a href="/<%= lang %>/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
@@ -85,7 +85,7 @@
                     <p><%= __('description.deepestThanks') %></p>
                     <h4><%= __('description.coreTeam') %></h4>
                     <div class="core-team">
-                        <a href="/user/astrosander/" style="font-size: 1.1rem;">Aliaksandr Melnichenka – Founder &amp; CEO</a>
+                        <a href="/user/astrosander/" style="font-size: 1.1rem;">Aliaksandr Melnichenka</a>
                         <a href="/user/Luisito/" style="font-size: 1.1rem;">Luis Daniel Fernández Quintana</a>
                         <a href="/user/stefannicov/" style="font-size: 1.1rem;">Stefan Nicov</a>
                         <a href="/user/ar4senN/" style="font-size: 1.1rem;">Arsen Almashkan</a>
