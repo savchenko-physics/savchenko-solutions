@@ -51,6 +51,16 @@ async function getUserProfile(req, res) {
         // Get frequent collaborators
         const frequentCollaborators = await getFrequentCollaborators(user.id);
 
+        // Get current user's profile picture if logged in
+        let profilePictureCurrent = null;
+        if (req.session.userId) {
+            const currentUserResult = await pool.query(
+                "SELECT profile_picture FROM users WHERE id = $1",
+                [req.session.userId]
+            );
+            profilePictureCurrent = currentUserResult.rows[0]?.profile_picture;
+        }
+
         // Render the user profile page with new data
         res.render("user_profile", {
             __: i18n.__,
@@ -70,6 +80,7 @@ async function getUserProfile(req, res) {
             isVerifiedUser: user.is_verified_user,
             bio: user.bio,
             profilePicture: user.profile_picture,
+            profilePictureCurrent,
             linkedin: user.linkedin,
             github: user.github,
             instagram: user.instagram,

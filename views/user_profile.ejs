@@ -147,7 +147,7 @@
                         <% if (lang==='en' ) { %>
                             <span class="text-white">
                                 <strong>
-                                    <a href="/ru" class="text-white text-decoration-none">EN</a>
+                                    <a href="/" class="text-white text-decoration-none">EN</a>
                                 </strong>
                             </span>
                             <% } else { %>
@@ -161,14 +161,13 @@
                     <li class="nav-item">
                         <% if (usernameCurrent) { %>
                             <a href="/user/<%= usernameCurrent %>" class="nav-link">
-                                <img src="<%= profilePicture %>" alt="Profile Picture"
-                                    class="rounded-circle" width="40" height="40" />
+                                <img src="<%= profilePictureCurrent %>" alt="Profile Picture" class="rounded-circle" width="40" height="40" />
                             </a>
-                            <% } else { %>
-                                <a href="/<%= lang %>/login" class="btn btn-outline-light btn-sm rounded-pill shadow-sm">
-                                    Login
-                                </a>
-                                <% } %>
+                        <% } else { %>
+                            <a href="/<%= lang %>/login" class="btn btn-outline-light btn-sm rounded-pill shadow-sm">
+                                Login
+                            </a>
+                        <% } %>
                     </li>
                 </ul>
             </div>
@@ -183,23 +182,24 @@
             <!-- Display user profile picture if available -->
             <% if (profilePicture) { %>
                 <img src="<%= profilePicture %>" alt="<%= fullName %>'s Profile Picture" class="rounded-circle mb-3" />
-                <% } else { %>
-                    <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder"
-                        class="rounded-circle mb-3" />
-                    <% } %>
-                        <h1 class="savchenko-color">
-                            <%= fullName %> (<%= username %>)
-                        </h1>
-                        <p class="mb-1 text-muted">Country: <%= countryLocation %>
-                        </p>
-                        <p class="mb-1">
-                            Verified User:
-                            <span class="<%= isVerifiedUser ? 'text-success' : 'text-danger' %>">
-                                <%= isVerifiedUser ? 'Yes' : 'No' %>
-                            </span>
-                        </p>
-                        <p class="mb-0">Bio: <%= bio %>
-                        </p>
+            <% } else { %>
+                <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder" class="rounded-circle mb-3" />
+            <% } %>
+            <h1 class="savchenko-color">
+                <%= fullName %> (<%= username %>)
+            </h1>
+            <% if (countryLocation) { %>
+                <p class="mb-1 text-muted">Country: <%= countryLocation %></p>
+            <% } %>
+            <p class="mb-1">
+                Verified User:
+                <span class="<%= isVerifiedUser ? 'text-success' : 'text-danger' %>">
+                    <%= isVerifiedUser ? 'Yes' : 'No' %>
+                </span>
+            </p>
+            <% if (bio) { %>
+                <p class="mb-0">Bio: <%= bio %></p>
+            <% } %>
         </div>
     </section>
     <!-- /Hero/Profile Banner -->
@@ -211,27 +211,19 @@
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
                         <h2 class="section-title">Contributions</h2>
-                        <p><strong>Full Name:</strong>
-                            <%= fullName %>
-                        </p>
-                        <p><strong>Username:</strong>
-                            <%= username %>
-                        </p>
-                        <% if (totalContributions> 0) { %>
-                            <p><strong>Total Contributions:</strong>
-                                <%= totalContributions %>
-                            </p>
-                            <% } %>
-                                <% if (uniqueSolutions> 0) { %>
-                                    <p><strong>Unique Solutions:</strong>
-                                        <%= uniqueSolutions %>
-                                    </p>
-                                    <% } %>
-                                        <% if (uniqueTranslations> 0) { %>
-                                            <p><strong>Unique Translations:</strong>
-                                                <%= uniqueTranslations %>
-                                            </p>
-                                            <% } %>
+                        <% if (fullName) { %>
+                            <p><strong>Full Name:</strong> <%= fullName %></p>
+                        <% } %>
+                        <p><strong>Username:</strong> <%= username %></p>
+                        <% if (totalContributions > 0) { %>
+                            <p><strong>Total Contributions:</strong> <%= totalContributions %></p>
+                        <% } %>
+                        <% if (uniqueSolutions > 0) { %>
+                            <p><strong>Unique Solutions:</strong> <%= uniqueSolutions %></p>
+                        <% } %>
+                        <% if (uniqueTranslations > 0) { %>
+                            <p><strong>Unique Translations:</strong> <%= uniqueTranslations %></p>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -240,40 +232,34 @@
                     <div class="card-body">
                         <h2 class="section-title">Social Links</h2>
                         <ul class="list-unstyled mb-0">
-                            <% if (linkedin) { %>
-                                <li class="mb-2">
-                                    <i class="bi bi-linkedin me-1"></i>
-                                    <a href="<%= linkedin %>" target="_blank" class="text-decoration-none">
-                                        LinkedIn
-                                    </a>
-                                </li>
+                            <% if (!linkedin && !github && !instagram && !personalWebsite) { %>
+                                <li class="text-muted">No information provided..</li>
+                            <% } else { %>
+                                <% if (linkedin) { %>
+                                    <li class="mb-2">
+                                        <i class="bi bi-linkedin me-1"></i>
+                                        <a href="<%= linkedin %>" target="_blank" class="text-decoration-none">LinkedIn</a>
+                                    </li>
                                 <% } %>
-                                    <% if (github) { %>
-                                        <li class="mb-2">
-                                            <i class="bi bi-github me-1"></i>
-                                            <a href="<%= github %>" target="_blank" class="text-decoration-none">
-                                                GitHub
-                                            </a>
-                                        </li>
-                                        <% } %>
-                                            <% if (instagram) { %>
-                                                <li class="mb-2">
-                                                    <i class="bi bi-instagram me-1"></i>
-                                                    <a href="<%= instagram %>" target="_blank"
-                                                        class="text-decoration-none">
-                                                        Instagram
-                                                    </a>
-                                                </li>
-                                                <% } %>
-                                                    <% if (personalWebsite) { %>
-                                                        <li class="mb-2">
-                                                            <i class="bi bi-globe me-1"></i>
-                                                            <a href="<%= personalWebsite %>" target="_blank"
-                                                                class="text-decoration-none">
-                                                                Personal Website
-                                                            </a>
-                                                        </li>
-                                                        <% } %>
+                                <% if (github) { %>
+                                    <li class="mb-2">
+                                        <i class="bi bi-github me-1"></i>
+                                        <a href="<%= github %>" target="_blank" class="text-decoration-none">GitHub</a>
+                                    </li>
+                                <% } %>
+                                <% if (instagram) { %>
+                                    <li class="mb-2">
+                                        <i class="bi bi-instagram me-1"></i>
+                                        <a href="<%= instagram %>" target="_blank" class="text-decoration-none">Instagram</a>
+                                    </li>
+                                <% } %>
+                                <% if (personalWebsite) { %>
+                                    <li class="mb-2">
+                                        <i class="bi bi-globe me-1"></i>
+                                        <a href="<%= personalWebsite %>" target="_blank" class="text-decoration-none">Personal Website</a>
+                                    </li>
+                                <% } %>
+                            <% } %>
                         </ul>
                     </div>
                 </div>
@@ -281,7 +267,8 @@
         </div>
         <!-- /Stats row -->
 
-        <!-- Contributions and Collaborators -->    
+        <!-- Contributions and Collaborators -->   
+         <% if (contributions && contributions.length > 0) { %> 
         <div class="row">
             <!-- Recent Contributions -->
             <% if (contributions && contributions.length > 0) { %>
@@ -350,6 +337,7 @@
             </div>
             <!-- /Frequent Collaborators -->
         </div>
+        <% } %>
         <!-- /Contributions and Collaborators -->
     </main>
 
