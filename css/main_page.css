@@ -218,37 +218,67 @@
   /* ----------------------------
      TABLES (Top Authors, etc.)
   ---------------------------- */
-  .table {
-    margin: 0;
+  .top-authors {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.top-authors h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.table {
     width: 100%;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 10px;
     text-align: center;
-  }
-  
-  .table th,
-  .table td {
-    padding: 0.8rem;
-    vertical-align: middle;
-  }
-  
-  .table thead th {
+}
+
+.table th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+.table td:first-child {
+    font-size: 1.2rem;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.table thead th {
     background-color: #fff !important;
     border-bottom: 2px solid #ddd !important;
-    font-weight: 600;
-  }
-  
-  .table tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  
+    font-weight: bold;
+}
+
+.table thead th,
+.table tbody td {
+    border: none;
+    /* Remove other borders */
+}
+
   /* ----------------------------
      TIMELINE
   ---------------------------- */
   .timeline {
+    display: flex;
+    flex-direction: column;
     position: relative;
     margin: 0;
     padding: 0;
-  }
-  .timeline::before {
+    width: 80%;
+}
+.timeline::before {
     content: '';
     position: absolute;
     left: 19px;
@@ -256,15 +286,16 @@
     bottom: 0;
     width: 2px;
     background-color: #ccc;
-  }
-  .timeline-item {
+}
+.timeline-item {
     display: flex;
     align-items: flex-start;
     position: relative;
     margin: 20px 0;
     padding-left: 60px;
-  }
-  .timeline-item::before {
+    width: 100%;
+}
+.timeline-item::before {
     content: '';
     position: absolute;
     left: 12px;
@@ -274,13 +305,35 @@
     background-color: white;
     border: 2px solid #ccc;
     border-radius: 50%;
-  }
-  .timeline-content {
+}
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 34px;
+    top: 26px;
+    width: 16px;
+    height: 2px;
+    background-color: #ccc;
+}
+.timeline-content {
     background: #ffffff;
-    padding: 0.75rem 1rem;
+    padding: 10px 15px;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 0.9rem;
+    font-family: 'Roboto', sans-serif;
+    width: 100%;
+}
+
+  
+  /* Remove old timeline styles */
+  .tl-content,
+  .tl-header,
+  .tl-body,
+  .tl-marker,
+  .tl-title,
+  .tl-time {
+    display: none;
   }
   
   /* ----------------------------

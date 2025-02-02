@@ -819,7 +819,7 @@ app.get("/search", (req, res) => {
     const results = [];
     const processedFiles = new Set(); // Track processed file names
 
-    const truncateWithHighlight = (name, text, query, maxLength = 50) => {
+    const truncateWithHighlight = (name, text, query, maxLength = 57) => {
         text = text.replace(name, "").replace(/\$/g, "").replace(/_/g, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "").replace("\ell", "l").replace("#", "");
 
         const matchIndex = text.toLowerCase().indexOf(query);
