@@ -66,14 +66,16 @@
                         For over 30 years, the Savchenko physics problem collection has challenged students across post-Soviet countries—yet no comprehensive solution manual existed, until now. Savchenko Solutions is the first global, student-led effort to compile and refine detailed explanations for all 2,023 problems. Surpassing 800 published solutions in multiple languages, our thriving platform welcomes learners worldwide to collaborate, share insights, and publish in rigorous peer review.
                     </p>
                     <p>
-                        What began as a modest "archive" for our personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught. Savchenko Solutions stands out by bringing together curious minds, encouraging active problem-solving, and embracing a spirit of open collaboration—proving that knowledge shared is knowledge multiplied.
+                        What began as a modest "archive" for our personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught — embracing a spirit of open collaboration and proving that knowledge shared is knowledge multiplied.
                     </p>
                 </div>
             </div>  
             <div class="col-5 col-xl-5 col-xxl-4 d-flex align-items-center">
-                <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
-                    <img src="/img/yt_preview.jpg" alt="Video" class="img-fluid rounded-3" style="width: 100%; height: auto;">
-                </a>
+                <div class="w-100 d-none d-lg-block" style="overflow: hidden;">
+                    <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
+                        <img src="/img/yt_preview.jpg" alt="<%= __('description.coreTeam') %>" class="img-fluid rounded-3" style="width: 100%; height: auto;">
+                    </a>
+                </div>
             </div>
         </div>
         <div class="row align-items-stretch justify-content-center">
@@ -104,17 +106,17 @@
 
     <section class="container">
         <div class="row">
-            <div class="col-12 col-lg-8 col-xl-8 col-xxl-8 bg-white br-10 shadow-sm pb-3">
+            <div class="col-12 col-lg-8 col-xl-8 col-xxl-8 bg-white br-10 shadow-sm pb-3 px-4">
                 <% chapters.forEach((chapter, chapterIndex)=> {
                     const hasContent = chapter.sections.some(section => section.problems.some(column => column.length >
                     0));
                     if (hasContent) { %>                    
-                    <p class="h3 p-0 text-center my-4">
+                    <p class="h3 p-0 text-center my-4 d-flex align-items-center justify-content-center">
                         <span class="text-secondary"><%= __('chapter') %> <%= chapterIndex + 1 %></span>
-                        <span class="savchenko-color font-weight-bold">
+                        <span class="savchenko-color font-weight-bold ms-2">
                             <%= chapter.title %>
                         </span>
-                        <span>
+                        <span class="d-flex align-items-center ms-2">
                             <a href="#" class="edit-button savchenko-color" data-chapter="<%= chapterIndex + 1 %>">
                                 <span class="upload-text"><%= __('upload') %></span>
                                 <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
@@ -147,6 +149,7 @@
                     </div>
                     <% } }); %>
             </div>
+
             <div class="col-md-4">
                 <div class="top-authors text-center br-10 shadow-sm">
                     <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
