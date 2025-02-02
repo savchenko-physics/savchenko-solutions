@@ -222,7 +222,7 @@
               class="edit-button"
               data-chapter="<%= chapterIndex + 1 %>"
             >
-              <span class="upload-text"><%= __('upload') %></span>
+              <span class="upload-text"><%= __('upload.upload') %></span>
               <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
               </svg>
@@ -412,6 +412,23 @@
     const searchResults = document.getElementById("searchResults");
     const searchResultsList = document.querySelector("#searchResults ul");
     const clearButton = document.getElementById("clearSearch");
+    let lastSearchResults = ""; // Store the last search results
+
+    // Add click event listener to document
+    document.addEventListener('click', function(event) {
+        // Check if click is outside search input and search results
+        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+            searchResults.style.display = "none";
+        }
+    });
+
+    // Show previous results when focusing on search input
+    searchInput.addEventListener("focus", () => {
+        if (searchInput.value.trim().length > 0 && lastSearchResults) {
+            searchResultsList.innerHTML = lastSearchResults;
+            searchResults.style.display = "block";
+        }
+    });
 
     searchInput.addEventListener("input", async () => {
         const query = searchInput.value.trim();
@@ -419,6 +436,7 @@
         if (query.length === 0) {
             searchResults.style.display = "none";
             searchResultsList.innerHTML = "";
+            lastSearchResults = ""; // Clear stored results
             return;
         }
 
@@ -428,7 +446,7 @@
 
             if (data.results.length > 0) {
                 const limitedResults = data.results.slice(0, 10);
-                searchResultsList.innerHTML = limitedResults.map((result, index) => `
+                const resultsHTML = limitedResults.map((result, index) => `
                     <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
                         <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none d-flex align-items-center">
                             <svg class="me-2" viewBox="0 0 24 24" width="16" height="16">
@@ -441,10 +459,12 @@
                         </a>
                     </li>
                 `).join("");
-
+                
+                searchResultsList.innerHTML = resultsHTML;
+                lastSearchResults = resultsHTML; // Store the results
                 searchResults.style.display = "block";
             } else {
-                searchResultsList.innerHTML = `
+                const noResultsHTML = `
                     <li class="cdx-menu-item cdx-menu-item--enabled p-4">
                         <div class="text-center">
                             <!-- No Results Icon -->
@@ -482,6 +502,9 @@
                         </div>
                     </li>
                 `;
+                searchResultsList.innerHTML = noResultsHTML;
+                lastSearchResults = noResultsHTML; // Store the no results message
+                searchResults.style.display = "block";
             }
         } catch (error) {
             console.error('Error fetching search results:', error);
