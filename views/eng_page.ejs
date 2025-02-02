@@ -1,427 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="content-language" content="en">
-    <meta name="keywords" content="<%= __('meta.keywords') %>">
-    <meta name="description" content="<%= __('meta.description') %>">
-    <meta name="author" content="<%= __('meta.author') %>">
-    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
-    <meta property="og:title" content="<%= __('title') %>">
-    <meta property="og:image" content="img/logo.png">
-    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
-    <meta name="yandex-verification" content="6cfda41f74038368">
-    <title><%= __('title') %></title>
-    <link rel="icon" href="/img/logo.png" type="image/png">
-    <script src="/js/jquery-1.10.1.min.js"></script>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/main_page.css">
+  <!-- Meta -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Bootstrap CSS & Google Fonts -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/main_page.css" />
+
+  <title><%= __('title') %></title>
 </head>
 
-<body class="container-fluid nbl-bg px-lg-4 px-xl-4 px-xxl-5 px-sm-2 px-md-3">
-    <header class="header  mx-lg-4 mx-xl-5 mx-xxl-5 mx-sm-2 mx-md-3">
-        <div class="d-flex justify-content-between align-items-center py-3 col">
-            <div class="logo d-flex align-items-center">
-                <a href="/<%= lang %>/" class="d-flex align-items-center" style="text-decoration: none;">
-                    <img src="https://savchenkosolutions.com/img/book.png" alt="<%= __('title') %> Logo" style="width: 50px;">
-                    <div>
-                        <p class="savchenko-color h1 mb-0" style="font-size: 1.75rem;"><%= __('title') %></p>
-                        <p class="mb-0" style="color: #555; font-size: 0.9rem;"><%= __('motto') %></p>
-                    </div>
+<body>
+  <!-- ============================
+       HERO / NAVIGATION SECTION
+  ============================ -->
+  <header class="hero-section text-white">
+    <nav class="navbar navbar-expand-lg navbar-dark">
+      <div class="container-fluid px-4">
+        <!-- Logo + Title -->
+        <a class="navbar-brand d-flex align-items-center me-auto" href="/<%= lang %>/">
+          <img 
+            src="/img/book.png" 
+            alt="<%= __('title') %> Logo" 
+            class="logo-img me-2"
+          />
+          <div>
+            <h1 class="site-title mb-0"><%= __('title') %></h1>
+            <p class="site-motto mb-0"><%= __('motto') %></p>
+          </div>
+        </a>
+
+        <!-- Toggle button for mobile -->
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Right side items: language + user -->
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item px-2 language-switch">
+              <% if (lang === 'en') { %>
+                <a href="/ru" class="nav-link text-white fw-bold">EN</a>
+              <% } else { %>
+                <a href="/en" class="nav-link text-white fw-bold">RU</a>
+              <% } %>
+            </li>
+            <li class="nav-item px-2">
+              <% if (username) { %>
+                <a href="/user/<%= username %>" class="d-flex align-items-center">
+                  <img
+                    src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>"
+                    alt="Profile Picture"
+                    class="rounded-circle"
+                    width="40"
+                    height="40"
+                  />
                 </a>
-            </div>
-            <div class="search d-none d-lg-block">
-                <input type="text" id="searchInput" class="form-control" placeholder="<%= __('menu.searchPlaceholder') %>">
-                <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-sm" style="display: none; z-index: 1000; width: 100%;">
-                    <ul class="list-unstyled mb-0"></ul>
-                </div>
-            </div>
-            <div class="language d-flex align-items-center">
-                <% if (lang === 'en') { %>
-                    <span class="me-2"><strong><a href="/ru" class="text-dark text-decoration-none">EN</a></strong></span>
-                <% } else { %>
-                    <span class="me-2"><strong><a href="/en" class="text-dark text-decoration-none">RU</a></strong></span>
-                <% } %>
-                <% if (username) { %>
-                    <a href="/user/<%= username %>">
-                        <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40">
-                    </a>
-                <% } else { %>
-                    <a href="/<%= lang %>/login" class="btn btn-outline-primary rounded-pill shadow-sm"><%= __('menu.login') %></a>
-                <% } %>
-            </div>
+              <% } else { %>
+                <a
+                  href="/<%= lang %>/login"
+                  class="btn btn-outline-light rounded-pill"
+                >
+                  <%= __('menu.login') %>
+                </a>
+              <% } %>
+            </li>
+          </ul>
         </div>
-    </header>
+      </div>
+    </nav>
 
-    <main class="my-5 mx-lg-4 mx-xl-5 mx-xxl-5 mx-sm-2 mx-md-3">
-        <h2 class="text-center my-5"><%= __('subtitle') %></h2>
-        <div class="row align-items-stretch justify-content-center">
-            <div class="col-12 col-md-7 col-xl-7 col-xxl-6">
-                <div class="content shadow-sm br-10 p-4 h-100 bl-bg" style="text-align: justify;">
-                    <p>
-                        For over 30 years, the Savchenko physics problem collection has challenged students across post-Soviet countries—yet no comprehensive solution manual existed, until now. Savchenko Solutions is the first global, student-led effort to compile and refine detailed explanations for all 2,023 problems. Surpassing 800 published solutions in multiple languages, our thriving platform welcomes learners worldwide to collaborate, share insights, and publish in rigorous peer review.
-                    </p>
-                    <p>
-                        What began as a modest "archive" for our personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught — embracing a spirit of open collaboration and proving that knowledge shared is knowledge multiplied.
-                    </p>
-                </div>
-            </div>  
-            <div class="col-5 col-xl-5 col-xxl-4 d-flex align-items-center">
-                <div class="w-100 d-none d-lg-block" style="overflow: hidden;">
-                    <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
-                        <img src="/img/yt_preview.jpg" alt="<%= __('description.coreTeam') %>" class="img-fluid rounded-3" style="width: 100%; height: auto;">
-                    </a>
-                </div>
-            </div>
+    <!-- Search Bar + Hero Text -->
+    <div class="container hero-content d-flex flex-column align-items-center justify-content-center text-center">
+      <h2 class="hero-subtitle mb-4"><%= __('subtitle') %></h2>
+      <div class="searchbar-wrapper mb-5">
+        <input
+          type="text"
+          id="searchInput"
+          class="form-control form-control-lg searchbar-input"
+          placeholder="<%= __('menu.searchPlaceholder') %>"
+        />
+        <div
+          id="searchResults"
+          class="search-results position-absolute bg-white border rounded shadow-sm"
+          style="display: none; z-index: 1000; width: 100%;"
+        >
+          <ul class="list-unstyled mb-0"></ul>
         </div>
-        <div class="row align-items-stretch justify-content-center">
-            <div class="col-3 col-xl-3 col-xxl-2 mt-4 align-items-stretch">
-                <div class="w-100 d-none d-lg-block" style="overflow: hidden;">
-                    <img src="https://savchenkosolutions.com/img/team.png" alt="<%= __('description.coreTeam') %>" class="img-fluid" style="width: 100%; height: auto;">
-                </div>
-            </div>
-            <div class="col-12 col-xl-9 col-xxl-7 col-lg-9 mt-4  align-items-stretch">
-                <div class="content bg-light p-4 w-100 bl-bg shadow-sm br-10 text-justify">
-                    <p class="h4"><%= __('description.acknowledgments') %></p>
-                    <p><%= __('description.deepestThanks') %></p>
-                    <h4 ><%= __('description.coreTeam') %></h4>
-                    <div class="core-team">
-                        <a href="/user/astrosander/" style="font-size: 1.2rem;">Aliaksandr Melnichenka <span style="font-size: 0.9rem; color: #6c757d;">(Founder)</span></a>
-                        <a href="/user/Luisito/" style="font-size: 1.1rem;">Luis Daniel Fernández Quintana</a>
-                        <a href="/user/stefan.nicov/" style="font-size: 1.1rem;">Stefan Nicov</a>
-                        <a href="/user/ar4senN/" style="font-size: 1.1rem;">Arsen Almashkan</a>
-                        <a href="/user/a.yersh/" style="font-size: 1.1rem;">Andrei Yersh</a>
-                        <a href="/user/jepkinsss/" style="font-size: 1.1rem;">Artem Levko</a>
-                        <a href="/user/diikann_/" style="font-size: 1.1rem;">Dzikan Mikita</a>
-                        <a href="/about#team" style="font-size: 1.1rem;">See all...</a>
-                    </div>
-                </div>
-            </div>
+      </div>
+      <p class="hero-tagline">
+        A global, student-led platform for exploring 2,023 challenging physics problems.
+      </p>
+    </div>
+  </header>
+
+  <!-- ============================
+       MAIN CONTENT
+  ============================ -->
+  <main class="container my-5">
+    <!-- Intro Row: Left = Text, Right = YouTube Preview -->
+    <div class="row align-items-center justify-content-center mb-5">
+      <div class="col-lg-6 mb-4">
+        <div class="content-card shadow-sm p-4">
+          <p>
+            For over 30 years, the Savchenko physics problem collection has
+            challenged students across post-Soviet countries—yet no comprehensive
+            solution manual existed, until now. <strong>Savchenko Solutions</strong>
+            is the first global, student-led effort to compile and refine detailed
+            explanations for all 2,023 problems. Surpassing 800 published
+            solutions in multiple languages, our thriving platform welcomes learners
+            worldwide to collaborate, share insights, and publish in rigorous
+            peer review.
+          </p>
+          <p>
+            What began as a modest "archive" for personal solutions soon evolved
+            into a vibrant international community, drawing thousands of regular
+            users. This unprecedented collective intelligence fosters an environment
+            where students and teachers learn from one another, transforming how
+            physics is studied and taught — embracing a spirit of open collaboration
+            and proving that knowledge shared is knowledge multiplied.
+          </p>
         </div>
-    </main>
-
-    <section class="container">
-        <div class="row">
-            <div class="col-12 col-lg-8 col-xl-8 col-xxl-8 bg-white br-10 shadow-sm pb-3 px-4">
-                <% chapters.forEach((chapter, chapterIndex)=> {
-                    const hasContent = chapter.sections.some(section => section.problems.some(column => column.length >
-                    0));
-                    if (hasContent) { %>                    
-                    <p class="h3 p-0 text-center my-4 d-flex align-items-center justify-content-center">
-                        <span class="text-secondary"><%= __('chapter') %> <%= chapterIndex + 1 %></span>
-                        <span class="savchenko-color font-weight-bold ms-2">
-                            <%= chapter.title %>
-                        </span>
-                        <span class="d-flex align-items-center ms-2">
-                            <a href="#" class="edit-button savchenko-color" data-chapter="<%= chapterIndex + 1 %>">
-                                <span class="upload-text"><%= __('upload') %></span>
-                                <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
-                                </svg>
-                            </a>
-                        </span>
-                    </p>
-                    
-                    <div class="col-11 border-top mt-3">
-                        <div>
-                        <% chapter.sections.forEach((section, sectionIndex)=> {
-                            const hasProblems = section.problems.some(column => column.length > 0);
-                            if (hasProblems) { %>
-                            <p class="mt-4 mb-2 font-weight-bold" id="<%= section.number %>">
-                                § <%= section.number %> <%= section.title %>
-                            </p>
-
-                            <div class="problems-grid">
-                                <% const allProblems=section.problems.flat(); allProblems.forEach((problem)=> { %>
-                                    <div class="problem-item">
-                                        <a href="/<%= lang %>/<%= problem %>" class="problem-link">
-                                            <%= problem %>
-                                        </a>
-                                    </div>
-                                    <% }); %>
-                            </div>
-                            <% } }); %>
-                        </div>
-                    </div>
-                    <% } }); %>
-            </div>
-
-            <div class="col-md-4">
-                <div class="top-authors text-center br-10 shadow-sm">
-                    <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
-                    <table class="table table-hover mx-auto" style="width: auto;">
-                        <thead class="thead-light">
-                            <tr>
-                                <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
-                                <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
-                                <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>🥇</td>
-                                <td><a href="/user/Luisito" class="text-dark text-decoration-none">Luisito</a></td>
-                                <td>152</td>
-                            </tr>
-                            <tr>
-                                <td>🥈</td>
-                                <td><a href="/user/ar4senN" class="text-dark text-decoration-none">ar4senN</a></td>
-                                <td>127</td>
-                            </tr>
-                            <tr>
-                                <td>🥉</td>
-                                <td><a href="/user/diikann_" class="text-dark text-decoration-none">diikann_</a></td>
-                                <td>116</td>
-                            </tr>
-                            <tr>
-                                <td>4</td>
-                                <td><a href="/user/Ismail" class="text-dark text-decoration-none">Ismail</a></td>
-                                <td>104</td>
-                            </tr>
-                            <tr>
-                                <td>5</td>
-                                <td><a href="/user/a.yersh" class="text-dark text-decoration-none">a.yersh</a></td>
-                                <td>94</td>
-                            </tr>
-                            <tr>
-                                <td>6</td>
-                                <td><a href="/user/jepkinsss" class="text-dark text-decoration-none">jepkinsss</a></td>
-                                <td>77</td>
-                            </tr>
-                            <tr>
-                                <td>7</td>
-                                <td><a href="/user/_chender_" class="text-dark text-decoration-none">_chender_</a></td>
-                                <td>65</td>
-                            </tr>
-                            <tr>
-                                <td>8</td>
-                                <td><a href="/user/Sasha" class="text-dark text-decoration-none">Sasha</a></td>
-                                <td>22</td>
-                            </tr>
-                            <tr>
-                                <td>9</td>
-                                <td><a href="/user/Artoghrul" class="text-dark text-decoration-none">Artoghrul</a></td>
-                                <td>16</td>
-                            </tr>
-                            <tr>
-                                <td>10</td>
-                                <td><a href="/user/Nurbaqyt" class="text-dark text-decoration-none">Nurbaqyt</a></td>
-                                <td>11</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm d-none d-lg-block">
-                    <h3 class="text-center mb-4"><%= __('description.contributions2') %></h3>
-                    <div class="contribution-history timeline">
-                        <% recentContributions.forEach(contribution => { %>
-                        <div class="timeline-item">
-                            <div class="timeline-content nbl-bg">
-                                <strong><%= contribution.version %></strong> 
-                                <% if (lang === 'en') { %>
-                                <span class="text-muted">
-                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="text-primary text-decoration-none">
-                                        <%= lang === 'en' ? 'edited' : 'изменена' %>
-                                    </a> 
-                                    <span class="text-dark font-weight-bold"><%= contribution.editor %></span>
-                                </span>
-                                <% } else { %>
-                                <span class="text-muted">
-                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="text-primary text-decoration-none">
-                                        <%= lang === 'en' ? 'edited' : 'изменена' %>
-                                    </a> 
-                                    <span class="text-dark font-weight-bold"><%= contribution.editor %></span>
-                                </span>
-                                <% } %>
-                                <span style="font-size: 0.8rem; color: #888;"><%= contribution.timestamp %></span>
-                            </div>
-                        </div>
-                        <% }); %>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <style>
-        .search-results {
-            max-height: 200px; /* Limit the height of the results */
-            overflow-y: auto; /* Add scroll if results exceed max height */
-            font-size: 0.85rem; /* Smaller font size for search results */
-        }
-        .search-results ul {
-            padding: 0;
-            margin: 0;
-        }
-        .search-results li {
-            padding: 8px 12px;
-            cursor: pointer;
-        }
-        .search-results li:hover {
-            background-color: #f1f1f1;
-        }
-    </style>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        const searchInput = document.getElementById("searchInput");
-        const searchResults = document.getElementById("searchResults");
-        const searchResultsList = document.querySelector("#searchResults ul");
-
-        searchInput.addEventListener("input", async () => {
-            const query = searchInput.value.trim();
-
-            if (query.length === 0) {
-                searchResults.style.display = "none";
-                searchResultsList.innerHTML = "";
-                return;
-            }
-
-            try {
-                const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-
-                if (data.results.length > 0) {
-                    const limitedResults = data.results.slice(0, 5);
-                    searchResultsList.innerHTML = limitedResults.map((result, index) => `
-                        <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
-                            <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
-                                <span class="cdx-menu-item__text">
-                                    <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
-                                    <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
-                                </span>
-                            </a>
-                        </li>
-                    `).join("");
-                    searchResults.style.display = "block";
-                } else {
-                    searchResultsList.innerHTML = `
-                        <li class="cdx-menu-item cdx-menu-item--enabled">
-                            <span class="cdx-menu-item__content">
-                                <span class="cdx-menu-item__text">No results found.</span>
-                            </span>
-                        </li>
-                    `;
-                }
-            } catch (error) {
-                console.error('Error fetching search results:', error);
-            }
-        });
-    </script>
-        <!-- Add these elements somewhere in your HTML body -->
-
-    <!-- Pop-up Window -->
-    <div id="edit-popup">
-        <h3><%= __('popup.title') %></h3>
-        <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>" />
-        <button id="submit-problem"><%= __('popup.submit') %></button>
-        <button id="cancel-edit"><%= __('popup.cancel') %></button>
+      </div>
+      <div class="col-lg-5 d-flex justify-content-center">
+        <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
+          <img
+            src="/img/yt_preview.jpg"
+            alt="Watch on YouTube"
+            class="img-fluid rounded-3 shadow-sm"
+            style="max-width: 100%;"
+          />
+        </a>
+      </div>
     </div>
 
-    <!-- Overlay -->
-    <div id="popup-overlay">
+    <!-- Team & Acknowledgments -->
+    <div class="row align-items-start justify-content-center mb-5">
+      <div class="col-lg-3 d-none d-lg-block">
+        <img
+          src="https://savchenkosolutions.com/img/team.png"
+          alt="<%= __('description.coreTeam') %>"
+          class="img-fluid rounded-3 shadow-sm"
+        />
+      </div>
+      <div class="col-lg-9">
+        <div class="content-card bg-light shadow-sm p-4">
+          <h3 class="mb-3"><%= __('description.acknowledgments') %></h3>
+          <p><%= __('description.deepestThanks') %></p>
+          <h4><%= __('description.coreTeam') %></h4>
+          <div class="core-team">
+            <a href="/user/astrosander/">Aliaksandr Melnichenka <span class="fw-normal">(Founder)</span></a>
+            <a href="/user/Luisito/">Luis Daniel Fernández Quintana</a>
+            <a href="/user/stefan.nicov/">Stefan Nicov</a>
+            <a href="/user/ar4senN/">Arsen Almashkan</a>
+            <a href="/user/a.yersh/">Andrei Yersh</a>
+            <a href="/user/jepkinsss/">Artem Levko</a>
+            <a href="/user/diikann_/">Dzikan Mikita</a>
+            <a href="/about#team">See all...</a>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Add preload class to body initially
-            document.body.classList.add('preload');
-            
-            // Remove preload class after a delay
-            setTimeout(() => {
-                document.body.classList.remove('preload');
-            }, 500);
-
-            const popup = document.getElementById("edit-popup");
-            const overlay = document.getElementById("popup-overlay");
-            const problemInput = document.getElementById("problem-name");
-            let currentChapter;
-
-            function showPopup() {
-                popup.style.display = "block";
-                overlay.style.display = "block";
-                // Force reflow
-                popup.offsetHeight;
-                overlay.offsetHeight;
-                // Add active class to trigger animations
-                popup.classList.add("active");
-                overlay.classList.add("active");
-            }
-
-            function hidePopup() {
-                popup.classList.remove("active");
-                overlay.classList.remove("active");
-                // Wait for animations to complete before hiding elements
-                setTimeout(() => {
-                    popup.style.display = "none";
-                    overlay.style.display = "none";
-                    problemInput.value = "";
-                }, 300);
-            }
-
-            document.querySelectorAll(".edit-button").forEach(button => {
-                button.addEventListener("click", (event) => {
-                    event.preventDefault();
-                    currentChapter = button.dataset.chapter;
-                    showPopup();
-                });
-            });
-
-            document.getElementById("cancel-edit").addEventListener("click", () => {
-                hidePopup();
-            });
-
-            document.getElementById("submit-problem").addEventListener("click", () => {
-                const problemName = problemInput.value.trim();
-                if (problemName) {
-                    fetch("/create-problem", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ 
-                            problemName, 
-                            chapter: currentChapter,
-                            lang: '<%= lang %>'
-                        })
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.redirectUrl) {
-                                window.location.href = data.redirectUrl;
-                            } else {
-                                alert(data.message);
-                                hidePopup();
-                            }
-                        })
-                        .catch(error => {
-                            console.error("Error:", error);
-                            alert("An error occurred. Please try again.");
-                        });
-                } else {
-                    alert('<%= lang === "ru" ? "Пожалуйста, введите корректное название задачи." : "Please enter a valid problem name." %>');
-                }
-            });
-        });
-    </script>
-    
-    <footer class="bg-light py-4">
-        <div class="container text-center">
-            <p class="mb-0">
-                <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
-            </p>
-            <p class="mb-0">
-                <small>
-                    All rights belong to the authors.
-                    Commercial use of materials - with the written permission of the authors.
-                    aliaksandr@melnichenka.com
-                </small>
-            </p>
+    <!-- Chapter & Sections + Sidebar with Top Authors & Contributions -->
+    <div class="row">
+      <div class="col-12 col-lg-8 mb-5">
+        <!-- Chapters and Problems -->
+        <% chapters.forEach((chapter, chapterIndex)=> {
+            const hasContent = chapter.sections.some(section => 
+                section.problems.some(column => column.length > 0)
+            );
+            if (hasContent) { %>
+        <div class="chapter-block mb-4">
+          <div class="d-flex align-items-center mb-3">
+            <h4 class="chapter-title me-2 text-secondary">
+              <%= __('chapter') %> <%= chapterIndex + 1 %>:
+            </h4>
+            <h4 class="chapter-name mb-0 me-2">
+              <%= chapter.title %>
+            </h4>
+            <!-- Upload Button -->
+            <a
+              href="#"
+              class="edit-button"
+              data-chapter="<%= chapterIndex + 1 %>"
+            >
+              <span class="upload-text"><%= __('upload') %></span>
+              <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+              </svg>
+            </a>
+          </div>
+          <hr />
+          <!-- Sections -->
+          <% chapter.sections.forEach((section, sectionIndex) => {
+               const hasProblems = section.problems.some(column => column.length > 0);
+               if (hasProblems) { %>
+          <div class="mb-4">
+            <h5 class="section-title mb-2" id="<%= section.number %>">
+              § <%= section.number %> - <%= section.title %>
+            </h5>
+            <div class="problems-grid">
+              <% const allProblems = section.problems.flat(); 
+                 allProblems.forEach((problem) => { %>
+              <div class="problem-item">
+                <a href="/<%= lang %>/<%= problem %>" class="problem-link">
+                  <%= problem %>
+                </a>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+          <% } }); %>
         </div>
-    </footer>
+        <% } }); %>
+      </div>
+
+      <!-- SIDEBAR: Top Authors + Recent Contributions -->
+      <div class="col-12 col-lg-4">
+        <!-- Top Authors -->
+        <div class="sidebar-card shadow-sm mb-4">
+          <h4 class="text-center py-3 mb-0 bg-white fw-bold">
+            <%= __('description.topAuthors') %>
+          </h4>
+          <table class="table table-hover text-center mb-0">
+            <thead>
+              <tr>
+                <th scope="col" style="width:10%; opacity:0.8;">#</th>
+                <th scope="col" style="width:45%; opacity:0.8;">
+                  <%= __('description.profile') %>
+                </th>
+                <th scope="col" style="width:45%; opacity:0.8;">
+                  <%= __('description.contributions') %>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>🥇</td>
+                <td><a href="/user/Luisito" class="text-dark">Luisito</a></td>
+                <td>152</td>
+              </tr>
+              <tr>
+                <td>🥈</td>
+                <td><a href="/user/ar4senN" class="text-dark">ar4senN</a></td>
+                <td>127</td>
+              </tr>
+              <tr>
+                <td>🥉</td>
+                <td><a href="/user/diikann_" class="text-dark">diikann_</a></td>
+                <td>116</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><a href="/user/Ismail" class="text-dark">Ismail</a></td>
+                <td>104</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><a href="/user/a.yersh" class="text-dark">a.yersh</a></td>
+                <td>94</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td><a href="/user/jepkinsss" class="text-dark">jepkinsss</a></td>
+                <td>77</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td><a href="/user/_chender_" class="text-dark">_chender_</a></td>
+                <td>65</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td><a href="/user/Sasha" class="text-dark">Sasha</a></td>
+                <td>22</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td><a href="/user/Artoghrul" class="text-dark">Artoghrul</a></td>
+                <td>16</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td><a href="/user/Nurbaqyt" class="text-dark">Nurbaqyt</a></td>
+                <td>11</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Recent Contributions -->
+        <div class="sidebar-card shadow-sm d-none d-lg-block">
+          <h4 class="text-center py-3 mb-0 bg-white fw-bold">
+            <%= __('description.contributions2') %>
+          </h4>
+          <div class="contribution-history timeline p-3">
+            <% recentContributions.forEach(contribution => { %>
+            <div class="timeline-item">
+              <div class="timeline-content">
+                <strong><%= contribution.version %></strong>
+                <span class="text-muted ms-1">
+                  <a
+                    href="/<%= lang %>/contributions/<%= contribution.id %>"
+                    class="text-primary text-decoration-none"
+                  >
+                    <%= lang === 'en' ? 'edited' : 'изменена' %>
+                  </a>
+                  <span class="text-dark fw-bold">
+                    <%= contribution.editor %>
+                  </span>
+                </span>
+                <div class="small text-muted">
+                  <%= contribution.timestamp %>
+                </div>
+              </div>
+            </div>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================
+       POP-UP & OVERLAY
+  ============================ -->
+  <div id="edit-popup">
+    <h3><%= __('popup.title') %></h3>
+    <input
+      type="text"
+      id="problem-name"
+      placeholder="<%= __('popup.placeholder') %>"
+    />
+    <button id="submit-problem"><%= __('popup.submit') %></button>
+    <button id="cancel-edit"><%= __('popup.cancel') %></button>
+  </div>
+  <div id="popup-overlay"></div>
+
+  <!-- ============================
+       FOOTER
+  ============================ -->
+  <footer class="bg-white py-4 mt-5 border-top">
+    <div class="container text-center">
+      <p class="mb-0">
+        <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
+      </p>
+      <p class="mb-0">
+        <small>
+          All rights belong to the authors.
+          Commercial use of materials requires written permission.
+          aliaksandr@melnichenka.com
+        </small>
+      </p>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS + Dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"
+  ></script>
+  <script
+    src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+  ></script>
 </body>
-
 </html>
