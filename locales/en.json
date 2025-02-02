@@ -26,7 +26,22 @@
     },
     "contents": "Contents",
     "chapter": "Chapter",
-    "upload": "Upload",
+    "upload": {
+        "title": "Upload Solution",
+        "problemNumber": "Problem Number",
+        "problemNumberHelp": "Enter the problem number in format: chapter.section.problem",
+        "solution": "Solution",
+        "solutionHelp": "Enter your solution here. You can use LaTeX for mathematical formulas.",
+        "attachments": "File Attachments",
+        "attachmentsHelp": "Upload any relevant files (images, code, etc.)",
+        "preview": "Preview",
+        "submit": "Submit Solution",
+        "guidelines": "Upload Guidelines",
+        "guideline1": "Use clear and concise explanations",
+        "guideline2": "Include step-by-step solutions",
+        "guideline3": "Add relevant diagrams or illustrations",
+        "error": "An error occurred while uploading"
+    },
     "popup": {
         "title": "Enter the name of the problem",
         "placeholder": "e.g., 13.1.19",
@@ -197,7 +212,7 @@
         "backToMain": "Main page",
         "eligibility": {
             "title": "Eligibility Criteria",
-            "content": "Our community welcomes all contributors—no special awards, degrees, or qualifications needed. If you’re eager to deepen your understanding of physics or to guide others in their learning journey, you have a place here!"
+            "content": "Our community welcomes all contributors—no special awards, degrees, or qualifications needed. If you're eager to deepen your understanding of physics or to guide others in their learning journey, you have a place here!"
         },
         "howToContribute": {
             "title": "How to Contribute",

@@ -21,6 +21,7 @@ const { getContribution, getContributionsByUserId, getTotalContributions } = req
 const renderFileList = require('./file-list');
 const { renderPost, getPageViewsData } = require('./post'); // Import the renderPost function
 const getUserProfile = require('./userProfile');
+const uploadRouter = require('./upload');
 
 const app = express();
 const PORT = 3000;
@@ -607,6 +608,9 @@ app.get("/ru", async (req, res) => {
         recentContributions
     });
 });
+
+// Remove the old upload routes and add the new router
+app.use('/', uploadRouter);
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
