@@ -1,153 +1,653 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
 <head>
-    <!-- Meta -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="content-language" content="<%= lang %>">
+  <meta name="keywords" content="<%= __('meta.keywords') %>">
+  <meta name="description" content="<%= __('meta.description') %>">
+  <meta name="author" content="<%= __('meta.author') %>">
+  <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
+  <meta property="og:title" content="<%= __('upload.title') %> | <%= __('title') %>">
+  <meta property="og:image" content="/img/logo.png">
+  <meta property="og:description" content="<%= __('meta.ogDescription') %>">
+  <meta name="yandex-verification" content="6cfda41f74038368">
+
+  <title><%= __('upload.title') %> | <%= __('title') %></title>
+  <link rel="icon" href="/img/logo.png" type="image/png">
+
+  <!-- Bootstrap CSS & Google Fonts -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
+  />
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
     
-    <!-- Bootstrap CSS & Google Fonts -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    main {
+      flex: 1;
+    }
+    .navbar-custom {
+      background-color: #343A40;
+    }
+    .navbar-brand {
+      font-weight: 700;
+      color: #fff !important;
+    }
+    .navbar-brand-container {
+      background: linear-gradient(135deg, #a3a9b564, #373c4172);
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      display: flex;
+      align-items: center;
+    }
+    .modern-search {
+      background-color: #343a40;
+      color: #fff;
+      border: 1px solid #495057;
+    }
+    .modern-search::placeholder {
+      color: #adb5bd;
+    }
+    .content-card {
+      background-color: #fff;
+      border-radius: 0.5rem;
+    }
+    .step-label {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+    /* Hide or show sections based on solution method */
+    #latexSection, #scansSection {
+      display: none;
+    }
+    /* Initially, keep both hidden; show them selectively via JavaScript. */
+    .image-wrapper {
+      transition: all 0.3s ease-out;
+      opacity: 1;
+      transform: scale(1);
+    }
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="/css/main_page.css" />
-    
-    <title><%= __('upload.title') %> | <%= __('title') %></title>
+    .image-wrapper.fade-out {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    /* Add cursor pointer for preview images */
+    .image-wrapper img {
+      cursor: pointer;
+    }
+
+    .upload-container {
+      border: 2px dashed #dee2e6 !important;
+      transition: all 0.3s ease;
+    }
+
+    .upload-container.dragover {
+      border-color: #0d6efd !important;
+      background: #f8f9fa;
+    }
+
+    .drop-zone {
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-
-    <main class="container my-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="content-card shadow-sm p-4">
-                    <h2 class="text-center mb-4"><%= __('upload.title') %></h2>
-                    
-                    <!-- Upload Form -->
-                    <form id="uploadForm" class="needs-validation" novalidate>
-                        <!-- Problem Selection -->
-                        <div class="mb-4">
-                            <label for="problemNumber" class="form-label"><%= __('upload.problemNumber') %></label>
-                            <input type="text" class="form-control" id="problemNumber" required>
-                            <div class="form-text"><%= __('upload.problemNumberHelp') %></div>
-                        </div>
-
-                        <!-- Solution Content -->
-                        <div class="mb-4">
-                            <label for="solutionContent" class="form-label"><%= __('upload.solution') %></label>
-                            <textarea class="form-control" id="solutionContent" rows="10" required></textarea>
-                            <div class="form-text"><%= __('upload.solutionHelp') %></div>
-                        </div>
-
-                        <!-- File Attachments -->
-                        <div class="mb-4">
-                            <label for="fileUpload" class="form-label"><%= __('upload.attachments') %></label>
-                            <input type="file" class="form-control" id="fileUpload" multiple>
-                            <div class="form-text"><%= __('upload.attachmentsHelp') %></div>
-                        </div>
-
-                        <!-- Preview Section -->
-                        <div class="mb-4">
-                            <h5><%= __('upload.preview') %></h5>
-                            <div id="previewContent" class="border rounded p-3 bg-light">
-                                <!-- Preview content will be inserted here -->
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="text-center">
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                    <polyline points="17 8 12 3 7 8"/>
-                                    <line x1="12" y1="3" x2="12" y2="15"/>
-                                </svg>
-                                <%= __('upload.submit') %>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Guidelines Sidebar -->
-            <div class="col-md-4">
-                <div class="content-card shadow-sm p-4">
-                    <h4 class="mb-3"><%= __('upload.guidelines') %></h4>
-                    <ul class="list-unstyled">
-                        <li class="mb-3">
-                            <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <%= __('upload.guideline1') %>
-                        </li>
-                        <li class="mb-3">
-                            <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <%= __('upload.guideline2') %>
-                        </li>
-                        <li class="mb-3">
-                            <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                                <polyline points="22 4 12 14.01 9 11.01"/>
-                            </svg>
-                            <%= __('upload.guideline3') %>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+  <!-- Top Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand ms-3" href="/">
+        <div class="navbar-brand-container">
+          <img
+            src="https://savchenkosolutions.com/img/book.png"
+            alt="Savchenko Solutions"
+            width="40"
+            height="40"
+            class="d-inline-block align-text-center me-2 logo-img"
+          />
+          Savchenko Solutions
         </div>
-    </main>
+      </a>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('uploadForm');
-            const preview = document.getElementById('previewContent');
-            const solutionInput = document.getElementById('solutionContent');
+      <button
+        class="navbar-toggler text-white me-3"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNav"
+        aria-controls="mainNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon text-white"></span>
+      </button>
 
-            // Live preview
-            solutionInput.addEventListener('input', function() {
-                preview.innerHTML = this.value;
-            });
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto me-3 align-items-center">
+          <li class="nav-item me-3">
+            <div class="search position-relative">
+              <input
+                type="text"
+                id="searchInput"
+                class="form-control form-control-sm modern-search"
+                placeholder="Search Savchenko Solutions"
+                aria-label="Search"
+              />
+              <div
+                id="searchResults"
+                class="search-results position-absolute bg-white border rounded shadow-lg"
+                style="display: none; z-index: 1050; width: 100%;"
+              >
+                <ul class="list-unstyled mb-0 p-2"></ul>
+              </div>
+            </div>
+          </li>
+          <li class="nav-item me-3">
+            <% if (lang === 'en') { %>
+              <span class="text-white">
+                <strong><a href="/" class="text-white text-decoration-none">EN</a></strong>
+              </span>
+            <% } else { %>
+              <span class="text-white">
+                <strong><a href="/en" class="text-white text-decoration-none">RU</a></strong>
+              </span>
+            <% } %>
+          </li>
+          <li class="nav-item">
+            <% if (locals.usernameCurrent) { %>
+              <a href="/user/<%= usernameCurrent %>" class="nav-link">
+                <img
+                  src="<%= profilePictureCurrent %>"
+                  alt="Profile Picture"
+                  class="rounded-circle"
+                  width="40"
+                  height="40"
+                />
+              </a>
+            <% } else { %>
+              <a
+                href="/<%= lang %>/login"
+                class="btn btn-outline-light btn-sm rounded-pill shadow-sm"
+              >
+                Login
+              </a>
+            <% } %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- /Top Navbar -->
 
-            // Form submission
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const formData = new FormData();
-                formData.append('problemNumber', document.getElementById('problemNumber').value);
-                formData.append('solution', solutionInput.value);
-                
-                const fileInput = document.getElementById('fileUpload');
-                for (const file of fileInput.files) {
-                    formData.append('files', file);
-                }
+  <main class="container my-5">
+    <div class="row justify-content-center g-5">
+      <!-- Main Content Column -->
+      <div class="col-md-8">
+        <div class="content-card shadow-sm p-4">
+          <h2 class="text-center mb-4"><%= __('upload.title') %></h2>
 
-                try {
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        window.location.href = data.redirectUrl;
-                    } else {
-                        alert(data.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('<%= __("upload.error") %>');
-                }
-            });
-        });
-    </script>
+          <!-- Step 1: Problem Name -->
+          <div class="mb-4">
+            <label for="problemName" class="form-label step-label">
+              <strong>1.</strong> Select a Problem
+            </label>
+            <!-- Could be an <input> or a <select> or an autocomplete field -->
+            <input
+              type="text"
+              class="form-control"
+              id="problemName"
+              placeholder="e.g., 13.4.1"
+              required
+            />
+            <div class="form-text">
+              Select or type the exact name/number of the problem you're solving.
+            </div>
+          </div>
+
+          <!-- Step 2: Choose the Method -->
+          <div class="mb-4">
+            <label class="form-label step-label">
+              <strong>2.</strong> How would you like to provide your solution?
+            </label>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="solutionMethod"
+                id="methodScans"
+                value="scans"
+              />
+              <label class="form-check-label" for="methodScans">
+                Upload Scans/Photos of My Notebook
+              </label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="solutionMethod"
+                id="methodLatex"
+                value="latex"
+              />
+              <label class="form-check-label" for="methodLatex">
+                Type My Solution in LaTeX
+              </label>
+            </div>
+          </div>
+
+          <!-- Step 3A: If user chose "Upload Scans" -->
+          <div id="scansSection" class="mb-4">
+            <div class="upload-container border rounded-4 p-4 text-center" 
+                 style="background: linear-gradient(to bottom, #f8f9fa, #ffffff); min-height: 300px; border-width: 2px !important;">
+
+              <!-- Modern Drag & Drop Zone -->
+              <div class="drop-zone mb-4 py-5 rounded-4" 
+                   style="background: rgba(255,255,255,0.7); border: 1px dashed #dee2e6;">
+                <div class="mb-3">
+                  <i class="bi bi-cloud-upload fs-1 text-primary"></i>
+                </div>
+                <p class="mb-3 text-muted">Drag and drop your files here</p>
+                <input type="file" class="form-control d-none" id="fileUpload" multiple accept="image/*,.pdf,.doc,.docx">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="selectFilesBtn">
+                  <i class="bi bi-folder me-2"></i>Select files
+                </button>
+              </div>
+
+              <!-- Preview Section with improved spacing -->
+              <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-center mt-4"></div>
+
+              <!-- Modern File Information -->
+              <div class="mt-4 p-3 rounded-4 bg-white shadow-sm">
+                <div class="d-flex align-items-center justify-content-center gap-4 text-muted small">
+                  <div>
+                    <i class="bi bi-file-earmark me-1"></i>
+                    PNG, JPG, PDF, DOC
+                  </div>
+                  <div>
+                    <i class="bi bi-arrows-angle-expand me-1"></i>
+                    Max 50 MB
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3B: If user chose "LaTeX" -->
+          <div id="latexSection" class="mb-4">
+            <label for="solutionContent" class="form-label">
+              Type Your LaTeX Solution
+            </label>
+            <textarea
+              class="form-control"
+              id="solutionContent"
+              rows="6"
+              placeholder="Type your LaTeX here..."
+            ></textarea>
+            <div class="form-text">
+              Use LaTeX syntax (e.g., $E = mc^2$). We'll render it below.
+            </div>
+
+            <!-- Added Illustration Upload Section -->
+            <div class="mt-3">
+              <label for="latexIllustrations" class="form-label">
+                Add Illustrations (Optional)
+              </label>
+              <input
+                type="file"
+                class="form-control"
+                id="latexIllustrations"
+                multiple
+                accept="image/*"
+              />
+              <div class="form-text">
+                Upload any supporting diagrams or illustrations for your solution.
+              </div>
+              <!-- Preview for LaTeX illustrations -->
+              <div id="latexImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+            </div>
+
+            <!-- LaTeX Preview -->
+            <div class="my-3">
+              <h6>LaTeX Preview:</h6>
+              <div
+                id="latexPreview"
+                class="border rounded p-3 bg-light"
+                style="min-height: 80px;"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="text-center">
+            <button id="submitBtn" class="btn btn-primary rounded-pill px-4">
+              <i class="bi bi-cloud-upload me-2"></i> Submit Solution
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- /Main Content Column -->
+
+      <!-- Guidelines Sidebar -->
+      <div class="col-md-4">
+        <div class="content-card shadow-sm p-4">
+          <h4 class="mb-3"><%= __('upload.guidelines') %></h4>
+          <ul class="list-unstyled">
+            <li class="mb-3">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <%= __('upload.guideline1') %>
+            </li>
+            <li class="mb-3">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <%= __('upload.guideline2') %>
+            </li>
+            <li class="mb-3">
+              <i class="bi bi-check-circle-fill me-2"></i>
+              <%= __('upload.guideline3') %>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <!-- /Guidelines Sidebar -->
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-light py-4">
+    <div class="container text-center">
+      <p class="mb-0">
+        <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
+      </p>
+      <p class="mb-0">
+        <small>
+          All rights belong to the authors.
+          Commercial use of materials - with the written permission of the authors.
+          aliaksandr@melnichenka.com
+        </small>
+      </p>
+    </div>
+  </footer>
+  <!-- /Footer -->
+
+  <!-- Scripts -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+  ></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+  ></script>
+  
+  <!-- (Optional) MathJax for LaTeX rendering -->
+  <!-- Uncomment if you'd like real-time LaTeX rendering in the preview
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+  -->
+
+  <!-- Image Preview Modal -->
+  <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-body p-0">
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-2 bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <img id="previewModalImage" src="" alt="Preview" class="img-fluid w-100">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const methodScans = document.getElementById('methodScans');
+      const methodLatex = document.getElementById('methodLatex');
+      const scansSection = document.getElementById('scansSection');
+      const latexSection = document.getElementById('latexSection');
+      const fileUpload = document.getElementById('fileUpload');
+      const scansPreview = document.getElementById('scansPreview');
+      const solutionContent = document.getElementById('solutionContent');
+      const latexPreview = document.getElementById('latexPreview');
+      const submitBtn = document.getElementById('submitBtn');
+      const selectFilesBtn = document.getElementById('selectFilesBtn');
+
+      // Toggle sections based on selected method
+      function toggleSolutionMethod() {
+        if (methodScans.checked) {
+          scansSection.style.display = 'block';
+          latexSection.style.display = 'none';
+        } else if (methodLatex.checked) {
+          scansSection.style.display = 'none';
+          latexSection.style.display = 'block';
+        } else {
+          scansSection.style.display = 'none';
+          latexSection.style.display = 'none';
+        }
+      }
+
+      // Listen for changes in radio buttons
+      methodScans.addEventListener('change', toggleSolutionMethod);
+      methodLatex.addEventListener('change', toggleSolutionMethod);
+
+      // Create preview modal instance
+      const imagePreviewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+      const previewModalImage = document.getElementById('previewModalImage');
+
+      // Add drag and drop functionality
+      const uploadContainer = document.querySelector('.upload-container');
+      
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight(e) {
+        uploadContainer.classList.add('dragover');
+      }
+
+      function unhighlight(e) {
+        uploadContainer.classList.remove('dragover');
+      }
+
+      uploadContainer.addEventListener('drop', handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+      }
+
+      function handleFiles(files) {
+        [...files].forEach(previewFile);
+      }
+
+      // Update the existing file preview function
+      function previewFile(file) {
+        if (file.type.startsWith('image/')) {
+          const wrapper = document.createElement('div');
+          wrapper.classList.add('position-relative', 'image-wrapper');
+          
+          const img = document.createElement('img');
+          img.classList.add('img-thumbnail', 'cursor-pointer');
+          img.style.height = '100px';
+          img.style.objectFit = 'cover';
+          img.style.objectPosition = 'center';
+          img.style.cursor = 'pointer';
+          
+          // Create remove button
+          const removeBtn = document.createElement('button');
+          removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+          removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+          removeBtn.style.top = '-8px';
+          removeBtn.style.right = '-8px';
+          removeBtn.style.padding = '2px 6px';
+          removeBtn.style.fontSize = '14px';
+          removeBtn.style.opacity = '0.8';
+          removeBtn.style.transition = 'opacity 0.2s ease';
+          
+          // Updated remove button click handler with animation
+          removeBtn.onclick = function() {
+            wrapper.classList.add('fade-out');
+            setTimeout(() => {
+              wrapper.remove();
+            }, 100); // Match this with the CSS transition duration
+          };
+          // Add click handler for preview
+          img.onclick = function() {
+            previewModalImage.src = this.src;
+            imagePreviewModal.show();
+          };
+          
+          const reader = new FileReader();
+          reader.onload = (e) => (img.src = e.target.result);
+          reader.readAsDataURL(file);
+
+          wrapper.appendChild(img);
+          wrapper.appendChild(removeBtn);
+          scansPreview.appendChild(wrapper);
+        }
+      }
+
+      // Live preview for LaTeX text
+      solutionContent.addEventListener('input', function() {
+        latexPreview.textContent = this.value;
+
+        // If using MathJax for real-time rendering, reprocess here:
+        // if (window.MathJax) {
+        //   MathJax.typesetPromise([latexPreview]);
+        // }
+      });
+
+      // Simple submit flow
+      submitBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+
+        const problemName = document.getElementById('problemName').value;
+        const chosenMethod = methodScans.checked ? 'scans' : 'latex';
+        
+        // Gather form data
+        const formData = new FormData();
+        formData.append('problemName', problemName);
+        formData.append('method', chosenMethod);
+
+        if (chosenMethod === 'scans') {
+          // Add images
+          const files = fileUpload.files;
+          for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+          }
+        } else {
+          // Add LaTeX text and illustrations
+          formData.append('latexContent', solutionContent.value);
+          const illustrations = document.getElementById('latexIllustrations').files;
+          for (let i = 0; i < illustrations.length; i++) {
+            formData.append('illustrations', illustrations[i]);
+          }
+        }
+
+        try {
+          // Adjust URL as needed for your back-end
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            window.location.href = data.redirectUrl;
+          } else {
+            alert(data.message || 'There was an error uploading your solution.');
+          }
+        } catch (err) {
+          console.error(err);
+          alert('An error occurred while uploading. Please try again.');
+        }
+      });
+
+      // Update the LaTeX illustrations preview with animation
+      document.getElementById('latexIllustrations').addEventListener('change', function() {
+        const preview = document.getElementById('latexImagesPreview');
+        const files = this.files;
+        
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          if (file.type.startsWith('image/')) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('position-relative', 'image-wrapper');
+            
+            const img = document.createElement('img');
+            img.classList.add('img-thumbnail', 'cursor-pointer');
+            img.style.height = '100px';
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+            removeBtn.style.top = '-8px';
+            removeBtn.style.right = '-8px';
+            removeBtn.style.padding = '2px 6px';
+            removeBtn.style.fontSize = '14px';
+            removeBtn.style.opacity = '0.8';
+            removeBtn.style.transition = 'opacity 0.2s ease';
+            
+            // Updated remove button click handler with animation
+            removeBtn.onclick = function() {
+              wrapper.classList.add('fade-out');
+              setTimeout(() => {
+                wrapper.remove();
+              }, 100); // Match this with the CSS transition duration
+            };
+            // Add click handler for preview
+            img.onclick = function() {
+              previewModalImage.src = this.src;
+              imagePreviewModal.show();
+            };
+            
+            
+            const reader = new FileReader();
+            reader.onload = (e) => (img.src = e.target.result);
+            reader.readAsDataURL(file);
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(removeBtn);
+            preview.appendChild(wrapper);
+          }
+        }
+      });
+
+      // Add click handler for the select files button
+      selectFilesBtn.addEventListener('click', function() {
+        fileUpload.click();
+      });
+
+      // Add change handler for the file input
+      fileUpload.addEventListener('change', function(e) {
+        handleFiles(this.files);
+      });
+    });
+  </script>
 </body>
-</html> 
+</html>
