@@ -121,12 +121,7 @@
         </div>
       </div>
       <p class="hero-tagline">
-        <!-- A global, student-led platform. Physics peers share, review, and grow together, exploring collective problemsolving. -->
         A global student-led platform to collaborate, review, and grow through collective problem-solving.
-
-
-<!-- Physics peers share, review, and grow together, fueling collective discovery. -->
-<!-- A global, student-led platform for exploring 2,023 challenging physics problems. -->
       </p>
     </div>
   </header>
@@ -173,6 +168,7 @@
 
     <!-- Team & Acknowledgments -->
     <div class="row align-items-start justify-content-center mb-5">
+      <!-- Only show team image on lg screens or bigger -->
       <div class="col-lg-3 d-none d-lg-block">
         <img
           src="https://savchenkosolutions.com/img/team.png"
@@ -209,7 +205,7 @@
             );
             if (hasContent) { %>
         <div class="chapter-block mb-4">
-          <div class="d-flex align-items-center mb-3">
+          <div class="d-flex align-items-center mb-3 flex-wrap">
             <h4 class="chapter-title me-2 text-secondary">
               <%= __('chapter') %> <%= chapterIndex + 1 %>:
             </h4>
@@ -219,7 +215,7 @@
             <!-- Upload Button -->
             <a
               href="#"
-              class="edit-button"
+              class="edit-button mt-2 mt-sm-0"
               data-chapter="<%= chapterIndex + 1 %>"
             >
               <span class="upload-text"><%= __('upload.upload') %></span>
@@ -258,67 +254,70 @@
         <!-- Top Authors -->
         <div class="top-authors text-center br-10 shadow-sm">
             <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
-            <table class="table table-hover mx-auto" style="width: auto;">
-                <thead class="thead-light">
-                    <tr>
-                        <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
-                        <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
-                        <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>🥇</td>
-                        <td><a href="/user/Luisito" class="text-dark text-decoration-none">Luisito</a></td>
-                        <td>152</td>
-                    </tr>
-                    <tr>
-                        <td>🥈</td>
-                        <td><a href="/user/ar4senN" class="text-dark text-decoration-none">ar4senN</a></td>
-                        <td>127</td>
-                    </tr>
-                    <tr>
-                        <td>🥉</td>
-                        <td><a href="/user/diikann_" class="text-dark text-decoration-none">diikann_</a></td>
-                        <td>116</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td><a href="/user/Ismail" class="text-dark text-decoration-none">Ismail</a></td>
-                        <td>104</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td><a href="/user/a.yersh" class="text-dark text-decoration-none">a.yersh</a></td>
-                        <td>94</td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td><a href="/user/jepkinsss" class="text-dark text-decoration-none">jepkinsss</a></td>
-                        <td>77</td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td><a href="/user/_chender_" class="text-dark text-decoration-none">_chender_</a></td>
-                        <td>65</td>
-                    </tr>
-                    <tr>
-                        <td>8</td>
-                        <td><a href="/user/Sasha" class="text-dark text-decoration-none">Sasha</a></td>
-                        <td>22</td>
-                    </tr>
-                    <tr>
-                        <td>9</td>
-                        <td><a href="/user/Artoghrul" class="text-dark text-decoration-none">Artoghrul</a></td>
-                        <td>16</td>
-                    </tr>
-                    <tr>
-                        <td>10</td>
-                        <td><a href="/user/Nurbaqyt" class="text-dark text-decoration-none">Nurbaqyt</a></td>
-                        <td>11</td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Wrap table in table-responsive to allow horizontal scrolling on mobile -->
+            <div class="table-responsive">
+              <table class="table table-hover mx-auto">
+                  <thead class="thead-light">
+                      <tr>
+                          <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
+                          <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
+                          <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      <tr>
+                          <td>🥇</td>
+                          <td><a href="/user/Luisito" class="text-dark text-decoration-none">Luisito</a></td>
+                          <td>152</td>
+                      </tr>
+                      <tr>
+                          <td>🥈</td>
+                          <td><a href="/user/ar4senN" class="text-dark text-decoration-none">ar4senN</a></td>
+                          <td>127</td>
+                      </tr>
+                      <tr>
+                          <td>🥉</td>
+                          <td><a href="/user/diikann_" class="text-dark text-decoration-none">diikann_</a></td>
+                          <td>116</td>
+                      </tr>
+                      <tr>
+                          <td>4</td>
+                          <td><a href="/user/Ismail" class="text-dark text-decoration-none">Ismail</a></td>
+                          <td>104</td>
+                      </tr>
+                      <tr>
+                          <td>5</td>
+                          <td><a href="/user/a.yersh" class="text-dark text-decoration-none">a.yersh</a></td>
+                          <td>94</td>
+                      </tr>
+                      <tr>
+                          <td>6</td>
+                          <td><a href="/user/jepkinsss" class="text-dark text-decoration-none">jepkinsss</a></td>
+                          <td>77</td>
+                      </tr>
+                      <tr>
+                          <td>7</td>
+                          <td><a href="/user/_chender_" class="text-dark text-decoration-none">_chender_</a></td>
+                          <td>65</td>
+                      </tr>
+                      <tr>
+                          <td>8</td>
+                          <td><a href="/user/Sasha" class="text-dark text-decoration-none">Sasha</a></td>
+                          <td>22</td>
+                      </tr>
+                      <tr>
+                          <td>9</td>
+                          <td><a href="/user/Artoghrul" class="text-dark text-decoration-none">Artoghrul</a></td>
+                          <td>16</td>
+                      </tr>
+                      <tr>
+                          <td>10</td>
+                          <td><a href="/user/Nurbaqyt" class="text-dark text-decoration-none">Nurbaqyt</a></td>
+                          <td>11</td>
+                      </tr>
+                  </tbody>
+              </table>
+            </div>
         </div>
 
         <!-- Recent Contributions -->
@@ -387,6 +386,10 @@
       </p>
     </div>
   </footer>
+
+  <!-- ============================
+       SCRIPTS
+  ============================ -->
   <style>
     .search-results {
         text-align: left;
@@ -403,11 +406,12 @@
     .search-results li:hover {
         background-color: #f1f1f1;
     }
-</style>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
+  </style>
+  
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
     const searchInput = document.getElementById("searchInput");
     const searchResults = document.getElementById("searchResults");
     const searchResultsList = document.querySelector("#searchResults ul");
@@ -524,22 +528,10 @@
         this.style.display = "none";
         searchInput.focus();
     });
-</script>
-    <!-- Add these elements somewhere in your HTML body -->
+  </script>
 
-<!-- Pop-up Window -->
-<div id="edit-popup">
-    <h3><%= __('popup.title') %></h3>
-    <input type="text" id="problem-name" placeholder="<%= __('popup.placeholder') %>" />
-    <button id="submit-problem"><%= __('popup.submit') %></button>
-    <button id="cancel-edit"><%= __('popup.cancel') %></button>
-</div>
-
-<!-- Overlay -->
-<div id="popup-overlay">
-</div>
-
-<script>
+  <!-- Pop-up handling -->
+  <script>
     document.addEventListener("DOMContentLoaded", () => {
         // Add preload class to body initially
         document.body.classList.add('preload');
@@ -618,7 +610,6 @@
             }
         });
     });
-</script>
-
+  </script>
 </body>
 </html>
