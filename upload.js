@@ -24,18 +24,30 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 // Handle file upload
-router.post("/api/upload", checkAuthenticated, async (req, res) => {
+router.post("/api/upload", async (req, res) => {
     try {
-        if (!req.body.problemNumber || !req.body.solution) {
+        console.log("Request body:", req.body);
+        console.log("Request files:", req.files);
+        
+        const lang = req.body.lang || 'en';
+        
+        if (!req.body.problemName || !req.body.method) {
             return res.status(400).json({
                 success: false,
-                message: 'Problem number and solution are required'
+                message: 'Problem name and solution method are required'
             });
         }
 
-        const problemNumber = req.body.problemNumber;
-        const lang = req.body.lang || 'en';
-        const solution = req.body.solution;
+        // Check if user is authenticated or provided full name
+        if (!req.session.userId && !req.body.fullName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide your full name or login to continue'
+            });
+        }
+
+        const problemNumber = req.body.problemName;
+        const solution = req.body.method === 'latex' ? req.body.latexContent : '';
 
         // Validate problem number format
         if (!problemNumber || !problemNumber.match(/^\d+\.\d+\.\d+$/)) {
@@ -84,62 +96,87 @@ $${problemNumber}.$ ${solution}
             });
         }
 
-        // Process images using Sharp
-        const uploadDir = path.join(__dirname, 'img', problemNumber);
-        fs.mkdirSync(uploadDir, { recursive: true });
+        // Update the files check to properly handle FormData uploads
+        const uploadedFiles = [];
+        if (req.files) {
+            // Handle both 'files' and 'illustrations' arrays if they exist
+            const fileArrays = ['files', 'illustrations'];
+            
+            for (const fileType of fileArrays) {
+                if (req.files[fileType]) {
+                    const files = Array.isArray(req.files[fileType]) 
+                        ? req.files[fileType] 
+                        : [req.files[fileType]];
+                    uploadedFiles.push(...files);
+                }
+            }
+        }
 
-        const uploadedFiles = Array.isArray(req.files.files) ? req.files.files : [req.files.files];
+        console.log("Processed uploaded files:", uploadedFiles);
+
         const imageResults = [];
 
-        // Add size validation
-        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-        const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20MB
-        let totalSize = 0;
+        // Create base img directory if it doesn't exist
+        const baseImgDir = path.join(__dirname, 'img', problemNumber);
+        fs.mkdirSync(baseImgDir, { recursive: true });
 
-        for (const file of uploadedFiles) {
-            // Check individual file size
-            if (file.size > MAX_FILE_SIZE) {
-                return res.status(400).json({
-                    success: false,
-                    message: `File ${file.name} exceeds maximum size of 5MB`
-                });
-            }
+        console.log(uploadedFiles);
+        
+        // Process images only if files were uploaded
+        if (uploadedFiles.length > 0) {
+            const uploadDir = path.join(__dirname, 'img', problemNumber);
+            fs.mkdirSync(uploadDir, { recursive: true });
 
-            // Check total upload size
-            totalSize += file.size;
-            if (totalSize > MAX_TOTAL_SIZE) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Total upload size exceeds maximum of 20MB'
-                });
-            }
+            // Add size validation
+            const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+            const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20MB
+            let totalSize = 0;
 
-            // Validate file type
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
-            if (!allowedTypes.includes(file.mimetype)) {
-                return res.status(400).json({
-                    success: false,
-                    message: `File ${file.name} has invalid type. Only JPG, PNG, GIF and SVG are allowed`
-                });
-            }
+            for (const file of uploadedFiles) {
+                // Check individual file size
+                if (file.size > MAX_FILE_SIZE) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `File ${file.name} exceeds maximum size of 5MB`
+                    });
+                }
 
-            const filePath = path.join(uploadDir, file.name);
-            
-            // Use Sharp to process and save the image
-            const imageBuffer = file.data;
-            await sharp(imageBuffer)
-                .toFile(filePath);
+                // Check total upload size
+                totalSize += file.size;
+                if (totalSize > MAX_TOTAL_SIZE) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Total upload size exceeds maximum of 20MB'
+                    });
+                }
 
-            // Get image dimensions using Sharp
-            try {
-                const metadata = await sharp(filePath).metadata();
-                imageResults.push({
-                    imagePath: `/img/${problemNumber}/${file.name}`,
-                    width: metadata.width,
-                    height: metadata.height
-                });
-            } catch (err) {
-                console.error("Error getting image metadata:", err);
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
+                if (!allowedTypes.includes(file.mimetype)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `File ${file.name} has invalid type. Only JPG, PNG, GIF and SVG are allowed`
+                    });
+                }
+
+                const filePath = path.join(uploadDir, file.name);
+                
+                // Use Sharp to process and save the image
+                const imageBuffer = file.data;
+                await sharp(imageBuffer)
+                    .toFile(filePath);
+
+                // Get image dimensions using Sharp
+                try {
+                    const metadata = await sharp(filePath).metadata();
+                    imageResults.push({
+                        imagePath: `/img/${problemNumber}/${file.name}`,
+                        width: metadata.width,
+                        height: metadata.height
+                    });
+                } catch (err) {
+                    console.error("Error getting image metadata:", err);
+                }
             }
         }
 
@@ -148,6 +185,7 @@ $${problemNumber}.$ ${solution}
 
         // Record the creation in contributions table
         const userId = req.session.userId || null;
+        const fullName = req.body.fullName || null;
         const clientIp = req.headers["x-forwarded-for"] || req.ip;
 
         await pool.query(
@@ -159,9 +197,10 @@ $${problemNumber}.$ ${solution}
                 original_content,
                 new_content,
                 ip_address,
-                content_changed
-            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)`,
-            [userId, problemNumber, lang, '', content, clientIp, false]
+                content_changed,
+                full_name
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8)`,
+            [userId, problemNumber, lang, '', content, clientIp, false, fullName]
         );
 
         return res.json({
@@ -175,6 +214,7 @@ $${problemNumber}.$ ${solution}
 
     } catch (error) {
         console.error('Upload error:', error);
+        const lang = req.body.lang || 'en';
         res.status(500).json({
             success: false,
             message: lang === 'ru' ?
@@ -197,7 +237,7 @@ function checkAuthenticated(req, res, next) {
 }
 
 // Upload page routes
-router.get(["/upload", "/:lang([a-z]{2})/upload"], checkAuthenticated, async (req, res) => {
+router.get(["/upload", "/:lang([a-z]{2})/upload"], async (req, res) => {
     const lang = req.params.lang || req.query.lang || 'en';
     i18n.setLocale(res, lang);
     
@@ -219,5 +259,21 @@ router.get(["/upload", "/:lang([a-z]{2})/upload"], checkAuthenticated, async (re
     });
 });
 
+// Add new route for problem verification
+router.get("/api/verify-problem/:id", async (req, res) => {
+    try {
+        const problemNumber = req.params.id;
+        const lang = req.query.lang || 'en';
+        
+        // Check if problem exists in the posts directory
+        const problemPath = path.join(__dirname, "posts", lang, `${problemNumber}.md`);
+        const exists = fs.existsSync(problemPath);
+
+        res.json({ exists });
+    } catch (error) {
+        console.error('Problem verification error:', error);
+        res.status(500).json({ error: 'Failed to verify problem' });
+    }
+});
 
 module.exports = router;
