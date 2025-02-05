@@ -206,7 +206,6 @@
             <label for="problemName" class="form-label step-label">
               <strong>1.</strong> Select a Problem
             </label>
-            <!-- Could be an <input> or a <select> or an autocomplete field -->
             <input
               type="text"
               class="form-control"
@@ -214,8 +213,24 @@
               placeholder="e.g., 13.4.1"
               required
             />
-            <div class="form-text">
-              Select or type the exact name/number of the problem you're solving.
+            <div id="problemStatus" class="form-text mt-2"></div>
+          </div>
+
+          <!-- Add Anonymous User Info Section -->
+          <div id="anonymousSection" class="mb-4" style="display: none;">
+            <label class="form-label step-label">
+              <strong>1b.</strong> Your Information
+            </label>
+            <div class="mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="fullName"
+                placeholder="Your Full Name"
+              />
+              <div class="form-text">
+                Please provide your full name or <a href="/<%= lang %>/login" class="text-primary">login</a> to continue
+              </div>
             </div>
           </div>
 
@@ -334,7 +349,7 @@
 
           <!-- Submit Button -->
           <div class="text-center">
-            <button id="submitBtn" class="btn btn-primary rounded-pill px-4">
+            <button id="submitBtn" class="btn btn-primary rounded-pill px-4" disabled>
               <i class="bi bi-cloud-upload me-2"></i> Submit Solution
             </button>
           </div>
@@ -476,58 +491,50 @@
       function handleDrop(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        handleFiles(files);
-      }
+        fileUpload.files = files; // Update the file input
+        [...files].forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('position-relative', 'image-wrapper');
+            
+            const img = document.createElement('img');
+            img.classList.add('img-thumbnail', 'cursor-pointer');
+            img.style.height = '100px';
+            img.style.width = '100px';
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+            removeBtn.style.top = '-8px';
+            removeBtn.style.right = '-8px';
+            
+            removeBtn.onclick = function() {
+              wrapper.classList.add('fade-out');
+              setTimeout(() => {
+                wrapper.remove();
+                validateForm();
+              }, 300);
+            };
+            
+            img.onclick = function() {
+              previewModalImage.src = this.src;
+              imagePreviewModal.show();
+            };
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              img.src = e.target.result;
+              validateForm();
+            };
+            reader.readAsDataURL(file);
 
-      function handleFiles(files) {
-        [...files].forEach(previewFile);
-      }
-
-      // Update the existing file preview function
-      function previewFile(file) {
-        if (file.type.startsWith('image/')) {
-          const wrapper = document.createElement('div');
-          wrapper.classList.add('position-relative', 'image-wrapper');
-          
-          const img = document.createElement('img');
-          img.classList.add('img-thumbnail', 'cursor-pointer');
-          img.style.height = '100px';
-          img.style.objectFit = 'cover';
-          img.style.objectPosition = 'center';
-          img.style.cursor = 'pointer';
-          
-          // Create remove button
-          const removeBtn = document.createElement('button');
-          removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-          removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
-          removeBtn.style.top = '-8px';
-          removeBtn.style.right = '-8px';
-          removeBtn.style.padding = '2px 6px';
-          removeBtn.style.fontSize = '14px';
-          removeBtn.style.opacity = '0.8';
-          removeBtn.style.transition = 'opacity 0.2s ease';
-          
-          // Updated remove button click handler with animation
-          removeBtn.onclick = function() {
-            wrapper.classList.add('fade-out');
-            setTimeout(() => {
-              wrapper.remove();
-            }, 100); // Match this with the CSS transition duration
-          };
-          // Add click handler for preview
-          img.onclick = function() {
-            previewModalImage.src = this.src;
-            imagePreviewModal.show();
-          };
-          
-          const reader = new FileReader();
-          reader.onload = (e) => (img.src = e.target.result);
-          reader.readAsDataURL(file);
-
-          wrapper.appendChild(img);
-          wrapper.appendChild(removeBtn);
-          scansPreview.appendChild(wrapper);
-        }
+            wrapper.appendChild(img);
+            wrapper.appendChild(removeBtn);
+            scansPreview.appendChild(wrapper);
+          }
+        });
       }
 
       // Live preview for LaTeX text
@@ -540,24 +547,117 @@
         // }
       });
 
-      // Simple submit flow
+      // Add problem verification
+      const problemNameInput = document.getElementById('problemName');
+      const anonymousSection = document.getElementById('anonymousSection');
+      const problemStatus = document.getElementById('problemStatus');
+      
+      let problemDebounceTimer;
+      
+      problemNameInput.addEventListener('input', function() {
+        clearTimeout(problemDebounceTimer);
+        problemDebounceTimer = setTimeout(async () => {
+          const problemName = this.value.trim();
+          
+          // Check problem name format (e.g., "13.4.1")
+          const problemFormat = /^\d+\.\d+\.\d+$/;
+          if (problemName && !problemFormat.test(problemName)) {
+            problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
+            anonymousSection.style.display = 'none';
+            return;
+          }
+
+          if (problemName) {
+            try {
+              const response = await fetch(`/api/verify-problem/${problemName}`);
+              const data = await response.json();
+              
+              if (data.exists) {
+                problemStatus.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-circle"></i> Problem already exists</span>';
+                anonymousSection.style.display = 'none';
+              } else if (data.existsInOtherLang) {
+                const otherLang = '<%= lang %>' === 'en' ? 'Russian' : 'English';
+                problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> Problem exists in ${otherLang}. Your solution will be linked.</span>`;
+                anonymousSection.style.display = 'none';
+              } else {
+                problemStatus.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> New problem - ready to submit</span>';
+                anonymousSection.style.display = 'block';
+              }
+            } catch (err) {
+              console.error(err);
+              problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Error checking problem</span>';
+            }
+          }
+        }, 500);
+      });
+
+      // Add validation function
+      function validateForm() {
+        const problemName = problemNameInput.value.trim();
+        const methodSelected = methodScans.checked || methodLatex.checked;
+        const fullNameInput = document.getElementById('fullName');
+        
+        // Check if anonymous section is visible and requires name
+        const needsFullName = anonymousSection.style.display !== 'none';
+        const hasFullName = fullNameInput ? fullNameInput.value.trim() : true;
+
+        // Check for content based on selected method
+        let hasContent = false;
+        if (methodScans.checked) {
+          hasContent = scansPreview.children.length > 0;
+        } else if (methodLatex.checked) {
+          hasContent = solutionContent.value.trim().length > 0;
+        }
+
+        // Enable submit button only if all required fields are filled
+        submitBtn.disabled = !(
+          problemName && 
+          methodSelected && 
+          hasContent && 
+          (!needsFullName || hasFullName)
+        );
+      }
+
+      // Add validation listeners
+      problemNameInput.addEventListener('input', validateForm);
+      methodScans.addEventListener('change', validateForm);
+      methodLatex.addEventListener('change', validateForm);
+      solutionContent.addEventListener('input', validateForm);
+      if (document.getElementById('fullName')) {
+        document.getElementById('fullName').addEventListener('input', validateForm);
+      }
+
+      // Update submit handler
       submitBtn.addEventListener('click', async function(e) {
         e.preventDefault();
 
         const problemName = document.getElementById('problemName').value;
-        const chosenMethod = methodScans.checked ? 'scans' : 'latex';
+        const fullName = document.getElementById('fullName')?.value;
         
-        // Gather form data
+        // Validate anonymous submission
+        if (anonymousSection.style.display !== 'none' && !fullName) {
+          alert('Please provide your full name or login to continue');
+          return;
+        }
+
         const formData = new FormData();
         formData.append('problemName', problemName);
-        formData.append('method', chosenMethod);
+        formData.append('method', methodScans.checked ? 'scans' : 'latex');
+        formData.append('lang', '<%= lang %>');
+        if (fullName) formData.append('fullName', fullName);
 
-        if (chosenMethod === 'scans') {
-          // Add images
-          const files = fileUpload.files;
-          for (let i = 0; i < files.length; i++) {
-            formData.append('files', files[i]);
-          }
+        if (methodScans.checked) {
+          // Get all images from the preview div
+          const previewImages = scansPreview.querySelectorAll('img');
+          previewImages.forEach((img, index) => {
+            // Convert base64 back to file
+            fetch(img.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], `scan-${index}.png`, { type: 'image/png' });
+                    formData.append('files', file);
+                });
+          });
         } else {
           // Add LaTeX text and illustrations
           formData.append('latexContent', solutionContent.value);
@@ -568,10 +668,9 @@
         }
 
         try {
-          // Adjust URL as needed for your back-end
           const response = await fetch('/api/upload', {
             method: 'POST',
-            body: formData,
+            body: formData, // FormData will automatically set the correct Content-Type
           });
           const data = await response.json();
           
@@ -643,9 +742,52 @@
         fileUpload.click();
       });
 
-      // Add change handler for the file input
+      // Update the file input change handler
       fileUpload.addEventListener('change', function(e) {
-        handleFiles(this.files);
+        const files = this.files;
+        [...files].forEach(file => {
+          if (file.type.startsWith('image/')) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('position-relative', 'image-wrapper');
+            
+            const img = document.createElement('img');
+            img.classList.add('img-thumbnail', 'cursor-pointer');
+            img.style.height = '100px';
+            img.style.width = '100px';
+            img.style.objectFit = 'cover';
+            img.style.objectPosition = 'center';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+            removeBtn.style.top = '-8px';
+            removeBtn.style.right = '-8px';
+            
+            removeBtn.onclick = function() {
+              wrapper.classList.add('fade-out');
+              setTimeout(() => {
+                wrapper.remove();
+                validateForm();
+              }, 300);
+            };
+            
+            img.onclick = function() {
+              previewModalImage.src = this.src;
+              imagePreviewModal.show();
+            };
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              img.src = e.target.result;
+              validateForm();
+            };
+            reader.readAsDataURL(file);
+
+            wrapper.appendChild(img);
+            wrapper.appendChild(removeBtn);
+            scansPreview.appendChild(wrapper);
+          }
+        });
       });
     });
   </script>
