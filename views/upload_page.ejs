@@ -105,6 +105,49 @@
     .drop-zone {
       cursor: pointer;
     }
+
+    /* Add these new styles */
+    .zoomed {
+      cursor: zoom-out !important;
+      transform-origin: center;
+      transition: transform 0.3s ease;
+    }
+
+    .modal-xl {
+      max-width: 95vw;
+    }
+
+    #prevImage, #nextImage {
+      z-index: 1060;
+      width: 40px;
+      height: 40px;
+      padding: 8px;
+      opacity: 0.8;
+      transition: opacity 0.2s;
+    }
+
+    #prevImage:hover, #nextImage:hover {
+      opacity: 1;
+    }
+
+    /* Add these styles for the preview section */
+    #scansPreview {
+      width: 100%;
+      min-height: 100px;
+    }
+
+    .image-wrapper {
+      transition: all 0.3s ease-out;
+      opacity: 1;
+      transform: scale(1);
+      flex: 0 0 auto; /* Prevent flex items from growing/shrinking */
+    }
+
+    /* Update the existing image-wrapper.fade-out style */
+    .image-wrapper.fade-out {
+      opacity: 0;
+      transform: scale(0.8);
+    }
   </style>
 </head>
 
@@ -286,7 +329,7 @@
               </div>
 
               <!-- Preview Section -->
-              <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-center mt-4"></div>
+              <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-start mt-4"></div>
 
               <!-- Modern File Information -->
               <div class="mt-4 p-3 rounded-4 bg-white shadow-sm">
@@ -413,13 +456,31 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
   -->
 
-  <!-- Image Preview Modal -->
+  <!-- Replace the existing Image Preview Modal with this new one -->
   <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-body p-0">
-          <button type="button" class="btn-close position-absolute top-0 end-0 m-2 bg-white" data-bs-dismiss="modal" aria-label="Close"></button>
-          <img id="previewModalImage" src="" alt="Preview" class="img-fluid w-100">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+      <div class="modal-content bg-dark">
+        <div class="modal-body p-0 position-relative">
+          <!-- Navigation buttons -->
+          <button type="button" class="btn btn-light position-absolute top-50 start-0 translate-middle-y rounded-circle ms-3" id="prevImage">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <button type="button" class="btn btn-light position-absolute top-50 end-0 translate-middle-y rounded-circle me-3" id="nextImage">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          
+          <!-- Close button -->
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+          
+          <!-- Image container with zoom capability -->
+          <div class="text-center" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+            <img id="previewModalImage" src="" alt="Preview" class="img-fluid" style="max-height: 80vh; cursor: zoom-in;">
+          </div>
+          
+          <!-- Image counter -->
+          <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 px-3 py-1 bg-dark bg-opacity-75 rounded-pill text-white">
+            <span id="imageCounter">1/1</span>
+          </div>
         </div>
       </div>
     </div>
@@ -459,6 +520,122 @@
       // Create preview modal instance
       const imagePreviewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
       const previewModalImage = document.getElementById('previewModalImage');
+      const prevButton = document.getElementById('prevImage');
+      const nextButton = document.getElementById('nextImage');
+      const imageCounter = document.getElementById('imageCounter');
+      let currentImageIndex = 0;
+      let currentImages = [];
+
+      // Function to update modal navigation
+      function updateModalNavigation() {
+        // Get all current preview images every time we update navigation
+        currentImages = Array.from(scansPreview.querySelectorAll('img'))
+          .map(img => img.dataset.fileData || img.src)
+          .filter(src => src); // Filter out any undefined or empty sources
+        
+        imageCounter.textContent = `${currentImageIndex + 1}/${currentImages.length}`;
+        prevButton.style.display = currentImages.length > 1 ? 'block' : 'none';
+        nextButton.style.display = currentImages.length > 1 ? 'block' : 'none';
+      }
+
+      // Handle image navigation
+      prevButton.addEventListener('click', () => {
+        currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+        previewModalImage.src = currentImages[currentImageIndex];
+        updateModalNavigation();
+      });
+
+      nextButton.addEventListener('click', () => {
+        currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+        previewModalImage.src = currentImages[currentImageIndex];
+        updateModalNavigation();
+      });
+
+      // Add keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (imagePreviewModal._element.classList.contains('show')) {
+          if (e.key === 'ArrowLeft') prevButton.click();
+          if (e.key === 'ArrowRight') nextButton.click();
+          if (e.key === 'Escape') imagePreviewModal.hide();
+        }
+      });
+
+      // Handle zoom functionality
+      previewModalImage.addEventListener('click', function() {
+        if (this.classList.contains('zoomed')) {
+          this.style.transform = 'scale(1)';
+          this.classList.remove('zoomed');
+        } else {
+          this.style.transform = 'scale(1.5)';
+          this.classList.add('zoomed');
+        }
+      });
+
+      // Update the image preview click handlers
+      function setupImagePreview(img) {
+        img.onclick = function() {
+          // Get fresh list of images and find current index
+          currentImages = Array.from(scansPreview.querySelectorAll('img'))
+            .map(img => img.dataset.fileData || img.src)
+            .filter(src => src);
+          currentImageIndex = currentImages.indexOf(this.dataset.fileData || this.src);
+          
+          previewModalImage.src = this.dataset.fileData || this.src;
+          previewModalImage.style.transform = 'scale(1)';
+          previewModalImage.classList.remove('zoomed');
+          updateModalNavigation();
+          imagePreviewModal.show();
+        };
+      }
+
+      // Update the preview creation code
+      function createPreviewImage(file, container) {
+        const wrapper = document.createElement('div');
+        wrapper.classList.add('position-relative', 'image-wrapper');
+        
+        const img = document.createElement('img');
+        img.classList.add('img-thumbnail', 'cursor-pointer');
+        img.style.height = '100px';
+        img.style.width = '100px';
+        img.style.objectFit = 'cover';
+        img.style.objectPosition = 'center';
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          img.src = e.target.result;
+          // Store the file data in a data attribute for later use
+          img.dataset.fileData = e.target.result;
+          // Get all current preview images after this image is loaded
+          const allImages = Array.from(container.querySelectorAll('img'))
+            .map(img => img.dataset.fileData || img.src)
+            .filter(src => src); // Filter out any undefined or empty sources
+          setupImagePreview(img, allImages);
+          validateForm();
+        };
+        reader.readAsDataURL(file);
+
+        // Add remove button
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+        removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+        removeBtn.style.top = '-8px';
+        removeBtn.style.right = '-8px';
+        
+        removeBtn.onclick = function() {
+          wrapper.classList.add('fade-out');
+          setTimeout(() => {
+            wrapper.remove();
+            validateForm();
+          }, 300);
+        };
+
+        wrapper.appendChild(img);
+        wrapper.appendChild(removeBtn);
+        
+        // Insert at the beginning of the container instead of appending
+        container.insertBefore(wrapper, container.firstChild);
+
+      }
 
       // Add drag and drop functionality
       const uploadContainer = document.querySelector('.upload-container');
@@ -496,45 +673,7 @@
         fileUpload.files = files; // Update the file input
         [...files].forEach(file => {
           if (file.type.startsWith('image/')) {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('position-relative', 'image-wrapper');
-            
-            const img = document.createElement('img');
-            img.classList.add('img-thumbnail', 'cursor-pointer');
-            img.style.height = '100px';
-            img.style.width = '100px';
-            img.style.objectFit = 'cover';
-            img.style.objectPosition = 'center';
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
-            removeBtn.style.top = '-8px';
-            removeBtn.style.right = '-8px';
-            
-            removeBtn.onclick = function() {
-              wrapper.classList.add('fade-out');
-              setTimeout(() => {
-                wrapper.remove();
-                validateForm();
-              }, 300);
-            };
-            
-            img.onclick = function() {
-              previewModalImage.src = this.src;
-              imagePreviewModal.show();
-            };
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              img.src = e.target.result;
-              validateForm();
-            };
-            reader.readAsDataURL(file);
-
-            wrapper.appendChild(img);
-            wrapper.appendChild(removeBtn);
-            scansPreview.appendChild(wrapper);
+            createPreviewImage(file, scansPreview);
           }
         });
       }
@@ -692,46 +831,7 @@
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           if (file.type.startsWith('image/')) {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('position-relative', 'image-wrapper');
-            
-            const img = document.createElement('img');
-            img.classList.add('img-thumbnail', 'cursor-pointer');
-            img.style.height = '100px';
-            img.style.objectFit = 'cover';
-            img.style.objectPosition = 'center';
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
-            removeBtn.style.top = '-8px';
-            removeBtn.style.right = '-8px';
-            removeBtn.style.padding = '2px 6px';
-            removeBtn.style.fontSize = '14px';
-            removeBtn.style.opacity = '0.8';
-            removeBtn.style.transition = 'opacity 0.2s ease';
-            
-            // Updated remove button click handler with animation
-            removeBtn.onclick = function() {
-              wrapper.classList.add('fade-out');
-              setTimeout(() => {
-                wrapper.remove();
-              }, 100); // Match this with the CSS transition duration
-            };
-            // Add click handler for preview
-            img.onclick = function() {
-              previewModalImage.src = this.src;
-              imagePreviewModal.show();
-            };
-            
-            
-            const reader = new FileReader();
-            reader.onload = (e) => (img.src = e.target.result);
-            reader.readAsDataURL(file);
-
-            wrapper.appendChild(img);
-            wrapper.appendChild(removeBtn);
-            preview.appendChild(wrapper);
+            createPreviewImage(file, preview);
           }
         }
       });
@@ -746,45 +846,7 @@
         const files = this.files;
         [...files].forEach(file => {
           if (file.type.startsWith('image/')) {
-            const wrapper = document.createElement('div');
-            wrapper.classList.add('position-relative', 'image-wrapper');
-            
-            const img = document.createElement('img');
-            img.classList.add('img-thumbnail', 'cursor-pointer');
-            img.style.height = '100px';
-            img.style.width = '100px';
-            img.style.objectFit = 'cover';
-            img.style.objectPosition = 'center';
-            
-            const removeBtn = document.createElement('button');
-            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-            removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
-            removeBtn.style.top = '-8px';
-            removeBtn.style.right = '-8px';
-            
-            removeBtn.onclick = function() {
-              wrapper.classList.add('fade-out');
-              setTimeout(() => {
-                wrapper.remove();
-                validateForm();
-              }, 300);
-            };
-            
-            img.onclick = function() {
-              previewModalImage.src = this.src;
-              imagePreviewModal.show();
-            };
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              img.src = e.target.result;
-              validateForm();
-            };
-            reader.readAsDataURL(file);
-
-            wrapper.appendChild(img);
-            wrapper.appendChild(removeBtn);
-            scansPreview.appendChild(wrapper);
+            createPreviewImage(file, scansPreview);
           }
         });
       });
