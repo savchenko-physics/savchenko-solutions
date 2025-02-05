@@ -272,18 +272,20 @@
 
               <!-- Modern Drag & Drop Zone -->
               <div class="drop-zone mb-4 py-5 rounded-4" 
-                   style="background: rgba(255,255,255,0.7); border: 1px dashed #dee2e6;">
+                   style="background: rgba(255,255,255,0.7); border: 1px dashed #dee2e6;"
+                   onclick="document.getElementById('fileUpload').click()">
                 <div class="mb-3">
                   <i class="bi bi-cloud-upload fs-1 text-primary"></i>
                 </div>
                 <p class="mb-3 text-muted">Drag and drop your files here</p>
-                <input type="file" class="form-control d-none" id="fileUpload" multiple accept="image/*,.pdf,.doc,.docx">
-                <button class="btn btn-outline-secondary rounded-pill px-4" id="selectFilesBtn">
+                <input type="file" class="form-control d-none" id="fileUpload" name="files" multiple accept="image/*">
+                <button class="btn btn-outline-secondary rounded-pill px-4" id="selectFilesBtn" 
+                        onclick="event.stopPropagation()">
                   <i class="bi bi-folder me-2"></i>Select files
                 </button>
               </div>
 
-              <!-- Preview Section with improved spacing -->
+              <!-- Preview Section -->
               <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-center mt-4"></div>
 
               <!-- Modern File Information -->
@@ -551,6 +553,7 @@
       const problemNameInput = document.getElementById('problemName');
       const anonymousSection = document.getElementById('anonymousSection');
       const problemStatus = document.getElementById('problemStatus');
+      const isSignedIn = <%= !!locals.usernameCurrent %>;
       
       let problemDebounceTimer;
       
@@ -581,7 +584,7 @@
                 anonymousSection.style.display = 'none';
               } else {
                 problemStatus.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> New problem - ready to submit</span>';
-                anonymousSection.style.display = 'block';
+                anonymousSection.style.display = isSignedIn ? 'none' : 'block';
               }
             } catch (err) {
               console.error(err);
@@ -598,7 +601,7 @@
         const fullNameInput = document.getElementById('fullName');
         
         // Check if anonymous section is visible and requires name
-        const needsFullName = anonymousSection.style.display !== 'none';
+        const needsFullName = !isSignedIn && anonymousSection.style.display !== 'none';
         const hasFullName = fullNameInput ? fullNameInput.value.trim() : true;
 
         // Check for content based on selected method
@@ -631,49 +634,45 @@
       submitBtn.addEventListener('click', async function(e) {
         e.preventDefault();
 
-        const problemName = document.getElementById('problemName').value;
-        const fullName = document.getElementById('fullName')?.value;
-        
-        // Validate anonymous submission
-        if (anonymousSection.style.display !== 'none' && !fullName) {
-          alert('Please provide your full name or login to continue');
-          return;
-        }
-
         const formData = new FormData();
-        formData.append('problemName', problemName);
+        formData.append('problemName', problemNameInput.value);
         formData.append('method', methodScans.checked ? 'scans' : 'latex');
         formData.append('lang', '<%= lang %>');
-        if (fullName) formData.append('fullName', fullName);
+        
+        if (document.getElementById('fullName')) {
+          formData.append('fullName', document.getElementById('fullName').value);
+        }
 
         if (methodScans.checked) {
-          // Get all images from the preview div
+          // Get all images from the preview div and append them to formData
           const previewImages = scansPreview.querySelectorAll('img');
-          previewImages.forEach((img, index) => {
-            // Convert base64 back to file
+          const promises = Array.from(previewImages).map((img, index) =>
             fetch(img.src)
-                .then(res => res.blob())
-                .then(blob => {
-                    const file = new File([blob], `scan-${index}.png`, { type: 'image/png' });
-                    formData.append('files', file);
-                });
-          });
+              .then(res => res.blob())
+              .then(blob => {
+                const fileName = `scan-${index}.png`;
+                formData.append('files', blob, fileName);
+              })
+          );
+
+          // Wait for all images to be processed
+          await Promise.all(promises);
         } else {
-          // Add LaTeX text and illustrations
+          // Handle LaTeX content
           formData.append('latexContent', solutionContent.value);
           const illustrations = document.getElementById('latexIllustrations').files;
-          for (let i = 0; i < illustrations.length; i++) {
-            formData.append('illustrations', illustrations[i]);
-          }
+          Array.from(illustrations).forEach(file => {
+            formData.append('illustrations', file);
+          });
         }
 
         try {
           const response = await fetch('/api/upload', {
             method: 'POST',
-            body: formData, // FormData will automatically set the correct Content-Type
+            body: formData
           });
-          const data = await response.json();
           
+          const data = await response.json();
           if (data.success) {
             window.location.href = data.redirectUrl;
           } else {
