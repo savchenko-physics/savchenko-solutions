@@ -56,12 +56,20 @@
       align-items: center;
     }
     .modern-search {
-      background-color: #343a40;
+      background-color: rgba(255, 255, 255, 0.1);
       color: #fff;
-      border: 1px solid #495057;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+      padding-left: 2.5rem !important;
+    }
+    .modern-search:focus {
+      background-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
+      color: #fff;
     }
     .modern-search::placeholder {
-      color: #adb5bd;
+      color: rgba(255, 255, 255, 0.6);
     }
     .content-card {
       background-color: #fff;
@@ -110,7 +118,7 @@
     .zoomed {
       cursor: zoom-out !important;
       transform-origin: center;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease-out !important;
     }
 
     .modal-xl {
@@ -148,6 +156,43 @@
       opacity: 0;
       transform: scale(0.8);
     }
+
+    /* Search Results Styling */
+    .cdx-menu-item {
+      padding: 0.75rem 1rem;
+      transition: all 0.2s ease;
+      border-radius: 0.5rem;
+      margin: 0 0.5rem;
+    }
+
+    .cdx-menu-item:hover {
+      background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .cdx-menu-item__content {
+      display: block;
+    }
+
+    .cdx-search-result-title {
+      font-weight: 500;
+      color: #1a1a1a;
+      margin-bottom: 0.25rem;
+    }
+
+    .cdx-menu-item__text__description {
+      font-size: 0.875rem;
+      color: #6c757d;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    #searchResults {
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.95);
+    }
   </style>
 </head>
 
@@ -184,30 +229,35 @@
         <ul class="navbar-nav ms-auto me-3 align-items-center">
           <li class="nav-item me-3">
             <div class="search position-relative">
-              <input
-                type="text"
-                id="searchInput"
-                class="form-control form-control-sm modern-search"
-                placeholder="Search Savchenko Solutions"
-                aria-label="Search"
-              />
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="searchInput"
+                  class="form-control form-control-sm modern-search rounded-pill ps-4"
+                  placeholder="<%= __('menu.searchPlaceholder') %>"
+                  aria-label="Search"
+                />
+                <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
+                  <i class="bi bi-search"></i>
+                </span>
+              </div>
               <div
                 id="searchResults"
-                class="search-results position-absolute bg-white border rounded shadow-lg"
+                class="search-results position-absolute bg-white border rounded-3 shadow-lg mt-2"
                 style="display: none; z-index: 1050; width: 100%;"
               >
-                <ul class="list-unstyled mb-0 p-2"></ul>
+                <ul class="list-unstyled mb-0 py-2"></ul>
               </div>
             </div>
           </li>
           <li class="nav-item me-3">
             <% if (lang === 'en') { %>
               <span class="text-white">
-                <strong><a href="/" class="text-white text-decoration-none">EN</a></strong>
+                <strong><a href="/ru/upload" class="text-white text-decoration-none">EN</a></strong>
               </span>
             <% } else { %>
               <span class="text-white">
-                <strong><a href="/en" class="text-white text-decoration-none">RU</a></strong>
+                <strong><a href="/en/upload" class="text-white text-decoration-none">RU</a></strong>
               </span>
             <% } %>
           </li>
@@ -247,7 +297,7 @@
           <!-- Step 1: Problem Name -->
           <div class="mb-4">
             <label for="problemName" class="form-label step-label">
-              <strong>1.</strong> Select a Problem
+              <strong>1.</strong> <%= __('upload.steps.problem') %>
             </label>
             <input
               type="text"
@@ -259,20 +309,53 @@
             <div id="problemStatus" class="form-text mt-2"></div>
           </div>
 
+          <!-- Add Language Selection Step -->
+          <div class="mb-4">
+            <label class="form-label step-label">
+              <strong>1a.</strong> <%= __('upload.steps.language') %>
+            </label>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="solutionLanguage"
+                id="langEnglish"
+                value="en"
+                <%= lang === 'en' ? 'checked' : '' %>
+              />
+              <label class="form-check-label" for="langEnglish">
+                English
+              </label>
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="radio"
+                name="solutionLanguage"
+                id="langRussian"
+                value="ru"
+                <%= lang === 'ru' ? 'checked' : '' %>
+              />
+              <label class="form-check-label" for="langRussian">
+                Русский
+              </label>
+            </div>
+          </div>
+
           <!-- Add Anonymous User Info Section -->
           <div id="anonymousSection" class="mb-4" style="display: none;">
             <label class="form-label step-label">
-              <strong>1b.</strong> Your Information
+              <strong>1b.</strong> <%= __('upload.steps.userInfo') %>
             </label>
             <div class="mb-3">
               <input
                 type="text"
                 class="form-control"
                 id="fullName"
-                placeholder="Your Full Name"
+                placeholder="<%= __('upload.anonymous.fullName') %>"
               />
               <div class="form-text">
-                Please provide your full name or <a href="/<%= lang %>/login" class="text-primary">login</a> to continue
+                <%= __('upload.anonymous.info') %>
               </div>
             </div>
           </div>
@@ -280,7 +363,7 @@
           <!-- Step 2: Choose the Method -->
           <div class="mb-4">
             <label class="form-label step-label">
-              <strong>2.</strong> How would you like to provide your solution?
+              <strong>2.</strong> <%= __('upload.steps.method') %>
             </label>
             <div class="form-check">
               <input
@@ -291,7 +374,7 @@
                 value="scans"
               />
               <label class="form-check-label" for="methodScans">
-                Upload Scans/Photos of My Notebook
+                <%= __('upload.method.scans') %>
               </label>
             </div>
             <div class="form-check">
@@ -303,7 +386,7 @@
                 value="latex"
               />
               <label class="form-check-label" for="methodLatex">
-                Type My Solution in LaTeX
+                <%= __('upload.method.latex') %>
               </label>
             </div>
           </div>
@@ -320,23 +403,23 @@
                 <div class="mb-3">
                   <i class="bi bi-cloud-upload fs-1 text-primary"></i>
                 </div>
-                <p class="mb-3 text-muted">Drag and drop your files here</p>
+                <p class="mb-3 text-muted"><%= __('upload.dragDrop.text') %></p>
                 <input type="file" class="form-control d-none" id="fileUpload" name="files" multiple accept="image/*">
                 <button class="btn btn-outline-secondary rounded-pill px-4" id="selectFilesBtn" 
                         onclick="event.stopPropagation()">
-                  <i class="bi bi-folder me-2"></i>Select files
+                  <i class="bi bi-folder me-2"></i><%= __('upload.dragDrop.selectFiles') %>
                 </button>
               </div>
 
               <!-- Preview Section -->
-              <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-start mt-4"></div>
+              <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-start mt-4" style="display: none !important;"></div>
 
               <!-- Modern File Information -->
               <div class="mt-4 p-3 rounded-4 bg-white shadow-sm">
                 <div class="d-flex align-items-center justify-content-center gap-4 text-muted small">
                   <div>
                     <i class="bi bi-file-earmark me-1"></i>
-                    PNG, JPG, PDF, DOC
+                    <%= __('upload.dragDrop.formats') %>
                   </div>
                   <div>
                     <i class="bi bi-arrows-angle-expand me-1"></i>
@@ -356,16 +439,16 @@
               class="form-control"
               id="solutionContent"
               rows="6"
-              placeholder="Type your LaTeX here..."
+              placeholder="<%= __('upload.latex.placeholder') %>"
             ></textarea>
             <div class="form-text">
-              Use LaTeX syntax (e.g., $E = mc^2$). We'll render it below.
+              <%= __('upload.latex.syntax') %>
             </div>
 
             <!-- Added Illustration Upload Section -->
             <div class="mt-3">
               <label for="latexIllustrations" class="form-label">
-                Add Illustrations (Optional)
+                <%= __('upload.steps.illustrations') %>
               </label>
               <input
                 type="file"
@@ -560,14 +643,18 @@
         }
       });
 
-      // Handle zoom functionality
+      // Update the zoom functionality with smooth transitions
       previewModalImage.addEventListener('click', function() {
         if (this.classList.contains('zoomed')) {
           this.style.transform = 'scale(1)';
-          this.classList.remove('zoomed');
+          // Wait for transition to complete before removing class
+          this.addEventListener('transitionend', function handler() {
+            this.classList.remove('zoomed');
+            this.removeEventListener('transitionend', handler);
+          });
         } else {
-          this.style.transform = 'scale(1.5)';
           this.classList.add('zoomed');
+          this.style.transform = 'scale(1.5)';
         }
       });
 
@@ -590,6 +677,11 @@
 
       // Update the preview creation code
       function createPreviewImage(file, container) {
+        // Show the preview container when first image is added
+        if (container.children.length === 0) {
+          container.style.display = 'flex';
+        }
+        
         const wrapper = document.createElement('div');
         wrapper.classList.add('position-relative', 'image-wrapper');
         
@@ -625,6 +717,10 @@
           wrapper.classList.add('fade-out');
           setTimeout(() => {
             wrapper.remove();
+            // Hide preview container if no images left
+            if (container.children.length === 0) {
+              container.style.display = 'none';
+            }
             validateForm();
           }, 300);
         };
@@ -634,7 +730,6 @@
         
         // Insert at the beginning of the container instead of appending
         container.insertBefore(wrapper, container.firstChild);
-
       }
 
       // Add drag and drop functionality
@@ -701,7 +796,7 @@
         problemDebounceTimer = setTimeout(async () => {
           const problemName = this.value.trim();
           
-          // Check problem name format (e.g., "13.4.1")
+          // Basic format validation
           const problemFormat = /^\d+\.\d+\.\d+$/;
           if (problemName && !problemFormat.test(problemName)) {
             problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
@@ -711,32 +806,54 @@
 
           if (problemName) {
             try {
-              const response = await fetch(`/api/verify-problem/${problemName}`);
-              const data = await response.json();
+              const selectedLanguage = document.querySelector('input[name="solutionLanguage"]:checked').value;
               
-              if (data.exists) {
-                problemStatus.innerHTML = '<span class="text-warning"><i class="bi bi-exclamation-circle"></i> Problem already exists</span>';
+              // First verify the problem doesn't already exist
+              const verifyResponse = await fetch(`/api/verify-problem/${problemName}?language=${selectedLanguage}`);
+              const verifyData = await verifyResponse.json();
+
+              // Then validate against chapter/section limits
+              const [chapter, section, problem] = problemName.split('.').map(Number);
+              const limitsResponse = await fetch(`/api/validate-limits/${chapter}/${section}/${problem}?language=${selectedLanguage}`);
+              const limitsData = await limitsResponse.json();
+
+              if (!limitsData.valid) {
+                problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${limitsData.message}</span>`;
                 anonymousSection.style.display = 'none';
-              } else if (data.existsInOtherLang) {
-                const otherLang = '<%= lang %>' === 'en' ? 'Russian' : 'English';
-                problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> Problem exists in ${otherLang}. Your solution will be linked.</span>`;
+              } else if (verifyData.exists) {
+                problemStatus.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle"></i> <%= __('upload.problemExists') %></span>`;
+                anonymousSection.style.display = 'none';
+              } else if (verifyData.existsInOtherLang) {
+                const otherLang = selectedLanguage === 'en' ? '<%= __("upload.language.russian") %>' : '<%= __("upload.language.english") %>';
+                problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> <%= __('upload.problemExistsOtherLang') %> ${otherLang}. <%= __('upload.willBeLinked') %></span>`;
                 anonymousSection.style.display = 'none';
               } else {
-                problemStatus.innerHTML = '<span class="text-success"><i class="bi bi-check-circle"></i> New problem - ready to submit</span>';
+                problemStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> <%= __('upload.newProblem') %></span>`;
                 anonymousSection.style.display = isSignedIn ? 'none' : 'block';
               }
             } catch (err) {
               console.error(err);
-              problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Error checking problem</span>';
+              problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> <%= __('upload.error') %></span>`;
             }
           }
         }, 500);
+
+        // Add language change listener to trigger problem verification
+        document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
+          radio.addEventListener('change', () => {
+            if (problemNameInput.value.trim()) {
+              // Trigger the input event on problemNameInput to recheck status
+              problemNameInput.dispatchEvent(new Event('input'));
+            }
+          });
+        });
       });
 
       // Add validation function
       function validateForm() {
         const problemName = problemNameInput.value.trim();
         const methodSelected = methodScans.checked || methodLatex.checked;
+        const languageSelected = document.querySelector('input[name="solutionLanguage"]:checked');
         const fullNameInput = document.getElementById('fullName');
         
         // Check if anonymous section is visible and requires name
@@ -755,6 +872,7 @@
         submitBtn.disabled = !(
           problemName && 
           methodSelected && 
+          languageSelected &&
           hasContent && 
           (!needsFullName || hasFullName)
         );
@@ -776,7 +894,12 @@
         const formData = new FormData();
         formData.append('problemName', problemNameInput.value);
         formData.append('method', methodScans.checked ? 'scans' : 'latex');
-        formData.append('lang', '<%= lang %>');
+        
+        // Get the selected language
+        const selectedLanguage = document.querySelector('input[name="solutionLanguage"]:checked').value;
+        
+        // Add language to formData
+        formData.append('lang', selectedLanguage);
         
         if (document.getElementById('fullName')) {
           formData.append('fullName', document.getElementById('fullName').value);
@@ -850,7 +973,70 @@
           }
         });
       });
+
+      // Search functionality
+      const searchInput = document.getElementById("searchInput");
+      const searchResults = document.getElementById("searchResults");
+      const searchResultsList = document.querySelector("#searchResults ul");
+      let searchDebounceTimer;
+
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(async () => {
+          const query = searchInput.value.trim();
+
+          if (query.length === 0) {
+            searchResults.style.display = "none";
+            searchResultsList.innerHTML = "";
+            return;
+          }
+
+          try {
+            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            if (data.results.length > 0) {
+              const limitedResults = data.results.slice(0, 5);
+              searchResultsList.innerHTML = limitedResults.map((result, index) => `
+                <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                  <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
+                    <span class="cdx-menu-item__text">
+                      <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                      <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                    </span>
+                  </a>
+                </li>
+              `).join("");
+              searchResults.style.display = "block";
+            } else {
+              searchResultsList.innerHTML = `
+                <li class="cdx-menu-item cdx-menu-item--enabled">
+                  <span class="cdx-menu-item__content">
+                    <span class="cdx-menu-item__text">No results found.</span>
+                  </span>
+                </li>
+              `;
+              searchResults.style.display = "block";
+            }
+          } catch (error) {
+            console.error('Error fetching search results:', error);
+          }
+        }, 300); // Debounce delay of 300ms
+      });
+
+      // Close search results when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+          searchResults.style.display = "none";
+        }
+      });
+
+      // Add validation listener for language selection
+      document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
+        radio.addEventListener('change', validateForm);
+      });
     });
   </script>
+  
 </body>
 </html>

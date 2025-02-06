@@ -7,6 +7,7 @@ const sharp = require('sharp');
 const fileUpload = require('express-fileupload');
 const { Pool } = require("pg");
 require("dotenv").config();
+const { getLanguageData} = require("./parents");
 
 // Add pool configuration
 const pool = new Pool({
@@ -46,14 +47,47 @@ router.post("/api/upload", async (req, res) => {
             });
         }
 
-        const problemNumber = req.body.problemName;
+        const problemName = req.body.problemName;
         const solution = req.body.method === 'latex' ? req.body.latexContent : '';
 
-        // Validate problem number format
-        if (!problemNumber || !problemNumber.match(/^\d+\.\d+\.\d+$/)) {
+        // Get language data for validation
+        const { chapters } = await getLanguageData(lang);
+
+        // Validate problem name format
+        if (!problemName || !problemName.match(/^\d+\.\d+\.\d+$/)) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Invalid problem name format. Use chapter.section.problem format." 
+            });
+        }
+
+        // Use different variable names to avoid conflict
+        const [chapterNum, sectionNum, probNum] = problemName.split('.').map(Number);
+
+        // Validate chapter exists
+        const currentChapter = chapters[chapterNum - 1]; // Adjust for zero-based indexing
+        if (!currentChapter) {
+            return res.status(400).json({ 
+                success: false,
+                message: `Chapter ${chapterNum} does not exist.` 
+            });
+        }
+
+        // Validate section exists
+        const currentSection = currentChapter.sections[sectionNum - 1]; // Adjust for zero-based indexing
+        if (!currentSection) {
+            return res.status(400).json({ 
+                success: false,
+                message: `Section ${chapterNum}.${sectionNum} does not exist.` 
+            });
+        }
+
+        // Validate problem number against section maximum
+        const maxProblems = currentSection.maximum;
+        if (parseInt(probNum) > parseInt(maxProblems)) {
             return res.status(400).json({
                 success: false,
-                message: 'Invalid problem number format'
+                message: `Problem number (${probNum}) exceeds the maximum allowed (${maxProblems}) for Section ${chapterNum}.${sectionNum}.`
             });
         }
 
@@ -61,7 +95,7 @@ router.post("/api/upload", async (req, res) => {
         const content = lang === 'ru' ?
             `### Условие
 
-$${problemNumber}.$ ${solution}
+$${probNum}.$ ${solution}
 
 ### Решение
 
@@ -73,7 +107,7 @@ $${problemNumber}.$ ${solution}
             :
             `### Statement
 
-$${problemNumber}.$ ${solution}
+$${probNum}.$ ${solution}
 
 ### Solution
 
@@ -86,7 +120,7 @@ $${problemNumber}.$ ${solution}
         // Create directory if it doesn't exist
         const problemsDir = path.join(__dirname, "posts", lang);
         fs.mkdirSync(problemsDir, { recursive: true });
-        const filePath = path.join(problemsDir, `${problemNumber}.md`);
+        const filePath = path.join(problemsDir, `${problemName}.md`);
 
         // Check if file already exists
         if (fs.existsSync(filePath)) {
@@ -117,14 +151,14 @@ $${problemNumber}.$ ${solution}
         const imageResults = [];
 
         // Create base img directory if it doesn't exist
-        const baseImgDir = path.join(__dirname, 'img', problemNumber);
+        const baseImgDir = path.join(__dirname, 'img', problemName);
         fs.mkdirSync(baseImgDir, { recursive: true });
 
         console.log(uploadedFiles);
         
         // Process images only if files were uploaded
         if (uploadedFiles.length > 0) {
-            const uploadDir = path.join(__dirname, 'img', problemNumber);
+            const uploadDir = path.join(__dirname, 'img', problemName);
             fs.mkdirSync(uploadDir, { recursive: true });
 
             // Add size validation
@@ -170,7 +204,7 @@ $${problemNumber}.$ ${solution}
                 try {
                     const metadata = await sharp(filePath).metadata();
                     imageResults.push({
-                        imagePath: `/img/${problemNumber}/${file.name}`,
+                        imagePath: `/img/${problemName}/${file.name}`,
                         width: metadata.width,
                         height: metadata.height
                     });
@@ -200,15 +234,15 @@ $${problemNumber}.$ ${solution}
                 content_changed,
                 full_name
             ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8)`,
-            [userId, problemNumber, lang, '', content, clientIp, false, fullName]
+            [userId, problemName, lang, '', content, clientIp, false, fullName]
         );
 
         return res.json({
             success: true,
             message: lang === 'ru' ?
-                `Задача ${problemNumber} успешно создана!` :
-                `Problem ${problemNumber} created successfully!`,
-            redirectUrl: `/${lang}/edit/${problemNumber}`,
+                `Задача ${problemName} успешно создана!` :
+                `Problem ${problemName} created successfully!`,
+            redirectUrl: `/${lang}/edit/${problemName}`,
             images: imageResults
         });
 
@@ -263,16 +297,76 @@ router.get(["/upload", "/:lang([a-z]{2})/upload"], async (req, res) => {
 router.get("/api/verify-problem/:id", async (req, res) => {
     try {
         const problemNumber = req.params.id;
-        const lang = req.query.lang || 'en';
-        
-        // Check if problem exists in the posts directory
+        const lang = req.query.language || 'en';  // Get the selected language
+        const otherLang = lang === 'en' ? 'ru' : 'en';
+
+        // Check if problem exists in the current language directory
         const problemPath = path.join(__dirname, "posts", lang, `${problemNumber}.md`);
         const exists = fs.existsSync(problemPath);
 
-        res.json({ exists });
+        // Check if problem exists in the other language directory
+        const otherLangPath = path.join(__dirname, "posts", otherLang, `${problemNumber}.md`);
+        const existsInOtherLang = fs.existsSync(otherLangPath);
+
+        res.json({ exists, existsInOtherLang });
     } catch (error) {
         console.error('Problem verification error:', error);
         res.status(500).json({ error: 'Failed to verify problem' });
+    }
+});
+
+router.get("/api/validate-limits/:chapter/:section/:problem", async (req, res) => {
+    try {
+        const { chapter, section, problem } = req.params;
+        const lang = req.query.language || 'en';
+
+        // Get language data for validation
+        const { chapters } = await getLanguageData(lang);
+
+        // Validate chapter exists
+        const currentChapter = chapters[chapter - 1];
+        if (!currentChapter) {
+            return res.json({ 
+                valid: false,
+                message: lang === 'ru' ?
+                    `Глава ${chapter} не существует.` :
+                    `Chapter ${chapter} does not exist.`
+            });
+        }
+
+        // Validate section exists
+        const currentSection = currentChapter.sections[section - 1];
+        if (!currentSection) {
+            return res.json({ 
+                valid: false,
+                message: lang === 'ru' ?
+                    `Раздел ${chapter}.${section} не существует.` :
+                    `Section ${chapter}.${section} does not exist.`
+            });
+        }
+
+        // Validate problem number against section maximum
+        const maxProblems = currentSection.maximum;
+
+        if (parseInt(problem) > parseInt(maxProblems)) {
+            return res.json({
+                valid: false,
+                message: lang === 'ru' ?
+                    `Номер задачи (${problem}) превышает максимально допустимый (${maxProblems}) для раздела ${chapter}.${section}.` :
+                    `Problem number (${problem}) exceeds the maximum allowed (${maxProblems}) for Section ${chapter}.${section}.`
+            });
+        }
+
+        res.json({ valid: true });
+    } catch (error) {
+        console.error('Limits validation error:', error);
+        const lang = req.query.language || 'en';
+        res.status(500).json({ 
+            valid: false,
+            message: lang === 'ru' ?
+                'Не удалось проверить ограничения задачи' :
+                'Failed to validate problem limits'
+        });
     }
 });
 
