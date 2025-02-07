@@ -8,10 +8,7 @@
     "langLink": "",
     "problemStatements": "Problem statements",
     "description": {
-        "intro": "The collection of problems in physics edited by O.Y. Savchenko has remained one of the most sought-after resources for physics olympiad preparation in post-soviet countries for over 30 years. However, during this time, not a single complete solution manual for this collection has been created.",
-        "project": "This website presents a non-profit project aimed at collaboratively creating the first solution manual with solutions from ",
         "team": "different authors",
-        "moto": "Currently, more than 800 solutions out of 2023 problems have been published. The project, launched in 2023, is actively developing in both Russian and English. ",
         "contribute": "If you would like to join the work, read ",
         "guide": "how-to-contribute guide",
         "coreTeam": "Core Team",
@@ -22,7 +19,10 @@
         "contributions": "Contrib.",
         "contributions2": "Recent changes",
         "editedBy": "was edited by",
-        "viewChanges": "View changes"
+        "viewChanges": "View changes",
+        "heroTagline": "A global student-led platform to collaborate, share, and review through collective problem-solving.",
+        "introFirst": "For over 30 years, the Savchenko physics problem collection has challenged students across post-Soviet countries—yet no comprehensive solution manual existed, until now. <strong>Savchenko Solutions</strong> is the first global, student-led effort to compile and refine detailed explanations for all 2,023 problems. Surpassing 800 published solutions in multiple languages, our thriving platform welcomes learners worldwide to collaborate, share insights, and publish in rigorous peer review.",
+        "introSecond": "What began as a modest \"archive\" for personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught — embracing a spirit of open collaboration and proving that knowledge shared is knowledge multiplied."
     },
     "contents": "Contents",
     "chapter": "Chapter",
@@ -41,7 +41,41 @@
         "guideline1": "Use clear and concise explanations",
         "guideline2": "Include step-by-step solutions",
         "guideline3": "Add relevant diagrams or illustrations",
-        "error": "An error occurred while uploading"
+        "error": "An error occurred while uploading",
+        "method": {
+            "scans": "Upload Scans/Photos of My Notebook",
+            "latex": "Type My Solution in LaTeX"
+        },
+        "steps": {
+            "problem": "Select a Problem",
+            "method": "How would you like to provide your solution?",
+            "userInfo": "Your Information",
+            "preview": "LaTeX Preview",
+            "illustrations": "Add Illustrations (Optional)",
+            "language": "Select Language"
+        },
+        "dragDrop": {
+            "text": "Drag and drop your files here",
+            "selectFiles": "Select files",
+            "formats": "PNG, JPG, PDF, DOC",
+            "maxSize": "Max 50 MB"
+        },
+        "latex": {
+            "placeholder": "Type your LaTeX here...",
+            "syntax": "Use LaTeX syntax (e.g., $E = mc^2$). We'll render it below."
+        },
+        "anonymous": {
+            "fullName": "Your Full Name",
+            "info": "Please provide your full name or login to continue"
+        },
+        "problemExists": "Problem already exists",
+        "problemExistsOtherLang": "Problem exists in",
+        "willBeLinked": "Your solution will be linked",
+        "newProblem": "New problem - ready to submit",
+        "language": {
+            "english": "English",
+            "russian": "Russian"
+        }
     },
     "popup": {
         "title": "Enter the name of the problem",

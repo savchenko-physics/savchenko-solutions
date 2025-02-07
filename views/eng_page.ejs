@@ -121,7 +121,7 @@
         </div>
       </div>
       <p class="hero-tagline">
-        A global student-led platform to collaborate, review, and grow through collective problem-solving.
+        <%= __('description.heroTagline') %>
       </p>
     </div>
   </header>
@@ -134,23 +134,11 @@
     <div class="row align-items-center justify-content-center mb-5">
       <div class="col-lg-6 mb-4">
         <div class="content-card shadow-sm p-4">
-          <p style="text-align: justify;">
-            For over 30 years, the Savchenko physics problem collection has
-            challenged students across post-Soviet countries—yet no comprehensive
-            solution manual existed, until now. <strong>Savchenko Solutions</strong>
-            is the first global, student-led effort to compile and refine detailed
-            explanations for all 2,023 problems. Surpassing 800 published
-            solutions in multiple languages, our thriving platform welcomes learners
-            worldwide to collaborate, share insights, and publish in rigorous
-            peer review.
+          <p style="text-align: justify;">    
+            <%- __('description.introFirst') %>
           </p>
           <p style="text-align: justify;">
-            What began as a modest "archive" for personal solutions soon evolved
-            into a vibrant international community, drawing thousands of regular
-            users. This unprecedented collective intelligence fosters an environment
-            where students and teachers learn from one another, transforming how
-            physics is studied and taught — embracing a spirit of open collaboration
-            and proving that knowledge shared is knowledge multiplied.
+            <%- __('description.introSecond') %>
           </p>
         </div>
       </div>
@@ -180,17 +168,19 @@
         <div class="content-card bg-light shadow-sm p-4">
           <h3 class="mb-3"><%= __('description.acknowledgments') %></h3>
           <p><%= __('description.deepestThanks') %></p>
-          <h4><%= __('description.coreTeam') %></h4>
+          <h4><%= __('description.coreTeam') %></h4>  
           <div class="core-team">
-            <a href="/user/astrosander/">Aliaksandr Melnichenka <span class="fw-normal">(Founder)</span></a>
-            <a href="/user/Luisito/">Luis Daniel Fernández Quintana</a>
+            <a href="/user/astrosander/">Aliaksandr Melnichenka</a>
+            <a href="/user/Luisito/">Luis D. Fernández Quintana</a>
             <a href="/user/stefan.nicov/">Stefan Nicov</a>
             <a href="/user/ar4senN/">Arsen Almashkan</a>
             <a href="/user/a.yersh/">Andrei Yersh</a>
             <a href="/user/jepkinsss/">Artem Levko</a>
             <a href="/user/diikann_/">Dzikan Mikita</a>
+            <a href="/user/Ismail/">Kaiyrbek Ismail</a>
+            <a href="/user/_chender_/">Kanashenka Aliaksandr</a>
             <a href="/about#team">See all...</a>
-          </div>
+        </div>
         </div>
       </div>
     </div>
@@ -205,20 +195,23 @@
             );
             if (hasContent) { %>
         <div class="chapter-block mb-4">
-          <div class="d-flex align-items-center mb-3 flex-wrap">
-            <h4 class="chapter-title me-2 text-secondary">
-              <%= __('chapter') %> <%= chapterIndex + 1 %>:
-            </h4>
-            <h4 class="chapter-name mb-0 me-2">
-              <%= chapter.title %>
-            </h4>
+          <div class="d-flex align-items-center mb-3 flex-wrap justify-content-between">
+            <div class="d-flex align-items-center flex-wrap">
+              <h4 class="chapter-title me-2 text-secondary mb-0">
+                <%= __('chapter') %> <%= chapterIndex + 1 %>:
+              </h4>
+              <h4 class="chapter-name mb-0">
+                <%= chapter.title %>
+              </h4>
+            </div>
             <!-- Upload Button -->
             <a
-              href="#"
-              class="edit-button mt-2 mt-sm-0"
+              href="/<%= lang %>/upload"
+              class="edit-button text-decoration-none d-inline-flex align-items-center"
               data-chapter="<%= chapterIndex + 1 %>"
+              style="cursor: pointer;"
             >
-              <span class="upload-text"><%= __('upload.upload') %></span>
+              <span class="upload-text me-2"><%= __('upload.upload') %></span>
               <svg class="upload-icon" viewBox="0 0 24 24" width="16" height="16">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
               </svg>
@@ -436,6 +429,7 @@
 
     searchInput.addEventListener("input", async () => {
         const query = searchInput.value.trim();
+        const currentLang = '<%= lang %>'; // Get current language from EJS template
 
         if (query.length === 0) {
             searchResults.style.display = "none";
@@ -445,7 +439,7 @@
         }
 
         try {
-            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`/search?q=${encodeURIComponent(query)}&lang=${currentLang}`);
             const data = await response.json();
 
             if (data.results.length > 0) {
@@ -453,12 +447,15 @@
                 const resultsHTML = limitedResults.map((result, index) => `
                     <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
                         <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none d-flex align-items-center">
-                            <svg class="me-2" viewBox="0 0 24 24" width="16" height="16">
-                                <path fill="#6c757d" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            <svg class="me-2" viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="#9e9e9e" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                             </svg>
-                            <span class="cdx-menu-item__text">
-                                <span class="cdx-search-result-title"><strong>${result.name}</strong></span>
-                                <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                            <span class="cdx-menu-item__text d-flex justify-content-between align-items-center w-100">
+                                <span class="cdx-search-result-title">
+                                    <strong>${result.name}</strong>
+                                    <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                                </span>
+                                ${result.confidence === 'high' ? '<small class="ms-2" style="color: #9e9e9e; font-size: 0.7em;">★</small>' : ''}
                             </span>
                         </a>
                     </li>
@@ -485,7 +482,7 @@
                             
                             <!-- Action Buttons -->
                             <div class="d-flex gap-2 justify-content-center">
-                                <a href="#" class="edit-button btn btn-outline-light rounded-pill px-4" style="background-color: #007bff; color: white;" data-chapter="1">
+                                <a href="/<%= lang %>/upload" class="edit-button btn btn-outline-light rounded-pill px-4" style="background-color: #007bff; color: white;" data-chapter="1">
                                     <svg class="me-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                                         <polyline points="17 8 12 3 7 8"/>
@@ -570,9 +567,9 @@
 
         document.querySelectorAll(".edit-button").forEach(button => {
             button.addEventListener("click", (event) => {
-                event.preventDefault();
-                currentChapter = button.dataset.chapter;
-                showPopup();
+                // Remove this event handler since we want the link to work normally
+                // event.preventDefault();
+                // window.location.href = `/${lang}/upload`;
             });
         });
 
