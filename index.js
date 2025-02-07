@@ -814,14 +814,16 @@ app.get("/file-list", renderFileList);
 
 app.get("/search", (req, res) => {
     const query = req.query.q?.toLowerCase();
-
+    const userLang = req.query.lang || res.getLocale() || 'en'; // Get language from query params first
+    
     if (!query) {
-        return res.json({ results: [] }); // Return empty results for empty query
+        return res.json({ results: [] });
     }
+
 
     const searchDirectory = path.join(__dirname, "posts");
     const results = [];
-    const processedFiles = new Set(); // Track processed file names
+    const processedFiles = new Set();
 
     const truncateWithHighlight = (name, text, query, maxLength = 57) => {
         text = text.replace(name, "").replace(/\$/g, "").replace(/_/g, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "").replace("\ell", "l").replace("#", "");
@@ -846,44 +848,116 @@ app.get("/search", (req, res) => {
     };
 
     const searchFiles = (directory) => {
-        const files = fs.readdirSync(directory);
+        // Get list of language directories
+        const langDirs = fs.readdirSync(directory).filter(dir => 
+            fs.statSync(path.join(directory, dir)).isDirectory()
+        );
+        
+        // Reorder directories to put userLang first
+        const orderedDirs = [
+            ...langDirs.filter(dir => dir === userLang),
+            ...langDirs.filter(dir => dir !== userLang)
+        ];
 
-        files.forEach((file) => {
-            const fullPath = path.join(directory, file);
+        const langResults = {
+            primary: [],   // Results in user's language
+            secondary: []  // Results in other language
+        };
 
-            if (fs.statSync(fullPath).isDirectory()) {
-                searchFiles(fullPath); // Recursively search directories
-            } else if (file.endsWith(".md")) {
-                if (processedFiles.has(file)) return; // Skip if file is already processed
+        // Search through directories in the preferred order
+        orderedDirs.forEach(langDir => {
+            const langPath = path.join(directory, langDir);
+            const files = fs.readdirSync(langPath);
 
-                const fileContents = fs.readFileSync(fullPath, "utf8");
-                const lines = fileContents.split("\n"); // Split file into lines
+            // First pass: search file names
+            files.forEach((file) => {
+                const fullPath = path.join(langPath, file);
+                if (file.endsWith(".md")) {
+                    const fileKey = `${langDir}_${file}`;
+                    if (processedFiles.has(fileKey)) return;
 
-                for (const [index, line] of lines.entries()) {
-                    if (line.toLowerCase().includes(query)) {
-                        const relativePath = path.relative(searchDirectory, fullPath);
-                        const lang = relativePath.split(path.sep)[0];
-                        const name = file.replace(".md", "");
+                    const name = file.replace(".md", "");
+                    
+                    if (name.toLowerCase().includes(query)) {
+                        const fileContents = fs.readFileSync(fullPath, "utf8");
+                        const firstLine = fileContents.split("\n")[0];
+                        const snippet = truncateWithHighlight(name, firstLine, query);
 
-                        // Truncate and highlight the matching line
-                        const snippet = truncateWithHighlight(name, line, query);
-
-                        results.push({
-                            lang,
+                        const result = {
+                            lang: langDir,
                             name,
-                            relativePath: `/${lang}/${name}`,
+                            relativePath: `/${langDir}/${name}`,
                             snippet: snippet,
-                            lineNumber: index + 1
-                        });
+                            lineNumber: 1,
+                            isFileNameMatch: true,
+                            confidence: 'high' // Add confidence level for name matches
+                        };
 
-                        processedFiles.add(file); // Mark this file as processed
-                        break; // Stop further matches in the same file
+                        if (langDir === userLang) {
+                            langResults.primary.push(result);
+                        } else {
+                            langResults.secondary.push(result);
+                        }
+
+                        processedFiles.add(fileKey);
                     }
                 }
-            }
-        });
-    };
+            });
 
+            // Second pass: search file contents
+            files.forEach((file) => {
+                const fullPath = path.join(langPath, file);
+                if (file.endsWith(".md")) {
+                    const fileKey = `${langDir}_${file}`;
+                    if (processedFiles.has(fileKey)) return;
+
+                    const fileContents = fs.readFileSync(fullPath, "utf8");
+                    const lines = fileContents.split("\n");
+
+                    for (const [index, line] of lines.entries()) {
+                        if (line.toLowerCase().includes(query)) {
+                            const name = file.replace(".md", "");
+                            const snippet = truncateWithHighlight(name, line, query);
+
+                            const result = {
+                                lang: langDir,
+                                name,
+                                relativePath: `/${langDir}/${name}`,
+                                snippet: snippet,
+                                lineNumber: index + 1,
+                                isFileNameMatch: false
+                            };
+                            
+                            if (langDir === userLang) {
+                                langResults.primary.push(result);
+                            } else {
+                                langResults.secondary.push(result);
+                            }
+
+                            processedFiles.add(fileKey);
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+
+        // console.log(langResults.primary);
+        // console.log(langResults.secondary);
+        const sortResults = (a, b) => {
+            if (a.isFileNameMatch !== b.isFileNameMatch) {
+                return b.isFileNameMatch ? 1 : -1;
+            }
+            return a.name.localeCompare(b.name);
+        };
+
+
+        langResults.primary.sort(sortResults);
+        langResults.secondary.sort(sortResults);
+
+        // Combine results with preferred language first
+        results.push(...langResults.primary, ...langResults.secondary);
+    };
 
     searchFiles(searchDirectory);
 
