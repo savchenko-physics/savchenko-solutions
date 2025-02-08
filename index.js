@@ -3,11 +3,10 @@ require('./sitemap');
 
 const express = require("express");
 const path = require("path");
-const ejs = require("ejs");
 const fs = require("fs"); // Import fs module
 const bodyParser = require("body-parser");
-const { parseMarkdown, getMarkdownFiles, getLineStatement, transformImageMarkdown } = require("./utils"); // Importing functions from utils.js
-const { getLanguageData, getBothLanguages } = require("./parents"); // generating content for the main english page
+const { convertLatexToPlainText } = require("./utils"); // Importing functions from utils.js
+const { getLanguageData } = require("./parents"); // generating content for the main english page
 
 const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
@@ -825,8 +824,16 @@ app.get("/search", (req, res) => {
     const results = [];
     const processedFiles = new Set();
 
-    const truncateWithHighlight = (name, text, query, maxLength = 57) => {
-        text = text.replace(name, "").replace(/\$/g, "").replace(/_/g, "").replace(".$", "").replace("\^", "").replace("\*", "").replace("##", "").replace("#", "").replace("\ell", "l").replace("#", "");
+    const truncateWithHighlight = (name, text, query, maxLength = 48) => {
+        // Remove the name and clean up special characters
+        text = convertLatexToPlainText(text) // Use the enhanced convertLatexToPlainText function
+            .replace(name, "")
+            .replace(/#{1,3}\s*/g, "")
+            .replace(/Statement\s*\./g, "")
+            .replace(/Условие\s*\./g, "")
+            .replace(/Условие:\s*\./g, "")
+            .replace(/Условие:/g, "")
+            .replace(/^\s*\./g, "");
 
         const matchIndex = text.toLowerCase().indexOf(query);
 
@@ -877,20 +884,38 @@ app.get("/search", (req, res) => {
                     if (processedFiles.has(fileKey)) return;
 
                     const name = file.replace(".md", "");
+                    const nameLower = name.toLowerCase();
                     
-                    if (name.toLowerCase().includes(query)) {
+                    if (nameLower.includes(query)) {
                         const fileContents = fs.readFileSync(fullPath, "utf8");
-                        const firstLine = fileContents.split("\n")[0];
-                        const snippet = truncateWithHighlight(name, firstLine, query);
+                        const firstFiveLines = fileContents.split("\n").slice(0, 5).join(" ");
+                        
+                        // Clean up the text for display, but don't search within it
+                        let cleanedText = convertLatexToPlainText(firstFiveLines)
+                            .replace(name, "")
+                            .replace(/\$/g, "")
+                            .replace(/_/g, "")
+                            .replace(".$", "")
+                            .replace("\^", "")
+                            .replace("\*", "")
+                            .replace(/#{1,3}\s*/g, "")
+                            .replace("\ell", "l")
+                            .replace(/Statement\s*\./g, "")
+                            .replace(/Условие\s*\./g, "")
+                            .replace(/Условие:\s*\./g, "")
+                            .replace(/Условие:/g, "")
+                            .replace(/Условие/g, "")
+                            .replace(/^\s*\./g, "") // Remove leading periods (and any whitespace before them)
+                            .replace(/\{[^}]*\}/g, ""); // Remove anything between curly braces
 
                         const result = {
                             lang: langDir,
                             name,
                             relativePath: `/${langDir}/${name}`,
-                            snippet: snippet,
+                            snippet: cleanedText.slice(0, 50) + " ...", // Add ellipsis after truncation
                             lineNumber: 1,
                             isFileNameMatch: true,
-                            confidence: 'high' // Add confidence level for name matches
+                            confidence: nameLower === query && langDir === userLang ? 'high' : 'medium'
                         };
 
                         if (langDir === userLang) {
@@ -911,32 +936,31 @@ app.get("/search", (req, res) => {
                     const fileKey = `${langDir}_${file}`;
                     if (processedFiles.has(fileKey)) return;
 
-                    const fileContents = fs.readFileSync(fullPath, "utf8");
-                    const lines = fileContents.split("\n");
+                    let fileContents = fs.readFileSync(fullPath, "utf8");
+                    
+                    // Join lines with space to handle headings without newlines
+                    const searchableContent = fileContents.split("\n").join(" ");
 
-                    for (const [index, line] of lines.entries()) {
-                        if (line.toLowerCase().includes(query)) {
-                            const name = file.replace(".md", "");
-                            const snippet = truncateWithHighlight(name, line, query);
+                    if (searchableContent.toLowerCase().includes(query)) {
+                        const name = file.replace(".md", "");
+                        const snippet = truncateWithHighlight(name, searchableContent, query);
 
-                            const result = {
-                                lang: langDir,
-                                name,
-                                relativePath: `/${langDir}/${name}`,
-                                snippet: snippet,
-                                lineNumber: index + 1,
-                                isFileNameMatch: false
-                            };
-                            
-                            if (langDir === userLang) {
-                                langResults.primary.push(result);
-                            } else {
-                                langResults.secondary.push(result);
-                            }
-
-                            processedFiles.add(fileKey);
-                            break;
+                        const result = {
+                            lang: langDir,
+                            name,
+                            relativePath: `/${langDir}/${name}`,
+                            snippet: snippet,
+                            lineNumber: 1, // Line number becomes less relevant with joined content
+                            isFileNameMatch: false
+                        };
+                        
+                        if (langDir === userLang) {
+                            langResults.primary.push(result);
+                        } else {
+                            langResults.secondary.push(result);
                         }
+
+                        processedFiles.add(fileKey);
                     }
                 }
             });
@@ -945,9 +969,15 @@ app.get("/search", (req, res) => {
         // console.log(langResults.primary);
         // console.log(langResults.secondary);
         const sortResults = (a, b) => {
+            // Sort by confidence first
+            if ((a.confidence === 'high') !== (b.confidence === 'high')) {
+                return a.confidence === 'high' ? -1 : 1;
+            }
+            // Then by filename match
             if (a.isFileNameMatch !== b.isFileNameMatch) {
                 return b.isFileNameMatch ? 1 : -1;
             }
+            // Finally by name
             return a.name.localeCompare(b.name);
         };
 
