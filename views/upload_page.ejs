@@ -801,6 +801,7 @@
           if (problemName && !problemFormat.test(problemName)) {
             problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
             anonymousSection.style.display = 'none';
+            submitBtn.disabled = true; // Disable submit button
             return;
           }
 
@@ -820,20 +821,24 @@
               if (!limitsData.valid) {
                 problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${limitsData.message}</span>`;
                 anonymousSection.style.display = 'none';
+                submitBtn.disabled = true; // Disable submit button
               } else if (verifyData.exists) {
                 problemStatus.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle"></i> <%= __('upload.problemExists') %></span>`;
                 anonymousSection.style.display = 'none';
+                submitBtn.disabled = true; // Disable submit button
               } else if (verifyData.existsInOtherLang) {
                 const otherLang = selectedLanguage === 'en' ? '<%= __("upload.language.russian") %>' : '<%= __("upload.language.english") %>';
                 problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> <%= __('upload.problemExistsOtherLang') %> ${otherLang}. <%= __('upload.willBeLinked') %></span>`;
                 anonymousSection.style.display = 'none';
+                submitBtn.disabled = true; // Disable submit button
               } else {
-                problemStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> <%= __('upload.newProblem') %></span>`;
-                anonymousSection.style.display = isSignedIn ? 'none' : 'block';
+                // Only validate form if problem name is valid
+                validateForm();
               }
             } catch (err) {
               console.error(err);
               problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> <%= __('upload.error') %></span>`;
+              submitBtn.disabled = true; // Disable submit button
             }
           }
         }, 500);
