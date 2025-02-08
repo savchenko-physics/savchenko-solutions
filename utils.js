@@ -61,10 +61,35 @@ const getMarkdownFiles = (directory) => {
 function convertLatexToPlainText(latexLine) {
     // Define mappings for LaTeX symbols to plain text
     const symbolMap = {
+
+        "\\^1": "¹",
+        "\\^2": "²",
+        "\\^3": "³",
+        "\\^4": "⁴",
+        "\\^5": "⁵",
+        "\\^6": "⁶",
+        "\\^7": "⁷",
+        "\\^8": "⁸",
+        "\\^9": "⁹",
+        "\\^0": "⁰",
+
+        "_1": "₁",
+        "_2": "₂",
+        "_3": "₃",
+        "_4": "₄",
+        "_5": "₅",
+        "_6": "₆",
+        "_7": "₇",
+        "_8": "₈",
+        "_9": "₉",
+        "_0": "₀",
+
+        // Greek letters (lowercase)
         "\\\\alpha": "α",
         "\\\\beta": "β",
         "\\\\gamma": "γ",
         "\\\\delta": "δ",
+
         "\\\\epsilon": "ε",
         "\\\\zeta": "ζ",
         "\\\\eta": "η",
@@ -85,6 +110,7 @@ function convertLatexToPlainText(latexLine) {
         "\\\\chi": "χ",
         "\\\\psi": "ψ",
         "\\\\omega": "ω",
+        // Greek letters (uppercase)
         "\\\\Gamma": "Γ",
         "\\\\Delta": "Δ",
         "\\\\Theta": "Θ",
@@ -94,13 +120,135 @@ function convertLatexToPlainText(latexLine) {
         "\\\\Sigma": "Σ",
         "\\\\Upsilon": "Υ",
         "\\\\Phi": "Φ",
+        "\\\\varphi": "φ",
         "\\\\Psi": "Ψ",
         "\\\\Omega": "Ω",
-        "\\,": "",
+        // Math operators and symbols
+        "\\\\times": "×",
+        "\\\\div": "÷",
+        "\\\\pm": "±",
+
+        "\\\\mp": "∓",
+        "\\\\cdot": "·",
+        "\\\\leq": "≤",
+        "\\\\geq": "≥",
+        "\\\\neq": "≠",
+        "\\\\approx": "≈",
+        "\\\\equiv": "≡",
+        "\\\\infty": "∞",
+        "\\\\partial": "∂",
+        "\\\\nabla": "∇",
+        "\\\\sum": "∑",
+        "\\\\prod": "∏",
+        "\\\\int": "∫",
+        "\\\\sqrt": "√",
+        // Arrows
+        "\\\\rightarrow": "→",
+        "\\\\leftarrow": "←",
+        "\\\\Rightarrow": "⇒",
+        "\\\\Leftarrow": "⇐",
+        // Formatting and spacing
+        "\\,": " ",
         "\\\\": "",
-        "\\{": "",
-        "\\}": "",
+        "\\{": "{",
+        "\\}": "}",
+        "\\[": "[",
+        "\\]": "]",
+        "\\(": "(",
+        "\\)": ")",
+        // Common math functions
+        "\\\\sin": "sin",
+        "\\\\cos": "cos",
+        "\\\\tan": "tan",
+        "\\\\log": "log",
+        "\\\\ln": "ln",
+        "\\\\exp": "exp",
+        // Subscripts and superscripts
+        "_": "",
+        "\\^": "",
+        // Additional math operators and symbols
+        "\\\\forall": "∀",
+        "\\\\exists": "∃",
+        "\\\\nexists": "∄",
+        "\\\\in": "∈",
+        "\\\\notin": "∉",
+        "\\\\subset": "⊂",
+        "\\\\supset": "⊃",
+        "\\\\subseteq": "⊆",
+        "\\\\supseteq": "⊇",
+        "\\\\cup": "∪",
+        "\\\\cap": "∩",
+        "\\\\emptyset": "∅",
+        "\\\\therefore": "∴",
+        "\\\\because": "∵",
+        "\\\\sim": "∼",
+        "\\\\perp": "⊥",
+        "\\\\parallel": "∥",
+        "\\\\angle": "∠",
+        "\\\\triangle": "△",
+        "\\\\square": "□",
+        "\\\\cong": "≅",
+        "\\\\neg": "¬",
+        "\\\\wedge": "∧",
+        "\\\\vee": "∨",
+        "\\\\oplus": "⊕",
+        "\\\\otimes": "⊗",
+        "\\\\bullet": "•",
+        "\\\\circ": "∘",
+        "\\\\propto": "∝",
+        "\\\\prime": "′",
+        "\\\\aleph": "ℵ",
+        "\\\\wp": "℘",
+        "\\\\Re": "ℜ",
+        "\\\\Im": "ℑ",
+        "\\\\top": "⊤",
+        "\\\\bot": "⊥",
+        "\\\\vdash": "⊢",
+        "\\\\models": "⊨",
+        "\\\\langle": "⟨",
+        "\\\\rangle": "⟩",
+        "\\\\lceil": "⌈",
+        "\\\\rceil": "⌉",
+        "\\\\lfloor": "⌊",
+        "\\\\rfloor": "⌋",
+        "\\\\nabla": "∇",
+        "\\\\partial": "∂",
+        "\\\\ell": "ℓ",
+        "\\\\eth": "ð",
+        "\\\\hbar": "ℏ",
+        "\\\\clubsuit": "♣",
+        "\\\\diamondsuit": "♢",
+        "\\\\heartsuit": "♡",
+        "\\\\spadesuit": "♠",
+        // Additional arrows
+        "\\\\leftrightarrow": "↔",
+        "\\\\Leftrightarrow": "⇔",
+        "\\\\uparrow": "↑",
+        "\\\\downarrow": "↓",
+        "\\\\updownarrow": "↕",
+        "\\\\mapsto": "↦",
+        "\\\\rightharpoonup": "⇀",
+        "\\\\rightharpoondown": "⇁",
+        "\\\\leftharpoonup": "↼",
+        "\\\\leftharpoondown": "↽",
+        // Additional spacing commands
+        "\\;": " ",
+        "\\:": " ",
+        "\\!": "",
+        "\\quad": "    ",
+        "\\qquad": "        ",
+        "\\text{": "",
+        "\\mathrm{": "",
+        "fbox{": "",
+        "\\begin": "",
+        "\\end": "",
+        "\\begin": "",
+        "\\end": "",
+        "\\left": "",
+        "\\right": ""
     };
+
+
 
     // Remove dollar signs surrounding LaTeX expressions
     let plainText = latexLine.replace(/\$/g, "");
@@ -108,9 +256,16 @@ function convertLatexToPlainText(latexLine) {
     // Replace LaTeX symbols with plain text equivalents
     for (const [latex, plain] of Object.entries(symbolMap)) {
         const regex = new RegExp(latex, "g");
-        // console.log(regex, plain)
         plainText = plainText.replace(regex, plain);
     }
+
+    // Clean up any remaining LaTeX-specific formatting
+    plainText = plainText
+        .replace(/\\text\{([^}]+)\}/g, "$1") // Remove \text{} wrapper
+        .replace(/\\mathrm\{([^}]+)\}/g, "$1") // Remove \mathrm{} wrapper
+        .replace(/\\left|\\right/g, "") // Remove \left and \right commands
+        .replace(/\s+/g, " ") // Normalize whitespace
+        .trim();
 
     return plainText;
 }
