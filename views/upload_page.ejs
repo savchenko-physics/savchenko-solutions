@@ -801,7 +801,6 @@
           if (problemName && !problemFormat.test(problemName)) {
             problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
             anonymousSection.style.display = 'none';
-            submitBtn.disabled = true; // Disable submit button
             return;
           }
 
@@ -821,24 +820,20 @@
               if (!limitsData.valid) {
                 problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${limitsData.message}</span>`;
                 anonymousSection.style.display = 'none';
-                submitBtn.disabled = true; // Disable submit button
               } else if (verifyData.exists) {
                 problemStatus.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle"></i> <%= __('upload.problemExists') %></span>`;
                 anonymousSection.style.display = 'none';
-                submitBtn.disabled = true; // Disable submit button
               } else if (verifyData.existsInOtherLang) {
                 const otherLang = selectedLanguage === 'en' ? '<%= __("upload.language.russian") %>' : '<%= __("upload.language.english") %>';
                 problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> <%= __('upload.problemExistsOtherLang') %> ${otherLang}. <%= __('upload.willBeLinked') %></span>`;
                 anonymousSection.style.display = 'none';
-                submitBtn.disabled = true; // Disable submit button
               } else {
-                // Only validate form if problem name is valid
-                validateForm();
+                problemStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> <%= __('upload.newProblem') %></span>`;
+                anonymousSection.style.display = isSignedIn ? 'none' : 'block';
               }
             } catch (err) {
               console.error(err);
               problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> <%= __('upload.error') %></span>`;
-              submitBtn.disabled = true; // Disable submit button
             }
           }
         }, 500);
@@ -854,12 +849,13 @@
         });
       });
 
-      // Add validation function
+      // Update the validation function
       function validateForm() {
         const problemName = problemNameInput.value.trim();
         const methodSelected = methodScans.checked || methodLatex.checked;
         const languageSelected = document.querySelector('input[name="solutionLanguage"]:checked');
         const fullNameInput = document.getElementById('fullName');
+        const hasSuccessStatus = problemStatus.querySelector('.text-success') !== null;
         
         // Check if anonymous section is visible and requires name
         const needsFullName = !isSignedIn && anonymousSection.style.display !== 'none';
@@ -873,13 +869,14 @@
           hasContent = solutionContent.value.trim().length > 0;
         }
 
-        // Enable submit button only if all required fields are filled
+        // Enable submit button only if all required fields are filled AND problem status is success
         submitBtn.disabled = !(
           problemName && 
           methodSelected && 
           languageSelected &&
           hasContent && 
-          (!needsFullName || hasFullName)
+          (!needsFullName || hasFullName) &&
+          hasSuccessStatus
         );
       }
 
