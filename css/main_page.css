@@ -294,7 +294,7 @@ body {
   content: '';
   position: absolute;
   left: 12px;
-  top: 18px;
+  top: 22px;
   width: 16px;
   height: 16px;
   background-color: white;
@@ -305,7 +305,7 @@ body {
   content: '';
   position: absolute;
   left: 34px;
-  top: 26px;
+  top: 30px;
   width: 16px;
   height: 2px;
   background-color: #ccc;
@@ -448,4 +448,51 @@ footer p {
     margin-top: 1rem;
     margin-bottom: 1rem;
   }
+}
+
+/* PDF Download Button */
+.pdf-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.pdf-download-btn:hover {
+  /* transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); */
+  color: #333;
+  text-decoration: none;
+}
+
+.pdf-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: #a52a2a;
+}
+
+.pdf-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.pdf-action {
+  font-weight: 600;
+  color: #a52a2a;
 }
