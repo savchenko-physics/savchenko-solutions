@@ -1,324 +1,605 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="content-language" content="en">
-    <meta name="keywords" content="<%= __('meta.keywords') %>">
-    <meta name="description" content="<%= __('meta.description') %>">
-    <meta name="author" content="<%= __('meta.author') %>">
-    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
-    <meta property="og:title" content="<%= __('profile.title') %>">
-    <meta property="og:image" content="img/logo.png">
-    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
-    <meta name="yandex-verification" content="6cfda41f74038368">
-    <title><%= __('contributions.viewChanges') %> - <%= contribution.problem_name %></title>
-    <link rel="icon" href="/img/logo.png" type="image/png">
-    <script src="/js/jquery-1.10.1.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="content-language" content="en" />
+  <meta name="keywords" content="<%= __('meta.keywords') %>" />
+  <meta name="description" content="<%= __('meta.description') %>" />
+  <meta name="author" content="<%= __('meta.author') %>" />
+  <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
+  <meta property="og:title" content="<%= __('profile.title') %>" />
+  <meta property="og:image" content="img/logo.png" />
+  <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
+  <meta name="yandex-verification" content="6cfda41f74038368" />
+  <title><%= __('contributions.viewChanges') %> - <%= contribution.problem_name %></title>
 
-    <script src="/diff_match_patch.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #1e3a8a; /* Dark Blue */
-            --secondary-color: #3b82f6; /* Light Blue */
-            --background-color: #e0e7ff; /* Lightest Blue */
-            --text-color: #1f2937; /* Dark Gray */
-            --border-color: #cbd5e1; /* Light Gray */
-            --shadow-color: rgba(0, 0, 0, 0.1); /* Subtle Shadow */
+  <link rel="icon" href="/img/logo.png" type="image/png" />
+
+  <!-- jQuery and diff_match_patch -->
+  <script src="/js/jquery-1.10.1.min.js"></script>
+  <script src="/diff_match_patch.js"></script>
+
+  <!-- Google Fonts & Bootstrap 5 -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+  />
+
+  <style>
+    :root {
+      --primary-color: #1e3a8a;       /* Dark Blue */
+      --secondary-color: #3b82f6;     /* Light Blue */
+      --text-color: #1f2937;          /* Dark Gray */
+      --diff-bg: #f3f4f6;             /* Subtle gray background for code diffs */
+      --navbar-bg-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      --bg-light: #f9fafb;
+      --border-color: #e2e8f0;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      color: var(--text-color);
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Navbar */
+    .navbar-custom {
+      background: var(--navbar-bg-gradient);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    .navbar-custom .navbar-brand,
+    .navbar-custom .nav-link {
+      color: var(--text-color) !important;
+      font-weight: 500;
+    }
+    .navbar-custom .navbar-toggler-icon {
+      color: var(--text-color) !important;
+    }
+    .navbar-brand-container {
+      background: #ffffff;
+      padding: 0.4rem 0.75rem;
+      border-radius: 0.3rem;
+      display: flex;
+      align-items: center;
+      transition: background-color 0.3s ease;
+    }
+    .navbar-brand-container:hover {
+      background-color: #f1f5f9;
+    }
+    .logo-img {
+      border-radius: 0;
+    }
+
+    /* Search dropdown example styling */
+    .search {
+      position: relative;
+    }
+    .modern-search {
+      width: 250px;
+      border-radius: 20px;
+      border: 1px solid #cad2df;
+      padding: 5px 15px;
+      transition: border-color 0.2s;
+    }
+    .modern-search:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+    }
+    .search-results {
+      max-height: 200px;
+      overflow-y: auto;
+      display: none; /* hidden by default */
+    }
+    .search-result-item:hover {
+      background-color: #f8f9fa;
+    }
+
+    /* Hero Example (Optional) */
+    .hero-profile {
+      background: linear-gradient(to bottom,
+          rgba(255, 255, 255, 0.9),
+          rgba(255, 255, 255, 0.95)),
+        url('https://savchenkosolutions.com/img/book.png') no-repeat center / 20%;
+      padding: 3rem 0;
+      margin-bottom: 2rem;
+    }
+    .hero-profile .hero-content {
+      text-align: center;
+    }
+    .hero-profile h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+    .hero-profile p {
+      font-size: 1.1rem;
+      color: #4b5563;
+      margin-bottom: 1rem;
+    }
+
+    /* Main heading */
+    .page-title {
+      color: var(--primary-color);
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    /* Subheader style */
+    .undertitle {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+      color: #49597b;
+      background-color: #f8f9fa;
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+
+    /* Card for changes info */
+    .changes-card {
+      margin-top: 2rem;
+      margin-bottom: 2rem;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+    .changes-card:hover {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Diff container styling */
+    #outputdiv {
+      background-color: var(--diff-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 3rem;
+    }
+    #outputdiv code {
+      background: transparent;
+      color: var(--text-color);
+    }
+
+    /* Commit link styling */
+    .commit-link svg {
+      margin-right: 5px;
+    }
+
+    /* Stats colors */
+    .added-stat {
+      color: #10b981; /* green */
+      font-weight: 500;
+    }
+    .removed-stat {
+      color: #ef4444; /* red */
+      font-weight: 500;
+    }
+
+    /* Footer styling */
+    .footer {
+      border-top: 1px solid var(--border-color);
+      padding: 1.5rem 0;
+      text-align: center;
+      background-color: var(--bg-light);
+    }
+    .footer p {
+      margin: 0.25rem 0;
+      color: #6b7280;
+    }
+    .footer-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-link:hover {
+      color: var(--secondary-color);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+      .search {
+        width: 100%;
+      }
+      .page-title {
+        font-size: 1.5rem;
+      }
+      .undertitle {
+        font-size: 0.85rem;
+      }
+      .modern-search {
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Enhanced search results styling */
+    .cdx-menu-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    .cdx-menu-item:hover {
+        background-color: var(--bg-light);
+    }
+    .cdx-menu-item__content {
+        display: block;
+    }
+    .cdx-menu-item__text {
+        display: flex;
+        flex-direction: column;
+    }
+    .cdx-search-result-title {
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    .cdx-menu-item__text__description {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+  </style>
+
+  <script>
+    // Initialize the diff match patch library
+    var dmp = new diff_match_patch();
+
+    function decodeHtmlEntities(str) {
+      var txt = document.createElement("textarea");
+      txt.innerHTML = str;
+      return txt.value;
+    }
+
+    function launchDiff() {
+      var text1 = decodeHtmlEntities(
+        `<%= originalContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`
+      );
+      var text2 = decodeHtmlEntities(
+        `<%= newContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`
+      );
+      var d = dmp.diff_main(text1, text2);
+      dmp.diff_cleanupSemantic(d);
+      var ds = dmp.diff_prettyHtml(d);
+      document.getElementById("outputdiv").innerHTML = "<code>" + ds + "</code>";
+    }
+
+    window.onload = function () {
+      launchDiff();
+
+      // Enhanced search functionality
+      const searchInput = document.getElementById("searchInput");
+      const searchResults = document.getElementById("searchResults");
+      const searchResultsList = document.querySelector("#searchResults ul");
+
+      searchInput.addEventListener("input", async () => {
+        const query = searchInput.value.trim();
+
+        if (query.length === 0) {
+          searchResults.style.display = "none";
+          searchResultsList.innerHTML = "";
+          return;
         }
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-color: var(--background-color);
-            color: var(--text-color);
+        try {
+          const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+          const data = await response.json();
+
+          if (data.results.length > 0) {
+            const limitedResults = data.results.slice(0, 5);
+            searchResultsList.innerHTML = limitedResults.map((result, index) => `
+              <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
+                  <span class="cdx-menu-item__text">
+                    <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                    <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                  </span>
+                </a>
+              </li>
+            `).join("");
+            searchResults.style.display = "block";
+          } else {
+            searchResultsList.innerHTML = `
+              <li class="cdx-menu-item cdx-menu-item--enabled">
+                <span class="cdx-menu-item__content">
+                  <span class="cdx-menu-item__text">No results found.</span>
+                </span>
+              </li>
+            `;
+          }
+        } catch (error) {
+          console.error('Error fetching search results:', error);
         }
-
-        h1 {
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            font-size: 2rem;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 800px;
-            background-color: #ffffff;
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            box-shadow: 0 4px 6px var(--shadow-color);
-            border-radius: 12px;
-            overflow-x: auto;
-        }
-
-        .back-link {
-            display: flex;
-            align-items: center;
-            color: var(--secondary-color);
-            text-decoration: none;
-            margin-bottom: 20px;
-            transition: color 0.3s;
-        }
-
-        .back-link:hover {
-            color: #2563eb;
-        }
-
-        .meta-info p {
-            margin: 5px 0;
-            color: #4b5563;
-        }
-
-        .stat {
-            font-weight: 500;
-            margin-right: 10px;
-        }
-
-        .added-stat {
-            color: #10b981;
-        }
-
-        .removed-stat {
-            color: #ef4444;
-        }
-
-        code {
-            display: block;
-            padding-left: 30px;
-            position: relative;
-            white-space: pre-wrap;
-            background-color: #f3f4f6;
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        #outputdiv {
-            width: 100%;
-            max-width: 800px;
-            background-color: #f9fafb;
-            border: 1px solid #d1d5db;
-            border-radius: 12px;
-            box-shadow: 0 4px 8px var(--shadow-color);
-            margin-top: 20px;
-            margin-bottom: 50px;
-            padding: 20px;
-            overflow-x: auto;
-        }
-
-        #outputdiv pre {
-            margin: 0;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--text-color);
-        }
-
-        #outputdiv code {
-            background-color: transparent;
-            padding: 0;
-        }
-
-        .footer {
-            background-color: var(--background-color);
-            color: var(--primary-color);
-            padding: 20px 0;
-            text-align: center;
-            width: 100%;
-            border-top: 1px solid #cbd5e1;
-            box-shadow: 0 -2px 4px var(--shadow-color);
-        }
-
-        .footer-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .footer-text {
-            margin: 10px 0;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .footer-link {
-            color: var(--secondary-color);
-            text-decoration: none;
-            transition: color 0.3s, transform 0.3s;
-        }
-
-        .footer-link:hover {
-            color: #2563eb;
-            transform: scale(1.05);
-        }
-
-        .commit-link a {
-            display: flex;
-            align-items: center;
-            color: #0366d6;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .commit-link a:hover {
-            color: #0056b3;
-        }
-
-        .commit-link svg {
-            margin-right: 8px;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .container, #outputdiv {
-                padding: 15px;
-            }
-
-            .footer-text {
-                font-size: 14px;
-            }
-        }
-
-        .undertitle {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1.2rem;
-            color: #49597b;
-            margin-top: -10px;
-            margin-bottom: 20px;
-            background-color: #f3f4f6;
-            padding: 5px 10px;
-            border-radius: 4px;
-        }
-
-        .problem-title {
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .problem-link {
-            color: var(--secondary-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s, transform 0.3s;
-        }
-
-        .problem-link:hover {
-            color: #2563eb;
-            transform: scale(1.05);
-        }
-    </style>
-    <script>
-        var dmp = new diff_match_patch();
-
-        function decodeHtmlEntities(str) {
-            var txt = document.createElement("textarea");
-            txt.innerHTML = str;
-            return txt.value;
-        }
-
-        function launch() {
-            var text1 = decodeHtmlEntities(`<%= originalContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`);
-            var text2 = decodeHtmlEntities(`<%= newContent.replace(/\\/g, '\\\\').replace(/\${/g, '\\$\{') %>`);
-            var d = dmp.diff_main(text1, text2);
-            var ds = dmp.diff_prettyHtml(d);
-            document.getElementById('outputdiv').innerHTML = `<pre><code>${ds}</code></pre>`;
-        }
-
-        window.onload = function () {
-            launch();
-        };
-    </script>
+      });
+    };
+  </script>
 </head>
 
 <body>
-    <h1><%= __('contributions.changesFor') %> <span style="color: var(--secondary-color);">#<%= contribution.id %></span></h1>
-
-    <div class="container" style="padding-bottom: 5px;">
-        <% if (contribution.editor_identifier) { %>
-            <a href="/user/<%= contribution.editor_identifier %>" class="back-link">
-        <% } else { %>
-            <a href="/" class="back-link">
-        <% } %>
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            <%= __('contributions.backToProfile') %>
-        </a>
-        
-        <div class="header">
-            <h2 class="problem-title">
-                <%= __('contributions.problem') %>: 
-                <a href="/<%= contribution.language %>/<%= contribution.problem_name %>" class="problem-link">
-                    <%= contribution.language %>/<%= contribution.problem_name %>
-                </a>
-            </h2>
-            <% if (contribution.caption) { %>
-                <h3 class="undertitle" style="font-size: 1.2rem; color: #49597b; margin-top: 10px;"><%= contribution.caption %></h3>
-            <% } %>
-            <div class="meta-info" style="margin-bottom: 20px;">
-                <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 10px;">
-                    <%= __('contributions.editedBy') %>: 
-                    <% if (contribution.isAnonymous) { %>
-                        <strong style="color: #ef4444;"><%= __('contributions.anonymousUser') %></strong> 
-                        (<strong>IP: <%= contribution.editor_identifier %></strong>)
-                    <% } else { %>
-                        <strong style="color: #10b981;"><%= contribution.editor_name %></strong> 
-                        (<a href="/user/<%= contribution.editor_identifier %>" style="font-size: 1.1rem; color: #4b5563; text-decoration: none;"><strong>@<%= contribution.editor_identifier %></strong></a>)
-                    <% } %>
-                </p>
-                <p style="font-size: 1.1rem; color: #4b5563; margin-bottom: 10px;">
-                    <%= __('contributions.editedAt') %>: <strong><%= formatDate(contribution.edited_at) %></strong>
-                </p>
-
-                <% if (contribution.commit) { %>
-                    <p class="commit-link" style="margin-bottom: 15px;">
-                        <a href="https://github.com/savchenko-physics/savchenko-physics.github.io/commit/<%= contribution.commit %>" target="_blank" style="color: #0366d6;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
-                                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                            </svg>
-                            GitHub commit: <strong><%= contribution.commit %></strong>
-                        </a>
-                    </p>
-                <% } %>
-                <p class="change-summary" style="font-size: 1.1rem;">
-                    <span class="stat added-stat">+<%= changes.filter(c => c.type === 'added' || c.type === 'modified').length %></span>
-                    <span class="stat removed-stat">-<%= changes.filter(c => c.type === 'removed' || c.type === 'modified').length %></span>
-                    <span><%= __('contributions.linesChanged') %></span>
-                </p>
-            </div>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand ms-3" href="/">
+        <div class="navbar-brand-container">
+          <img
+            src="https://savchenkosolutions.com/img/book.png"
+            alt="Savchenko Solutions"
+            width="40"
+            height="40"
+            class="d-inline-block align-text-center me-2 logo-img"
+          />
+          Savchenko Solutions
         </div>
+      </a>
+
+      <button
+        class="navbar-toggler me-3"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#mainNav"
+        aria-controls="mainNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto me-3 align-items-center">
+          <!-- Search Input -->
+          <li class="nav-item me-3">
+            <div class="search">
+              <input
+                type="text"
+                id="searchInput"
+                class="form-control form-control-sm modern-search"
+                placeholder="Search Savchenko Solutions"
+                aria-label="Search"
+              />
+              <div
+                id="searchResults"
+                class="search-results position-absolute bg-white border rounded shadow-sm mt-1"
+                style="z-index: 1050; width: 100%;"
+              >
+                <ul class="list-unstyled mb-0 p-2">
+                  <!-- Example of a search result item -->
+                  <li
+                    class="search-result-item py-2 px-3 mb-1 rounded"
+                  >
+                    <a
+                      href="#"
+                      class="d-block text-dark text-decoration-none"
+                    >
+                      <span class="search-result-title font-weight-bold"
+                        >Example Result Title</span
+                      >
+                      <span
+                        class="search-result-snippet d-block text-muted small"
+                        >Snippet or description goes here...</span
+                      >
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </li>
+
+          <!-- Language Toggle (EJS logic) -->
+          <li class="nav-item me-3">
+            <% if (lang === 'en') { %>
+              <span class="text-dark">
+                <strong>
+                  <a href="/ru/contributions/<%= contribution.id %>" class="text-dark text-decoration-none"
+                    >EN</a
+                  >
+                </strong>
+              </span>
+            <% } else { %>
+              <span class="text-dark">
+                <strong>
+                  <a href="/en/contributions/<%= contribution.id %>" class="text-dark text-decoration-none"
+                    >RU</a
+                  >
+                </strong>
+              </span>
+            <% } %>
+          </li>
+
+          <!-- Profile/Login -->
+          <li class="nav-item">
+            <% if (usernameCurrent) { %>
+              <a href="/user/<%= usernameCurrent %>" class="nav-link">
+                <img
+                  src="<%= profilePictureCurrent %>"
+                  alt="Profile Picture"
+                  class="rounded-circle"
+                  width="40"
+                  height="40"
+                />
+              </a>
+            <% } else { %>
+              <a
+                href="/<%= lang %>/login"
+                class="btn btn-outline-dark btn-sm rounded-pill shadow-sm"
+              >
+                Login
+              </a>
+            <% } %>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <!-- END NAVBAR -->
+
+  <!-- Optional Hero Section -->
+  <!--
+  <section class="hero-profile">
+    <div class="container hero-content">
+      <h1>Welcome to Savchenko Solutions</h1>
+      <p>Accelerating your learning, one problem at a time.</p>
+      <a href="#get-started" class="btn btn-primary btn-lg"
+        >Get Started</a
+      >
+    </div>
+  </section>
+  -->
+
+  <!-- PAGE CONTENT -->
+  <div class="container">
+    <h1 class="page-title">
+      <%= __('contributions.changesFor') %>
+      <span style="color: var(--secondary-color);">#<%= contribution.id %></span>
+    </h1>
+
+    <!-- Back link -->
+    <div class="mb-3">
+      <% if (contribution.editor_identifier && !contribution.isAnonymous) { %>
+        <a
+          href="/user/<%= contribution.editor_identifier %>"
+          class="text-decoration-none"
+        >
+      <% } else { %>
+        <a href="/<%= lang %>" class="text-decoration-none">
+      <% } %>
+          <i class="bi bi-arrow-left-circle me-1"></i>
+          <%= __('contributions.backToProfile') %>
+        </a>
     </div>
 
+    <!-- Changes Card -->
+    <div class="card shadow-sm changes-card">
+      <div class="card-body">
+        <h2 class="h5 text-muted">
+          <%= __('contributions.problem') %>:
+          <a
+            href="/<%= contribution.language %>/<%= contribution.problem_name %>"
+            class="fw-semibold"
+            style="color: var(--secondary-color);"
+          >
+            <%= contribution.language %>/<%= contribution.problem_name %>
+          </a>
+        </h2>
+
+        <% if (contribution.caption) { %>
+          <span class="undertitle"><%= contribution.caption %></span>
+        <% } %>
+
+        <p class="mb-2">
+          <%= __('contributions.editedBy') %>:
+          <% if (contribution.isAnonymous) { %>
+            <strong class="text-danger">
+              <%= __('contributions.anonymousUser') %></strong
+            >
+            (<strong>IP: <%= contribution.editor_identifier %></strong>)
+          <% } else { %>
+            <strong class="text-success"><%= contribution.editor_name %></strong>
+            (<a
+              href="/user/<%= contribution.editor_identifier %>"
+              class="text-decoration-none text-muted"
+            >
+              @<%= contribution.editor_identifier %>
+            </a>)
+          <% } %>
+        </p>
+
+        <p class="mb-2">
+          <%= __('contributions.editedAt') %>:
+          <strong><%= formatDate(contribution.edited_at) %></strong>
+        </p>
+
+        <% if (contribution.commit) { %>
+          <p class="commit-link mb-3">
+            <a
+              href="https://github.com/savchenko-physics/savchenko-physics.github.io/commit/<%= contribution.commit %>"
+              target="_blank"
+              class="text-decoration-none"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-github"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 
+                  6.53 5.47 7.59.4.07.55-.17.55-.38 
+                  0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49
+                  -2.69-.94-.09-.23-.48-.94
+                  -.82-1.13-.28-.15-.68-.52
+                  -.01-.53.63-.01 1.08.58
+                  1.23.82.72 1.21 1.87.87
+                  2.33.66.07-.52.28-.87.51
+                  -1.07-1.78-.2-3.64-.89-3.64
+                  -3.95 0-.87.31-1.59.82-2.15
+                  -.08-.2-.36-1.02.08-2.12 0 0
+                  .67-.21 2.2.82.64-.18 1.32-.27
+                  2-.27s1.36.09 2 .27c1.53-1.04
+                  2.2-.82 2.2-.82.44 1.1.16
+                  1.92.08 2.12.51.56.82 1.27.82
+                  2.15 0 3.07-1.87 3.75-3.65
+                  3.95.29.25.54.73.54 1.48
+                  0 1.07-.01 1.93-.01 2.19 0
+                  .21.15.46.55.38A8.013 8.013 0 0 0
+                  16 8c0-4.42-3.58-8-8-8z"
+                />
+              </svg>
+              GitHub commit: <strong><%= contribution.commit %></strong>
+            </a>
+          </p>
+        <% } %>
+
+        <p class="mb-0">
+          <span class="added-stat">
+            +<%= changes.filter(c => c.type === 'added' || c.type === 'modified').length %>
+          </span>
+          <span class="removed-stat">
+            -<%= changes.filter(c => c.type === 'removed' || c.type === 'modified').length %>
+          </span>
+          <span><%= __('contributions.linesChanged') %></span>
+        </p>
+      </div>
+    </div>
+
+    <!-- DIFF OUTPUT -->
     <div id="outputdiv"></div>
+  </div>
 
-    <footer class="footer">
-        <div class="footer-container">
-            <p class="footer-text">
-                © <strong>Savchenko Solutions</strong>, 2023-2025
-            </p>
-            <p class="footer-text">
-                All rights belong to the authors. Commercial use of materials - with the written permission of the authors.
-            </p>
-            <p class="footer-text">
-                <a href="mailto:aliaksandr@melnichenka.com" class="footer-link">aliaksandr@melnichenka.com</a>
-            </p>
-        </div>
-    </footer>
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <p class="mb-1">
+        © <strong>Savchenko Solutions</strong>, 2023-2025
+      </p>
+      <p class="mb-1">
+        All rights belong to the authors. Commercial use of materials requires
+        written permission.
+      </p>
+      <p class="mb-0">
+        <a href="mailto:aliaksandr@melnichenka.com" class="footer-link"
+          >aliaksandr@melnichenka.com</a
+        >
+      </p>
+    </div>
+  </footer>
 
+  <!-- Bootstrap JS (Popper + Bootstrap) -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  ></script>
 </body>
-
 </html>
