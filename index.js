@@ -530,7 +530,7 @@ app.get("/", async (req, res) => {
 async function getRecentContributions(limit) {
     try {
         const result = await pool.query(
-            "SELECT id, problem_name, user_id, edited_at, ip_address FROM contributions ORDER BY edited_at DESC LIMIT $1",
+            "SELECT id, problem_name, user_id, edited_at, ip_address, invisible FROM contributions WHERE invisible = false ORDER BY edited_at DESC LIMIT $1",
             [limit]
         );
 
