@@ -96,6 +96,47 @@ function checkNotAuthenticated(req, res, next) {
 
     res.redirect(`/${lang}/profile`);
 }
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'img', req.params.name);
+        fs.mkdirSync(dir, { recursive: true }); // Ensure the directory exists
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname); // Use the original file name
+    }
+});
+
+
+const upload = multer({ storage: storage });
+
+// Add this route to handle image uploads
+app.post('/upload-image/:name', upload.single('image'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded.' });
+    }
+    
+    const dir = path.join(__dirname, 'img', req.params.name);
+    fs.mkdirSync(dir, { recursive: true });
+
+    const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
+
+    // Use a library like 'sharp' to get image dimensions
+    const sharp = require('sharp');
+    sharp(req.file.path).metadata().then(metadata => {
+        res.json({
+            imagePath,
+            width: metadata.width,
+            height: metadata.height
+        });
+    }).catch(err => {
+        console.error("Error getting image metadata:", err);
+        res.status(500).json({ message: 'Error processing image.' });
+    });
+});
+
 app.get('/img/:name', (req, res) => {
     const dirPath = path.join(__dirname, 'img', req.params.name);
     fs.readdir(dirPath, (err, files) => {
@@ -1034,45 +1075,6 @@ app.get("/global-search", async (req, res) => {
             lang
         });
     }
-});
-
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = path.join(__dirname, 'img', req.params.name);
-        fs.mkdirSync(dir, { recursive: true }); // Ensure the directory exists
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname); // Use the original file name
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// Add this route to handle image uploads
-app.post('/upload-image/:name', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ message: 'No file uploaded.' });
-    }
-
-    const dir = path.join(__dirname, 'img', req.params.name);
-    fs.mkdirSync(dir, { recursive: true });
-
-    const imagePath = `/img/${req.params.name}/${req.file.originalname}`;
-
-    // Use a library like 'sharp' to get image dimensions
-    const sharp = require('sharp');
-    sharp(req.file.path).metadata().then(metadata => {
-        res.json({
-            imagePath,
-            width: metadata.width,
-            height: metadata.height
-        });
-    }).catch(err => {
-        console.error("Error getting image metadata:", err);
-        res.status(500).json({ message: 'Error processing image.' });
-    });
 });
 
 // Update the route to handle contributions with an ID
