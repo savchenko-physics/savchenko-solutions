@@ -91,45 +91,6 @@ router.post("/api/upload", async (req, res) => {
             });
         }
 
-        // Generate markdown content based on language
-        const content = lang === 'ru' ?
-            `### Условие
-
-$${probNum}.$ ${solution}
-
-### Решение
-
-[Здесь должно быть ваше решение]
-
-#### Ответ
-
-[Вставьте краткий ответ или результат в рамке]`
-            :
-            `### Statement
-
-$${probNum}.$ ${solution}
-
-### Solution
-
-[Your solution should be placed here]
-
-#### Answer
-
-[Insert a concise answer or boxed result]`;
-
-        // Create directory if it doesn't exist
-        const problemsDir = path.join(__dirname, "posts", lang);
-        fs.mkdirSync(problemsDir, { recursive: true });
-        const filePath = path.join(problemsDir, `${problemName}.md`);
-
-        // Check if file already exists
-        if (fs.existsSync(filePath)) {
-            return res.status(400).json({
-                success: false,
-                message: "Problem file already exists."
-            });
-        }
-
         // Update the files check to properly handle FormData uploads
         const uploadedFiles = [];
         if (req.files) {
@@ -214,7 +175,42 @@ $${probNum}.$ ${solution}
             }
         }
 
-        // Write the markdown file
+        // Generate markdown content based on language AFTER image processing
+        const content = lang === 'ru' ?
+            `### Условие
+
+$${problemName}.$ [Вставьте условие задачи]
+
+### Решение
+
+${imageResults.map(img => {
+    const relativePath = img.imagePath.replace('/img/', '../../img/');
+    return `![К задаче $${problemName}$ |${img.width}x${img.height}, 31%](${relativePath})\n\n`;
+}).join('')}${solution}
+
+#### Ответ
+
+[Вставьте краткий ответ или результат в рамке]`
+            :
+            `### Statement
+
+$${problemName}.$ [Insert the problem statement]
+
+### Solution
+
+${imageResults.map(img => {
+    const relativePath = img.imagePath.replace('/img/', '../../img/');
+    return `![For problem $${problemName}$ |${img.width}x${img.height}, 31%](${relativePath})\n\n`;
+}).join('')}${solution}
+
+#### Answer
+
+[Insert a concise answer or boxed result]`;
+
+        // Create directory if it doesn't exist
+        const problemsDir = path.join(__dirname, "posts", lang);
+        fs.mkdirSync(problemsDir, { recursive: true });
+        const filePath = path.join(problemsDir, `${problemName}.md`);
         await fs.promises.writeFile(filePath, content);
 
         // Record the creation in contributions table
