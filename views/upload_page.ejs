@@ -849,13 +849,42 @@
         });
       });
 
-      // Update the validation function
+      // Update the validation function and add validation triggers
+      const formElements = [
+        problemNameInput,
+        methodScans,
+        methodLatex,
+        solutionContent,
+        fileUpload,
+        document.getElementById('fullName'),
+        ...document.querySelectorAll('input[name="solutionLanguage"]')
+      ].filter(Boolean); // Filter out null elements
+
+      formElements.forEach(element => {
+        ['input', 'change'].forEach(eventType => {
+          element.addEventListener(eventType, validateForm);
+        });
+      });
+
+      // Add validation trigger for image preview changes
+      const observer = new MutationObserver(validateForm);
+      observer.observe(scansPreview, { 
+        childList: true, 
+        subtree: true 
+      });
+
+      // Regular validation interval (every 2 seconds)
+      setInterval(validateForm, 1000);
+
+      // Update validation function to be more comprehensive
       function validateForm() {
         const problemName = problemNameInput.value.trim();
         const methodSelected = methodScans.checked || methodLatex.checked;
         const languageSelected = document.querySelector('input[name="solutionLanguage"]:checked');
         const fullNameInput = document.getElementById('fullName');
-        const hasSuccessStatus = problemStatus.querySelector('.text-success') !== null;
+        
+        // Update status check to allow both success and "exists in other language" status
+        const hasValidStatus = problemStatus.querySelector('.text-success, .text-info') !== null;
         
         // Check if anonymous section is visible and requires name
         const needsFullName = !isSignedIn && anonymousSection.style.display !== 'none';
@@ -869,24 +898,24 @@
           hasContent = solutionContent.value.trim().length > 0;
         }
 
-        // Enable submit button only if all required fields are filled AND problem status is success
-        submitBtn.disabled = !(
-          problemName && 
+        // Enable submit button if all required fields are filled AND status is either success or exists in other language
+        const isValid = problemName && 
           methodSelected && 
           languageSelected &&
           hasContent && 
           (!needsFullName || hasFullName) &&
-          hasSuccessStatus
-        );
-      }
+          hasValidStatus;
 
-      // Add validation listeners
-      problemNameInput.addEventListener('input', validateForm);
-      methodScans.addEventListener('change', validateForm);
-      methodLatex.addEventListener('change', validateForm);
-      solutionContent.addEventListener('input', validateForm);
-      if (document.getElementById('fullName')) {
-        document.getElementById('fullName').addEventListener('input', validateForm);
+        submitBtn.disabled = !isValid;
+        
+        // Optional: Add visual feedback
+        if (isValid) {
+          submitBtn.classList.remove('btn-secondary');
+          submitBtn.classList.add('btn-primary');
+        } else {
+          submitBtn.classList.remove('btn-primary');
+          submitBtn.classList.add('btn-secondary');
+        }
       }
 
       // Update submit handler
@@ -1031,11 +1060,6 @@
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
           searchResults.style.display = "none";
         }
-      });
-
-      // Add validation listener for language selection
-      document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
-        radio.addEventListener('change', validateForm);
       });
     });
   </script>
