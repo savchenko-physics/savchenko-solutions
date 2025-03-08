@@ -638,5 +638,29 @@
         });
     });
   </script>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // Get the user's timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      // Add timezone to all internal links
+      const links = document.querySelectorAll('a[href^="/"]');
+      links.forEach(link => {
+          const url = new URL(link.href, window.location.origin);
+          url.searchParams.set('timezone', timezone);
+          link.href = url.toString();
+      });
+      
+      // If we're on the homepage, reload with timezone if it's not already in the URL
+      if (window.location.pathname === '/' || window.location.pathname === '/en' || window.location.pathname === '/ru') {
+          const currentUrl = new URL(window.location.href);
+          if (!currentUrl.searchParams.has('timezone')) {
+              currentUrl.searchParams.set('timezone', timezone);
+              window.location.href = currentUrl.toString();
+          }
+      }
+  });
+  </script>
 </body>
 </html>
