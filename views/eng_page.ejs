@@ -367,7 +367,7 @@
                         </span>
                         <% } %>
                         <br>
-                        <span style="font-size: 0.8rem; color: #888;"><%= contribution.timestamp %></span>
+                        <span style="font-size: 0.8rem; color: #888;"><%= new Date(contribution.timestamp).toISOString() %></span>
                     </div>
                 </div>
                 <% }); %>
@@ -636,6 +636,23 @@
                 alert('<%= lang === "ru" ? "Пожалуйста, введите корректное название задачи." : "Please enter a valid problem name." %>');
             }
         });
+    });
+  </script>
+
+  <!-- Convert UTC timestamps to local timezone -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.timeline-content span[style*="font-size: 0.8rem"]').forEach(span => {
+        const isoDate = new Date(span.textContent);
+        const localDate = isoDate.toLocaleString(undefined, {
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+        span.textContent = localDate;
+      });
     });
   </script>
 </body>
