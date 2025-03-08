@@ -347,8 +347,8 @@
         <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm">
             <h3 class="text-center mb-4"><%= __('description.contributions2') %></h3>
             <div class="contribution-history timeline ms-2">
-                <% recentContributions.forEach(contribution => { %>
-                <div class="timeline-item">
+                <% recentContributions.forEach((contribution, index) => { %>
+                <div class="timeline-item" style="opacity: <%= index >= recentContributions.length - 3 ? Math.max(0.5, 1 - ((index - (recentContributions.length - 3)) * 0.15)) : 1 %>;">
                     <div class="timeline-content nbl-bg">
                         <strong><%= contribution.version %></strong> 
                         <% if (lang === 'en') { %>

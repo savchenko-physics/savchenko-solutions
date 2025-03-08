@@ -533,7 +533,7 @@ app.get("/logout", (req, res) => {
 app.get("/", async (req, res) => {
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
-    const recentContributions = await getRecentContributions(3);
+    const recentContributions = await getRecentContributions(10);
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -571,23 +571,24 @@ app.get("/", async (req, res) => {
 async function getRecentContributions(limit) {
     try {
         const result = await pool.query(
-            "SELECT id, problem_name, user_id, edited_at, ip_address, invisible FROM contributions WHERE invisible = false ORDER BY edited_at DESC LIMIT $1",
+            "SELECT id, problem_name, user_id, edited_at AT TIME ZONE 'UTC' as edited_at, ip_address, invisible FROM contributions WHERE invisible = false ORDER BY edited_at DESC LIMIT $1",
             [limit]
         );
 
         const contributions = await Promise.all(result.rows.map(async (row) => {
             const userResult = await pool.query("SELECT username FROM users WHERE id = $1", [row.user_id]);
-            const username = userResult.rows[0]?.username || row.ip_address; // Show ip_address if username is 'Unknown'
+            const username = userResult.rows[0]?.username || row.ip_address;
 
             return {
                 version: row.problem_name,
-                editor: username, // Convert user_id to username or show ip_address
-                timestamp: new Intl.DateTimeFormat('en-US', {
+                editor: username,
+                timestamp: new Intl.DateTimeFormat(undefined, { // 'undefined' uses the user's locale
                     hour: '2-digit',
                     minute: '2-digit',
                     month: 'short',
-                    day: '2-digit'
-                }).format(row.edited_at), // Format the timestamp
+                    day: '2-digit',
+                    timeZoneName: 'short'
+                }).format(row.edited_at),
                 id: row.id
             };
         }));
@@ -615,7 +616,7 @@ app.use(i18n.init);
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-    const recentContributions = await getRecentContributions(3);
+    const recentContributions = await getRecentContributions(10);
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -654,7 +655,7 @@ app.use('/', uploadRouter);
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-    const recentContributions = await getRecentContributions(3);
+    const recentContributions = await getRecentContributions(10);
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
