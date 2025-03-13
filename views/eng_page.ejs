@@ -53,7 +53,7 @@
 
         <!-- Toggle button for mobile -->
         <button
-          class="navbar-toggler"
+          class="navbar-toggler d-flex align-items-center gap-2 border-0 pe-0 d-lg-none"
           type="button"
           data-bs-toggle="collapse"
           data-bs-target="#navbarSupportedContent"
@@ -61,7 +61,25 @@
           aria-expanded="false"
           aria-label="Toggle navigation"
         >
-          <span class="navbar-toggler-icon"></span>
+          <!-- Language Switch (mobile only) -->
+          <% if (lang === 'en') { %>
+            <a href="/ru" class="nav-link text-white fw-bold">EN</a>
+          <% } else { %>
+            <a href="/en" class="nav-link text-white fw-bold">RU</a>
+          <% } %>
+
+          <!-- Login/Profile Image -->
+          <% if (username) { %>
+            <img
+              src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>"
+              alt="Profile Picture"
+              class="rounded-circle"
+              width="48"
+              height="48"
+            />
+          <% } else { %>
+            <span class="text-white fw-bold"><%= __('menu.login') %></span>
+          <% } %>
         </button>
 
         <!-- Right side items: language + user -->
@@ -141,7 +159,7 @@
   ============================ -->
   <main class="container my-5">
     <!-- Intro Row: Left = Text, Right = YouTube Preview -->
-    <div class="row align-items-center justify-content-center mb-5">
+    <div class="row align-items-center justify-content-center mb-lg-5 mb-2">
       <div class="col-lg-6 mb-4">
         <div class="content-card shadow-sm p-4">
           <p style="text-align: justify;">    
@@ -152,7 +170,7 @@
           </p>
         </div>
       </div>
-      <div class="col-lg-5 d-flex justify-content-center">
+      <div class="col-lg-5 d-none d-lg-flex justify-content-center">
         <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
           <img
             src="/img/yt_preview.jpg"
@@ -165,9 +183,9 @@
     </div>
 
     <!-- Team & Acknowledgments -->
-    <div class="row align-items-start justify-content-center mb-5">
+    <div class="row align-items-start justify-content-center mb-5 d-none d-lg-flex">
       <!-- Only show team image on lg screens or bigger -->
-      <div class="col-lg-3 d-none d-lg-block">
+      <div class="col-lg-3">
         <img
           src="https://savchenkosolutions.com/img/team.png"
           alt="<%= __('description.coreTeam') %>"
@@ -175,7 +193,7 @@
         />
       </div>
       <div class="col-lg-9">
-        <div class="content-card bg-light shadow-sm p-4">
+        <div class="content-card shadow-sm p-4">
           <h3 class="mb-3"><%= __('description.acknowledgments') %></h3>
           <p><%= __('description.deepestThanks') %></p>
           <h4><%= __('description.coreTeam') %></h4>  
@@ -197,6 +215,29 @@
 
     <!-- Chapter & Sections + Sidebar with Top Authors & Contributions -->
     <div class="row">
+      <!-- Problem Statements PDF (visible on mobile) -->
+      <div class="col-12 d-lg-none mb-4">
+        <div class="problem-statements">
+          <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>" 
+             class="pdf-download-btn">
+            <div class="pdf-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <line x1="10" y1="9" x2="8" y2="9" />
+              </svg>
+            </div>
+            <div class="pdf-text">
+              <span class="pdf-label"><%= __('description.problemStatements') %></span>
+              <span class="pdf-action"><%= __('description.downloadPDF') %></span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main content column -->
       <div class="col-12 col-lg-8 mb-5">
         <!-- Chapters and Problems -->
         <% chapters.forEach((chapter, chapterIndex)=> {
@@ -252,10 +293,10 @@
         <% } }); %>
       </div>
 
-      <!-- SIDEBAR: Top Authors + Recent Contributions -->
+      <!-- Sidebar column -->
       <div class="col-12 col-lg-4">
-        <!-- Problem Statements PDF -->
-        <div class="problem-statements mb-4">
+        <!-- Problem Statements PDF (visible on desktop) -->
+        <div class="problem-statements mb-4 d-none d-lg-block">
           <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>" 
              class="pdf-download-btn">
             <div class="pdf-icon">
@@ -275,7 +316,7 @@
         </div>
 
         <!-- Top Authors -->
-        <div class="top-authors text-center br-10 shadow-sm">
+        <div class="top-authors text-center br-10 shadow-sm d-none d-lg-block">
             <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
             <!-- Wrap table in table-responsive to allow horizontal scrolling on mobile -->
             <div class="table-responsive">
@@ -344,7 +385,7 @@
         </div>
 
         <!-- Recent Contributions -->
-        <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm">
+        <div class="contributions text-center mt-3 bg-white br-10 p-4 shadow-sm d-none d-lg-block">
             <h3 class="text-center mb-4"><%= __('description.contributions2') %></h3>
             <div class="contribution-history timeline ms-2">
                 <% recentContributions.forEach((contribution, index) => { %>
