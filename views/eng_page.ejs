@@ -395,18 +395,50 @@
   <!-- ============================
        FOOTER
   ============================ -->
-  <footer class="bg-white py-4 mt-5 border-top">
-    <div class="container text-center">
-      <p class="mb-0">
-        <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
-      </p>
-      <p class="mb-0">
-        <small>
-          All rights belong to the authors.
-          Commercial use of materials requires written permission.
-          aliaksandr@melnichenka.com
-        </small>
-      </p>
+  <footer class="bg-dark text-white py-5 border-top mt-5">
+    <div class="container">
+      <div class="row align-items-center text-center text-md-start">
+        <div class="col-md-6 mb-4 mb-md-0">
+          <!-- Brand / Title -->
+          <a href="/<%= lang %>/" class="d-inline-flex align-items-center text-decoration-none mb-3">
+            <img
+              src="/img/logo_main.svg"
+              alt="<%= __('title') %> Logo"
+              style="height: 40px;"
+              class="me-2"
+            />
+            <span class="fw-bold h5 mb-0 text-white"><%= __('title') %></span>
+          </a>
+          <!-- Copyright & Basic Info -->
+          <p class="mb-0">
+            <small>
+              © <strong>Savchenko Solutions</strong>, 2023-2025
+              <br />
+              All solutions are contributed by their respective authors and are
+              based on original textbook content, which remains the property of
+              the textbook authors.
+            </small>
+          </p>
+        </div>
+        
+        <!-- License & Contact -->
+        <div class="col-md-6 text-md-end">
+          <p class="small mb-2">
+            Unless otherwise noted, solutions are provided under the
+            <strong>CC BY-SA 4.0</strong> license.
+            Commercial use of any material requires written permission.
+          </p>
+          <p class="small mb-0">
+            Contact: 
+            <a
+              href="mailto:aliaksandr@melnichenka.com"
+              class="text-decoration-none text-white"
+            >
+              aliaksandr@melnichenka.com
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   </footer>
 
@@ -428,6 +460,19 @@
     }
     .search-results li:hover {
         background-color: #f1f1f1;
+    }
+    .bg-dark {
+      animation: fadeInFooter 0.8s ease-in-out;
+    }
+    @keyframes fadeInFooter {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
   
