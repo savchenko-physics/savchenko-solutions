@@ -101,6 +101,10 @@
         .modern-search::placeholder {
             color: #adb5bd; /* Lighter placeholder text */
         }
+        .footer-modern {
+            background: linear-gradient(135deg, #343A40 0%, #495057 100%);
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -342,19 +346,53 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-light py-4">
-        <div class="container text-center">
-            <p class="mb-0">
-                <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
-            </p>
-            <p class="mb-0">
+    <footer class="footer-modern py-4 mt-5">
+        <div class="container">
+          <div class="row align-items-center text-center text-md-start">
+            <div class="col-md-6 mb-4 mb-md-0">
+              <!-- Brand / Title -->
+              <a href="/<%= lang %>/" class="d-inline-flex align-items-center text-decoration-none mb-3">
+                <img
+                  src="/img/logo_main.svg"
+                  alt="<%= __('title') %> Logo"
+                  style="height: 40px;"
+                  class="me-2"
+                />
+                <span class="fw-bold h5 mb-0 text-white"><%= __('title') %></span>
+              </a>
+              <!-- Copyright & Basic Info -->
+              <p class="mb-0">
                 <small>
-                    Solutions are contributed by their authors and based on original textbook content, which remains the property of the textbook authors. Unless stated otherwise, solutions are licensed under CC BY-SA 4.0. Commercial use requires written permission.
-                    aliaksandr@melnichenka.com
+                  © <strong>Savchenko Solutions</strong>, 2023-2025
+                  <br />
+                  All solutions are contributed by their respective authors and are
+                  based on original textbook content, which remains the property of
+                  the textbook authors.
                 </small>
-            </p>
+              </p>
+            </div>
+            
+            <!-- License & Contact -->
+            <div class="col-md-6 text-md-end">
+              <p class="small mb-2">
+                Unless otherwise noted, solutions are provided under the
+                <strong>CC BY-SA 4.0</strong> license.
+                Commercial use of any material requires written permission.
+              </p>
+              <p class="small mb-0">
+                Contact: 
+                <a
+                  href="mailto:aliaksandr@melnichenka.com"
+                  class="text-decoration-none text-white"
+                >
+                  aliaksandr@melnichenka.com
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
-    </footer>
+      </footer>
+    
     <!-- /Footer -->
 
     <!-- Scripts -->
