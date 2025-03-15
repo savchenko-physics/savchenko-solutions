@@ -541,7 +541,7 @@ app.get("/", async (req, res) => {
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    const working_page = isMobile ? "eng_page" : "eng_page";
 
     let profilePicture = null; // Initialize profilePicture
 
@@ -623,7 +623,7 @@ app.get("/ru", async (req, res) => {
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    const working_page = isMobile ? "eng_page" : "eng_page";
 
     let profilePicture = null; // Initialize profilePicture
 
@@ -662,7 +662,7 @@ app.get("/en", async (req, res) => {
 
     const userAgent = req.headers['user-agent'];
     const isMobile = /mobile/i.test(userAgent);
-    const working_page = isMobile ? "eng_page_old" : "eng_page";
+    const working_page = isMobile ? "eng_page" : "eng_page";
 
     let profilePicture = null; // Initialize profilePicture
 
