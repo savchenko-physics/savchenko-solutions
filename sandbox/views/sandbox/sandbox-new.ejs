@@ -1,64 +1,807 @@
 <%- include('../partials/header') %>
 
-<h2>Post a New Solution</h2>
+<!-- Main Content -->
+<main class="container my-5">
+  <div class="row justify-content-center g-5">
+    <!-- Main Content Column -->
+    <div class="col-md-8">
+      <div class="content-card shadow-sm p-4">
+        <h2 class="text-center mb-4"><%= __('upload.title') %></h2>
 
-<form action="/sandbox" method="POST">
-  <div class="mb-3">
-    <label for="title" class="form-label">Solution Title</label>
-    <input
-      type="text"
-      name="title"
-      id="title"
-      class="form-control"
-      required
-    />
+        <!-- Step 1: Problem Name -->
+        <div class="mb-4">
+          <label for="problemName" class="form-label step-label">
+            <strong>1.</strong> <%= __('upload.steps.problem') %>
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            id="problemName"
+            placeholder="e.g., 13.4.1"
+            required
+          />
+          <div id="problemStatus" class="form-text mt-2"></div>
+        </div>
+
+        <!-- Add Language Selection Step -->
+        <div class="mb-4">
+          <label class="form-label step-label">
+            <strong>1a.</strong> <%= __('upload.steps.language') %>
+          </label>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="solutionLanguage"
+              id="langEnglish"
+              value="en"
+              <%= lang === 'en' ? 'checked' : '' %>
+            />
+            <label class="form-check-label" for="langEnglish">
+              English
+            </label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="solutionLanguage"
+              id="langRussian"
+              value="ru"
+              <%= lang === 'ru' ? 'checked' : '' %>
+            />
+            <label class="form-check-label" for="langRussian">
+              Русский
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 1b: Problem Details -->
+        <div class="mb-4">
+          <label class="form-label step-label">
+            <strong>1b.</strong> <%= __('upload.steps.details') %>
+          </label>
+          
+          <div class="mb-3">
+            <label for="title" class="form-label">
+              <%= __('upload.details.title') %>
+            </label>
+            <input
+              type="text"
+              name="title"
+              id="title"
+              class="form-control"
+              required
+              placeholder="<%= __('upload.details.titlePlaceholder') %>"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="subject" class="form-label">
+              <%= __('upload.details.subject') %>
+            </label>
+            <input
+              type="text"
+              name="subject"
+              id="subject"
+              class="form-control"
+              placeholder="<%= __('upload.details.subjectPlaceholder') %>"
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              <%= __('upload.details.difficulty') %>
+            </label>
+            <div class="difficulty-options">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="difficulty"
+                  id="difficultyEasy"
+                  value="easy"
+                />
+                <label class="form-check-label" for="difficultyEasy">
+                  <%= __('upload.difficulty.easy') %>
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="difficulty"
+                  id="difficultyMedium"
+                  value="medium"
+                />
+                <label class="form-check-label" for="difficultyMedium">
+                  <%= __('upload.difficulty.medium') %>
+                </label>
+              </div>
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="difficulty"
+                  id="difficultyHard"
+                  value="hard"
+                />
+                <label class="form-check-label" for="difficultyHard">
+                  <%= __('upload.difficulty.hard') %>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="problem_book" class="form-label">
+              <%= __('upload.details.otherInfo') %>
+            </label>
+            <input
+              type="text"
+              name="problem_book"
+              id="problem_book"
+              class="form-control"
+              placeholder="<%= __('upload.details.otherInfoPlaceholder') %>"
+            />
+          </div>
+        </div>
+
+        <!-- Add Anonymous User Info Section -->
+        <div id="anonymousSection" class="mb-4" style="display: none;">
+          <label class="form-label step-label">
+            <strong>1b.</strong> <%= __('upload.steps.userInfo') %>
+          </label>
+          <div class="mb-3">
+            <input
+              type="text"
+              class="form-control"
+              id="fullName"
+              placeholder="<%= __('upload.anonymous.fullName') %>"
+            />
+            <div class="form-text">
+              <%= __('upload.anonymous.info') %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Choose the Method -->
+        <div class="mb-4">
+          <label class="form-label step-label">
+            <strong>2.</strong> <%= __('upload.steps.method') %>
+          </label>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="solutionMethod"
+              id="methodScans"
+              value="scans"
+            />
+            <label class="form-check-label" for="methodScans">
+              <%= __('upload.method.scans') %>
+            </label>
+          </div>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="solutionMethod"
+              id="methodLatex"
+              value="latex"
+            />
+            <label class="form-check-label" for="methodLatex">
+              <%= __('upload.method.latex') %>
+            </label>
+          </div>
+        </div>
+
+        <!-- Step 3A: If user chose "Upload Scans" -->
+        <div id="scansSection" class="mb-4">
+          <div class="upload-container border rounded-4 p-4 text-center" 
+               style="background: linear-gradient(to bottom, #f8f9fa, #ffffff); min-height: 300px; border-width: 2px !important;">
+
+            <!-- Modern Drag & Drop Zone -->
+            <div class="drop-zone mb-4 py-5 rounded-4" 
+                 style="background: rgba(255,255,255,0.7); border: 1px dashed #dee2e6;"
+                 onclick="document.getElementById('fileUpload').click()">
+              <div class="mb-3">
+                <i class="bi bi-cloud-upload fs-1 text-primary"></i>
+              </div>
+              <p class="mb-3 text-muted"><%= __('upload.dragDrop.text') %></p>
+              <input type="file" class="form-control d-none" id="fileUpload" name="files" multiple accept="image/*">
+              <button class="btn btn-outline-secondary rounded-pill px-4" id="selectFilesBtn" 
+                      onclick="event.stopPropagation()">
+                <i class="bi bi-folder me-2"></i><%= __('upload.dragDrop.selectFiles') %>
+              </button>
+            </div>
+
+            <!-- Preview Section -->
+            <div id="scansPreview" class="d-flex flex-wrap gap-3 justify-content-start mt-4" style="display: none !important;"></div>
+
+            <!-- Modern File Information -->
+            <div class="mt-4 p-3 rounded-4 bg-white shadow-sm">
+              <div class="d-flex align-items-center justify-content-center gap-4 text-muted small">
+                <div>
+                  <i class="bi bi-file-earmark me-1"></i>
+                  <%= __('upload.dragDrop.formats') %>
+                </div>
+                <div>
+                  <i class="bi bi-arrows-angle-expand me-1"></i>
+                  Max 50 MB
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3B: If user chose "LaTeX" -->
+        <div id="latexSection" class="mb-4">
+          <label for="solutionContent" class="form-label">
+            Type Your LaTeX Solution
+          </label>
+          <textarea
+            class="form-control"
+            id="solutionContent"
+            rows="6"
+            placeholder="<%= __('upload.latex.placeholder') %>"
+          ></textarea>
+          <div class="form-text">
+            <%= __('upload.latex.syntax') %>
+          </div>
+
+          <!-- Added Illustration Upload Section -->
+          <div class="mt-3">
+            <label for="latexIllustrations" class="form-label">
+              <%= __('upload.steps.illustrations') %>
+            </label>
+            <input
+              type="file"
+              class="form-control"
+              id="latexIllustrations"
+              multiple
+              accept="image/*"
+            />
+            <div class="form-text">
+              Upload any supporting diagrams or illustrations for your solution.
+            </div>
+            <!-- Preview for LaTeX illustrations -->
+            <div id="latexImagesPreview" class="d-flex flex-wrap gap-2 mt-2"></div>
+          </div>
+
+          <!-- LaTeX Preview -->
+          <div class="my-3">
+            <h6>LaTeX Preview:</h6>
+            <div
+              id="latexPreview"
+              class="border rounded p-3 bg-light"
+              style="min-height: 80px;"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center">
+          <button id="submitBtn" class="btn btn-primary rounded-pill px-4" disabled>
+            <i class="bi bi-cloud-upload me-2"></i> Submit Solution
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- /Main Content Column -->
+
+    <!-- Guidelines Sidebar -->
+    <div class="col-md-4">
+      <div class="content-card shadow-sm p-4">
+        <h4 class="mb-3"><%= __('upload.guidelines') %></h4>
+        <ul class="list-unstyled">
+          <li class="mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <%= __('upload.guideline1') %>
+          </li>
+          <li class="mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <%= __('upload.guideline2') %>
+          </li>
+          <li class="mb-3">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <%= __('upload.guideline3') %>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <!-- /Guidelines Sidebar -->
   </div>
-
-  <div class="mb-3">
-    <label for="content" class="form-label">Solution Content</label>
-    <textarea
-      name="content"
-      id="content"
-      rows="6"
-      class="form-control"
-      required
-    ></textarea>
-  </div>
-
-  <div class="mb-3">
-    <label for="subject" class="form-label">Subject</label>
-    <input
-      type="text"
-      name="subject"
-      id="subject"
-      class="form-control"
-      placeholder="e.g., Math, Physics..."
-    />
-  </div>
-
-  <div class="mb-3">
-    <label for="difficulty" class="form-label">Difficulty Level</label>
-    <input
-      type="text"
-      name="difficulty"
-      id="difficulty"
-      class="form-control"
-      placeholder="e.g., Easy, Medium, Hard..."
-    />
-  </div>
-
-  <div class="mb-3">
-    <label for="problem_book" class="form-label">Problem Book/Source</label>
-    <input
-      type="text"
-      name="problem_book"
-      id="problem_book"
-      class="form-control"
-      placeholder="e.g., Book Title, Page #, Problem #"
-    />
-  </div>
-
-  <button type="submit" class="btn btn-primary">Submit Solution</button>
-</form>
+</main>
 
 <%- include('../partials/footer') %>
+
+<!-- Scripts -->
+<script
+  src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+></script>
+
+<!-- (Optional) MathJax for LaTeX rendering -->
+<!-- Uncomment if you'd like real-time LaTeX rendering in the preview
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+-->
+
+<!-- Replace the existing Image Preview Modal with this new one -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content bg-dark">
+      <div class="modal-body p-0 position-relative">
+        <!-- Navigation buttons -->
+        <button type="button" class="btn btn-light position-absolute top-50 start-0 translate-middle-y rounded-circle ms-3" id="prevImage">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="btn btn-light position-absolute top-50 end-0 translate-middle-y rounded-circle me-3" id="nextImage">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        
+        <!-- Close button -->
+        <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+        
+        <!-- Image container with zoom capability -->
+        <div class="text-center" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+          <img id="previewModalImage" src="" alt="Preview" class="img-fluid" style="max-height: 80vh; cursor: zoom-in;">
+        </div>
+        
+        <!-- Image counter -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x mb-3 px-3 py-1 bg-dark bg-opacity-75 rounded-pill text-white">
+          <span id="imageCounter">1/1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const methodScans = document.getElementById('methodScans');
+    const methodLatex = document.getElementById('methodLatex');
+    const scansSection = document.getElementById('scansSection');
+    const latexSection = document.getElementById('latexSection');
+    const fileUpload = document.getElementById('fileUpload');
+    const scansPreview = document.getElementById('scansPreview');
+    const solutionContent = document.getElementById('solutionContent');
+    const latexPreview = document.getElementById('latexPreview');
+    const submitBtn = document.getElementById('submitBtn');
+    const selectFilesBtn = document.getElementById('selectFilesBtn');
+
+    // Toggle sections based on selected method
+    function toggleSolutionMethod() {
+      if (methodScans.checked) {
+        scansSection.style.display = 'block';
+        latexSection.style.display = 'none';
+      } else if (methodLatex.checked) {
+        scansSection.style.display = 'none';
+        latexSection.style.display = 'block';
+      } else {
+        scansSection.style.display = 'none';
+        latexSection.style.display = 'none';
+      }
+    }
+
+    // Listen for changes in radio buttons
+    methodScans.addEventListener('change', toggleSolutionMethod);
+    methodLatex.addEventListener('change', toggleSolutionMethod);
+
+    // Create preview modal instance
+    const imagePreviewModal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
+    const previewModalImage = document.getElementById('previewModalImage');
+    const prevButton = document.getElementById('prevImage');
+    const nextButton = document.getElementById('nextImage');
+    const imageCounter = document.getElementById('imageCounter');
+    let currentImageIndex = 0;
+    let currentImages = [];
+
+    // Function to update modal navigation
+    function updateModalNavigation() {
+      // Get all current preview images every time we update navigation
+      currentImages = Array.from(scansPreview.querySelectorAll('img'))
+        .map(img => img.dataset.fileData || img.src)
+        .filter(src => src); // Filter out any undefined or empty sources
+      
+      imageCounter.textContent = `${currentImageIndex + 1}/${currentImages.length}`;
+      prevButton.style.display = currentImages.length > 1 ? 'block' : 'none';
+      nextButton.style.display = currentImages.length > 1 ? 'block' : 'none';
+    }
+
+    // Handle image navigation
+    prevButton.addEventListener('click', () => {
+      currentImageIndex = (currentImageIndex - 1 + currentImages.length) % currentImages.length;
+      previewModalImage.src = currentImages[currentImageIndex];
+      updateModalNavigation();
+    });
+
+    nextButton.addEventListener('click', () => {
+      currentImageIndex = (currentImageIndex + 1) % currentImages.length;
+      previewModalImage.src = currentImages[currentImageIndex];
+      updateModalNavigation();
+    });
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (imagePreviewModal._element.classList.contains('show')) {
+        if (e.key === 'ArrowLeft') prevButton.click();
+        if (e.key === 'ArrowRight') nextButton.click();
+        if (e.key === 'Escape') imagePreviewModal.hide();
+      }
+    });
+
+    // Update the zoom functionality with smooth transitions
+    previewModalImage.addEventListener('click', function() {
+      if (this.classList.contains('zoomed')) {
+        this.style.transform = 'scale(1)';
+        // Wait for transition to complete before removing class
+        this.addEventListener('transitionend', function handler() {
+          this.classList.remove('zoomed');
+          this.removeEventListener('transitionend', handler);
+        });
+      } else {
+        this.classList.add('zoomed');
+        this.style.transform = 'scale(1.5)';
+      }
+    });
+
+    // Update the image preview click handlers
+    function setupImagePreview(img) {
+      img.onclick = function() {
+        // Get fresh list of images and find current index
+        currentImages = Array.from(scansPreview.querySelectorAll('img'))
+          .map(img => img.dataset.fileData || img.src)
+          .filter(src => src);
+        currentImageIndex = currentImages.indexOf(this.dataset.fileData || this.src);
+        
+        previewModalImage.src = this.dataset.fileData || this.src;
+        previewModalImage.style.transform = 'scale(1)';
+        previewModalImage.classList.remove('zoomed');
+        updateModalNavigation();
+        imagePreviewModal.show();
+      };
+    }
+
+    // Update the preview creation code
+    function createPreviewImage(file, container) {
+      // Show the preview container when first image is added
+      if (container.children.length === 0) {
+        container.style.display = 'flex';
+      }
+      
+      const wrapper = document.createElement('div');
+      wrapper.classList.add('position-relative', 'image-wrapper');
+      
+      const img = document.createElement('img');
+      img.classList.add('img-thumbnail', 'cursor-pointer');
+      img.style.height = '100px';
+      img.style.width = '100px';
+      img.style.objectFit = 'cover';
+      img.style.objectPosition = 'center';
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        img.src = e.target.result;
+        // Store the file data in a data attribute for later use
+        img.dataset.fileData = e.target.result;
+        // Get all current preview images after this image is loaded
+        const allImages = Array.from(container.querySelectorAll('img'))
+          .map(img => img.dataset.fileData || img.src)
+          .filter(src => src); // Filter out any undefined or empty sources
+        setupImagePreview(img, allImages);
+        validateForm();
+      };
+      reader.readAsDataURL(file);
+
+      // Add remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+      removeBtn.classList.add('btn', 'btn-dark', 'btn-sm', 'position-absolute', 'rounded-circle');
+      removeBtn.style.top = '-8px';
+      removeBtn.style.right = '-8px';
+      
+      removeBtn.onclick = function() {
+        wrapper.classList.add('fade-out');
+        setTimeout(() => {
+          wrapper.remove();
+          // Hide preview container if no images left
+          if (container.children.length === 0) {
+            container.style.display = 'none';
+          }
+          validateForm();
+        }, 300);
+      };
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(removeBtn);
+      
+      // Insert at the beginning of the container instead of appending
+      container.insertBefore(wrapper, container.firstChild);
+    }
+
+    // Add drag and drop functionality
+    const uploadContainer = document.querySelector('.upload-container');
+    
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadContainer.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadContainer.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadContainer.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+      uploadContainer.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+      uploadContainer.classList.remove('dragover');
+    }
+
+    uploadContainer.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      fileUpload.files = files; // Update the file input
+      [...files].forEach(file => {
+        if (file.type.startsWith('image/')) {
+          createPreviewImage(file, scansPreview);
+        }
+      });
+    }
+
+    // Live preview for LaTeX text
+    solutionContent.addEventListener('input', function() {
+      latexPreview.textContent = this.value;
+
+      // If using MathJax for real-time rendering, reprocess here:
+      // if (window.MathJax) {
+      //   MathJax.typesetPromise([latexPreview]);
+      // }
+    });
+
+    // Add problem verification
+    const problemNameInput = document.getElementById('problemName');
+    const anonymousSection = document.getElementById('anonymousSection');
+    const problemStatus = document.getElementById('problemStatus');
+    const isSignedIn = <%= !!locals.usernameCurrent %>;
+    
+    let problemDebounceTimer;
+    
+    problemNameInput.addEventListener('input', function() {
+      clearTimeout(problemDebounceTimer);
+      problemDebounceTimer = setTimeout(async () => {
+        const problemName = this.value.trim();
+        
+        // Basic format validation
+        const problemFormat = /^\d+\.\d+\.\d+$/;
+        if (problemName && !problemFormat.test(problemName)) {
+          problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
+          anonymousSection.style.display = 'none';
+          return;
+        }
+
+        if (problemName) {
+          try {
+            const selectedLanguage = document.querySelector('input[name="solutionLanguage"]:checked').value;
+            
+            // First verify the problem doesn't already exist
+            const verifyResponse = await fetch(`/api/verify-problem/${problemName}?language=${selectedLanguage}`);
+            const verifyData = await verifyResponse.json();
+
+            // Then validate against chapter/section limits
+            const [chapter, section, problem] = problemName.split('.').map(Number);
+            const limitsResponse = await fetch(`/api/validate-limits/${chapter}/${section}/${problem}?language=${selectedLanguage}`);
+            const limitsData = await limitsResponse.json();
+
+            if (!limitsData.valid) {
+              problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> ${limitsData.message}</span>`;
+              anonymousSection.style.display = 'none';
+            } else if (verifyData.exists) {
+              problemStatus.innerHTML = `<span class="text-warning"><i class="bi bi-exclamation-circle"></i> <%= __('upload.problemExists') %></span>`;
+              anonymousSection.style.display = 'none';
+            } else if (verifyData.existsInOtherLang) {
+              const otherLang = selectedLanguage === 'en' ? '<%= __("upload.language.russian") %>' : '<%= __("upload.language.english") %>';
+              problemStatus.innerHTML = `<span class="text-info"><i class="bi bi-info-circle"></i> <%= __('upload.problemExistsOtherLang') %> ${otherLang}. <%= __('upload.willBeLinked') %></span>`;
+              anonymousSection.style.display = 'none';
+            } else {
+              problemStatus.innerHTML = `<span class="text-success"><i class="bi bi-check-circle"></i> <%= __('upload.newProblem') %></span>`;
+              anonymousSection.style.display = isSignedIn ? 'none' : 'block';
+            }
+          } catch (err) {
+            console.error(err);
+            problemStatus.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> <%= __('upload.error') %></span>`;
+          }
+        }
+      }, 500);
+
+      // Add language change listener to trigger problem verification
+      document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (problemNameInput.value.trim()) {
+            // Trigger the input event on problemNameInput to recheck status
+            problemNameInput.dispatchEvent(new Event('input'));
+          }
+        });
+      });
+    });
+
+    // Update the validation function and add validation triggers
+    const formElements = [
+      problemNameInput,
+      methodScans,
+      methodLatex,
+      solutionContent,
+      fileUpload,
+      document.getElementById('fullName'),
+      ...document.querySelectorAll('input[name="solutionLanguage"]')
+    ].filter(Boolean); // Filter out null elements
+
+    formElements.forEach(element => {
+      ['input', 'change'].forEach(eventType => {
+        element.addEventListener(eventType, validateForm);
+      });
+    });
+
+    // Add validation trigger for image preview changes
+    const observer = new MutationObserver(validateForm);
+    observer.observe(scansPreview, { 
+      childList: true, 
+      subtree: true 
+    });
+
+    // Regular validation interval (every 2 seconds)
+    setInterval(validateForm, 1000);
+
+    // Update validation function to be more comprehensive
+    function validateForm() {
+      const problemName = problemNameInput.value.trim();
+      const methodSelected = methodScans.checked || methodLatex.checked;
+      const languageSelected = document.querySelector('input[name="solutionLanguage"]:checked');
+      const fullNameInput = document.getElementById('fullName');
+      
+      // Update status check to allow both success and "exists in other language" status
+      const hasValidStatus = problemStatus.querySelector('.text-success, .text-info') !== null;
+      
+      // Check if anonymous section is visible and requires name
+      const needsFullName = !isSignedIn && anonymousSection.style.display !== 'none';
+      const hasFullName = fullNameInput ? fullNameInput.value.trim() : true;
+
+      // Check for content based on selected method
+      let hasContent = false;
+      if (methodScans.checked) {
+        hasContent = scansPreview.children.length > 0;
+      } else if (methodLatex.checked) {
+        hasContent = solutionContent.value.trim().length > 0;
+      }
+
+      // Enable submit button if all required fields are filled
+      const isValid = problemName && 
+        methodSelected && 
+        languageSelected &&
+        hasContent && 
+        (!needsFullName || hasFullName) &&
+        hasValidStatus;
+
+      submitBtn.disabled = !isValid;
+      
+      // Add visual feedback
+      if (isValid) {
+        submitBtn.classList.remove('btn-secondary');
+        submitBtn.classList.add('btn-primary');
+      } else {
+        submitBtn.classList.remove('btn-primary');
+        submitBtn.classList.add('btn-secondary');
+      }
+    }
+
+    // Update submit handler
+    submitBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+
+      // Disable submit button while processing
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new FormData();
+        
+        // Add basic form data
+        formData.append('problemName', problemNameInput.value.trim());
+        formData.append('method', methodScans.checked ? 'scans' : 'latex');
+        formData.append('lang', document.querySelector('input[name="solutionLanguage"]:checked').value);
+        
+        // Add problem details
+        formData.append('title', document.getElementById('title').value.trim());
+        formData.append('subject', document.getElementById('subject').value.trim());
+        formData.append('difficulty', document.querySelector('input[name="difficulty"]:checked')?.value || '');
+        formData.append('problem_book', document.getElementById('problem_book').value.trim());
+
+        // Add anonymous user info if needed
+        if (document.getElementById('fullName')) {
+          formData.append('fullName', document.getElementById('fullName').value.trim());
+        }
+
+        if (methodScans.checked) {
+          // Get all images from the preview div
+          const previewImages = scansPreview.querySelectorAll('img');
+          const promises = Array.from(previewImages).map((img, index) =>
+            fetch(img.dataset.fileData)
+              .then(res => res.blob())
+              .then(blob => {
+                formData.append('files', blob, `scan-${index}.png`);
+              })
+          );
+
+          await Promise.all(promises);
+        } else {
+          // Handle LaTeX content
+          formData.append('latexContent', solutionContent.value.trim());
+          
+          // Handle LaTeX illustrations
+          const illustrations = document.getElementById('latexIllustrations').files;
+          Array.from(illustrations).forEach((file, index) => {
+            formData.append('illustrations', file, `illustration-${index}${file.name.substring(file.name.lastIndexOf('.'))}`);
+          });
+        }
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          window.location.href = data.redirectUrl;
+        } else {
+          throw new Error(data.message || 'Upload failed');
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        alert(err.message || 'An error occurred while uploading. Please try again.');
+        submitBtn.disabled = false;
+      }
+    });
+
+    // Update the LaTeX illustrations preview with animation
+    document.getElementById('latexIllustrations').addEventListener('change', function() {
+      const preview = document.getElementById('latexImagesPreview');
+      const files = this.files;
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+          createPreviewImage(file, preview);
+        }
+      }
+    });
+
+    // Add click handler for the select files button
+    selectFilesBtn.addEventListener('click', function() {
+      fileUpload.click();
+    });
+
+    // Update the file input change handler
+    fileUpload.addEventListener('change', function(e) {
+      const files = this.files;
+      [...files].forEach(file => {
+        if (file.type.startsWith('image/')) {
+          createPreviewImage(file, scansPreview);
+        }
+      });
+    });
+  });
+</script>

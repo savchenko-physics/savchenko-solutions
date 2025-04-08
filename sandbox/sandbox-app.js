@@ -11,6 +11,8 @@ module.exports = function(mainPool) {
     const LocalStrategy = require('passport-local').Strategy;
     const bcrypt = require('bcrypt');
     require('dotenv').config({ path: '../.env' });
+    const multer = require('multer');
+    const fs = require('fs');
 
     // Use the shared pool instead of creating a new one
     const pool = mainPool;
@@ -83,6 +85,37 @@ module.exports = function(mainPool) {
         res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
     }
 
+    // Update multer configuration to handle both files and illustrations
+    const storage = multer.diskStorage({
+        destination: function (req, file, cb) {
+            const uploadDir = path.join(__dirname, 'public/uploads');
+            // Create the uploads directory if it doesn't exist
+            if (!fs.existsSync(uploadDir)){
+                fs.mkdirSync(uploadDir, { recursive: true });
+            }
+            cb(null, uploadDir);
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+    const upload = multer({
+        storage: storage,
+        fileFilter: (req, file, cb) => {
+            // Accept images only
+            if (!file.originalname.match(/\.(jpg|JPG|jpeg|JPEG|png|PNG|gif|GIF)$/)) {
+                req.fileValidationError = 'Only image files are allowed!';
+                return cb(null, false);
+            }
+            cb(null, true);
+        }
+    }).fields([
+        { name: 'files', maxCount: 10 },      // For scan uploads
+        { name: 'illustrations', maxCount: 5 }, // For LaTeX illustrations
+        { name: 'comment_images', maxCount: 5 }  // For comment images
+    ]);
+
     // ====================== ROUTES ======================
 
     // 1) Home route (just a placeholder)
@@ -139,11 +172,20 @@ module.exports = function(mainPool) {
     });
 
     // 5) View a single solution (and comments)
-    app.get('/sandbox/:id', async (req, res) => {
+    app.get(['/sandbox/:id', '/:lang/sandbox/:id'], async (req, res) => {
       try {
         const solutionId = req.params.id;
+        const lang = req.params.lang || 'en';
+        i18n.setLocale(res, lang);
+        
         const solutionResult = await pool.query(
-          `SELECT * FROM solutions WHERE id = $1`,
+          `SELECT s.*, 
+            COALESCE(SUM(CASE WHEN v.vote_value = 1 THEN 1 ELSE 0 END), 0) as upvotes,
+            COALESCE(SUM(CASE WHEN v.vote_value = -1 THEN 1 ELSE 0 END), 0) as downvotes
+           FROM solutions s
+           LEFT JOIN votes v ON s.id = v.solution_id
+           WHERE s.id = $1
+           GROUP BY s.id`,
           [solutionId]
         );
         
@@ -151,18 +193,31 @@ module.exports = function(mainPool) {
           `SELECT * FROM comments WHERE solution_id = $1 ORDER BY created_at ASC`,
           [solutionId]
         );
-        
-        // You might also fetch total votes or upvote/downvote data
-        // from the votes table here.
 
         if (solutionResult.rows.length === 0) {
           return res.send('Solution not found');
+        }
+
+        // Check if user has already voted
+        let userVote = null;
+        if (req.session.userId) {
+          const voteResult = await pool.query(
+            `SELECT vote_value FROM votes 
+             WHERE solution_id = $1 AND user_id = $2`,
+            [solutionId, req.session.userId]
+          );
+          if (voteResult.rows.length > 0) {
+            userVote = voteResult.rows[0].vote_value;
+          }
         }
 
         res.render('sandbox/sandbox-show', {
           pageTitle: `Viewing: ${solutionResult.rows[0].title}`,
           solution: solutionResult.rows[0],
           comments: commentsResult.rows,
+          userVote,
+          __: i18n.__,
+          lang
         });
       } catch (err) {
         console.error(err);
@@ -171,15 +226,21 @@ module.exports = function(mainPool) {
     });
 
     // 6) Post a comment on a solution
-    app.post('/sandbox/:id/comment', checkAuthenticated, async (req, res) => {
+    app.post('/sandbox/:id/comment', checkAuthenticated, upload, async (req, res) => {
       try {
         const solutionId = req.params.id;
         const { comment_text } = req.body;
         
+        // Handle uploaded images
+        const uploadedImages = [];
+        if (req.files && req.files.comment_images) {
+          uploadedImages.push(...req.files.comment_images.map(f => f.filename));
+        }
+        
         await pool.query(
-          `INSERT INTO comments (solution_id, comment_text, author) 
-           VALUES ($1, $2, $3)`,
-          [solutionId, comment_text, req.session.username]
+          `INSERT INTO comments (solution_id, comment_text, author, images) 
+           VALUES ($1, $2, $3, $4)`,
+          [solutionId, comment_text, req.session.username, uploadedImages.length > 0 ? uploadedImages : null]
         );
         
         res.redirect(`/sandbox/${solutionId}`);
@@ -195,11 +256,27 @@ module.exports = function(mainPool) {
         const solutionId = req.params.id;
         const { vote_value } = req.body;
         
-        await pool.query(
-          `INSERT INTO votes (solution_id, vote_value, user_id) 
-           VALUES ($1, $2, $3)`,
-          [solutionId, vote_value, req.session.userId]
+        // Check if user has already voted
+        const existingVote = await pool.query(
+          `SELECT * FROM votes WHERE solution_id = $1 AND user_id = $2`,
+          [solutionId, req.session.userId]
         );
+
+        if (existingVote.rows.length > 0) {
+          // Update existing vote
+          await pool.query(
+            `UPDATE votes SET vote_value = $1 
+             WHERE solution_id = $2 AND user_id = $3`,
+            [vote_value, solutionId, req.session.userId]
+          );
+        } else {
+          // Insert new vote
+          await pool.query(
+            `INSERT INTO votes (solution_id, vote_value, user_id) 
+             VALUES ($1, $2, $3)`,
+            [solutionId, vote_value, req.session.userId]
+          );
+        }
         
         res.redirect(`/sandbox/${solutionId}`);
       } catch (err) {
@@ -207,6 +284,137 @@ module.exports = function(mainPool) {
         res.send('Error registering vote.');
       }
     });
+
+    // Update the upload API endpoint
+    app.post('/api/upload', upload, async (req, res) => {
+        try {
+            const {
+                problemName,
+                method,
+                lang,
+                latexContent,
+                title,
+                subject,
+                difficulty,
+                problem_book,
+                fullName
+            } = req.body;
+
+            // Combine all uploaded files
+            const uploadedFiles = [];
+            if (req.files) {
+                if (req.files.files) {
+                    uploadedFiles.push(...req.files.files.map(f => f.filename));
+                }
+                if (req.files.illustrations) {
+                    uploadedFiles.push(...req.files.illustrations.map(f => f.filename));
+                }
+            }
+
+            // Set content based on method - use empty string for scans
+            const content = method === 'latex' ? latexContent : '';
+
+            // Insert the solution into the database
+            const result = await pool.query(
+                `INSERT INTO solutions 
+                (title, content, subject, difficulty, problem_book, user_id, method, language, files) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id`,
+                [
+                    problemName,
+                    content, // Use empty string instead of null
+                    subject || null,
+                    difficulty || null,
+                    problem_book || null,
+                    req.session.userId || null,
+                    method,
+                    lang,
+                    uploadedFiles.length > 0 ? uploadedFiles : null
+                ]
+            );
+
+            // If user is anonymous, store their name
+            if (fullName && !req.session.userId) {
+                await pool.query(
+                    `UPDATE solutions SET anonymous_name = $1 WHERE id = $2`,
+                    [fullName, result.rows[0].id]
+                );
+            }
+
+            res.json({
+                success: true,
+                redirectUrl: `/${lang}/sandbox/${result.rows[0].id}`
+            });
+        } catch (err) {
+            console.error('Upload error:', err);
+            res.status(500).json({
+                success: false,
+                message: 'Error uploading solution: ' + err.message
+            });
+        }
+    });
+
+    // Add these API routes before your existing routes
+    app.get('/api/verify-problem/:name', async (req, res) => {
+        try {
+            const problemName = req.params.name;
+            const language = req.query.language || 'en';
+
+            // Just check if solution exists, without language check for now
+            const result = await pool.query(
+                `SELECT * FROM solutions WHERE title = $1`,
+                [problemName]
+            );
+
+            res.json({
+                exists: result.rows.length > 0,
+                existsInOtherLang: false // Set to false until language support is added
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    });
+
+    app.get('/api/validate-limits/:chapter/:section/:problem', async (req, res) => {
+        const { chapter, section, problem } = req.params;
+        const language = req.query.language || 'en';
+
+        try {
+            // Add your validation logic here
+            // For example, checking if chapter/section/problem numbers are within valid ranges
+            const isValid = validateProblemLimits(chapter, section, problem);
+            
+            if (isValid) {
+                res.json({ valid: true });
+            } else {
+                res.json({
+                    valid: false,
+                    message: language === 'ru' ? 
+                        'Неверный номер главы, раздела или задачи' :
+                        'Invalid chapter, section, or problem number'
+                });
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    });
+
+    function validateProblemLimits(chapter, section, problem) {
+        // Add your validation logic here
+        // For example:
+        const chapterNum = parseInt(chapter);
+        const sectionNum = parseInt(section);
+        const problemNum = parseInt(problem);
+
+        // Basic validation example - adjust these limits according to your needs
+        return (
+            chapterNum >= 1 && chapterNum <= 14 &&
+            sectionNum >= 1 && sectionNum <= 10 &&
+            problemNum >= 1 && problemNum <= 50
+        );
+    }
 
     const PORT = process.env.SANDBOX_PORT || 4000;
     

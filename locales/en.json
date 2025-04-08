@@ -56,7 +56,8 @@
             "userInfo": "Your Information",
             "preview": "LaTeX Preview",
             "illustrations": "Add Illustrations (Optional)",
-            "language": "Select Language"
+            "language": "Select Language",
+            "details": "Problem Details"
         },
         "dragDrop": {
             "text": "Drag and drop your files here",
@@ -79,6 +80,21 @@
         "language": {
             "english": "English",
             "russian": "Russian"
+        },
+        "details": {
+            "title": "Problem Title",
+            "titlePlaceholder": "Enter a descriptive title for the problem",
+            "subject": "Subject",
+            "subjectPlaceholder": "e.g., Algebra, Geometry, Calculus",
+            "difficulty": "Difficulty Level",
+            "difficultyPlaceholder": "e.g., Easy, Medium, Hard",
+            "otherInfo": "Additional Information",
+            "otherInfoPlaceholder": "e.g., Book name, chapter, or other relevant details"
+        },
+        "difficulty": {
+            "easy": "Easy",
+            "medium": "Medium",
+            "hard": "Hard"
         }
     },
     "popup": {
