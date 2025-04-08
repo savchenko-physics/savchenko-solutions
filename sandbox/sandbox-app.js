@@ -314,32 +314,28 @@ module.exports = function(mainPool) {
             // Set content based on method - use empty string for scans
             const content = method === 'latex' ? latexContent : '';
 
+            // Get author name - use session username if logged in, otherwise use provided fullName
+            const authorName = req.session.username || fullName || 'Anonymous';
+
             // Insert the solution into the database
             const result = await pool.query(
                 `INSERT INTO solutions 
-                (title, content, subject, difficulty, problem_book, user_id, method, language, files) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                (title, content, subject, difficulty, problem_book, user_id, method, language, files, author) 
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 RETURNING id`,
                 [
                     problemName,
-                    content, // Use empty string instead of null
+                    content,
                     subject || null,
                     difficulty || null,
                     problem_book || null,
                     req.session.userId || null,
                     method,
                     lang,
-                    uploadedFiles.length > 0 ? uploadedFiles : null
+                    uploadedFiles.length > 0 ? uploadedFiles : null,
+                    authorName
                 ]
             );
-
-            // If user is anonymous, store their name
-            if (fullName && !req.session.userId) {
-                await pool.query(
-                    `UPDATE solutions SET anonymous_name = $1 WHERE id = $2`,
-                    [fullName, result.rows[0].id]
-                );
-            }
 
             res.json({
                 success: true,
