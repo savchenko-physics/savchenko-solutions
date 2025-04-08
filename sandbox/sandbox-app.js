@@ -74,15 +74,10 @@ module.exports = function(mainPool) {
         next();
     });
 
-    // Update authentication middleware to check shared session
+    // Update authentication middleware to make it optional
     function checkAuthenticated(req, res, next) {
-        // console.log(req.session.userId);
-        // console.log(req.session.username);
-        if (req.session.userId) {
-            return next();
-        }
-        const lang = req.params.lang || 'en';
-        res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
+        // Always proceed to next middleware, regardless of authentication status
+        return next();
     }
 
     // Update multer configuration to handle both files and illustrations
@@ -132,7 +127,7 @@ module.exports = function(mainPool) {
         res.render('sandbox/sandbox-list', {
           pageTitle: 'Sandbox Solutions',
           solutions: result.rows,
-          user: req.user,
+          user: req.user || null,  // Handle case when user is not logged in
           __: i18n.__,
           lang
         });
