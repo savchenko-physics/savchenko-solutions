@@ -1111,7 +1111,20 @@ app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
 // Add this route to handle page views data requests
 app.get("/api/page-views/:name", getPageViewsData);
 
-// Start the server
+// Update the sandbox server import to pass the session pool
+const sandboxPool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
+});
+
+// Pass the pool to the sandbox app
+require('./sandbox/sandbox-app')(sandboxPool);
+
+// Start the main server
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+    console.log(`Main server listening on port ${PORT}`);
 });

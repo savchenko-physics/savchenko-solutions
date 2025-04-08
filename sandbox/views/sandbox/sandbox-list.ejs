@@ -1,0 +1,31 @@
+<%- include('../partials/header') %>
+
+<h2>Sandbox Solutions</h2>
+
+<a class="btn btn-success mb-3" href="/sandbox/new">Post a New Solution</a>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Subject</th>
+      <th>Difficulty</th>
+      <th>Status</th>
+      <th>Posted</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% solutions.forEach((sol) => { %>
+      <tr>
+        <td><a href="/sandbox/<%= sol.id %>"><%= sol.title %></a></td>
+        <td><%= sol.subject %></td>
+        <td><%= sol.difficulty %></td>
+        <td><%= sol.status %></td>
+        <td><%= sol.created_at %></td>
+      </tr>
+    <% }); %>
+  </tbody>
+</table>
+
+
+<%- include('../partials/footer') %>

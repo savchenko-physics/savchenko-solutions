@@ -1,0 +1,72 @@
+<%- include('../partials/header') %>
+
+<div class="mb-3">
+  <h2><%= solution.title %></h2>
+  <p><strong>Subject:</strong> <%= solution.subject %></p>
+  <p><strong>Difficulty:</strong> <%= solution.difficulty %></p>
+  <p><strong>Status:</strong> <%= solution.status %></p>
+  <p><strong>Posted:</strong> <%= solution.created_at %></p>
+  <hr />
+  <h4>Solution Content:</h4>
+  <p><%= solution.content %></p>
+</div>
+
+<!-- Voting form -->
+<form action="/sandbox/<%= solution.id %>/vote" method="POST" class="mb-3">
+  <input type="hidden" name="voter" value="AnonymousUser123" />
+  <button name="vote_value" value="1" class="btn btn-outline-success">
+    Upvote
+  </button>
+  <button name="vote_value" value="-1" class="btn btn-outline-danger">
+    Downvote
+  </button>
+</form>
+
+<!-- Comments Section -->
+<div class="mb-4">
+  <h3>Comments</h3>
+  <% if (comments.length > 0) { %>
+    <ul class="list-group">
+      <% comments.forEach(comment => { %>
+        <li class="list-group-item mb-2">
+          <strong><%= comment.author || 'Anonymous' %></strong> said:
+          <p><%= comment.comment_text %></p>
+          <small><%= comment.created_at %></small>
+        </li>
+      <% }); %>
+    </ul>
+  <% } else { %>
+    <p>No comments yet.</p>
+  <% } %>
+</div>
+
+<!-- Add a new comment -->
+<div>
+  <h4>Add a Comment</h4>
+  <form action="/sandbox/<%= solution.id %>/comment" method="POST">
+    <div class="mb-3">
+      <label for="comment_text" class="form-label">Comment</label>
+      <textarea
+        name="comment_text"
+        id="comment_text"
+        rows="3"
+        class="form-control"
+      ></textarea>
+    </div>
+
+    <div class="mb-3">
+      <label for="author" class="form-label">Author (optional)</label>
+      <input
+        type="text"
+        name="author"
+        id="author"
+        class="form-control"
+        placeholder="Your name or nickname"
+      />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Post Comment</button>
+  </form>
+</div>
+
+<%- include('../partials/footer') %>

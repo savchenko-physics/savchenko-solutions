@@ -1,0 +1,64 @@
+<%- include('../partials/header') %>
+
+<h2>Post a New Solution</h2>
+
+<form action="/sandbox" method="POST">
+  <div class="mb-3">
+    <label for="title" class="form-label">Solution Title</label>
+    <input
+      type="text"
+      name="title"
+      id="title"
+      class="form-control"
+      required
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="content" class="form-label">Solution Content</label>
+    <textarea
+      name="content"
+      id="content"
+      rows="6"
+      class="form-control"
+      required
+    ></textarea>
+  </div>
+
+  <div class="mb-3">
+    <label for="subject" class="form-label">Subject</label>
+    <input
+      type="text"
+      name="subject"
+      id="subject"
+      class="form-control"
+      placeholder="e.g., Math, Physics..."
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="difficulty" class="form-label">Difficulty Level</label>
+    <input
+      type="text"
+      name="difficulty"
+      id="difficulty"
+      class="form-control"
+      placeholder="e.g., Easy, Medium, Hard..."
+    />
+  </div>
+
+  <div class="mb-3">
+    <label for="problem_book" class="form-label">Problem Book/Source</label>
+    <input
+      type="text"
+      name="problem_book"
+      id="problem_book"
+      class="form-control"
+      placeholder="e.g., Book Title, Page #, Problem #"
+    />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Submit Solution</button>
+</form>
+
+<%- include('../partials/footer') %>
