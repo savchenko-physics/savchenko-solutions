@@ -360,9 +360,33 @@
 ></script>
 
 <!-- (Optional) MathJax for LaTeX rendering -->
-<!-- Uncomment if you'd like real-time LaTeX rendering in the preview
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
--->
+<!-- Remove comment markers to enable LaTeX rendering -->
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      packages: ['base', 'ams', 'noerrors', 'noundefined', 'autoload', 'require'],
+      macros: {
+        // Add common macros here
+        R: '{\\mathbb{R}}',
+        N: '{\\mathbb{N}}',
+        Z: '{\\mathbb{Z}}',
+        Q: '{\\mathbb{Q}}',
+        C: '{\\mathbb{C}}'
+      }
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      enableMenu: false
+    },
+    startup: {
+      typeset: false
+    }
+  };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script"></script>
 
 <!-- Image Preview Modal -->
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
@@ -436,6 +460,10 @@
     const isSignedIn = <%= !!locals.usernameCurrent %>;
 
     let problemDebounceTimer;
+    let typingTimer;
+    const doneTypingInterval = 150; // Reduced from 300ms to 150ms
+    let lastContent = '';
+    let errorLine = null;
 
     // Toggle sections based on solution method
     function toggleSolutionMethod() {
@@ -595,13 +623,294 @@
       });
     }
 
-    // Live preview for LaTeX text
+    // Helper function to extract error location from MathJax error message
+    function getErrorLocation(error) {
+      const match = error.message.match(/at position (\d+)/);
+      return match ? parseInt(match[1]) : null;
+    }
+
+    // Helper function to format LaTeX content
+    function formatLatexContent(content) {
+      if (!content.trim()) return '';
+      
+      return content.split('\n').map(line => {
+        line = line.trim();
+        if (!line) return '\\\\'; // Convert empty lines to line breaks
+
+        // If the line begins with a proper math delimiter, return as is.
+        if (line.startsWith('$') || line.startsWith('\\[') ||
+            line.startsWith('\\begin{') || line.startsWith('$$')) {
+          return line;
+        }
+
+        // If the line contains an opening "\[" without a closing "\]", assume it's already in a math block.
+        if (line.includes('\\[') && !line.includes('\\]')) {
+          return line;
+        }
+
+        return line;
+      }).join('\n');
+    }
+
+
+
+    // Update preview with error handling
+    function updatePreview() {
+      const content = solutionContent.value;
+      if (content === lastContent) return;
+      lastContent = content;
+
+      try {
+        const formattedContent = formatLatexContent(content);
+        latexPreview.innerHTML = formattedContent;
+
+        // Clear previous error styling
+        if (errorLine !== null) {
+          solutionContent.classList.remove('error-line');
+          errorLine = null;
+        }
+
+        // Render with MathJax
+        if (window.MathJax && formattedContent) {
+          MathJax.typesetPromise([latexPreview])
+            .catch(error => {
+              console.error('MathJax error:', error);
+              errorLine = getErrorLocation(error);
+              
+              if (errorLine !== null) {
+                // Add error indication
+                latexPreview.innerHTML = `<div class="alert alert-danger">
+                  <i class="bi bi-exclamation-triangle"></i> 
+                  LaTeX Error: ${error.message}
+                </div>` + formattedContent;
+                
+                // Highlight the error in the textarea
+                solutionContent.classList.add('error-line');
+              }
+            });
+        }
+      } catch (error) {
+        console.error('Preview error:', error);
+        latexPreview.innerHTML = `<div class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle"></i> 
+          Error rendering preview
+        </div>`;
+      }
+    }
+
+    // Update styles for a more modern design
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Modern editor styling */
+      #solutionContent {
+        font-family: 'Fira Code', monospace;
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 1.2rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        background: #fafbfc;
+        resize: vertical;
+        min-height: 200px;
+        transition: all 0.2s ease;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+      }
+
+      #solutionContent:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+        background: #ffffff;
+      }
+
+      /* Modern preview styling */
+      #latexPreview {
+        min-height: 120px;
+        padding: 1.5rem;
+        background: #ffffff;
+        border-radius: 12px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+        border: 1px solid #e0e0e0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        transition: all 0.2s ease;
+      }
+
+      /* Template buttons styling */
+      .btn-group {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 1rem;
+      }
+
+      .btn-group .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        border: 1px solid #e0e0e0;
+        color: #4b5563;
+      }
+
+      .btn-group .btn:hover {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+      }
+
+      /* Error styling */
+      .error-line {
+        background: rgba(239,68,68,0.05);
+        border-color: #ef4444;
+      }
+
+      .alert-danger {
+        background: #fef2f2;
+        border: none;
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* MathJax styling improvements */
+      .mjx-chtml {
+        margin: 0.5rem 0 !important;
+        padding: 0.5rem 0;
+      }
+
+      .mjx-math {
+        white-space: normal !important;
+        padding: 0.25rem 0;
+      }
+
+      /* Section headers */
+      .latex-section-header {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #4b5563;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      /* Preview header */
+      #previewHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+      }
+
+      /* Scrollbar styling */
+      #solutionContent::-webkit-scrollbar,
+      #latexPreview::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      #solutionContent::-webkit-scrollbar-track,
+      #latexPreview::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+      }
+
+      #solutionContent::-webkit-scrollbar-thumb,
+      #latexPreview::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 4px;
+      }
+
+      #solutionContent::-webkit-scrollbar-thumb:hover,
+      #latexPreview::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Add preview header - Fixed insertion
+    const previewHeader = document.createElement('div');
+    previewHeader.id = 'previewHeader';
+    previewHeader.innerHTML = `
+      <span>Preview</span>
+      <span class="preview-status">
+        <i class="bi bi-check-circle text-success"></i> Rendering
+      </span>
+    `;
+    
+    // Insert preview header before the preview div
+    if (latexPreview && latexPreview.parentNode) {
+      latexPreview.parentNode.insertBefore(previewHeader, latexPreview);
+    }
+
+    // Update template buttons container - Fixed insertion
+    const templateContainer = document.createElement('div');
+    templateContainer.className = 'btn-group';
+    templateContainer.innerHTML = `
+      <div class="latex-section-header">
+        <i class="bi bi-code-square"></i>
+        Quick Templates
+      </div>
+    `;
+    
+    // Insert template container before the solution content
+    if (solutionContent && solutionContent.parentNode) {
+      solutionContent.parentNode.insertBefore(templateContainer, solutionContent);
+    }
+
+    // Event listeners for real-time preview
     solutionContent.addEventListener('input', function() {
-      latexPreview.textContent = this.value;
-      // If using MathJax for real-time rendering, reprocess here:
-      // if (window.MathJax) {
-      //   MathJax.typesetPromise([latexPreview]);
-      // }
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(updatePreview, doneTypingInterval);
+    });
+
+    solutionContent.addEventListener('keydown', function(e) {
+      // Handle tab key for indentation
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+      }
+    });
+
+    // Add common LaTeX templates
+    const templates = {
+      'equation': '\\begin{equation}\n  \n\\end{equation}',
+      'align': '\\begin{align}\n  \n\\end{align}',
+      'matrix': '\\begin{matrix}\n  a & b \\\\\n  c & d\n\\end{matrix}',
+      'cases': '\\begin{cases}\n  x, & \\text{if } y \\\\\n  z, & \\text{otherwise}\n\\end{cases}'
+    };
+
+    // Add template buttons if needed
+    Object.entries(templates).forEach(([name, template]) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm btn-outline-secondary';
+      btn.textContent = name;
+      btn.onclick = () => {
+        const start = solutionContent.selectionStart;
+        solutionContent.value = 
+          solutionContent.value.slice(0, start) + 
+          template + 
+          solutionContent.value.slice(solutionContent.selectionEnd);
+        solutionContent.focus();
+        updatePreview();
+      };
+      templateContainer.appendChild(btn);
     });
 
     // Problem verification mock
