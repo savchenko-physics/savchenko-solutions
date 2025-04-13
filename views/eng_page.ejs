@@ -202,18 +202,31 @@
           <p><%= __('description.deepestThanks') %></p>
           <h4><%= __('description.coreTeam') %></h4>  
           <div class="core-team">
-            <a href="/user/astrosander/">Aliaksandr Melnichenka</a>
-            <a href="/user/emixter/">Eugene Dubrovin</a>
-            <a href="/user/Luisito/">Luis D. Fernández Quintana</a>
-            <a href="/user/stefan.nicov/">Stefan Nicov</a>
-            <a href="/user/ar4senN/">Arsen Almashkan</a>
-            <a href="/user/a.yersh/">Andrei Yersh</a>
-            <a href="/user/jepkinsss/">Artem Levko</a>
-            <a href="/user/diikann_/">Dzikan Mikita</a>
-            <a href="/user/Ismail/">Kaiyrbek Ismail</a>
-            <a href="/user/_chender_/">Kanashenka Aliaksandr</a>
-            <a href="/about#team">See all...</a>
-        </div>
+            <% if (lang === 'en') { %>
+              <a href="/user/astrosander/">Aliaksandr Melnichenka</a>
+              <a href="/user/emixter/">Eugene Dubrovin</a>
+              <a href="/user/Luisito/">Luis D. Fernández Quintana</a>
+              <a href="/user/stefan.nicov/">Stefan Nicov</a>
+              <a href="/user/ar4senN/">Arsen Almashkan</a>
+              <a href="/user/a.yersh/">Andrei Yersh</a>
+              <a href="/user/jepkinsss/">Artem Levko</a>
+              <a href="/user/diikann_/">Dzikan Mikita</a>
+              <a href="/user/Ismail/">Kaiyrbek Ismail</a>
+              <a href="/user/_chender_/">Kanashenka Aliaksandr</a>
+            <% } else { %>
+              <a href="/user/astrosander/">Александр Мельниченко</a>
+              <a href="/user/emixter/">Евгений Дубровин</a>
+              <a href="/user/Luisito/">Луис Д. Фернандес Кинтана</a>
+              <a href="/user/stefan.nicov/">Стефан Ников</a>
+              <a href="/user/ar4senN/">Арсен Алмашкан</a>
+              <a href="/user/a.yersh/">Андрей Ёрш</a>
+              <a href="/user/jepkinsss/">Артем Левко</a>
+              <a href="/user/diikann_/">Дикан Никита</a>
+              <a href="/user/Ismail/">Кайырбек Исмаил</a>
+              <a href="/user/_chender_/">Конашенко Александр</a>
+            <% } %>
+            <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>"><%= __('description.seeAll') %></a>
+          </div>
         </div>
       </div>
     </div>
