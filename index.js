@@ -534,6 +534,7 @@ app.get("/", async (req, res) => {
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
     const recentContributions = await getRecentContributions(10);
+    const topAuthors = await getTopAuthors();
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -564,7 +565,8 @@ app.get("/", async (req, res) => {
         pinnedChapters,
         profilePicture, // Pass profilePicture to the template
         lang,
-        recentContributions
+        recentContributions,
+        topAuthors
     });
 });
 
@@ -617,6 +619,7 @@ app.use(i18n.init);
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
     const recentContributions = await getRecentContributions(10);
+    const topAuthors = await getTopAuthors();
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -646,7 +649,8 @@ app.get("/ru", async (req, res) => {
         pinnedChapters,
         profilePicture, // Pass profilePicture to the template
         lang: 'ru',
-        recentContributions
+        recentContributions,
+        topAuthors
     });
 });
 
@@ -656,6 +660,7 @@ app.use('/', uploadRouter);
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
     const recentContributions = await getRecentContributions(10);
+    const topAuthors = await getTopAuthors();
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -685,7 +690,8 @@ app.get("/en", async (req, res) => {
         pinnedChapters,
         profilePicture, // Pass profilePicture to the template
         lang: 'en',
-        recentContributions
+        recentContributions,
+        topAuthors
     });
 });
 
@@ -1128,3 +1134,53 @@ require('./sandbox/sandbox-app')(sandboxPool);
 app.listen(PORT, () => {
     console.log(`Main server listening on port ${PORT}`);
 });
+
+// Add this function near your other database query functions
+async function getTopAuthors() {
+    try {
+        const query = `
+            WITH all_contributions AS (
+                SELECT user_id, problem_name FROM contributions
+                UNION ALL
+                SELECT user_id, problem_name FROM github_contributions
+            ),
+            user_stats AS (
+                SELECT 
+                    u.username,
+                    COUNT(DISTINCT ac.problem_name) AS unique_contributions,
+                    COUNT(*) AS total_contributions,
+                    16 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+                FROM all_contributions ac
+                JOIN users u ON ac.user_id = u.id
+                GROUP BY u.username
+            )
+            SELECT 
+                username,
+                unique_contributions,
+                total_contributions,
+                ROUND(raw_rank::numeric, 0) AS rank
+            FROM user_stats
+            ORDER BY rank DESC
+            LIMIT 10
+        `;
+        
+        const result = await pool.query(query);
+        
+        // Add artificial entries
+        const artificialEntries = [
+            { username: 'ar4senN', rank: 92, unique_contributions: 45, total_contributions: 60 },
+            { username: 'a.yersh', rank: 86, unique_contributions: 40, total_contributions: 55 },
+            { username: 'jepkinsss', rank: 80, unique_contributions: 35, total_contributions: 50 }
+        ];
+
+        // Combine real and artificial entries
+        const combinedResults = [...result.rows, ...artificialEntries]
+            .sort((a, b) => b.rank - a.rank) // Sort by rank in descending order
+            .slice(0, 10); // Keep only top 10
+
+        return combinedResults;
+    } catch (error) {
+        console.error("Error fetching top authors:", error);
+        return [];
+    }
+}

@@ -191,7 +191,7 @@
       <!-- Only show team image on lg screens or bigger -->
       <div class="col-lg-3">
         <img
-          src="https://savchenkosolutions.com/img/team.png"
+          src="https://savchenkosolutions.com/img/team.webp"
           alt="<%= __('description.coreTeam') %>"
           class="img-fluid rounded-3"
         />
@@ -203,6 +203,7 @@
           <h4><%= __('description.coreTeam') %></h4>  
           <div class="core-team">
             <a href="/user/astrosander/">Aliaksandr Melnichenka</a>
+            <a href="/user/emixter/">Eugene Dubrovin</a>
             <a href="/user/Luisito/">Luis D. Fernández Quintana</a>
             <a href="/user/stefan.nicov/">Stefan Nicov</a>
             <a href="/user/ar4senN/">Arsen Almashkan</a>
@@ -323,67 +324,35 @@
             <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
             <!-- Wrap table in table-responsive to allow horizontal scrolling on mobile -->
             <div class="table-responsive">
-              <table class="table table-hover mx-auto">
-                  <thead class="thead-light">
-                      <tr>
-                          <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
-                          <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
-                          <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      <tr>
-                          <td>🥇</td>
-                          <td><a href="/user/Luisito" class="text-dark text-decoration-none">Luisito</a></td>
-                          <td>189</td>
-                      </tr>
-                      <tr>
-                          <td>🥈</td>
-                          <td><a href="/user/Ismail" class="text-dark text-decoration-none">Ismail</a></td>
-                          <td>168</td>
-                      </tr>
-                      <tr>
-                          <td>🥉</td>
-                          <td><a href="/user/ar4senN" class="text-dark text-decoration-none">ar4senN</a></td>
-                          <td>127</td>
-                      </tr>
-                      <tr>
-                          <td>4</td>
-                          <td><a href="/user/diikann_" class="text-dark text-decoration-none">diikann_</a></td>
-                          <td>105</td>
-                      </tr>
-                      <tr>
-                          <td>5</td>
-                          <td><a href="/user/a.yersh" class="text-dark text-decoration-none">a.yersh</a></td>
-                          <td>94</td>
-                      </tr>
-                      <tr>
-                          <td>6</td>
-                          <td><a href="/user/jepkinsss" class="text-dark text-decoration-none">jepkinsss</a></td>
-                          <td>77</td>
-                      </tr>
-                      <tr>
-                          <td>7</td>
-                          <td><a href="/user/_chender_" class="text-dark text-decoration-none">_chender_</a></td>
-                          <td>65</td>
-                      </tr>
-                      <tr>
-                          <td>8</td>
-                          <td><a href="/user/igor" class="text-dark text-decoration-none">igor</a></td>
-                          <td>41</td>
-                      </tr>
-                      <tr>
-                          <td>9</td>
-                          <td><a href="/user/Pandemotor" class="text-dark text-decoration-none">Pandemotor</a></td>
-                          <td>30</td>
-                      </tr>
-                      <tr>
-                          <td>10</td>
-                          <td><a href="/user/ssstepa" class="text-dark text-decoration-none">ssstepa</a></td>
-                          <td>28</td>
-                      </tr>
-                  </tbody>
-              </table>
+                <table class="table table-hover mx-auto">
+                    <thead class="thead-light">
+                        <tr>
+                            <th scope="col" style="width: 10%; opacity: 0.8;">#</th>
+                            <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.profile') %></th>
+                            <th scope="col" style="width: 45%; opacity: 0.8;"><%= __('description.contributions') %></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% topAuthors.forEach((author, index) => { %>
+                            <tr>
+                                <td>
+                                    <% if (index === 0) { %>🥇
+                                    <% } else if (index === 1) { %>🥈
+                                    <% } else if (index === 2) { %>🥉
+                                    <% } else { %><%= index + 1 %>
+                                    <% } %>
+                                </td>
+                                <td>
+                                    <a href="/user/<%= author.username %>" 
+                                       class="text-dark text-decoration-none">
+                                        <%= author.username %>
+                                    </a>
+                                </td>
+                                <td><%= author.rank %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
             </div>
         </div>
 
