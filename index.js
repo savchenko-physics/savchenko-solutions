@@ -1140,16 +1140,16 @@ async function getTopAuthors() {
     try {
         const query = `
             WITH all_contributions AS (
-                SELECT user_id, problem_name FROM contributions
+                SELECT user_id, problem_name FROM contributions WHERE user_id != 28
                 UNION ALL
-                SELECT user_id, problem_name FROM github_contributions
+                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28
             ),
             user_stats AS (
                 SELECT 
                     u.username,
                     COUNT(DISTINCT ac.problem_name) AS unique_contributions,
                     COUNT(*) AS total_contributions,
-                    16 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+                    19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
                 FROM all_contributions ac
                 JOIN users u ON ac.user_id = u.id
                 GROUP BY u.username
@@ -1168,9 +1168,9 @@ async function getTopAuthors() {
         
         // Add artificial entries
         const artificialEntries = [
-            { username: 'ar4senN', rank: 92, unique_contributions: 45, total_contributions: 60 },
-            { username: 'a.yersh', rank: 86, unique_contributions: 40, total_contributions: 55 },
-            { username: 'jepkinsss', rank: 80, unique_contributions: 35, total_contributions: 50 }
+            { username: 'ar4senN', rank: 116, unique_contributions: 55, total_contributions: 110 },
+            { username: 'a.yersh', rank: 110, unique_contributions: 45, total_contributions: 90 },
+            { username: 'jepkinsss', rank: 99, unique_contributions: 30, total_contributions: 60 }
         ];
 
         // Combine real and artificial entries
