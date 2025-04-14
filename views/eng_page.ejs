@@ -233,11 +233,13 @@
 
     <!-- Chapter & Sections + Sidebar with Top Authors & Contributions -->
     <div class="row">
-      <!-- Problem Statements PDF (visible on mobile) -->
+      <!-- Statistics Button (visible on mobile) -->
       <div class="col-12 d-lg-none mb-4">
         <div class="problem-statements">
+          <!-- Download PDF Button -->
           <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>" 
-             class="pdf-download-btn">
+            class="pdf-download-btn"
+            style="border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;">
             <div class="pdf-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -250,6 +252,24 @@
             <div class="pdf-text">
               <span class="pdf-label"><%= __('description.problemStatements') %></span>
               <span class="pdf-action"><%= __('description.downloadPDF') %></span>
+            </div>
+          </a>
+
+          <!-- Statistics Button -->
+          <a href="/<%= lang %>/unsolved" 
+             class="pdf-download-btn"
+             style="border-top-left-radius: 0; border-top-right-radius: 0;">
+            <div class="pdf-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M5 3v16h16"/>
+                <path d="M8 13v3"/>
+                <path d="M12 8v8"/>
+                <path d="M16 11v5"/>
+              </svg>
+            </div>
+            <div class="pdf-text">
+              <span class="pdf-label"><%= __('description.statistics') %></span>
+              <span class="pdf-action"><%= __('description.viewStats') %></span>
             </div>
           </a>
         </div>
@@ -314,22 +334,43 @@
       <div class="col-12 col-lg-4">
         <!-- Problem Statements PDF (visible on desktop) -->
         <div class="problem-statements mb-4 d-none d-lg-block">
-          <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>" 
-             class="pdf-download-btn">
-            <div class="pdf-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <line x1="10" y1="9" x2="8" y2="9" />
-              </svg>
-            </div>
-            <div class="pdf-text">
-              <span class="pdf-label"><%= __('description.problemStatements') %></span>
-              <span class="pdf-action"><%= __('description.downloadPDF') %></span>
-            </div>
-          </a>
+          <div class="buttons-container bg-white rounded-3">
+            <!-- PDF Download Button -->
+            <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>" 
+               class="pdf-download-btn" style="border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom-left-radius: 0; border-bottom-right-radius: 0;">
+              <div class="pdf-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <line x1="10" y1="9" x2="8" y2="9" />
+                </svg>
+              </div>
+              <div class="pdf-text">
+                <span class="pdf-label"><%= __('description.problemStatements') %></span>
+                <span class="pdf-action"><%= __('description.downloadPDF') %></span>
+              </div>
+            </a>
+
+            <!-- Statistics Button -->
+            <a href="/<%= lang %>/unsolved" 
+               class="pdf-download-btn"
+               style="border-radius: 0 0 12px 12px;">
+              <div class="pdf-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M5 3v16h16"/>
+                  <path d="M8 13v3"/>
+                  <path d="M12 8v8"/>
+                  <path d="M16 11v5"/>
+                </svg>
+              </div>
+              <div class="pdf-text">
+                <span class="pdf-label"><%= __('description.statistics') %></span>
+                <span class="pdf-action"><%= __('description.viewStats') %></span>
+              </div>
+            </a>
+          </div>
         </div>
 
         <!-- Top Authors -->
