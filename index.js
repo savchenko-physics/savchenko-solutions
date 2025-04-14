@@ -21,6 +21,7 @@ const renderFileList = require('./file-list');
 const { renderPost, getPageViewsData } = require('./post'); // Import the renderPost function
 const getUserProfile = require('./userProfile');
 const uploadRouter = require('./upload');
+const renderUnsolvedList = require('./unsolved');
 
 const app = express();
 const PORT = 3000;
@@ -719,6 +720,10 @@ app.get("/ru/about", (req, res) => {
         __: i18n.__
     });
 });
+
+// Add these routes before your other routes
+app.get('/unsolved', renderUnsolvedList);
+app.get('/:lang/unsolved', renderUnsolvedList);
 
 app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     const lang = req.params.lang || 'en';
