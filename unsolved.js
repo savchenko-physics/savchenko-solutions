@@ -1,18 +1,32 @@
 const path = require('path');
 const fs = require('fs');
 const { getLanguageData } = require('./parents');
+const i18n = require('i18n');
 
 async function getUnsolvedProblems(lang = 'en') {
     const { chapters } = await getLanguageData(lang);
     const postsDir = path.join(__dirname, 'posts', lang);
+    const otherLang = lang === 'en' ? 'ru' : 'en';
+    const otherPostsDir = path.join(__dirname, 'posts', otherLang);
+    
     const existingProblems = new Set();
+    const otherLangProblems = new Set();
     const unsolvedProblems = [];
 
-    // Get list of existing problems
+    // Get list of existing problems in current language
     if (fs.existsSync(postsDir)) {
         fs.readdirSync(postsDir).forEach(file => {
             if (file.endsWith('.md')) {
                 existingProblems.add(file.replace('.md', ''));
+            }
+        });
+    }
+
+    // Get list of problems in other language
+    if (fs.existsSync(otherPostsDir)) {
+        fs.readdirSync(otherPostsDir).forEach(file => {
+            if (file.endsWith('.md')) {
+                otherLangProblems.add(file.replace('.md', ''));
             }
         });
     }
@@ -36,37 +50,52 @@ async function getUnsolvedProblems(lang = 'en') {
                         chapterNum,
                         sectionNum,
                         problemNum,
-                        maximum: section.maximum
+                        maximum: section.maximum,
+                        existsInOtherLang: otherLangProblems.has(problemName)
                     });
                 }
             }
         });
     });
 
-    return unsolvedProblems;
+    return {
+        unsolvedProblems,
+        currentLangSolutions: existingProblems.size,
+        otherLangSolutions: otherLangProblems.size,
+        totalUniqueSolutions: new Set([...existingProblems, ...otherLangProblems]).size
+    };
 }
 
 // Express route handler
 async function renderUnsolvedList(req, res) {
     try {
         const lang = req.params.lang || 'en';
-        const unsolved = await getUnsolvedProblems(lang);
         
-        // Calculate total statistics
+        // Validate language and redirect if invalid
+        if (!['en', 'ru'].includes(lang)) {
+            return res.redirect('/unsolved');
+        }
+
+        // Set locale for translations
+        i18n.setLocale(res, lang);
+
+        // Get unsolved problems and language data
+        const { 
+            unsolvedProblems: unsolved, 
+            currentLangSolutions,
+            otherLangSolutions,
+            totalUniqueSolutions 
+        } = await getUnsolvedProblems(lang);
         const { chapters } = await getLanguageData(lang);
+
+        // Calculate total problems and solved count
         let totalProblems = 0;
-        
-        // Calculate total problems by summing maximums from each section
         chapters.forEach(chapter => {
             chapter.sections.forEach(section => {
-                // Ensure we're working with valid numbers
-                const maximum = parseInt(section.maximum) || 0;
-                totalProblems += maximum;
+                totalProblems += parseInt(section.maximum) || 0;
             });
         });
-        
         const solvedProblems = Math.max(0, totalProblems - unsolved.length);
-        console.log(solvedProblems);
         
         // Sort problems by chapter, section, and problem number
         unsolved.sort((a, b) => {
@@ -75,12 +104,17 @@ async function renderUnsolvedList(req, res) {
             return a.problemNum - b.problemNum;
         });
 
+        // Render the page
         res.render('unsolved', {
             unsolved,
             lang,
-            title: lang === 'ru' ? 'Нерешенные задачи' : 'Unsolved Problems',
+            __: i18n.__,
+            title: i18n.__('unsolved.title'),
             totalProblems,
-            solvedProblems
+            solvedProblems,
+            currentLangSolutions,
+            otherLangSolutions,
+            totalUniqueSolutions
         });
     } catch (error) {
         console.error('Error rendering unsolved problems:', error);
