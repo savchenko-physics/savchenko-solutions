@@ -476,7 +476,8 @@
               </h5>
               <p class="text-muted mb-2">
                 <%= __('unsolved.totalSolved') %>:
-                <%= totalUniqueSolutions %>/<%= totalProblems %>
+                <span id="progressCounter">0</span>/<%= totalProblems %>
+                (<span id="percentageCounter">0</span>%)
               </p>
             </div>
             <div class="progress-container" style="width: 200px;">
@@ -844,6 +845,48 @@
       const solved = parseInt(completionText[0]);
       const total = parseInt(completionText[1]);
       createPieChart(canvas.id, solved, total);
+    });
+
+    // Add the counter animation
+    function animateValue(obj, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        obj.textContent = value;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    function animatePercentage(obj, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = (progress * (end - start) + start).toFixed(1);
+        obj.textContent = value;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    // Start the animations when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+      const progressCounter = document.getElementById('progressCounter');
+      const percentageCounter = document.getElementById('percentageCounter');
+      
+      const totalUniqueSolutions = <%= totalUniqueSolutions %>;
+      const totalProblems = <%= totalProblems %>;
+      const percentage = (totalUniqueSolutions / totalProblems * 100);
+      
+      animateValue(progressCounter, 0, totalUniqueSolutions, 1000);
+      animatePercentage(percentageCounter, 0, percentage, 1000);
     });
   </script>
 </body>
