@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="content-language" content="<%= lang %>" />
+  <meta name="keywords" content="<%= __('meta.keywords') %>" />
+  <meta name="description" content="<%= __('meta.description') %>" />
+  <meta name="author" content="<%= __('meta.author') %>" />
+  <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
+  <meta property="og:title" content="<%= __('title') %>" />
+  <meta property="og:image" content="/img/logo.png" />
+  <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
+  <link rel="icon" href="/img/logo.png" type="image/png" />
   <title><%= __('unsolved.title') %></title>
 
   <!-- Bootstrap 5 (via CDN) -->
