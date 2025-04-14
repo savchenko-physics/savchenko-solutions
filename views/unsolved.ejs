@@ -219,6 +219,23 @@
       min-width: 230px;
       flex: 1;
       color: #444;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 991.98px) {
+      .section-header {
+        gap: 10px;
+      }
+      .section-title {
+        font-size: 1.1rem;
+        min-width: auto;
+        width: 100%;
+        white-space: normal;
+        order: -1 !important;
+        margin-bottom: 10px;
+      }
     }
 
     /* Pie Chart Container */
@@ -231,13 +248,17 @@
     /* Problem Links */
     .problem-links {
       margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-start;
     }
+    
     .problem-link {
+      flex: 1 1 80px; /* Base flex properties */
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
-      margin: 5px 6px;
       padding: 0.5rem 1rem;
       font-size: 0.875rem;
       font-weight: 500;
@@ -251,6 +272,15 @@
       background: linear-gradient(to right, rgba(245, 158, 11, 0.05), rgba(249, 115, 22, 0.05));
       color: #b45309;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      margin: 0;
+      text-align: center;
+    }
+
+    /* Apply max-width only for screens larger than 576px */
+    @media (min-width: 594px) {
+      .problem-link {
+        max-width: 120px;
+      }
     }
 
     .problem-link:hover {
@@ -321,22 +351,75 @@
     @media (max-width: 991.98px) {
       .search {
         width: 100%;
+        max-width: none;
+      }
+      .search.active {
+        width: 100%;
       }
       .navbar-container {
-        flex-wrap: wrap;
-      }
-      .navbar-brand {
-        margin-bottom: 0.5rem;
-      }
-      .section-header {
         flex-direction: column;
-        align-items: flex-start;
+        padding: 10px 15px;
+      }
+      
+      .statistics-section .card-body {
+        padding: 15px;
       }
       .progress-container {
-        margin-top: 1rem;
+        width: 100%;
+        margin: 10px 0;
       }
-      .completion-text {
-        margin-top: 0.5rem;
+      
+      .section-header {
+        gap: 10px;
+      }
+      .section-title {
+        font-size: 1.1rem;
+        min-width: auto;
+        width: 100%;
+      }
+      
+      .pie-chart-container {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .problem-link {
+        padding: 8px 16px;
+        margin: 4px;
+        min-width: 80px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .statistics-section .row {
+        margin: 0 -5px;
+      }
+      .statistics-section .col-md-4 {
+        padding: 0 5px;
+      }
+      
+      h1 {
+        font-size: 1.5rem;
+      }
+      .chapter-title {
+        font-size: 1.3rem;
+      }
+      
+      .footer-container .row {
+        text-align: center;
+      }
+      .footer-container .text-md-end {
+        text-align: center !important;
+      }
+      .problem-links {
+        gap: 6px;
+      }
+      
+      .problem-link {
+        flex: 1 1 70px;
+        max-width: 100px;
+        padding: 8px 12px;
       }
     }
   </style>
@@ -455,9 +538,7 @@
     %>
       <div class="section-header">
         <h3 class="section-title">
-          <%= __('unsolved.section') %> 
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: 
-          <%= currentSection %>
+          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
         </h3>
         <div class="pie-chart-container">
           <canvas
@@ -515,9 +596,7 @@
     %>
       <div class="section-header">
         <h3 class="section-title">
-          <%= __('unsolved.section') %> 
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: 
-          <%= currentSection %>
+          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
         </h3>
         <div class="pie-chart-container">
           <canvas
@@ -569,9 +648,7 @@
     %>
       <div class="section-header">
         <h3 class="section-title">
-          <%= __('unsolved.section') %> 
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: 
-          <%= currentSection %>
+          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
         </h3>
         <div class="pie-chart-container">
           <canvas
