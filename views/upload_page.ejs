@@ -571,6 +571,20 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Add this at the beginning of your existing DOMContentLoaded handler
+      
+      // Check for hash in URL and populate problem name
+      const hash = window.location.hash;
+      if (hash) {
+        const problemNumber = hash.substring(1); // Remove the # symbol
+        const problemNameInput = document.getElementById('problemName');
+        if (problemNameInput) {
+          problemNameInput.value = problemNumber;
+          // Trigger the input event to validate the problem number
+          problemNameInput.dispatchEvent(new Event('input'));
+        }
+      }
+
       const methodScans = document.getElementById('methodScans');
       const methodLatex = document.getElementById('methodLatex');
       const scansSection = document.getElementById('scansSection');
