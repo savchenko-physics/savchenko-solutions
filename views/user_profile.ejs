@@ -105,6 +105,16 @@
             background: linear-gradient(135deg, #343A40 0%, #495057 100%);
             color: #fff;
         }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+        }
+
+        .animate-badge {
+            animation: pulse 2.5s infinite;
+        }
     </style>
 </head>
 
@@ -151,13 +161,13 @@
                         <% if (lang==='en' ) { %>
                             <span class="text-white">
                                 <strong>
-                                    <a href="/" class="text-white text-decoration-none">EN</a>
+                                    <a href="/ru/user/<%= username %>" class="text-white text-decoration-none">EN</a>
                                 </strong>
                             </span>
                             <% } else { %>
                                 <span class="text-white">
                                     <strong>
-                                        <a href="/en" class="text-white text-decoration-none">RU</a>
+                                        <a href="/en/user/<%= username %>" class="text-white text-decoration-none">RU</a>
                                     </strong>
                                 </span>
                                 <% } %>
@@ -189,9 +199,16 @@
             <% } else { %>
                 <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder" class="rounded-circle mb-3" />
             <% } %>
-            <h1 class="savchenko-color">
-                <%= fullName %> (<%= username %>)
-            </h1>
+            <% if (username === "emixter") { %>
+                <h1 class="savchenko-color d-flex justify-content-center align-items-center gap-3">
+                    Eugene Dubrovin (emixter)
+                    <span class="badge bg-primary text-white fs-6 animate-badge">Emeritus Collaborator</span>
+                </h1>
+            <% } else { %>
+                <h1 class="savchenko-color">
+                    <%= fullName %> (<%= username %>)
+                </h1>
+            <% } %>
             <% if (countryLocation) { %>
                 <p class="mb-1 text-muted">Country: <%= countryLocation %></p>
             <% } %>
@@ -232,8 +249,40 @@
                 </div>
             </div>
             <div class="col-12 col-md-6">
+                <% if (username === "emixter") { %>
+                    <section class="bg-gradient-light border-0 rounded-4 shadow-lg text-center py-4 px-3 my-3 mx-2" 
+                        style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                        <div class="container">
+                            <div class="d-flex flex-column align-items-center">
+                                <h3 class="fw-bold mb-3 text-primary">
+                                    <i class="bi bi-award me-2"></i>С благодарностью и уважением
+                                </h3>
+                                <p class="lead mb-3 text-dark">
+                                    Евгений Дубровин (emixter) внёс один из самых значимых вкладов в этот проект —
+                                    более 200 подробных решений, каждое из которых отличается точностью, глубиной и любовью к физике.
+                                </p>
+                                <blockquote class="blockquote bg-white rounded-3 p-3 shadow-sm" style="max-width: 800px;">
+                                    <p class="mb-2 fst-italic text-muted">
+                                        "Был рад познакомиться и прикоснуться к тому, что вы делаете для популяризации физики".
+                                    </p>
+                                    <p class="mb-2 fst-italic text-muted">
+                                        "Надеюсь, в ближайшем будущем вы осуществите, среди прочего, мою мечту — полное собрание решений задачника Савченко."
+                                    </p>
+                                    <footer class="blockquote-footer mt-1">
+                                        Евгений Дубровин
+                                    </footer>
+                                </blockquote>
+                                <p class="mt-3 mb-0 fw-bold text-primary">
+                                    Мы продолжаем воплощать эту мечту. Спасибо тебе, Евгений.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                <% } %>
+                <% if (username !== "emixter") { %>
                 <div class="card h-100 shadow-sm">
                     <div class="card-body">
+
                         <h2 class="section-title">Social Links</h2>
                         <ul class="list-unstyled mb-0">
                             <% if (!linkedin && !github && !instagram && !personalWebsite) { %>
@@ -265,8 +314,10 @@
                                 <% } %>
                             <% } %>
                         </ul>
-                    </div>
+                        </div>
                 </div>
+
+                <% } %>
             </div>
         </div>
         <!-- /Stats row -->
