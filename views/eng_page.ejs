@@ -61,6 +61,11 @@
           aria-expanded="false"
           aria-label="Toggle navigation"
         >
+          <% if (lang === 'ru') { %>
+          <!-- Summit Link (mobile only) -->
+          <a href="/summit" class="nav-link text-warning fw-bold">🎉</a>
+          <% } %>
+
           <!-- Language Switch (mobile only) -->
           <% if (lang === 'en') { %>
             <a href="/ru" class="nav-link text-white fw-bold">EN</a>
@@ -89,6 +94,13 @@
         <!-- Right side items: language + user -->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto align-items-center">
+            <% if (lang === 'ru') { %>
+            <li class="nav-item px-2">
+              <a href="/summit" class="nav-link text-warning fw-bold" style="background: rgba(255, 193, 7, 0.1); border-radius: 20px; padding: 0.5rem 1rem;">
+                🎉 Summit 2025
+              </a>
+            </li>
+            <% } %>
             <li class="nav-item px-2 language-switch">
               <% if (lang === 'en') { %>
                 <a href="/ru" class="nav-link text-white fw-bold">EN</a>
@@ -162,6 +174,58 @@
        MAIN CONTENT
   ============================ -->
   <main class="container my-5">
+    <!-- ============================
+         SUMMIT PROMOTION SECTION
+    ============================ -->
+    <% if (lang === 'ru' || lang != 'ru') { %>
+    <div class="summit-promotion-banner mb-5">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <div class="summit-promotion-content">
+            <div class="summit-badge">
+              🎉 НОВОЕ СОБЫТИЕ
+            </div>
+            <h2 class="summit-promotion-title">
+              Первый Savchenko Solutions Summit в Москве!
+            </h2>
+            <p class="summit-promotion-description">
+              11 июня 2025 в 18:00 в парке «Крылатские холмы». Присоединяйтесь к исторической встрече community физиков и энтузиастов образования!
+            </p>
+            <div class="summit-promotion-details">
+              <span class="summit-detail-item">📅 11 июня 2025</span>
+              <span class="summit-detail-item">⏰ 18:00–19:30</span>
+              <span class="summit-detail-item">📍 м. Крылатское</span>
+            </div>
+            <div class="summit-promotion-buttons">
+              <a href="/summit" class="btn-summit-main">
+                Подробнее о саммите
+              </a>
+              <a href="https://t.me/+J9BAjlghLrFmNjcy" target="_blank" class="btn-summit-telegram">
+                💬 Telegram-группа
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4 text-center">
+          <div class="summit-promotion-visual">
+            <div class="summit-countdown-mini">
+              <div class="countdown-mini-item">
+                <span class="countdown-mini-number" id="summit-days">--</span>
+                <span class="countdown-mini-label">дней</span>
+              </div>
+              <div class="countdown-separator">:</div>
+              <div class="countdown-mini-item">
+                <span class="countdown-mini-number" id="summit-hours">--</span>
+                <span class="countdown-mini-label">часов</span>
+              </div>
+            </div>
+            <p class="summit-countdown-text">до саммита</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <% } %>
+
     <!-- Intro Row: Left = Text, Right = YouTube Preview -->
     <div class="row align-items-center justify-content-center mb-lg-5 mb-2">
       <div class="col-lg-6 mb-4">
@@ -175,9 +239,9 @@
         </div>
       </div>
       <div class="col-lg-6 d-none d-lg-flex justify-content-center mb-4">
-        <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
+        <a href="/summit" target="_blank">
           <img
-            src="/img/yt_preview.jpg"
+            src="/img/summit_11-06.jpg"
             alt="Watch on YouTube"
             class="img-fluid rounded-3 shadow-sm"
             style="max-width: 100%;"
@@ -582,6 +646,225 @@
         grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       }
     }
+
+    /* Summit Promotion Styles */
+    .summit-promotion-banner {
+      background: linear-gradient(135deg, #ff6b35 0%, #1a659e 100%);
+      border-radius: 25px;
+      padding: 3rem 2.5rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.3);
+      margin-bottom: 3rem;
+      animation: summitSlideIn 1s ease-out;
+    }
+
+    .summit-promotion-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="summitGrain" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="40" r="0.5" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23summitGrain)"/></svg>');
+      animation: summitFloat 15s infinite linear;
+    }
+
+    @keyframes summitSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes summitFloat {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-50px, -50px) rotate(360deg); }
+    }
+
+    .summit-promotion-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .summit-badge {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: inline-block;
+      margin-bottom: 1rem;
+      animation: summitPulse 2s infinite;
+    }
+
+    @keyframes summitPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    .summit-promotion-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .summit-promotion-description {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+
+    .summit-promotion-details {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .summit-detail-item {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 0.8rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .summit-promotion-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-summit-main {
+      background: white;
+      color: #ff6b35;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-summit-main:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(255, 255, 255, 0.4);
+      color: #ff6b35;
+      text-decoration: none;
+    }
+
+    .btn-summit-telegram {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-summit-telegram:hover {
+      background: white;
+      color: #ff6b35;
+      transform: translateY(-3px);
+      text-decoration: none;
+    }
+
+    .summit-promotion-visual {
+      position: relative;
+      z-index: 2;
+    }
+
+    .summit-countdown-mini {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .countdown-mini-item {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 1rem 1.2rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .countdown-mini-number {
+      display: block;
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .countdown-mini-label {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .countdown-separator {
+      font-size: 1.5rem;
+      font-weight: 700;
+      opacity: 0.8;
+    }
+
+    .summit-countdown-text {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .summit-promotion-banner {
+        padding: 2rem 1.5rem;
+      }
+      
+      .summit-promotion-title {
+        font-size: 1.8rem;
+      }
+      
+      .summit-promotion-details {
+        gap: 0.8rem;
+      }
+      
+      .summit-detail-item {
+        font-size: 0.8rem;
+        padding: 0.6rem 1rem;
+      }
+      
+      .summit-promotion-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .countdown-mini-item {
+        padding: 0.8rem 1rem;
+      }
+      
+      .countdown-mini-number {
+        font-size: 1.5rem;
+      }
+    }
   </style>
   
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -812,6 +1095,36 @@
         span.textContent = localDate;
       });
     });
+
+    // Summit Countdown Timer
+    function updateSummitCountdown() {
+      const eventDate = new Date('2025-06-11T18:00:00+03:00');
+      const now = new Date();
+      const diff = eventDate - now;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+        const summitDaysEl = document.getElementById('summit-days');
+        const summitHoursEl = document.getElementById('summit-hours');
+        
+        if (summitDaysEl) summitDaysEl.textContent = days.toString().padStart(2, '0');
+        if (summitHoursEl) summitHoursEl.textContent = hours.toString().padStart(2, '0');
+      } else {
+        const summitDaysEl = document.getElementById('summit-days');
+        const summitHoursEl = document.getElementById('summit-hours');
+        
+        if (summitDaysEl) summitDaysEl.textContent = '🎉';
+        if (summitHoursEl) summitHoursEl.textContent = '🎉';
+      }
+    }
+
+    // Update summit countdown every minute
+    if (document.querySelector('.summit-countdown-mini')) {
+      updateSummitCountdown();
+      setInterval(updateSummitCountdown, 60000);
+    }
   </script>
 </body>
 </html>

@@ -721,6 +721,33 @@ app.get("/ru/about", (req, res) => {
     });
 });
 
+// Summit page routes
+app.get("/summit", (req, res) => {
+    i18n.setLocale(res, 'ru'); // Default to Russian for summit
+    res.locals.username = req.session.username || null;
+    res.locals.userId = req.session.userId || null;
+    
+    res.render("summit", {
+        lang: 'ru',
+        __: i18n.__,
+        username: res.locals.username,
+        userId: res.locals.userId
+    });
+});
+
+app.get("/ru/summit", (req, res) => {
+    i18n.setLocale(res, 'ru');
+    res.locals.username = req.session.username || null;
+    res.locals.userId = req.session.userId || null;
+    
+    res.render("summit", {
+        lang: 'ru',
+        __: i18n.__,
+        username: res.locals.username,
+        userId: res.locals.userId
+    });
+});
+
 // Add these routes before your other routes
 app.get('/unsolved', renderUnsolvedList);
 app.get('/:lang/unsolved', renderUnsolvedList);
