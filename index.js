@@ -1149,6 +1149,68 @@ app.get(/^\/([1-9]|1[0-4])\/?$/, (req, res) => {
 // Add this route to handle page views data requests
 app.get("/api/page-views/:name", getPageViewsData);
 
+// Add API endpoint for contributors
+app.get("/api/contributors/:problemRef", async (req, res) => {
+    const { problemRef } = req.params;
+    const lang = req.query.lang || 'en';
+
+    try {
+        const result = await pool.query(
+            `WITH all_contributions AS (
+                SELECT 
+                    user_id, 
+                    edited_at,
+                    'github' as source
+                FROM github_contributions 
+                WHERE problem_name = $1 AND language = $2
+                UNION ALL
+                SELECT 
+                    user_id, 
+                    edited_at,
+                    'direct' as source
+                FROM contributions 
+                WHERE problem_name = $1 AND language = $2 AND content_changed = true
+            ),
+            contributor_stats AS (
+                SELECT 
+                    user_id,
+                    COUNT(*) as contribution_count,
+                    MIN(edited_at) as first_contribution,
+                    MAX(edited_at) as last_contribution,
+                    ARRAY_AGG(DISTINCT source) as sources
+                FROM all_contributions
+                WHERE user_id IS NOT NULL
+                GROUP BY user_id
+            )
+            SELECT 
+                cs.*,
+                u.username,
+                u.full_name,
+                u.profile_picture
+            FROM contributor_stats cs
+            JOIN users u ON cs.user_id = u.id
+            ORDER BY cs.contribution_count DESC, cs.first_contribution ASC`,
+            [problemRef, lang]
+        );
+
+        const contributors = result.rows.map(row => ({
+            id: row.user_id,
+            name: row.full_name || row.username,
+            username: row.username,
+            profile_picture: row.profile_picture || `/img/profile_images/${row.user_id}.png`,
+            contributions: row.contribution_count,
+            role: row.sources.includes('github') ? 'GitHub Contributor' : 'Direct Contributor',
+            first_contribution: row.first_contribution,
+            last_contribution: row.last_contribution
+        }));
+
+        res.json(contributors);
+    } catch (error) {
+        console.error("Error fetching contributors:", error);
+        res.status(500).json({ error: 'Failed to fetch contributors' });
+    }
+});
+
 // Update the sandbox server import to pass the session pool
 const sandboxPool = new Pool({
     user: process.env.PG_USER,

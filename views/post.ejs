@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= lang %>">
 
 <head>
     <meta charset="utf-8" />
@@ -13,14 +13,25 @@
     <meta property="og:image" content="img/logo.png" />
     <meta property="og:description" content="<%= title %>" />
     <meta name="yandex-verification" content="6cfda41f74038368" />
-    <title>
-        <%= title %>
-    </title>
-    <link rel="stylesheet" href="../../css/css-latex/style.css" />
+    <title><%= title %></title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    
+    <!-- Icons -->
     <link rel="icon" href="../../img/logo.png" type="image/png" />
+    
+    <!-- Scripts -->
     <script src="../../js/jquery-1.10.1.min.js"></script>
-    <script async
-        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script type="text/x-mathjax-config">
         MathJax.Hub.Config({
             extensions: ['tex2jax.js'],
@@ -35,481 +46,1021 @@
             messageStyle: 'none'
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
     <style>
-        .submit-button {
-            font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
-            width: 100%;
-            padding-left: 15px;
-            padding-right: 15px;
-            padding-top: 5px;
-            padding-bottom: 15px;
-            background-color: #36c;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
+        :root {
+            --primary-color: #0969da;
+            --secondary-color: #656d76;
+            --accent-color: #36c;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #f0f3f6;
+            --border-color: #d1d9e0;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8c959f;
+            --success-color: #1a7f37;
+            --warning-color: #d1242f;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-accent: linear-gradient(135deg, #ff6b35 0%, #f9ca24 100%);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+            --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            margin: 0;
+            font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv03';
+        }
+
+        /* Summit Banner */
+        .summit-banner {
+            background: var(--gradient-primary);
+            color: white;
+            position: relative;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .summit-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100px, -100px); }
+        }
+
+        .summit-content {
+            position: relative;
+            z-index: 2;
+            padding: 1rem 0;
+        }
+
+        .summit-text {
             font-weight: 600;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .summit-date {
+            font-weight: 500;
+            opacity: 0.9;
+            font-size: 0.85rem;
+        }
+
+        .summit-cta {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .summit-cta:hover {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
+        .summit-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
             cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .summit-close:hover {
+            opacity: 1;
+        }
+
+        /* Modern Header */
+        .modern-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .brand-text {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Main Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 3rem;
+            align-items: start;
+        }
+
+        .content-area {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 2rem 2.5rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .content-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
         }
 
         .back-link {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 0.5rem;
+            color: var(--primary-color);
             text-decoration: none;
-            color: #36c;
-            font-size: 0.95em;
-            font-weight: normal;
-            padding: 0.4rem 0.6rem;
-            background: #f2f4f8;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            transform: translateX(0);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius-sm);
+            background: rgba(9, 105, 218, 0.1);
+            transition: all 0.3s ease;
         }
 
         .back-link:hover {
-            background: #edf0f7;
-            border-color: #36c;
-            transform: translateX(-1px);
+            background: rgba(9, 105, 218, 0.15);
+            transform: translateX(-2px);
+            color: var(--primary-color);
             text-decoration: none;
-            color: inherit;
         }
 
-        .back-link svg {
-            width: 20px;
-            height: 20px;
+        .edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius-sm);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
         }
 
-        @media (max-width: 768px) {
-            .container>div:first-of-type {
-                margin-top: 0 !important;
-            }
+        .edit-btn:hover {
+            background: #0860ca;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            text-decoration: none;
         }
 
-        .contributions-button {
-            margin-left: 10px;
+        .problem-meta {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 12px 24px;
-            gap: 5px;
-            min-width: 100px;
-            transition: background-color 0.3s, transform 0.2s;
-            border-radius: 8px;
-            background-color: #f0f0f0;
-            color: #333;
+            gap: 1rem;
+            flex-wrap: wrap;
         }
 
-        .contributions-button:hover {
-            background-color: #e0e0e0;
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
         }
 
-        #viewGraphButton {
-            cursor: pointer;
+        .content-body {
+            padding: 2.5rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
         }
 
-        @keyframes d-menu-opening {
+        /* Typography Improvements */
+        .content-body h3 {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .content-body h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.25rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .content-body p {
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .content-body code {
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.9em;
+        }
+
+        .content-body pre {
+            background: var(--bg-tertiary);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-sm);
+            overflow-x: auto;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .sidebar-card {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .sidebar-content {
+            padding: 1.5rem;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+
+        .info-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .info-link:hover {
+            text-decoration: underline;
+            color: var(--primary-color);
+        }
+
+        /* Contributors Section */
+        .contributors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contributor {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+        }
+
+        .contributor-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .contributor-info {
+            flex: 1;
+        }
+
+        .contributor-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .contributor-role {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .contributor-stats {
+            text-align: right;
+        }
+
+        .contribution-count {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .stat-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 0;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* Graph Popup */
+        .graph-popup {
+            position: fixed;
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 2rem;
+            z-index: 1000;
+            border: 1px solid var(--border-color);
+            max-width: 500px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: scale(0.9);
+                transform: translateY(-20px) scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: scale(1);
+                transform: translateY(0) scale(1);
             }
         }
+
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .graph-title {
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Modern Footer */
+        .modern-footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+        }
+
+        .footer-section h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 2rem;
+            }
+
+            .content-header,
+            .content-body {
+                padding: 1.5rem;
+            }
+
+            .content-nav {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .summit-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Dark mode support */
+        /* @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #0d1117;
+                --bg-secondary: #010409;
+                --bg-tertiary: #21262d;
+                --text-primary: #f0f6fc;
+                --text-secondary: #8b949e;
+                --text-muted: #6e7681;
+                --border-color: #30363d;
+            }
+        } */
     </style>
 </head>
 
-<body style="max-width: none;">
-    <%- include('default/header.ejs') %>
-
-        <div class="container" style="display: flex; flex-wrap: wrap;">
-            <div style="flex: 0.2; height: auto;border-right: 1px dashed rgba(0, 0, 0, 0.1);"></div>
-            <div style="flex: 0.1; height: auto; margin-right: 24px;">
-            </div>
-            <div style="flex: 0.85; height: auto; ">
-                <div style="max-width: 100vh; margin: 0 auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
-                        <h3 style="margin-top: 20px; margin-bottom: 10px;">
-                            <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>" class="back-link">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                                    stroke="#36c" fill="none">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
-                                        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                                </svg>
-                                <%= __('post.backLink') %>
-                            </a>
-                        </h3>
-                        <h4 id="back-link">
-                            <a href="/<%= lang %>/edit/<%= problemRef %>" style="text-decoration: none;">
-                                <button type="button" class="submit-button"
-                                    style="margin-top: 10px; display: flex; align-items: center; justify-content: center; padding: 8px 16px; gap: 5px; min-width: 90px; transition: background-color 0.2s">
-                                    <img src="/img/edit.svg" alt="Edit" width="22" height="22">
-                                    <span>
-                                        <%= __('post.edit') %>
-                                    </span>
-                                </button>
-                            </a>
-                        </h4>
+<body>
+    <!-- Summit Banner -->
+    <div class="summit-banner" id="summitBanner">
+        <div class="summit-content">
+            <div class="container">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="summit-text">
+                            🎯 Первый Savchenko Solutions Summit в Москве
+                        </div>
+                        <div class="summit-date">11 июня 2025, 18:00</div>
                     </div>
-
-                    <%- content %>
-                </div>
-
-            </div>
-
-            <div style="flex: 0.1; height: auto; border-right: 1px dashed rgba(0, 0, 0, 0.1); margin-right: 0px;">
-            </div>
-            <div style="flex: 0.3; height: auto;  margin-left: 24px; line-height: 1.5; font-size: 14px;">
-
-                <style>
-                    /* ... existing styles ... */
-
-                    h2.mb-3 {
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-                        font-weight: var(--base-text-weight-semibold, 600) !important;
-                        margin-bottom: var(--base-size-16, 16px) !important;
-                        font-size: var(--h4-size, 16px) !important;
-                        margin-top: 2px !important;
-                    }
-
-
-                    .my-3 {
-                        margin-top: var(--base-size-16, 16px) !important;
-                        margin-bottom: var(--base-size-16, 16px) !important;
-                    }
-
-                    p {
-                        display: block;
-                        margin-block-start: 1em;
-                        margin-block-end: 1em;
-                        margin-inline-start: 0px;
-                        margin-inline-end: 0px;
-                        unicode-bidi: isolate;
-                    }
-
-                    p.f4 {
-                        display: block;
-                        margin-block-start: 1em;
-                        margin-block-end: 1em;
-                        margin-inline-start: 0px;
-                        margin-inline-end: 0px;
-                        unicode-bidi: isolate;
-                        margin-top: var(--base-size-16, 14px) !important;
-                        margin-bottom: var(--base-size-16, 14px) !important;
-                        font-size: 16px !important;
-                    }
-
-                    .mt-2 {
-                        margin-top: var(--base-size-8, 8px) !important;
-
-                    }
-
-                    .Link--muted {
-                        color: #59636e !important;
-                    }
-
-                    .Link:hover {
-                        color: #36c !important;
-                        text-decoration: none;
-                    }
-
-                    .Link:hover svg {
-                        fill: #36c !important;
-                    }
-                    .d-flex {
-                        display: flex !important;
-                    }
-                    .my-3 {
-                        margin-top: var(--base-size-16, 16px) !important;
-                        margin-bottom: var(--base-size-16, 16px) !important;
-                    }
-                    .flex-items-center {
-                        align-items: center !important;
-                    }
-
-                    /* ... existing styles ... */
-                </style>
-
-                <div class="BorderGrid-row" style="padding-bottom: 16px;margin-bottom: 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); padding-left: 12px;">
-                    <div class="BorderGrid-cell">
-
-                        <h2 class="mb-3 h4">
-                            About
-                        </h2>
-                        <p class="f4">
-                            Solution to problem <%= problemRef %>
-                        </p>
-
-                        <div class="my-3 d-flex flex-items-center">
-                            <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16"
-                                data-view-component="true" class="octicon octicon-link flex-shrink-0 mr-2">
-                                <path
-                                    d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z">
-                                </path>
-                            </svg>
-                            <span class="flex-auto min-width-0 css-truncate css-truncate-target width-fit" style="margin-left: 8px;">
-                                <a title="http://savchenkosolutions.com/<%= lang %>/<%= problemRef %>" role="link"
-                                    target="_blank" rel="noopener noreferrer nofollow" class="text-bold" style="color: #0969da !important;"
-                                    href="http://savchenkosolutions.com/<%= lang %>/<%= problemRef %>">savchenkosolutions.com/<%= lang %>/<%= problemRef %></a>
-                            </span>
-                        </div>
-
-
-                        <div class="mt-2">
-                            <a data-view-component="true" id="viewGraphButton"
-                                class="Link Link--muted" style="display: flex; align-items: center;">
-                                <svg aria-hidden="true" height="16" viewBox="0 0 16 16"
-                                    version="1.1" width="16" data-view-component="true"
-                                    class="octicon octicon-eye mr-2">
-                                    <path d="M2 5.5a3.5 3.5 0 1 1 5.898 2.549 5.508 5.508 0 0 1 3.034 4.084.75.75 0 1 1-1.482.235 4 4 0 0 0-7.9 0 .75.75 0 0 1-1.482-.236A5.507 5.507 0 0 1 3.102 8.05 3.493 3.493 0 0 1 2 5.5ZM11 4a3.001 3.001 0 0 1 2.22 5.018 5.01 5.01 0 0 1 2.56 3.012.749.749 0 0 1-.885.954.752.752 0 0 1-.549-.514 3.507 3.507 0 0 0-2.522-2.372.75.75 0 0 1-.574-.73v-.352a.75.75 0 0 1 .416-.672A1.5 1.5 0 0 0 11 5.5.75.75 0 0 1 11 4Zm-5.5-.5a2 2 0 1 0-.001 3.999A2 2 0 0 0 5.5 3.5Z"></path>
-                                </svg>
-                                <strong style="margin-left: 8px;">
-                                    <%= totalViews > 1000 ? (totalViews / 1000).toFixed(1) + 'k+' : totalViews %>
-                                </strong> 
-                                <span style="margin-left: 4px;">views</span>
-                            </a>
-                        </div>
-                        
-                        <div class="mt-2">
-                           <% if (alternateFileExists) { %>
-                               <% if (lang === 'en') { %>
-                                   <a href="/ru/<%= problemRef %>" class="Link Link--muted">
-                                       Смотреть русскую версию
-                                   </a>
-                               <% } else { %>
-                                   <a href="/en/<%= problemRef %>" class="Link Link--muted">
-                                       View English version
-                                   </a>
-                               <% } %>
-                           <% } else { %>
-                                <% if (lang === 'en') { %>
-                                    <a href="/ru/<%= problemRef %>" class="Link Link--muted">
-                                        Перевести на английский
-                                    </a>
-                                <% } else { %>
-                                    <a href="/en/<%= problemRef %>" class="Link Link--muted">
-                                        Translate to Russian
-                                    </a>
-                                <% } %>
-                           <% } %>
-                        </div>
-
-                        <div class="mt-2">
-                            <a class="Link Link--muted" 
-                                href="/contact/report-content?content_url=https%3A%2F%2Fgithub.com%2Fsavchenko-physics%2Fsavchenko-solutions&amp;report=savchenko-physics+%28user%29">
-                                Report solution
-                            </a>
-                        </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <a href="/summit" class="summit-cta">
+                            Присоединиться
+                        </a>
+                        <button class="summit-close" onclick="closeSummitBanner()">
+                            ×
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <style>
-                    .Label--success {
-                        border-color: #1a7f37;
-                        color: #1a7f37;
-                    }
-                    .Label, .label {
-                        border: 0.0625rem solid #d1d9e0;
-                        border-radius: 624.9375rem;
-                        display: inline-block;
-                        font-size: 0.75rem;
-                        font-weight: 500;
-                        line-height: 18px;
-                        padding: 0 0.375rem;
-                        white-space: nowrap;
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-                    }
-                    .text-bold {
-                        font-weight: 600;
-                    }
-                    .d-flex {
-                        display: flex !important;
-                    }
-                    .Link--primary {
-                        color: #1f2328 !important;
-                    }
-                    a:-webkit-any-link {
-                        cursor: pointer;
-                    }
-                    .BorderGrid-row{
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-                    }
-                </style>
-                <div class="BorderGrid-row">
-                    <div class="BorderGrid-cell" style="padding-bottom: 12px;">
-                       <h2 class="h4 mb-3" data-pjax="#repo-content-pjax-container" data-turbo-frame="repo-content-turbo-frame" style="margin-bottom: 16px;">
-                          <a href="/<%= lang %>/contributions/<%= problemRef %>" data-view-component="true" class="Link--primary no-underline Link" data-turbo-frame="repo-content-turbo-frame">History</a>
-                       </h2>
-                       <a class="Link--primary d-flex no-underline" data-pjax="#repo-content-pjax-container" data-turbo-frame="repo-content-turbo-frame" href="/<%= lang %>/contributions/<%= problemRef %>" style="text-decoration: none !important;">
-                          <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-tag flex-shrink-0 mt-1 color-fg-success" style="margin-top: 4px; ">
-                             <path d="m.427 1.927 1.215 1.215a8.002 8.002 0 1 1-1.6 5.685.75.75 0 1 1 1.493-.154 6.5 6.5 0 1 0 1.18-4.458l1.358 1.358A.25.25 0 0 1 3.896 6H.25A.25.25 0 0 1 0 5.75V2.104a.25.25 0 0 1 .427-.177ZM7.75 4a.75.75 0 0 1 .75.75v2.992l2.028.812a.75.75 0 0 1-.557 1.392l-2.5-1A.751.751 0 0 1 7 8.25v-3.5A.75.75 0 0 1 7.75 4Z" style="fill: #1a7f37 !important;"></path>
-                          </svg>
-                          <div class="ml-2 min-width-0" style="margin-left: 8px;">
-                             <div class="d-flex">
-                                <span class="css-truncate css-truncate-target text-bold mr-2" style="max-width: none; margin-right: 8px;">Contributions</span>
-                                <span title="Label: Latest" data-view-component="true" class="Label Label--success flex-shrink-0">
-                                Latest
-                                </span>      
-                             </div>
-                             <div class="text-small color-fg-muted">
-                                <relative-time datetime="<%= creationDate %>" class="no-wrap" style="font-size: 12px; color: #6e7781 !important;" title="<%= new Date(creationDate).toLocaleString() %>">
-                                    from <%= new Date(creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
-                                </relative-time>
-                             </div>
-                          </div>
-                       </a>
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo-section">
+                    <a href="/<%= lang %>" class="brand-text">
+                        <img src="../../img/logo.png" alt="Savchenko Solutions" class="logo-img">
+                        Savchenko Solutions
+                    </a>
+                </div>
+                <div class="nav-actions">
+                    <% if (lang === 'en') { %>
+                        <a href="/ru/<%= problemRef %>" class="info-link">RU</a>
+                    <% } else { %>
+                        <a href="/en/<%= problemRef %>" class="info-link">EN</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container fade-in">
+        <!-- Content Area -->
+        <main class="content-area">
+            <div class="content-header">
+                <div class="content-nav">
+                    <a href="../../<%= __('post.backLinkTag') %>#<%= pageRef %>" class="back-link">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        <%= __('post.backLink') %>
+                    </a>
+                    <a href="/<%= lang %>/edit/<%= problemRef %>" class="edit-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        <%= __('post.edit') %>
+                    </a>
+                </div>
+                <div class="problem-meta">
+                    <div class="meta-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14,2 14,8 20,8"/>
+                        </svg>
+                        Problem <%= problemRef %>
                     </div>
+                    <div class="meta-badge">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <%= totalViews > 1000 ? (totalViews / 1000).toFixed(1) + 'k+' : totalViews %> views
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-body">
+                <%- content %>
+            </div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- About Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-title">About</h3>
+                </div>
+                <div class="sidebar-content">
+                    <p>Solution to problem <%= problemRef %> from Savchenko Physics Problems collection.</p>
                     
-                <div class="BorderGrid-row" style="padding-bottom: 16px;margin-bottom: 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.1); border-top: 1px solid rgba(0, 0, 0, 0.1); padding-left: 12px;">
-                    <div class="BorderGrid-cell">
-                        <h2 class="h4 mb-3">
-                           <a href="/savchenko-physics/savchenko-physics.github.io/graphs/contributors" data-view-component="true" class="Link--primary no-underline Link d-flex flex-items-center">Contributors
-                           <span title="4" data-view-component="true" class="Counter ml-1">4</span></a>
-                        </h2>
-                        <ul class="list-style-none ">
-                           <li class="mb-2 d-flex">
-                              <a href="https://github.com/astrosander" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/astrosander/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
-                              <img src="https://avatars.githubusercontent.com/u/69795340?s=64&amp;v=4" alt="@astrosander" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
-                              </a>
-                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
-                              <a href="https://github.com/astrosander" class="Link--primary no-underline flex-self-center">
-                              <strong>astrosander</strong>
-                              <span class="color-fg-muted">Aliaksandr Melnichenka</span>
-                              </a>
-                              </span>    
-                           </li>
-                           <li class="mb-2 d-flex">
-                              <a href="https://github.com/LuisDFQ" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/LuisDFQ/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
-                              <img src="https://avatars.githubusercontent.com/u/108282689?s=64&amp;v=4" alt="@LuisDFQ" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
-                              </a>
-                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
-                              <a href="https://github.com/LuisDFQ" class="Link--primary no-underline flex-self-center">
-                              <strong>LuisDFQ</strong>
-                              <span class="color-fg-muted">Luisito</span>
-                              </a>
-                              </span>    
-                           </li>
-                           <li class="mb-2 d-flex">
-                              <a href="https://github.com/Technoglark" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/Technoglark/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
-                              <img src="https://avatars.githubusercontent.com/u/149113870?s=64&amp;v=4" alt="@Technoglark" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
-                              </a>
-                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
-                              <a href="https://github.com/Technoglark" class="Link--primary no-underline flex-self-center">
-                              <strong>Technoglark</strong>
-                              <span class="color-fg-muted">technoglark</span>
-                              </a>
-                              </span>    
-                           </li>
-                           <li class="mb-2 d-flex">
-                              <a href="https://github.com/savchenko-physics" class="mr-2" data-hovercard-type="user" data-hovercard-url="/users/savchenko-physics/hovercard" data-octo-click="hovercard-link-click" data-octo-dimensions="link_type:self">
-                              <img src="https://avatars.githubusercontent.com/u/147443940?s=64&amp;v=4" alt="@savchenko-physics" size="32" height="32" width="32" data-view-component="true" class="avatar circle">
-                              </a>
-                              <span data-view-component="true" class="flex-self-center min-width-0 css-truncate css-truncate-overflow width-fit flex-auto">
-                              <a href="https://github.com/savchenko-physics" class="Link--primary no-underline flex-self-center">
-                              <strong>savchenko-physics</strong>
-                              </a>
-                              </span>    
-                           </li>
-                        </ul>
-                     </div>
+                    <ul class="info-list">
+                        <li class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                            </svg>
+                            <a href="http://savchenkosolutions.com/<%= lang %>/<%= problemRef %>" class="info-link" target="_blank">
+                                View Online
+                            </a>
+                        </li>
+                        
+                        <li class="info-item" id="viewsItem" style="cursor: pointer;">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <span><%= totalViews %> total views</span>
+                        </li>
+
+                        <% if (alternateFileExists) { %>
+                            <li class="info-item">
+                                <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                </svg>
+                                <% if (lang === 'en') { %>
+                                    <a href="/ru/<%= problemRef %>" class="info-link">Русская версия</a>
+                                <% } else { %>
+                                    <a href="/en/<%= problemRef %>" class="info-link">English version</a>
+                                <% } %>
+                            </li>
+                        <% } %>
+                    </ul>
                 </div>
-                 </div>
+            </div>
 
+            <!-- Statistics Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-title">Statistics</h3>
+                </div>
+                <div class="sidebar-content">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number"><%= totalViews %></div>
+                            <div class="stat-label">Views</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="contributorCount">-</div>
+                            <div class="stat-label">Contributors</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contributors Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="sidebar-title">Contributors</h3>
+                        <a href="/<%= lang %>/contributions/<%= problemRef %>" class="info-link">View all</a>
+                    </div>
+                </div>
+                <div class="sidebar-content">
+                    <div class="contributors-list" id="contributorsList">
+                        <div class="text-center text-muted">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Card -->
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <h3 class="sidebar-title">History</h3>
+                </div>
+                <div class="sidebar-content">
+                    <ul class="info-list">
+                        <li class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12,6 12,12 16,14"/>
+                            </svg>
+                            <div>
+                                <div>Latest update</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                                    <%= new Date(creationDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="info-item">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12l2 2 4-4"/>
+                                <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                <path d="M13 12c0-3 1.5-6 7-6"/>
+                                <path d="M11 12c0-3-1.5-6-7-6"/>
+                            </svg>
+                            <a href="/<%= lang %>/contributions/<%= problemRef %>" class="info-link">View history</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Graph Popup -->
+    <div id="graphPopup" class="graph-popup" style="display: none;">
+        <div class="graph-header">
+            <h4 class="graph-title">Page Views</h4>
+            <button class="close-btn" id="closeGraphButton">×</button>
+        </div>
+        <canvas id="viewsGraph" width="400" height="200"></canvas>
+    </div>
+
+    <!-- Modern Footer -->
+    <footer class="modern-footer">
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div>
+                    <div class="footer-brand">Savchenko Solutions</div>
+                    <p class="footer-description">
+                        Comprehensive solutions to Savchenko Physics Problems, contributed by a global community of physics enthusiasts and educators.
+                    </p>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul class="footer-links">
+                        <li><a href="/study-guide">Study Guide</a></li>
+                        <li><a href="/about">About</a></li>
+                        <li><a href="/summit">Summit 2025</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Community</h4>
+                    <ul class="footer-links">
+                        <li><a href="https://t.me/savchenko_solutions">Telegram</a></li>
+                        <li><a href="https://github.com/savchenko-physics">GitHub</a></li>
+                        <li><a href="/contributors">Contributors</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023-2025 Savchenko Solutions. Licensed under CC BY-SA 4.0</p>
             </div>
         </div>
-        </div>
+    </footer>
 
-        <div id="graphPopup" style="display: none; position: fixed; background: #f9f9f9; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); min-width: 300px; max-width: 90%; animation: d-menu-opening .15s ease-in; border-left: 5px solid #36c; position: relative;">
-            <div id="loadingSpinner" style="display: none; text-align: center;">
-                <h3>Loading...</h3>
-            </div>
-            <canvas id="viewsGraph" width="400" height="200"></canvas>
-            <button id="closeGraphButton" class="submit-button" style="margin-top: 10px; padding: 10px 20px; background-color: #007bff; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease;">
-                Close
-            </button>
-        </div>
-        
-        <%- include(`default/footer_${lang}.ejs`) %>
-        
+    <script>
+        // Summit banner management
+        function closeSummitBanner() {
+            document.getElementById('summitBanner').style.display = 'none';
+            localStorage.setItem('summitBannerClosed', 'true');
+        }
 
-        <script>
-            let chartInstance; // Declare a variable to hold the chart instance
+        // Check if banner was previously closed
+        if (localStorage.getItem('summitBannerClosed') === 'true') {
+            document.getElementById('summitBanner').style.display = 'none';
+        }
 
-            document.getElementById('viewGraphButton').addEventListener('click', async function(event) {
-                const graphPopup = document.getElementById('graphPopup');
-                const buttonRect = event.target.getBoundingClientRect();//top: 50%; left: 50%; transform: translate(-50%, -50%);
+        // Load contributors
+        async function loadContributors() {
+            try {
+                const response = await fetch(`/api/contributors/<%= problemRef %>?lang=<%= lang %>`);
+                const contributors = await response.json();
                 
+                const contributorsList = document.getElementById('contributorsList');
+                const contributorCount = document.getElementById('contributorCount');
+                
+                contributorCount.textContent = contributors.length;
+                
+                if (contributors.length === 0) {
+                    contributorsList.innerHTML = '<div class="text-center text-muted">No contributors yet</div>';
+                    return;
+                }
+
+                contributorsList.innerHTML = contributors.slice(0, 5).map(contributor => `
+                    <div class="contributor">
+                        <img src="${contributor.profile_picture || '/img/profile_images/Default_placeholder.svg'}" 
+                             alt="${contributor.name}" class="contributor-avatar">
+                        <div class="contributor-info">
+                            <div class="contributor-name">${contributor.name}</div>
+                            <div class="contributor-role">${contributor.role || 'Contributor'}</div>
+                        </div>
+                        <div class="contributor-stats">
+                            <span class="contribution-count">${contributor.contributions}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                if (contributors.length > 5) {
+                    contributorsList.innerHTML += `
+                        <div class="text-center mt-3">
+                            <a href="/<%= lang %>/contributions/<%= problemRef %>" class="info-link">
+                                +${contributors.length - 5} more contributors
+                            </a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading contributors:', error);
+                document.getElementById('contributorsList').innerHTML = '<div class="text-center text-muted">Error loading contributors</div>';
+                document.getElementById('contributorCount').textContent = '0';
+            }
+        }
+
+        // Graph functionality
+        let chartInstance;
+
+        document.getElementById('viewsItem').addEventListener('click', async function(event) {
+            const graphPopup = document.getElementById('graphPopup');
+            const rect = event.target.getBoundingClientRect();
+            
+            try {
                 const response = await fetch(`/api/page-views/<%= problemRef %>`);
                 const data = await response.json();
 
                 const labels = data.map(entry => entry.date);
                 const views = data.map(entry => entry.views);
 
-                const ctx = document.getElementById('viewsGraph').getContext('2d');
-                
-                // Set the position before displaying the graphPopup
-                graphPopup.style.position = 'absolute';
-                graphPopup.style.top = `${buttonRect.bottom + window.scrollY-140}px`;
-                graphPopup.style.left = `${buttonRect.right + window.scrollX-510}px`;
-                graphPopup.style.display = 'block'; // Display the graphPopup after setting the position
+                // Position popup
+                graphPopup.style.position = 'fixed';
+                graphPopup.style.top = `${Math.min(rect.bottom + 10, window.innerHeight - 300)}px`;
+                graphPopup.style.left = `${Math.min(rect.left, window.innerWidth - 500)}px`;
+                graphPopup.style.display = 'block';
 
-                // Destroy the existing chart instance if it exists
+                // Destroy existing chart
                 if (chartInstance) {
                     chartInstance.destroy();
                 }
 
-                // Create a new chart instance
+                // Create new chart
+                const ctx = document.getElementById('viewsGraph').getContext('2d');
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Page Views',
+                            label: 'Views',
                             data: views,
-                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderColor: 'rgb(9, 105, 218)',
+                            backgroundColor: 'rgba(9, 105, 218, 0.1)',
                             borderWidth: 2,
-                            fill: false
+                            fill: true,
+                            tension: 0.4
                         }]
                     },
                     options: {
+                        responsive: true,
                         scales: {
                             x: {
                                 type: 'time',
                                 time: {
                                     unit: 'day',
-                                    stepSize: 5,
                                     displayFormats: {
-                                        day: 'dd.MM'
+                                        day: 'MMM dd'
                                     }
-                                },
-                                ticks: {
-                                    source: 'auto',
-                                    autoSkip: true,
-                                    maxTicksLimit: 8
                                 }
                             },
                             y: {
+                                beginAtZero: true,
                                 ticks: {
-                                    callback: function(value) {
-                                        return Number.isInteger(value) ? value : null;
-                                    }
+                                    precision: 0
                                 }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
                             }
                         }
                     }
                 });
-            });
+            } catch (error) {
+                console.error('Error loading graph data:', error);
+            }
+        });
 
-            document.getElementById('closeGraphButton').addEventListener('click', function() {
-                document.getElementById('graphPopup').style.display = 'none';
-            });
-        </script>
+        document.getElementById('closeGraphButton').addEventListener('click', function() {
+            document.getElementById('graphPopup').style.display = 'none';
+        });
 
+        // Close popup when clicking outside
+        document.addEventListener('click', function(event) {
+            const popup = document.getElementById('graphPopup');
+            const viewsItem = document.getElementById('viewsItem');
+            
+            if (!popup.contains(event.target) && !viewsItem.contains(event.target)) {
+                popup.style.display = 'none';
+            }
+        });
+
+        // Load contributors on page load
+        document.addEventListener('DOMContentLoaded', loadContributors);
+    </script>
 </body>
-
 </html>
