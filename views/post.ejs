@@ -161,6 +161,334 @@
             opacity: 1;
         }
 
+        /* Vertical Summit Banners */
+        .summit-vertical-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--border-radius);
+            padding: 2rem 1.5rem;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            animation: summitPulse 4s ease-in-out infinite;
+        }
+
+        @keyframes summitPulse {
+            0%, 100% { 
+                box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+                transform: scale(1.02);
+            }
+        }
+
+        .summit-vertical-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: summitRotate 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes summitRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .summit-vertical-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .summit-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            animation: summitBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes summitBounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .summit-vertical-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .summit-vertical-date {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .summit-vertical-description {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 1.5rem;
+            opacity: 0.95;
+        }
+
+        .summit-vertical-cta {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summit-vertical-cta::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .summit-vertical-cta:hover::before {
+            left: 100%;
+        }
+
+        .summit-vertical-cta:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Floating Summit Button */
+        .summit-floating {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: linear-gradient(135deg, #ff6b35 0%, #f9ca24 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 6px 24px rgba(255, 107, 53, 0.4);
+            transition: all 0.3s ease;
+            animation: summitFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes summitFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .summit-floating:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 32px rgba(255, 107, 53, 0.6);
+        }
+
+        .summit-floating .summit-tooltip {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .summit-floating:hover .summit-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(-5px);
+        }
+
+        /* In-Content Summit Banner */
+        .summit-inline-banner {
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            background-size: 200% 200%;
+            animation: summitGradient 6s ease infinite;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin: 2rem 0;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes summitGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .summit-inline-banner::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/></svg>');
+            animation: summitPattern 15s linear infinite;
+        }
+
+        @keyframes summitPattern {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(-40px) translateY(-40px); }
+        }
+
+        .summit-inline-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .summit-inline-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .summit-inline-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 1.5rem;
+        }
+
+        .summit-inline-cta {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 35px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(15px);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summit-inline-cta:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        /* Summit Sticky Side Banner */
+        .summit-sticky {
+            position: fixed;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 0.5rem;
+            border-radius: 0 15px 15px 0;
+            z-index: 999;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .summit-sticky:hover {
+            transform: translateY(-50%) translateX(5px);
+            box-shadow: 4px 0 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .summit-sticky-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        /* Hide floating elements on mobile */
+        @media (max-width: 768px) {
+            .summit-floating,
+            .summit-sticky {
+                display: none;
+            }
+            
+            .summit-vertical-card {
+                margin-bottom: 1.5rem;
+                padding: 1.5rem 1rem;
+            }
+            
+            .summit-inline-banner {
+                margin: 1.5rem 0;
+                padding: 1.5rem;
+            }
+
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 2rem;
+            }
+
+            .content-header,
+            .content-body {
+                padding: 1.5rem;
+            }
+
+            .content-nav {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+
+            .summit-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Modern Header */
         .modern-header {
             background: var(--bg-primary);
@@ -599,40 +927,6 @@
             font-size: 0.9rem;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-                padding: 1rem;
-                gap: 2rem;
-            }
-
-            .content-header,
-            .content-body {
-                padding: 1.5rem;
-            }
-
-            .content-nav {
-                flex-direction: column;
-                gap: 1rem;
-                align-items: stretch;
-            }
-
-            .summit-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .footer-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
         /* Animations */
         .fade-in {
             animation: fadeIn 0.6s ease;
@@ -754,10 +1048,71 @@
             <div class="content-body">
                 <%- content %>
             </div>
+
+            <!-- Inline Summit Banner -->
+            <div class="summit-inline-banner">
+                <div class="summit-inline-content">
+                    <div class="summit-inline-title">
+                        <% if (lang === 'en') { %>
+                            🚀 Join Summit 2025!
+                        <% } else { %>
+                            🚀 Присоединяйтесь к Summit 2025!
+                        <% } %>
+                    </div>
+                    <div class="summit-inline-subtitle">
+                        <% if (lang === 'en') { %>
+                            First Savchenko Solutions community meetup in Moscow — June 11, 2025
+                        <% } else { %>
+                            Первая встреча сообщества Savchenko Solutions в Москве — 11 июня 2025
+                        <% } %>
+                    </div>
+                    <a href="/summit" class="summit-inline-cta">
+                        <span>
+                            <% if (lang === 'en') { %>
+                                Reserve Your Spot
+                            <% } else { %>
+                                Забронировать место
+                            <% } %>
+                        </span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </main>
 
         <!-- Sidebar -->
         <aside class="sidebar">
+            <!-- Summit Vertical Banner Card -->
+            <div class="summit-vertical-card">
+                <div class="summit-vertical-content">
+                    <span class="summit-icon">🎯</span>
+                    <div class="summit-vertical-title">Summit 2025</div>
+                    <div class="summit-vertical-date">
+                        <% if (lang === 'en') { %>
+                            June 11 • Moscow
+                        <% } else { %>
+                            11 июня • Москва
+                        <% } %>
+                    </div>
+                    <div class="summit-vertical-description">
+                        <% if (lang === 'en') { %>
+                            First offline meetup of Savchenko Solutions community. Networking, physics, and connections.
+                        <% } else { %>
+                            Первый офлайн-митап сообщества Savchenko Solutions. Знакомства, физика, нетворкинг.
+                        <% } %>
+                    </div>
+                    <a href="/summit" class="summit-vertical-cta">
+                        <% if (lang === 'en') { %>
+                            Registration Open
+                        <% } else { %>
+                            Регистрация открыта
+                        <% } %>
+                    </a>
+                </div>
+            </div>
+
             <!-- About Card -->
             <div class="sidebar-card">
                 <div class="sidebar-header">
@@ -914,6 +1269,23 @@
             </div>
         </div>
     </footer>
+
+    <!-- Floating Summit Button -->
+    <a href="/summit" class="summit-floating" aria-label="Summit 2025">
+        <span>🎯</span>
+        <div class="summit-tooltip">
+            <% if (lang === 'en') { %>
+                Summit 2025 • June 11
+            <% } else { %>
+                Summit 2025 • 11 июня
+            <% } %>
+        </div>
+    </a>
+
+    <!-- Sticky Side Banner -->
+    <a href="/summit" class="summit-sticky" aria-label="Summit 2025">
+        <div class="summit-sticky-text">SUMMIT 2025</div>
+    </a>
 
     <script>
         // Summit banner management
