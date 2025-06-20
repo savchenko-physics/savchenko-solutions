@@ -110,8 +110,36 @@ const storage = multer.diskStorage({
     }
 });
 
-
 const upload = multer({ storage: storage });
+
+// Configure multer for profile pictures
+const profileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'img', 'profile_images');
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `${req.session.userId}${ext}`);
+    }
+});
+
+const profileUpload = multer({ 
+    storage: profileStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|gif/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (mimetype && extname) {
+            return cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    }
+});
 
 // Add this route to handle image uploads
 app.post('/upload-image/:name', upload.single('image'), (req, res) => {
@@ -148,6 +176,493 @@ app.get('/img/:name', (req, res) => {
         const images = files.filter(file => /\.(jpg|jpeg|png|gif|svg)$/i.test(file));
         res.json(images);
     });
+});
+
+// User Settings Routes
+app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) => {
+    const lang = req.params.lang || 'en';
+    i18n.setLocale(res, lang);
+
+    try {
+        // Get user data
+        const userResult = await pool.query(
+            "SELECT * FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        const user = userResult.rows[0];
+
+        // Get user preferences
+        const preferencesResult = await pool.query(
+            "SELECT * FROM user_preferences WHERE user_id = $1",
+            [req.session.userId]
+        );
+        const preferences = preferencesResult.rows[0] || {};
+
+        // Get user interests
+        const interestsResult = await pool.query(
+            "SELECT interest_tag FROM user_interests WHERE user_id = $1",
+            [req.session.userId]
+        );
+        const interests = interestsResult.rows;
+
+        res.render("user_settings", {
+            __: i18n.__,
+            lang,
+            username: user.username,
+            fullName: user.full_name,
+            email: user.email,
+            bio: user.bio,
+            countryLocation: user.country_location,
+            linkedin: user.linkedin,
+            github: user.github,
+            instagram: user.instagram,
+            personalWebsite: user.personal_website,
+            profilePicture: user.profile_picture || `/img/profile_images/${user.id}.png`,
+            preferences,
+            interests,
+            error: req.query.error || "",
+            success: req.query.success || ""
+        });
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/profile?error=${i18n.__('Failed to load settings')}`);
+    }
+});
+
+// Profile settings update
+app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single('profilePicture'), async (req, res) => {
+    const { lang } = req.params;
+    const { fullName, email, bio, countryLocation } = req.body;
+
+    try {
+        let updateData = { fullName, email, bio, countryLocation };
+        
+        // Handle profile picture upload
+        if (req.file) {
+            updateData.profilePicture = `/img/profile_images/${req.file.filename}`;
+        }
+
+        // Update user data
+        await pool.query(
+            `UPDATE users SET 
+                full_name = $1, 
+                email = $2, 
+                bio = $3, 
+                country_location = $4
+                ${req.file ? ', profile_picture = $5' : ''}
+            WHERE id = ${req.file ? '$6' : '$5'}`,
+            req.file 
+                ? [fullName, email, bio, countryLocation, updateData.profilePicture, req.session.userId]
+                : [fullName, email, bio, countryLocation, req.session.userId]
+        );
+
+        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Profile updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update profile')}`);
+    }
+});
+
+// Social links update
+app.post("/:lang/settings/social", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    const { linkedin, github, instagram, personalWebsite } = req.body;
+
+    try {
+        await pool.query(
+            "UPDATE users SET linkedin = $1, github = $2, instagram = $3, personal_website = $4 WHERE id = $5",
+            [linkedin, github, instagram, personalWebsite, req.session.userId]
+        );
+
+        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Social links updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update social links')}`);
+    }
+});
+
+// Privacy settings update
+app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    const { publicProfile, showOnlineStatus, emailNotifications, privacyLevel } = req.body;
+
+    try {
+        // Insert or update user preferences
+        await pool.query(
+            `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT (user_id) 
+             DO UPDATE SET 
+                public_profile = $2,
+                show_online_status = $3,
+                email_notifications = $4,
+                privacy_level = $5,
+                updated_at = NOW()`,
+            [req.session.userId, !!publicProfile, !!showOnlineStatus, !!emailNotifications, privacyLevel]
+        );
+
+        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Privacy settings updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update privacy settings')}`);
+    }
+});
+
+// Interests update
+app.post("/:lang/settings/interests", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    const { interests } = req.body;
+
+    try {
+        const interestsList = JSON.parse(interests);
+
+        // Delete existing interests
+        await pool.query("DELETE FROM user_interests WHERE user_id = $1", [req.session.userId]);
+
+        // Insert new interests
+        if (interestsList.length > 0) {
+            const values = interestsList.map((interest, index) => 
+                `($1, $${index + 2})`
+            ).join(', ');
+            
+            await pool.query(
+                `INSERT INTO user_interests (user_id, interest_tag) VALUES ${values}`,
+                [req.session.userId, ...interestsList]
+            );
+        }
+
+        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Interests updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update interests')}`);
+    }
+});
+
+// Password update for settings
+app.post("/:lang/settings/password", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+        return res.redirect(`/${lang}/settings?error=${encodeURIComponent('New passwords do not match')}`);
+    }
+
+    try {
+        const result = await pool.query(
+            "SELECT password FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+
+        const validPassword = await bcrypt.compare(currentPassword, result.rows[0].password);
+
+        if (!validPassword) {
+            return res.redirect(`/${lang}/settings?error=${encodeURIComponent('Current password is incorrect')}`);
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await pool.query(
+            "UPDATE users SET password = $1 WHERE id = $2",
+            [hashedPassword, req.session.userId]
+        );
+
+        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Password updated successfully')}`);
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update password')}`);
+    }
+});
+
+// Social Media API Routes
+
+// Follow/Unfollow user
+app.post("/api/follow/:userId", checkAuthenticated, async (req, res) => {
+    const { userId } = req.params;
+    const followerId = req.session.userId;
+
+    if (followerId === parseInt(userId)) {
+        return res.status(400).json({ error: "You cannot follow yourself" });
+    }
+
+    try {
+        // Check if already following
+        const existingFollow = await pool.query(
+            "SELECT id FROM user_follows WHERE follower_id = $1 AND following_id = $2",
+            [followerId, userId]
+        );
+
+        if (existingFollow.rows.length > 0) {
+            // Unfollow
+            await pool.query(
+                "DELETE FROM user_follows WHERE follower_id = $1 AND following_id = $2",
+                [followerId, userId]
+            );
+            
+            // Log activity
+            await pool.query(
+                "INSERT INTO user_activities (user_id, activity_type, target_user_id) VALUES ($1, $2, $3)",
+                [followerId, 'unfollow', userId]
+            );
+
+            res.json({ following: false, message: "Unfollowed successfully" });
+        } else {
+            // Follow
+            await pool.query(
+                "INSERT INTO user_follows (follower_id, following_id) VALUES ($1, $2)",
+                [followerId, userId]
+            );
+            
+            // Log activity
+            await pool.query(
+                "INSERT INTO user_activities (user_id, activity_type, target_user_id) VALUES ($1, $2, $3)",
+                [followerId, 'follow', userId]
+            );
+
+            res.json({ following: true, message: "Followed successfully" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to follow/unfollow user" });
+    }
+});
+
+// Like/Unlike solution
+app.post("/api/solutions/:problemName/:language/like", checkAuthenticated, async (req, res) => {
+    const { problemName, language } = req.params;
+    const { isLike } = req.body; // true for like, false for dislike
+    const userId = req.session.userId;
+
+    try {
+        // Check if already liked/disliked
+        const existingLike = await pool.query(
+            "SELECT id, is_like FROM solution_likes WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+            [userId, problemName, language]
+        );
+
+        if (existingLike.rows.length > 0) {
+            const currentLike = existingLike.rows[0];
+            
+            if (currentLike.is_like === isLike) {
+                // Remove like/dislike
+                await pool.query(
+                    "DELETE FROM solution_likes WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                    [userId, problemName, language]
+                );
+                
+                res.json({ action: 'removed', isLike: null });
+            } else {
+                // Update like/dislike
+                await pool.query(
+                    "UPDATE solution_likes SET is_like = $1 WHERE user_id = $2 AND problem_name = $3 AND language = $4",
+                    [isLike, userId, problemName, language]
+                );
+                
+                res.json({ action: 'updated', isLike });
+            }
+        } else {
+            // Add new like/dislike
+            await pool.query(
+                "INSERT INTO solution_likes (user_id, problem_name, language, is_like) VALUES ($1, $2, $3, $4)",
+                [userId, problemName, language, isLike]
+            );
+            
+            // Log activity
+            await pool.query(
+                "INSERT INTO user_activities (user_id, activity_type, target_problem, target_language, metadata) VALUES ($1, $2, $3, $4, $5)",
+                [userId, 'like', problemName, language, JSON.stringify({ isLike })]
+            );
+            
+            res.json({ action: 'added', isLike });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to like/dislike solution" });
+    }
+});
+
+// Star/Unstar solution
+app.post("/api/solutions/:problemName/:language/star", checkAuthenticated, async (req, res) => {
+    const { problemName, language } = req.params;
+    const userId = req.session.userId;
+
+    try {
+        // Check if already starred
+        const existingStar = await pool.query(
+            "SELECT id FROM starred_solutions WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+            [userId, problemName, language]
+        );
+
+        if (existingStar.rows.length > 0) {
+            // Unstar
+            await pool.query(
+                "DELETE FROM starred_solutions WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                [userId, problemName, language]
+            );
+            
+            res.json({ starred: false, message: "Removed from favorites" });
+        } else {
+            // Star
+            await pool.query(
+                "INSERT INTO starred_solutions (user_id, problem_name, language) VALUES ($1, $2, $3)",
+                [userId, problemName, language]
+            );
+            
+            // Log activity
+            await pool.query(
+                "INSERT INTO user_activities (user_id, activity_type, target_problem, target_language) VALUES ($1, $2, $3, $4)",
+                [userId, 'star', problemName, language]
+            );
+            
+            res.json({ starred: true, message: "Added to favorites" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to star/unstar solution" });
+    }
+});
+
+// Get solution stats (likes, dislikes, stars, comments)
+app.get("/api/solutions/:problemName/:language/stats", async (req, res) => {
+    const { problemName, language } = req.params;
+    const userId = req.session.userId;
+
+    try {
+        // Get likes/dislikes count
+        const likesResult = await pool.query(
+            `SELECT 
+                COUNT(CASE WHEN is_like = true THEN 1 END) as likes,
+                COUNT(CASE WHEN is_like = false THEN 1 END) as dislikes
+            FROM solution_likes 
+            WHERE problem_name = $1 AND language = $2`,
+            [problemName, language]
+        );
+
+        // Get stars count
+        const starsResult = await pool.query(
+            "SELECT COUNT(*) as stars FROM starred_solutions WHERE problem_name = $1 AND language = $2",
+            [problemName, language]
+        );
+
+        // Get comments count
+        const commentsResult = await pool.query(
+            "SELECT COUNT(*) as comments FROM solution_comments WHERE problem_name = $1 AND language = $2 AND is_deleted = false",
+            [problemName, language]
+        );
+
+        // Get user's interaction status
+        let userInteraction = { liked: null, starred: false };
+        
+        if (userId) {
+            const userLikeResult = await pool.query(
+                "SELECT is_like FROM solution_likes WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                [userId, problemName, language]
+            );
+            
+            const userStarResult = await pool.query(
+                "SELECT id FROM starred_solutions WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                [userId, problemName, language]
+            );
+
+            if (userLikeResult.rows.length > 0) {
+                userInteraction.liked = userLikeResult.rows[0].is_like;
+            }
+            
+            userInteraction.starred = userStarResult.rows.length > 0;
+        }
+
+        res.json({
+            likes: parseInt(likesResult.rows[0].likes),
+            dislikes: parseInt(likesResult.rows[0].dislikes),
+            stars: parseInt(starsResult.rows[0].stars),
+            comments: parseInt(commentsResult.rows[0].comments),
+            userInteraction
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to get solution stats" });
+    }
+});
+
+// Get comments for a solution
+app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
+    const { problemName, language } = req.params;
+
+    try {
+        const result = await pool.query(
+            `SELECT 
+                c.id, c.content, c.parent_id, c.created_at, c.updated_at,
+                u.username, u.full_name, u.profile_picture
+            FROM solution_comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.problem_name = $1 AND c.language = $2 AND c.is_deleted = false
+            ORDER BY c.created_at ASC`,
+            [problemName, language]
+        );
+
+        // Organize comments into threads
+        const comments = result.rows.map(row => ({
+            id: row.id,
+            content: row.content,
+            parentId: row.parent_id,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            author: {
+                username: row.username,
+                fullName: row.full_name,
+                profilePicture: row.profile_picture || `/img/profile_images/${row.username}.png`
+            }
+        }));
+
+        res.json({ comments });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to get comments" });
+    }
+});
+
+// Add comment to solution
+app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, async (req, res) => {
+    const { problemName, language } = req.params;
+    const { content, parentId } = req.body;
+    const userId = req.session.userId;
+
+    if (!content || content.trim().length === 0) {
+        return res.status(400).json({ error: "Comment content is required" });
+    }
+
+    try {
+        const result = await pool.query(
+            "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at",
+            [userId, problemName, language, content.trim(), parentId || null]
+        );
+
+        // Get user info for response
+        const userResult = await pool.query(
+            "SELECT username, full_name, profile_picture FROM users WHERE id = $1",
+            [userId]
+        );
+        const user = userResult.rows[0];
+
+        // Log activity
+        await pool.query(
+            "INSERT INTO user_activities (user_id, activity_type, target_problem, target_language, metadata) VALUES ($1, $2, $3, $4, $5)",
+            [userId, 'comment', problemName, language, JSON.stringify({ commentId: result.rows[0].id })]
+        );
+
+        res.json({
+            id: result.rows[0].id,
+            content: content.trim(),
+            parentId: parentId || null,
+            createdAt: result.rows[0].created_at,
+            author: {
+                username: user.username,
+                fullName: user.full_name,
+                profilePicture: user.profile_picture || `/img/profile_images/${user.username}.png`
+            }
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to add comment" });
+    }
 });
 
 // Add a new route for user profiles
@@ -1278,3 +1793,82 @@ async function getTopAuthors() {
         return [];
     }
 }
+
+// Add API endpoint for related problems
+app.get("/api/related-problems/:problemName", async (req, res) => {
+    const { problemName } = req.params;
+    const lang = req.query.lang || 'en';
+
+    try {
+        // Simple algorithm to find related problems based on chapter and section similarity
+        const [chapter, section] = problemName.split('.');
+        
+        // Find problems in the same section first
+        const sameSection = await pool.query(
+            `SELECT DISTINCT problem_name, COUNT(*) as popularity
+             FROM (
+                 SELECT problem_name FROM page_views WHERE problem_name LIKE $1 AND problem_name != $2
+                 UNION ALL
+                 SELECT problem_name FROM page_views_old WHERE problem_name LIKE $1 AND problem_name != $2
+             ) AS combined
+             GROUP BY problem_name
+             ORDER BY popularity DESC
+             LIMIT 3`,
+            [`${chapter}.${section}.%`, problemName]
+        );
+
+        // Find problems in the same chapter if we need more
+        const sameChapter = await pool.query(
+            `SELECT DISTINCT problem_name, COUNT(*) as popularity
+             FROM (
+                 SELECT problem_name FROM page_views WHERE problem_name LIKE $1 AND problem_name != $2 AND problem_name NOT LIKE $3
+                 UNION ALL
+                 SELECT problem_name FROM page_views_old WHERE problem_name LIKE $1 AND problem_name != $2 AND problem_name NOT LIKE $3
+             ) AS combined
+             GROUP BY problem_name
+             ORDER BY popularity DESC
+             LIMIT 2`,
+            [`${chapter}.%`, problemName, `${chapter}.${section}.%`]
+        );
+
+        const relatedProblems = [
+            ...sameSection.rows.map(row => ({ 
+                name: row.problem_name, 
+                similarity: 95 - Math.floor(Math.random() * 10) 
+            })),
+            ...sameChapter.rows.map(row => ({ 
+                name: row.problem_name, 
+                similarity: 75 - Math.floor(Math.random() * 15) 
+            }))
+        ].slice(0, 5);
+
+        res.json(relatedProblems);
+    } catch (error) {
+        console.error("Error fetching related problems:", error);
+        res.status(500).json({ error: "Failed to fetch related problems" });
+    }
+});
+
+// Add API endpoint for reporting solutions
+app.post("/api/report-solution", async (req, res) => {
+    const { problemName, language, reason } = req.body;
+    const userId = req.session.userId;
+    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+
+    if (!reason || reason.trim().length === 0) {
+        return res.status(400).json({ error: "Reason is required" });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO solution_reports (user_id, problem_name, language, reason, ip_address, created_at) 
+             VALUES ($1, $2, $3, $4, $5, NOW())`,
+            [userId, problemName, language, reason.trim(), clientIp]
+        );
+
+        res.json({ message: "Report submitted successfully" });
+    } catch (error) {
+        console.error("Error submitting report:", error);
+        res.status(500).json({ error: "Failed to submit report" });
+    }
+});
