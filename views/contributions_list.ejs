@@ -2,172 +2,571 @@
 <html lang="<%= lang %>">
 
 <head>
-    <meta charset="UTF-8">
-    <title>
-        <%= __('Contributions for') %>
-            <%= problemName %>
-    </title>
-    <!-- Link to a CSS framework like Bootstrap -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <!-- Include the diff library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/7.0.0/diff.min.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History - <%= problemName %> | <%= __('title') %></title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- Icon -->
+    <link rel="icon" href="/img/logo.png" type="image/png" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <style>
-        .added {
-            background-color: #d4edda;
-            color: #155724;
+        :root {
+            --primary-color: #0969da;
+            --secondary-color: #656d76;
+            --accent-color: #36c;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f6f8fa;
+            --bg-tertiary: #f0f3f6;
+            --border-color: #d1d9e0;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8c959f;
+            --success-color: #1a7f37;
+            --warning-color: #d1242f;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
         }
 
-        .removed {
-            background-color: #f8d7da;
-            color: #721c24;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modern Header */
+        .modern-header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb-nav {
+            flex: 1;
+            margin: 0 2rem;
+        }
+
+        .breadcrumb {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .breadcrumb-item a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: var(--text-primary);
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .lang-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .lang-toggle:hover {
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+        }
+
+        .page-header {
+            background: var(--gradient-primary);
+            color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* Timeline */
+        .timeline-container {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-sm);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -3.25rem;
+            top: 1.5rem;
+            width: 12px;
+            height: 12px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            border: 3px solid var(--bg-primary);
+        }
+
+        .timeline-item.github::before {
+            background: #333;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .timeline-author {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .author-info h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .author-info small {
+            color: var(--text-muted);
+        }
+
+        .timeline-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+
+        .timeline-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .badge-github {
+            background: #f6f8fa;
+            color: #333;
+            border: 1px solid #d1d9e0;
+        }
+
+        .badge-direct {
+            background: #dbeafe;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+
+        .timeline-date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .timeline-content {
+            margin-top: 1rem;
+        }
+
+        .content-changes {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .diff-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .diff-addition {
+            color: var(--success-color);
+        }
+
+        .diff-deletion {
+            color: var(--warning-color);
+        }
+
+        .view-diff-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .view-diff-btn:hover {
+            background: #0550ae;
+        }
+
+        /* Footer */
+        .modern-footer {
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 0;
+            margin-top: 2rem;
+        }
+
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 0 1rem;
+            }
+
+            .breadcrumb-nav {
+                display: none;
+            }
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .page-header {
+                padding: 1.5rem 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .timeline {
+                padding-left: 2rem;
+            }
+
+            .timeline::before {
+                left: 0.5rem;
+            }
+
+            .timeline-item::before {
+                left: -2.75rem;
+            }
+
+            .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .timeline-meta {
+                margin-left: 0;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-custom">
-        <div class="container-fluid">
-            <a class="navbar-brand ms-3" href="/">
-                <div class="navbar-brand-container">
-                    <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions" width="40" height="40"
-                        class="d-inline-block align-text-center me-2 logo-img" />
-                        
-                        Savchenko Solutions
-                </div>
-            </a>
-
-            <button class="navbar-toggler text-white me-3" type="button" data-bs-toggle="collapse"
-                data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon text-white"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="mainNav">
-                <ul class="navbar-nav ms-auto me-3 align-items-center">
-                    <li class="nav-item me-3">
-                        <!-- Search Input -->
-                        <div class="search position-relative">
-                            <input type="text" id="searchInput" class="form-control form-control-sm modern-search" placeholder="Search Savchenko Solutions" aria-label="Search" />
-                            <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-lg" style="display: none; z-index: 1050; width: 100%;">
-                                <ul class="list-unstyled mb-0 p-2">
-                                    <!-- Example of a search result item -->
-                                    <li class="search-result-item py-2 px-3 mb-1 rounded hover-bg-light">
-                                        <a href="#" class="d-block text-dark text-decoration-none">
-                                            <span class="search-result-title font-weight-bold">Result Title</span>
-                                            <span class="search-result-snippet d-block text-muted small">Result snippet or description goes here...</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="nav-item me-3">
-                        <!-- Language Toggle (EJS logic) -->
-                        <% if (lang==='en' ) { %>
-                            <span class="text-white">
-                                <strong>
-                                    <a href="/ru" class="text-white text-decoration-none">EN</a>
-                                </strong>
-                            </span>
-                            <% } else { %>
-                                <span class="text-white">
-                                    <strong>
-                                        <a href="/en" class="text-white text-decoration-none">RU</a>
-                                    </strong>
-                                </span>
-                                <% } %>
-                    </li>
-                    <li class="nav-item">
-                        <% if (usernameCurrent) { %>
-                            <a href="/user/<%= usernameCurrent %>" class="nav-link">
-                                <img src="/img/profile_images/<%= userIdCurrent %>.png" alt="Profile Picture"
-                                    class="rounded-circle" width="40" height="40" />
-                            </a>
-                            <% } else { %>
-                                <a href="/<%= lang %>/login" class="btn btn-outline-light btn-sm rounded-pill shadow-sm">
-                                    Login
-                                </a>
-                                <% } %>
-                    </li>
-                </ul>
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="/img/logo.png" alt="Logo" class="logo-img">
+                <a href="/<%= lang %>/" class="logo-text"><%= __('title') %></a>
+            </div>
+            
+            <nav class="breadcrumb-nav">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/<%= lang %>/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/<%= lang %>/<%= problemName %>"><%= problemName %></a></li>
+                    <li class="breadcrumb-item active">History</li>
+                </ol>
+            </nav>
+            
+            <div class="user-section">
+                <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="lang-toggle">
+                    <%= lang.toUpperCase() %>
+                </a>
+                <% if (usernameCurrent) { %>
+                    <a href="/user/<%= usernameCurrent %>" class="lang-toggle">Profile</a>
+                <% } else { %>
+                    <a href="/<%= lang %>/login" class="lang-toggle">Login</a>
+                <% } %>
             </div>
         </div>
-    </nav>
-   
-    <div class="container">
-        <h1>
-            <%= __('Contributions for') %>
-                <%= problemName %>
-        </h1>
-        <% if (contributions.length===0) { %>
-            <p>
-                <%= __('No previously saved records.') %>
-            </p>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">$<%= problemName %>$ History</h1>
+            <p class="page-subtitle">Complete timeline of all contributions and changes</p>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline-container">
+            <% if (contributions.length > 0) { %>
+                <div class="timeline">
+                    <% contributions.forEach((contribution, index) => { %>
+                        <div class="timeline-item <%= contribution.user_id ? 'direct' : 'github' %>">
+                            <div class="timeline-header">
+                                <div class="timeline-author">
+                                    <img src="<%= contribution.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" 
+                                         alt="<%= contribution.username || 'Anonymous' %>" class="author-avatar">
+                                    <div class="author-info">
+                                        <h5>
+                                            <% if (contribution.username) { %>
+                                                <a href="/user/<%= contribution.username %>" class="text-decoration-none">
+                                                    <%= contribution.full_name || contribution.username %>
+                                                </a>
+                                            <% } else { %>
+                                                Anonymous Contributor
+                                            <% } %>
+                                        </h5>
+                                        <small>
+                                            <% if (contribution.ip_address && !contribution.username) { %>
+                                                IP: <%= contribution.ip_address.substring(0, 8) %>...
+                                            <% } else { %>
+                                                @<%= contribution.username || 'anonymous' %>
+                                            <% } %>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="timeline-meta">
+                                    <span class="timeline-badge <%= contribution.user_id ? 'badge-direct' : 'badge-github' %>">
+                                        <% if (contribution.user_id) { %>
+                                            <i class="fas fa-edit me-1"></i>Direct Edit
+                                        <% } else { %>
+                                            <i class="fab fa-github me-1"></i>GitHub
+                                        <% } %>
+                                    </span>
+                                    <span class="timeline-date">
+                                        <i class="fas fa-clock me-1"></i>
+                                        <%= formatDate(contribution.edited_at) %>
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-content">
+                                <% if (contribution.content_changed) { %>
+                                    <div class="content-changes">
+                                        <div class="diff-stats">
+                                            <span class="diff-addition">
+                                                <i class="fas fa-plus me-1"></i>Content Modified
+                                            </span>
+                                        </div>
+                                        <button class="view-diff-btn" onclick="viewDiff(<%= contribution.id %>)">
+                                            <i class="fas fa-code me-1"></i>View Changes
+                                        </button>
+                                    </div>
+                                <% } else { %>
+                                    <p class="text-muted mb-0">
+                                        <i class="fas fa-file-plus me-1"></i>
+                                        Initial creation or metadata update
+                                    </p>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
             <% } else { %>
-                <ul>
-                    <% contributions.forEach(contribution => { %>
-                        <li>
-                            <% if (contribution.profile_picture) { %>
-                                <img src="<%= contribution.profile_picture %>" alt="<%= contribution.full_name %>'s Profile Picture" class="rounded-circle mb-3" width="40" height="40"/>
-                            <% } else { %>
-                                <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder" class="rounded-circle" width="40" height="40" />
-                            <% } %>
-                            <strong>
-                                <%= (contribution.username ? contribution.username + ', ' : '') + (contribution.full_name || contribution.ip_address || __('Anonymous')) %>
-                            </strong> -
-                            <%= formatDate(contribution.edited_at) %>
-                            <p class="diff" data-original="<%= contribution.original_content || '' %>" data-new="<%= contribution.new_content || '' %>"></p>
-                            <% if (contribution.new_content) { %>
-                                <a href="/<%= lang %>/contributions/<%= contribution.id %>">
-                                    <%= __('View Details') %>
-                                </a>
-                            <% } %>
-                        </li>
-                        <% }) %>
-                </ul>
-                <% } %>
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <h3>No History Available</h3>
+                    <p>This problem doesn't have any recorded contributions yet.</p>
+                    <a href="/<%= lang %>/edit/<%= problemName %>" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Be the first to contribute
+                    </a>
+                </div>
+            <% } %>
+        </div>
     </div>
-    <!-- Footer -->
-    <footer class="bg-light py-4">
-        <div class="container text-center">
-            <p class="mb-0">
-                <small>© <strong>Savchenko Solutions</strong>, 2023-2025</small>
-            </p>
-            <p class="mb-0">
-                <small>
-                    All solutions are contributed by their respective authors (Savchenko Solutions contributors) and are based on original textbook content, which remains the property of the textbook authors. Unless otherwise noted, solutions are provided under the Creative Commons Attribution–ShareAlike 4.0 International (CC BY-SA 4.0) license. Commercial use of any material requires written permission.
-                    aliaksandr@melnichenka.com
-                </small>
+
+    <!-- Modern Footer -->
+    <footer class="modern-footer">
+        <div class="footer-container">
+            <div class="footer-links">
+                <a href="/<%= lang %>/about">About</a>
+                <a href="/<%= lang %>/contact">Contact</a>
+                <a href="/<%= lang %>/privacy">Privacy</a>
+                <a href="/<%= lang %>/terms">Terms</a>
+            </div>
+            <p class="text-muted mb-0">
+                &copy; <%= new Date().getFullYear() %> <%= __('title') %>. All rights reserved.
             </p>
         </div>
     </footer>
-    <!-- /Footer -->
-    <script>
-        const translations = {
-            noContentAvailable: "<%= __('No content available') %>"
-        };
 
-        function showDiff(original, updated) {
-            const diff = Diff.diffWords(original, updated);
-            return diff
-                .filter(part => part.added || part.removed)
-                .map(part => {
-                    const cls = part.added ? 'added' : part.removed ? 'removed' : '';
-                    const escapedValue = part.value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    return `<span class="${cls}">${escapedValue}</span>`;
-                })
-                .join('');
+    <!-- MathJax -->
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            extensions: ['tex2jax.js'],
+            jax: ['input/TeX', 'output/HTML-CSS'],
+            tex2jax: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                processEscapes: true,
+                processClass: 'tex2jax',
+                ignoreClass: 'html'
+            },
+            showProcessingMessages: false,
+            messageStyle: 'none'
+        });
+    </script>
+
+    <script>
+        function viewDiff(contributionId) {
+            // Open diff view in a new window or modal
+            window.open(`/<%= lang %>/contribution/${contributionId}`, '_blank', 'width=800,height=600');
         }
 
+        // Initialize MathJax after page load
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.diff').forEach(element => {
-                const original = element.getAttribute('data-original');
-                const updated = element.getAttribute('data-new');
-                if (original && updated) {
-                    element.innerHTML = showDiff(original, updated);
-                } else {
-                    element.innerHTML = translations.noContentAvailable;
-                }
-            });
+            if (typeof MathJax !== 'undefined') {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            }
         });
     </script>
 </body>

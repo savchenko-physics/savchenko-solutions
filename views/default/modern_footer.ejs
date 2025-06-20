@@ -1,0 +1,456 @@
+<!-- Modern Footer Component -->
+<style>
+    .modern-footer {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: #ffffff;
+        padding: 3rem 0 1rem 0;
+        margin-top: 4rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .modern-footer::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.02"/></svg>');
+        animation: footerFloat 30s infinite linear;
+        pointer-events: none;
+    }
+
+    @keyframes footerFloat {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-100px, -100px); }
+    }
+
+    .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        position: relative;
+        z-index: 2;
+    }
+
+    .footer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .footer-section h4 {
+        color: #ffffff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        position: relative;
+        padding-bottom: 0.5rem;
+    }
+
+    .footer-section h4::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+        height: 2px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 1px;
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .footer-links a:hover {
+        color: #ffffff;
+        text-decoration: none;
+        transform: translateX(5px);
+    }
+
+    .footer-links a i {
+        width: 16px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .footer-description {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .social-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .social-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .footer-stats {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .footer-bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1.5rem;
+        margin-top: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .footer-copyright {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85rem;
+    }
+
+    .footer-legal {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .footer-legal a {
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: color 0.3s ease;
+    }
+
+    .footer-legal a:hover {
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    .newsletter-form {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .newsletter-input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        backdrop-filter: blur(10px);
+        font-size: 0.9rem;
+    }
+
+    .newsletter-input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .newsletter-input:focus {
+        outline: none;
+        border-color: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .newsletter-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: #ffffff;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .newsletter-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .modern-footer {
+            padding: 2rem 0 1rem 0;
+        }
+
+        .footer-container {
+            padding: 0 1rem;
+        }
+
+        .footer-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .footer-bottom {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .footer-legal {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .newsletter-form {
+            flex-direction: column;
+        }
+
+        .stat-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .stat-number {
+            font-size: 1.2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .social-links {
+            justify-content: center;
+        }
+
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+
+<footer class="modern-footer">
+    <div class="footer-container">
+        <div class="footer-grid">
+            <!-- About Section -->
+            <div class="footer-section">
+                <h4><%= __('title') %></h4>
+                <p class="footer-description">
+                    A collaborative platform for physics students to share, learn, and excel together. 
+                    Join our community of passionate learners solving Savchenko problems.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="social-link" title="Discord">
+                        <i class="fab fa-discord"></i>
+                    </a>
+                    <a href="#" class="social-link" title="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="/<%= lang || 'en' %>/"><i class="fas fa-home"></i>Home</a></li>
+                    <li><a href="/<%= lang || 'en' %>/about"><i class="fas fa-info-circle"></i>About</a></li>
+                    <li><a href="/<%= lang || 'en' %>/study-guide"><i class="fas fa-book"></i>Study Guide</a></li>
+                    <li><a href="/<%= lang || 'en' %>/unsolved"><i class="fas fa-question-circle"></i>Unsolved Problems</a></li>
+                    <% if (username) { %>
+                    <li><a href="/<%= lang || 'en' %>/settings"><i class="fas fa-cog"></i>Settings</a></li>
+                    <% } else { %>
+                    <li><a href="/<%= lang || 'en' %>/login"><i class="fas fa-sign-in-alt"></i>Login</a></li>
+                    <li><a href="/<%= lang || 'en' %>/register"><i class="fas fa-user-plus"></i>Register</a></li>
+                    <% } %>
+                </ul>
+            </div>
+
+            <!-- Community -->
+            <div class="footer-section">
+                <h4>Community</h4>
+                <ul class="footer-links">
+                    <li><a href="#"><i class="fas fa-users"></i>Join Discord</a></li>
+                    <li><a href="#"><i class="fas fa-question"></i>Help & FAQ</a></li>
+                    <li><a href="#"><i class="fas fa-bug"></i>Report Issues</a></li>
+                    <li><a href="#"><i class="fas fa-lightbulb"></i>Suggest Features</a></li>
+                    <li><a href="#"><i class="fas fa-heart"></i>Contribute</a></li>
+                </ul>
+            </div>
+
+            <!-- Platform Stats -->
+            <div class="footer-section">
+                <h4>Platform Stats</h4>
+                <div class="footer-stats">
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">500+</span>
+                            <span class="stat-label">Solutions</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">100+</span>
+                            <span class="stat-label">Contributors</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">1K+</span>
+                            <span class="stat-label">Students</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">24/7</span>
+                            <span class="stat-label">Available</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Newsletter -->
+                <div style="margin-top: 1.5rem;">
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Stay updated with new solutions
+                    </p>
+                    <form class="newsletter-form" onsubmit="return false;">
+                        <input type="email" class="newsletter-input" placeholder="Enter your email" required>
+                        <button type="submit" class="newsletter-btn">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="footer-copyright">
+                © 2023-2025 <strong>Savchenko Solutions</strong>. Built with ❤️ for physics students worldwide.
+            </div>
+            <div class="footer-legal">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="mailto:aliaksandr@melnichenka.com">Contact</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // Newsletter subscription
+    document.querySelector('.newsletter-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const email = this.querySelector('.newsletter-input').value;
+        if (email) {
+            // Simulate subscription (replace with actual API call)
+            const btn = this.querySelector('.newsletter-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Subscribed!';
+            btn.style.background = 'linear-gradient(135deg, #1a7f37 0%, #2d8f3f 100%)';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                this.querySelector('.newsletter-input').value = '';
+            }, 3000);
+        }
+    });
+
+    // Dynamic stats animation on scroll
+    const observerOptions = {
+        threshold: 0.5,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const statNumbers = entry.target.querySelectorAll('.stat-number');
+                statNumbers.forEach(stat => {
+                    const finalValue = stat.textContent;
+                    const numValue = parseInt(finalValue);
+                    
+                    if (!isNaN(numValue)) {
+                        let currentValue = 0;
+                        const increment = numValue / 50;
+                        const timer = setInterval(() => {
+                            currentValue += increment;
+                            if (currentValue >= numValue) {
+                                stat.textContent = finalValue;
+                                clearInterval(timer);
+                            } else {
+                                stat.textContent = Math.floor(currentValue) + (finalValue.includes('+') ? '+' : '');
+                            }
+                        }, 30);
+                    }
+                });
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Observe footer stats
+    document.addEventListener('DOMContentLoaded', () => {
+        const footerStats = document.querySelector('.footer-stats');
+        if (footerStats) {
+            statsObserver.observe(footerStats);
+        }
+    });
+</script> 

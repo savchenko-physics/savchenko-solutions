@@ -1,0 +1,480 @@
+<!-- Modern Header Component -->
+<style>
+    .modern-header {
+        background: var(--bg-primary, #ffffff);
+        border-bottom: 1px solid var(--border-color, #d1d9e0);
+        padding: 1rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .logo-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 200px;
+    }
+
+    .logo-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .logo-img:hover {
+        transform: scale(1.05);
+    }
+
+    .logo-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary-color, #0969da);
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .logo-text:hover {
+        color: var(--accent-color, #36c);
+        text-decoration: none;
+    }
+
+    .search-section {
+        flex: 1;
+        max-width: 500px;
+        margin: 0 2rem;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 3rem;
+        border: 2px solid var(--border-color, #d1d9e0);
+        border-radius: 25px;
+        background: var(--bg-secondary, #f6f8fa);
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary-color, #0969da);
+        box-shadow: 0 0 0 0.2rem rgba(9, 105, 218, 0.1);
+        outline: none;
+        background: var(--bg-primary, #ffffff);
+    }
+
+    .search-input::placeholder {
+        color: var(--text-muted, #8c959f);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted, #8c959f);
+        transition: color 0.3s ease;
+    }
+
+    .search-input:focus + .search-icon {
+        color: var(--primary-color, #0969da);
+    }
+
+    .user-section {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        min-width: 200px;
+        justify-content: flex-end;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color, #d1d9e0);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        object-fit: cover;
+    }
+
+    .user-avatar:hover {
+        border-color: var(--primary-color, #0969da);
+        transform: scale(1.05);
+    }
+
+    .lang-toggle {
+        background: var(--bg-tertiary, #f0f3f6);
+        border: 1px solid var(--border-color, #d1d9e0);
+        color: var(--text-primary, #1f2328);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        min-width: 40px;
+        text-align: center;
+    }
+
+    .lang-toggle:hover {
+        background: var(--primary-color, #0969da);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .login-btn {
+        background: var(--primary-color, #0969da);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .login-btn:hover {
+        background: var(--accent-color, #36c);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
+    }
+
+    .user-menu {
+        position: relative;
+    }
+
+    .user-dropdown {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background: var(--bg-primary, #ffffff);
+        border: 1px solid var(--border-color, #d1d9e0);
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        min-width: 200px;
+        padding: 0.5rem 0;
+        margin-top: 0.5rem;
+        display: none;
+        z-index: 1000;
+    }
+
+    .user-dropdown.show {
+        display: block;
+        animation: dropdownFadeIn 0.2s ease-out;
+    }
+
+    @keyframes dropdownFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: var(--text-primary, #1f2328);
+        text-decoration: none;
+        transition: background 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .dropdown-item:hover {
+        background: var(--bg-secondary, #f6f8fa);
+        color: var(--text-primary, #1f2328);
+        text-decoration: none;
+    }
+
+    .dropdown-item i {
+        width: 16px;
+        color: var(--text-secondary, #656d76);
+    }
+
+    .dropdown-divider {
+        border-top: 1px solid var(--border-color, #d1d9e0);
+        margin: 0.5rem 0;
+    }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary, #ffffff);
+        border: 1px solid var(--border-color, #d1d9e0);
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+        margin-top: 0.5rem;
+    }
+
+    .search-result-item {
+        padding: 1rem;
+        border-bottom: 1px solid var(--bg-secondary, #f6f8fa);
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .search-result-item:hover {
+        background: var(--bg-secondary, #f6f8fa);
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-title {
+        font-weight: 500;
+        color: var(--text-primary, #1f2328);
+        margin-bottom: 0.25rem;
+    }
+
+    .search-result-snippet {
+        color: var(--text-muted, #8c959f);
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+
+    .mobile-menu-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-primary, #1f2328);
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .header-container {
+            padding: 0 1rem;
+        }
+
+        .search-section {
+            order: 3;
+            flex-basis: 100%;
+            margin: 1rem 0 0 0;
+            max-width: none;
+        }
+
+        .logo-section {
+            min-width: auto;
+        }
+
+        .user-section {
+            min-width: auto;
+        }
+
+        .mobile-menu-toggle {
+            display: block;
+        }
+
+        .header-container {
+            flex-wrap: wrap;
+        }
+
+        .search-section.mobile-hidden {
+            display: none;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .logo-text {
+            display: none;
+        }
+
+        .user-section {
+            gap: 0.5rem;
+        }
+
+        .lang-toggle {
+            padding: 0.4rem 0.8rem;
+        }
+    }
+</style>
+
+<header class="modern-header">
+    <div class="header-container">
+        <div class="logo-section">
+            <img src="/img/logo.png" alt="<%= __('title') %>" class="logo-img">
+            <a href="/<%= lang || 'en' %>/" class="logo-text"><%= __('title') %></a>
+        </div>
+        
+        <div class="search-section" id="searchSection">
+            <div class="position-relative">
+                <input type="text" class="search-input" placeholder="<%= __('menu.search') %>" id="headerSearch">
+                <i class="fas fa-search search-icon"></i>
+                <div class="search-results" id="searchResults" style="display: none;">
+                    <!-- Search results will be populated here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="user-section">
+            <a href="<%= (lang || 'en') === 'en' ? '/ru' : '/en' %>" class="lang-toggle">
+                <%= (lang || 'en').toUpperCase() %>
+            </a>
+            
+            <% if (username) { %>
+                <div class="user-menu">
+                    <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" 
+                         alt="<%= username %>" class="user-avatar" id="userAvatar">
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="/user/<%= username %>" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            <%= __('menu.profile') %>
+                        </a>
+                        <a href="/<%= lang || 'en' %>/settings" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="/logout" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <%= __('menu.logout') %>
+                        </a>
+                    </div>
+                </div>
+            <% } else { %>
+                <a href="/<%= lang || 'en' %>/login" class="login-btn">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
+                </a>
+            <% } %>
+            
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<script>
+    // Header functionality
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeHeaderSearch();
+        initializeUserMenu();
+        initializeMobileMenu();
+    });
+
+    function initializeHeaderSearch() {
+        const searchInput = document.getElementById('headerSearch');
+        const searchResults = document.getElementById('searchResults');
+        let searchTimeout;
+
+        if (!searchInput) return;
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length === 0) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.results.length > 0) {
+                        searchResults.innerHTML = data.results.slice(0, 5).map(result => `
+                            <div class="search-result-item" onclick="location.href='${result.relativePath}'">
+                                <div class="search-result-title">${result.name}</div>
+                                <div class="search-result-snippet">${result.snippet}</div>
+                            </div>
+                        `).join('');
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="search-result-item">No results found</div>';
+                        searchResults.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    searchResults.innerHTML = '<div class="search-result-item">Search unavailable</div>';
+                    searchResults.style.display = 'block';
+                }
+            }, 300);
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Show results on focus if there's a query
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim() && searchResults.innerHTML) {
+                searchResults.style.display = 'block';
+            }
+        });
+    }
+
+    function initializeUserMenu() {
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+
+        if (!userAvatar || !userDropdown) return;
+
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    function initializeMobileMenu() {
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const searchSection = document.getElementById('searchSection');
+
+        if (!mobileMenuToggle || !searchSection) return;
+
+        mobileMenuToggle.addEventListener('click', () => {
+            searchSection.classList.toggle('mobile-hidden');
+            const icon = mobileMenuToggle.querySelector('i');
+            
+            if (searchSection.classList.contains('mobile-hidden')) {
+                icon.className = 'fas fa-bars';
+            } else {
+                icon.className = 'fas fa-times';
+                searchSection.querySelector('input').focus();
+            }
+        });
+    }
+</script> 

@@ -100,16 +100,29 @@ async function renderPost(req, res) {
         const creationDateResult = await getCreationDate(req, res);
         const creationDate = creationDateResult ? new Date(creationDateResult).toISOString() : null;
 
-        res.render("post", {
+        // Fetch profile picture for the user
+        let profilePicture = null;
+        if (req.session.userId) {
+            const userResult = await pool.query(
+                "SELECT profile_picture FROM users WHERE id = $1",
+                [req.session.userId]
+            );
+            profilePicture = userResult.rows[0]?.profile_picture || null;
+        }
+
+        res.render("solution_post", {
             __: i18n.__,
             lang,
             pageRef,
             problemRef: name,
+            name,
+            username: req.session.username || null,
             title: name + ". " + titleContent,
             content: html,
             totalViews, // Pass total views to the template
             creationDate, // Pass creation date to the template
-            alternateFileExists // Pass the existence flag to the template
+            alternateFileExists, // Pass the existence flag to the template
+            profilePicture // Pass profile picture to the template
         });
     } else {
         i18n.setLocale(res, lang);
