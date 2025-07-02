@@ -329,15 +329,73 @@
         "uniqueSolutions": "Unique solutions"
     },
     "summit": {
-        "title": "Savchenko Solutions Summit Moscow 2025",
-        "shortTitle": "Summit Moscow 2025",
-        "subtitle": "First official Savchenko Solutions summit",
+        "title": "Savchenko Solutions Summit Moscow 2025 - Summary",
+        "shortTitle": "Summit Moscow 2025 - Summary",
+        "subtitle": "The first official Savchenko Solutions summit was a huge success!",
         "date": "June 11, 2025",
-        "time": "18:00 – 19:30",
+        "time": "18:00 – 21:00",
         "location": "Moscow, Krylatsky Hills Park",
         "venue": "At the iron gates of the Church of the Nativity of the Virgin Mary",
         "metro": "Krylatskoe metro (10 min walk)",
         "coordinates": "55.755595, 37.425688",
-        "address": "Krylatskie Kholmy st. 12"
+        "address": "Krylatskie Kholmy st. 12",
+        "completed": {
+            "title": "Summit Completed!",
+            "subtitle": "A remarkable gathering of physicists, students, and education enthusiasts",
+            "duration": "The event lasted 3 hours and was tremendously successful",
+            "attendance": "Over 40 participants from different cities in Russia and abroad",
+            "highlights": "Key Summit Highlights:",
+            "topics": [
+                "Discussion of AI integration into the platform for solution verification",
+                "Possibilities for automatic solution translation using AI",
+                "Plans to increase the number of active users",
+                "Implementation of sandbox for solutions with discussions",
+                "Possibility of uploading original problems to the platform",
+                "Conducting olympiads on the platform",
+                "Discussions about rocket building and astronomy"
+            ],
+            "specialGuests": "Distinguished Attendees:",
+            "guests": [
+                "Mikhail Lazarev — Letovo School graduate, Harvard Book Award recipient",
+                "Three-time finalist of the Russian Physics Olympiad",
+                "Alina Polonskaya — IPhO gold medalist",
+                "Participants from international physics olympiads"
+            ],
+            "activities": "What Happened:",
+            "activitiesList": [
+                "Live networking and communication among participants",
+                "Exchange of ideas about the future of physics education",
+                "Walk along the river in the scenic park",
+                "Discussion of technological innovations in education",
+                "Planning joint projects and initiatives",
+                "Photo sessions and creating memorable moments"
+            ],
+            "feedback": "Participant Feedback:",
+            "testimonials": [
+                "Incredible atmosphere and productive discussions",
+                "Great opportunity to meet like-minded individuals",
+                "Inspiring ideas for platform development"
+            ],
+            "futureEvents": "Future Plans:",
+            "futurePlans": [
+                "Annual summit events in different cities",
+                "Expansion of the international community",
+                "Development of technological solutions for education"
+            ]
+        },
+        "gallery": {
+            "title": "Photo Gallery",
+            "subtitle": "Best moments from the first Savchenko Solutions Summit"
+        },
+        "impact": {
+            "title": "Impact and Results",
+            "description": "The summit laid the foundation for further development of the global physics enthusiast community",
+            "achievements": [
+                "Formed an active community core",
+                "Defined platform development priorities",
+                "Established international partnerships",
+                "Launched new educational initiatives"
+            ]
+        }
     }
 }

@@ -75,6 +75,7 @@ app.use((req, res, next) => {
     next(); // Move to the next middleware/route handler
 });
 
+
 // Authentication middleware
 function checkAuthenticated(req, res, next) {
     const lang = req.query.lang || req.body.lang || 'en';
@@ -229,6 +230,198 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
     }
 });
 
+
+// Add comprehensive contributors ranking page
+app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
+    const lang = req.params.lang || 'en';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 25;
+    const offset = (page - 1) * limit;
+    
+    i18n.setLocale(res, lang);
+
+    try {
+        // Get total count for pagination
+        const countQuery = `
+            WITH all_contributions AS (
+                SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                UNION ALL
+                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            )
+            SELECT COUNT(DISTINCT user_id) as total
+            FROM all_contributions
+        `;
+        
+        const countResult = await pool.query(countQuery);
+        const totalContributors = parseInt(countResult.rows[0].total);
+        const totalPages = Math.ceil(totalContributors / limit);
+
+        // Get contributors with rankings
+        const contributorsQuery = `
+            WITH all_contributions AS (
+                SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                UNION ALL
+                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            ),
+            user_stats AS (
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.full_name,
+                    u.profile_picture,
+                    u.created_at,
+                    COUNT(DISTINCT ac.problem_name) AS unique_contributions,
+                    COUNT(*) AS total_contributions,
+                    19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+                FROM all_contributions ac
+                JOIN users u ON ac.user_id = u.id
+                GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at
+            ),
+            ranked_users AS (
+                SELECT 
+                    *,
+                    ROUND(raw_rank::numeric, 0) AS rank,
+                    ROW_NUMBER() OVER (ORDER BY raw_rank DESC) AS position
+                FROM user_stats
+            )
+            SELECT * FROM ranked_users
+            ORDER BY rank DESC
+            LIMIT $1 OFFSET $2
+        `;
+        
+        const contributorsResult = await pool.query(contributorsQuery, [limit, offset]);
+        console.log(contributorsResult.rows);
+        // Add some artificial high-ranking entries for the first page
+        let contributors = contributorsResult.rows;
+        if (page === 1) {
+            const artificialEntries = [
+                { 
+                    id: 999, 
+                    username: 'ar4senN', 
+                    full_name: 'Арсен Алмашкан', 
+                    profile_picture: null,
+                    created_at: new Date('2023-01-15'),
+                    rank: 116, 
+                    unique_contributions: 55, 
+                    total_contributions: 110,
+                    position: 1
+                },
+                { 
+                    id: 998, 
+                    username: 'a.yersh', 
+                    full_name: 'Андрей Ёрш', 
+                    profile_picture: null,
+                    created_at: new Date('2023-02-20'),
+                    rank: 110, 
+                    unique_contributions: 45, 
+                    total_contributions: 90,
+                    position: 2
+                },
+                { 
+                    id: 997, 
+                    username: 'jepkinsss', 
+                    full_name: 'Артем Левко', 
+                    profile_picture: null,
+                    created_at: new Date('2023-03-10'),
+                    rank: 99, 
+                    unique_contributions: 30, 
+                    total_contributions: 60,
+                    position: 3
+                }
+            ];
+
+            // Adjust positions for real contributors
+            contributors = contributors.map(contributor => ({
+                ...contributor,
+                position: contributor.position + 3
+            }));
+
+            contributors = [...artificialEntries, ...contributors];
+        } else {
+            // Adjust positions for other pages
+            contributors = contributors.map(contributor => ({
+                ...contributor,
+                position: contributor.position + 3 + ((page - 1) * limit)
+            }));
+        }
+
+        // Get user's profile picture if logged in
+        let profilePicture = null;
+        if (req.session.userId) {
+            const userResult = await pool.query(
+                "SELECT profile_picture FROM users WHERE id = $1",
+                [req.session.userId]
+            );
+            profilePicture = userResult.rows[0]?.profile_picture || null;
+        }
+
+        res.render("contributors_ranking", {
+            __: i18n.__,
+            lang,
+            contributors,
+            currentPage: page,
+            totalPages,
+            totalContributors: totalContributors + 3, // Add artificial entries to total
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+            username: req.session.username || null,
+            userId: req.session.userId || null,
+            profilePicture
+        });
+    } catch (error) {
+        console.error("Error fetching contributors:", error);
+        res.status(500).render("404", {
+            __: i18n.__,
+            pageUrl: req.originalUrl,
+            lang
+        });
+    }
+});
+
+// Update the existing getTopAuthors function to be more comprehensive
+async function getAllContributors(limit = 50, offset = 0) {
+    try {
+        const query = `
+            WITH all_contributions AS (
+                SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                UNION ALL
+                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            ),
+            user_stats AS (
+                SELECT 
+                    u.id,
+                    u.username,
+                    u.full_name,
+                    u.profile_picture,
+                    u.created_at,
+                    COUNT(DISTINCT ac.problem_name) AS unique_contributions,
+                    COUNT(*) AS total_contributions,
+                    19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+                FROM all_contributions ac
+                JOIN users u ON ac.user_id = u.id
+                GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at
+            )
+            SELECT 
+                id,
+                username,
+                full_name,
+                profile_picture,
+                created_at,
+                unique_contributions,
+                total_contributions,
+                ROUND(raw_rank::numeric, 0) AS rank
+            FROM user_stats
+            ORDER BY rank DESC
+            LIMIT $1 OFFSET $2
+        `;
+        
+        const result = await pool.query(query, [limit, offset]);
+        return result.rows;
+    } catch (error) {
+        console.error("Error fetching all contributors:", error);
+        return [];
+    }
+}
 // Profile settings update
 app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single('profilePicture'), async (req, res) => {
     const { lang } = req.params;

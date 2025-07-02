@@ -175,7 +175,7 @@
   ============================ -->
   <main class="container my-5">
     <!-- ============================
-         SUMMIT PROMOTION SECTION
+         SUMMIT COMPLETION SECTION
     ============================ -->
     <% if (lang === 'ru' || lang != 'ru') { %>
     <div class="summit-promotion-banner mb-5">
@@ -183,48 +183,133 @@
         <div class="col-lg-8">
           <div class="summit-promotion-content">
             <div class="summit-badge">
-              🎉 НОВОЕ СОБЫТИЕ
+              ✅ СОБЫТИЕ ЗАВЕРШЕНО
             </div>
             <h2 class="summit-promotion-title">
-              Первый Savchenko Solutions Summit в Москве!
+              Первый Savchenko Solutions Summit прошел успешно!
             </h2>
             <p class="summit-promotion-description">
-              11 июня 2025 в 18:00 в парке «Крылатские холмы». Присоединяйтесь к исторической встрече community физиков и энтузиастов образования!
+              11 июня 2025 в Москве состоялась историческая встреча более 40 физиков, студентов и энтузиастов образования. Обсуждали ИИ интеграции, новые образовательные инициативы и будущее платформы.
             </p>
             <div class="summit-promotion-details">
-              <span class="summit-detail-item">📅 11 июня 2025</span>
-              <span class="summit-detail-item">⏰ 18:00–19:30</span>
-              <span class="summit-detail-item">📍 м. Крылатское</span>
+              <span class="summit-detail-item">🎯 40+ участников</span>
+              <span class="summit-detail-item">🚀 6 новых инициатив</span>
+              <span class="summit-detail-item">🤝 Международная коллаборация</span>
             </div>
             <div class="summit-promotion-buttons">
               <a href="/summit" class="btn-summit-main">
-                Подробнее о саммите
+                Смотреть итоги саммита
               </a>
               <a href="https://t.me/savchenko_summit_2025" target="_blank" class="btn-summit-telegram">
-                💬 Telegram-группа
+                💬 Telegram-сообщество
               </a>
             </div>
           </div>
         </div>
         <div class="col-lg-4 text-center">
           <div class="summit-promotion-visual">
-            <div class="summit-countdown-mini">
-              <div class="countdown-mini-item">
-                <span class="countdown-mini-number" id="summit-days">--</span>
-                <span class="countdown-mini-label">дней</span>
-              </div>
-              <div class="countdown-separator">:</div>
-              <div class="countdown-mini-item">
-                <span class="countdown-mini-number" id="summit-hours">--</span>
-                <span class="countdown-mini-label">часов</span>
-              </div>
+            <div class="summit-success-icon">
+              <div class="success-checkmark">✅</div>
+              <div class="success-text">Успешно завершен</div>
             </div>
-            <p class="summit-countdown-text">до саммита</p>
+            <p class="summit-completion-text">Спасибо всем участникам!</p>
           </div>
         </div>
       </div>
     </div>
     <% } %>
+
+    <!-- ============================
+         PARTICIPATION CALL TO ACTION
+    ============================ -->
+    <div class="participation-section mb-5">
+      <div class="row align-items-center">
+        <div class="col-lg-6 mb-4">
+          <div class="participation-content">
+            <h2 class="participation-title">
+              <% if (lang === 'en') { %>
+                Join Our Growing Community
+              <% } else { %>
+                Присоединяйтесь к растущему сообществу
+              <% } %>
+            </h2>
+            <p class="participation-description">
+              <% if (lang === 'en') { %>
+                Help us build the world's largest physics solutions database. Every contribution matters - from simple edits to complete solutions.
+              <% } else { %>
+                Помогите нам создать крупнейшую базу решений задач по физике. Каждый вклад важен - от простых правок до полных решений.
+              <% } %>
+            </p>
+            <div class="participation-features">
+              <div class="feature-item">
+                <span class="feature-icon">✏️</span>
+                <span class="feature-text">
+                  <% if (lang === 'en') { %>No registration required<% } else { %>Регистрация не требуется<% } %>
+                </span>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">🌟</span>
+                <span class="feature-text">
+                  <% if (lang === 'en') { %>Get recognized for your contributions<% } else { %>Получите признание за ваш вклад<% } %>
+                </span>
+              </div>
+              <div class="feature-item">
+                <span class="feature-icon">🎓</span>
+                <span class="feature-text">
+                  <% if (lang === 'en') { %>Learn from the global physics community<% } else { %>Учитесь у мирового сообщества физиков<% } %>
+                </span>
+              </div>
+            </div>
+            <div class="participation-buttons">
+              <a href="/<%= lang %>/study-guide" class="btn-participation-primary">
+                <% if (lang === 'en') { %>
+                  Learn How to Contribute
+                <% } else { %>
+                  Узнать как участвовать
+                <% } %>
+              </a>
+              <a href="/<%= lang %>/upload" class="btn-participation-secondary">
+                <% if (lang === 'en') { %>
+                  Upload Solution
+                <% } else { %>
+                  Загрузить решение
+                <% } %>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="participation-stats">
+            <div class="stat-grid">
+              <div class="stat-card">
+                <div class="stat-number">800+</div>
+                <div class="stat-label">
+                  <% if (lang === 'en') { %>Solutions<% } else { %>Решений<% } %>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">50+</div>
+                <div class="stat-label">
+                  <% if (lang === 'en') { %>Contributors<% } else { %>Участников<% } %>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">2023</div>
+                <div class="stat-label">
+                  <% if (lang === 'en') { %>Total Problems<% } else { %>Всего задач<% } %>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-number">15+</div>
+                <div class="stat-label">
+                  <% if (lang === 'en') { %>Countries<% } else { %>Стран<% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Intro Row: Left = Text, Right = YouTube Preview -->
     <div class="row align-items-center justify-content-center mb-lg-5 mb-2">
@@ -439,7 +524,12 @@
 
         <!-- Top Authors -->
         <div class="top-authors text-center br-10 shadow-sm d-none d-lg-block">
-            <h3 class="text-center mb-4"><%= __('description.topAuthors') %></h3>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="mb-0"><%= __('description.topAuthors') %></h3>
+                <a href="/<%= lang %>/contributors" class="btn btn-outline-primary btn-sm">
+                    <% if (lang === 'en') { %>View All<% } else { %>Смотреть всех<% } %>
+                </a>
+            </div>
             <!-- Wrap table in table-responsive to allow horizontal scrolling on mobile -->
             <div class="table-responsive">
                 <table class="table table-hover mx-auto">
@@ -461,16 +551,27 @@
                                     <% } %>
                                 </td>
                                 <td>
-                                    <a href="/user/<%= author.username %>" 
-                                       class="text-dark text-decoration-none">
-                                        <%= author.username %>
-                                    </a>
+                                    <div class="d-flex align-items-center">
+                                        <img src="/img/profile_images/Default_placeholder.svg" 
+                                             alt="<%= author.username %>" 
+                                             class="rounded-circle me-2" 
+                                             width="24" height="24">
+                                        <a href="/user/<%= author.username %>" 
+                                           class="text-dark text-decoration-none">
+                                            <%= author.username %>
+                                        </a>
+                                    </div>
                                 </td>
                                 <td><%= author.rank %></td>
                             </tr>
                         <% }); %>
                     </tbody>
                 </table>
+            </div>
+            <div class="text-center mt-3">
+                <a href="/<%= lang %>/contributors" class="text-muted small">
+                    <% if (lang === 'en') { %>View complete ranking →<% } else { %>Полный рейтинг →<% } %>
+                </a>
             </div>
         </div>
 
@@ -789,45 +890,27 @@
       z-index: 2;
     }
 
-    .summit-countdown-mini {
+    .summit-success-icon {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
       margin-bottom: 1rem;
     }
 
-    .countdown-mini-item {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 1rem 1.2rem;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    .success-checkmark {
+      font-size: 4rem;
+      margin-bottom: 0.5rem;
     }
 
-    .countdown-mini-number {
-      display: block;
-      font-size: 1.8rem;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
+    .success-text {
+      font-size: 1rem;
+      opacity: 0.9;
+      margin: 0;
+      font-weight: 500;
     }
 
-    .countdown-mini-label {
-      display: block;
-      font-size: 0.7rem;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .countdown-separator {
-      font-size: 1.5rem;
-      font-weight: 700;
-      opacity: 0.8;
-    }
-
-    .summit-countdown-text {
+    .summit-completion-text {
       font-size: 1rem;
       opacity: 0.9;
       margin: 0;
@@ -857,12 +940,193 @@
         align-items: stretch;
       }
       
-      .countdown-mini-item {
-        padding: 0.8rem 1rem;
+      .summit-success-icon {
+        font-size: 2rem;
+      }
+    }
+
+    /* Participation Section Styles */
+    .participation-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 25px;
+      padding: 4rem 2.5rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
+      margin: 3rem 0;
+    }
+
+    .participation-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="participationGrain" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="40" r="0.5" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23participationGrain)"/></svg>');
+      animation: participationFloat 20s infinite linear;
+    }
+
+    @keyframes participationFloat {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-50px, -50px) rotate(360deg); }
+    }
+
+    .participation-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .participation-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .participation-description {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+
+    .participation-features {
+      margin-bottom: 2.5rem;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 0.8rem;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .feature-icon {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+      min-width: 40px;
+    }
+
+    .feature-text {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .participation-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-participation-primary {
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-participation-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 35px rgba(255, 255, 255, 0.4);
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    .btn-participation-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .btn-participation-secondary:hover {
+      background: white;
+      color: #667eea;
+      transform: translateY(-3px);
+      text-decoration: none;
+    }
+
+    .participation-stats {
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .participation-section {
+        padding: 2rem 1.5rem;
       }
       
-      .countdown-mini-number {
-        font-size: 1.5rem;
+      .participation-title {
+        font-size: 1.8rem;
+      }
+      
+      .participation-description {
+        font-size: 1rem;
+      }
+      
+      .participation-features {
+        margin-bottom: 1.5rem;
+      }
+      
+      .feature-item {
+        padding: 0.6rem;
+      }
+      
+      .participation-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .btn-participation-primary, .btn-participation-secondary {
+        width: 100%;
       }
     }
   </style>
@@ -1096,35 +1360,38 @@
       });
     });
 
-    // Summit Countdown Timer
-    function updateSummitCountdown() {
-      const eventDate = new Date('2025-06-11T18:00:00+03:00');
-      const now = new Date();
-      const diff = eventDate - now;
+    // Participation section animations
+    document.addEventListener('DOMContentLoaded', () => {
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
 
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+          }
+        });
+      }, observerOptions);
 
-        const summitDaysEl = document.getElementById('summit-days');
-        const summitHoursEl = document.getElementById('summit-hours');
-        
-        if (summitDaysEl) summitDaysEl.textContent = days.toString().padStart(2, '0');
-        if (summitHoursEl) summitHoursEl.textContent = hours.toString().padStart(2, '0');
-      } else {
-        const summitDaysEl = document.getElementById('summit-days');
-        const summitHoursEl = document.getElementById('summit-hours');
-        
-        if (summitDaysEl) summitDaysEl.textContent = '🎉';
-        if (summitHoursEl) summitHoursEl.textContent = '🎉';
-      }
-    }
+      // Animate participation stats
+      document.querySelectorAll('.stat-card').forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        observer.observe(el);
+      });
 
-    // Update summit countdown every minute
-    if (document.querySelector('.summit-countdown-mini')) {
-      updateSummitCountdown();
-      setInterval(updateSummitCountdown, 60000);
-    }
+      // Animate feature items
+      document.querySelectorAll('.feature-item').forEach((el, index) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-20px)';
+        el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        observer.observe(el);
+      });
+    });
   </script>
 </body>
 </html>
