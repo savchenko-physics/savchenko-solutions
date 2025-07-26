@@ -1969,12 +1969,11 @@ async function getTopAuthors() {
         `;
         
         const result = await pool.query(query);
-        
         // Add artificial entries
         const artificialEntries = [
-            { username: 'ar4senN', rank: 116, unique_contributions: 55, total_contributions: 110 },
-            { username: 'a.yersh', rank: 110, unique_contributions: 45, total_contributions: 90 },
-            { username: 'jepkinsss', rank: 99, unique_contributions: 30, total_contributions: 60 }
+            { username: 'ar4senN', rank: 116, unique_contributions: 55, total_contributions: 110, profile_picture: '/img/profile_images/73.jpg'},
+            { username: 'a.yersh', rank: 110, unique_contributions: 45, total_contributions: 90, profile_picture: '/img/profile_images/74.jpg'},
+            { username: 'jepkinsss', rank: 99, unique_contributions: 30, total_contributions: 60, profile_picture: '/img/profile_images/75.jpg'}
         ];
 
         // Combine real and artificial entries

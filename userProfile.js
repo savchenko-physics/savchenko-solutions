@@ -215,7 +215,7 @@ async function getUserProfile(req, res) {
             github: user.github,
             instagram: user.instagram,
             personalWebsite: user.personal_website,
-            profilePicture: user.profile_picture || `/img/profile_images/${user.id}.png`,
+            profilePicture: user.profile_picture,
             
             // Social stats
             followersCount: parseInt(user.followers_count),
