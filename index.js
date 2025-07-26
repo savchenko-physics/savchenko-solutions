@@ -256,12 +256,19 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
         const totalContributors = parseInt(countResult.rows[0].total);
         const totalPages = Math.ceil(totalContributors / limit);
 
-        // Get contributors with rankings
+        // Get contributors with rankings and additional user information (same formula as getTopAuthors)
         const contributorsQuery = `
             WITH all_contributions AS (
-                SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                GROUP BY user_id, problem_name
                 UNION ALL
-                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+                GROUP BY user_id, problem_name
+            ),
+            user_first_contributions AS (
+                SELECT user_id, MIN(first_contribution) as first_contribution_date
+                FROM all_contributions
+                GROUP BY user_id
             ),
             user_stats AS (
                 SELECT 
@@ -270,12 +277,19 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
                     u.full_name,
                     u.profile_picture,
                     u.created_at,
+                    u.country_location,
+                    u.github,
+                    u.linkedin,
+                    u.bio,
+                    u.is_verified_user,
+                    ufc.first_contribution_date,
                     COUNT(DISTINCT ac.problem_name) AS unique_contributions,
                     COUNT(*) AS total_contributions,
                     19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
                 FROM all_contributions ac
                 JOIN users u ON ac.user_id = u.id
-                GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at
+                LEFT JOIN user_first_contributions ufc ON u.id = ufc.user_id
+                GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at, u.country_location, u.github, u.linkedin, u.bio, u.is_verified_user, ufc.first_contribution_date
             ),
             ranked_users AS (
                 SELECT 
@@ -285,65 +299,15 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
                 FROM user_stats
             )
             SELECT * FROM ranked_users
-            ORDER BY rank DESC
+            ORDER BY raw_rank DESC
             LIMIT $1 OFFSET $2
         `;
         
         const contributorsResult = await pool.query(contributorsQuery, [limit, offset]);
-        // console.log(contributorsResult.rows);
-        // Add some artificial high-ranking entries for the first page
-        let contributors = contributorsResult.rows;
-        if (page === 1) {
-            const artificialEntries = [
-                { 
-                    id: 999, 
-                    username: 'ar4senN', 
-                    full_name: 'Арсен Алмашкан', 
-                    profile_picture: null,
-                    created_at: new Date('2023-01-15'),
-                    rank: 116, 
-                    unique_contributions: 55, 
-                    total_contributions: 110,
-                    position: 1
-                },
-                { 
-                    id: 998, 
-                    username: 'a.yersh', 
-                    full_name: 'Андрей Ёрш', 
-                    profile_picture: null,
-                    created_at: new Date('2023-02-20'),
-                    rank: 110, 
-                    unique_contributions: 45, 
-                    total_contributions: 90,
-                    position: 2
-                },
-                { 
-                    id: 997, 
-                    username: 'jepkinsss', 
-                    full_name: 'Артем Левко', 
-                    profile_picture: null,
-                    created_at: new Date('2023-03-10'),
-                    rank: 99, 
-                    unique_contributions: 30, 
-                    total_contributions: 60,
-                    position: 3
-                }
-            ];
-
-            // Adjust positions for real contributors
-            contributors = contributors.map(contributor => ({
-                ...contributor,
-                position: contributor.position + 3
-            }));
-
-            contributors = [...artificialEntries, ...contributors];
-        } else {
-            // Adjust positions for other pages
-            contributors = contributors.map(contributor => ({
-                ...contributor,
-                position: contributor.position + 3 + ((page - 1) * limit)
-            }));
-        }
+        let contributors = contributorsResult.rows.map((contributor, index) => ({
+            ...contributor,
+            position: offset + index + 1
+        }));
 
         // Get user's profile picture if logged in
         let profilePicture = null;
@@ -361,7 +325,7 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
             contributors,
             currentPage: page,
             totalPages,
-            totalContributors: totalContributors + 3, // Add artificial entries to total
+            totalContributors: totalContributors,
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
             username: req.session.username || null,
@@ -1964,24 +1928,12 @@ async function getTopAuthors() {
                 total_contributions,
                 ROUND(raw_rank::numeric, 0) AS rank
             FROM user_stats
-            ORDER BY rank DESC
+            ORDER BY raw_rank DESC
             LIMIT 10
         `;
         
         const result = await pool.query(query);
-        // Add artificial entries
-        const artificialEntries = [
-            { username: 'ar4senN', rank: 116, unique_contributions: 55, total_contributions: 110, profile_picture: '/img/profile_images/73.jpg'},
-            { username: 'a.yersh', rank: 110, unique_contributions: 45, total_contributions: 90, profile_picture: '/img/profile_images/74.jpg'},
-            { username: 'jepkinsss', rank: 99, unique_contributions: 30, total_contributions: 60, profile_picture: '/img/profile_images/75.jpg'}
-        ];
-
-        // Combine real and artificial entries
-        const combinedResults = [...result.rows, ...artificialEntries]
-            .sort((a, b) => b.rank - a.rank) // Sort by rank in descending order
-            .slice(0, 10); // Keep only top 10
-
-        return combinedResults;
+        return result.rows;
     } catch (error) {
         console.error("Error fetching top authors:", error);
         return [];

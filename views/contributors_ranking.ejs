@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><% if (lang === 'en') { %>Contributors Ranking<% } else { %>Рейтинг участников<% } %> - Savchenko Solutions</title>
-    <meta name="description" content="<% if (lang === 'en') { %>Complete ranking of all contributors to Savchenko Solutions physics problems database<% } else { %>Полный рейтинг всех участников базы данных решений задач по физике Savchenko Solutions<% } %>">
+    <title><% if (lang === 'en') { %>Contributors Leaderboard<% } else { %>Рейтинг участников<% } %> - Savchenko Solutions</title>
+    <meta name="description" content="<% if (lang === 'en') { %>Complete leaderboard of all contributors to Savchenko Solutions physics problems database<% } else { %>Полный рейтинг всех участников базы данных решений задач по физике Savchenko Solutions<% } %>">
     <link rel="icon" href="/img/logo.png" type="image/png">
     
     <!-- Bootstrap 5 -->
@@ -12,63 +12,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     
     <style>
         :root {
-            --primary-color: #0969da;
-            --secondary-color: #656d76;
-            --success-color: #1a7f37;
-            --warning-color: #9a6700;
-            --danger-color: #cf222e;
+            --primary-color: #0066cc;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            
             --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #eef2f5;
-            --border-color: #d1d9e0;
-            --text-primary: #1f2328;
-            --text-secondary: #656d76;
-            --text-muted: #848d97;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-            --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
-            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15), 0 4px 6px rgba(0,0,0,0.1);
-            --border-radius: 12px;
-            --border-radius-sm: 8px;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --bg-dark: #212529;
+            
+            --border-color: #dee2e6;
+            --border-color-light: #e9ecef;
+            
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-muted: #8e9297;
+            
+            --gold: linear-gradient(135deg, #ffd700, #ffed4e);
+            --silver: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            --bronze: linear-gradient(135deg, #cd7f32, #deb887);
+            
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            
+            --border-radius: 0.375rem;
+            --border-radius-lg: 0.75rem;
+            --border-radius-xl: 1rem;
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-secondary);
             color: var(--text-primary);
-            line-height: 1.6;
+            line-height: 1.5;
         }
 
-        .navbar {
-            background: var(--bg-primary) !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--text-primary) !important;
-            font-size: 1.2rem;
-        }
-
-        .main-container {
-            max-width: 1200px;
+        /* Modern leaderboard container */
+        .leaderboard-container {
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem 1rem;
         }
 
+        /* Page header */
         .page-header {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-xl);
             padding: 3rem 2rem;
             margin-bottom: 2rem;
             text-align: center;
@@ -98,316 +100,451 @@
         }
 
         .page-title {
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 3rem;
+            font-weight: 900;
             margin-bottom: 1rem;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .page-subtitle {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
+        /* Stats cards */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
             margin-top: 2rem;
         }
 
         .stat-card {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
-            border-radius: var(--border-radius-sm);
-            padding: 1.5rem;
+            border-radius: var(--border-radius-lg);
+            padding: 2rem;
             text-align: center;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
         }
 
         .stat-number {
-            font-size: 2rem;
-            font-weight: 800;
+            font-size: 2.5rem;
+            font-weight: 900;
             display: block;
             font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
         }
 
         .stat-label {
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 0.5rem;
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 500;
         }
 
-        .contributors-card {
+        /* Leaderboard table */
+        .leaderboard-card {
             background: var(--bg-primary);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-md);
+            border-radius: var(--border-radius-xl);
+            box-shadow: var(--shadow);
             overflow: hidden;
+            margin-bottom: 2rem;
         }
 
-        .contributors-header {
-            padding: 1.5rem;
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
+        .leaderboard-header {
+            background: var(--bg-dark);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .contributors-table {
+        .leaderboard-title {
+            font-size: 1.5rem;
+            font-weight: 700;
             margin: 0;
         }
 
-        .contributors-table th {
-            background: var(--bg-secondary);
-            color: var(--text-secondary);
-            font-weight: 600;
+        .page-info {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            margin: 0;
+        }
+
+        .leaderboard-table thead th {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-weight: 700;
             font-size: 0.9rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 1rem;
+            padding: 1.5rem 1rem;
             border: none;
+            text-align: center;
         }
 
-        .contributors-table td {
-            padding: 1rem;
-            border-color: var(--border-color);
+        .leaderboard-table tbody td {
+            padding: 1.5rem 1rem;
+            border-color: var(--border-color-light);
             vertical-align: middle;
+            text-align: center;
         }
 
-        .contributors-table tr:hover {
+        .leaderboard-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-table tbody tr:hover {
             background: var(--bg-secondary);
+            transform: translateX(5px);
+        }
+
+        /* Rank badges */
+        .rank-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .rank-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: 900;
+            font-size: 1.1rem;
+            font-family: 'JetBrains Mono', monospace;
+            position: relative;
         }
 
         .rank-badge.gold {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #d35400;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            background: var(--gold);
+            color: #b8860b;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            animation: goldGlow 2s ease-in-out infinite alternate;
         }
 
         .rank-badge.silver {
-            background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
+            background: var(--silver);
             color: #666;
-            box-shadow: 0 4px 15px rgba(192, 192, 192, 0.3);
+            box-shadow: 0 6px 20px rgba(192, 192, 192, 0.4);
         }
 
         .rank-badge.bronze {
-            background: linear-gradient(135deg, #cd7f32, #deb887);
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(205, 127, 50, 0.3);
+            background: var(--bronze);
+            color: #8b4513;
+            box-shadow: 0 6px 20px rgba(205, 127, 50, 0.4);
         }
 
         .rank-badge.regular {
             background: var(--bg-tertiary);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+            font-weight: 700;
         }
 
-        .contributor-info {
+        @keyframes goldGlow {
+            0% { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); }
+            100% { box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6); }
+        }
+
+        .medal-icon {
+            font-size: 1.5rem;
+            margin-left: 0.5rem;
+        }
+
+        /* User info */
+        .user-info {
             display: flex;
             align-items: center;
             gap: 1rem;
+            justify-content: flex-start;
+            text-align: left;
+            max-width: 400px;
         }
 
-        .contributor-avatar {
-            width: 48px;
-            height: 48px;
+        .user-avatar {
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--border-color);
-        }
-
-        .contributor-details {
-            flex: 1;
-        }
-
-        .contributor-name {
-            font-weight: 600;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 1rem;
-        }
-
-        .contributor-name:hover {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .contributor-username {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-        }
-
-        .score-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--primary-color);
-        }
-
-        .contributions-badge {
-            background: var(--bg-tertiary);
-            color: var(--text-secondary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .pagination-wrapper {
-            margin-top: 2rem;
-            display: flex;
-            justify-content: center;
-        }
-
-        .pagination .page-link {
-            color: var(--primary-color);
-            border-color: var(--border-color);
-            padding: 0.75rem 1rem;
-        }
-
-        .pagination .page-link:hover {
-            background: var(--bg-secondary);
-            border-color: var(--primary-color);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .back-button {
-            position: fixed;
-            top: 2rem;
-            left: 2rem;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            padding: 0.75rem 1.5rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 500;
-            box-shadow: var(--shadow-md);
-            z-index: 1000;
+            border: 3px solid var(--border-color);
             transition: all 0.3s ease;
         }
 
-        .back-button:hover {
-            background: var(--bg-secondary);
+        .user-avatar:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 700;
             color: var(--text-primary);
             text-decoration: none;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-name:hover {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .verified-badge {
+            color: var(--primary-color);
+            font-size: 0.9rem;
+        }
+
+        .user-username {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        .user-meta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .user-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Score display */
+        .score-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        /* Contributions display */
+        .contributions-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .contributions-primary {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--success-color);
+        }
+
+        .contributions-secondary {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .progress-bar-container {
+            width: 80px;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success-color), var(--info-color));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Country flag */
+        .country-flag {
+            width: 24px;
+            height: 16px;
+            border-radius: 2px;
+            object-fit: cover;
+            margin-right: 0.5rem;
+        }
+
+        /* Social links */
+        .social-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .social-link {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .social-link:hover {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .leaderboard-container {
+                padding: 1rem 0.5rem;
+            }
         }
 
         @media (max-width: 768px) {
-            .main-container {
-                padding: 1rem 0.5rem;
+            .page-title {
+                font-size: 2rem;
             }
 
             .page-header {
                 padding: 2rem 1rem;
             }
 
-            .page-title {
-                font-size: 2rem;
-            }
-
-            .back-button {
-                top: 1rem;
-                left: 1rem;
-                padding: 0.5rem 1rem;
-            }
-
-            .contributor-info {
-                gap: 0.75rem;
-            }
-
-            .contributor-avatar {
-                width: 40px;
-                height: 40px;
-            }
-
-            .contributors-table th,
-            .contributors-table td {
-                padding: 0.75rem 0.5rem;
-            }
-
             .stats-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .user-info {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.75rem;
+            }
+
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+            }
+
+            .leaderboard-table thead th,
+            .leaderboard-table tbody td {
+                padding: 1rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .score-display {
+                font-size: 1.2rem;
+            }
+
+            .rank-badge {
+                width: 40px;
+                height: 40px;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .user-meta {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+        }
+
+        /* Animation for table rows */
+        .leaderboard-table tbody tr.contributor-row {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .leaderboard-table tbody tr.contributor-row[data-index="0"] { animation-delay: 0s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="1"] { animation-delay: 0.1s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="2"] { animation-delay: 0.2s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="3"] { animation-delay: 0.3s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="4"] { animation-delay: 0.4s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="5"] { animation-delay: 0.5s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="6"] { animation-delay: 0.6s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="7"] { animation-delay: 0.7s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="8"] { animation-delay: 0.8s; }
+        .leaderboard-table tbody tr.contributor-row[data-index="9"] { animation-delay: 0.9s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pagination styling */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .pagination .page-link {
+            color: var(--primary-color);
+            border-color: var(--border-color);
+            padding: 0.75rem 1.25rem;
+            margin: 0 0.125rem;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .pagination .page-link:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
         }
     </style>
 </head>
 
 <body>
-    <!-- Back Button -->
-    <a href="/<%= lang %>" class="back-button">
-        <i class="bi bi-arrow-left me-2"></i>
-        <% if (lang === 'en') { %>Back to Home<% } else { %>На главную<% } %>
-    </a>
+    <!-- Include modern header -->
+    <%- include('default/modern_header') %>
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="/<%= lang %>">
-                Savchenko Solutions
-            </a>
-            <div class="navbar-nav ms-auto">
-                <% if (username) { %>
-                    <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
-                            <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" 
-                                 alt="Profile" class="rounded-circle me-2" width="32" height="32">
-                            <%= username %>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/user/<%= username %>">
-                                <i class="bi bi-person me-2"></i>
-                                <% if (lang === 'en') { %>Visit Profile<% } else { %>Профиль<% } %>
-                            </a></li>
-                            <li><a class="dropdown-item" href="/<%= lang %>/settings">
-                                <i class="bi bi-gear me-2"></i>
-                                <% if (lang === 'en') { %>Settings<% } else { %>Настройки<% } %>
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout">
-                                <i class="bi bi-box-arrow-right me-2"></i>
-                                <% if (lang === 'en') { %>Logout<% } else { %>Выйти<% } %>
-                            </a></li>
-                        </ul>
-                    </div>
-                <% } else { %>
-                    <a class="nav-link" href="/<%= lang %>/login">
-                        <% if (lang === 'en') { %>Login<% } else { %>Войти<% } %>
-                    </a>
-                <% } %>
-            </div>
-        </div>
-    </nav>
-
-    <div class="main-container">
+    <div class="leaderboard-container">
         <!-- Page Header -->
         <div class="page-header">
             <div class="page-header-content">
                 <h1 class="page-title">
-                    <% if (lang === 'en') { %>Contributors Ranking<% } else { %>Рейтинг участников<% } %>
+                    🏆 <% if (lang === 'en') { %>Contributors Leaderboard<% } else { %>Рейтинг участников<% } %>
                 </h1>
                 <p class="page-subtitle">
                     <% if (lang === 'en') { %>
-                        Recognizing all contributors to the Savchenko Solutions physics problems database
+                        Celebrating the brilliant minds advancing physics education worldwide
                     <% } else { %>
-                        Признание всех участников базы данных решений задач по физике Savchenko Solutions
+                        Чествуем блестящие умы, развивающие физическое образование по всему миру
                     <% } %>
                 </p>
 
@@ -415,81 +552,119 @@
                     <div class="stat-card">
                         <span class="stat-number"><%= totalContributors %></span>
                         <div class="stat-label">
-                            <% if (lang === 'en') { %>Contributors<% } else { %>Участников<% } %>
+                            <% if (lang === 'en') { %>Total Contributors<% } else { %>Всего участников<% } %>
                         </div>
                     </div>
                     <div class="stat-card">
                         <span class="stat-number"><%= totalPages %></span>
                         <div class="stat-label">
-                            <% if (lang === 'en') { %>Pages<% } else { %>Страниц<% } %>
+                            <% if (lang === 'en') { %>Total Pages<% } else { %>Всего страниц<% } %>
                         </div>
                     </div>
                     <div class="stat-card">
                         <span class="stat-number"><%= currentPage %></span>
                         <div class="stat-label">
-                            <% if (lang === 'en') { %>Current<% } else { %>Текущая<% } %>
+                            <% if (lang === 'en') { %>Current Page<% } else { %>Текущая страница<% } %>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number">500+</span>
+                        <div class="stat-label">
+                            <% if (lang === 'en') { %>Solutions Shared<% } else { %>Решений поделено<% } %>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Contributors Table -->
-        <div class="contributors-card">
-            <div class="contributors-header">
-                <h3 class="mb-0">
+        <!-- Leaderboard Table -->
+        <div class="leaderboard-card">
+            <div class="leaderboard-header">
+                <h2 class="leaderboard-title">
+                    🥇 <% if (lang === 'en') { %>Physics Champions<% } else { %>Чемпионы физики<% } %>
+                </h2>
+                <div class="page-info">
                     <% if (lang === 'en') { %>
-                        All Contributors (Page <%= currentPage %> of <%= totalPages %>)
+                        Page <%= currentPage %> of <%= totalPages %>
                     <% } else { %>
-                        Все участники (Страница <%= currentPage %> из <%= totalPages %>)
+                        Страница <%= currentPage %> из <%= totalPages %>
                     <% } %>
-                </h3>
+                </div>
             </div>
 
             <div class="table-responsive">
-                <table class="table contributors-table">
+                <table class="table leaderboard-table">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">
+                            <th style="width: 12%;">
                                 <% if (lang === 'en') { %>Rank<% } else { %>Место<% } %>
                             </th>
-                            <th style="width: 50%;">
+                            <th style="width: 40%;">
                                 <% if (lang === 'en') { %>Contributor<% } else { %>Участник<% } %>
                             </th>
-                            <th style="width: 20%;">
+                            <th style="width: 16%;">
                                 <% if (lang === 'en') { %>Score<% } else { %>Рейтинг<% } %>
                             </th>
-                            <th style="width: 20%;">
-                                <% if (lang === 'en') { %>Contributions<% } else { %>Вклад<% } %>
+                            <th style="width: 16%;">
+                                <% if (lang === 'en') { %>Problems<% } else { %>Задачи<% } %>
+                            </th>
+                            <th style="width: 16%;">
+                                <% if (lang === 'en') { %>Joined<% } else { %>Присоединился<% } %>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <% contributors.forEach((contributor, index) => { %>
-                            <tr>
+                            <tr class="contributor-row" data-index="<%= index %>">
                                 <td>
-                                    <div class="rank-badge <%= 
-                                        contributor.position === 1 ? 'gold' : 
-                                        contributor.position === 2 ? 'silver' : 
-                                        contributor.position === 3 ? 'bronze' : 'regular' 
-                                    %>">
-                                        <% if (contributor.position === 1) { %>🥇
-                                        <% } else if (contributor.position === 2) { %>🥈
-                                        <% } else if (contributor.position === 3) { %>🥉
-                                        <% } else { %><%= contributor.position %>
+                                    <div class="rank-container">
+                                        <div class="rank-badge <%= 
+                                            contributor.position === 1 ? 'gold' : 
+                                            contributor.position === 2 ? 'silver' : 
+                                            contributor.position === 3 ? 'bronze' : 'regular' 
+                                        %>">
+                                            <%= contributor.position %>
+                                        </div>
+                                        <% if (contributor.position === 1) { %>
+                                            <span class="medal-icon">🥇</span>
+                                        <% } else if (contributor.position === 2) { %>
+                                            <span class="medal-icon">🥈</span>
+                                        <% } else if (contributor.position === 3) { %>
+                                            <span class="medal-icon">🥉</span>
                                         <% } %>
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="contributor-info">
+                                    <div class="user-info">
                                         <img src="<%= contributor.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" 
                                              alt="<%= contributor.full_name || contributor.username %>" 
-                                             class="contributor-avatar">
-                                        <div class="contributor-details">
-                                            <a href="/user/<%= contributor.username %>" class="contributor-name">
+                                             class="user-avatar">
+                                        <div class="user-details">
+                                            <a href="/user/<%= contributor.username %>" class="user-name">
                                                 <%= contributor.full_name || contributor.username %>
+                                                <% if (contributor.is_verified_user) { %>
+                                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
+                                                <% } %>
                                             </a>
-                                            <div class="contributor-username">@<%= contributor.username %></div>
+                                            <div class="user-username">@<%= contributor.username %></div>
+                                            <div class="user-meta">
+                                                <% if (contributor.country_location) { %>
+                                                    <div class="user-meta-item">
+                                                        <i class="fas fa-map-marker-alt"></i>
+                                                        <span><%= contributor.country_location %></span>
+                                                    </div>
+                                                <% } %>
+                                                <% if (contributor.github) { %>
+                                                    <a href="<%= contributor.github %>" class="social-link" target="_blank">
+                                                        <i class="fab fa-github"></i>
+                                                    </a>
+                                                <% } %>
+                                                <% if (contributor.linkedin) { %>
+                                                    <a href="<%= contributor.linkedin %>" class="social-link" target="_blank">
+                                                        <i class="fab fa-linkedin"></i>
+                                                    </a>
+                                                <% } %>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -497,9 +672,32 @@
                                     <div class="score-display"><%= contributor.rank %></div>
                                 </td>
                                 <td>
-                                    <div class="contributions-badge">
-                                        <%= contributor.unique_contributions %> 
-                                        <% if (lang === 'en') { %>problems<% } else { %>задач<% } %>
+                                    <div class="contributions-info">
+                                        <div class="contributions-primary"><%= contributor.unique_contributions %></div>
+                                        <div class="contributions-secondary">
+                                            <%= contributor.total_contributions %> 
+                                            <% if (lang === 'en') { %>total<% } else { %>всего<% } %>
+                                        </div>
+                                        <div class="progress-bar-container">
+                                            <div class="progress-bar" data-width="<%= Math.min(100, contributor.unique_contributions) %>"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                                        <div>
+                                            <%
+                                                const date = new Date(contributor.first_contribution_date || contributor.created_at);
+                                                const locale = lang === 'en' ? 'en-US' : 'ru-RU';
+                                                const options = { year: 'numeric', month: 'short' };
+                                            %>
+                                            <%= date.toLocaleDateString(locale, options) %>
+                                        </div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                            <i class="fas fa-clock"></i>
+                                            <%= Math.floor((new Date() - new Date(contributor.first_contribution_date || contributor.created_at)) / (1000 * 60 * 60 * 24)) %> 
+                                            <% if (lang === 'en') { %>days ago<% } else { %>дней назад<% } %>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -512,12 +710,12 @@
         <!-- Pagination -->
         <% if (totalPages > 1) { %>
             <div class="pagination-wrapper">
-                <nav>
-                    <ul class="pagination">
+                <nav aria-label="Contributors pagination">
+                    <ul class="pagination pagination-lg">
                         <% if (hasPrevPage) { %>
                             <li class="page-item">
                                 <a class="page-link" href="?page=<%= currentPage - 1 %>">
-                                    <i class="bi bi-chevron-left"></i>
+                                    <i class="fas fa-chevron-left me-2"></i>
                                     <% if (lang === 'en') { %>Previous<% } else { %>Назад<% } %>
                                 </a>
                             </li>
@@ -560,7 +758,7 @@
                             <li class="page-item">
                                 <a class="page-link" href="?page=<%= currentPage + 1 %>">
                                     <% if (lang === 'en') { %>Next<% } else { %>Далее<% } %>
-                                    <i class="bi bi-chevron-right"></i>
+                                    <i class="fas fa-chevron-right ms-2"></i>
                                 </a>
                             </li>
                         <% } %>
@@ -570,28 +768,57 @@
         <% } %>
     </div>
 
+    <!-- Include modern footer -->
+    <%- include('default/modern_footer') %>
+
     <script>
-        // Add some smooth animations
+        // Enhanced animations and interactions
         document.addEventListener('DOMContentLoaded', () => {
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
+            // Animate table rows on load
+            const tableRows = document.querySelectorAll('.leaderboard-table tbody tr');
+            tableRows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.style.opacity = '1';
+                }, index * 100);
+            });
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
+            // Add hover effects for user avatars
+            const avatars = document.querySelectorAll('.user-avatar');
+            avatars.forEach(avatar => {
+                avatar.addEventListener('mouseenter', () => {
+                    avatar.style.transform = 'scale(1.1) rotate(5deg)';
                 });
-            }, observerOptions);
+                avatar.addEventListener('mouseleave', () => {
+                    avatar.style.transform = 'scale(1) rotate(0deg)';
+                });
+            });
 
-            document.querySelectorAll('tbody tr').forEach((el, index) => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(20px)';
-                el.style.transition = `opacity 0.6s ease ${index * 0.05}s, transform 0.6s ease ${index * 0.05}s`;
-                observer.observe(el);
+            // Progress bar animation
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.getAttribute('data-width') + '%';
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 200);
+            });
+
+            // Add sparkle effect to gold medal
+            const goldBadges = document.querySelectorAll('.rank-badge.gold');
+            goldBadges.forEach(badge => {
+                setInterval(() => {
+                    badge.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        badge.style.transform = 'scale(1)';
+                    }, 200);
+                }, 3000);
+            });
+        });
+
+        // Smooth scroll for pagination
+        document.querySelectorAll('.pagination .page-link').forEach(link => {
+            link.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         });
     </script>
