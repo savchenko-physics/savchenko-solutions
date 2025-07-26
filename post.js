@@ -41,7 +41,7 @@ async function renderPost(req, res) {
             [clientIp, name, lang, oneMinuteAgo]
         );
 
-        console.log(recentViewCheck.rows[0].count);
+        // console.log(recentViewCheck.rows[0].count);
 
         if (parseInt(recentViewCheck.rows[0].count) === 0 && clientIp !== '::1') {
             // Increment page views in the database
@@ -147,13 +147,13 @@ async function getPageViewsData(req, res) {
          ORDER BY date`,
         [name]
     );
-    console.log(result.rows);
+    // console.log(result.rows);
     res.json(result.rows);
 }
 
 async function getCreationDate(req, res) {
     const { name, lang } = req.params;
-    console.log(name, lang);
+    // console.log(name, lang);
 
     const result = await pool.query(
         `SELECT MIN(date) AS creation_date 

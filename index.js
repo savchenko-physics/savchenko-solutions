@@ -290,7 +290,7 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
         `;
         
         const contributorsResult = await pool.query(contributorsQuery, [limit, offset]);
-        console.log(contributorsResult.rows);
+        // console.log(contributorsResult.rows);
         // Add some artificial high-ranking entries for the first page
         let contributors = contributorsResult.rows;
         if (page === 1) {
@@ -1002,7 +1002,7 @@ $$ x(t)=\\frac{bt^3}{6} $$
 
     try {
         await fs.promises.writeFile(filePath, content);
-        console.log(`Problem file created: ${filePath}`);
+        // console.log(`Problem file created: ${filePath}`);
 
         // Record the creation in the contributions table with content_changed set to false
         await pool.query(
@@ -1171,7 +1171,7 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
             "SELECT * FROM users WHERE id = $1",
             [req.session.userId]
         );
-        console.log(userResult);
+        // console.log(userResult);
         const user = userResult.rows[0];
         res.redirect(`/user/${user.username}`);
     } catch (error) {
@@ -1949,15 +1949,17 @@ async function getTopAuthors() {
             user_stats AS (
                 SELECT 
                     u.username,
+                    u.profile_picture,
                     COUNT(DISTINCT ac.problem_name) AS unique_contributions,
                     COUNT(*) AS total_contributions,
                     19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
                 FROM all_contributions ac
                 JOIN users u ON ac.user_id = u.id
-                GROUP BY u.username
+                GROUP BY u.username, u.profile_picture
             )
             SELECT 
                 username,
+                profile_picture,
                 unique_contributions,
                 total_contributions,
                 ROUND(raw_rank::numeric, 0) AS rank
