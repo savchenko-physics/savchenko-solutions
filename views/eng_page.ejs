@@ -184,15 +184,15 @@
             <span class="news-label">
               <% if (lang === 'en') { %>📢 Platform Update<% } else { %>📢 Обновление платформы<% } %>
             </span>
-            <p class="news-text mb-2">
+            <p class="news-text">
               <% if (lang === 'en') { %>
-                <strong>Hello, SavchenkoSolutions users!</strong> We're planning a new platform and would love your feedback. What do you like/dislike about SS? What could be the strongest part of future exploration?
+                I'm thinking about the future of this platform. Should we expand beyond Savchenko? Create collaborative study guides? Cover new subjects like math or astronomy? If you have a few minutes, I'd appreciate hearing your thoughts—what works, what doesn't, what you'd like to see.
               <% } else { %>
-                <strong>Здравствуйте, пользователи SavchenkoSolutions!</strong> Мы планируем создание новой платформы и хотели бы узнать ваше мнение. Что вам нравится/не нравится в SS? Какой может быть самая сильная часть будущего развития?
+                Я думаю о будущем этой платформы. Стоит ли расширяться за пределы Савченко? Создать совместные учебники? Охватить новые предметы, такие как математика или астрономия? Если у вас есть несколько минут, буду благодарен услышать ваши мысли — что работает, что нет, что бы вы хотели видеть.
               <% } %>
             </p>
-            <a href="https://t.me/savchenko_summit_2025" target="_blank" class="news-cta">
-              <% if (lang === 'en') { %>Share your thoughts →<% } else { %>Поделитесь мнением →<% } %>
+            <a href="https://forms.gle/JWDWk1CRiPurKhVD7" target="_blank" class="feedback-link">
+              <% if (lang === 'en') { %>Share feedback<% } else { %>Поделиться мнением<% } %>
             </a>
           </div>
         </div>
@@ -681,19 +681,21 @@
       color: #664d03;
       font-size: 0.95rem;
       line-height: 1.6;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
     }
 
-    .news-cta {
-      color: #cc9a06;
-      font-weight: 600;
+    .feedback-link {
+      display: inline-block;
+      color: #856404;
       font-size: 0.9rem;
-      text-decoration: none;
-      transition: all 0.3s ease;
+      font-weight: 500;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      transition: color 0.2s ease;
     }
 
-    .news-cta:hover {
-      color: #b38600;
+    .feedback-link:hover {
+      color: #533f03;
       text-decoration: underline;
     }
 
@@ -879,6 +881,10 @@
 
       .news-text {
         font-size: 0.9rem;
+      }
+
+      .feedback-link {
+        font-size: 0.85rem;
       }
 
       .compact-intro {
