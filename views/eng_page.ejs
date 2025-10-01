@@ -182,17 +182,13 @@
         <div class="col-12">
           <div class="news-content">
             <span class="news-label">
-              <% if (lang === 'en') { %>📢 Platform Update<% } else { %>📢 Обновление платформы<% } %>
+              📢 <%= __('description.platformUpdate.label') %>
             </span>
             <p class="news-text">
-              <% if (lang === 'en') { %>
-                I'm thinking about the future of this platform. Should we expand beyond Savchenko? Create collaborative study guides? Cover new subjects like math or astronomy? If you have a few minutes, I'd appreciate hearing your thoughts—what works, what doesn't, what you'd like to see.
-              <% } else { %>
-                Я думаю о будущем этой платформы. Стоит ли расширяться за пределы Савченко? Создать совместные учебники? Охватить новые предметы, такие как математика или астрономия? Если у вас есть несколько минут, буду благодарен услышать ваши мысли — что работает, что нет, что бы вы хотели видеть.
-              <% } %>
+              <%= __('description.platformUpdate.message') %>
             </p>
             <a href="https://forms.gle/JWDWk1CRiPurKhVD7" target="_blank" class="feedback-link">
-              <% if (lang === 'en') { %>Share feedback<% } else { %>Поделиться мнением<% } %>
+              <%= __('description.platformUpdate.feedbackLink') %>
             </a>
           </div>
         </div>
