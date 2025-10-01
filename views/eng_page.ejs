@@ -94,13 +94,15 @@
         <!-- Right side items: language + user -->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto align-items-center">
-            <% if (lang === 'ru') { %>
             <li class="nav-item px-2">
-              <a href="/summit" class="nav-link text-warning fw-bold" style="background: rgba(255, 193, 7, 0.1); border-radius: 20px; padding: 0.5rem 1rem;">
-                🎉 Summit 2025
+              <a href="/summit" class="nav-link summit-header-link" style="opacity: 0.8; font-size: 0.85rem;">
+                <% if (lang === 'en') { %>
+                  ✅ Summit 2025
+                <% } else { %>
+                  ✅ Summit 2025
+                <% } %>
               </a>
             </li>
-            <% } %>
             <li class="nav-item px-2 language-switch">
               <% if (lang === 'en') { %>
                 <a href="/ru" class="nav-link text-white fw-bold">EN</a>
@@ -174,207 +176,87 @@
        MAIN CONTENT
   ============================ -->
   <main class="container my-5">
-    <!-- ============================
-         SUMMIT COMPLETION SECTION
-    ============================ -->
-    <% if (lang === 'ru' || lang != 'ru') { %>
-    <div class="summit-promotion-banner mb-5">
+    <!-- Platform Update Banner -->
+    <div class="platform-news-banner mb-4">
       <div class="row align-items-center">
-        <div class="col-lg-8">
-          <div class="summit-promotion-content">
-            <div class="summit-badge">
-              ✅ СОБЫТИЕ ЗАВЕРШЕНО
-            </div>
-            <h2 class="summit-promotion-title">
-              Первый Savchenko Solutions Summit прошел успешно!
-            </h2>
-            <p class="summit-promotion-description">
-              11 июня 2025 в Москве состоялась историческая встреча более 40 физиков, студентов и энтузиастов образования. Обсуждали ИИ интеграции, новые образовательные инициативы и будущее платформы.
-            </p>
-            <div class="summit-promotion-details">
-              <span class="summit-detail-item">🎯 40+ участников</span>
-              <span class="summit-detail-item">🚀 6 новых инициатив</span>
-              <span class="summit-detail-item">🤝 Международная коллаборация</span>
-            </div>
-            <div class="summit-promotion-buttons">
-              <a href="/summit" class="btn-summit-main">
-                Смотреть итоги саммита
-              </a>
-              <a href="https://t.me/savchenko_summit_2025" target="_blank" class="btn-summit-telegram">
-                💬 Telegram-сообщество
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-4 text-center">
-          <div class="summit-promotion-visual">
-            <div class="summit-success-icon">
-              <div class="success-checkmark">✅</div>
-              <div class="success-text">Успешно завершен</div>
-            </div>
-            <p class="summit-completion-text">Спасибо всем участникам!</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <% } %>
-
-    <!-- ============================
-         PARTICIPATION CALL TO ACTION
-    ============================ -->
-    <div class="participation-section mb-5">
-      <div class="row align-items-center">
-        <div class="col-lg-6 mb-4">
-          <div class="participation-content">
-            <h2 class="participation-title">
+        <div class="col-12">
+          <div class="news-content">
+            <span class="news-label">
+              <% if (lang === 'en') { %>📢 Platform Update<% } else { %>📢 Обновление платформы<% } %>
+            </span>
+            <p class="news-text mb-2">
               <% if (lang === 'en') { %>
-                Join Our Growing Community
+                <strong>Hello, SavchenkoSolutions users!</strong> We're planning a new platform and would love your feedback. What do you like/dislike about SS? What could be the strongest part of future exploration?
               <% } else { %>
-                Присоединяйтесь к растущему сообществу
-              <% } %>
-            </h2>
-            <p class="participation-description">
-              <% if (lang === 'en') { %>
-                Help us build the world's largest physics solutions database. Every contribution matters - from simple edits to complete solutions.
-              <% } else { %>
-                Помогите нам создать крупнейшую базу решений задач по физике. Каждый вклад важен - от простых правок до полных решений.
+                <strong>Здравствуйте, пользователи SavchenkoSolutions!</strong> Мы планируем создание новой платформы и хотели бы узнать ваше мнение. Что вам нравится/не нравится в SS? Какой может быть самая сильная часть будущего развития?
               <% } %>
             </p>
-            <div class="participation-features">
-              <div class="feature-item">
-                <span class="feature-icon">✏️</span>
-                <span class="feature-text">
-                  <% if (lang === 'en') { %>No registration required<% } else { %>Регистрация не требуется<% } %>
-                </span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">🌟</span>
-                <span class="feature-text">
-                  <% if (lang === 'en') { %>Get recognized for your contributions<% } else { %>Получите признание за ваш вклад<% } %>
-                </span>
-              </div>
-              <div class="feature-item">
-                <span class="feature-icon">🎓</span>
-                <span class="feature-text">
-                  <% if (lang === 'en') { %>Learn from the global physics community<% } else { %>Учитесь у мирового сообщества физиков<% } %>
-                </span>
-              </div>
-            </div>
-            <div class="participation-buttons">
-              <a href="/<%= lang %>/study-guide" class="btn-participation-primary">
-                <% if (lang === 'en') { %>
-                  Learn How to Contribute
-                <% } else { %>
-                  Узнать как участвовать
-                <% } %>
-              </a>
-              <a href="/<%= lang %>/upload" class="btn-participation-secondary">
-                <% if (lang === 'en') { %>
-                  Upload Solution
-                <% } else { %>
-                  Загрузить решение
-                <% } %>
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="participation-stats">
-            <div class="stat-grid">
-              <div class="stat-card">
-                <div class="stat-number">800+</div>
-                <div class="stat-label">
-                  <% if (lang === 'en') { %>Solutions<% } else { %>Решений<% } %>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-number">50+</div>
-                <div class="stat-label">
-                  <% if (lang === 'en') { %>Contributors<% } else { %>Участников<% } %>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-number">2023</div>
-                <div class="stat-label">
-                  <% if (lang === 'en') { %>Total Problems<% } else { %>Всего задач<% } %>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-number">15+</div>
-                <div class="stat-label">
-                  <% if (lang === 'en') { %>Countries<% } else { %>Стран<% } %>
-                </div>
-              </div>
-            </div>
+            <a href="https://t.me/savchenko_summit_2025" target="_blank" class="news-cta">
+              <% if (lang === 'en') { %>Share your thoughts →<% } else { %>Поделитесь мнением →<% } %>
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Intro Row: Left = Text, Right = YouTube Preview -->
-    <div class="row align-items-center justify-content-center mb-lg-5 mb-2">
-      <div class="col-lg-6 mb-4">
-        <div class="content-card shadow-sm p-4">
-          <p style="text-align: justify;">    
+    <!-- Compact Introduction -->
+    <div class="compact-intro mb-4">
+      <div class="row align-items-start">
+        <div class="col-lg-9">
+          <p class="intro-text mb-3">
             <%- __('description.introFirst') %>
           </p>
-          <p style="text-align: justify;">
-            <%- __('description.introSecond') %>
-          </p>
+          <div class="intro-actions">
+            <a href="/<%= lang %>/study-guide" class="action-link primary-action">
+              <span class="action-icon">📖</span>
+              <span class="action-content">
+                <strong class="action-title">
+                  <% if (lang === 'en') { %>Contributing Guide<% } else { %>Руководство по участию<% } %>
+                </strong>
+                <span class="action-desc">
+                  <% if (lang === 'en') { %>Learn how to submit solutions, edit problems, and earn recognition<% } else { %>Узнайте, как отправлять решения, редактировать задачи и получать признание<% } %>
+                </span>
+              </span>
+            </a>
+            <a href="/<%= lang %>/upload" class="action-link secondary-action">
+              <span class="action-icon">⬆️</span>
+              <span class="action-content">
+                <strong class="action-title">
+                  <% if (lang === 'en') { %>Upload Solution<% } else { %>Загрузить решение<% } %>
+                </strong>
+                <span class="action-desc">
+                  <% if (lang === 'en') { %>Quick upload - no registration needed<% } else { %>Быстрая загрузка - регистрация не требуется<% } %>
+                </span>
+              </span>
+            </a>
+          </div>
         </div>
-      </div>
-      <div class="col-lg-6 d-none d-lg-flex justify-content-center mb-4">
-        <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank">
-          <img
-            src="/img/yt_preview.jpg"
-            alt="Watch on YouTube"
-            class="img-fluid rounded-3 shadow-sm"
-            style="max-width: 100%;"
-          />
-        </a>
-      </div>
-    </div>
-
-    <!-- Team & Acknowledgments -->
-    <div class="row align-items-start justify-content-center mb-5 d-none d-lg-flex">
-      <!-- Only show team image on lg screens or bigger -->
-      <div class="col-lg-3">
-        <img
-          src="https://savchenkosolutions.com/img/team.webp"
-          alt="<%= __('description.coreTeam') %>"
-          class="img-fluid rounded-3"
-        />
-      </div>
-      <div class="col-lg-9">
-        <div class="content-card shadow-sm p-4">
-          <h3 class="mb-3"><%= __('description.acknowledgments') %></h3>
-          <p><%= __('description.deepestThanks') %></p>
-          <h4><%= __('description.coreTeam') %></h4>  
-          <div class="core-team">
-            <% if (lang === 'en') { %>
-              <a href="/user/astrosander/">Aliaksandr Melnichenka</a>
-              <a href="/user/emixter/">Eugene Dubrovin</a>
-              <a href="/user/Luisito/">Luis D. Fernández Quintana</a>
-              <a href="/user/stefan.nicov/">Stefan Nicov</a>
-              <a href="/user/ar4senN/">Arsen Almashkan</a>
-              <a href="/user/a.yersh/">Andrei Yersh</a>
-              <a href="/user/jepkinsss/">Artem Levko</a>
-              <a href="/user/diikann_/">Dzikan Mikita</a>
-              <a href="/user/Ismail/">Kaiyrbek Ismail</a>
-              <a href="/user/_chender_/">Kanashenka Aliaksandr</a>
-            <% } else { %>
-              <a href="/user/astrosander/">Александр Мельниченко</a>
-              <a href="/user/emixter/">Евгений Дубровин</a>
-              <a href="/user/Luisito/">Луис Д. Фернандес Кинтана</a>
-              <a href="/user/stefan.nicov/">Стефан Ников</a>
-              <a href="/user/ar4senN/">Арсен Алмашкан</a>
-              <a href="/user/a.yersh/">Андрей Ёрш</a>
-              <a href="/user/jepkinsss/">Артем Левко</a>
-              <a href="/user/diikann_/">Дикан Никита</a>
-              <a href="/user/Ismail/">Кайырбек Исмаил</a>
-              <a href="/user/_chender_/">Конашенко Александр</a>
-            <% } %>
-            <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>"><%= __('description.seeAll') %></a>
+        <div class="col-lg-3">
+          <div class="progress-badge">
+            <div class="progress-circle">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+                <path class="circle"
+                  stroke-dasharray="<%= Math.round((1434/2023)*100) %>, 100"
+                  d="M18 2.0845
+                    a 15.9155 15.9155 0 0 1 0 31.831
+                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                />
+              </svg>
+              <div class="progress-text">
+                <span class="progress-number"><%= Math.round((1434/2023)*100) %>%</span>
+                <span class="progress-label">
+                  <% if (lang === 'en') { %>solved<% } else { %>решено<% } %>
+                </span>
+              </div>
+            </div>
+            <p class="progress-stats">
+              <strong>1434</strong> / 2023 <% if (lang === 'en') { %>problems<% } else { %>задач<% } %>
+            </p>
           </div>
         </div>
       </div>
@@ -748,385 +630,251 @@
       }
     }
 
-    /* Summit Promotion Styles */
-    .summit-promotion-banner {
-      background: linear-gradient(135deg, #ff6b35 0%, #1a659e 100%);
-      border-radius: 25px;
-      padding: 3rem 2.5rem;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.3);
-      margin-bottom: 3rem;
-      animation: summitSlideIn 1s ease-out;
+    /* Header Summit Link */
+    .summit-header-link {
+      color: rgba(255, 255, 255, 0.8) !important;
+      transition: opacity 0.3s ease;
     }
 
-    .summit-promotion-banner::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="summitGrain" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="40" r="0.5" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23summitGrain)"/></svg>');
-      animation: summitFloat 15s infinite linear;
+    .summit-header-link:hover {
+      opacity: 1 !important;
+      color: white !important;
     }
 
-    @keyframes summitSlideIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* Platform News Banner */
+    .platform-news-banner {
+      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
+      border-left: 4px solid #ffc107;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     }
 
-    @keyframes summitFloat {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      100% { transform: translate(-50px, -50px) rotate(360deg); }
-    }
-
-    .summit-promotion-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .summit-badge {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50px;
-      padding: 0.5rem 1.2rem;
-      font-size: 0.85rem;
-      font-weight: 600;
+    .news-label {
       display: inline-block;
-      margin-bottom: 1rem;
-      animation: summitPulse 2s infinite;
+      background: #ffc107;
+      color: #000;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      letter-spacing: 0.5px;
     }
 
-    @keyframes summitPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    .news-text {
+      color: #664d03;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
     }
 
-    .summit-promotion-title {
-      font-size: 2.2rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    .news-cta {
+      color: #cc9a06;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
     }
 
-    .summit-promotion-description {
-      font-size: 1.1rem;
-      margin-bottom: 1.5rem;
-      opacity: 0.95;
+    .news-cta:hover {
+      color: #b38600;
+      text-decoration: underline;
+    }
+
+    /* Compact Introduction */
+    .compact-intro {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .intro-text {
+      color: #495057;
+      font-size: 1rem;
       line-height: 1.6;
     }
 
-    .summit-promotion-details {
-      display: flex;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .summit-detail-item {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 0.8rem 1.2rem;
-      font-size: 0.9rem;
-      font-weight: 500;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .summit-promotion-buttons {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .btn-summit-main {
-      background: white;
-      color: #ff6b35;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-summit-main:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(255, 255, 255, 0.4);
-      color: #ff6b35;
-      text-decoration: none;
-    }
-
-    .btn-summit-telegram {
-      background: transparent;
-      color: white;
-      border: 2px solid white;
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-
-    .btn-summit-telegram:hover {
-      background: white;
-      color: #ff6b35;
-      transform: translateY(-3px);
-      text-decoration: none;
-    }
-
-    .summit-promotion-visual {
-      position: relative;
-      z-index: 2;
-    }
-
-    .summit-success-icon {
+    .intro-actions {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-    }
-
-    .success-checkmark {
-      font-size: 4rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .success-text {
-      font-size: 1rem;
-      opacity: 0.9;
-      margin: 0;
-      font-weight: 500;
-    }
-
-    .summit-completion-text {
-      font-size: 1rem;
-      opacity: 0.9;
-      margin: 0;
-      font-weight: 500;
-    }
-
-    @media (max-width: 768px) {
-      .summit-promotion-banner {
-        padding: 2rem 1.5rem;
-      }
-      
-      .summit-promotion-title {
-        font-size: 1.8rem;
-      }
-      
-      .summit-promotion-details {
-        gap: 0.8rem;
-      }
-      
-      .summit-detail-item {
-        font-size: 0.8rem;
-        padding: 0.6rem 1rem;
-      }
-      
-      .summit-promotion-buttons {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .summit-success-icon {
-        font-size: 2rem;
-      }
-    }
-
-    /* Participation Section Styles */
-    .participation-section {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 25px;
-      padding: 4rem 2.5rem;
-      color: white;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(102, 126, 234, 0.3);
-      margin: 3rem 0;
-    }
-
-    .participation-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="participationGrain" width="50" height="50" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="10" cy="40" r="0.5" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23participationGrain)"/></svg>');
-      animation: participationFloat 20s infinite linear;
-    }
-
-    @keyframes participationFloat {
-      0% { transform: translate(0, 0) rotate(0deg); }
-      100% { transform: translate(-50px, -50px) rotate(360deg); }
-    }
-
-    .participation-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .participation-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 1.5rem;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .participation-description {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      opacity: 0.95;
-      line-height: 1.6;
-    }
-
-    .participation-features {
-      margin-bottom: 2.5rem;
-    }
-
-    .feature-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-      padding: 0.8rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 15px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .feature-icon {
-      font-size: 1.5rem;
-      margin-right: 1rem;
-      min-width: 40px;
-    }
-
-    .feature-text {
-      font-size: 1rem;
-      font-weight: 500;
-    }
-
-    .participation-buttons {
-      display: flex;
       gap: 1rem;
-      flex-wrap: wrap;
     }
 
-    .btn-participation-primary {
-      background: white;
-      color: #667eea;
-      border: none;
-      padding: 1rem 2rem;
-      border-radius: 50px;
-      font-weight: 600;
+    .action-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
       text-decoration: none;
       transition: all 0.3s ease;
-      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+      border: 2px solid transparent;
     }
 
-    .btn-participation-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 35px rgba(255, 255, 255, 0.4);
-      color: #667eea;
-      text-decoration: none;
-    }
-
-    .btn-participation-secondary {
-      background: transparent;
+    .action-link.primary-action {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
       color: white;
-      border: 2px solid white;
-      padding: 1rem 2rem;
-      border-radius: 50px;
+    }
+
+    .action-link.primary-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+      color: white;
+    }
+
+    .action-link.secondary-action {
+      background: #f8f9fa;
+      color: #495057;
+      border-color: #dee2e6;
+    }
+
+    .action-link.secondary-action:hover {
+      background: #e9ecef;
+      border-color: #007bff;
+      color: #007bff;
+    }
+
+    .action-icon {
+      font-size: 1.75rem;
+      flex-shrink: 0;
+    }
+
+    .action-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+    }
+
+    .action-title {
+      font-size: 1rem;
       font-weight: 600;
-      text-decoration: none;
-      transition: all 0.3s ease;
     }
 
-    .btn-participation-secondary:hover {
-      background: white;
-      color: #667eea;
-      transform: translateY(-3px);
-      text-decoration: none;
-    }
-
-    .participation-stats {
-      position: relative;
-      z-index: 2;
-    }
-
-    .stat-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 2rem 1.5rem;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: transform 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: 800;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.9rem;
+    .action-desc {
+      font-size: 0.85rem;
       opacity: 0.9;
-      font-weight: 500;
+    }
+
+    /* Progress Badge */
+    .progress-badge {
+      text-align: center;
+      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .progress-circle {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1rem;
+    }
+
+    .circular-chart {
+      width: 100%;
+      height: 100%;
+    }
+
+    .circle-bg {
+      fill: none;
+      stroke: #e9ecef;
+      stroke-width: 3.8;
+    }
+
+    .circle {
+      fill: none;
+      stroke: #007bff;
+      stroke-width: 3.8;
+      stroke-linecap: round;
+      animation: progress 1s ease-out forwards;
+    }
+
+    @keyframes progress {
+      0% {
+        stroke-dasharray: 0, 100;
+      }
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .progress-number {
+      display: block;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #007bff;
+      line-height: 1;
+    }
+
+    .progress-label {
+      display: block;
+      font-size: 0.75rem;
+      color: #6c757d;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    .progress-stats {
+      font-size: 0.9rem;
+      color: #495057;
+      margin: 0;
+    }
+
+    .progress-stats strong {
+      color: #007bff;
+      font-size: 1.1rem;
     }
 
     @media (max-width: 768px) {
-      .participation-section {
-        padding: 2rem 1.5rem;
+      .platform-news-banner {
+        padding: 1rem;
       }
-      
-      .participation-title {
-        font-size: 1.8rem;
+
+      .news-text {
+        font-size: 0.9rem;
       }
-      
-      .participation-description {
-        font-size: 1rem;
+
+      .compact-intro {
+        padding: 1.25rem;
       }
-      
-      .participation-features {
-        margin-bottom: 1.5rem;
+
+      .intro-actions {
+        gap: 0.75rem;
       }
-      
-      .feature-item {
-        padding: 0.6rem;
+
+      .action-link {
+        padding: 0.875rem 1rem;
       }
-      
-      .participation-buttons {
-        flex-direction: column;
-        align-items: stretch;
+
+      .action-icon {
+        font-size: 1.5rem;
       }
-      
-      .btn-participation-primary, .btn-participation-secondary {
-        width: 100%;
+
+      .action-title {
+        font-size: 0.95rem;
+      }
+
+      .action-desc {
+        font-size: 0.8rem;
+      }
+
+      .progress-circle {
+        width: 100px;
+        height: 100px;
+      }
+
+      .progress-number {
+        font-size: 1.5rem;
       }
     }
   </style>
@@ -1360,7 +1108,7 @@
       });
     });
 
-    // Participation section animations
+    // Fade-in animations for action links
     document.addEventListener('DOMContentLoaded', () => {
       const observerOptions = {
         threshold: 0.1,
@@ -1376,19 +1124,11 @@
         });
       }, observerOptions);
 
-      // Animate participation stats
-      document.querySelectorAll('.stat-card').forEach((el, index) => {
+      // Animate action links
+      document.querySelectorAll('.action-link').forEach((el, index) => {
         el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
-        observer.observe(el);
-      });
-
-      // Animate feature items
-      document.querySelectorAll('.feature-item').forEach((el, index) => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(-20px)';
-        el.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        el.style.transform = 'translateY(10px)';
+        el.style.transition = `opacity 0.5s ease ${index * 0.15}s, transform 0.5s ease ${index * 0.15}s`;
         observer.observe(el);
       });
     });
