@@ -232,30 +232,44 @@
           </div>
         </div>
         <div class="col-lg-3">
-          <div class="progress-badge">
-            <div class="progress-circle">
-              <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg"
-                  d="M18 2.0845
-                    a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path class="circle"
-                  stroke-dasharray="<%= Math.round((1434/2023)*100) %>, 100"
-                  d="M18 2.0845
-                    a 15.9155 15.9155 0 0 1 0 31.831
-                    a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <div class="progress-text">
-                <span class="progress-number"><%= Math.round((1434/2023)*100) %>%</span>
-                <span class="progress-label">
-                  <% if (lang === 'en') { %>solved<% } else { %>решено<% } %>
-                </span>
+          <!-- YouTube Video -->
+          <div class="mb-3">
+            <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank" class="video-preview">
+              <img
+                src="/img/yt_preview.jpg"
+                alt="Watch on YouTube"
+                class="img-fluid rounded-3 shadow-sm"
+              />
+              <div class="play-button-overlay">
+                <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
+                  <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
+                  <path d="M45 24L27 14v20" fill="white"/>
+                </svg>
               </div>
-            </div>
-            <p class="progress-stats">
-              <strong>1434</strong> / 2023 <% if (lang === 'en') { %>problems<% } else { %>задач<% } %>
+            </a>
+          </div>
+
+          <!-- Compact Info Card -->
+          <div class="info-card-compact">
+            <p class="info-stat">
+              <strong>1434</strong> / 2023 <% if (lang === 'en') { %>problems<% } else { %>задач<% } %> (<%= Math.round((1434/2023)*100) %>%)
+            </p>
+            <hr class="info-divider">
+            <p class="info-team-label"><% if (lang === 'en') { %>Core Team<% } else { %>Команда<% } %></p>
+            <p class="info-team-members">
+              <% if (lang === 'en') { %>
+                <a href="/user/astrosander/">A. Melnichenka</a>,
+                <a href="/user/emixter/">E. Dubrovin</a>,
+                <a href="/user/Luisito/">L. Fernández</a>,
+                <a href="/user/stefan.nicov/">S. Nicov</a>
+                <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+more</a>
+              <% } else { %>
+                <a href="/user/astrosander/">А. Мельниченко</a>,
+                <a href="/user/emixter/">Е. Дубровин</a>,
+                <a href="/user/Luisito/">Л. Фернандес</a>,
+                <a href="/user/stefan.nicov/">С. Ников</a>
+                <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+ещё</a>
+              <% } %>
             </p>
           </div>
         </div>
@@ -759,80 +773,103 @@
       opacity: 0.9;
     }
 
-    /* Progress Badge */
-    .progress-badge {
-      text-align: center;
-      padding: 1rem;
+    /* Compact Info Card */
+    .info-card-compact {
       background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      font-size: 0.85rem;
     }
 
-    .progress-circle {
+    .info-stat {
+      color: #495057;
+      margin: 0 0 0.75rem 0;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .info-stat strong {
+      color: #007bff;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .info-divider {
+      margin: 0.75rem 0;
+      border-top: 1px solid #e9ecef;
+      opacity: 0.5;
+    }
+
+    .info-team-label {
+      font-weight: 600;
+      color: #495057;
+      margin: 0 0 0.5rem 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-team-members {
+      color: #6c757d;
+      margin: 0;
+      line-height: 1.7;
+      font-size: 0.85rem;
+    }
+
+    .info-team-members a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .info-team-members a:hover {
+      color: #0056b3;
+      text-decoration: underline;
+    }
+
+    .info-more {
+      color: #6c757d !important;
+      font-weight: 400 !important;
+      font-style: italic;
+      margin-left: 0.25rem;
+    }
+
+    .info-more:hover {
+      color: #495057 !important;
+    }
+
+    /* Video Preview */
+    .video-preview {
       position: relative;
-      width: 120px;
-      height: 120px;
-      margin: 0 auto 1rem;
+      display: block;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.3s ease;
     }
 
-    .circular-chart {
+    .video-preview:hover {
+      transform: scale(1.02);
+    }
+
+    .video-preview img {
       width: 100%;
-      height: 100%;
+      display: block;
     }
 
-    .circle-bg {
-      fill: none;
-      stroke: #e9ecef;
-      stroke-width: 3.8;
-    }
-
-    .circle {
-      fill: none;
-      stroke: #007bff;
-      stroke-width: 3.8;
-      stroke-linecap: round;
-      animation: progress 1s ease-out forwards;
-    }
-
-    @keyframes progress {
-      0% {
-        stroke-dasharray: 0, 100;
-      }
-    }
-
-    .progress-text {
+    .play-button-overlay {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      text-align: center;
+      pointer-events: none;
+      opacity: 0.9;
+      transition: opacity 0.3s ease;
     }
 
-    .progress-number {
-      display: block;
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #007bff;
-      line-height: 1;
-    }
-
-    .progress-label {
-      display: block;
-      font-size: 0.75rem;
-      color: #6c757d;
-      text-transform: uppercase;
-      margin-top: 0.25rem;
-    }
-
-    .progress-stats {
-      font-size: 0.9rem;
-      color: #495057;
-      margin: 0;
-    }
-
-    .progress-stats strong {
-      color: #007bff;
-      font-size: 1.1rem;
+    .video-preview:hover .play-button-overlay {
+      opacity: 1;
     }
 
     @media (max-width: 768px) {
@@ -868,13 +905,22 @@
         font-size: 0.8rem;
       }
 
-      .progress-circle {
-        width: 100px;
-        height: 100px;
+      .info-card-compact {
+        font-size: 0.8rem;
+        padding: 0.75rem 0.875rem;
       }
 
-      .progress-number {
-        font-size: 1.5rem;
+      .info-stat {
+        font-size: 0.85rem;
+      }
+
+      .info-team-members {
+        font-size: 0.8rem;
+      }
+
+      .play-button-overlay svg {
+        width: 36px;
+        height: 36px;
       }
     }
   </style>
@@ -1134,4 +1180,5 @@
     });
   </script>
 </body>
+</html>
 </html>
