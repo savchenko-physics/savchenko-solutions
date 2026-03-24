@@ -1434,7 +1434,17 @@ app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     });
 });
 
-app.get("/:lang/:name", renderPost); // Use the renderPost function for this route
+// Russian breadcrumb targets: /ru/1 and /ru/1,1 → main catalog anchors (not problem files)
+app.get("/:lang/:name", (req, res, next) => {
+    const { lang, name } = req.params;
+    if (lang === "ru" && /^\d+$/.test(name)) {
+        return res.redirect(302, `/ru/#${name}`);
+    }
+    if (lang === "ru" && /^\d+,\d+$/.test(name)) {
+        return res.redirect(302, `/ru/#${name.replace(/,/g, ".")}`);
+    }
+    return renderPost(req, res).catch(next);
+}); // Use the renderPost function for this route
 
 app.get("/:lang/edit/:name", (req, res) => {
     const { lang, name } = req.params;

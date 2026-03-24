@@ -230,17 +230,16 @@ function readCSV(filePath, column) {
 }
 
 /**
- * Breadcrumb title for a problem page, e.g.
- * "Kinematics > Motion in gravity field. Curvilinear motion > No. 1.3.18" (en)
- * "Кинематика > ... > № 1.3.18" (ru)
+ * Chapter / section titles and anchor ids for breadcrumb links on problem pages.
  */
-function getProblemBreadcrumbTitle(name, lang) {
+function getProblemBreadcrumbParts(name, lang) {
     const parts = name.split(".");
     if (parts.length !== 3 || parts.some((p) => isNaN(Number(p)))) {
         return null;
     }
 
     const sectionRef = `${parts[0]}.${parts[1]}`;
+    const chapterNum = parts[0];
     const chapterIdx = parseInt(parts[0], 10) - 1;
 
     const chaptersCSV = path.join(
@@ -267,12 +266,41 @@ function getProblemBreadcrumbTitle(name, lang) {
     }
 
     const sectionTitle = sectionTitles[secIdx];
-    const problemLabel = lang === "ru" ? `№ ${name}` : `No. ${name}`;
-    return `${chapterTitle} > ${sectionTitle} > ${problemLabel}`;
+    const problemLabel =
+        lang === "ru" ? `Задача ${name}` : `Problem ${name}`;
+
+    const chapterHref =
+        lang === "ru" ? `/${lang}/${chapterNum}` : `../#${chapterNum}`;
+    const sectionHref =
+        lang === "ru"
+            ? `/${lang}/${sectionRef.replace(/\./g, ",")}`
+            : `../#${sectionRef}`;
+
+    return {
+        chapterNum,
+        chapterTitle,
+        sectionRef,
+        sectionTitle,
+        problemLabel,
+        chapterHref,
+        sectionHref,
+    };
+}
+
+/**
+ * Breadcrumb title for a problem page, e.g.
+ * "Kinematics > Motion in gravity field. Curvilinear motion > Problem 1.3.18" (en)
+ * "Кинематика > ... > Задача 1.3.18" (ru)
+ */
+function getProblemBreadcrumbTitle(name, lang) {
+    const p = getProblemBreadcrumbParts(name, lang);
+    if (!p) return null;
+    return `${p.chapterTitle} > ${p.sectionTitle} > ${p.problemLabel}`;
 }
 
 module.exports = {
     getLanguageData,
     getBothLanguages,
     getProblemBreadcrumbTitle,
+    getProblemBreadcrumbParts,
 };
