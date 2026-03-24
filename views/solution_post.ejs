@@ -40,7 +40,7 @@
             --secondary-color: #656d76;
             --accent-color: #36c;
             --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
+            --bg-secondary: #ffffff;
             --bg-tertiary: #f0f3f6;
             --border-color: #d1d9e0;
             --text-primary: #1f2328;
@@ -63,30 +63,13 @@
             line-height: 1.6;
         }
 
-        /* Modern Header */
-        .modern-header {
-            background: var(--bg-primary);
+        /* Hero header (matches main page style) */
+        .hero-section {
+            background: #ffffff;
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
             position: sticky;
             top: 0;
             z-index: 999;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
         }
 
         .logo-img {
@@ -95,87 +78,64 @@
             border-radius: 8px;
         }
 
-        .logo-text {
-            font-size: 1.2rem;
+        .site-title {
+            font-size: 1.1rem;
+            line-height: 1.1;
             font-weight: 700;
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .search-section {
-            flex: 1;
-            max-width: 400px;
-            margin: 0 2rem;
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 0.75rem 1rem 0.75rem 3rem;
-            border: 2px solid var(--border-color);
-            border-radius: 25px;
-            background: var(--bg-secondary);
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(9, 105, 218, 0.1);
-            outline: none;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-        }
-
-        .user-avatar:hover {
-            border-color: var(--primary-color);
-        }
-
-        .lang-toggle {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
         }
 
-        .lang-toggle:hover {
-            background: var(--primary-color);
-            color: white;
-            text-decoration: none;
+        .site-motto {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .hero-section .nav-link {
+            color: var(--text-primary) !important;
+        }
+
+        .searchbar-input {
+            border-radius: 999px;
+            border: 1px solid #ced4da;
+            padding: 0.35rem 2rem 0.35rem 2.4rem;
+            font-size: 0.95rem;
+        }
+
+        .searchbar-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        }
+
+        .header-upload-btn {
+            background: #ffffff;
+            border: 1px solid #212529;
+            color: #212529;
+            padding: 0.35rem 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .header-upload-btn:hover {
+            background: #212529;
+            color: #ffffff;
+        }
+
+        .upload-icon {
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         /* Main Content */
         .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0.0rem 0.0rem 1.25rem 0.75rem;
             display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 0.75rem;
         }
 
         .content-section {
@@ -186,10 +146,11 @@
         }
 
         .content-header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 1.5rem 2rem;
+            background: #ffffff;
+            color: var(--text-primary);
+            padding: 1rem 1.25rem;
             text-align: center;
+            border-bottom: 1px solid var(--border-color);
         }
 
         .content-title {
@@ -202,14 +163,14 @@
         .content-nav {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 0.6rem;
+            margin-top: 0.6rem;
         }
 
         .nav-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             padding: 0.5rem 1rem;
             border-radius: 20px;
             text-decoration: none;
@@ -219,15 +180,47 @@
         }
 
         .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
             text-decoration: none;
         }
 
         .content-body {
-            padding: 3rem 2rem;
+            padding: 1rem 1.25rem;
             font-size: 1.1rem;
-            line-height: 1.8;
+            line-height: 1.5;
+            max-width: 1100px;
+            margin: 0 auto;
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+            text-align: justify;
+            text-justify: inter-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            overflow-wrap: break-word;
+        }
+
+        .content-body p {
+            margin-bottom: 0.55rem;
+            text-indent: 0.9em;
+        }
+
+        .content-body p:first-of-type,
+        .content-body h1 + p,
+        .content-body h2 + p,
+        .content-body h3 + p,
+        .content-body h4 + p {
+            text-indent: 0;
+        }
+
+        .content-body h1,
+        .content-body h2,
+        .content-body h3,
+        .content-body h4 {
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+            
+            line-height: 1.25;
+            margin-top: 1rem;
+            margin-bottom: 0.45rem;
         }
 
         /* Views Button */
@@ -349,14 +342,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem 2rem;
+            padding: 0.75rem 1.25rem;
             border-top: 1px solid var(--border-color);
             background: var(--bg-secondary);
         }
 
         .action-group {
             display: flex;
-            gap: 1rem;
+            gap: 0.6rem;
             align-items: center;
         }
 
@@ -399,21 +392,23 @@
         .sidebar {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1rem;
+            margin-right: 0;
+            padding-right: 0;
         }
 
         .sidebar-card {
             background: var(--bg-primary);
             border-radius: var(--border-radius);
-            padding: 1.5rem;
+            padding: 1rem;
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
         }
 
         .sidebar-title {
-            font-size: 1.1rem;
+            font-size: 1.0rem;
             font-weight: 600;
-            margin-bottom: 1rem;
+            margin-bottom: 0.6rem;
             color: var(--text-primary);
         }
 
@@ -442,19 +437,25 @@
         .comments-section {
             background: var(--bg-primary);
             border-radius: var(--border-radius);
-            margin-top: 2rem;
+            margin-top: 0.0rem;
             overflow: hidden;
             box-shadow: var(--shadow-md);
+            max-height: 520px;
+        }
+
+        #commentsList {
+            max-height: 260px;
+            overflow-y: auto;
         }
 
         .comments-header {
-            padding: 1.5rem;
+            padding: 1rem;
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-secondary);
         }
 
         .comment-form {
-            padding: 1.5rem;
+            padding: 1rem;
             border-bottom: 1px solid var(--border-color);
         }
 
@@ -474,15 +475,15 @@
         }
 
         .comment-item {
-            padding: 1.5rem;
+            padding: 1rem;
             border-bottom: 1px solid var(--bg-secondary);
         }
 
         .comment-author {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .comment-avatar {
@@ -499,6 +500,10 @@
         .comment-content {
             color: var(--text-primary);
             line-height: 1.6;
+        }
+
+        .comments-section .comment-item.text-muted.text-center {
+            font-size: 0.9rem;
         }
 
         /* Responsive */
@@ -575,6 +580,7 @@
             border-bottom: 1px solid var(--bg-secondary);
             cursor: pointer;
             transition: background 0.3s ease;
+            font-size: 0.9rem;
         }
 
         .search-result-item:hover {
@@ -588,56 +594,81 @@
         .search-result-title {
             font-weight: 500;
             color: var(--text-primary);
+            font-size: 0.9rem;
         }
 
         .search-result-snippet {
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             margin-top: 0.25rem;
         }
     </style>
 </head>
 
 <body>
-    <!-- Modern Header -->
-    <header class="modern-header">
-        <div class="header-container">
-            <div class="logo-section">
-                <div class="burger-menu" id="burgerMenu">
-                    <div class="burger-line"></div>
-                    <div class="burger-line"></div>
-                    <div class="burger-line"></div>
-                </div>
-                <img src="/img/logo.png" alt="Logo" class="logo-img">
-                <a href="/<%= lang %>/" class="logo-text"><%= __('title') %></a>
-            </div>
-            
-            <div class="search-section">
-                <div class="position-relative">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="<%= __('menu.search') %>" id="headerSearch">
-                    <div class="search-results" id="searchResults" style="display: none;">
-                        <!-- Search results will be populated here -->
+    <header class="hero-section">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid px-3 px-md-4 align-items-center">
+                <a class="navbar-brand d-flex align-items-center" href="/<%= lang %>/">
+                    <img src="/img/book.png" alt="Savchenko Solutions Logo" class="logo-img me-2">
+                    <div>
+                        <h1 class="site-title mb-0">Savchenko Solutions</h1>
+                        <p class="site-motto mb-0">The Collaborative Problem Solving</p>
+                    </div>
+                </a>
+
+                <div class="flex-grow-1 d-none d-md-flex justify-content-center px-3">
+                    <div class="searchbar-wrapper position-relative w-100" style="max-width: 420px;">
+                        <svg class="search-icon position-absolute" viewBox="0 0 24 24" width="20" height="20" style="left: 15px; top: 50%; transform: translateY(-50%); z-index: 1;">
+                            <path fill="#6c757d" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                        </svg>
+                        <input type="text" id="headerSearch" class="form-control searchbar-input" placeholder="<%= __('menu.search') %>">
+                        <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-sm" style="display: none; z-index: 1000; width: 100%;"></div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="user-section">
-                <button class="views-button" id="viewsButton">
-                    <i class="fas fa-eye"></i>
-                    <span id="viewCount">-</span>
+
+                <button class="navbar-toggler d-flex align-items-center gap-2 border-0 pe-0 d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
+                    <% if (username) { %>
+                        <a href="/user/<%= username %>" class="nav-link text-white fw-bold">
+                            <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="36" height="36">
+                        </a>
+                    <% } %>
                 </button>
-                <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="lang-toggle">
-                    <%= lang.toUpperCase() %>
-                </a>
-                <% if (username) { %>
-                    <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" 
-                         alt="Profile" class="user-avatar" onclick="location.href='/user/<%= username %>'">
-                <% } else { %>
-                    <a href="/<%= lang %>/login" class="lang-toggle">Login</a>
-                <% } %>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item px-2 d-none d-md-block">
+                            <button class="views-button" id="viewsButton">
+                                <i class="fas fa-eye"></i>
+                                <span id="viewCount">-</span>
+                            </button>
+                        </li>
+                        <li class="nav-item px-2 d-none d-md-block">
+                            <a href="/<%= lang %>/upload" class="header-upload-btn text-decoration-none d-inline-flex align-items-center btn btn-sm rounded-pill">
+                                <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                                </svg>
+                                <span class="ms-2">Upload</span>
+                            </a>
+                        </li>
+                        <li class="nav-item px-2">
+                            <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
+                        </li>
+                        <li class="nav-item px-2">
+                            <% if (username) { %>
+                                <a href="/user/<%= username %>" class="d-flex align-items-center">
+                                    <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40" height="40">
+                                </a>
+                            <% } else { %>
+                                <a href="/<%= lang %>/login" class="nav-link text-white fw-bold">Login</a>
+                            <% } %>
+                        </li>
+                    </ul>
+                </div>
             </div>
-        </div>
+        </nav>
+        <div class="container hero-content"></div>
     </header>
 
     <!-- Mobile Navigation -->
@@ -764,7 +795,7 @@
     </div>
 
     <!-- Comments Section -->
-    <div class="comments-section" id="commentsSection" style="display: none;">
+    <div class="comments-section" id="commentsSection" style="display: block;">
         <div class="comments-header">
             <h3><i class="fas fa-comments me-2"></i>Discussion</h3>
         </div>
@@ -1047,6 +1078,9 @@
             const mobileNav = document.getElementById('mobileNav');
             const mobileNavOverlay = document.getElementById('mobileNavOverlay');
             const closeMobileNav = document.getElementById('closeMobileNav');
+            if (!burgerMenu || !mobileNav || !mobileNavOverlay || !closeMobileNav) {
+                return;
+            }
 
             burgerMenu.addEventListener('click', () => {
                 mobileNav.classList.add('active');

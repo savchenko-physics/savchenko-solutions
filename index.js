@@ -1578,7 +1578,7 @@ app.get("/search", (req, res) => {
     const results = [];
     const processedFiles = new Set();
 
-    const truncateWithHighlight = (name, text, query, maxLength = 48) => {
+    const truncateWithHighlight = (name, text, query, maxLength = 60) => {
         // Remove the name and clean up special characters
         text = convertLatexToPlainText(text) // Use the enhanced convertLatexToPlainText function
             .replace(name, "")
@@ -1666,7 +1666,7 @@ app.get("/search", (req, res) => {
                             lang: langDir,
                             name,
                             relativePath: `/${langDir}/${name}`,
-                            snippet: cleanedText.slice(0, 50) + " ...", // Add ellipsis after truncation
+                            snippet: cleanedText.slice(0, 120) + " ...", // Add ellipsis after truncation
                             lineNumber: 1,
                             isFileNameMatch: true,
                             confidence: nameLower === query && langDir === userLang ? 'high' : 'medium'
