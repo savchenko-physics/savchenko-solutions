@@ -545,6 +545,17 @@
             flex: 0 0 auto;
             align-self: center;
             white-space: nowrap;
+            background: #1f2a44;
+            border-color: #1f2a44;
+            color: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(31, 42, 68, 0.22);
+        }
+
+        .comment-form-row #submitComment:hover,
+        .comment-form-row #submitComment:focus {
+            background: #162038;
+            border-color: #162038;
+            color: #ffffff;
         }
 
         .comment-input {
@@ -714,10 +725,10 @@
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid px-3 px-md-4 align-items-center">
                 <a class="navbar-brand d-flex align-items-center" href="/<%= lang %>/">
-                    <img src="/img/book.png" alt="Savchenko Solutions Logo" class="logo-img me-2">
+                    <img src="/img/book.png" alt="<%= __('title') %> Logo" class="logo-img me-2">
                     <div>
-                        <h1 class="site-title mb-0">Savchenko Solutions</h1>
-                        <p class="site-motto mb-0">The Collaborative Problem Solving</p>
+                        <h1 class="site-title mb-0"><%= __('title') %></h1>
+                        <p class="site-motto mb-0"><%= __('motto') %></p>
                     </div>
                 </a>
 
@@ -753,7 +764,7 @@
                                 <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14">
                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
                                 </svg>
-                                <span class="ms-2">Upload</span>
+                                <span class="ms-2"><%= __('upload.upload') %></span>
                             </a>
                         </li>
                         <li class="nav-item px-2">
@@ -765,7 +776,7 @@
                                     <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40" height="40">
                                 </a>
                             <% } else { %>
-                                <a href="/<%= lang %>/login" class="nav-link text-white fw-bold">Login</a>
+                                <a href="/<%= lang %>/login" class="nav-link text-white fw-bold"><%= lang === 'ru' ? 'Войти' : 'Login' %></a>
                             <% } %>
                         </li>
                     </ul>
@@ -779,21 +790,21 @@
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
     <nav class="mobile-nav" id="mobileNav">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5>Menu</h5>
+            <h5><%= lang === 'ru' ? 'Меню' : 'Menu' %></h5>
             <button class="btn-close" id="closeMobileNav"></button>
         </div>
         <div class="mb-3">
             <input type="text" class="form-control" placeholder="<%= __('menu.search') %>" id="mobileSearch">
         </div>
         <ul class="list-unstyled">
-            <li><a href="/<%= lang %>/" class="d-block py-2"><i class="fas fa-home me-2"></i>Home</a></li>
-            <li><a href="/<%= lang %>/edit/<%= name %>" class="d-block py-2"><i class="fas fa-edit me-2"></i>Edit</a></li>
-            <li><a href="/<%= lang %>/contributions/<%= name %>" class="d-block py-2"><i class="fas fa-history me-2"></i>History</a></li>
+            <li><a href="/<%= lang %>/" class="d-block py-2"><i class="fas fa-home me-2"></i><%= lang === 'ru' ? 'Главная' : 'Home' %></a></li>
+            <li><a href="/<%= lang %>/edit/<%= name %>" class="d-block py-2"><i class="fas fa-edit me-2"></i><%= lang === 'ru' ? 'Редактировать' : 'Edit' %></a></li>
+            <li><a href="/<%= lang %>/contributions/<%= name %>" class="d-block py-2"><i class="fas fa-history me-2"></i><%= lang === 'ru' ? 'История' : 'History' %></a></li>
             <% if (username) { %>
-                <li><a href="/user/<%= username %>" class="d-block py-2"><i class="fas fa-user me-2"></i>Profile</a></li>
-                <li><a href="/<%= lang %>/settings" class="d-block py-2"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                <li><a href="/user/<%= username %>" class="d-block py-2"><i class="fas fa-user me-2"></i><%= lang === 'ru' ? 'Профиль' : 'Profile' %></a></li>
+                <li><a href="/<%= lang %>/settings" class="d-block py-2"><i class="fas fa-cog me-2"></i><%= lang === 'ru' ? 'Настройки' : 'Settings' %></a></li>
             <% } else { %>
-                <li><a href="/<%= lang %>/login" class="d-block py-2"><i class="fas fa-sign-in-alt me-2"></i>Login</a></li>
+                <li><a href="/<%= lang %>/login" class="d-block py-2"><i class="fas fa-sign-in-alt me-2"></i><%= lang === 'ru' ? 'Войти' : 'Login' %></a></li>
             <% } %>
         </ul>
     </nav>
@@ -817,10 +828,10 @@
                 </h1>
                 <div class="content-nav">
                     <a href="/<%= lang %>/edit/<%= name %>" class="nav-btn">
-                        <i class="fas fa-edit me-2"></i>Edit
+                        <i class="fas fa-edit me-2"></i><%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
                     </a>
                     <a href="/<%= lang %>/contributions/<%= name %>" class="nav-btn">
-                        <i class="fas fa-history me-2"></i>History
+                        <i class="fas fa-history me-2"></i><%= lang === 'ru' ? 'История' : 'History' %>
                     </a>
                 </div>
             </div>
@@ -853,11 +864,11 @@
                 <div class="action-group">
                     <button class="action-btn" onclick="navigator.share ? navigator.share({title: '<%= title %>', url: window.location.href}) : copyToClipboard(window.location.href)">
                         <i class="fas fa-share"></i>
-                        Share
+                        <%= lang === 'ru' ? 'Поделиться' : 'Share' %>
                     </button>
                     <button class="report-btn" id="reportBtn">
                         <i class="fas fa-flag"></i>
-                        Report
+                        <%= lang === 'ru' ? 'Пожаловаться' : 'Report' %>
                     </button>
                 </div>
             </div>
@@ -867,38 +878,38 @@
         <div class="sidebar">
             <!-- Solution Stats -->
             <div class="sidebar-card">
-                <h3 class="sidebar-title">Solution Stats</h3>
+                <h3 class="sidebar-title"><%= lang === 'ru' ? 'Статистика решения' : 'Solution Stats' %></h3>
                 <div class="stat-item">
-                    <span class="stat-label">Views</span>
+                    <span class="stat-label"><%= lang === 'ru' ? 'Просмотры' : 'Views' %></span>
                     <span class="stat-value" id="sidebarViews">-</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Likes</span>
+                    <span class="stat-label"><%= lang === 'ru' ? 'Лайки' : 'Likes' %></span>
                     <span class="stat-value" id="sidebarLikes">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Comments</span>
+                    <span class="stat-label"><%= lang === 'ru' ? 'Комментарии' : 'Comments' %></span>
                     <span class="stat-value" id="sidebarComments">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Stars</span>
+                    <span class="stat-label"><%= lang === 'ru' ? 'Избранное' : 'Stars' %></span>
                     <span class="stat-value" id="sidebarStars">0</span>
                 </div>
             </div>
 
             <!-- Contributors -->
             <div class="sidebar-card" id="contributorsCard">
-                <h3 class="sidebar-title">Contributors</h3>
+                <h3 class="sidebar-title"><%= lang === 'ru' ? 'Участники' : 'Contributors' %></h3>
                 <div id="contributorsList">
-                    <div class="text-muted">Loading...</div>
+                    <div class="text-muted"><%= lang === 'ru' ? 'Загрузка...' : 'Loading...' %></div>
                 </div>
             </div>
 
             <!-- Related Problems -->
             <div class="sidebar-card">
-                <h3 class="sidebar-title">Related Problems</h3>
+                <h3 class="sidebar-title"><%= lang === 'ru' ? 'Похожие задачи' : 'Related Problems' %></h3>
                 <div id="relatedProblems">
-                    <div class="text-muted">Loading...</div>
+                    <div class="text-muted"><%= lang === 'ru' ? 'Загрузка...' : 'Loading...' %></div>
                 </div>
             </div>
         </div>
@@ -907,7 +918,7 @@
     <!-- Comments Section -->
     <div class="comments-section" id="commentsSection" style="display: block;">
         <div class="comments-header">
-            <h3><i class="fas fa-comments me-2"></i>Discussion</h3>
+            <h3><i class="fas fa-comments me-2"></i><%= lang === 'ru' ? 'Обсуждение' : 'Discussion' %></h3>
         </div>
 
         <div id="commentsList" class="comments-list-wrap">
@@ -917,16 +928,16 @@
         <% if (username) { %>
         <div class="comment-add-area">
             <div class="comment-form-row">
-                <textarea class="comment-input" id="commentText" rows="1" placeholder="Share your thoughts about this solution..."></textarea>
+                <textarea class="comment-input" id="commentText" rows="1" placeholder="<%= lang === 'ru' ? 'Поделитесь мыслями об этом решении...' : 'Share your thoughts about this solution...' %>"></textarea>
                 <button type="button" class="btn btn-primary" id="submitComment">
-                    <i class="fas fa-paper-plane me-2"></i>Post Comment
+                    <i class="fas fa-paper-plane me-2"></i><%= lang === 'ru' ? 'Отправить комментарий' : 'Post Comment' %>
                 </button>
             </div>
         </div>
         <% } else { %>
         <div class="comment-add-area text-center">
             <p class="text-muted mb-0">
-                <a href="/<%= lang %>/login">Login</a> to join the discussion
+                <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Войдите' : 'Login' %></a> <%= lang === 'ru' ? 'чтобы участвовать в обсуждении' : 'to join the discussion' %>
             </p>
         </div>
         <% } %>
@@ -936,7 +947,7 @@
     <div class="views-modal" id="viewsModal">
         <div class="views-modal-content">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>Views Over Last 14 Days</h4>
+                <h4><%= lang === 'ru' ? 'Просмотры за последние 14 дней' : 'Views Over Last 14 Days' %></h4>
                 <button class="btn-close" id="closeViewsModal"></button>
             </div>
             <canvas id="viewsChart" class="views-chart"></canvas>
@@ -947,6 +958,18 @@
         const problemName = '<%- name %>';
         const language = '<%- lang %>';
         const isLoggedIn = Boolean(<%- username ? 1 : 0 %>);
+        const i18nText = {
+            noComments: language === 'ru' ? 'Комментариев пока нет. Будьте первым и поделитесь мыслями!' : 'No comments yet. Be the first to share your thoughts!',
+            noResults: language === 'ru' ? 'Ничего не найдено' : 'No results found',
+            linkCopied: language === 'ru' ? 'Ссылка скопирована в буфер обмена!' : 'Link copied to clipboard!',
+            viewsLabel: language === 'ru' ? 'Просмотры' : 'Views',
+            contributorsNone: language === 'ru' ? 'Пока нет участников' : 'No contributors yet',
+            relatedNone: language === 'ru' ? 'Похожие задачи не найдены' : 'No related problems found',
+            loadFailed: language === 'ru' ? 'Не удалось загрузить' : 'Failed to load',
+            reportPrompt: language === 'ru' ? 'Укажите причину жалобы на это решение:' : 'Please provide a reason for reporting this solution:',
+            reportSuccess: language === 'ru' ? 'Жалоба успешно отправлена. Спасибо за помощь в улучшении платформы.' : 'Report submitted successfully. Thank you for helping us improve the platform.',
+            reportFail: language === 'ru' ? 'Не удалось отправить жалобу. Попробуйте еще раз.' : 'Failed to submit report. Please try again.'
+        };
         
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1020,7 +1043,7 @@
                         </div>
                     `).join('');
                 } else {
-                    contributorsList.innerHTML = '<div class="text-muted">No contributors yet</div>';
+                    contributorsList.innerHTML = `<div class="text-muted">${i18nText.contributorsNone}</div>`;
                 }
             } catch (error) {
                 console.error('Error loading contributors:', error);
@@ -1102,7 +1125,7 @@
                         </div>
                     `).join('');
                 } else {
-                    commentsList.innerHTML = '<div class="comment-item text-muted text-center">No comments yet. Be the first to share your thoughts!</div>';
+                    commentsList.innerHTML = `<div class="comment-item text-muted text-center">${i18nText.noComments}</div>`;
                 }
             } catch (error) {
                 console.error('Error loading comments:', error);
@@ -1159,7 +1182,7 @@
                         `).join('');
                         searchResults.style.display = 'block';
                     } else {
-                        searchResults.innerHTML = '<div class="search-result-item">No results found</div>';
+                        searchResults.innerHTML = `<div class="search-result-item">${i18nText.noResults}</div>`;
                         searchResults.style.display = 'block';
                     }
                 } catch (error) {
@@ -1178,7 +1201,7 @@
         // Copy to clipboard fallback
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('Link copied to clipboard!');
+                alert(i18nText.linkCopied);
             });
         }
 
@@ -1254,7 +1277,7 @@
                     data: {
                         labels: last14Days.map(date => new Date(date).toLocaleDateString()),
                         datasets: [{
-                            label: 'Views',
+                            label: i18nText.viewsLabel,
                             data: chartData,
                             borderColor: 'rgb(9, 105, 218)',
                             backgroundColor: 'rgba(9, 105, 218, 0.1)',
@@ -1303,11 +1326,11 @@
                         </div>
                     `).join('');
                 } else {
-                    relatedContainer.innerHTML = '<div class="text-muted">No related problems found</div>';
+                    relatedContainer.innerHTML = `<div class="text-muted">${i18nText.relatedNone}</div>`;
                 }
             } catch (error) {
                 console.error('Error loading related problems:', error);
-                document.getElementById('relatedProblems').innerHTML = '<div class="text-muted">Failed to load</div>';
+                document.getElementById('relatedProblems').innerHTML = `<div class="text-muted">${i18nText.loadFailed}</div>`;
             }
         }
 
@@ -1316,7 +1339,7 @@
             const reportBtn = document.getElementById('reportBtn');
             
             reportBtn.addEventListener('click', async () => {
-                const reason = prompt('Please provide a reason for reporting this solution:');
+                const reason = prompt(i18nText.reportPrompt);
                 if (reason && reason.trim()) {
                     try {
                         const response = await fetch(`/api/report-solution`, {
@@ -1330,13 +1353,13 @@
                         });
                         
                         if (response.ok) {
-                            alert('Report submitted successfully. Thank you for helping us improve the platform.');
+                            alert(i18nText.reportSuccess);
                         } else {
-                            alert('Failed to submit report. Please try again.');
+                            alert(i18nText.reportFail);
                         }
                     } catch (error) {
                         console.error('Error submitting report:', error);
-                        alert('Failed to submit report. Please try again.');
+                        alert(i18nText.reportFail);
                     }
                 }
             });
