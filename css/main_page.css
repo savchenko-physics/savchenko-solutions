@@ -6,7 +6,7 @@
 body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
-  background-color: #f8f9fa;
+  background-color: #ffffff;
   color: #333;
 }
 
@@ -14,11 +14,17 @@ body {
    HERO SECTION
 ---------------------------- */
 .hero-section {
-  /* Gradient background */
-  background: linear-gradient(135deg, #a52a2a 0%, #cc6666 100%);
-  min-height: 60vh;
+  /* Solid white header background */
+  background: #ffffff;
+  /* min-height: 28vh; */
   display: flex;
   flex-direction: column;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .navbar {
@@ -28,29 +34,36 @@ body {
 
 .navbar-brand {
   font-size: 1.2rem;
+  color: #000 !important;
 }
 
 .logo-img {
-  width: 50px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
 }
 
 .site-title {
-  font-size: 1.5rem;
+  font-size: 1.15rem;
   font-weight: 700;
   margin-bottom: 0;
+  color: #000;
 }
 
 .site-motto {
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   margin-bottom: 0;
-  color: #f1f1f1;
+  color: #000;
+}
+
+/* Ensure header links use dark text on white header */
+.navbar-dark .navbar-nav .nav-link {
+  color: #000 !important;
 }
 
 .hero-content {
-  flex: 1;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  flex: 0;
+  margin-top: 0;
+  margin-bottom: 0;
   /* For very small screens, reduce top/bottom space */
 }
 
@@ -63,6 +76,8 @@ body {
   position: relative;
   width: 100%;
   max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .searchbar-input {
@@ -162,7 +177,7 @@ body {
   display: block;
   padding: 0.4rem 0.6rem;
   margin: 2px;
-  background: #f8f9fa;
+  background: #ffffff;
   border-radius: 6px;
   border: 1px solid transparent;
   color: #a52a2a;
@@ -197,6 +212,18 @@ body {
   transition: all 0.2s ease;
 }
 
+/* Larger, black upload button variant for header */
+.header-upload-btn {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000 !important;
+  border-color: #bbb;
+}
+
+.header-upload-btn .upload-icon {
+  stroke: #000;
+}
+
 .upload-icon {
   fill: none;
   stroke: currentColor;
@@ -217,7 +244,7 @@ body {
 .top-authors {
   background-color: #fff;
   border-radius: 8px;
-  padding: 20px;
+  padding: 12px 14px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -233,7 +260,7 @@ body {
 
 .table th,
 .table td {
-  padding: 10px;
+  padding: 6px 8px;
   text-align: center;
 }
 
@@ -475,7 +502,7 @@ footer p {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fa;
+  background: #ffffff;
   padding: 0.75rem;
   border-radius: 10px;
   color: #a52a2a;
