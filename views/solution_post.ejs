@@ -29,6 +29,9 @@
                 processClass: 'tex2jax',
                 ignoreClass: 'html'
             },
+            'HTML-CSS': {
+                scale: 120
+            },
             showProcessingMessages: false,
             messageStyle: 'none'
         });
@@ -148,35 +151,49 @@
         .content-header {
             background: #ffffff;
             color: var(--text-primary);
-            padding: 1rem 1.25rem;
-            text-align: center;
+            padding: 0.65rem 1.25rem;
+            text-align: left;
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: nowrap;
         }
 
         .content-title {
-            font-size: 1.4rem;
+            font-size: 1.15rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin: 0;
             font-family: 'Computer Modern', serif;
+            flex: 1 1 auto;
+            min-width: 0;
+            line-height: 1.35;
+            white-space: normal;
         }
 
         .content-nav {
             display: flex;
-            justify-content: center;
-            gap: 0.6rem;
-            margin-top: 0.6rem;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.45rem;
+            margin: 0;
+            flex: 0 0 auto;
+            flex-wrap: nowrap;
         }
 
         .nav-btn {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 0.5rem 1rem;
+            padding: 0.35rem 0.65rem;
             border-radius: 20px;
             text-decoration: none;
             font-weight: 500;
             transition: all 0.3s ease;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
+            white-space: nowrap;
         }
 
         .nav-btn:hover {
@@ -187,8 +204,8 @@
 
         .content-body {
             padding: 1rem 1.25rem;
-            font-size: 1.1rem;
-            line-height: 1.5;
+            font-size: 1.25rem;
+            line-height: 1.55;
             max-width: 1100px;
             margin: 0 auto;
             font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
@@ -221,6 +238,24 @@
             line-height: 1.25;
             margin-top: 1rem;
             margin-bottom: 0.45rem;
+        }
+
+        .content-body img {
+            margin: 0.25rem 0;
+            padding: 0;
+            max-width: 100%;
+            height: auto;
+            vertical-align: middle;
+        }
+
+        .content-body figure {
+            margin: 0.35rem 0;
+            padding: 0;
+        }
+
+        .content-body figcaption {
+            margin-top: 0.2rem;
+            margin-bottom: 0;
         }
 
         /* Views Button */
@@ -531,16 +566,29 @@
             }
 
             .content-header {
-                padding: 1rem;
+                padding: 0.5rem 0.65rem;
+                flex-wrap: nowrap;
+                gap: 0.5rem;
             }
 
             .content-title {
-                font-size: 1.2rem;
+                font-size: 1rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .content-nav {
-                flex-wrap: wrap;
-                gap: 0.5rem;
+                gap: 0.3rem;
+            }
+
+            .nav-btn {
+                padding: 0.28rem 0.45rem;
+                font-size: 0.72rem;
+            }
+
+            .nav-btn .me-2 {
+                margin-right: 0.2rem !important;
             }
 
             .content-body {
@@ -701,7 +749,7 @@
         <div class="content-section">
             <!-- Content Header -->
             <div class="content-header">
-                <h1 class="content-title">$<%= name %>.$</h1>
+                <h1 class="content-title"><%= problemBreadcrumbTitle %></h1>
                 <div class="content-nav">
                     <a href="/<%= lang %>/<%= name %>" class="nav-btn">
                         <i class="fas fa-eye me-2"></i>View

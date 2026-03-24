@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const { parseMarkdown, transformImageMarkdown, getLineStatement } = require("./utils"); // Adjust the import based on your utils file
+const { getProblemBreadcrumbTitle } = require("./parents");
 const i18n = require('i18n');
 const { Pool } = require("pg");
 
@@ -110,12 +111,16 @@ async function renderPost(req, res) {
             profilePicture = userResult.rows[0]?.profile_picture || null;
         }
 
+        const problemBreadcrumbTitle =
+            getProblemBreadcrumbTitle(name, lang) || `$${name}.$`;
+
         res.render("solution_post", {
             __: i18n.__,
             lang,
             pageRef,
             problemRef: name,
             name,
+            problemBreadcrumbTitle,
             username: req.session.username || null,
             title: name + ". " + titleContent,
             content: html,

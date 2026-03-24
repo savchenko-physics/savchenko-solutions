@@ -229,7 +229,50 @@ function readCSV(filePath, column) {
         .map((line) => line.split(",")[column].trim());
 }
 
+/**
+ * Breadcrumb title for a problem page, e.g.
+ * "Kinematics > Motion in gravity field. Curvilinear motion > No. 1.3.18" (en)
+ * "Кинематика > ... > № 1.3.18" (ru)
+ */
+function getProblemBreadcrumbTitle(name, lang) {
+    const parts = name.split(".");
+    if (parts.length !== 3 || parts.some((p) => isNaN(Number(p)))) {
+        return null;
+    }
+
+    const sectionRef = `${parts[0]}.${parts[1]}`;
+    const chapterIdx = parseInt(parts[0], 10) - 1;
+
+    const chaptersCSV = path.join(
+        __dirname,
+        lang === "ru" ? "src/ru/database/chapters.csv" : "src/database/chapters.csv"
+    );
+    const sectionsCSV = path.join(
+        __dirname,
+        lang === "ru" ? "src/ru/database/sections.csv" : "src/database/sections.csv"
+    );
+
+    if (!fs.existsSync(chaptersCSV) || !fs.existsSync(sectionsCSV)) {
+        return null;
+    }
+
+    const chapterTitles = readCSV(chaptersCSV, 1);
+    const sectionNumbers = readCSV(sectionsCSV, 0);
+    const sectionTitles = readCSV(sectionsCSV, 1);
+
+    const chapterTitle = chapterTitles[chapterIdx];
+    const secIdx = sectionNumbers.findIndex((n) => n === sectionRef);
+    if (chapterTitle == null || chapterTitle === undefined || secIdx === -1) {
+        return null;
+    }
+
+    const sectionTitle = sectionTitles[secIdx];
+    const problemLabel = lang === "ru" ? `№ ${name}` : `No. ${name}`;
+    return `${chapterTitle} > ${sectionTitle} > ${problemLabel}`;
+}
+
 module.exports = {
     getLanguageData,
     getBothLanguages,
+    getProblemBreadcrumbTitle,
 };
