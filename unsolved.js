@@ -66,6 +66,44 @@ async function getUnsolvedProblems(lang = 'en') {
     };
 }
 
+function computeTotalProblems(chapters) {
+    let totalProblems = 0;
+    chapters.forEach(chapter => {
+        chapter.sections.forEach(section => {
+            totalProblems += parseInt(section.maximum, 10) || 0;
+        });
+    });
+    return totalProblems;
+}
+
+/**
+ * Single pass: same filesystem + chapter metadata as /:lang/unsolved.
+ * Used by the unsolved page (sorts `unsolved` in place) and by the homepage stats card.
+ */
+async function loadUnsolvedPagePayload(lang) {
+    const [langData, unsolvedData] = await Promise.all([
+        getLanguageData(lang),
+        getUnsolvedProblems(lang)
+    ]);
+    const totalProblems = computeTotalProblems(langData.chapters);
+    const unsolved = unsolvedData.unsolvedProblems;
+    const solvedProblems = Math.max(0, totalProblems - unsolved.length);
+    return {
+        unsolved,
+        totalProblems,
+        solvedProblems,
+        currentLangSolutions: unsolvedData.currentLangSolutions,
+        otherLangSolutions: unsolvedData.otherLangSolutions,
+        totalUniqueSolutions: unsolvedData.totalUniqueSolutions
+    };
+}
+
+/** Progress fields only (no unsolved array reference in the returned object). */
+async function getSolutionProgressStats(lang) {
+    const { unsolved, ...stats } = await loadUnsolvedPagePayload(lang);
+    return stats;
+}
+
 // Express route handler
 async function renderUnsolvedList(req, res) {
     try {
@@ -79,24 +117,9 @@ async function renderUnsolvedList(req, res) {
         // Set locale for translations
         i18n.setLocale(res, lang);
 
-        // Get unsolved problems and language data
-        const { 
-            unsolvedProblems: unsolved, 
-            currentLangSolutions,
-            otherLangSolutions,
-            totalUniqueSolutions 
-        } = await getUnsolvedProblems(lang);
-        const { chapters } = await getLanguageData(lang);
+        const payload = await loadUnsolvedPagePayload(lang);
+        const { unsolved, ...stats } = payload;
 
-        // Calculate total problems and solved count
-        let totalProblems = 0;
-        chapters.forEach(chapter => {
-            chapter.sections.forEach(section => {
-                totalProblems += parseInt(section.maximum) || 0;
-            });
-        });
-        const solvedProblems = Math.max(0, totalProblems - unsolved.length);
-        
         // Sort problems by chapter, section, and problem number
         unsolved.sort((a, b) => {
             if (a.chapterNum !== b.chapterNum) return a.chapterNum - b.chapterNum;
@@ -110,11 +133,7 @@ async function renderUnsolvedList(req, res) {
             lang,
             __: i18n.__,
             title: i18n.__('unsolved.title'),
-            totalProblems,
-            solvedProblems,
-            currentLangSolutions,
-            otherLangSolutions,
-            totalUniqueSolutions
+            ...stats
         });
     } catch (error) {
         console.error('Error rendering unsolved problems:', error);
@@ -122,4 +141,5 @@ async function renderUnsolvedList(req, res) {
     }
 }
 
+renderUnsolvedList.getSolutionProgressStats = getSolutionProgressStats;
 module.exports = renderUnsolvedList;

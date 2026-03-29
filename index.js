@@ -1208,6 +1208,7 @@ app.get("/", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
     const recentContributions = await getRecentContributions(10);
     const topAuthors = await getTopAuthors();
+    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats(lang);
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -1239,7 +1240,8 @@ app.get("/", async (req, res) => {
         profilePicture, // Pass profilePicture to the template
         lang,
         recentContributions,
-        topAuthors
+        topAuthors,
+        solutionProgress
     });
 });
 
@@ -1293,6 +1295,7 @@ app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
     const recentContributions = await getRecentContributions(10);
     const topAuthors = await getTopAuthors();
+    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats('ru');
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -1323,7 +1326,8 @@ app.get("/ru", async (req, res) => {
         profilePicture, // Pass profilePicture to the template
         lang: 'ru',
         recentContributions,
-        topAuthors
+        topAuthors,
+        solutionProgress
     });
 });
 
@@ -1334,6 +1338,7 @@ app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
     const recentContributions = await getRecentContributions(10);
     const topAuthors = await getTopAuthors();
+    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats('en');
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -1364,7 +1369,8 @@ app.get("/en", async (req, res) => {
         profilePicture, // Pass profilePicture to the template
         lang: 'en',
         recentContributions,
-        topAuthors
+        topAuthors,
+        solutionProgress
     });
 });
 
