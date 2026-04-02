@@ -5,7 +5,12 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs"); // Import fs module
 const bodyParser = require("body-parser");
-const { convertLatexToPlainText } = require("./utils"); // Importing functions from utils.js
+const {
+    convertLatexToPlainText,
+    validateSolutionMarkdownContent,
+    isValidSolutionLang,
+    isValidSolutionProblemName,
+} = require("./utils"); // Importing functions from utils.js
 const { getLanguageData } = require("./parents"); // generating content for the main english page
 
 const bcrypt = require("bcrypt");
@@ -1454,6 +1459,14 @@ app.get("/:lang/:name", (req, res, next) => {
 
 app.get("/:lang/edit/:name", (req, res) => {
     const { lang, name } = req.params;
+    if (!isValidSolutionLang(lang) || !isValidSolutionProblemName(name)) {
+        i18n.setLocale(res, isValidSolutionLang(lang) ? lang : "en");
+        return res.status(404).render("404", {
+            __: i18n.__,
+            pageUrl: req.originalUrl,
+            lang: isValidSolutionLang(lang) ? lang : "en",
+        });
+    }
     const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
 
     if (fs.existsSync(filePath)) {
@@ -1464,7 +1477,7 @@ app.get("/:lang/edit/:name", (req, res) => {
             lang,
             name,
             content: fileContents,
-            title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`
+            title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
         });
     } else {
         i18n.setLocale(res, lang);
@@ -1493,13 +1506,53 @@ const blockedIPs = [
     '82.194.13.2'
 ];
 
+function editSaveWantsJson(req) {
+    const accept = req.get("Accept") || "";
+    return accept.includes("application/json");
+}
+
 // Route for saving edited content
 app.post("/:lang/save/:name", async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
     const userId = req.session.userId || null; // Will be null for unauthenticated users
-    const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
     const clientIp = req.headers["x-forwarded-for"] || req.ip;
+
+    if (!isValidSolutionLang(lang) || !isValidSolutionProblemName(name)) {
+        if (editSaveWantsJson(req)) {
+            return res.status(400).json({
+                ok: false,
+                error: lang === "ru" ? "Некорректный запрос." : "Invalid request.",
+            });
+        }
+        return res.status(400).send("Invalid request");
+    }
+
+    const contentValidation = validateSolutionMarkdownContent(content, lang);
+    if (!contentValidation.ok) {
+        i18n.setLocale(res, lang);
+        if (editSaveWantsJson(req)) {
+            return res.status(400).json({ ok: false, error: contentValidation.message });
+        }
+        let fileContents = "";
+        const filePathForError = path.join(__dirname, `posts/${lang}`, `${name}.md`);
+        try {
+            fileContents = await fs.promises.readFile(filePathForError, "utf8");
+        } catch {
+            fileContents = "";
+        }
+        const editorContent = typeof content === "string" ? content : fileContents;
+        return res.status(400).render("edit_post", {
+            __: i18n.__,
+            lang,
+            name,
+            content: editorContent,
+            title: lang === "ru" ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
+            saveError: contentValidation.message,
+        });
+    }
+
+    const filePath = path.join(__dirname, `posts/${lang}`, `${name}.md`);
 
     // Define originalContent before using it
     let originalContent;
@@ -1510,6 +1563,15 @@ app.post("/:lang/save/:name", async (req, res) => {
             originalContent = await fs.promises.readFile(filePath, "utf8");
         } catch (error) {
             console.error("Error reading original content:", error);
+            if (editSaveWantsJson(req)) {
+                return res.status(500).json({
+                    ok: false,
+                    error:
+                        lang === "ru"
+                            ? "Не удалось прочитать файл решения."
+                            : "Could not read the solution file.",
+                });
+            }
             return res.status(500).send("Error reading original content");
         }
 
@@ -1532,12 +1594,16 @@ app.post("/:lang/save/:name", async (req, res) => {
                 [userId, name, lang, originalContent, content, clientIp]
             );
 
-            // Render a page indicating the submission for review
+            const reviewMessage =
+                lang === "ru"
+                    ? "Ваши изменения были отправлены на проверку!"
+                    : "Your edits have been successfully submitted for review!";
+            if (editSaveWantsJson(req)) {
+                return res.json({ ok: true, review: true, message: reviewMessage });
+            }
             return res.render("review_submission", {
                 lang,
-                message: lang === 'ru' ? 
-                    "Ваши изменения были отправлены на проверку!" : 
-                    "Your edits have been successfully submitted for review!"
+                message: reviewMessage,
             });
         }
 
@@ -1572,9 +1638,21 @@ app.post("/:lang/save/:name", async (req, res) => {
             [userId, name, lang, originalContent, content, clientIp, contentChanged]
         );
 
+        if (editSaveWantsJson(req)) {
+            return res.json({ ok: true, redirect: `/${lang}/${name}` });
+        }
         res.redirect(`/${lang}/${name}`);
     } catch (error) {
         console.error("Error saving file:", error);
+        if (editSaveWantsJson(req)) {
+            return res.status(500).json({
+                ok: false,
+                error:
+                    lang === "ru"
+                        ? "Не удалось сохранить файл."
+                        : "Could not save the file.",
+            });
+        }
         res.status(500).send("Error saving file");
     }
 });

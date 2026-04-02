@@ -782,6 +782,70 @@
         .symbol-palette-close-button:hover {
             color: white;
         }
+
+        .save-msg-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .save-msg-modal[aria-hidden="false"] {
+            display: flex;
+        }
+
+        .save-msg-modal__backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            cursor: pointer;
+        }
+
+        .save-msg-modal__dialog {
+            position: relative;
+            max-width: 420px;
+            width: 100%;
+            background: #1b222c;
+            color: #e8eaed;
+            border-radius: 8px;
+            padding: 20px 22px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+            border: 1px solid #2f3a4c;
+        }
+
+        .save-msg-modal__title {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .save-msg-modal__text {
+            margin: 0 0 18px 0;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .save-msg-modal__btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: #4a90e2;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .save-msg-modal__btn:hover {
+            background: #3a7bc8;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -814,7 +878,7 @@
             </a>
             <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
-                <button id="save-button" class="submit-button"
+                <button type="submit" id="save-button" class="submit-button"
                     style="font-size: 16px; color: #fff; opacity: 0.9; background-color: #007b0c; border-color: #6fae75; border-radius: 1px; box-shadow: none; padding: 10px 18px;">
                     <i class="fa fa-save" aria-hidden="true"></i>
                     <span>
@@ -824,6 +888,15 @@
             </form>
         </div>
     </header>
+
+    <div id="save-message-modal" class="save-msg-modal" aria-hidden="true" role="presentation">
+        <div class="save-msg-modal__backdrop" tabindex="-1" aria-hidden="true"></div>
+        <div class="save-msg-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="save-msg-modal-title">
+            <h2 id="save-msg-modal-title" class="save-msg-modal__title"><%= lang === 'ru' ? 'Сохранение' : 'Save' %></h2>
+            <p id="save-msg-modal-text" class="save-msg-modal__text"></p>
+            <button type="button" id="save-msg-modal-close" class="save-msg-modal__btn">OK</button>
+        </div>
+    </div>
 
     <div id="toolbar"
         style="position: fixed; top: 40px; left: 0; right: 0; height: 32px; background-color: #2f3a4c;display: flex; align-items: center; padding: 0 24px; z-index: 1000;">
@@ -1382,36 +1455,103 @@
             }
         });
 
-        // Add save functionality
-        document.getElementById('save-button').addEventListener('click', () => {
-            // Get current content from editor
-            const content = editor.getValue();
+        const saveForm = document.getElementById('save-form');
+        const saveButton = document.getElementById('save-button');
+        const saveModal = document.getElementById('save-message-modal');
+        const saveModalText = document.getElementById('save-msg-modal-text');
+        const saveModalClose = document.getElementById('save-msg-modal-close');
+        const saveModalBackdrop = saveModal.querySelector('.save-msg-modal__backdrop');
 
-            // Update hidden textarea
-            document.getElementById('hidden-content').value = content;
+        function showSaveModal(message) {
+            saveModalText.textContent = message;
+            saveModal.style.display = 'flex';
+            saveModal.setAttribute('aria-hidden', 'false');
+            saveModalClose.focus();
+        }
 
-            // Submit the form
-            document.getElementById('save-form').submit();
-        });
+        function hideSaveModal() {
+            saveModal.style.display = 'none';
+            saveModal.setAttribute('aria-hidden', 'true');
+        }
 
-        // Add keyboard shortcut (Ctrl/Cmd + S)
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault(); // Prevent browser's save dialog
-                document.getElementById('save-button').click();
-            }
-        });
+        saveModalClose.addEventListener('click', hideSaveModal);
+        saveModalBackdrop.addEventListener('click', hideSaveModal);
 
         let hasUnsavedChanges = false;
 
-        // Track changes in the editor
         editor.on('change', () => {
             hasUnsavedChanges = true;
         });
 
-        // Reset changes flag when saving
-        document.getElementById('save-button').addEventListener('click', () => {
-            hasUnsavedChanges = false;
+        async function submitSave() {
+            const content = editor.getValue();
+            document.getElementById('hidden-content').value = content;
+            saveButton.disabled = true;
+            try {
+                const res = await fetch(saveForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams({ content: content }),
+                    credentials: 'same-origin'
+                });
+
+                const ct = res.headers.get('content-type') || '';
+                let data = {};
+                if (ct.includes('application/json')) {
+                    try {
+                        data = await res.json();
+                    } catch (e) {
+                        showSaveModal('<%= lang === "ru" ? "Некорректный ответ сервера." : "Invalid server response." %>');
+                        return;
+                    }
+                }
+
+                if (!res.ok) {
+                    const err = data.error || (res.status >= 500
+                        ? '<%= lang === "ru" ? "Ошибка сервера при сохранении." : "Server error while saving." %>'
+                        : '<%= lang === "ru" ? "Не удалось сохранить." : "Could not save." %>');
+                    showSaveModal(err);
+                    return;
+                }
+
+                if (data.review && data.message) {
+                    showSaveModal(data.message);
+                    return;
+                }
+
+                if (data.redirect) {
+                    hasUnsavedChanges = false;
+                    window.location.href = data.redirect;
+                    return;
+                }
+
+                hasUnsavedChanges = false;
+                window.location.href = '/<%= lang %>/<%= name %>';
+            } catch (err) {
+                showSaveModal('<%= lang === "ru" ? "Сеть недоступна или запрос прерван." : "Network error or request was aborted." %>');
+            } finally {
+                saveButton.disabled = false;
+            }
+        }
+
+        saveForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submitSave();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && saveModal.getAttribute('aria-hidden') === 'false') {
+                hideSaveModal();
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                submitSave();
+            }
         });
 
         // Add click handler to the Go Back button
@@ -1676,6 +1816,19 @@
         // Initialize by showing the first tab and panel
         document.querySelector('.symbol-palette-tab[aria-selected="true"]').click();
     </script>
+
+    <% if (typeof saveError !== 'undefined' && saveError) { %>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var textEl = document.getElementById('save-msg-modal-text');
+            var modal = document.getElementById('save-message-modal');
+            if (!textEl || !modal) return;
+            textEl.textContent = <%- JSON.stringify(saveError) %>;
+            modal.style.display = 'flex';
+            modal.setAttribute('aria-hidden', 'false');
+        });
+    </script>
+    <% } %>
 
 </body>
 
