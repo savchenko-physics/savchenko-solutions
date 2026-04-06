@@ -652,7 +652,12 @@
                                             </a>
                                             <div class="user-username">@<%= contributor.username %></div>
                                             <div class="user-meta">
-                                                <% if (contributor.country_location) { %>
+                                                <% if (contributor.country_location && contributor.country_flag_emoji) { %>
+                                                    <div class="user-meta-item">
+                                                        <span class="country-flag-emoji" aria-hidden="true"><%= contributor.country_flag_emoji %></span>
+                                                        <span><%= contributor.country_location %></span>
+                                                    </div>
+                                                <% } else if (contributor.country_location) { %>
                                                     <div class="user-meta-item">
                                                         <i class="fas fa-map-marker-alt"></i>
                                                         <span><%= contributor.country_location %></span>

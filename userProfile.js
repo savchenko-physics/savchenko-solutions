@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 const i18n = require('i18n');
+const { flagEmojiForCountryName } = require("./lib/countries");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -211,6 +212,8 @@ async function getUserProfile(req, res) {
             email: user.email,
             bio: user.bio,
             countryLocation: user.country_location,
+            countryFlagEmoji: flagEmojiForCountryName(user.country_location || ""),
+            institution: user.institution,
             isVerifiedUser: user.is_verified_user,
             linkedin: user.linkedin,
             github: user.github,

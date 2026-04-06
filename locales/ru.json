@@ -263,6 +263,93 @@
         "updatePassword": "Обновить пароль",
         "viewChanges": "Просмотр изменений"
     },
+    "settings": {
+        "title": "Настройки",
+        "backToProfile": "К профилю",
+        "nav": {
+            "profile": "Профиль",
+            "account": "Аккаунт",
+            "privacy": "Конфиденциальность",
+            "password": "Пароль"
+        },
+        "profile": {
+            "avatarTitle": "Фото профиля",
+            "changePhoto": "Изменить",
+            "removePhoto": "Удалить",
+            "personalInfo": "Личные данные",
+            "fullName": "Полное имя",
+            "username": "Имя пользователя",
+            "usernameHelp": "Отображается рядом с вашими вкладами. Без пробелов.",
+            "email": "Электронная почта",
+            "emailPrivate": "Не показывается публично",
+            "country": "Страна",
+            "countryPreferNot": "Предпочитаю не указывать",
+            "institution": "Учебное заведение или вуз",
+            "institutionHint": "Необязательно. Показывается в профиле.",
+            "bio": "О себе",
+            "links": "Ссылки",
+            "githubPh": "github.com/username",
+            "linkedinPh": "linkedin.com/in/username",
+            "websitePh": "https://example.com",
+            "save": "Сохранить",
+            "saved": "Сохранено",
+            "usernameAvailable": "Имя свободно",
+            "usernameTaken": "Имя занято"
+        },
+        "account": {
+            "title": "Электронная почта",
+            "currentEmail": "Текущий адрес",
+            "newEmail": "Новый адрес",
+            "passwordForEmail": "Текущий пароль",
+            "requestChange": "Отправить подтверждение",
+            "deleteTitle": "Опасная зона",
+            "deleteLink": "Удалить аккаунт",
+            "deleteModalTitle": "Удалить аккаунт?",
+            "deleteModalBody": "Это действие необратимо. Введите пароль для подтверждения.",
+            "deleteConfirm": "Удалить",
+            "cancel": "Отмена"
+        },
+        "privacy": {
+            "publicProfile": "Публичный профиль",
+            "publicProfileDesc": "Разрешить другим просматривать ваш профиль",
+            "emailNotif": "Уведомления по почте",
+            "emailNotifDesc": "Получать новости о ваших вкладах",
+            "showCountry": "Страна в рейтинге",
+            "showCountryDesc": "Показывать флаг страны в рейтинге участников",
+            "save": "Сохранить настройки"
+        },
+        "password": {
+            "current": "Текущий пароль",
+            "new": "Новый пароль",
+            "confirm": "Подтвердите пароль",
+            "requirements": "Не менее 8 символов",
+            "save": "Обновить пароль"
+        },
+        "messages": {
+            "profileSaved": "Профиль сохранён",
+            "privacySaved": "Настройки конфиденциальности сохранены",
+            "passwordSaved": "Пароль обновлён",
+            "emailChangePending": "Ссылка для подтверждения подготовлена. В продакшене она была бы отправлена на новый адрес. В режиме разработки ссылка в логах сервера.",
+            "emailConfirmed": "Адрес электронной почты обновлён",
+            "accountDeleted": "Аккаунт удалён"
+        },
+        "errors": {
+            "invalidUsername": "Имя: 2–32 символа — буквы, цифры, точка, подчёркивание или дефис",
+            "usernameTaken": "Это имя уже занято",
+            "profileUpdateFailed": "Не удалось сохранить профиль",
+            "privacyUpdateFailed": "Не удалось сохранить настройки",
+            "passwordMismatch": "Новые пароли не совпадают",
+            "passwordTooShort": "Пароль не короче 8 символов",
+            "currentPasswordWrong": "Неверный текущий пароль",
+            "passwordUpdateFailed": "Не удалось обновить пароль",
+            "invalidEmail": "Введите корректный адрес почты",
+            "emailUnchanged": "Это уже ваш текущий адрес",
+            "emailTaken": "Этот адрес уже используется",
+            "emailChangeFailed": "Не удалось сменить почту",
+            "invalidToken": "Недействительная или просроченная ссылка",
+            "deleteAccountFailed": "Не удалось удалить аккаунт. Возможны связанные данные — напишите в поддержку."
+        }
+    },
     "search": {
         "title": "Результаты поиска",
         "placeholder": "Введите поисковый запрос...",

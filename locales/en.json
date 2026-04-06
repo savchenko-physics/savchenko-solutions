@@ -268,6 +268,93 @@
 		"updatePassword": "Update Password",
 		"viewChanges": "View Changes"
 	},
+	"settings": {
+		"title": "Settings",
+		"backToProfile": "Back to profile",
+		"nav": {
+			"profile": "Profile",
+			"account": "Account",
+			"privacy": "Privacy",
+			"password": "Password"
+		},
+		"profile": {
+			"avatarTitle": "Profile picture",
+			"changePhoto": "Change",
+			"removePhoto": "Remove",
+			"personalInfo": "Personal Information",
+			"fullName": "Full Name",
+			"username": "Username",
+			"usernameHelp": "This appears on your contributions. Cannot contain spaces.",
+			"email": "Email",
+			"emailPrivate": "Not displayed publicly",
+			"country": "Country",
+			"countryPreferNot": "Prefer not to say",
+			"institution": "Institution or University",
+			"institutionHint": "Optional. Displayed on your profile.",
+			"bio": "Bio",
+			"links": "Links",
+			"githubPh": "github.com/username",
+			"linkedinPh": "linkedin.com/in/username",
+			"websitePh": "https://yoursite.com",
+			"save": "Save Changes",
+			"saved": "Saved",
+			"usernameAvailable": "Username available",
+			"usernameTaken": "Username taken"
+		},
+		"account": {
+			"title": "Email",
+			"currentEmail": "Current email",
+			"newEmail": "New email address",
+			"passwordForEmail": "Current password",
+			"requestChange": "Send confirmation",
+			"deleteTitle": "Danger zone",
+			"deleteLink": "Delete my account",
+			"deleteModalTitle": "Delete account?",
+			"deleteModalBody": "This cannot be undone. Enter your password to confirm.",
+			"deleteConfirm": "Delete account",
+			"cancel": "Cancel"
+		},
+		"privacy": {
+			"publicProfile": "Public Profile",
+			"publicProfileDesc": "Allow others to view your profile",
+			"emailNotif": "Email Notifications",
+			"emailNotifDesc": "Receive updates about your contributions",
+			"showCountry": "Show Country on Leaderboard",
+			"showCountryDesc": "Display your country flag on the contributor leaderboard",
+			"save": "Save privacy settings"
+		},
+		"password": {
+			"current": "Current Password",
+			"new": "New Password",
+			"confirm": "Confirm New Password",
+			"requirements": "At least 8 characters",
+			"save": "Update password"
+		},
+		"messages": {
+			"profileSaved": "Profile updated successfully",
+			"privacySaved": "Privacy settings saved",
+			"passwordSaved": "Password updated successfully",
+			"emailChangePending": "Confirmation link prepared. In production, it would be emailed to your new address. Check server logs in development for the link.",
+			"emailConfirmed": "Your email address has been updated",
+			"accountDeleted": "Your account has been deleted"
+		},
+		"errors": {
+			"invalidUsername": "Username must be 2–32 characters: letters, digits, dot, underscore, or hyphen",
+			"usernameTaken": "Username is already taken",
+			"profileUpdateFailed": "Could not save profile",
+			"privacyUpdateFailed": "Could not save privacy settings",
+			"passwordMismatch": "New passwords do not match",
+			"passwordTooShort": "Password must be at least 8 characters",
+			"currentPasswordWrong": "Current password is incorrect",
+			"passwordUpdateFailed": "Could not update password",
+			"invalidEmail": "Enter a valid email address",
+			"emailUnchanged": "That is already your email address",
+			"emailTaken": "That email is already in use",
+			"emailChangeFailed": "Could not process email change",
+			"invalidToken": "Invalid or expired link",
+			"deleteAccountFailed": "Could not delete account. You may still have related data; contact support."
+		}
+	},
 	"search": {
 		"title": "Search results",
 		"placeholder": "Enter search term...",

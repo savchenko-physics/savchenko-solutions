@@ -27,6 +27,8 @@ const { renderPost, getPageViewsData } = require('./post'); // Import the render
 const getUserProfile = require('./userProfile');
 const uploadRouter = require('./upload');
 const renderUnsolvedList = require('./unsolved');
+const crypto = require("crypto");
+const { getSortedCountryNames, flagEmojiForCountryName } = require("./lib/countries");
 
 const app = express();
 const PORT = 3000;
@@ -98,7 +100,7 @@ app.use((req, res, next) => {
 
 // Authentication middleware
 function checkAuthenticated(req, res, next) {
-    const lang = req.query.lang || req.body.lang || 'en';
+    const lang = req.params.lang || req.query.lang || req.body.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (req.session.userId) {
@@ -109,7 +111,7 @@ function checkAuthenticated(req, res, next) {
 }
 
 function checkNotAuthenticated(req, res, next) {
-    const lang = req.query.lang || req.body.lang || 'en';
+    const lang = req.params.lang || req.query.lang || req.body.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (!req.session.userId) {
@@ -150,17 +152,24 @@ const profileUpload = multer({
     storage: profileStorage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif/;
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = allowedTypes.test(file.mimetype);
-        
-        if (mimetype && extname) {
+        const allowedExt = /\.(jpe?g|png|gif|webp)$/i.test(file.originalname);
+        const okMime = !file.mimetype || /image\/(jpeg|png|gif|webp)/i.test(file.mimetype);
+
+        if (okMime && allowedExt) {
             return cb(null, true);
         } else {
             cb(new Error('Only image files are allowed'));
         }
     }
 });
+
+function normalizeProfileUrl(val) {
+    if (val == null) return null;
+    const s = String(val).trim();
+    if (!s) return null;
+    if (/^https?:\/\//i.test(s)) return s;
+    return "https://" + s.replace(/^\/+/, "");
+}
 
 // Add this route to handle image uploads
 app.post('/upload-image/:name', upload.single('image'), (req, res) => {
@@ -219,13 +228,6 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
         );
         const preferences = preferencesResult.rows[0] || {};
 
-        // Get user interests
-        const interestsResult = await pool.query(
-            "SELECT interest_tag FROM user_interests WHERE user_id = $1",
-            [req.session.userId]
-        );
-        const interests = interestsResult.rows;
-
         res.render("user_settings", {
             __: i18n.__,
             lang,
@@ -234,15 +236,16 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
             email: user.email,
             bio: user.bio,
             countryLocation: user.country_location,
+            institution: user.institution,
             linkedin: user.linkedin,
             github: user.github,
-            instagram: user.instagram,
             personalWebsite: user.personal_website,
             profilePicture: user.profile_picture || `/img/profile_images/${user.id}.png`,
             preferences,
-            interests,
+            countryNames: getSortedCountryNames(),
             error: req.query.error || "",
-            success: req.query.success || ""
+            success: req.query.success || "",
+            activeTab: req.query.tab || ""
         });
     } catch (error) {
         console.error(error);
@@ -303,11 +306,13 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
                     u.bio,
                     u.is_verified_user,
                     ufc.first_contribution_date,
+                    MAX(COALESCE(up.show_country_on_leaderboard, true)) AS show_country_on_leaderboard,
                     COUNT(DISTINCT ac.problem_name) AS unique_contributions,
                     COUNT(*) AS total_contributions,
                     19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
                 FROM all_contributions ac
                 JOIN users u ON ac.user_id = u.id
+                LEFT JOIN user_preferences up ON u.id = up.user_id
                 LEFT JOIN user_first_contributions ufc ON u.id = ufc.user_id
                 GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at, u.country_location, u.github, u.linkedin, u.bio, u.is_verified_user, ufc.first_contribution_date
             ),
@@ -324,10 +329,17 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
         `;
         
         const contributorsResult = await pool.query(contributorsQuery, [limit, offset]);
-        let contributors = contributorsResult.rows.map((contributor, index) => ({
-            ...contributor,
-            position: offset + index + 1
-        }));
+        let contributors = contributorsResult.rows.map((contributor, index) => {
+            const showFlag =
+                contributor.show_country_on_leaderboard !== false && contributor.country_location;
+            return {
+                ...contributor,
+                position: offset + index + 1,
+                country_flag_emoji: showFlag
+                    ? flagEmojiForCountryName(contributor.country_location)
+                    : "",
+            };
+        });
 
         res.render("contributors_ranking", {
             __: i18n.__,
@@ -395,122 +407,164 @@ async function getAllContributors(limit = 50, offset = 0) {
         return [];
     }
 }
-// Profile settings update
-app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single('profilePicture'), async (req, res) => {
+// Profile settings update (profile + links; email is changed from Account tab only)
+app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("profilePicture"), async (req, res) => {
     const { lang } = req.params;
-    const { fullName, email, bio, countryLocation } = req.body;
+    i18n.setLocale(res, lang);
+    const {
+        fullName,
+        bio,
+        countryLocation,
+        institution,
+        username: newUsername,
+        linkedin,
+        github,
+        personalWebsite,
+        removeProfilePicture,
+    } = req.body;
+
+    const bioTrim = String(bio || "").slice(0, 300);
+    const uname = String(newUsername || "").trim();
+    const usernameRe = /^[a-zA-Z0-9._-]{2,32}$/;
+
+    if (!usernameRe.test(uname)) {
+        return res.redirect(
+            `/${lang}/settings?tab=profile&error=${encodeURIComponent(i18n.__("settings.errors.invalidUsername"))}`
+        );
+    }
 
     try {
-        let updateData = { fullName, email, bio, countryLocation };
-        
-        // Handle profile picture upload
-        if (req.file) {
-            updateData.profilePicture = `/img/profile_images/${req.file.filename}`;
+        const self = await pool.query("SELECT username FROM users WHERE id = $1", [req.session.userId]);
+        const currentUsername = self.rows[0]?.username;
+        if (uname.toLowerCase() !== String(currentUsername).toLowerCase()) {
+            const clash = await pool.query(
+                "SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id <> $2",
+                [uname, req.session.userId]
+            );
+            if (clash.rows.length > 0) {
+                return res.redirect(
+                    `/${lang}/settings?tab=profile&error=${encodeURIComponent(i18n.__("settings.errors.usernameTaken"))}`
+                );
+            }
         }
 
-        // Update user data
-        await pool.query(
-            `UPDATE users SET 
-                full_name = $1, 
-                email = $2, 
-                bio = $3, 
-                country_location = $4
-                ${req.file ? ', profile_picture = $5' : ''}
-            WHERE id = ${req.file ? '$6' : '$5'}`,
-            req.file 
-                ? [fullName, email, bio, countryLocation, updateData.profilePicture, req.session.userId]
-                : [fullName, email, bio, countryLocation, req.session.userId]
-        );
+        let profilePictureValue = undefined;
+        if (req.file) {
+            profilePictureValue = `/img/profile_images/${req.file.filename}`;
+        } else if (removeProfilePicture === "1" || removeProfilePicture === "on") {
+            profilePictureValue = DEFAULT_PROFILE_AVATAR;
+        }
 
-        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Profile updated successfully')}`);
+        const countryVal = countryLocation && String(countryLocation).trim() ? String(countryLocation).trim() : null;
+        const instVal = institution && String(institution).trim() ? String(institution).trim() : null;
+
+        const gh = normalizeProfileUrl(github);
+        const li = normalizeProfileUrl(linkedin);
+        const web = normalizeProfileUrl(personalWebsite);
+
+        const base = [
+            fullName != null ? String(fullName) : "",
+            bioTrim,
+            countryVal,
+            instVal,
+            gh,
+            li,
+            web,
+            uname,
+        ];
+
+        if (profilePictureValue !== undefined) {
+            await pool.query(
+                `UPDATE users SET
+                    full_name = $1,
+                    bio = $2,
+                    country_location = $3,
+                    institution = $4,
+                    github = $5,
+                    linkedin = $6,
+                    personal_website = $7,
+                    username = $8,
+                    instagram = NULL,
+                    profile_picture = $9
+                WHERE id = $10`,
+                [...base, profilePictureValue, req.session.userId]
+            );
+        } else {
+            await pool.query(
+                `UPDATE users SET
+                    full_name = $1,
+                    bio = $2,
+                    country_location = $3,
+                    institution = $4,
+                    github = $5,
+                    linkedin = $6,
+                    personal_website = $7,
+                    username = $8,
+                    instagram = NULL
+                WHERE id = $9`,
+                [...base, req.session.userId]
+            );
+        }
+
+        req.session.username = uname;
+
+        res.redirect(
+            `/${lang}/settings?tab=profile&success=${encodeURIComponent(i18n.__("settings.messages.profileSaved"))}`
+        );
     } catch (error) {
         console.error(error);
-        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update profile')}`);
-    }
-});
-
-// Social links update
-app.post("/:lang/settings/social", checkAuthenticated, async (req, res) => {
-    const { lang } = req.params;
-    const { linkedin, github, instagram, personalWebsite } = req.body;
-
-    try {
-        await pool.query(
-            "UPDATE users SET linkedin = $1, github = $2, instagram = $3, personal_website = $4 WHERE id = $5",
-            [linkedin, github, instagram, personalWebsite, req.session.userId]
+        res.redirect(
+            `/${lang}/settings?tab=profile&error=${encodeURIComponent(i18n.__("settings.errors.profileUpdateFailed"))}`
         );
-
-        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Social links updated successfully')}`);
-    } catch (error) {
-        console.error(error);
-        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update social links')}`);
     }
 });
 
 // Privacy settings update
 app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
     const { lang } = req.params;
-    const { publicProfile, showOnlineStatus, emailNotifications, privacyLevel } = req.body;
+    i18n.setLocale(res, lang);
+    const { publicProfile, emailNotifications, showCountryOnLeaderboard } = req.body;
 
     try {
-        // Insert or update user preferences
         await pool.query(
-            `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level)
-             VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (user_id) 
-             DO UPDATE SET 
-                public_profile = $2,
-                show_online_status = $3,
-                email_notifications = $4,
-                privacy_level = $5,
+            `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level, show_country_on_leaderboard)
+             VALUES ($1, $2, false, $3, 'public', $4)
+             ON CONFLICT (user_id)
+             DO UPDATE SET
+                public_profile = EXCLUDED.public_profile,
+                email_notifications = EXCLUDED.email_notifications,
+                show_country_on_leaderboard = EXCLUDED.show_country_on_leaderboard,
                 updated_at = NOW()`,
-            [req.session.userId, !!publicProfile, !!showOnlineStatus, !!emailNotifications, privacyLevel]
+            [req.session.userId, !!publicProfile, !!emailNotifications, !!showCountryOnLeaderboard]
         );
 
-        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Privacy settings updated successfully')}`);
+        res.redirect(
+            `/${lang}/settings?tab=privacy&success=${encodeURIComponent(i18n.__("settings.messages.privacySaved"))}`
+        );
     } catch (error) {
         console.error(error);
-        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update privacy settings')}`);
-    }
-});
-
-// Interests update
-app.post("/:lang/settings/interests", checkAuthenticated, async (req, res) => {
-    const { lang } = req.params;
-    const { interests } = req.body;
-
-    try {
-        const interestsList = JSON.parse(interests);
-
-        // Delete existing interests
-        await pool.query("DELETE FROM user_interests WHERE user_id = $1", [req.session.userId]);
-
-        // Insert new interests
-        if (interestsList.length > 0) {
-            const values = interestsList.map((interest, index) => 
-                `($1, $${index + 2})`
-            ).join(', ');
-            
-            await pool.query(
-                `INSERT INTO user_interests (user_id, interest_tag) VALUES ${values}`,
-                [req.session.userId, ...interestsList]
-            );
-        }
-
-        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Interests updated successfully')}`);
-    } catch (error) {
-        console.error(error);
-        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update interests')}`);
+        res.redirect(
+            `/${lang}/settings?tab=privacy&error=${encodeURIComponent(i18n.__("settings.errors.privacyUpdateFailed"))}`
+        );
     }
 });
 
 // Password update for settings
 app.post("/:lang/settings/password", checkAuthenticated, async (req, res) => {
     const { lang } = req.params;
+    i18n.setLocale(res, lang);
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (newPassword !== confirmPassword) {
-        return res.redirect(`/${lang}/settings?error=${encodeURIComponent('New passwords do not match')}`);
+        return res.redirect(
+            `/${lang}/settings?tab=password&error=${encodeURIComponent(i18n.__("settings.errors.passwordMismatch"))}`
+        );
+    }
+
+    if (String(newPassword || "").length < 8) {
+        return res.redirect(
+            `/${lang}/settings?tab=password&error=${encodeURIComponent(i18n.__("settings.errors.passwordTooShort"))}`
+        );
     }
 
     try {
@@ -522,7 +576,9 @@ app.post("/:lang/settings/password", checkAuthenticated, async (req, res) => {
         const validPassword = await bcrypt.compare(currentPassword, result.rows[0].password);
 
         if (!validPassword) {
-            return res.redirect(`/${lang}/settings?error=${encodeURIComponent('Current password is incorrect')}`);
+            return res.redirect(
+                `/${lang}/settings?tab=password&error=${encodeURIComponent(i18n.__("settings.errors.currentPasswordWrong"))}`
+            );
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -531,10 +587,154 @@ app.post("/:lang/settings/password", checkAuthenticated, async (req, res) => {
             [hashedPassword, req.session.userId]
         );
 
-        res.redirect(`/${lang}/settings?success=${encodeURIComponent('Password updated successfully')}`);
+        res.redirect(
+            `/${lang}/settings?tab=password&success=${encodeURIComponent(i18n.__("settings.messages.passwordSaved"))}`
+        );
     } catch (error) {
         console.error(error);
-        res.redirect(`/${lang}/settings?error=${encodeURIComponent('Failed to update password')}`);
+        res.redirect(
+            `/${lang}/settings?tab=password&error=${encodeURIComponent(i18n.__("settings.errors.passwordUpdateFailed"))}`
+        );
+    }
+});
+
+// Username availability (settings page)
+app.get("/:lang/api/username-available", async (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({ available: false });
+    }
+    const candidate = String(req.query.u || "").trim();
+    if (!candidate || /\s/.test(candidate)) {
+        return res.json({ available: false });
+    }
+    try {
+        const r = await pool.query(
+            "SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id <> $2",
+            [candidate, req.session.userId]
+        );
+        res.json({ available: r.rows.length === 0 });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ available: false });
+    }
+});
+
+// Request email change (confirmation link — configure SMTP in production to email the link)
+app.post("/:lang/settings/account/email", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    i18n.setLocale(res, lang);
+    const { newEmail, currentPassword } = req.body;
+    const email = String(newEmail || "").trim().toLowerCase();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.redirect(
+            `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.invalidEmail"))}`
+        );
+    }
+
+    try {
+        const userRow = await pool.query(
+            "SELECT id, email, password FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        const u = userRow.rows[0];
+        const ok = await bcrypt.compare(String(currentPassword || ""), u.password);
+        if (!ok) {
+            return res.redirect(
+                `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.currentPasswordWrong"))}`
+            );
+        }
+        if (email === String(u.email).toLowerCase()) {
+            return res.redirect(
+                `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.emailUnchanged"))}`
+            );
+        }
+        const taken = await pool.query("SELECT id FROM users WHERE LOWER(email) = LOWER($1) AND id <> $2", [
+            email,
+            req.session.userId,
+        ]);
+        if (taken.rows.length > 0) {
+            return res.redirect(
+                `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.emailTaken"))}`
+            );
+        }
+
+        const token = crypto.randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await pool.query(
+            `UPDATE users SET pending_email = $1, email_change_token = $2, email_change_expires = $3 WHERE id = $4`,
+            [email, token, expires, req.session.userId]
+        );
+
+        const confirmUrl = `${req.protocol}://${req.get("host")}/${lang}/settings/confirm-email?token=${token}`;
+        if (process.env.NODE_ENV !== "production") {
+            console.log("[email change] confirmation URL:", confirmUrl);
+        }
+
+        res.redirect(
+            `/${lang}/settings?tab=account&success=${encodeURIComponent(i18n.__("settings.messages.emailChangePending"))}`
+        );
+    } catch (error) {
+        console.error(error);
+        res.redirect(
+            `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.emailChangeFailed"))}`
+        );
+    }
+});
+
+app.get("/:lang/settings/confirm-email", async (req, res) => {
+    const { lang } = req.params;
+    i18n.setLocale(res, lang);
+    const token = String(req.query.token || "");
+    if (!token) {
+        return res.redirect(`/${lang}/login?error=${encodeURIComponent(i18n.__("settings.errors.invalidToken"))}`);
+    }
+    try {
+        const r = await pool.query(
+            "SELECT id, pending_email, email_change_expires FROM users WHERE email_change_token = $1",
+            [token]
+        );
+        if (r.rows.length === 0) {
+            return res.redirect(`/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.invalidToken"))}`);
+        }
+        const row = r.rows[0];
+        if (!row.pending_email || !row.email_change_expires || new Date(row.email_change_expires) < new Date()) {
+            return res.redirect(`/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.invalidToken"))}`);
+        }
+        await pool.query(
+            `UPDATE users SET email = $1, pending_email = NULL, email_change_token = NULL, email_change_expires = NULL WHERE id = $2`,
+            [row.pending_email, row.id]
+        );
+        res.redirect(
+            `/${lang}/settings?tab=account&success=${encodeURIComponent(i18n.__("settings.messages.emailConfirmed"))}`
+        );
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.emailChangeFailed"))}`);
+    }
+});
+
+app.post("/:lang/settings/account/delete", checkAuthenticated, async (req, res) => {
+    const { lang } = req.params;
+    i18n.setLocale(res, lang);
+    const { password } = req.body;
+    try {
+        const result = await pool.query("SELECT password FROM users WHERE id = $1", [req.session.userId]);
+        const valid = await bcrypt.compare(String(password || ""), result.rows[0].password);
+        if (!valid) {
+            return res.redirect(
+                `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.currentPasswordWrong"))}`
+            );
+        }
+        await pool.query("DELETE FROM users WHERE id = $1", [req.session.userId]);
+        req.session.destroy(() => {
+            res.redirect(`/${lang}/login?success=${encodeURIComponent(i18n.__("settings.messages.accountDeleted"))}`);
+        });
+    } catch (error) {
+        console.error(error);
+        res.redirect(
+            `/${lang}/settings?tab=account&error=${encodeURIComponent(i18n.__("settings.errors.deleteAccountFailed"))}`
+        );
     }
 });
 

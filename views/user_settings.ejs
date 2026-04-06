@@ -5,904 +5,791 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="content-language" content="<%= lang %>">
     <title><%= __('settings.title') %> | <%= __('title') %></title>
-    
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <script src="/js/jquery-1.10.1.min.js"></script>
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
-    <link rel="apple-touch-icon" href="/img/logo.png">
-    
     <style>
         :root {
-            --primary-color: #0969da;
-            --secondary-color: #656d76;
-            --accent-color: #36c;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #f0f3f6;
-            --border-color: #d1d9e0;
-            --text-primary: #1f2328;
-            --text-secondary: #656d76;
-            --text-muted: #8c959f;
-            --success-color: #1a7f37;
-            --warning-color: #d1242f;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-accent: linear-gradient(135deg, #ff6b35 0%, #f9ca24 100%);
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --border-radius: 12px;
-            --border-radius-sm: 8px;
+            --text-primary: #2d2d2d;
+            --text-secondary: #6c757d;
+            --text-muted: #999;
+            --heading: #1a1a2e;
+            --border: #dee2e6;
+            --focus: #1a5276;
+            --btn: #1a1a2e;
+            --btn-hover: #2c2c4a;
+            --error: #c0392b;
+            --success: #27ae60;
+            --bg: #ffffff;
         }
-
-        * {
-            box-sizing: border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
-            background: var(--bg-secondary);
             margin: 0;
-            font-feature-settings: 'ss01', 'ss02', 'cv01', 'cv03';
-        }
-
-        .settings-container {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            padding: 2rem 0;
-        }
-
-        .settings-card {
-            background: var(--bg-primary);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-lg);
-            overflow: hidden;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .settings-header {
-            background: var(--gradient-primary);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .settings-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/></svg>');
-            animation: float 20s infinite linear;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(-100px, -100px); }
-        }
-
-        .settings-header-content {
-            position: relative;
-            z-index: 2;
-        }
-
-        .settings-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            margin: 0 auto 1rem;
-            object-fit: cover;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .settings-subtitle {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        .settings-nav {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .nav-tabs .nav-link {
-            border: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            padding: 1rem 1.5rem;
-            border-radius: 0;
-            background: transparent;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: var(--primary-color);
-            background: rgba(9, 105, 218, 0.05);
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--primary-color);
-            background: var(--bg-primary);
-            border-bottom: 3px solid var(--primary-color);
-        }
-
-        .settings-content {
-            padding: 2rem;
-        }
-
-        .tab-content {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-section {
-            background: var(--bg-secondary);
-            border-radius: var(--border-radius-sm);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border: 1px solid var(--border-color);
-        }
-
-        .form-section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bg);
             color: var(--text-primary);
-            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+        a { color: var(--text-secondary); transition: color 150ms ease, opacity 150ms ease; }
+        a:hover { color: var(--heading); }
+
+        .settings-page { min-height: 100vh; padding-bottom: 3rem; }
+        .settings-topbar {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            max-width: 920px;
+            margin: 0 auto;
         }
-
-        .form-section-title i {
-            color: var(--primary-color);
+        .settings-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            color: var(--heading);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 150ms ease;
         }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .form-control {
-            border: 2px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            padding: 0.75rem 1rem;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            background: var(--bg-primary);
-        }
-
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(9, 105, 218, 0.1);
-            background: var(--bg-primary);
-        }
-
-        .form-control::placeholder {
-            color: var(--text-muted);
-        }
-
-        .btn-primary {
-            background: var(--gradient-primary);
-            border: none;
-            padding: 0.75rem 2rem;
-            border-radius: var(--border-radius-sm);
+        .settings-back:hover { background: #f4f4f4; color: var(--heading); }
+        .settings-topbar h1 {
+            margin: 0;
+            font-size: 20px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: var(--shadow-sm);
+            color: var(--heading);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            background: var(--gradient-primary);
+        .settings-layout {
+            display: flex;
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 24px 20px 0;
+            gap: 32px;
+            align-items: flex-start;
         }
-
-        .btn-secondary {
-            background: var(--bg-tertiary);
-            border: 2px solid var(--border-color);
+        .settings-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .settings-nav-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 10px 12px;
+            margin-bottom: 4px;
+            border: none;
+            border-left: 4px solid transparent;
+            background: none;
+            font-size: 14px;
             color: var(--text-secondary);
-            padding: 0.75rem 2rem;
-            border-radius: var(--border-radius-sm);
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary:hover {
-            background: var(--border-color);
-            border-color: var(--text-secondary);
-            color: var(--text-primary);
-        }
-
-        .social-links-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .social-input-group {
-            position: relative;
-        }
-
-        .social-input-group .form-control {
-            padding-left: 3rem;
-        }
-
-        .social-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            z-index: 3;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: var(--border-radius-sm);
-            padding: 2rem;
-            text-align: center;
-            transition: all 0.3s ease;
             cursor: pointer;
-            background: var(--bg-primary);
+            transition: color 150ms ease, border-color 150ms ease, font-weight 150ms ease;
+            font-family: inherit;
+        }
+        .settings-nav-btn:hover { color: var(--heading); }
+        .settings-nav-btn.is-active {
+            color: var(--heading);
+            font-weight: 700;
+            border-left-color: var(--heading);
         }
 
-        .upload-area:hover {
-            border-color: var(--primary-color);
-            background: rgba(9, 105, 218, 0.02);
-        }
+        .settings-main { flex: 1; max-width: 640px; min-width: 0; }
 
-        .upload-area.dragover {
-            border-color: var(--primary-color);
-            background: rgba(9, 105, 218, 0.05);
-        }
-
-        .upload-icon {
-            font-size: 3rem;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        .privacy-section {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            border: 1px solid #e1bee7;
-        }
+        .tab-panel { display: none; }
+        .tab-panel.is-active { display: block; }
 
         .alert {
-            border-radius: var(--border-radius-sm);
-            border: none;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .alert-success { background: #e8f8ef; color: #1e6b3a; border: 1px solid #b8e6c8; }
+        .alert-error { background: #fdecea; color: #8b2e22; border: 1px solid #f5c4c0; }
+
+        .section-heading {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--heading);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 32px 0 16px;
+        }
+        .section-heading:first-child { margin-top: 0; }
+
+        .field { margin-bottom: 16px; }
+        .field-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        .field-error { font-size: 12px; color: var(--error); margin-top: 6px; display: none; }
+        .field-error.is-visible { display: block; }
+
+        .input, .textarea, .select {
+            width: 100%;
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 15px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+        .textarea { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+        .input:focus, .textarea:focus, .select:focus {
+            outline: none;
+            border-color: var(--focus);
+            box-shadow: 0 0 0 2px rgba(26, 82, 118, 0.25);
+        }
+        .input.input-invalid, .textarea.input-invalid { border-color: var(--error); }
+
+        .input-with-icon { position: relative; }
+        .input-with-icon .input { padding-left: 40px; padding-right: 40px; }
+        .input-with-icon .icon-left {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            font-size: 16px; color: var(--text-muted); pointer-events: none;
+        }
+        .pw-toggle {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            padding: 4px; font-size: 16px;
+        }
+        .pw-toggle:focus { outline: none; box-shadow: 0 0 0 2px var(--focus); border-radius: 4px; }
+
+        .bio-wrap { position: relative; }
+        .bio-counter {
+            position: absolute; bottom: 8px; right: 10px;
+            font-size: 12px; color: var(--text-muted);
+            pointer-events: none;
         }
 
-        .alert-success {
-            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            color: var(--success-color);
+        .avatar-block { text-align: center; margin-bottom: 24px; }
+        .avatar-wrap {
+            position: relative;
+            width: 96px; height: 96px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
         }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            color: var(--warning-color);
+        .avatar-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+            display: block;
         }
-
-        .header-back-btn {
-            position: absolute;
-            left: 2rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 25px;
-            text-decoration: none;
+        .avatar-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
             font-weight: 500;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 150ms ease;
+        }
+        .avatar-wrap:hover .avatar-overlay { opacity: 1; }
+        .avatar-overlay i { font-size: 20px; margin-bottom: 4px; }
+        .remove-photo {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: none; border: none; cursor: pointer;
+            font-family: inherit;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .remove-photo:hover { color: var(--heading); }
+
+        .username-status { font-size: 12px; margin-top: 6px; min-height: 18px; }
+        .username-status.ok { color: var(--success); }
+        .username-status.bad { color: var(--error); }
+
+        .btn-primary {
+            width: 100%;
+            height: 44px;
+            margin-top: 8px;
+            border: none;
+            border-radius: 6px;
+            background: var(--btn);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 150ms ease, color 150ms ease;
+        }
+        .btn-primary:hover:not(:disabled) { background: var(--btn-hover); }
+        .btn-primary:disabled {
+            background: #e0e0e0;
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+        .btn-primary.flash-success { background: var(--success); }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .toggle-text {
+            flex: 1;
+        }
+        .toggle-text strong { display: block; font-size: 14px; color: var(--text-primary); font-weight: 500; }
+        .toggle-text span { font-size: 12px; color: var(--text-muted); }
+
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 44px;
+            height: 24px;
+            margin: 0;
+            z-index: 3;
+            cursor: pointer;
+        }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 999px;
+            transition: background 150ms ease;
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            transition: transform 150ms ease;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .toggle input:checked ~ .toggle-track { background: var(--btn); }
+        .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+        .toggle input:focus ~ .toggle-track {
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--focus);
         }
 
-        .header-back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            text-decoration: none;
-            transform: translateY(-50%) translateX(-5px);
+        .danger-link {
+            color: var(--error);
+            font-size: 14px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            font-family: inherit;
+            text-decoration: underline;
+        }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-backdrop.is-open { display: flex; }
+        .modal-box {
+            background: #fff;
+            max-width: 400px;
+            width: 100%;
+            padding: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .modal-box h2 { margin: 0 0 12px; font-size: 18px; color: var(--heading); }
+        .modal-box p { margin: 0 0 16px; font-size: 14px; color: var(--text-secondary); }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+        .btn-secondary {
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .btn-danger {
+            padding: 8px 16px;
+            border: none;
+            background: var(--error);
+            color: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
         }
 
         @media (max-width: 768px) {
-            .settings-container {
-                padding: 1rem;
+            .settings-layout { flex-direction: column; }
+            .settings-sidebar {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
             }
-
-            .settings-header {
-                padding: 1.5rem 1rem;
+            .settings-nav-btn {
+                flex: 1 1 auto;
+                min-width: calc(50% - 4px);
+                border-left: none;
+                border-bottom: 3px solid transparent;
+                text-align: center;
             }
-
-            .header-back-btn {
-                position: static;
-                transform: none;
-                margin-bottom: 1rem;
-                display: inline-block;
+            .settings-nav-btn.is-active {
+                border-left: none;
+                border-bottom-color: var(--heading);
             }
-
-            .settings-title {
-                font-size: 1.5rem;
-            }
-
-            .settings-content {
-                padding: 1rem;
-            }
-
-            .nav-tabs .nav-link {
-                padding: 0.75rem 1rem;
-                font-size: 0.9rem;
-            }
-
-            .social-links-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .interest-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-
-        .interest-tag {
-            background: var(--primary-color);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .interest-tag:hover {
-            background: var(--accent-color);
-            transform: scale(1.05);
-        }
-
-        .interest-tag.remove {
-            background: var(--warning-color);
-        }
-
-        .add-interest-btn {
-            background: var(--bg-tertiary);
-            border: 2px dashed var(--border-color);
-            color: var(--text-secondary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .add-interest-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .achievement-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .achievement-card {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            padding: 1rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .achievement-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .achievement-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-        }
-
-        .achievement-title {
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .achievement-description {
-            font-size: 0.8rem;
-            color: var(--text-muted);
         }
     </style>
 </head>
-
 <body>
-    <div class="settings-container">
-        <div class="container-fluid px-3">
-            <div class="settings-card">
-                <!-- Header -->
-                <div class="settings-header">
-                    <a href="/user/<%= username %>" class="header-back-btn">
-                        <i class="fas fa-arrow-left me-2"></i>Back to Profile
-                    </a>
-                    <div class="settings-header-content">
-                        <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" 
-                             alt="Profile Picture" class="settings-avatar">
-                        <h1 class="settings-title">Account Settings</h1>
-                        <p class="settings-subtitle">Manage your profile, privacy, and preferences</p>
-                    </div>
+    <div class="settings-page">
+        <header class="settings-topbar">
+            <a href="/user/<%= username %>" class="settings-back" aria-label="<%= __('settings.backToProfile') %>">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            </a>
+            <h1><%= __('settings.title') %></h1>
+        </header>
+
+        <div class="settings-layout">
+            <nav class="settings-sidebar" aria-label="<%= __('settings.title') %>">
+                <button type="button" class="settings-nav-btn is-active" data-tab="profile"><%= __('settings.nav.profile') %></button>
+                <button type="button" class="settings-nav-btn" data-tab="account"><%= __('settings.nav.account') %></button>
+                <button type="button" class="settings-nav-btn" data-tab="privacy"><%= __('settings.nav.privacy') %></button>
+                <button type="button" class="settings-nav-btn" data-tab="password"><%= __('settings.nav.password') %></button>
+            </nav>
+
+            <div class="settings-main">
+                <% if (error) { %>
+                    <div class="alert alert-error" role="alert"><%= error %></div>
+                <% } %>
+                <% if (success) { %>
+                    <div class="alert alert-success" role="alert"><%= success %></div>
+                <% } %>
+
+                <!-- Profile -->
+                <div id="panel-profile" class="tab-panel is-active">
+                    <form id="form-profile" action="/<%= lang %>/settings/profile" method="POST" enctype="multipart/form-data" autocomplete="off">
+                        <input type="hidden" name="removeProfilePicture" id="removeProfilePicture" value="0">
+
+                        <div class="avatar-block">
+                            <div class="avatar-wrap" id="avatarWrap" role="button" tabindex="0" aria-label="<%= __('settings.profile.changePhoto') %>">
+                                <img id="avatarPreview" src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="">
+                                <span class="avatar-overlay">
+                                    <i class="fas fa-camera" aria-hidden="true"></i>
+                                    <%= __('settings.profile.changePhoto') %>
+                                </span>
+                            </div>
+                            <input type="file" id="profilePicture" name="profilePicture" accept="image/png,image/jpeg,image/webp" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
+                            <button type="button" class="remove-photo" id="btnRemovePhoto"><%= __('settings.profile.removePhoto') %></button>
+                        </div>
+
+                        <h2 class="section-heading"><%= __('settings.profile.personalInfo') %></h2>
+
+                        <div class="field">
+                            <label class="field-label" for="fullName"><%= __('settings.profile.fullName') %></label>
+                            <input class="input" type="text" id="fullName" name="fullName" value="<%= fullName || '' %>" placeholder="<%= lang === 'ru' ? 'Ваше полное имя' : 'Your full name' %>">
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="username"><%= __('settings.profile.username') %></label>
+                            <input class="input" type="text" id="username" name="username" value="<%= username %>" autocomplete="username" pattern="[a-zA-Z0-9._\-]{2,32}">
+                            <p class="field-hint"><%= __('settings.profile.usernameHelp') %></p>
+                            <div class="username-status" id="usernameStatus" aria-live="polite"></div>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="emailDisplay">
+                                <%= __('settings.profile.email') %>
+                                <i class="fas fa-lock" style="font-size:12px;color:var(--text-muted);" aria-hidden="true"></i>
+                            </label>
+                            <input class="input" type="email" id="emailDisplay" value="<%= email || '' %>" readonly disabled style="background:#f8f9fa;color:var(--text-secondary);">
+                            <p class="field-hint"><%= __('settings.profile.emailPrivate') %></p>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="countryLocation"><%= __('settings.profile.country') %></label>
+                            <select class="select input" id="countryLocation" name="countryLocation" style="height:40px;">
+                                <option value=""><%= __('settings.profile.countryPreferNot') %></option>
+                                <% if (countryLocation && countryNames.indexOf(countryLocation) === -1) { %>
+                                    <option value="<%= countryLocation %>" selected><%= countryLocation %></option>
+                                <% } %>
+                                <% countryNames.forEach(function(c) { %>
+                                    <option value="<%= c %>" <%= countryLocation === c ? 'selected' : '' %>><%= c %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="institution"><%= __('settings.profile.institution') %></label>
+                            <input class="input" type="text" id="institution" name="institution" value="<%= institution || '' %>" placeholder="<%= lang === 'ru' ? 'напр., МФТИ, лицей БГУ' : 'e.g., MIT, BSU Lyceum, self-taught' %>">
+                            <p class="field-hint"><%= __('settings.profile.institutionHint') %></p>
+                        </div>
+
+                        <div class="field bio-wrap">
+                            <label class="field-label" for="bio"><%= __('settings.profile.bio') %></label>
+                            <textarea class="textarea" id="bio" name="bio" rows="4" maxlength="300" placeholder="<%= lang === 'ru' ? 'Несколько слов о себе' : 'A few words about your background and interests' %>"><%= bio || '' %></textarea>
+                            <span class="bio-counter" id="bioCounter">0/300</span>
+                        </div>
+
+                        <h2 class="section-heading"><%= __('settings.profile.links') %></h2>
+
+                        <div class="field">
+                            <label class="field-label" for="github"><%= 'GitHub' %></label>
+                            <div class="input-with-icon">
+                                <i class="fab fa-github icon-left" aria-hidden="true"></i>
+                                <input class="input url-field" type="text" id="github" name="github" value="<%= github || '' %>" placeholder="<%= __('settings.profile.githubPh') %>" data-label="GitHub">
+                            </div>
+                            <p class="field-error" id="err-github"></p>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="linkedin"><%= 'LinkedIn' %></label>
+                            <div class="input-with-icon">
+                                <i class="fab fa-linkedin icon-left" aria-hidden="true"></i>
+                                <input class="input url-field" type="text" id="linkedin" name="linkedin" value="<%= linkedin || '' %>" placeholder="<%= __('settings.profile.linkedinPh') %>" data-label="LinkedIn">
+                            </div>
+                            <p class="field-error" id="err-linkedin"></p>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="personalWebsite"><%= lang === 'ru' ? 'Сайт' : 'Website' %></label>
+                            <div class="input-with-icon">
+                                <i class="fas fa-globe icon-left" aria-hidden="true"></i>
+                                <input class="input url-field" type="text" id="personalWebsite" name="personalWebsite" value="<%= personalWebsite || '' %>" placeholder="<%= __('settings.profile.websitePh') %>" data-label="Website">
+                            </div>
+                            <p class="field-error" id="err-personalWebsite"></p>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="btnSaveProfile" disabled><%= __('settings.profile.save') %></button>
+                    </form>
                 </div>
 
-                <!-- Navigation Tabs -->
-                <div class="settings-nav">
-                    <ul class="nav nav-tabs" id="settingsTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" 
-                                    data-bs-target="#profile" type="button" role="tab">
-                                <i class="fas fa-user me-2"></i>Profile
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="social-tab" data-bs-toggle="tab" 
-                                    data-bs-target="#social" type="button" role="tab">
-                                <i class="fas fa-share-alt me-2"></i>Social Links
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="privacy-tab" data-bs-toggle="tab" 
-                                    data-bs-target="#privacy" type="button" role="tab">
-                                <i class="fas fa-shield-alt me-2"></i>Privacy
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="interests-tab" data-bs-toggle="tab" 
-                                    data-bs-target="#interests" type="button" role="tab">
-                                <i class="fas fa-tags me-2"></i>Interests
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="security-tab" data-bs-toggle="tab" 
-                                    data-bs-target="#security" type="button" role="tab">
-                                <i class="fas fa-lock me-2"></i>Security
-                            </button>
-                        </li>
-                    </ul>
+                <!-- Account -->
+                <div id="panel-account" class="tab-panel">
+                    <h2 class="section-heading" style="margin-top:0;"><%= __('settings.account.title') %></h2>
+                    <p style="font-size:14px;color:var(--text-secondary);margin:0 0 16px;"><%= __('settings.account.currentEmail') %>: <strong style="color:var(--text-primary);"><%= email || '' %></strong></p>
+
+                    <form action="/<%= lang %>/settings/account/email" method="POST" autocomplete="off">
+                        <div class="field">
+                            <label class="field-label" for="newEmail"><%= __('settings.account.newEmail') %></label>
+                            <input class="input" type="email" id="newEmail" name="newEmail" required placeholder="you@example.com">
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="currentPasswordEmail"><%= __('settings.account.passwordForEmail') %></label>
+                            <div class="input-with-icon">
+                                <input class="input" type="password" id="currentPasswordEmail" name="currentPassword" required style="padding-right:40px;">
+                                <button type="button" class="pw-toggle" data-target="currentPasswordEmail" aria-label="show password"><i class="far fa-eye"></i></button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary" style="margin-top:16px;"><%= __('settings.account.requestChange') %></button>
+                    </form>
+
+                    <h2 class="section-heading"><%= __('settings.account.deleteTitle') %></h2>
+                    <button type="button" class="danger-link" id="openDeleteModal"><%= __('settings.account.deleteLink') %></button>
                 </div>
 
-                <!-- Tab Content -->
-                <div class="settings-content">
-                    <% if (error) { %>
-                        <div class="alert alert-danger">
-                            <i class="fas fa-exclamation-triangle me-2"></i><%= error %>
+                <!-- Privacy -->
+                <div id="panel-privacy" class="tab-panel">
+                    <form action="/<%= lang %>/settings/privacy" method="POST">
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= __('settings.privacy.publicProfile') %></strong>
+                                <span><%= __('settings.privacy.publicProfileDesc') %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="publicProfile" value="1" <%= (preferences && preferences.public_profile !== false) ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
                         </div>
-                    <% } %>
-                    <% if (success) { %>
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle me-2"></i><%= success %>
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= __('settings.privacy.emailNotif') %></strong>
+                                <span><%= __('settings.privacy.emailNotifDesc') %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="emailNotifications" value="1" <%= (preferences && preferences.email_notifications !== false) ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
                         </div>
-                    <% } %>
-
-                    <div class="tab-content" id="settingsTabContent">
-                        <!-- Profile Tab -->
-                        <div class="tab-pane fade show active" id="profile" role="tabpanel">
-                            <form action="/<%= lang %>/settings/profile" method="POST" enctype="multipart/form-data">
-                                <div class="form-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-camera"></i>Profile Picture
-                                    </h3>
-                                    <div class="upload-area" id="avatarUpload">
-                                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
-                                        <p><strong>Click to upload</strong> or drag and drop</p>
-                                        <p class="text-muted">PNG, JPG up to 5MB</p>
-                                        <input type="file" id="profilePicture" name="profilePicture" 
-                                               accept="image/*" style="display: none;">
-                                    </div>
-                                </div>
-
-                                <div class="form-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-id-card"></i>Personal Information
-                                    </h3>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Full Name</label>
-                                                <input type="text" name="fullName" class="form-control" 
-                                                       value="<%= fullName || '' %>" placeholder="Your full name">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Username</label>
-                                                <input type="text" name="username" class="form-control" 
-                                                       value="<%= username %>" readonly 
-                                                       title="Username cannot be changed">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Email</label>
-                                                <input type="email" name="email" class="form-control" 
-                                                       value="<%= email || '' %>" placeholder="your@email.com">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Country</label>
-                                                <select name="countryLocation" class="form-control">
-                                                    <option value="">Select your country</option>
-                                                    <option value="United States" <%= countryLocation === 'United States' ? 'selected' : '' %>>United States</option>
-                                                    <option value="Canada" <%= countryLocation === 'Canada' ? 'selected' : '' %>>Canada</option>
-                                                    <option value="United Kingdom" <%= countryLocation === 'United Kingdom' ? 'selected' : '' %>>United Kingdom</option>
-                                                    <option value="Germany" <%= countryLocation === 'Germany' ? 'selected' : '' %>>Germany</option>
-                                                    <option value="France" <%= countryLocation === 'France' ? 'selected' : '' %>>France</option>
-                                                    <option value="Russia" <%= countryLocation === 'Russia' ? 'selected' : '' %>>Russia</option>
-                                                    <option value="China" <%= countryLocation === 'China' ? 'selected' : '' %>>China</option>
-                                                    <option value="Japan" <%= countryLocation === 'Japan' ? 'selected' : '' %>>Japan</option>
-                                                    <option value="Australia" <%= countryLocation === 'Australia' ? 'selected' : '' %>>Australia</option>
-                                                    <option value="Brazil" <%= countryLocation === 'Brazil' ? 'selected' : '' %>>Brazil</option>
-                                                    <option value="India" <%= countryLocation === 'India' ? 'selected' : '' %>>India</option>
-                                                    <!-- Add more countries as needed -->
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Bio</label>
-                                        <textarea name="bio" class="form-control" rows="4" 
-                                                  placeholder="Tell us about yourself, your physics interests, goals, etc."><%= bio || '' %></textarea>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Save Changes
-                                    </button>
-                                    <a href="/user/<%= username %>" class="btn btn-secondary">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </a>
-                                </div>
-                            </form>
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= __('settings.privacy.showCountry') %></strong>
+                                <span><%= __('settings.privacy.showCountryDesc') %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="showCountryOnLeaderboard" value="1" <%= (preferences && preferences.show_country_on_leaderboard !== false) ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
                         </div>
+                        <button type="submit" class="btn-primary"><%= __('settings.privacy.save') %></button>
+                    </form>
+                </div>
 
-                        <!-- Social Links Tab -->
-                        <div class="tab-pane fade" id="social" role="tabpanel">
-                            <form action="/<%= lang %>/settings/social" method="POST">
-                                <div class="form-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-link"></i>Social Links
-                                    </h3>
-                                    <div class="social-links-grid">
-                                        <div class="social-input-group">
-                                            <i class="fab fa-linkedin social-icon"></i>
-                                            <input type="url" name="linkedin" class="form-control" 
-                                                   value="<%= linkedin || '' %>" 
-                                                   placeholder="https://linkedin.com/in/yourprofile">
-                                        </div>
-                                        <div class="social-input-group">
-                                            <i class="fab fa-github social-icon"></i>
-                                            <input type="url" name="github" class="form-control" 
-                                                   value="<%= github || '' %>" 
-                                                   placeholder="https://github.com/yourusername">
-                                        </div>
-                                        <div class="social-input-group">
-                                            <i class="fab fa-instagram social-icon"></i>
-                                            <input type="url" name="instagram" class="form-control" 
-                                                   value="<%= instagram || '' %>" 
-                                                   placeholder="https://instagram.com/yourusername">
-                                        </div>
-                                        <div class="social-input-group">
-                                            <i class="fas fa-globe social-icon"></i>
-                                            <input type="url" name="personalWebsite" class="form-control" 
-                                                   value="<%= personalWebsite || '' %>" 
-                                                   placeholder="https://yourwebsite.com">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Save Links
-                                    </button>
-                                </div>
-                            </form>
+                <!-- Password -->
+                <div id="panel-password" class="tab-panel">
+                    <form id="form-password" action="/<%= lang %>/settings/password" method="POST" autocomplete="off">
+                        <div class="field">
+                            <label class="field-label" for="currentPassword"><%= __('settings.password.current') %></label>
+                            <div class="input-with-icon">
+                                <input class="input" type="password" id="currentPassword" name="currentPassword" required style="padding-right:40px;">
+                                <button type="button" class="pw-toggle" data-target="currentPassword" aria-label="show password"><i class="far fa-eye"></i></button>
+                            </div>
                         </div>
-
-                        <!-- Privacy Tab -->
-                        <div class="tab-pane fade" id="privacy" role="tabpanel">
-                            <form action="/<%= lang %>/settings/privacy" method="POST">
-                                <div class="form-section privacy-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-user-shield"></i>Privacy Settings
-                                    </h3>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch mb-3">
-                                                <input class="form-check-input" type="checkbox" name="publicProfile" 
-                                                       id="publicProfile" <%= (preferences && preferences.public_profile !== false) ? 'checked' : '' %>>
-                                                <label class="form-check-label" for="publicProfile">
-                                                    <strong>Public Profile</strong><br>
-                                                    <small class="text-muted">Allow others to view your profile</small>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch mb-3">
-                                                <input class="form-check-input" type="checkbox" name="showOnlineStatus" 
-                                                       id="showOnlineStatus" <%= (preferences && preferences.show_online_status !== false) ? 'checked' : '' %>>
-                                                <label class="form-check-label" for="showOnlineStatus">
-                                                    <strong>Show Online Status</strong><br>
-                                                    <small class="text-muted">Let others see when you're online</small>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-check form-switch mb-3">
-                                                <input class="form-check-input" type="checkbox" name="emailNotifications" 
-                                                       id="emailNotifications" <%= (preferences && preferences.email_notifications !== false) ? 'checked' : '' %>>
-                                                <label class="form-check-label" for="emailNotifications">
-                                                    <strong>Email Notifications</strong><br>
-                                                    <small class="text-muted">Receive updates via email</small>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Privacy Level</label>
-                                                <select name="privacyLevel" class="form-control">
-                                                    <option value="public" <%= (preferences && preferences.privacy_level === 'public') ? 'selected' : '' %>>Public</option>
-                                                    <option value="friends" <%= (preferences && preferences.privacy_level === 'friends') ? 'selected' : '' %>>Friends Only</option>
-                                                    <option value="private" <%= (preferences && preferences.privacy_level === 'private') ? 'selected' : '' %>>Private</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Save Privacy Settings
-                                    </button>
-                                </div>
-                            </form>
+                        <div class="field">
+                            <label class="field-label" for="newPassword"><%= __('settings.password.new') %></label>
+                            <div class="input-with-icon">
+                                <input class="input" type="password" id="newPassword" name="newPassword" required minlength="8" style="padding-right:40px;">
+                                <button type="button" class="pw-toggle" data-target="newPassword" aria-label="show password"><i class="far fa-eye"></i></button>
+                            </div>
+                            <p class="field-hint"><%= __('settings.password.requirements') %></p>
                         </div>
-
-                        <!-- Interests Tab -->
-                        <div class="tab-pane fade" id="interests" role="tabpanel">
-                            <form action="/<%= lang %>/settings/interests" method="POST">
-                                <div class="form-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-star"></i>Physics Interests
-                                    </h3>
-                                    <p class="text-muted mb-3">Select your areas of interest in physics to connect with like-minded students</p>
-                                    
-                                    <div class="interest-tags" id="interestTags">
-                                        <% if (interests && interests.length > 0) { %>
-                                            <% interests.forEach(interest => { %>
-                                                <span class="interest-tag" data-interest="<%= interest.interest_tag %>">
-                                                    <%= interest.interest_tag %>
-                                                    <i class="fas fa-times ms-1"></i>
-                                                </span>
-                                            <% }); %>
-                                        <% } %>
-                                        <span class="add-interest-btn" id="addInterestBtn">
-                                            <i class="fas fa-plus me-1"></i>Add Interest
-                                        </span>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <label class="form-label">Popular Topics:</label>
-                                        <div class="d-flex flex-wrap gap-2">
-                                            <% const popularTopics = ['Mechanics', 'Thermodynamics', 'Electromagnetism', 'Quantum Physics', 'Optics', 'Nuclear Physics', 'Astrophysics', 'Mathematical Physics']; %>
-                                            <% popularTopics.forEach(topic => { %>
-                                                <button type="button" class="btn btn-outline-primary btn-sm popular-topic-btn" 
-                                                        data-topic="<%= topic %>">
-                                                    <%= topic %>
-                                                </button>
-                                            <% }); %>
-                                        </div>
-                                    </div>
-
-                                    <input type="hidden" name="interests" id="interestsInput" value="">
-                                </div>
-
-                                <div class="d-flex gap-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Save Interests
-                                    </button>
-                                </div>
-                            </form>
+                        <div class="field">
+                            <label class="field-label" for="confirmPassword"><%= __('settings.password.confirm') %></label>
+                            <div class="input-with-icon">
+                                <input class="input" type="password" id="confirmPassword" name="confirmPassword" required minlength="8" style="padding-right:40px;">
+                                <button type="button" class="pw-toggle" data-target="confirmPassword" aria-label="show password"><i class="far fa-eye"></i></button>
+                            </div>
                         </div>
-
-                        <!-- Security Tab -->
-                        <div class="tab-pane fade" id="security" role="tabpanel">
-                            <form action="/<%= lang %>/settings/password" method="POST">
-                                <div class="form-section">
-                                    <h3 class="form-section-title">
-                                        <i class="fas fa-key"></i>Change Password
-                                    </h3>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="form-group">
-                                                <label class="form-label">Current Password</label>
-                                                <input type="password" name="currentPassword" class="form-control" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">New Password</label>
-                                                <input type="password" name="newPassword" class="form-control" required>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="form-label">Confirm New Password</label>
-                                                <input type="password" name="confirmPassword" class="form-control" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex gap-3">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-2"></i>Update Password
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn-primary" id="btnSavePassword" disabled><%= __('settings.password.save') %></button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="modal-backdrop" id="deleteModal" aria-hidden="true">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="delTitle">
+            <h2 id="delTitle"><%= __('settings.account.deleteModalTitle') %></h2>
+            <p><%= __('settings.account.deleteModalBody') %></p>
+            <form action="/<%= lang %>/settings/account/delete" method="POST">
+                <div class="field">
+                    <input class="input" type="password" name="password" required placeholder="<%= __('settings.account.passwordForEmail') %>">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="closeDeleteModal"><%= __('settings.account.cancel') %></button>
+                    <button type="submit" class="btn-danger"><%= __('settings.account.deleteConfirm') %></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Avatar upload functionality
-        const avatarUpload = document.getElementById('avatarUpload');
-        const profilePictureInput = document.getElementById('profilePicture');
+(function () {
+    var lang = '<%= lang %>';
+    var MSG = {
+        usernameOk: <%- JSON.stringify(__('settings.profile.usernameAvailable')) %>,
+        usernameTaken: <%- JSON.stringify(__('settings.profile.usernameTaken')) %>,
+        saved: <%- JSON.stringify(__('settings.profile.saved')) %>
+    };
+    var initialSnapshot = '';
 
-        avatarUpload.addEventListener('click', () => {
-            profilePictureInput.click();
+    function tab(name) {
+        document.querySelectorAll('.settings-nav-btn').forEach(function (b) {
+            b.classList.toggle('is-active', b.getAttribute('data-tab') === name);
         });
-
-        avatarUpload.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            avatarUpload.classList.add('dragover');
+        document.querySelectorAll('.tab-panel').forEach(function (p) {
+            p.classList.toggle('is-active', p.id === 'panel-' + name);
         });
-
-        avatarUpload.addEventListener('dragleave', () => {
-            avatarUpload.classList.remove('dragover');
-        });
-
-        avatarUpload.addEventListener('drop', (e) => {
-            e.preventDefault();
-            avatarUpload.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                profilePictureInput.files = files;
-                handleFileSelect(files[0]);
-            }
-        });
-
-        profilePictureInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileSelect(e.target.files[0]);
-            }
-        });
-
-        function handleFileSelect(file) {
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    avatarUpload.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
-                        <p class="mt-2"><strong>File selected:</strong> ${file.name}</p>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            }
+        if (history.replaceState) {
+            var u = new URL(window.location.href);
+            u.searchParams.set('tab', name);
+            history.replaceState({}, '', u.toString());
         }
+    }
 
-        // Interests management
-        const interestTags = document.getElementById('interestTags');
-        const addInterestBtn = document.getElementById('addInterestBtn');
-        const interestsInput = document.getElementById('interestsInput');
-        const popularTopicBtns = document.querySelectorAll('.popular-topic-btn');
+    var qp = new URLSearchParams(window.location.search);
+    var startTab = qp.get('tab') || '<%= activeTab || "profile" %>';
+    if (['profile','account','privacy','password'].indexOf(startTab) >= 0) tab(startTab);
 
-        function updateInterestsInput() {
-            const interests = Array.from(interestTags.querySelectorAll('.interest-tag'))
-                .map(tag => tag.dataset.interest);
-            interestsInput.value = JSON.stringify(interests);
+    document.querySelectorAll('.settings-nav-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { tab(btn.getAttribute('data-tab')); });
+    });
+
+    // Avatar
+    var fileInput = document.getElementById('profilePicture');
+    var avatarPreview = document.getElementById('avatarPreview');
+    var removeField = document.getElementById('removeProfilePicture');
+    var avatarWrap = document.getElementById('avatarWrap');
+    function openPicker() { fileInput.click(); }
+    avatarWrap.addEventListener('click', openPicker);
+    avatarWrap.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); }
+    });
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files && fileInput.files[0]) {
+            removeField.value = '0';
+            var r = new FileReader();
+            r.onload = function (ev) { avatarPreview.src = ev.target.result; };
+            r.readAsDataURL(fileInput.files[0]);
+            markProfileDirty();
         }
+    });
+    document.getElementById('btnRemovePhoto').addEventListener('click', function () {
+        removeField.value = '1';
+        avatarPreview.src = '/img/profile_images/Default_placeholder.svg';
+        fileInput.value = '';
+        markProfileDirty();
+    });
 
-        addInterestBtn.addEventListener('click', () => {
-            const interest = prompt('Enter a physics topic:');
-            if (interest && interest.trim()) {
-                addInterest(interest.trim());
+    // Bio counter
+    var bio = document.getElementById('bio');
+    var bioCounter = document.getElementById('bioCounter');
+    function updBio() {
+        bioCounter.textContent = (bio.value.length) + '/300';
+    }
+    bio.addEventListener('input', updBio);
+    updBio();
+
+    // Profile dirty + save button
+    var btnSaveProfile = document.getElementById('btnSaveProfile');
+    var formProfile = document.getElementById('form-profile');
+    function profileState() {
+        var fd = new FormData(formProfile);
+        var parts = [];
+        fd.forEach(function (v, k) { if (k !== 'profilePicture') parts.push(k + '=' + v); });
+        parts.sort();
+        return parts.join('&');
+    }
+    function markProfileDirty() { btnSaveProfile.disabled = profileState() === initialSnapshot; }
+    initialSnapshot = profileState();
+    formProfile.addEventListener('input', markProfileDirty);
+    formProfile.addEventListener('change', markProfileDirty);
+    markProfileDirty();
+
+    formProfile.addEventListener('submit', function () {
+        var btn = document.getElementById('btnSaveProfile');
+        btn.disabled = true;
+    });
+
+    // Username availability
+    var unameInput = document.getElementById('username');
+    var unameStatus = document.getElementById('usernameStatus');
+    var t;
+    function checkU() {
+        var v = unameInput.value.trim();
+        unameStatus.textContent = '';
+        unameStatus.className = 'username-status';
+        if (v.length < 2) return;
+        clearTimeout(t);
+        t = setTimeout(function () {
+            fetch('/' + lang + '/api/username-available?u=' + encodeURIComponent(v), { credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d.available) {
+                        unameStatus.textContent = '\u2713 ' + MSG.usernameOk;
+                        unameStatus.className = 'username-status ok';
+                    } else {
+                        unameStatus.textContent = MSG.usernameTaken;
+                        unameStatus.className = 'username-status bad';
+                    }
+                }).catch(function () {});
+        }, 350);
+    }
+    unameInput.addEventListener('input', function () { checkU(); markProfileDirty(); });
+
+    // URL blur validation
+    function looksLikeUrl(s) {
+        if (!s || !String(s).trim()) return true;
+        var t = String(s).trim();
+        if (!/^https?:\/\//i.test(t)) t = 'https://' + t;
+        try { new URL(t); return true; } catch (e) { return false; }
+    }
+    document.querySelectorAll('.url-field').forEach(function (el) {
+        el.addEventListener('blur', function () {
+            var err = document.getElementById('err-' + el.id);
+            if (!looksLikeUrl(el.value)) {
+                el.classList.add('input-invalid');
+                if (err) { err.textContent = (lang === 'ru' ? 'Некорректный адрес' : 'Invalid URL'); err.classList.add('is-visible'); }
+            } else {
+                el.classList.remove('input-invalid');
+                if (err) { err.textContent = ''; err.classList.remove('is-visible'); }
             }
         });
+    });
 
-        function addInterest(interest) {
-            // Check if interest already exists
-            const existing = interestTags.querySelector(`[data-interest="${interest}"]`);
-            if (existing) return;
-
-            const tag = document.createElement('span');
-            tag.className = 'interest-tag';
-            tag.dataset.interest = interest;
-            tag.innerHTML = `${interest} <i class="fas fa-times ms-1"></i>`;
-            
-            tag.addEventListener('click', () => {
-                tag.remove();
-                updateInterestsInput();
-            });
-
-            interestTags.insertBefore(tag, addInterestBtn);
-            updateInterestsInput();
+    // Save flash
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('success') && params.get('tab') === 'profile') {
+        var b = document.getElementById('btnSaveProfile');
+        if (b) {
+            var orig = b.textContent;
+            b.textContent = MSG.saved;
+            b.classList.add('flash-success');
+            setTimeout(function () {
+                b.textContent = orig;
+                b.classList.remove('flash-success');
+            }, 2000);
         }
+    }
 
-        popularTopicBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                addInterest(btn.dataset.topic);
-            });
+    // Password form
+    var fp = document.getElementById('form-password');
+    var bp = document.getElementById('btnSavePassword');
+    function pwSnap() {
+        return document.getElementById('currentPassword').value + '|' +
+            document.getElementById('newPassword').value + '|' +
+            document.getElementById('confirmPassword').value;
+    }
+    var initialPw = pwSnap();
+    fp.addEventListener('input', function () {
+        bp.disabled = pwSnap() === initialPw || document.getElementById('newPassword').value.length < 8;
+    });
+
+    // Password toggles
+    document.querySelectorAll('.pw-toggle').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var id = btn.getAttribute('data-target');
+            var inp = document.getElementById(id);
+            if (!inp) return;
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+            btn.querySelector('i').className = inp.type === 'password' ? 'far fa-eye' : 'far fa-eye-slash';
         });
+    });
 
-        // Initialize interests input
-        updateInterestsInput();
-
-        // Tab animation
-        document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-            tab.addEventListener('shown.bs.tab', (e) => {
-                const target = document.querySelector(e.target.getAttribute('data-bs-target'));
-                target.style.animation = 'none';
-                target.offsetHeight; // Trigger reflow
-                target.style.animation = 'fadeIn 0.3s ease-in-out';
-            });
-        });
+    // Delete modal
+    var delModal = document.getElementById('deleteModal');
+    document.getElementById('openDeleteModal').addEventListener('click', function () {
+        delModal.classList.add('is-open');
+        delModal.setAttribute('aria-hidden', 'false');
+    });
+    document.getElementById('closeDeleteModal').addEventListener('click', function () {
+        delModal.classList.remove('is-open');
+        delModal.setAttribute('aria-hidden', 'true');
+    });
+    delModal.addEventListener('click', function (e) {
+        if (e.target === delModal) {
+            delModal.classList.remove('is-open');
+            delModal.setAttribute('aria-hidden', 'true');
+        }
+    });
+})();
     </script>
 </body>
-</html> 
+</html>
