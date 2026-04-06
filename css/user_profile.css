@@ -11,7 +11,9 @@
     color: #a52a2a;
 }
 .logo img {
-    width: 50px;
+    width: 32px;
+    height: auto;
+    object-fit: contain;
 }
 
 .logo h1 {

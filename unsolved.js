@@ -127,12 +127,12 @@ async function renderUnsolvedList(req, res) {
             return a.problemNum - b.problemNum;
         });
 
-        // Render the page
         res.render('unsolved', {
             unsolved,
             lang,
             __: i18n.__,
             title: i18n.__('unsolved.title'),
+            username: req.session.username || null,
             ...stats
         });
     } catch (error) {

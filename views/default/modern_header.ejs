@@ -28,14 +28,15 @@
     }
 
     .logo-img {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        transition: transform 0.3s ease;
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+        border-radius: 6px;
+        transition: opacity 0.2s ease;
     }
 
     .logo-img:hover {
-        transform: scale(1.05);
+        opacity: 0.85;
     }
 
     .logo-text {
@@ -323,7 +324,7 @@
 <header class="modern-header">
     <div class="header-container">
         <div class="logo-section">
-            <img src="/img/logo.png" alt="<%= __('title') %>" class="logo-img">
+            <img src="/img/logo.svg" alt="<%= __('title') %>" class="logo-img">
             <a href="/<%= lang || 'en' %>/" class="logo-text"><%= __('title') %></a>
         </div>
         

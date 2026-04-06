@@ -10,12 +10,14 @@
     <meta name="author" content="<%= __('meta.author') %>">
     <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
     <meta property="og:title" content="<%= __('title') %>">
-    <meta property="og:image" content="img/logo.png">
+    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png">
     <meta property="og:description" content="<%= __('meta.ogDescription') %>">
     <meta name="yandex-verification" content="6cfda41f74038368">
     <title><%= __('title') %></title>
     <link rel="stylesheet" href="/css/css-latex/style.css">
-    <link rel="icon" href="/img/logo.png" type="image/png">
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+    <link rel="icon" type="image/png" href="/img/logo.png">
+    <link rel="apple-touch-icon" href="/img/logo.png">
     <script src="/js/jquery-1.10.1.min.js"></script>
     <script async
         src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
@@ -712,7 +714,7 @@
         }
 
         .logo-image {
-            height: 4rem;
+            height: 32px;
             width: auto;
             object-fit: contain;
         }
@@ -807,7 +809,7 @@
             }
 
             .logo-image {
-                height: 3rem;
+                height: 32px;
             }
 
             .header-subtitle {
@@ -947,7 +949,7 @@
             <div class="header-container">
                 <a href="" class="logo-link">
                     <div class="logo">
-                        <img src="/img/book.png" alt="Book logo" class="logo-image">
+                        <img src="/img/logo.svg" alt="Savchenko Solutions logo" class="logo-image">
                         <span class="logo-text"><%= __('title') %></span>
                     </div>
                 </a>

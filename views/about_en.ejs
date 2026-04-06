@@ -3,24 +3,28 @@
 
 <head>
     <%- include('default/head_en.ejs') %>
+    <%- include('default/main_site_header_head') %>
         <title>Contributors of Savchenko Solutions</title>
         <script src="/js/jquery-1.10.1.min.js"></script>
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
         <style>
-            body {
+            /* css-latex/style.css sets body max-width: 80ch — breaks full-width .hero-section; unscoped a{} overrides nav links */
+            body.about-page {
                 font-family: 'Roboto', sans-serif;
-                padding: 0;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
                 background-color: #f9f9f9;
                 color: #333;
             }
 
-            .container {
+            .about-page-inner {
                 max-width: 1200px;
                 margin: 0 auto;
                 padding: 20px;
             }
 
-            h3 {
+            .about-page-inner h3 {
                 color: #333;
                 margin-top: 1em;
             }
@@ -56,12 +60,12 @@
                 transform: scale(1.02);
             }
 
-            a {
+            .about-page-inner a {
                 color: #36c;
                 text-decoration: none;
             }
 
-            a:hover {
+            .about-page-inner a:hover {
                 text-decoration: underline;
             }
 
@@ -80,9 +84,9 @@
         </style>
 </head>
 
-<body>
-    <div class="container">
-        <%- include('default/header.ejs') %>
+<body class="about-page">
+    <%- include('default/header.ejs') %>
+    <div class="about-page-inner">
 
             <h3 id="back-link">
                 <a href="../#description" class="back-link">
@@ -221,6 +225,7 @@
                 </ul>
             </div>
 
+            <%- include('default/main_site_footer_scripts') %>
             <%- include('default/footer_en.ejs') %>
     </div>
 </body>

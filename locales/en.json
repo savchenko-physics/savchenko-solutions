@@ -1,7 +1,16 @@
 {
 	"title": "Savchenko Solutions",
 	"subtitle": "First solutions of Savchenko Problems in Physics",
-	"motto": "The Collaborative Problem Solving",
+	"motto": "Collaborative Physics Problem Solutions",
+	"page404": {
+		"title": "Page not found",
+		"heading": "This page disappeared into a black hole",
+		"lineBeforeUrl": "The page",
+		"lineAfterUrl": "does not exist.",
+		"hint": "You can return to",
+		"homeLink": "Savchenko Solutions",
+		"teamImageAlt": "Savchenko Solutions contributors"
+	},
 	"russianVersion": "Решения на русском",
 	"oppositeLang": "ru",
 	"statementsLink": "en/savchenko_en.pdf",
@@ -183,6 +192,7 @@
 		"search": "Search Savchenko Solutions",
 		"searchButton": "Search",
 		"resultsNotFound": "No results found.",
+		"searchTypeToSeeResults": "Type to see results.",
 		"errorLoadingResults": "Error loading results.",
 		"searchPlaceholder": "Search Savchenko Solutions",
 		"upload": "Upload Solution",

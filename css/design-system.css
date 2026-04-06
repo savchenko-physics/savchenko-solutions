@@ -1,0 +1,102 @@
+/* Savchenko Solutions — global design tokens (academic, no bright accents, no gradients) */
+:root {
+  --ss-navy: #1a1a2e;
+  --ss-white: #ffffff;
+  --ss-body-text: #2d2d2d;
+  --ss-text-secondary: #6c757d;
+  --ss-heading: #1a1a2e;
+  --ss-link: #1a5276;
+  --ss-link-hover: #0d3b54;
+  --ss-link-visited: #4a235a;
+  --ss-page-bg: #ffffff;
+  --ss-card-bg: #f8f9fa;
+  --ss-header-bg: #1a1a2e;
+  --ss-footer-bg: #1a1a2e;
+  --ss-footer-text: #cccccc;
+  --ss-border-light: #e0e0e0;
+  --ss-border-card: #dee2e6;
+  --ss-primary-btn: #1a1a2e;
+  --ss-primary-btn-hover: #2c2c4a;
+  --ss-code-bg: #f5f5f5;
+}
+
+/* Base typography */
+body {
+  color: var(--ss-body-text);
+  background-color: var(--ss-page-bg);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ss-heading);
+}
+
+/* Global links (navbar / buttons override below) */
+a:link {
+  color: var(--ss-link);
+}
+
+a:visited {
+  color: var(--ss-link-visited);
+}
+
+a:hover {
+  color: var(--ss-link-hover);
+}
+
+/* Cards / sections */
+.ss-card,
+.content-card {
+  background-color: var(--ss-card-bg);
+  border: 1px solid var(--ss-border-card);
+}
+
+/* Site footer (include class="site-footer" on <footer>) */
+.site-footer {
+  background-color: var(--ss-footer-bg);
+  color: var(--ss-footer-text);
+  padding: 0;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-footer a:link,
+.site-footer a:visited {
+  color: #d4d4d4;
+}
+
+.site-footer a:hover {
+  color: var(--ss-white);
+}
+
+.site-footer strong {
+  color: #e8e8e8;
+}
+
+.site-footer small {
+  color: var(--ss-footer-text);
+}
+
+/* Primary solid button (forms) */
+.btn-ss-primary {
+  background-color: var(--ss-primary-btn) !important;
+  color: var(--ss-white) !important;
+  border-color: var(--ss-primary-btn) !important;
+}
+
+.btn-ss-primary:hover,
+.btn-ss-primary:focus {
+  background-color: var(--ss-primary-btn-hover) !important;
+  border-color: var(--ss-primary-btn-hover) !important;
+  color: var(--ss-white) !important;
+}
+
+/* Code blocks (pre); inline <code> left to page-specific styles */
+pre {
+  background-color: var(--ss-code-bg);
+  color: var(--ss-body-text);
+  border: 1px solid var(--ss-border-light);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+}

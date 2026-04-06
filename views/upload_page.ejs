@@ -9,12 +9,14 @@
   <meta name="author" content="<%= __('meta.author') %>">
   <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
   <meta property="og:title" content="<%= __('upload.title') %> | <%= __('title') %>">
-  <meta property="og:image" content="/img/logo.png">
+  <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png">
   <meta property="og:description" content="<%= __('meta.ogDescription') %>">
   <meta name="yandex-verification" content="6cfda41f74038368">
 
   <title><%= __('upload.title') %> | <%= __('title') %></title>
-  <link rel="icon" href="/img/logo.png" type="image/png">
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+  <link rel="icon" type="image/png" href="/img/logo.png">
+  <link rel="apple-touch-icon" href="/img/logo.png">
 
   <script src="/js/jquery-1.10.1.min.js"></script>
   <!-- Bootstrap CSS & Google Fonts -->
@@ -26,6 +28,8 @@
     href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet"
   />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
@@ -41,20 +45,6 @@
     
     main {
       flex: 1;
-    }
-    .navbar-custom {
-      background-color: #343A40;
-    }
-    .navbar-brand {
-      font-weight: 700;
-      color: #fff !important;
-    }
-    .navbar-brand-container {
-      background: linear-gradient(135deg, #a3a9b564, #373c4172);
-      padding: 0.5rem;
-      border-radius: 0.25rem;
-      display: flex;
-      align-items: center;
     }
     .modern-search {
       background-color: rgba(255, 255, 255, 0.1);
@@ -198,95 +188,7 @@
 </head>
 
 <body>
-  <!-- Top Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-custom">
-    <div class="container-fluid">
-      <a class="navbar-brand ms-3" href="/">
-        <div class="navbar-brand-container">
-          <img
-            src="https://savchenkosolutions.com/img/book.png"
-            alt="Savchenko Solutions"
-            width="40"
-            height="40"
-            class="d-inline-block align-text-center me-2 logo-img"
-          />
-          Savchenko Solutions
-        </div>
-      </a>
-
-      <button
-        class="navbar-toggler text-white me-3"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#mainNav"
-        aria-controls="mainNav"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-icon text-white"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="mainNav">
-        <ul class="navbar-nav ms-auto me-3 align-items-center">
-          <li class="nav-item me-3">
-            <div class="search position-relative">
-              <div class="input-group">
-                <input
-                  type="text"
-                  id="searchInput"
-                  class="form-control form-control-sm modern-search rounded-pill ps-4"
-                  placeholder="<%= __('menu.searchPlaceholder') %>"
-                  aria-label="Search"
-                />
-                <span class="position-absolute top-50 start-0 translate-middle-y ps-3 text-muted">
-                  <i class="bi bi-search"></i>
-                </span>
-              </div>
-              <div
-                id="searchResults"
-                class="search-results position-absolute bg-white border rounded-3 shadow-lg mt-2"
-                style="display: none; z-index: 1050; width: 100%;"
-              >
-                <ul class="list-unstyled mb-0 py-2"></ul>
-              </div>
-            </div>
-          </li>
-          <li class="nav-item me-3">
-            <% if (lang === 'en') { %>
-              <span class="text-white">
-                <strong><a href="/ru/upload" class="text-white text-decoration-none">EN</a></strong>
-              </span>
-            <% } else { %>
-              <span class="text-white">
-                <strong><a href="/en/upload" class="text-white text-decoration-none">RU</a></strong>
-              </span>
-            <% } %>
-          </li>
-          <li class="nav-item">
-            <% if (locals.usernameCurrent) { %>
-              <a href="/user/<%= usernameCurrent %>" class="nav-link">
-                <img
-                  src="<%= profilePictureCurrent %>"
-                  alt="Profile Picture"
-                  class="rounded-circle"
-                  width="40"
-                  height="40"
-                />
-              </a>
-            <% } else { %>
-              <a
-                href="/<%= lang %>/login"
-                class="btn btn-outline-light btn-sm rounded-pill shadow-sm"
-              >
-                Login
-              </a>
-            <% } %>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
-  <!-- /Top Navbar -->
+  <%- include('default/main_site_header') %>
 
   <main class="container my-5">
     <div class="row justify-content-center g-5">
@@ -1020,64 +922,8 @@
         });
       });
 
-      // Search functionality
-      const searchInput = document.getElementById("searchInput");
-      const searchResults = document.getElementById("searchResults");
-      const searchResultsList = document.querySelector("#searchResults ul");
-      let searchDebounceTimer;
-
-      searchInput.addEventListener("input", () => {
-        clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(async () => {
-          const query = searchInput.value.trim();
-
-          if (query.length === 0) {
-            searchResults.style.display = "none";
-            searchResultsList.innerHTML = "";
-            return;
-          }
-
-          try {
-            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-            const data = await response.json();
-
-            if (data.results.length > 0) {
-              const limitedResults = data.results.slice(0, 5);
-              searchResultsList.innerHTML = limitedResults.map((result, index) => `
-                <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
-                  <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none">
-                    <span class="cdx-menu-item__text">
-                      <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
-                      <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
-                    </span>
-                  </a>
-                </li>
-              `).join("");
-              searchResults.style.display = "block";
-            } else {
-              searchResultsList.innerHTML = `
-                <li class="cdx-menu-item cdx-menu-item--enabled">
-                  <span class="cdx-menu-item__content">
-                    <span class="cdx-menu-item__text">No results found.</span>
-                  </span>
-                </li>
-              `;
-              searchResults.style.display = "block";
-            }
-          } catch (error) {
-            console.error('Error fetching search results:', error);
-          }
-        }, 300); // Debounce delay of 300ms
-      });
-
-      // Close search results when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-          searchResults.style.display = "none";
-        }
-      });
     });
   </script>
-  
+  <%- include('default/main_site_footer_scripts') %>
 </body>
 </html>

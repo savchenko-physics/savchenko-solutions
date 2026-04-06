@@ -41,6 +41,8 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
 
+const DEFAULT_PROFILE_AVATAR = "/img/profile_images/Default_placeholder.svg";
+
 // Session configuration (AFTER pool is created)
 app.use(
     session({
@@ -76,8 +78,21 @@ app.use("/js", express.static(path.join(__dirname, "js")));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use((req, res, next) => {
-    res.locals.username = req.session.username || null; // Set username globally
-    next(); // Move to the next middleware/route handler
+    res.locals.username = req.session.username || null;
+    res.locals.profilePicture = null;
+    if (!req.session.userId) {
+        return next();
+    }
+    pool
+        .query("SELECT profile_picture FROM users WHERE id = $1", [req.session.userId])
+        .then((result) => {
+            res.locals.profilePicture = result.rows[0]?.profile_picture || null;
+            next();
+        })
+        .catch((err) => {
+            console.error("Error loading profile picture for header:", err);
+            next();
+        });
 });
 
 
@@ -314,16 +329,6 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
             position: offset + index + 1
         }));
 
-        // Get user's profile picture if logged in
-        let profilePicture = null;
-        if (req.session.userId) {
-            const userResult = await pool.query(
-                "SELECT profile_picture FROM users WHERE id = $1",
-                [req.session.userId]
-            );
-            profilePicture = userResult.rows[0]?.profile_picture || null;
-        }
-
         res.render("contributors_ranking", {
             __: i18n.__,
             lang,
@@ -335,7 +340,6 @@ app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
             hasPrevPage: page > 1,
             username: req.session.username || null,
             userId: req.session.userId || null,
-            profilePicture
         });
     } catch (error) {
         console.error("Error fetching contributors:", error);
@@ -770,7 +774,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
             author: {
                 username: row.username,
                 fullName: row.full_name,
-                profilePicture: row.profile_picture || `/img/profile_images/${row.username}.png`
+                profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR
             }
         }));
 
@@ -818,7 +822,7 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
             author: {
                 username: user.username,
                 fullName: user.full_name,
-                profilePicture: user.profile_picture || `/img/profile_images/${user.username}.png`
+                profilePicture: user.profile_picture || DEFAULT_PROFILE_AVATAR
             }
         });
     } catch (error) {
@@ -1223,16 +1227,6 @@ app.get("/", async (req, res) => {
     const isMobile = /mobile/i.test(userAgent);
     const working_page = isMobile ? "eng_page" : "eng_page";
 
-    let profilePicture = null; // Initialize profilePicture
-
-    if (req.session.userId) {
-        const userResult = await pool.query(
-            "SELECT profile_picture FROM users WHERE id = $1",
-            [req.session.userId]
-        );
-        profilePicture = userResult.rows[0]?.profile_picture || null;
-    }
-    
     res.render(working_page, {
         __: i18n.__,
         title: i18n.__('title'),
@@ -1242,7 +1236,6 @@ app.get("/", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        profilePicture, // Pass profilePicture to the template
         lang,
         recentContributions,
         topAuthors,
@@ -1309,16 +1302,6 @@ app.get("/ru", async (req, res) => {
     const isMobile = /mobile/i.test(userAgent);
     const working_page = isMobile ? "eng_page" : "eng_page";
 
-    let profilePicture = null; // Initialize profilePicture
-
-    if (req.session.userId) {
-        const userResult = await pool.query(
-            "SELECT profile_picture FROM users WHERE id = $1",
-            [req.session.userId]
-        );
-        profilePicture = userResult.rows[0]?.profile_picture || null;
-    }
-    
     res.render(working_page, {
         __: i18n.__,
         title: i18n.__('title'),
@@ -1328,7 +1311,6 @@ app.get("/ru", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        profilePicture, // Pass profilePicture to the template
         lang: 'ru',
         recentContributions,
         topAuthors,
@@ -1352,16 +1334,6 @@ app.get("/en", async (req, res) => {
     const isMobile = /mobile/i.test(userAgent);
     const working_page = isMobile ? "eng_page" : "eng_page";
 
-    let profilePicture = null; // Initialize profilePicture
-
-    if (req.session.userId) {
-        const userResult = await pool.query(
-            "SELECT profile_picture FROM users WHERE id = $1",
-            [req.session.userId]
-        );
-        profilePicture = userResult.rows[0]?.profile_picture || null;
-    }
-    
     res.render(working_page, {
         __: i18n.__,
         title: i18n.__('title'),
@@ -1371,7 +1343,6 @@ app.get("/en", async (req, res) => {
         userId: res.locals.userId,
         sections,
         pinnedChapters,
-        profilePicture, // Pass profilePicture to the template
         lang: 'en',
         recentContributions,
         topAuthors,
@@ -1851,12 +1822,17 @@ app.get("/global-search", async (req, res) => {
 
     i18n.setLocale(res, lang);
 
+    const searchLocals = {
+        __: i18n.__,
+        lang,
+        username: req.session.username || null,
+    };
+
     if (!query) {
         return res.render("search", {
+            ...searchLocals,
             results: [],
             searchTerm: "",
-            __: i18n.__,
-            lang
         });
     }
 
@@ -1866,18 +1842,16 @@ app.get("/global-search", async (req, res) => {
         const data = await response.json();
 
         res.render("search", {
+            ...searchLocals,
             results: data.results,
             searchTerm: query,
-            __: i18n.__,
-            lang
         });
     } catch (error) {
         console.error("Error fetching search results:", error);
         res.render("search", {
+            ...searchLocals,
             results: [],
             searchTerm: query,
-            __: i18n.__,
-            lang
         });
     }
 });
@@ -1963,7 +1937,7 @@ app.get("/api/contributors/:problemRef", async (req, res) => {
             id: row.user_id,
             name: row.full_name || row.username,
             username: row.username,
-            profile_picture: row.profile_picture || `/img/profile_images/${row.user_id}.png`,
+            profile_picture: row.profile_picture || DEFAULT_PROFILE_AVATAR,
             contributions: row.contribution_count,
             role: row.sources.includes('github') ? 'GitHub Contributor' : 'Direct Contributor',
             first_contribution: row.first_contribution,

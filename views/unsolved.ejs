@@ -9,9 +9,11 @@
   <meta name="author" content="<%= __('meta.author') %>" />
   <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
   <meta property="og:title" content="<%= __('title') %>" />
-  <meta property="og:image" content="/img/logo.png" />
+  <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
   <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
-  <link rel="icon" href="/img/logo.png" type="image/png" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
   <title><%= __('unsolved.title') %></title>
   <script src="/js/jquery-1.10.1.min.js"></script>
 
@@ -33,8 +35,8 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
   />
 
-  <!-- Your existing style.css (if needed) -->
-  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
 
   <style>
     /* Global Typography & Colors */
@@ -45,104 +47,6 @@
     h1, h2, h3, h4, h5, h6 {
       font-weight: 700;
       color: #333;
-    }
-
-    /* Navbar Custom */
-    .navbar-custom {
-      background-color: #ffffff;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-      padding: 0.75rem 0;
-      width: 100%;
-    }
-    .navbar-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 15px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .navbar-brand {
-      color: #333 !important;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      text-decoration: none;
-    }
-    .navbar-brand img {
-      width: 32px;
-      height: auto;
-    }
-
-    /* Modern search styling */
-    .search {
-      position: relative;
-      width: 240px;
-      transition: width 0.3s ease;
-    }
-    .search.active {
-      width: 350px;
-    }
-    .modern-search {
-      background-color: #f8f9fa;
-      border: 1px solid #e9ecef;
-      color: #495057;
-      padding: 0.35rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      height: 32px;
-      line-height: 1;
-      outline: none;
-      transition: all 0.2s;
-    }
-    .modern-search::placeholder {
-      color: #adb5bd;
-    }
-    .modern-search:focus {
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    }
-
-    /* Search Results */
-    .search-results {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      width: 100%;
-      background: #fff;
-      border-radius: 8px;
-      margin-top: 5px;
-      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
-      z-index: 1050;
-    }
-    .search-results li {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 6px 12px;
-      font-size: 0.875rem;
-    }
-    .search-results .result-snippet {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-      margin-top: 2px;
-      font-size: 0.8125rem;
-      color: #666;
-    }
-    .hover-bg-light:hover {
-      background-color: #f8f9fa !important;
-    }
-
-    /* Language Switch Link */
-    .language-switch {
-      color: #333;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .language-switch:hover {
-      text-decoration: underline;
     }
 
     /* Unsolved List */
@@ -426,39 +330,10 @@
   </style>
 </head>
 <body>
-  <!-- Top Navbar -->
-  <nav class="navbar navbar-custom">
-    <div class="navbar-container">
-      <a class="navbar-brand" href="/">
-        <img src="https://savchenkosolutions.com/img/book.png" alt="Savchenko Solutions" />
-        Savchenko Solutions
-      </a>
-
-      <div class="d-flex align-items-center gap-3">
-        <div class="search position-relative">
-          <input
-            type="text"
-            id="searchInput"
-            class="form-control form-control-sm modern-search"
-            placeholder="Search"
-            aria-label="Search"
-          />
-          <div
-            id="searchResults"
-            class="search-results position-absolute border rounded"
-            style="display: none;"
-          ></div>
-        </div>
-        <div>
-          <% if (lang === 'en') { %>
-            <a href="/ru/unsolved" class="language-switch">EN</a>
-          <% } else { %>
-            <a href="/en/unsolved" class="language-switch">RU</a>
-          <% } %>
-        </div>
-      </div>
-    </div>
-  </nav>
+  <%- include('default/main_site_header', {
+    langSwitchEnUrl: '/en/unsolved',
+    langSwitchRuUrl: '/ru/unsolved'
+  }) %>
 
   <!-- Main Content -->
   <div class="unsolved-list">
@@ -698,7 +573,7 @@
         <div class="row align-items-center text-center text-md-start">
             <div class="col-md-6 mb-4 mb-md-0">
                 <a href="/en/" class="d-inline-flex align-items-center text-decoration-none mb-3">
-                    <img src="/img/logo_main.svg" alt="Savchenko Solutions Logo" style="height: 40px;" class="me-2" />
+                    <img src="/img/logo_main.svg" alt="Savchenko Solutions Logo" style="height: 32px;" class="me-2" />
                     <span class="fw-bold h5 mb-0 text-white">Savchenko Solutions</span>
                 </a>
                 <p class="mb-0">
@@ -729,66 +604,6 @@
   <!-- Chart.js (for pie charts) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
   <script>
-    $(document).ready(function () {
-      // Search functionality
-      const searchInput = document.getElementById("searchInput");
-      const searchResults = document.getElementById("searchResults");
-
-      searchInput.placeholder = "<%= __('unsolved.searchPlaceholder') %>";
-
-      searchInput.addEventListener("input", async () => {
-        const query = searchInput.value.trim();
-
-        if (query.length === 0) {
-          searchResults.style.display = "none";
-          searchResults.innerHTML = "";
-          return;
-        }
-
-        try {
-          const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-          const data = await response.json();
-
-          if (data.results.length > 0) {
-            const limitedResults = data.results.slice(0, 5);
-            searchResults.innerHTML = `
-              <ul class="list-unstyled mb-0 p-2">
-                ${limitedResults
-                  .map(
-                    (result) => `
-                  <li class="py-2 px-3 mb-1 rounded hover-bg-light">
-                    <a href="${result.relativePath}" class="d-block text-dark text-decoration-none">
-                      <span class="fw-bold">${result.name}</span> - 
-                      <span class="text-muted small">${result.snippet}</span>
-                    </a>
-                  </li>
-                `
-                  )
-                  .join("")}
-              </ul>
-            `;
-            searchResults.style.display = "block";
-          } else {
-            searchResults.innerHTML = `
-              <ul class="list-unstyled mb-0 p-2">
-                <li class="py-2 px-3 text-muted"><%= __('unsolved.noResults') %></li>
-              </ul>
-            `;
-            searchResults.style.display = "block";
-          }
-        } catch (error) {
-          console.error("Error fetching search results:", error);
-        }
-      });
-
-      // Close search results when clicking outside
-      document.addEventListener("click", (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-          searchResults.style.display = "none";
-        }
-      });
-    });
-
     function createPieChart(elementId, solved, total) {
       const ctx = document.getElementById(elementId).getContext("2d");
       const container = document.getElementById(elementId).closest(".section-header");
@@ -890,5 +705,6 @@
       animatePercentage(percentageCounter, 0, percentage, 1000);
     });
   </script>
+  <%- include('default/main_site_search_script') %>
 </body>
 </html>

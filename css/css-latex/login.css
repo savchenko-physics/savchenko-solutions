@@ -1,7 +1,3 @@
-header {
-    display: block;
-}
-
 .container1 {
     width: 400px;
     padding: 5px 40px 20px 40px;
@@ -19,7 +15,16 @@ header {
 h2 {
     margin-top: 20px;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--ss-heading, #1a1a2e);
+}
+
+.container1 a:link,
+.container1 a:visited {
+    color: var(--ss-link);
+}
+
+.container1 a:hover {
+    color: var(--ss-link-hover);
 }
 
 .form-group {
@@ -29,7 +34,7 @@ h2 {
 
 .form-group label {
     font-size: 16px;
-    color: #333;
+    color: var(--ss-body-text, #2d2d2d);
 }
 
 .form-group input {
@@ -42,20 +47,21 @@ h2 {
     border-radius: 4px;
 }
 
-.submit-button {
+/* Only login/register forms — not global-search .submit-button */
+.container1 .submit-button {
     font-family: 'Arial', 'Roboto', sans-serif;
     width: 100%;
     padding: 10px;
-    background-color: #36c;
-    color: #fff;
+    background-color: var(--ss-primary-btn, #1a1a2e);
+    color: var(--ss-white, #fff);
     border: none;
     border-radius: 4px;
     font-size: 16px;
     cursor: pointer;
 }
 
-.submit-button:hover {
-    background-color: #0056b3;
+.container1 .submit-button:hover {
+    background-color: var(--ss-primary-btn-hover, #2c2c4a);
 }
 
 .container1 p {
@@ -93,4 +99,127 @@ h2 {
 .eye-icon {
     width: 20px;
     height: 20px;
+}
+
+/* Auth pages: style.css sets body max-width: 80ch + padding; main_page.css sets margin: 0 and
+   drops the horizontal auto margin. That leaves a narrow column stuck to the left. Reset here
+   (login.css loads last) so the form and footer use the full width and .container1 stays centered. */
+body.auth-page {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 100vh;
+    background-color: var(--ss-page-bg, #ffffff);
+    color: var(--ss-body-text, #2d2d2d);
+    line-height: 1.5;
+    font-family: 'Roboto', sans-serif;
+}
+
+body.auth-page p {
+    text-align: inherit;
+    hyphens: none;
+    -webkit-hyphens: none;
+    -moz-hyphens: none;
+}
+
+body.auth-page .container1 {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body.auth-page footer.site-footer .container {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body.auth-page footer.site-footer p {
+    text-align: center;
+    hyphens: none;
+}
+
+/* Header on auth pages: css-latex/style.css applies serif to all h1–h4 and global link colors,
+   which breaks the shared main site header. Scope resets to .hero-section only. */
+body.auth-page .hero-section h1,
+body.auth-page .hero-section h2,
+body.auth-page .hero-section h3,
+body.auth-page .hero-section h4 {
+    font-family: 'Roboto', sans-serif !important;
+}
+
+body.auth-page .hero-section .site-title {
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0 !important;
+    color: var(--ss-heading) !important;
+}
+
+body.auth-page .hero-section .site-motto {
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    color: var(--ss-text-secondary) !important;
+}
+
+body.auth-page .hero-section .navbar-brand,
+body.auth-page .hero-section .navbar-brand:visited,
+body.auth-page .hero-section .navbar-brand:hover {
+    color: var(--ss-heading) !important;
+    text-decoration: none !important;
+}
+
+/* RU/EN: same vertical size and baseline as Upload / Log in pills (.header-upload-btn uses ~1rem + padding) */
+body.auth-page .hero-section .navbar-nav {
+    align-items: center !important;
+}
+
+body.auth-page .hero-section .navbar-nav > .nav-item {
+    display: flex;
+    align-items: center;
+}
+
+body.auth-page .hero-section .language-nav-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 0.35rem 0.75rem !important;
+    font-family: 'Roboto', sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 600 !important;
+    line-height: 1.2 !important;
+    color: var(--ss-heading) !important;
+    text-decoration: none !important;
+    border: none;
+    background: transparent;
+}
+
+body.auth-page .hero-section .language-nav-link:hover {
+    color: var(--ss-link) !important;
+}
+
+/* Main content (global search, etc.): latex style.css still applies serif to h1–h4 outside .hero-section */
+body.auth-page .container > h1 {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 600 !important;
+    color: var(--ss-heading, #1a1a2e) !important;
+}
+
+body.auth-page .result h2 {
+    font-family: 'Roboto', sans-serif !important;
+}
+
+body.auth-page .result a {
+    color: var(--ss-link);
+}
+
+body.auth-page .result a:visited {
+    color: var(--ss-link-visited);
+}
+
+body.auth-page .result a:hover {
+    color: var(--ss-link-hover);
 }

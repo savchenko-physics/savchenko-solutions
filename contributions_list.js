@@ -56,7 +56,8 @@ async function getContributionsList(req, res) {
                 });
             },
             usernameCurrent: req.session.username || null,
-            userIdCurrent: req.session.userId || null
+            userIdCurrent: req.session.userId || null,
+            username: req.session.username || null,
         });
 
     } catch (error) {

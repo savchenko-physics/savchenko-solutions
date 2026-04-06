@@ -271,21 +271,10 @@ router.get(["/upload", "/:lang([a-z]{2})/upload"], async (req, res) => {
     const lang = req.params.lang || req.query.lang || 'en';
     i18n.setLocale(res, lang);
     
-    // Get current user's profile picture if logged in
-    let profilePictureCurrent = null;
-    if (req.session.userId) {
-        const currentUserResult = await pool.query(
-            "SELECT profile_picture FROM users WHERE id = $1",
-            [req.session.userId]
-        );
-        profilePictureCurrent = currentUserResult.rows[0]?.profile_picture;
-    }
-    
     res.render("upload_page", {
         __: i18n.__,
         lang,
         usernameCurrent: req.session.username,
-        profilePictureCurrent
     });
 });
 

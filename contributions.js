@@ -16,16 +16,6 @@ async function getContribution(req, res) {
     i18n.setLocale(res, lang);
 
     try {
-        // Get current user's profile picture if logged in
-        let profilePictureCurrent = null;
-        if (req.session.userId) {
-            const currentUserResult = await pool.query(
-                "SELECT profile_picture FROM users WHERE id = $1",
-                [req.session.userId]
-            );
-            profilePictureCurrent = currentUserResult.rows[0]?.profile_picture;
-        }
-
         const result = await pool.query(
             `SELECT 
                 c.*, 
@@ -95,7 +85,6 @@ async function getContribution(req, res) {
             },
             usernameCurrent: req.session.username,
             userIdCurrent: req.session.userId,
-            profilePictureCurrent,
             newContent: contribution.new_content,
             originalContent: contribution.original_content,
             changes, // Pass the changes array to the template

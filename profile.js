@@ -25,6 +25,7 @@ async function getProfile(req, res) {
             __: i18n.__,
             lang,
             username: user.username,
+            profilePicture: user.profile_picture || null,
             email: user.email,
             fullName: user.full_name,
             joinDate: new Date(user.created_at),

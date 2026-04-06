@@ -827,8 +827,9 @@ button::-moz-focus-inner {
     .mw-logo-icon {
         float: left;
         margin-right: 8px;
-        width: 2.925em;
-        height: 2.925em;
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
     }
 
     .mw-logo-container {

@@ -1,35 +1,134 @@
 <!DOCTYPE html>
-<html>
-
+<% const pageLang = typeof lang !== 'undefined' ? lang : 'en'; %>
+<html lang="<%= pageLang %>">
 <head>
-    <%- include('default/head_en.ejs') %>
-        <title>404 Error</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="content-language" content="<%= pageLang %>" />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
+  <title><%= __('page404.title') %> — <%= __('title') %></title>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f9fafb;
+    }
+    .error-404-code {
+      font-size: clamp(3rem, 12vw, 5rem);
+      font-weight: 700;
+      line-height: 1;
+      color: #dee2e6;
+      letter-spacing: -0.02em;
+    }
+    .error-404-wrap {
+      max-width: 960px;
+    }
+    .error-404-team-col {
+      background: #eef1f4;
+      min-height: 180px;
+    }
+    @media (min-width: 768px) {
+      .error-404-team-col {
+        min-height: 100%;
+      }
+    }
+    .error-404-team-img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 200px;
+      object-fit: cover;
+      object-position: center;
+    }
+    @media (min-width: 768px) {
+      .error-404-team-img {
+        min-height: 280px;
+        max-height: none;
+      }
+    }
+    /* Match design-system link colors (Bootstrap/card can otherwise inherit body black) */
+    .error-404-wrap a:link {
+      color: var(--ss-link);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+      text-decoration-color: rgba(26, 82, 118, 0.45);
+    }
+    .error-404-wrap a:visited {
+      color: var(--ss-link-visited);
+      text-decoration-color: rgba(74, 35, 90, 0.45);
+    }
+    .error-404-wrap a:hover,
+    .error-404-wrap a:focus-visible {
+      color: var(--ss-link-hover);
+      text-decoration-color: var(--ss-link-hover);
+    }
+  </style>
 </head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('default/main_site_header', {
+    langSwitchEnUrl: '/en',
+    langSwitchRuUrl: '/ru'
+  }) %>
 
-<body style="">
-    <header style="text-align: center;">
-        <a href="../../" style="text-decoration: none;">
-            <div id="logo">
-                <span><img src="http://savchenkosolutions.com/img/book.png" /></span><span>Savchenko Solutions</span>
+  <main class="flex-grow-1 d-flex align-items-center py-5 px-3">
+    <div class="container error-404-wrap px-0 px-sm-3">
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="row g-0 flex-column flex-md-row align-items-stretch">
+          <div class="col-md-5 col-lg-6 error-404-team-col p-0 d-flex">
+            <img
+              class="error-404-team-img flex-grow-1"
+              src="/img/team.webp"
+              alt="<%= __('page404.teamImageAlt') %>"
+              width="1200"
+              height="675"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div class="col-md-7 col-lg-6 d-flex align-items-center">
+            <div class="card-body text-center text-md-start p-4 p-md-5 w-100">
+              <p class="error-404-code mb-3" aria-hidden="true">404</p>
+              <h1 class="h4 mb-3"><%= __('page404.heading') %></h1>
+              <p class="text-muted mb-4 text-break">
+                <%= __('page404.lineBeforeUrl') %>
+                <code class="user-select-all d-inline-block px-1 rounded bg-light"><%= pageUrl %></code>
+                <%= __('page404.lineAfterUrl') %>
+              </p>
+              <p class="mb-0">
+                <%= __('page404.hint') %>
+                <a href="/<%= pageLang %>/"><%= __('page404.homeLink') %></a>.
+              </p>
             </div>
-        </a>
-        <p class="author">
-            Solutions&nbsp;of&nbsp;Savchenko Problems&nbsp;in&nbsp;Physics <br />
-            <i><b>knowledge must be free</b></i>
-        </p>
-    </header>
-
-    <div class="container">
-        <center>
-            <h2 style="font-weight: bold;">Page Disappeared into a Black Hole</h2>
-
-            <br />
-            <p>The page <code><%= pageUrl %></code> you're looking for seems doesn't exist.</p>
-            <p>Perhaps, instead, you’d like to explore the fascinating world of <a href="/">Savchenko Solutions</a>?</p>
-        </center>
+          </div>
+        </div>
+      </div>
     </div>
+  </main>
 
+  <% if (pageLang === 'ru') { %>
+    <%- include('default/footer_ru.ejs') %>
+  <% } else { %>
     <%- include('default/footer_en.ejs') %>
-</body>
+  <% } %>
 
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+  ></script>
+  <%- include('default/main_site_search_script') %>
+</body>
 </html>

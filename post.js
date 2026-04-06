@@ -101,16 +101,6 @@ async function renderPost(req, res) {
         const creationDateResult = await getCreationDate(req, res);
         const creationDate = creationDateResult ? new Date(creationDateResult).toISOString() : null;
 
-        // Fetch profile picture for the user
-        let profilePicture = null;
-        if (req.session.userId) {
-            const userResult = await pool.query(
-                "SELECT profile_picture FROM users WHERE id = $1",
-                [req.session.userId]
-            );
-            profilePicture = userResult.rows[0]?.profile_picture || null;
-        }
-
         const problemBreadcrumbTitle =
             getProblemBreadcrumbTitle(name, lang) || `$${name}.$`;
         const problemBreadcrumb = getProblemBreadcrumbParts(name, lang);
@@ -128,8 +118,7 @@ async function renderPost(req, res) {
             content: html,
             totalViews, // Pass total views to the template
             creationDate, // Pass creation date to the template
-            alternateFileExists, // Pass the existence flag to the template
-            profilePicture // Pass profile picture to the template
+            alternateFileExists // Pass the existence flag to the template
         });
     } else {
         i18n.setLocale(res, lang);

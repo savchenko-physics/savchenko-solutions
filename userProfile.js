@@ -205,6 +205,7 @@ async function getUserProfile(req, res) {
         res.render("user_profile", {
             __: i18n.__,
             lang,
+            sessionUsername: req.session.username || null,
             username: user.username,
             fullName: user.full_name,
             email: user.email,
@@ -247,9 +248,11 @@ async function getUserProfile(req, res) {
             offset,
             hasMore: contributionsResult.rows.length === limit,
             
-            // Current user data for header
+            // Current user data for header (only when signed in; no placeholder when logged out)
             usernameCurrent: currentUserProfile?.username,
-            profilePictureCurrent: currentUserProfile?.profile_picture || '/img/profile_images/Default_placeholder.svg',
+            profilePictureCurrent: currentUserProfile
+                ? (currentUserProfile.profile_picture || '/img/profile_images/Default_placeholder.svg')
+                : null,
             
             // User ID for API calls
             userId: user.id

@@ -10,10 +10,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
     <script src="/js/jquery-1.10.1.min.js"></script>
     
     <!-- Icon -->
-    <link rel="icon" href="/img/logo.png" type="image/png" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <link rel="apple-touch-icon" href="/img/logo.png" />
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -50,86 +55,25 @@
             flex-direction: column;
         }
 
-        /* Modern Header */
-        .modern-header {
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            backdrop-filter: blur(10px);
-        }
-
-        .header-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .history-breadcrumb {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0.75rem 2rem 0;
         }
 
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-img {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
-
-        .logo-text {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .breadcrumb-nav {
-            flex: 1;
-            margin: 0 2rem;
-        }
-
-        .breadcrumb {
+        .history-breadcrumb .breadcrumb {
             background: none;
             padding: 0;
             margin: 0;
         }
 
-        .breadcrumb-item a {
+        .history-breadcrumb .breadcrumb-item a {
             color: var(--text-secondary);
             text-decoration: none;
         }
 
-        .breadcrumb-item.active {
+        .history-breadcrumb .breadcrumb-item.active {
             color: var(--text-primary);
-        }
-
-        .user-section {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .lang-toggle {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .lang-toggle:hover {
-            background: var(--primary-color);
-            color: white;
-            text-decoration: none;
         }
 
         /* Main Content */
@@ -408,34 +352,18 @@
 </head>
 
 <body>
-    <!-- Modern Header -->
-    <header class="modern-header">
-        <div class="header-container">
-            <div class="logo-section">
-                <img src="/img/logo.png" alt="Logo" class="logo-img">
-                <a href="/<%= lang %>/" class="logo-text"><%= __('title') %></a>
-            </div>
-            
-            <nav class="breadcrumb-nav">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/<%= lang %>/">Home</a></li>
-                    <li class="breadcrumb-item"><a href="/<%= lang %>/<%= problemName %>"><%= problemName %></a></li>
-                    <li class="breadcrumb-item active">History</li>
-                </ol>
-            </nav>
-            
-            <div class="user-section">
-                <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="lang-toggle">
-                    <%= lang.toUpperCase() %>
-                </a>
-                <% if (usernameCurrent) { %>
-                    <a href="/user/<%= usernameCurrent %>" class="lang-toggle">Profile</a>
-                <% } else { %>
-                    <a href="/<%= lang %>/login" class="lang-toggle">Login</a>
-                <% } %>
-            </div>
-        </div>
-    </header>
+    <%- include('default/main_site_header', {
+        langSwitchEnUrl: '/en/contributions/' + problemName,
+        langSwitchRuUrl: '/ru/contributions/' + problemName
+    }) %>
+
+    <nav class="history-breadcrumb" aria-label="breadcrumb">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="/<%= lang %>/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/<%= lang %>/<%= problemName %>"><%= problemName %></a></li>
+            <li class="breadcrumb-item active">History</li>
+        </ol>
+    </nav>
 
     <!-- Main Content -->
     <div class="main-container">
@@ -570,6 +498,7 @@
             }
         });
     </script>
+    <%- include('default/main_site_search_script') %>
 </body>
 
 </html>

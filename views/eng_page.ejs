@@ -10,10 +10,12 @@
   <meta name="author" content="<%= __('meta.author') %>" />
   <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
   <meta property="og:title" content="<%= __('title') %>" />
-  <meta property="og:image" content="/img/logo.png" />
+  <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
   <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
   <meta name="yandex-verification" content="6cfda41f74038368" />
-  <link rel="icon" href="/img/logo.png" type="image/png" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
   
   <!-- jQuery -->
   <script src="/js/jquery-1.10.1.min.js"></script>
@@ -25,150 +27,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
 
   
-  <!-- Custom CSS -->
+  <!-- Design system + page CSS -->
+  <link rel="stylesheet" href="/css/design-system.css" />
   <link rel="stylesheet" href="/css/main_page.css" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <title><%= __('title') %></title>
 </head>
 
 <body>
-  <!-- ============================
-       HERO / NAVIGATION SECTION
-  ============================ -->
-  <header class="hero-section text-white">
-    <nav class="navbar navbar-expand-lg navbar-dark">
-      <div class="container-fluid px-4 align-items-center">
-        <!-- Logo + Title -->
-        <a class="navbar-brand d-flex align-items-center" href="/<%= lang %>/">
-          <img 
-            src="/img/book.png" 
-            alt="<%= __('title') %> Logo" 
-            class="logo-img me-2"
-          />
-          <div>
-            <h1 class="site-title mb-0"><%= __('title') %></h1>
-            <p class="site-motto mb-0"><%= __('motto') %></p>
-          </div>
-        </a>
-
-        <!-- Centered search bar on the same line (desktop/tablet) -->
-        <div class="flex-grow-1 d-none d-md-flex justify-content-center px-3">
-          <div class="searchbar-wrapper position-relative w-100" style="max-width: 520px;">
-            <svg class="search-icon position-absolute" viewBox="0 0 24 24" width="20" height="20" style="left: 15px; top: 50%; transform: translateY(-50%); z-index: 1;">
-              <path fill="#6c757d" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-            </svg>
-            <input
-              type="text"
-              id="searchInput"
-              class="form-control form-control-lg searchbar-input"
-              placeholder="<%= __('menu.searchPlaceholder') %>"
-              style="padding-left: 45px; padding-right: 40px;"
-            />
-            <button 
-              type="button" 
-              id="clearSearch" 
-              class="btn position-absolute" 
-              style="right: 10px; top: 50%; transform: translateY(-50%); display: none; background: none; border: none; padding: 5px;">
-              <svg viewBox="0 0 24 24" width="16" height="16">
-                <path fill="#6c757d" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
-            </button>
-            <div
-              id="searchResults"
-              class="search-results position-absolute bg-white border rounded shadow-sm"
-              style="display: none; z-index: 1000; width: 100%;"
-            >
-              <ul class="list-unstyled mb-0"></ul>
-            </div>
-          </div>
-        </div>
-
-        <!-- Toggle button for mobile -->
-        <button
-          class="navbar-toggler d-flex align-items-center gap-2 border-0 pe-0 d-lg-none ms-auto"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarSupportedContent"
-          aria-controls="navbarSupportedContent"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <!-- Language Switch (mobile only) -->
-          <% if (lang === 'en') { %>
-            <a href="/ru" class="nav-link text-white fw-bold">EN</a>
-          <% } else { %>
-            <a href="/en" class="nav-link text-white fw-bold">RU</a>
-          <% } %>
-
-          <!-- Login/Profile Image -->
-          <% if (username) { %>
-            <a href="/user/<%= username %>" class="nav-link text-white fw-bold">
-              <img
-                src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>"
-                alt="Profile Picture"
-                class="rounded-circle"
-                width="36"
-                height="36"
-              />
-            </a>
-          <% } else { %>
-            <a href="/<%= lang %>/login" class="nav-link text-white fw-bold">
-              <span class="text-white fw-bold ps-1"><%= __('menu.login') %></span>
-            </a>
-          <% } %>
-        </button>
-
-        <!-- Right side items: language + user -->
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav ms-auto align-items-center">
-            <!-- Upload button in header (same design as main Upload buttons) -->
-            <li class="nav-item px-2 d-none d-md-block">
-              <a
-                href="/<%= lang %>/upload"
-                class="edit-button header-upload-btn text-decoration-none d-inline-flex align-items-center btn btn-sm rounded-pill"
-                data-chapter="1"
-              >
-                <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
-                </svg>
-                <span class="upload-text ms-2"><%= __('upload.upload') %></span>
-              </a>
-            </li>
-            <li class="nav-item px-2 language-switch">
-              <% if (lang === 'en') { %>
-                <a href="/ru" class="nav-link text-white fw-bold">EN</a>
-              <% } else { %>
-                <a href="/en" class="nav-link text-white fw-bold">RU</a>
-              <% } %>
-            </li>
-            <li class="nav-item px-2">
-              <% if (username) { %>
-                <a href="/user/<%= username %>" class="d-flex align-items-center">
-                  <img
-                    src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>"
-                    alt="Profile Picture"
-                    class="rounded-circle"
-                    width="40"
-                    height="40"
-                  />
-                </a>
-              <% } else { %>
-                <a
-                  href="/<%= lang %>/login"
-                  class="btn btn-outline-light rounded-pill"
-                >
-                  <%= __('menu.login') %>
-                </a>
-              <% } %>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Hero content no longer needed for text/search; kept for potential future use -->
-    <div class="container hero-content"></div>
-  </header>
+  <%- include('default/main_site_header') %>
 
   <!-- ============================
        MAIN CONTENT (FULL WIDTH)
@@ -376,7 +244,7 @@
             <!-- Upload Button -->
             <a
               href="/<%= lang %>/upload"
-              class="edit-button text-decoration-none d-inline-flex align-items-center btn btn-sm btn-outline-primary rounded-pill"
+              class="text-decoration-none d-inline-flex align-items-center btn btn-sm btn-outline-dark rounded-pill chapter-upload-pill"
               data-chapter="<%= chapterIndex + 1 %>"
             >
               <span class="upload-text me-2"><%= __('upload.upload') %></span>
@@ -562,9 +430,9 @@
           <!-- Brand / Title -->
           <a href="/<%= lang %>/" class="d-inline-flex align-items-center text-decoration-none mb-3">
             <img
-              src="/img/book.png"
+              src="/img/logo.svg"
               alt="<%= __('title') %> Logo"
-              style="height: 40px;"
+              style="height: 32px;"
               class="me-2"
             />
             <span class="fw-bold h5 mb-0 text-white"><%= __('title') %></span>
@@ -650,8 +518,9 @@
             font-size: 0.9rem;
         }
         .logo-img {
-            width: 36px;
-            height: auto;
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
         }
         .searchbar-input {
             font-size: 1rem;
@@ -689,8 +558,8 @@
 
     /* Platform News Banner */
     .platform-news-banner {
-      background: linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%);
-      border-left: 4px solid #ffc107;
+      background: #fff9e6;
+      border-left: 4px solid #c9a227;
       border-radius: 12px;
       padding: 1.25rem 1.5rem;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
@@ -936,8 +805,8 @@
       top: 0;
       bottom: 0;
       width: 4px;
-      background: linear-gradient(180deg, #b8a369 0%, #8a7a4a 50%, #c4b27a 100%);
-      opacity: 0.85;
+      background: #9a8a5c;
+      opacity: 0.9;
       border-radius: 0;
     }
 
@@ -1302,136 +1171,7 @@
     }
   </style>
   
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script>
-    const searchInput = document.getElementById("searchInput");
-    const searchResults = document.getElementById("searchResults");
-    const searchResultsList = document.querySelector("#searchResults ul");
-    const clearButton = document.getElementById("clearSearch");
-    let lastSearchResults = ""; // Store the last search results
-
-    // Add click event listener to document
-    document.addEventListener('click', function(event) {
-        // Check if click is outside search input and search results
-        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
-            searchResults.style.display = "none";
-        }
-    });
-
-    // Show previous results when focusing on search input
-    searchInput.addEventListener("focus", () => {
-        if (searchInput.value.trim().length > 0 && lastSearchResults) {
-            searchResultsList.innerHTML = lastSearchResults;
-            searchResults.style.display = "block";
-        }
-    });
-
-    searchInput.addEventListener("input", async () => {
-        const query = searchInput.value.trim();
-        const currentLang = '<%= lang %>'; // Get current language from EJS template
-
-        if (query.length === 0) {
-            searchResults.style.display = "none";
-            searchResultsList.innerHTML = "";
-            lastSearchResults = ""; // Clear stored results
-            return;
-        }
-
-        try {
-            const response = await fetch(`/search?q=${encodeURIComponent(query)}&lang=${currentLang}`);
-            const data = await response.json();
-
-            if (data.results.length > 0) {
-                const limitedResults = data.results.slice(0, 10);
-                const resultsHTML = limitedResults.map((result, index) => `
-                    <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
-                        <a href="${result.relativePath}" class="cdx-menu-item__content text-dark text-decoration-none d-flex align-items-center">
-                            <svg class="me-2" viewBox="0 0 24 24" width="16" height="16">
-                                <path fill="#9e9e9e" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                            </svg>
-                            <span class="cdx-menu-item__text d-flex justify-content-between align-items-center w-100">
-                                <span class="cdx-search-result-title">
-                                    <strong>${result.name}</strong>
-                                    <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
-                                </span>
-                                ${result.confidence === 'high' ? '<small class="ms-2" style="color: #9e9e9e; font-size: 0.7em;">★</small>' : ''}
-                            </span>
-                        </a>
-                    </li>
-                `).join("");
-                
-                searchResultsList.innerHTML = resultsHTML;
-                lastSearchResults = resultsHTML; // Store the results
-                searchResults.style.display = "block";
-            } else {
-                const noResultsHTML = `
-                    <li class="cdx-menu-item cdx-menu-item--enabled p-4">
-                        <div class="text-center">
-                            <!-- No Results Icon -->
-                            <svg class="mb-3" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6c757d" stroke-width="1.5">
-                                <circle cx="11" cy="11" r="8"/>
-                                <path d="M21 21l-4.35-4.35"/>
-                                <path d="M8 11h6"/>
-                            </svg>
-                            
-                            <!-- No Results Message -->
-                            <h6 class="mb-3 text-secondary">
-                                <%= lang === 'ru' ? 'Ничего не найдено.' : 'No results found.' %>
-                            </h6>
-                            
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2 justify-content-center" style="white-space: nowrap;">
-                                <a href="/<%= lang %>/upload" 
-                                   class="edit-button btn btn-outline-light rounded-pill px-3" 
-                                   style="background-color: #007bff; color: white; font-size: 0.85rem;" 
-                                   data-chapter="1">
-                                    <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                    <%= __('menu.upload') %>
-                                </a>
-                                <a href="/global-search?search=${encodeURIComponent(query)}" 
-                                   class="btn btn-outline-light rounded-pill px-3" 
-                                   style="border-color: #6c757d; color: #6c757d; font-size: 0.85rem;">
-                                    <svg class="me-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="11" cy="11" r="8"/>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                                        <line x1="11" y1="8" x2="11" y2="14"/>
-                                        <line x1="8" y1="11" x2="14" y2="11"/>
-                                    </svg>
-                                    <%= __('menu.advancedSearch') %>
-                                </a>
-                            </div>
-                        </div>
-                    </li>
-                `;
-                searchResultsList.innerHTML = noResultsHTML;
-                lastSearchResults = noResultsHTML; // Store the no results message
-                searchResults.style.display = "block";
-            }
-        } catch (error) {
-            console.error('Error fetching search results:', error);
-        }
-    });
-
-    // Show/hide clear button based on input
-    searchInput.addEventListener("input", function() {
-        clearButton.style.display = this.value ? "block" : "none";
-    });
-
-    // Clear search input and results
-    clearButton.addEventListener("click", function() {
-        searchInput.value = "";
-        searchResults.style.display = "none";
-        searchResultsList.innerHTML = "";
-        this.style.display = "none";
-        searchInput.focus();
-    });
-  </script>
+  <%- include('default/main_site_search_script') %>
 
   <!-- Pop-up handling -->
   <script>
@@ -1471,7 +1211,7 @@
             }, 300);
         }
 
-        document.querySelectorAll(".edit-button").forEach(button => {
+        document.querySelectorAll(".chapter-upload-pill").forEach(button => {
             button.addEventListener("click", (event) => {
                 // Remove this event handler since we want the link to work normally
                 // event.preventDefault();

@@ -1,7 +1,16 @@
 {
     "title": "Решения Савченко",
     "subtitle": "Первые решения\u00A0задач Савченко\u00A0по\u00A0физике",
-    "motto": "Коллаборативное Решение Задач",
+    "motto": "Коллаборативные решения задач по физике",
+    "page404": {
+        "title": "Страница не найдена",
+        "heading": "Эта страница попала в чёрную дыру",
+        "lineBeforeUrl": "Страница",
+        "lineAfterUrl": "не существует.",
+        "hint": "Вы можете вернуться на",
+        "homeLink": "Savchenko Solutions",
+        "teamImageAlt": "Участники Savchenko Solutions"
+    },
     "russianVersion": "English solutions",
     "oppositeLang": "../",
     "statementsLink": "/savchenko.pdf",
@@ -178,6 +187,7 @@
         "search": "Поиск по Решениям Савченко",
         "searchButton": "Поиск",
         "resultsNotFound": "Ничего не найдено.",
+        "searchTypeToSeeResults": "Введите запрос, чтобы увидеть результаты.",
         "errorLoadingResults": "Ошибка загрузки результатов.",
         "searchPlaceholder": "Поиск по Savchenko Solutions",
         "upload":"Загрузить",

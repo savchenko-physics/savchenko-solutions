@@ -1,4 +1,4 @@
-/* Base resets and font */
+/* Base resets and font — colors from /css/design-system.css */
 * {
   box-sizing: border-box;
 }
@@ -6,25 +6,35 @@
 body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
-  background-color: #ffffff;
-  color: #333;
+  background-color: var(--ss-page-bg);
+  color: var(--ss-body-text);
 }
 
 /* ----------------------------
-   HERO SECTION
+   HERO SECTION (white bar — brand navy is in text/tokens, not bar fill)
 ---------------------------- */
 .hero-section {
-  /* Solid white header background */
-  background: #ffffff;
-  /* min-height: 28vh; */
+  background: var(--ss-white);
   display: flex;
   flex-direction: column;
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
   position: sticky;
   top: 0;
   z-index: 1030;
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid var(--ss-border-light);
+  /* Do not inherit page body fonts (e.g. Inter on study-guide, about content tweaks) */
+  font-family: 'Roboto', sans-serif;
+}
+
+/* css-latex/style.css sets h1,h2,h3,h4 { font-family: Linux Libertine } — override for nav chrome */
+.hero-section h1,
+.hero-section p,
+.hero-section .navbar,
+.hero-section .navbar-nav,
+.hero-section input,
+.hero-section button {
+  font-family: 'Roboto', sans-serif;
 }
 
 .navbar {
@@ -34,30 +44,41 @@ body {
 
 .navbar-brand {
   font-size: 1.2rem;
-  color: #000 !important;
+  color: var(--ss-heading) !important;
 }
 
 .logo-img {
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .site-title {
   font-size: 1.15rem;
   font-weight: 700;
   margin-bottom: 0;
-  color: #000;
+  color: var(--ss-heading);
 }
 
 .site-motto {
   font-size: 0.75rem;
   margin-bottom: 0;
-  color: #000;
+  color: var(--ss-text-secondary);
 }
 
-/* Ensure header links use dark text on white header */
-.navbar-dark .navbar-nav .nav-link {
-  color: #000 !important;
+.hero-section .navbar .navbar-brand,
+.hero-section .navbar .navbar-brand:visited,
+.hero-section .navbar .navbar-brand:hover {
+  color: var(--ss-heading) !important;
+  text-decoration: none !important;
+}
+
+.hero-section .navbar .navbar-nav .nav-link {
+  color: var(--ss-body-text) !important;
+}
+
+.hero-section .navbar .nav-link:hover {
+  color: var(--ss-heading) !important;
 }
 
 .hero-content {
@@ -84,6 +105,9 @@ body {
   border-radius: 25px;
   padding: 0.8rem 1.5rem;
   font-size: 1rem;
+  background-color: var(--ss-white);
+  color: var(--ss-body-text);
+  border: 1px solid var(--ss-border-light);
 }
 
 .hero-tagline {
@@ -98,10 +122,33 @@ body {
   padding: 0.5rem 1rem;
 }
 
-/* Language Switch */
-.language-switch a {
+/* Language Switch — dark text on white header */
+.language-switch a,
+.language-switch a:visited,
+.language-switch a:hover {
   font-size: 1rem;
   font-weight: 500;
+  color: var(--ss-heading) !important;
+}
+
+.hero-section .language-nav-link,
+.hero-section .language-nav-link:visited,
+.hero-section .language-nav-link:hover {
+  color: var(--ss-heading) !important;
+}
+
+/* Search hit rows only — do not override no-results CTAs (blue Upload pill uses white text) */
+.hero-section .search-results a.cdx-menu-item__content {
+  color: var(--ss-link) !important;
+}
+.hero-section .search-results a.cdx-menu-item__content:hover {
+  color: var(--ss-link-hover) !important;
+}
+
+.hero-section .search-results a.search-dropdown-upload-cta,
+.hero-section .search-results a.search-dropdown-upload-cta:hover,
+.hero-section .search-results a.search-dropdown-upload-cta:focus {
+  color: #fff !important;
 }
 
 /* ----------------------------
@@ -128,36 +175,38 @@ body {
 }
 .core-team a {
   text-decoration: none;
-  color: #4464c4;
+  color: var(--ss-link);
   font-weight: 500;
 }
 .core-team a:hover {
   text-decoration: underline;
+  color: var(--ss-link-hover);
 }
 
 /* ----------------------------
    CHAPTERS & PROBLEMS
 ---------------------------- */
 .chapter-block {
-  background-color: #ffffff;
+  background-color: var(--ss-card-bg);
   border-radius: 10px;
   padding: 1rem 1.2rem;
-  border: 1px solid #ececec;
+  border: 1px solid var(--ss-border-card);
 }
 
 .chapter-title {
   margin: 0;
   font-weight: 500;
+  color: var(--ss-text-secondary);
 }
 
 .chapter-name {
-  color: #a52a2a;
+  color: var(--ss-heading);
   font-weight: 600;
 }
 
 .section-title {
   font-weight: 500;
-  color: #555;
+  color: var(--ss-text-secondary);
 }
 
 .problems-grid {
@@ -177,21 +226,22 @@ body {
   display: block;
   padding: 0.4rem 0.6rem;
   margin: 2px;
-  background: #ffffff;
+  background: var(--ss-white);
   border-radius: 6px;
-  border: 1px solid transparent;
-  color: #a52a2a;
+  border: 1px solid var(--ss-border-light);
+  color: var(--ss-link);
   font-size: 1rem;
   text-decoration: none !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }
 
 .problem-link:hover {
-  background: #f0f4ff;
-  border-color: #36c;
-  transform: translateX(3px);
-  box-shadow: 2px 4px 8px rgba(51, 102, 204, 0.15);
+  background: var(--ss-card-bg);
+  border-color: var(--ss-link);
+  color: var(--ss-link-hover);
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(26, 82, 118, 0.12);
 }
 
 /* ----------------------------
@@ -204,24 +254,34 @@ body {
   margin-bottom: 0 !important;
   padding: 0.35rem 0.8rem;
   font-size: 0.9rem;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--ss-white);
+  border: 1px solid var(--ss-border-light);
   border-radius: 6px;
-  color: #a52a2a;
+  color: var(--ss-link);
   text-decoration: none !important;
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
 }
 
-/* Larger, black upload button variant for header */
-.header-upload-btn {
+/* Header Upload / Log in — outline on white bar */
+.hero-section .navbar .edit-button.header-upload-btn.btn-outline-dark {
+  --bs-btn-color: var(--ss-navy);
+  --bs-btn-border-color: var(--ss-border-light);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--ss-primary-btn);
+  --bs-btn-hover-border-color: var(--ss-primary-btn);
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--ss-primary-btn-hover);
+  --bs-btn-active-border-color: var(--ss-primary-btn-hover);
+  --bs-btn-focus-shadow-rgb: 26, 26, 46;
   font-size: 1rem;
   font-weight: 600;
-  color: #000 !important;
-  border-color: #bbb;
+  color: var(--bs-btn-color);
+  border-color: var(--bs-btn-border-color);
+  background-color: transparent;
 }
 
 .header-upload-btn .upload-icon {
-  stroke: #000;
+  stroke: currentColor;
 }
 
 .upload-icon {
@@ -233,9 +293,37 @@ body {
 }
 
 .edit-button:hover {
-  color: #6b1111;
-  border-color: #bbb;
-  background: #fff0f0;
+  color: var(--ss-link-hover);
+  border-color: var(--ss-link);
+  background: var(--ss-card-bg);
+}
+
+/* Header pills: do not apply generic .edit-button:hover */
+.hero-section .navbar .edit-button.header-upload-btn:hover,
+.hero-section .navbar .edit-button.header-upload-btn:focus-visible {
+  color: var(--bs-btn-hover-color, #fff);
+  background-color: var(--bs-btn-hover-bg, var(--ss-primary-btn));
+  border-color: var(--bs-btn-hover-border-color, var(--ss-primary-btn));
+}
+
+/* eng_page chapter row upload — outline navy on light content background */
+.chapter-upload-pill.btn-outline-dark {
+  --bs-btn-color: var(--ss-navy);
+  --bs-btn-border-color: var(--ss-navy);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--ss-primary-btn-hover);
+  --bs-btn-hover-border-color: var(--ss-primary-btn-hover);
+  font-weight: 600;
+  color: var(--bs-btn-color);
+  border-color: var(--bs-btn-border-color);
+  background-color: transparent;
+}
+
+.chapter-upload-pill.btn-outline-dark:hover,
+.chapter-upload-pill.btn-outline-dark:focus-visible {
+  color: var(--bs-btn-hover-color, #fff);
+  background-color: var(--bs-btn-hover-bg, var(--ss-primary-btn-hover));
+  border-color: var(--bs-btn-hover-border-color, var(--ss-primary-btn-hover));
 }
 
 /* ----------------------------
@@ -402,7 +490,7 @@ body {
 
 #edit-popup input:focus {
   outline: none;
-  border-color: #36c;
+  border-color: var(--ss-link);
 }
 
 #edit-popup button {
@@ -416,12 +504,12 @@ body {
 }
 
 #submit-problem {
-  background-color: #36c;
-  color: #fff;
+  background-color: var(--ss-primary-btn);
+  color: var(--ss-white);
 }
 
 #submit-problem:hover {
-  background-color: #2b5099;
+  background-color: var(--ss-primary-btn-hover);
 }
 
 #cancel-edit {
@@ -453,11 +541,20 @@ body {
 /* ----------------------------
    FOOTER
 ---------------------------- */
-footer {
+footer.site-footer {
+  font-size: 0.9rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+footer.site-footer p {
+  margin: 0.2rem 0;
+}
+
+footer:not(.site-footer) {
   font-size: 0.9rem;
 }
 
-footer p {
+footer:not(.site-footer) p {
   margin: 0.2rem 0;
 }
 
@@ -502,10 +599,10 @@ footer p {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--ss-white);
   padding: 0.75rem;
   border-radius: 10px;
-  color: #a52a2a;
+  color: var(--ss-navy);
 }
 
 .pdf-text {
@@ -516,10 +613,10 @@ footer p {
 .pdf-label {
   font-weight: 500;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--ss-text-secondary);
 }
 
 .pdf-action {
   font-weight: 600;
-  color: #a52a2a;
+  color: var(--ss-link);
 }

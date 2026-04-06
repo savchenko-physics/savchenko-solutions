@@ -3,18 +3,31 @@
 
 <head>
     <%- include('default/head_en.ejs') %>
+    <%- include('default/main_site_header_head') %>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         <title>
             <%= __('studyGuide.title') %>
         </title>
         <script src="/js/jquery-1.10.1.min.js"></script>
         <style>
-            body {
+            /* css-latex/style.css sets body max-width: 80ch — breaks full-width .hero-section */
+            body.study-guide-page {
                 font-family: 'Inter', sans-serif;
                 line-height: 1.6;
                 color: #333;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background-color: #fff;
             }
 
-            .back-link {
+            .study-guide-inner {
+                max-width: 960px;
+                margin: 0 auto;
+                padding: 0 20px 40px;
+            }
+
+            .study-guide-inner .back-link {
                 display: inline-flex;
                 align-items: center;
                 gap: 5px;
@@ -29,13 +42,13 @@
                 transition: all 0.3s ease;
             }
 
-            .back-link:hover {
+            .study-guide-inner .back-link:hover {
                 background: #e2e6ea;
                 border-color: #007bff;
                 color: #0056b3;
             }
 
-            .submit-button {
+            .study-guide-inner .submit-button {
                 font-family: 'Inter', sans-serif;
                 width: 100%;
                 padding: 10px 20px;
@@ -50,11 +63,11 @@
                 transition: background-color 0.3s ease;
             }
 
-            .submit-button:hover {
+            .study-guide-inner .submit-button:hover {
                 background-color: #0056b3;
             }
 
-            .video-container {
+            .study-guide-inner .video-container {
                 position: relative;
                 padding-bottom: 56.25%;
                 height: 0;
@@ -64,7 +77,7 @@
                 margin: 20px 0;
             }
 
-            .video-container iframe {
+            .study-guide-inner .video-container iframe {
                 position: absolute;
                 top: 0;
                 left: 0;
@@ -72,28 +85,29 @@
                 height: 100%;
             }
 
-            h1, h3 {
+            .study-guide-inner h1,
+            .study-guide-inner h3 {
                 font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif; 
             }
 
-            /* Add responsive heading styles */
             @media screen and (max-width: 768px) {
-                h1 {
+                .study-guide-inner h1 {
                     font-size: 1.4rem !important;
                     margin: 1rem 0;
                     line-height: 1.2;
                 }
 
-                h3 {
+                .study-guide-inner h3 {
                     font-size: 1.2rem;
                 }
 
-                h3 strong {
+                .study-guide-inner h3 strong {
                     font-size: 1.1rem;
                 }
             }
 
-            .edit-button {
+            /* Scoped so main_page .edit-button / .upload-icon in .hero-section are not overridden */
+            .study-guide-inner .edit-button {
                 display: flex;
                 align-items: center;
                 gap: 0.4rem;
@@ -106,14 +120,14 @@
                 cursor: pointer;
             }
 
-            .edit-button:hover {
+            .study-guide-inner .edit-button:hover {
                 color: hsla(0, 100%, 33%, 1);
                 border-color: hsla(0, 100%, 33%, 0.4);
                 background: hsla(0, 100%, 33%, 0.01);
             }
 
-            .external-link-icon,
-            .upload-icon {
+            .study-guide-inner .external-link-icon,
+            .study-guide-inner .upload-icon {
                 fill: none;
                 stroke: currentColor;
                 stroke-width: 2;
@@ -123,8 +137,9 @@
         </style>
 </head>
 
-<body>
+<body class="study-guide-page">
     <%- include('default/header.ejs') %>
+    <div class="study-guide-inner">
         <div style="margin-top: 30px;">
             <a href="../<%= lang %>#description" class="back-link">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c"
@@ -236,7 +251,9 @@
             <%= __('studyGuide.registration.conclusion') %>
         </p>
 
+        <%- include('default/main_site_footer_scripts') %>
         <%- include('default/footer_en.ejs') %>
+    </div>
 </body>
 
 </html>

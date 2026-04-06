@@ -10,11 +10,14 @@
     <meta name="author" content="<%= __('meta.author') %>">
     <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
     <meta property="og:title" content="<%= __('profile.title') %>">
-    <meta property="og:image" content="img/logo.png">
+    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png">
     <meta property="og:description" content="<%= __('meta.ogDescription') %>">
     <meta name="yandex-verification" content="6cfda41f74038368">
     <title>Submission Review</title>
-    <link rel="icon" href="/img/logo.png" type="image/png">
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+    <link rel="icon" type="image/png" href="/img/logo.png">
+    <link rel="apple-touch-icon" href="/img/logo.png">
+    <%- include('default/main_site_header_head') %>
     <script src="/js/jquery-1.10.1.min.js"></script>
     <style>
         body {
@@ -89,11 +92,10 @@
             color: #3182ce;
         }
     </style>
-    <div style="max-width: calc(100vw - 30px);">
-        <%- include('default/header.ejs') %></div>
 </head>
 
 <body>
+    <%- include('default/header.ejs') %>
 
     <div class="container">
         <h1>
@@ -123,6 +125,7 @@
             </p>
         </div>
     </footer>
+    <%- include('default/main_site_footer_scripts') %>
 </body>
 
 </html>

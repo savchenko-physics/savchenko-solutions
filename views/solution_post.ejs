@@ -9,10 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
     <script src="/js/jquery-1.10.1.min.js"></script>
     
-    <!-- Icon -->
-    <link rel="icon" href="/img/logo.png" type="image/png" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <link rel="apple-touch-icon" href="/img/logo.png" />
     
     <!-- MathJax -->
     <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
@@ -64,70 +68,6 @@
             background: var(--bg-secondary);
             color: var(--text-primary);
             line-height: 1.6;
-        }
-
-        /* Hero header (matches main page style) */
-        .hero-section {
-            background: #ffffff;
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 999;
-        }
-
-        .logo-img {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-        }
-
-        .site-title {
-            font-size: 1.1rem;
-            line-height: 1.1;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .site-motto {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .hero-section .nav-link {
-            color: var(--text-primary) !important;
-        }
-
-        .searchbar-input {
-            border-radius: 999px;
-            border: 1px solid #ced4da;
-            padding: 0.35rem 2rem 0.35rem 2.4rem;
-            font-size: 0.95rem;
-        }
-
-        .searchbar-input:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
-        }
-
-        .header-upload-btn {
-            background: #ffffff;
-            border: 1px solid #212529;
-            color: #212529;
-            padding: 0.35rem 0.8rem;
-            transition: background 0.2s ease;
-        }
-
-        .header-upload-btn:hover {
-            background: #212529;
-            color: #ffffff;
-        }
-
-        .upload-icon {
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
         }
 
         /* Main Content */
@@ -721,70 +661,7 @@
 </head>
 
 <body>
-    <header class="hero-section">
-        <nav class="navbar navbar-expand-lg navbar-light">
-            <div class="container-fluid px-3 px-md-4 align-items-center">
-                <a class="navbar-brand d-flex align-items-center" href="/<%= lang %>/">
-                    <img src="/img/book.png" alt="<%= __('title') %> Logo" class="logo-img me-2">
-                    <div>
-                        <h1 class="site-title mb-0"><%= __('title') %></h1>
-                        <p class="site-motto mb-0"><%= __('motto') %></p>
-                    </div>
-                </a>
-
-                <div class="flex-grow-1 d-none d-md-flex justify-content-center px-3">
-                    <div class="searchbar-wrapper position-relative w-100" style="max-width: 420px;">
-                        <svg class="search-icon position-absolute" viewBox="0 0 24 24" width="20" height="20" style="left: 15px; top: 50%; transform: translateY(-50%); z-index: 1;">
-                            <path fill="#6c757d" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-                        </svg>
-                        <input type="text" id="headerSearch" class="form-control searchbar-input" placeholder="<%= __('menu.search') %>">
-                        <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-sm" style="display: none; z-index: 1000; width: 100%;"></div>
-                    </div>
-                </div>
-
-                <button class="navbar-toggler d-flex align-items-center gap-2 border-0 pe-0 d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
-                    <% if (username) { %>
-                        <a href="/user/<%= username %>" class="nav-link text-white fw-bold">
-                            <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="36" height="36">
-                        </a>
-                    <% } %>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ms-auto align-items-center">
-                        <li class="nav-item px-2 d-none d-md-block">
-                            <button class="views-button" id="viewsButton">
-                                <i class="fas fa-eye"></i>
-                                <span id="viewCount">-</span>
-                            </button>
-                        </li>
-                        <li class="nav-item px-2 d-none d-md-block">
-                            <a href="/<%= lang %>/upload" class="header-upload-btn text-decoration-none d-inline-flex align-items-center btn btn-sm rounded-pill">
-                                <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
-                                </svg>
-                                <span class="ms-2"><%= __('upload.upload') %></span>
-                            </a>
-                        </li>
-                        <li class="nav-item px-2">
-                            <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
-                        </li>
-                        <li class="nav-item px-2">
-                            <% if (username) { %>
-                                <a href="/user/<%= username %>" class="d-flex align-items-center">
-                                    <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40" height="40">
-                                </a>
-                            <% } else { %>
-                                <a href="/<%= lang %>/login" class="nav-link text-white fw-bold"><%= lang === 'ru' ? 'Войти' : 'Login' %></a>
-                            <% } %>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-        <div class="container hero-content"></div>
-    </header>
+    <%- include('default/main_site_header', { showViewsButton: true }) %>
 
     <!-- Mobile Navigation -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
@@ -957,6 +834,7 @@
     <script>
         const problemName = '<%- name %>';
         const language = '<%- lang %>';
+        const defaultProfileAvatar = '/img/profile_images/Default_placeholder.svg';
         const isLoggedIn = Boolean(<%- username ? 1 : 0 %>);
         const i18nText = {
             noComments: language === 'ru' ? 'Комментариев пока нет. Будьте первым и поделитесь мыслями!' : 'No comments yet. Be the first to share your thoughts!',
@@ -977,7 +855,6 @@
             await loadContributors();
             await loadComments();
             await loadRelatedProblems();
-            initializeSearch();
             initializeMobileMenu();
             initializeViewsChart();
             initializeReportButton();
@@ -1032,7 +909,7 @@
                 if (contributors.length > 0) {
                     contributorsList.innerHTML = contributors.map(contributor => `
                         <div class="d-flex align-items-center mb-2">
-                            <img src="${contributor.profile_picture}" alt="${contributor.username}" 
+                            <img src="${contributor.profile_picture || defaultProfileAvatar}" alt="${contributor.username}" 
                                  class="comment-avatar me-2">
                             <div>
                                 <a href="/user/${contributor.username}" class="text-decoration-none">
@@ -1112,7 +989,7 @@
                     commentsList.innerHTML = data.comments.map(comment => `
                         <div class="comment-item">
                             <div class="comment-author">
-                                <img src="${comment.author.profilePicture}" alt="${comment.author.username}" 
+                                <img src="${comment.author.profilePicture || defaultProfileAvatar}" alt="${comment.author.username}" 
                                      class="comment-avatar">
                                 <div>
                                     <strong>${comment.author.fullName || comment.author.username}</strong>
@@ -1152,48 +1029,6 @@
                     }
                 } catch (error) {
                     console.error('Error submitting comment:', error);
-                }
-            });
-        }
-
-        // Search functionality
-        function initializeSearch() {
-            const searchInput = document.getElementById('headerSearch');
-            const searchResults = document.getElementById('searchResults');
-
-            searchInput.addEventListener('input', async (e) => {
-                const query = e.target.value.trim();
-                
-                if (query.length === 0) {
-                    searchResults.style.display = 'none';
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-                    const data = await response.json();
-                    
-                    if (data.results.length > 0) {
-                        searchResults.innerHTML = data.results.slice(0, 5).map(result => `
-                            <div class="search-result-item" onclick="location.href='${result.relativePath}'">
-                                <div class="search-result-title">${result.name}</div>
-                                <div class="search-result-snippet">${result.snippet}</div>
-                            </div>
-                        `).join('');
-                        searchResults.style.display = 'block';
-                    } else {
-                        searchResults.innerHTML = `<div class="search-result-item">${i18nText.noResults}</div>`;
-                        searchResults.style.display = 'block';
-                    }
-                } catch (error) {
-                    console.error('Search error:', error);
-                }
-            });
-
-            // Hide search results when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                    searchResults.style.display = 'none';
                 }
             });
         }
@@ -1365,5 +1200,6 @@
             });
         }
     </script>
+    <%- include('default/main_site_search_script') %>
 </body>
 </html> 
