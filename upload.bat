@@ -1,0 +1,2 @@
+@echo off
+wsl -d Ubuntu -- bash -lc "rsync -avz --progress --exclude=\"img/\" --exclude=\"node_modules/\" --exclude=\"posts/\" --exclude=\".git/\" -e \"ssh -i $HOME/.ssh/test.pem\" \"$HOME/savchenko-solutions-src/\" ubuntu@3.146.34.179:~/savchenko-solutions/; echo; echo Done; exec bash"

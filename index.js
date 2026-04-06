@@ -253,116 +253,6 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
     }
 });
 
-
-// Add comprehensive contributors ranking page
-app.get(["/contributors", "/:lang/contributors"], async (req, res) => {
-    const lang = req.params.lang || 'en';
-    const page = parseInt(req.query.page) || 1;
-    const limit = 25;
-    const offset = (page - 1) * limit;
-    
-    i18n.setLocale(res, lang);
-
-    try {
-        // Get total count for pagination
-        const countQuery = `
-            WITH all_contributions AS (
-                SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
-                UNION ALL
-                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
-            )
-            SELECT COUNT(DISTINCT user_id) as total
-            FROM all_contributions
-        `;
-        
-        const countResult = await pool.query(countQuery);
-        const totalContributors = parseInt(countResult.rows[0].total);
-        const totalPages = Math.ceil(totalContributors / limit);
-
-        // Get contributors with rankings and additional user information (same formula as getTopAuthors)
-        const contributorsQuery = `
-            WITH all_contributions AS (
-                SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
-                GROUP BY user_id, problem_name
-                UNION ALL
-                SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
-                GROUP BY user_id, problem_name
-            ),
-            user_first_contributions AS (
-                SELECT user_id, MIN(first_contribution) as first_contribution_date
-                FROM all_contributions
-                GROUP BY user_id
-            ),
-            user_stats AS (
-                SELECT 
-                    u.id,
-                    u.username,
-                    u.full_name,
-                    u.profile_picture,
-                    u.created_at,
-                    u.country_location,
-                    u.github,
-                    u.linkedin,
-                    u.bio,
-                    u.is_verified_user,
-                    ufc.first_contribution_date,
-                    MAX(COALESCE(up.show_country_on_leaderboard, true)) AS show_country_on_leaderboard,
-                    COUNT(DISTINCT ac.problem_name) AS unique_contributions,
-                    COUNT(*) AS total_contributions,
-                    19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
-                FROM all_contributions ac
-                JOIN users u ON ac.user_id = u.id
-                LEFT JOIN user_preferences up ON u.id = up.user_id
-                LEFT JOIN user_first_contributions ufc ON u.id = ufc.user_id
-                GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at, u.country_location, u.github, u.linkedin, u.bio, u.is_verified_user, ufc.first_contribution_date
-            ),
-            ranked_users AS (
-                SELECT 
-                    *,
-                    ROUND(raw_rank::numeric, 0) AS rank,
-                    ROW_NUMBER() OVER (ORDER BY raw_rank DESC) AS position
-                FROM user_stats
-            )
-            SELECT * FROM ranked_users
-            ORDER BY raw_rank DESC
-            LIMIT $1 OFFSET $2
-        `;
-        
-        const contributorsResult = await pool.query(contributorsQuery, [limit, offset]);
-        let contributors = contributorsResult.rows.map((contributor, index) => {
-            const showFlag =
-                contributor.show_country_on_leaderboard !== false && contributor.country_location;
-            return {
-                ...contributor,
-                position: offset + index + 1,
-                country_flag_emoji: showFlag
-                    ? flagEmojiForCountryName(contributor.country_location)
-                    : "",
-            };
-        });
-
-        res.render("contributors_ranking", {
-            __: i18n.__,
-            lang,
-            contributors,
-            currentPage: page,
-            totalPages,
-            totalContributors: totalContributors,
-            hasNextPage: page < totalPages,
-            hasPrevPage: page > 1,
-            username: req.session.username || null,
-            userId: req.session.userId || null,
-        });
-    } catch (error) {
-        console.error("Error fetching contributors:", error);
-        res.status(500).render("404", {
-            __: i18n.__,
-            pageUrl: req.originalUrl,
-            lang
-        });
-    }
-});
-
 // Update the existing getTopAuthors function to be more comprehensive
 async function getAllContributors(limit = 50, offset = 0) {
     try {
@@ -1616,9 +1506,183 @@ app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     });
 });
 
+// Contributors leaderboard — MUST be registered before `/:lang/:name` or "contributors" is treated as a problem slug (404).
+async function handleContributorsRanking(req, res) {
+    const lang = req.params.lang || "en";
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 25;
+    const offset = (page - 1) * limit;
+
+    i18n.setLocale(res, lang);
+
+    const countQuery = `
+        WITH all_contributions AS (
+            SELECT user_id, problem_name FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            UNION ALL
+            SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+        )
+        SELECT COUNT(DISTINCT user_id) as total
+        FROM all_contributions
+    `;
+
+    const contributorsQueryWithPrefs = `
+        WITH all_contributions AS (
+            SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            GROUP BY user_id, problem_name
+            UNION ALL
+            SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            GROUP BY user_id, problem_name
+        ),
+        user_first_contributions AS (
+            SELECT user_id, MIN(first_contribution) as first_contribution_date
+            FROM all_contributions
+            GROUP BY user_id
+        ),
+        user_stats AS (
+            SELECT
+                u.id,
+                u.username,
+                u.full_name,
+                u.profile_picture,
+                u.created_at,
+                u.country_location,
+                u.github,
+                u.linkedin,
+                u.bio,
+                u.is_verified_user,
+                ufc.first_contribution_date,
+                BOOL_OR(COALESCE(up.show_country_on_leaderboard, true)) AS show_country_on_leaderboard,
+                COUNT(DISTINCT ac.problem_name) AS unique_contributions,
+                COUNT(*) AS total_contributions,
+                19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+            FROM all_contributions ac
+            JOIN users u ON ac.user_id = u.id
+            LEFT JOIN user_preferences up ON u.id = up.user_id
+            LEFT JOIN user_first_contributions ufc ON u.id = ufc.user_id
+            GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at, u.country_location, u.github, u.linkedin, u.bio, u.is_verified_user, ufc.first_contribution_date
+        ),
+        ranked_users AS (
+            SELECT
+                *,
+                ROUND(raw_rank::numeric, 0) AS rank,
+                ROW_NUMBER() OVER (ORDER BY raw_rank DESC) AS position
+            FROM user_stats
+        )
+        SELECT * FROM ranked_users
+        ORDER BY raw_rank DESC
+        LIMIT $1 OFFSET $2
+    `;
+
+    const contributorsQueryNoPrefsColumn = `
+        WITH all_contributions AS (
+            SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            GROUP BY user_id, problem_name
+            UNION ALL
+            SELECT user_id, problem_name, MIN(edited_at) as first_contribution FROM github_contributions WHERE user_id != 28 AND user_id IS NOT NULL
+            GROUP BY user_id, problem_name
+        ),
+        user_first_contributions AS (
+            SELECT user_id, MIN(first_contribution) as first_contribution_date
+            FROM all_contributions
+            GROUP BY user_id
+        ),
+        user_stats AS (
+            SELECT
+                u.id,
+                u.username,
+                u.full_name,
+                u.profile_picture,
+                u.created_at,
+                u.country_location,
+                u.github,
+                u.linkedin,
+                u.bio,
+                u.is_verified_user,
+                ufc.first_contribution_date,
+                true AS show_country_on_leaderboard,
+                COUNT(DISTINCT ac.problem_name) AS unique_contributions,
+                COUNT(*) AS total_contributions,
+                19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
+            FROM all_contributions ac
+            JOIN users u ON ac.user_id = u.id
+            LEFT JOIN user_first_contributions ufc ON u.id = ufc.user_id
+            GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.created_at, u.country_location, u.github, u.linkedin, u.bio, u.is_verified_user, ufc.first_contribution_date
+        ),
+        ranked_users AS (
+            SELECT
+                *,
+                ROUND(raw_rank::numeric, 0) AS rank,
+                ROW_NUMBER() OVER (ORDER BY raw_rank DESC) AS position
+            FROM user_stats
+        )
+        SELECT * FROM ranked_users
+        ORDER BY raw_rank DESC
+        LIMIT $1 OFFSET $2
+    `;
+
+    try {
+        const countResult = await pool.query(countQuery);
+        const totalContributors = parseInt(countResult.rows[0].total, 10);
+        const totalPages = Math.ceil(totalContributors / limit);
+
+        let contributorsResult;
+        try {
+            contributorsResult = await pool.query(contributorsQueryWithPrefs, [limit, offset]);
+        } catch (qErr) {
+            const msg = String(qErr && qErr.message ? qErr.message : "");
+            if (
+                msg.includes("show_country_on_leaderboard") ||
+                msg.includes("user_preferences") ||
+                msg.includes("max(boolean)")
+            ) {
+                contributorsResult = await pool.query(contributorsQueryNoPrefsColumn, [limit, offset]);
+            } else {
+                throw qErr;
+            }
+        }
+
+        const contributors = contributorsResult.rows.map((contributor, index) => {
+            const showFlag =
+                contributor.show_country_on_leaderboard !== false && contributor.country_location;
+            return {
+                ...contributor,
+                position: offset + index + 1,
+                country_flag_emoji: showFlag
+                    ? flagEmojiForCountryName(contributor.country_location)
+                    : "",
+            };
+        });
+
+        res.render("contributors_ranking", {
+            __: i18n.__,
+            lang,
+            contributors,
+            currentPage: page,
+            totalPages,
+            totalContributors,
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+            username: req.session.username || null,
+            userId: req.session.userId || null,
+        });
+    } catch (error) {
+        console.error("Error fetching contributors:", error);
+        res.status(500).render("404", {
+            __: i18n.__,
+            pageUrl: req.originalUrl,
+            lang,
+        });
+    }
+}
+
+app.get(["/contributors", "/:lang/contributors"], handleContributorsRanking);
+
 // Russian breadcrumb targets: /ru/1 and /ru/1,1 → main catalog anchors (not problem files)
 app.get("/:lang/:name", (req, res, next) => {
     const { lang, name } = req.params;
+    if (name === "contributors") {
+        return handleContributorsRanking(req, res);
+    }
     if (lang === "ru" && /^\d+$/.test(name)) {
         return res.redirect(302, `/ru/#${name}`);
     }
