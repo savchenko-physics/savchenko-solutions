@@ -4,348 +4,364 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>History - <%= problemName %> | <%= __('title') %></title>
-    
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <title><%= problemName === 'all' ? (lang === 'ru' ? 'Все изменения' : 'All Contributions') : 'History - ' + problemName %> | <%= __('title') %></title>
+    <meta name="description" content="<%= problemName === 'all' ? (lang === 'ru' ? 'История всех изменений решений задач Савченко' : 'Complete history of all contributions to Savchenko Solutions') : 'Contribution history for problem ' + problemName %>" />
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/design-system.css" />
     <link rel="stylesheet" href="/css/main_page.css" />
-    
-    <!-- Icon -->
+
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
-        :root {
-            --primary-color: #0969da;
-            --secondary-color: #656d76;
-            --accent-color: #36c;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f6f8fa;
-            --bg-tertiary: #f0f3f6;
-            --border-color: #d1d9e0;
-            --text-primary: #1f2328;
-            --text-secondary: #656d76;
-            --text-muted: #8c959f;
-            --success-color: #1a7f37;
-            --warning-color: #d1242f;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
-            --border-radius: 12px;
-            --border-radius-sm: 8px;
-        }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #fff;
+            color: #2d2d2d;
             margin: 0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        .history-breadcrumb {
-            max-width: 1200px;
+        .cl-container {
+            max-width: 960px;
             margin: 0 auto;
-            padding: 0.75rem 2rem 0;
-        }
-
-        .history-breadcrumb .breadcrumb {
-            background: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .history-breadcrumb .breadcrumb-item a {
-            color: var(--text-secondary);
-            text-decoration: none;
-        }
-
-        .history-breadcrumb .breadcrumb-item.active {
-            color: var(--text-primary);
-        }
-
-        /* Main Content */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
+            padding: 0 24px;
             flex: 1;
         }
 
-        .page-header {
-            background: var(--gradient-primary);
-            color: white;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
+        /* Breadcrumb */
+        .cl-breadcrumb {
+            padding: 16px 0 0;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        .cl-breadcrumb a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .cl-breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        .cl-breadcrumb-sep {
+            margin: 0 6px;
+            color: #adb5bd;
         }
 
-        .page-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+        /* Page header */
+        .cl-header {
+            padding: 24px 0 20px;
+            border-bottom: 1px solid #dee2e6;
         }
-
-        .page-subtitle {
-            opacity: 0.9;
-            font-size: 1.1rem;
-        }
-
-        /* Timeline */
-        .timeline-container {
-            background: var(--bg-primary);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            box-shadow: var(--shadow-md);
-        }
-
-        .timeline {
-            position: relative;
-            padding-left: 3rem;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 1rem;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: var(--border-color);
-        }
-
-        .timeline-item {
-            position: relative;
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: var(--bg-secondary);
-            border-radius: var(--border-radius-sm);
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -3.25rem;
-            top: 1.5rem;
-            width: 12px;
-            height: 12px;
-            background: var(--primary-color);
-            border-radius: 50%;
-            border: 3px solid var(--bg-primary);
-        }
-
-        .timeline-item.github::before {
-            background: #333;
-        }
-
-        .timeline-header {
+        .cl-header-row {
             display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1rem;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
             flex-wrap: wrap;
-            gap: 1rem;
         }
-
-        .timeline-author {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .author-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-        }
-
-        .author-info h5 {
-            margin: 0;
+        .cl-title {
+            font-size: 24px;
             font-weight: 600;
+            color: #1a1a2e;
+            margin: 0 0 4px;
+        }
+        .cl-subtitle {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
+        }
+        .cl-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #1a1a2e;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.15s ease;
+            flex-shrink: 0;
+        }
+        .cl-cta:hover {
+            background: #2d2d4e;
+            color: #fff;
         }
 
-        .author-info small {
-            color: var(--text-muted);
+        /* Stats bar */
+        .cl-stats {
+            display: flex;
+            gap: 24px;
+            padding: 16px 0;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
         }
-
-        .timeline-meta {
+        .cl-stat {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            margin-left: auto;
+            gap: 6px;
+            color: #6c757d;
+        }
+        .cl-stat-num {
+            font-weight: 600;
+            color: #2d2d2d;
         }
 
-        .timeline-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            font-size: 0.8rem;
+        /* Date group */
+        .cl-date-group {
+            margin-top: 24px;
+        }
+        .cl-date-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            margin-bottom: 0;
+        }
+        .cl-date-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            color: #6c757d;
+        }
+        .cl-date-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+
+        /* Commit list (GitHub style) */
+        .cl-commit-list {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .cl-commit-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #dee2e6;
+            gap: 12px;
+            transition: background 0.1s ease;
+        }
+        .cl-commit-row:last-child {
+            border-bottom: none;
+        }
+        .cl-commit-row:hover {
+            background: #f8f9fa;
+        }
+
+        /* Dot badge (git-commit icon style) */
+        .cl-commit-badge {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            width: 32px;
+            justify-content: center;
+        }
+        .cl-commit-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1a1a2e;
+            position: relative;
+        }
+        .cl-commit-dot::before,
+        .cl-commit-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            height: 2px;
+            width: 10px;
+            background: #dee2e6;
+            transform: translateY(-50%);
+        }
+        .cl-commit-dot::before {
+            right: 100%;
+        }
+        .cl-commit-dot::after {
+            left: 100%;
+        }
+        .cl-commit-row.is-new .cl-commit-dot {
+            background: #27ae60;
+        }
+
+        /* Main content area */
+        .cl-commit-main {
+            flex: 1;
+            min-width: 0;
+        }
+        .cl-commit-title {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .cl-commit-problem {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .cl-commit-problem:hover {
+            color: #0d3b54;
+            text-decoration: underline;
+        }
+        .cl-commit-label {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 1px 8px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+        .cl-label-new {
+            background: #dcffe4;
+            color: #1a7f37;
+        }
+        .cl-label-edit {
+            background: #f0f3f6;
+            color: #6c757d;
+        }
+
+        .cl-commit-meta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        .cl-commit-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .cl-commit-user {
+            color: #2d2d2d;
+            text-decoration: none;
             font-weight: 500;
         }
-
-        .badge-github {
-            background: #f6f8fa;
-            color: #333;
-            border: 1px solid #d1d9e0;
+        .cl-commit-user:hover {
+            text-decoration: underline;
+            color: #1a5276;
+        }
+        .cl-commit-anon {
+            color: #6c757d;
+            font-style: italic;
         }
 
-        .badge-direct {
-            background: #dbeafe;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-
-        .timeline-date {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .timeline-content {
-            margin-top: 1rem;
-        }
-
-        .content-changes {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
-            padding: 1rem;
-            margin-top: 1rem;
-        }
-
-        .diff-stats {
+        /* Right-side metadata */
+        .cl-commit-right {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
         }
-
-        .diff-addition {
-            color: var(--success-color);
-        }
-
-        .diff-deletion {
-            color: var(--warning-color);
-        }
-
-        .view-diff-btn {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-
-        .view-diff-btn:hover {
-            background: #0550ae;
-        }
-
-        /* Footer */
-        .modern-footer {
-            background: var(--bg-primary);
-            border-top: 1px solid var(--border-color);
-            padding: 2rem 0;
-            margin-top: 2rem;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            text-align: center;
-        }
-
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
+        .cl-commit-hash {
+            font-size: 12px;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+            color: #1a5276;
             text-decoration: none;
-            transition: color 0.3s ease;
+            background: #f0f3f6;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            white-space: nowrap;
+        }
+        .cl-commit-hash:hover {
+            background: #e1e7ed;
+            text-decoration: none;
+        }
+        .cl-commit-time {
+            font-size: 13px;
+            color: #8c959f;
+            white-space: nowrap;
         }
 
-        .footer-links a:hover {
-            color: var(--primary-color);
+        /* Empty state */
+        .cl-empty {
+            text-align: center;
+            padding: 64px 24px;
+        }
+        .cl-empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            color: #adb5bd;
+        }
+        .cl-empty h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 8px;
+        }
+        .cl-empty p {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0 0 20px;
+        }
+
+        /* CTA banner */
+        .cl-contribute-banner {
+            margin: 32px 0;
+            padding: 20px 24px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .cl-banner-text {
+            flex: 1;
+            min-width: 200px;
+        }
+        .cl-banner-text h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 0 0 4px;
+        }
+        .cl-banner-text p {
+            font-size: 14px;
+            color: #6c757d;
+            margin: 0;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            .header-container {
-                padding: 0 1rem;
+        @media (max-width: 640px) {
+            .cl-header-row {
+                flex-direction: column;
             }
-
-            .breadcrumb-nav {
+            .cl-stats {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+            .cl-commit-row {
+                padding: 10px 12px;
+                flex-wrap: wrap;
+            }
+            .cl-commit-right {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 4px;
+            }
+            .cl-commit-badge {
                 display: none;
             }
-
-            .main-container {
-                padding: 1rem;
-            }
-
-            .page-header {
-                padding: 1.5rem 1rem;
-            }
-
-            .page-title {
-                font-size: 1.5rem;
-            }
-
-            .timeline {
-                padding-left: 2rem;
-            }
-
-            .timeline::before {
-                left: 0.5rem;
-            }
-
-            .timeline-item::before {
-                left: -2.75rem;
-            }
-
-            .timeline-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .timeline-meta {
-                margin-left: 0;
-            }
-
-            .footer-links {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
         }
     </style>
     <script src="/js/analytics.js"></script>
@@ -357,147 +373,146 @@
         langSwitchRuUrl: '/ru/contributions/' + problemName
     }) %>
 
-    <nav class="history-breadcrumb" aria-label="breadcrumb">
-        <ol class="breadcrumb mb-0">
-            <li class="breadcrumb-item"><a href="/<%= lang %>/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/<%= lang %>/<%= problemName %>"><%= problemName %></a></li>
-            <li class="breadcrumb-item active">History</li>
-        </ol>
-    </nav>
+    <div class="cl-container">
+        <!-- Breadcrumb -->
+        <nav class="cl-breadcrumb" aria-label="breadcrumb">
+            <a href="/<%= lang %>/"><%= lang === 'ru' ? 'Главная' : 'Home' %></a>
+            <span class="cl-breadcrumb-sep">/</span>
+            <% if (problemName === 'all') { %>
+                <span><%= lang === 'ru' ? 'Все изменения' : 'All Contributions' %></span>
+            <% } else { %>
+                <a href="/<%= lang %>/<%= problemName %>"><%= problemName %></a>
+                <span class="cl-breadcrumb-sep">/</span>
+                <span><%= lang === 'ru' ? 'История' : 'History' %></span>
+            <% } %>
+        </nav>
 
-    <!-- Main Content -->
-    <div class="main-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-title">$<%= problemName %>$ History</h1>
-            <p class="page-subtitle">Complete timeline of all contributions and changes</p>
+        <!-- Header -->
+        <div class="cl-header">
+            <div class="cl-header-row">
+                <div>
+                    <h1 class="cl-title">
+                        <% if (problemName === 'all') { %>
+                            <%= lang === 'ru' ? 'Все изменения' : 'All Contributions' %>
+                        <% } else { %>
+                            <%= lang === 'ru' ? 'История задачи' : 'History for' %> <%= problemName %>
+                        <% } %>
+                    </h1>
+                    <p class="cl-subtitle">
+                        <% if (problemName === 'all') { %>
+                            <%= lang === 'ru' ? 'Полная история изменений решений. Каждое изменение проверяется сообществом.' : 'Complete record of every solution change. Each contribution is peer-reviewed.' %>
+                        <% } else { %>
+                            <%= lang === 'ru' ? 'Все редакции этой задачи' : 'Every revision of this problem\'s solution' %>
+                        <% } %>
+                    </p>
+                </div>
+                <a href="/<%= lang %>/upload" class="cl-cta">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z"/></svg>
+                    <%= lang === 'ru' ? 'Добавить решение' : 'Contribute' %>
+                </a>
+            </div>
         </div>
 
-        <!-- Timeline -->
-        <div class="timeline-container">
-            <% if (contributions.length > 0) { %>
-                <div class="timeline">
-                    <% contributions.forEach((contribution, index) => { %>
-                        <div class="timeline-item <%= contribution.user_id ? 'direct' : 'github' %>">
-                            <div class="timeline-header">
-                                <div class="timeline-author">
-                                    <img src="<%= contribution.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" 
-                                         alt="<%= contribution.username || 'Anonymous' %>" class="author-avatar">
-                                    <div class="author-info">
-                                        <h5>
-                                            <% if (contribution.username) { %>
-                                                <a href="/user/<%= contribution.username %>" class="text-decoration-none">
-                                                    <%= contribution.full_name || contribution.username %>
-                                                </a>
-                                            <% } else { %>
-                                                Anonymous Contributor
-                                            <% } %>
-                                        </h5>
-                                        <small>
-                                            <% if (contribution.ip_address && !contribution.username) { %>
-                                                IP: <%= contribution.ip_address.substring(0, 8) %>...
-                                            <% } else { %>
-                                                @<%= contribution.username || 'anonymous' %>
-                                            <% } %>
-                                        </small>
-                                    </div>
-                                </div>
-                                <div class="timeline-meta">
-                                    <span class="timeline-badge <%= contribution.user_id ? 'badge-direct' : 'badge-github' %>">
-                                        <% if (contribution.user_id) { %>
-                                            <i class="fas fa-edit me-1"></i>Direct Edit
-                                        <% } else { %>
-                                            <i class="fab fa-github me-1"></i>GitHub
-                                        <% } %>
-                                    </span>
-                                    <span class="timeline-date">
-                                        <i class="fas fa-clock me-1"></i>
-                                        <%= formatDate(contribution.edited_at) %>
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="timeline-content">
-                                <% if (contribution.content_changed) { %>
-                                    <div class="content-changes">
-                                        <div class="diff-stats">
-                                            <span class="diff-addition">
-                                                <i class="fas fa-plus me-1"></i>Content Modified
-                                            </span>
-                                        </div>
-                                        <button class="view-diff-btn" onclick="viewDiff(<%= contribution.id %>)">
-                                            <i class="fas fa-code me-1"></i>View Changes
-                                        </button>
-                                    </div>
-                                <% } else { %>
-                                    <p class="text-muted mb-0">
-                                        <i class="fas fa-file-plus me-1"></i>
-                                        Initial creation or metadata update
-                                    </p>
-                                <% } %>
-                            </div>
+        <% if (contributions.length > 0) { %>
+
+        <!-- Stats -->
+        <div class="cl-stats">
+            <div class="cl-stat">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
+                <span class="cl-stat-num"><%= stats.total %></span>
+                <%= lang === 'ru' ? 'изменений' : 'contributions' %>
+            </div>
+            <div class="cl-stat">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5zm10.5-1h-8a1 1 0 00-1 1v6.708A2.486 2.486 0 014.5 9h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
+                <span class="cl-stat-num"><%= stats.uniqueProblems %></span>
+                <%= lang === 'ru' ? 'задач' : 'problems' %>
+            </div>
+            <div class="cl-stat">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.001 4.001 0 00-7.9 0 .75.75 0 01-1.482-.236A5.507 5.507 0 013.102 8.05 3.49 3.49 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4zM5.5 3a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                <span class="cl-stat-num"><%= stats.uniqueContributors %></span>
+                <%= lang === 'ru' ? 'авторов' : 'contributors' %>
+            </div>
+        </div>
+
+        <!-- Grouped commit list -->
+        <% Object.entries(grouped).forEach(([dateLabel, entries]) => { %>
+        <div class="cl-date-group">
+            <div class="cl-date-header">
+                <div class="cl-date-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
+                </div>
+                <span class="cl-date-label">
+                    <%= lang === 'ru' ? 'Изменения за' : 'Contributions on' %> <%= dateLabel %>
+                </span>
+            </div>
+            <div class="cl-commit-list">
+                <% entries.forEach(contribution => { %>
+                <div class="cl-commit-row<%= contribution.isNew ? ' is-new' : '' %>">
+                    <div class="cl-commit-badge">
+                        <div class="cl-commit-dot"></div>
+                    </div>
+                    <div class="cl-commit-main">
+                        <div class="cl-commit-title">
+                            <a href="/<%= lang %>/<%= contribution.problem_name %>" class="cl-commit-problem"><%= contribution.problem_name %></a>
+                            <% if (contribution.isNew) { %>
+                                <span class="cl-commit-label cl-label-new"><%= lang === 'ru' ? 'новое' : 'new solution' %></span>
+                            <% } else { %>
+                                <span class="cl-commit-label cl-label-edit"><%= lang === 'ru' ? 'правка' : 'edit' %></span>
+                            <% } %>
                         </div>
-                    <% }); %>
+                        <div class="cl-commit-meta">
+                            <% if (contribution.username) { %>
+                                <img src="<%= contribution.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                                     alt="" class="cl-commit-avatar" width="20" height="20" loading="lazy" />
+                                <a href="/user/<%= contribution.username %>" class="cl-commit-user"><%= contribution.username %></a>
+                            <% } else { %>
+                                <span class="cl-commit-anon"><%= lang === 'ru' ? 'Аноним' : 'Anonymous' %></span>
+                            <% } %>
+                            <span><%= lang === 'ru' ? 'в' : 'at' %> <%= formatTime(contribution.edited_at) %></span>
+                        </div>
+                    </div>
+                    <div class="cl-commit-right">
+                        <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Посмотреть изменения' : 'View changes' %>">#<%= contribution.id %></a>
+                    </div>
                 </div>
-            <% } else { %>
-                <div class="empty-state">
-                    <i class="fas fa-history"></i>
-                    <h3>No History Available</h3>
-                    <p>This problem doesn't have any recorded contributions yet.</p>
-                    <a href="/<%= lang %>/edit/<%= problemName %>" class="btn btn-primary">
-                        <i class="fas fa-edit me-2"></i>Be the first to contribute
-                    </a>
-                </div>
+                <% }); %>
+            </div>
+        </div>
+        <% }); %>
+
+        <!-- Contribute banner -->
+        <div class="cl-contribute-banner">
+            <div class="cl-banner-text">
+                <h4><%= lang === 'ru' ? 'Помогите расширить коллекцию' : 'Help expand the collection' %></h4>
+                <p><%= lang === 'ru' ? '507 задач ещё не имеют решений. Каждое решение проходит рецензию и лицензируется CC BY-SA 4.0.' : 'Hundreds of problems still need solutions. Every contribution is peer-reviewed and licensed CC BY-SA 4.0.' %></p>
+            </div>
+            <a href="/<%= lang %>/upload" class="cl-cta">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v14"/><path d="M6 9l6-6 6 6"/><path d="M5 19h14"/></svg>
+                <%= lang === 'ru' ? 'Загрузить решение' : 'Upload Solution' %>
+            </a>
+        </div>
+
+        <% } else { %>
+
+        <!-- Empty state -->
+        <div class="cl-empty">
+            <div class="cl-empty-icon">
+                <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
+            </div>
+            <h3><%= lang === 'ru' ? 'Нет записей' : 'No contributions yet' %></h3>
+            <p><%= lang === 'ru' ? 'Эта задача ещё не имеет истории изменений.' : 'This problem doesn\'t have any recorded contributions yet.' %></p>
+            <% if (problemName !== 'all') { %>
+            <a href="/<%= lang %>/edit/<%= problemName %>" class="cl-cta">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.013 1.427a1.75 1.75 0 012.474 0l1.086 1.086a1.75 1.75 0 010 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 01-.927-.928l.929-3.25a1.75 1.75 0 01.445-.758l8.61-8.61zm1.414 1.06a.25.25 0 00-.354 0L3.463 11.1a.25.25 0 00-.064.108l-.563 1.97 1.971-.564a.25.25 0 00.108-.064l8.609-8.61a.25.25 0 000-.353l-1.086-1.086z"/></svg>
+                <%= lang === 'ru' ? 'Добавить решение' : 'Be the first to contribute' %>
+            </a>
             <% } %>
         </div>
+
+        <% } %>
     </div>
 
-    <!-- Modern Footer -->
-    <footer class="modern-footer">
-        <div class="footer-container">
-            <div class="footer-links">
-                <a href="/<%= lang %>/about">About</a>
-                <a href="/<%= lang %>/contact">Contact</a>
-                <a href="/<%= lang %>/privacy">Privacy</a>
-                <a href="/<%= lang %>/terms">Terms</a>
-            </div>
-            <p class="text-muted mb-0">
-                &copy; <%= new Date().getFullYear() %> <%= __('title') %>. All rights reserved.
-            </p>
-        </div>
-    </footer>
-
-    <!-- MathJax -->
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
-    </script>
-
-    <script>
-        function viewDiff(contributionId) {
-            // Open diff view in a new window or modal
-            window.open(`/<%= lang %>/contribution/${contributionId}`, '_blank', 'width=800,height=600');
-        }
-
-        // Initialize MathJax after page load
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof MathJax !== 'undefined') {
-                MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-            }
-        });
-    </script>
+    <%- include('default/modern_footer') %>
     <%- include('default/main_site_search_script') %>
 </body>
 

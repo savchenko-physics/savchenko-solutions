@@ -1392,27 +1392,33 @@ app.get("/", async (req, res) => {
 async function getRecentContributions(limit) {
     try {
         const result = await pool.query(
-            "SELECT id, problem_name, user_id, edited_at AT TIME ZONE 'UTC' as edited_at, ip_address, invisible FROM contributions WHERE invisible = false ORDER BY edited_at DESC LIMIT $1",
+            `SELECT c.id, c.problem_name, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
+                    u.username,
+                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible = false AND c2.edited_at <= c.edited_at) AS edit_number
+             FROM contributions c
+             LEFT JOIN users u ON c.user_id = u.id
+             WHERE c.invisible = false
+             ORDER BY c.edited_at DESC LIMIT $1`,
             [limit]
         );
 
-        const contributions = await Promise.all(result.rows.map(async (row) => {
-            const userResult = await pool.query("SELECT username FROM users WHERE id = $1", [row.user_id]);
-            const username = userResult.rows[0]?.username || row.ip_address;
-
+        const contributions = result.rows.map(row => {
             return {
                 version: row.problem_name,
-                editor: username,
-                timestamp: new Intl.DateTimeFormat(undefined, { // 'undefined' uses the user's locale
+                editor: row.username || 'Anonymous',
+                hasUser: !!row.username,
+                isNew: parseInt(row.edit_number) === 1,
+                timestamp: new Intl.DateTimeFormat(undefined, {
                     hour: '2-digit',
                     minute: '2-digit',
                     month: 'short',
                     day: '2-digit',
                     timeZoneName: 'short'
                 }).format(row.edited_at),
+                relativeTime: row.edited_at,
                 id: row.id
             };
-        }));
+        });
 
         return contributions;
     } catch (error) {
@@ -2053,7 +2059,9 @@ app.get("/api/contributions/:id", checkAuthenticated, async (req, res) => {
 
 app.get("/:lang/contributions/:problemName", (req, res, next) => {
     const { problemName } = req.params;
-    if ((problemName.match(/\./g) || []).length === 2) {
+    if (problemName === 'all') {
+        return getContributionsList(req, res, next);
+    } else if ((problemName.match(/\./g) || []).length === 2) {
         return getContributionsList(req, res, next);
     } else {
         return getContribution(req, res, next);

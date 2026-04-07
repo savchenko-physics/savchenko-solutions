@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { parseMarkdown, transformImageMarkdown, getLineStatement } = require("./utils"); // Adjust the import based on your utils file
+const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText } = require("./utils"); // Adjust the import based on your utils file
 const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts } = require("./parents");
 const i18n = require('i18n');
 const { Pool } = require("pg");
@@ -105,6 +105,46 @@ async function renderPost(req, res) {
             getProblemBreadcrumbTitle(name, lang) || `$${name}.$`;
         const problemBreadcrumb = getProblemBreadcrumbParts(name, lang);
 
+        // Fetch most recent contributor for structured data
+        let contributorName = null;
+        let lastModified = null;
+        try {
+            const contribResult = await pool.query(
+                `SELECT u.username, c.edited_at FROM contributions c
+                 LEFT JOIN users u ON u.id = c.user_id
+                 WHERE c.problem_name = $1 AND c.invisible = false
+                 ORDER BY c.edited_at DESC LIMIT 1`,
+                [name]
+            );
+            if (contribResult.rows.length > 0) {
+                contributorName = contribResult.rows[0].username || 'Anonymous';
+                lastModified = new Date(contribResult.rows[0].edited_at).toISOString();
+            }
+        } catch (err) {
+            console.error("Error fetching contributor for structured data:", err);
+        }
+
+        // Fallback lastModified to file mtime
+        if (!lastModified) {
+            try {
+                const stat = fs.statSync(filePath);
+                lastModified = stat.mtime.toISOString();
+            } catch (_) {
+                lastModified = new Date().toISOString();
+            }
+        }
+
+        // Generate plain-text meta description from solution content
+        const rawText = fs.readFileSync(filePath, "utf8");
+        const plainDesc = convertLatexToPlainText(rawText).replace(/\s+/g, ' ').trim().substring(0, 155);
+
+        // Build improved title using section name
+        const seoTitle = problemBreadcrumb
+            ? (lang === 'ru'
+                ? `Задача ${name} Решение — ${problemBreadcrumb.sectionTitle} | Решения Савченко`
+                : `Problem ${name} Solution — ${problemBreadcrumb.sectionTitle} | Savchenko Solutions`)
+            : `${name} | ${i18n.__('title')}`;
+
         res.render("solution_post", {
             __: i18n.__,
             lang,
@@ -114,11 +154,14 @@ async function renderPost(req, res) {
             problemBreadcrumbTitle,
             problemBreadcrumb,
             username: req.session.username || null,
-            title: name + ". " + titleContent,
+            title: seoTitle,
             content: html,
             totalViews, // Pass total views to the template
             creationDate, // Pass creation date to the template
-            alternateFileExists // Pass the existence flag to the template
+            alternateFileExists, // Pass the existence flag to the template
+            contributorName,
+            lastModified,
+            metaDescription: plainDesc,
         });
     } else {
         i18n.setLocale(res, lang);
