@@ -31,8 +31,15 @@ const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 
+const rateLimit = require('express-rate-limit');
+
 const app = express();
 const PORT = 3000;
+
+// Require SESSION_SECRET — refuse to start with the insecure default
+if (!process.env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET environment variable is required. The server will not start without it.');
+}
 
 // PostgreSQL setup (move this BEFORE session configuration)
 const pool = new Pool({
@@ -53,7 +60,7 @@ app.use(
             pool: pool,
             tableName: 'session'
         }),
-        secret: process.env.SESSION_SECRET || "your_secret_key",
+        secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -67,14 +74,62 @@ app.use(
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+// Rate limiters
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,
+    message: 'Too many login attempts, please try again after 15 minutes.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const registerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 3,
+    message: 'Too many registration attempts, please try again after an hour.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 100,
+    message: { error: 'Too many API requests, please try again later.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const searchLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 30,
+    message: { error: 'Too many search requests, please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const editSaveLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20,
+    keyGenerator: (req) => String(req.session?.userId ?? 'anonymous'),
+    message: 'Too many save attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
 app.set("view engine", "ejs");
+
+// Apply API rate limiter to all /api/* routes
+app.use('/api/', apiLimiter);
+
 app.use(express.static(path.join(__dirname, "posts")));
 app.use("/img", express.static(path.join(__dirname, "img"))); // Serve images from img folder
 app.use("/css", express.static(path.join(__dirname, "css")));
 app.use("/en", express.static(path.join(__dirname, "en")));
 app.use("/theory", express.static(path.join(__dirname, "theory")));
 app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
-app.use(express.static(path.join(__dirname, "src")));
+// Removed: app.use(express.static(path.join(__dirname, "src")));
+// The src directory contains Python scripts and CSV data — must not be publicly served.
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 app.use("/js", express.static(path.join(__dirname, "js")));
@@ -173,7 +228,7 @@ function normalizeProfileUrl(val) {
 }
 
 // Add this route to handle image uploads
-app.post('/upload-image/:name', upload.single('image'), (req, res) => {
+app.post('/upload-image/:name', checkAuthenticated, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
@@ -925,7 +980,7 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
 // Add a new route for user profiles
 app.get("/user/:username", getUserProfile);
 
-app.post("/create-problem", async (req, res) => {
+app.post("/create-problem", checkAuthenticated, async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
 
     const { chapters } = await getLanguageData(lang);
@@ -1162,7 +1217,7 @@ app.get("/en/register", checkNotAuthenticated, (req, res) => {
 });
 
 // Registration Route
-app.post("/register", async (req, res) => {
+app.post("/register", registerLimiter, async (req, res) => {
     const { username, email, fullname, password, password2, lang = 'en' } = req.body;
 
     // Validate required fields
@@ -1201,7 +1256,7 @@ app.post("/register", async (req, res) => {
 
 
 // Login Route
-app.post("/login", async (req, res) => {
+app.post("/login", loginLimiter, async (req, res) => {
     const { username, password, lang = 'en' } = req.body;
 
     if (!username || !password) {
@@ -1572,6 +1627,7 @@ app.get("/:lang/edit/:name", (req, res) => {
             name,
             content: fileContents,
             title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
+            userId: req.session.userId || null,
         });
     } else {
         i18n.setLocale(res, lang);
@@ -1606,7 +1662,7 @@ function editSaveWantsJson(req) {
 }
 
 // Route for saving edited content
-app.post("/:lang/save/:name", async (req, res) => {
+app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
     const userId = req.session.userId || null; // Will be null for unauthenticated users
@@ -1643,6 +1699,7 @@ app.post("/:lang/save/:name", async (req, res) => {
             content: editorContent,
             title: lang === "ru" ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
             saveError: contentValidation.message,
+            userId: req.session.userId || null,
         });
     }
 
@@ -1753,7 +1810,7 @@ app.post("/:lang/save/:name", async (req, res) => {
 
 app.get("/file-list", renderFileList);
 
-app.get("/search", (req, res) => {
+app.get("/search", searchLimiter, (req, res) => {
     const query = req.query.q?.toLowerCase();
     const userLang = req.query.lang || res.getLocale() || 'en'; // Get language from query params first
     

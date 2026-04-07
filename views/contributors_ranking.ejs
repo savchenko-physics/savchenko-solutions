@@ -82,6 +82,14 @@
             color: var(--sv-secondary);
         }
 
+        .contributors-page .stat-value {
+            color: var(--sv-primary) !important;
+        }
+
+        .contributors-page .stat-label {
+            color: var(--sv-secondary) !important;
+        }
+
         .card {
             border: 1px solid var(--sv-border);
             background: var(--sv-bg);
@@ -206,6 +214,80 @@
             background: var(--sv-card);
         }
 
+        .heatmap-summary-row {
+            margin-bottom: 12px;
+        }
+
+        .heatmap-summary {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.35;
+            color: var(--sv-primary);
+        }
+
+        .heatmap-summary strong {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .heatmap-graph-row {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .heatmap-graph-row .heatmap-graph-border {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .heatmap-year-nav {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
+            gap: 8px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            flex: 0 0 auto;
+            align-self: flex-start;
+            padding-top: 2px;
+            min-width: 9.5rem;
+        }
+
+        .heatmap-year-nav button {
+            border: 1px solid #d0d7de;
+            background: #f6f8fa;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 14px;
+            color: #24292f;
+            cursor: pointer;
+            line-height: 1.3;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .heatmap-year-nav button:hover {
+            background: #eaeef2;
+        }
+
+        .heatmap-year-nav button.is-active {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+
+        .heatmap-graph-border {
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 10px 8px 8px;
+            background: #fff;
+        }
+
         .heatmap-shell {
             overflow-x: auto;
             padding-bottom: 8px;
@@ -256,6 +338,56 @@
             height: 11px;
             border-radius: 2px;
             background: var(--sv-heat-0);
+            cursor: default;
+        }
+
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 10px;
+            padding-top: 8px;
+            font-size: 11px;
+            color: #656d76;
+        }
+
+        .heatmap-legend-scale {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .heatmap-legend-cell {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+        }
+
+        .heatmap-cell-tooltip {
+            position: fixed;
+            z-index: 10050;
+            left: 0;
+            top: 0;
+            max-width: min(280px, calc(100vw - 16px));
+            padding: 8px 10px;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #24292f;
+            background: #fff;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.08s ease;
+        }
+
+        .heatmap-cell-tooltip.heatmap-cell-tooltip--visible {
+            opacity: 1;
+            visibility: visible;
         }
 
         .skeleton {
@@ -280,6 +412,20 @@
         @media (max-width: 768px) {
             .contributors-page {
                 padding: 16px 12px 24px;
+            }
+            .heatmap-graph-row {
+                flex-direction: column;
+            }
+            .heatmap-year-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                min-width: 0;
+                width: 100%;
+                align-self: stretch;
+            }
+            .heatmap-year-nav button {
+                width: auto;
             }
             .leaderboard-table thead th,
             .leaderboard-table tbody td {
@@ -348,24 +494,44 @@
         </section>
 
         <section class="card">
-            <h2 class="section-title">Platform Contribution Activity (Last 12 Months)</h2>
-            <div class="heatmap-shell">
-                <div class="heatmap-wrap">
-                    <div class="heatmap-y">
-                        <div></div>
-                        <div>Mon</div>
-                        <div></div>
-                        <div>Wed</div>
-                        <div></div>
-                        <div>Fri</div>
-                        <div></div>
+            <h2 class="section-title">Platform Contribution Activity</h2>
+            <div class="heatmap-summary-row">
+                <p id="platform-heatmap-summary" class="heatmap-summary" aria-live="polite"></p>
+            </div>
+            <div class="heatmap-graph-row">
+                <div class="heatmap-graph-border">
+                    <div class="heatmap-shell">
+                        <div class="heatmap-wrap">
+                            <div class="heatmap-y">
+                                <div></div>
+                                <div>Mon</div>
+                                <div></div>
+                                <div>Wed</div>
+                                <div></div>
+                                <div>Fri</div>
+                                <div></div>
+                            </div>
+                            <div class="heatmap-main">
+                                <div id="platform-months" class="heatmap-months"></div>
+                                <div id="platform-heatmap" class="heatmap-grid"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="heatmap-main">
-                        <div id="platform-months" class="heatmap-months"></div>
-                        <div id="platform-heatmap" class="heatmap-grid"></div>
+                    <div class="heatmap-legend" aria-hidden="true">
+                        <span>Less</span>
+                        <div class="heatmap-legend-scale">
+                            <span class="heatmap-legend-cell" style="background:#ebedf0;"></span>
+                            <span class="heatmap-legend-cell" style="background:#b3c6d9;"></span>
+                            <span class="heatmap-legend-cell" style="background:#6d93b8;"></span>
+                            <span class="heatmap-legend-cell" style="background:#3a6a9e;"></span>
+                            <span class="heatmap-legend-cell" style="background:#1a1a2e;"></span>
+                        </div>
+                        <span>More</span>
                     </div>
                 </div>
+                <ul id="platform-heatmap-year-nav" class="heatmap-year-nav" aria-label="Contribution period"></ul>
             </div>
+            <div id="platform-heatmap-tooltip" class="heatmap-cell-tooltip" role="tooltip" hidden aria-hidden="true"></div>
         </section>
     </main>
 
@@ -406,33 +572,86 @@
             if (removeSkeleton) el.classList.remove("skeleton");
         }
 
-        function heatColor(value, max) {
-            if (!value) return heatColors[0];
-            const ratio = max > 0 ? value / max : 0;
-            if (ratio >= 0.75) return heatColors[4];
-            if (ratio >= 0.5) return heatColors[3];
-            if (ratio >= 0.25) return heatColors[2];
+        function buildHeatScale(dayCounts) {
+            const positives = (dayCounts || [])
+                .map((x) => Number(x.count || 0))
+                .filter((n) => n > 0)
+                .sort((a, b) => a - b);
+
+            if (!positives.length) {
+                return { thresholds: [1, 1, 1, 1], cap: 1 };
+            }
+
+            const percentile = (p) => {
+                const idx = Math.max(0, Math.min(positives.length - 1, Math.floor((positives.length - 1) * p)));
+                return positives[idx];
+            };
+
+            const cap = Math.max(1, percentile(0.95));
+            const q1 = Math.max(1, percentile(0.25));
+            const q2 = Math.max(q1, percentile(0.5));
+            const q3 = Math.max(q2, percentile(0.75));
+            const q4 = Math.max(q3, cap);
+            return { thresholds: [q1, q2, q3, q4], cap };
+        }
+
+        function heatColor(value, scaleMeta) {
+            const n = Number(value || 0);
+            if (n <= 0) return heatColors[0];
+            const clamped = Math.min(n, scaleMeta.cap);
+            const [t1, t2, t3, t4] = scaleMeta.thresholds;
+            if (clamped >= t4) return heatColors[4];
+            if (clamped >= t3) return heatColors[3];
+            if (clamped >= t2) return heatColors[2];
+            if (clamped >= t1) return heatColors[1];
             return heatColors[1];
         }
 
-        function buildCalendarDays(dayCounts) {
+        function localDateKey(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+            const d = String(dateObj.getDate()).padStart(2, "0");
+            return `${y}-${m}-${d}`;
+        }
+
+        function buildCalendarDays(dayCounts, view) {
+            const countMap = new Map(dayCounts.map((x) => [String(x.day).slice(0, 10), Number(x.count || 0)]));
+            const result = [];
+
+            if (view && view.kind === "year" && Number.isFinite(view.year)) {
+                const y = Number(view.year);
+                const jan1 = new Date(y, 0, 1);
+                jan1.setHours(0, 0, 0, 0);
+                const start = new Date(jan1);
+                const startDay = (start.getDay() + 6) % 7;
+                start.setDate(start.getDate() - startDay);
+
+                for (let i = 0; i < 371; i += 1) {
+                    const d = new Date(start);
+                    d.setDate(start.getDate() + i);
+                    result.push({
+                        date: d,
+                        count: countMap.get(localDateKey(d)) || 0,
+                        week: Math.floor(i / 7),
+                        dow: (d.getDay() + 6) % 7,
+                    });
+                }
+                return result;
+            }
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const start = new Date(today);
             start.setDate(start.getDate() - 364);
-
             const startDay = (start.getDay() + 6) % 7;
             start.setDate(start.getDate() - startDay);
 
-            const result = [];
-            const countMap = new Map(dayCounts.map((x) => [String(x.day).slice(0, 10), x.count]));
             for (let i = 0; i < 371; i += 1) {
                 const d = new Date(start);
                 d.setDate(start.getDate() + i);
-                const key = d.toISOString().slice(0, 10);
                 result.push({
                     date: d,
-                    count: countMap.get(key) || 0,
+                    count: countMap.get(localDateKey(d)) || 0,
                     week: Math.floor(i / 7),
                     dow: (d.getDay() + 6) % 7,
                 });
@@ -440,20 +659,140 @@
             return result;
         }
 
-        function renderHeatmap(dayCounts) {
+        let heatmapTooltipHideTimer = null;
+        let heatmapTooltipScrollBound = false;
+
+        function getHeatmapTooltipEl() {
+            return document.getElementById("platform-heatmap-tooltip");
+        }
+
+        function ensureHeatmapTooltipOnBody() {
+            const tip = getHeatmapTooltipEl();
+            if (tip && tip.parentElement !== document.body) {
+                document.body.appendChild(tip);
+            }
+        }
+
+        function hideHeatmapTooltip() {
+            const tip = getHeatmapTooltipEl();
+            if (!tip) return;
+            tip.classList.remove("heatmap-cell-tooltip--visible");
+            tip.hidden = true;
+            tip.setAttribute("aria-hidden", "true");
+        }
+
+        function showHeatmapTooltip(cell) {
+            const tip = getHeatmapTooltipEl();
+            if (!tip) return;
+            const text = cell.getAttribute("data-heatmap-tip");
+            if (!text) return;
+            ensureHeatmapTooltipOnBody();
+            tip.textContent = text;
+            tip.hidden = false;
+            tip.setAttribute("aria-hidden", "false");
+            requestAnimationFrame(() => {
+                tip.classList.add("heatmap-cell-tooltip--visible");
+                const r = cell.getBoundingClientRect();
+                const margin = 8;
+                const tw = tip.offsetWidth;
+                const th = tip.offsetHeight;
+                let left = r.left + r.width / 2 - tw / 2;
+                let top = r.top - th - margin;
+                if (top < margin) top = r.bottom + margin;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                left = Math.max(margin, Math.min(left, vw - tw - margin));
+                top = Math.max(margin, Math.min(top, vh - th - margin));
+                tip.style.left = `${left}px`;
+                tip.style.top = `${top}px`;
+            });
+        }
+
+        function scheduleHideHeatmapTooltip() {
+            clearTimeout(heatmapTooltipHideTimer);
+            heatmapTooltipHideTimer = setTimeout(hideHeatmapTooltip, 80);
+        }
+
+        function cancelHideHeatmapTooltip() {
+            clearTimeout(heatmapTooltipHideTimer);
+        }
+
+        function bindHeatmapTooltipDismissOnce() {
+            if (heatmapTooltipScrollBound) return;
+            const shell = document.querySelector(".heatmap-shell");
+            if (!shell) return;
+            heatmapTooltipScrollBound = true;
+            shell.addEventListener("scroll", hideHeatmapTooltip, { passive: true });
+            window.addEventListener("scroll", hideHeatmapTooltip, { passive: true });
+            window.addEventListener("resize", hideHeatmapTooltip, { passive: true });
+        }
+
+        function renderHeatmapYearNav(years, view) {
+            const nav = document.getElementById("platform-heatmap-year-nav");
+            if (!nav) return;
+            nav.innerHTML = "";
+
+            const addBtn = (label, active, yearVal) => {
+                const li = document.createElement("li");
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.textContent = label;
+                if (active) btn.classList.add("is-active");
+                btn.addEventListener("click", () => loadHeatmap(yearVal));
+                li.appendChild(btn);
+                nav.appendChild(li);
+            };
+
+            const rolling = !view || view.kind === "rolling";
+            addBtn("12 months", rolling, null);
+            const yearsList = Array.isArray(years) ? years.filter((y) => Number.isFinite(Number(y))).map(Number) : [];
+            const navYears = yearsList.length > 0
+                ? (() => {
+                    const maxY = Math.max(...yearsList);
+                    const minY = Math.min(...yearsList);
+                    const arr = [];
+                    for (let y = maxY; y >= minY; y -= 1) arr.push(y);
+                    return arr;
+                })()
+                : [];
+            navYears.forEach((y) => {
+                const active = view && view.kind === "year" && view.year === y;
+                addBtn(String(y), active, y);
+            });
+        }
+
+        function ordinalDayEn(n) {
+            const j = n % 10;
+            const k = n % 100;
+            if (k >= 11 && k <= 13) return `${n}th`;
+            if (j === 1) return `${n}st`;
+            if (j === 2) return `${n}nd`;
+            if (j === 3) return `${n}rd`;
+            return `${n}th`;
+        }
+
+        function renderHeatmap(payload) {
+            const data = Array.isArray(payload) ? { days: payload, view: { kind: "rolling" }, years: [] } : payload;
+            const dayCounts = data.days || [];
+            const view = data.view || { kind: "rolling" };
+            const years = data.years || [];
             const grid = document.getElementById("platform-heatmap");
             const months = document.getElementById("platform-months");
+            const summaryEl = document.getElementById("platform-heatmap-summary");
             if (!grid || !months) return;
 
-            const days = buildCalendarDays(dayCounts);
-            const max = dayCounts.reduce((m, x) => Math.max(m, x.count), 0);
+            const days = buildCalendarDays(dayCounts, view);
+            const scaleMeta = buildHeatScale(dayCounts);
 
             grid.innerHTML = "";
             months.innerHTML = "";
+            renderHeatmapYearNav(years, view);
+            bindHeatmapTooltipDismissOnce();
 
             const labels = new Array(53).fill("");
             for (const day of days) {
                 if (day.date.getDate() === 1) {
+                    if (view.kind === "year" && day.date.getFullYear() !== view.year) continue;
                     labels[day.week] = day.date.toLocaleDateString("en-US", { month: "short" });
                 }
             }
@@ -468,11 +807,28 @@
                 cell.className = "heat-cell";
                 cell.style.gridColumn = String(day.week + 1);
                 cell.style.gridRow = String(day.dow + 1);
-                cell.style.background = heatColor(day.count, max);
-                const dateLabel = day.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-                cell.title = `${day.count} contributions on ${dateLabel}`;
+                cell.style.background = heatColor(day.count, scaleMeta);
+                const monthLong = day.date.toLocaleDateString("en-US", { month: "long" });
+                const contribWord = day.count === 1 ? "contribution" : "contributions";
+                const tipText = `${day.count} ${contribWord} on ${monthLong} ${ordinalDayEn(day.date.getDate())}.`;
+                cell.setAttribute("data-heatmap-tip", tipText);
+                cell.setAttribute("aria-label", tipText);
+                cell.addEventListener("mouseenter", () => {
+                    cancelHideHeatmapTooltip();
+                    showHeatmapTooltip(cell);
+                });
+                cell.addEventListener("mouseleave", scheduleHideHeatmapTooltip);
                 grid.appendChild(cell);
             });
+
+            const total = dayCounts.reduce((sum, x) => sum + Number(x.count || 0), 0);
+            if (summaryEl) {
+                if (view.kind === "rolling") {
+                    summaryEl.innerHTML = `<strong>${total.toLocaleString("en-US")}</strong> contributions in the last year`;
+                } else {
+                    summaryEl.innerHTML = `<strong>${total.toLocaleString("en-US")}</strong> contributions in ${view.year}`;
+                }
+            }
         }
 
         async function fetchJSON(url) {
@@ -548,8 +904,63 @@
                 fetchJSON("/api/contributors/map"),
             ]);
 
-            const counts = new Map(mapData.map((x) => [String(x.country).toLowerCase(), Number(x.contributors || 0)]));
-            const max = Math.max(0, ...mapData.map((x) => Number(x.contributors || 0)));
+            function normalizeCountryKey(name) {
+                return String(name || "").trim().toLowerCase().replace(/\./g, "");
+            }
+
+            function countryAliases(name) {
+                const key = normalizeCountryKey(name);
+                const aliases = new Set([key]);
+                if (
+                    key === "usa" ||
+                    key === "us" ||
+                    key === "u s a" ||
+                    key === "united states" ||
+                    key === "united states of america"
+                ) {
+                    aliases.add("united states of america");
+                    aliases.add("united states");
+                    aliases.add("usa");
+                    aliases.add("us");
+                }
+                if (key === "uk" || key === "u k") {
+                    aliases.add("united kingdom");
+                }
+                if (key === "russia") {
+                    aliases.add("russian federation");
+                }
+                return aliases;
+            }
+
+            const contributionCounts = new Map();
+            const peopleCounts = new Map();
+            mapData.forEach((x) => {
+                const contributions = Number(
+                    x.total_contributions ?? x.contributions ?? 0
+                );
+                const contributors = Number(x.contributors || 0);
+                countryAliases(x.country).forEach((alias) => {
+                    contributionCounts.set(alias, (contributionCounts.get(alias) || 0) + contributions);
+                    peopleCounts.set(alias, (peopleCounts.get(alias) || 0) + contributors);
+                });
+            });
+            const positiveContributionValues = mapData
+                .map((x) => Number(x.total_contributions ?? x.contributions ?? 0))
+                .filter((v) => v > 0);
+            const maxContributions = Math.max(0, ...positiveContributionValues, 0);
+            const minPositiveContributions = positiveContributionValues.length > 0
+                ? Math.min(...positiveContributionValues)
+                : 1;
+            const sortedContrib = [...positiveContributionValues].sort((a, b) => a - b);
+            const percentile = (arr, p) => {
+                if (!arr.length) return 0;
+                const idx = Math.max(0, Math.min(arr.length - 1, Math.floor((arr.length - 1) * p)));
+                return arr[idx];
+            };
+            const capContributions = Math.max(
+                minPositiveContributions,
+                percentile(sortedContrib, 0.9)
+            );
             const svg = d3.select("#world-map");
             svg.selectAll("*").remove();
 
@@ -557,7 +968,10 @@
             const height = 300;
             const projection = d3.geoNaturalEarth1().fitSize([width, height], geojson);
             const path = d3.geoPath().projection(projection);
-            const scale = d3.scaleLinear().domain([0, Math.max(1, max)]).range(["#ffffff", "#1a1a2e"]);
+            const scale = d3.scaleLog()
+                .domain([Math.max(1, minPositiveContributions), Math.max(1, capContributions)])
+                .range(["#b7cce0", "#1a1a2e"])
+                .clamp(true);
             const tooltip = document.getElementById("map-tooltip");
 
             svg.selectAll("path.country")
@@ -566,17 +980,27 @@
                 .attr("class", "country")
                 .attr("d", path)
                 .attr("fill", (d) => {
-                    const name = String(d.properties?.name || "").toLowerCase();
-                    const count = counts.get(name) || 0;
-                    return scale(count);
+                    const aliases = countryAliases(d.properties?.name || "");
+                    let count = 0;
+                    aliases.forEach((alias) => {
+                        count = Math.max(count, contributionCounts.get(alias) || 0);
+                    });
+                    if (count <= 0) return "#ebedf0";
+                    return scale(Math.max(1, Math.min(count, capContributions)));
                 })
                 .attr("stroke", "#dee2e6")
                 .attr("stroke-opacity", 0.7)
                 .attr("stroke-width", 0.6)
                 .on("mousemove", (event, d) => {
                     const name = d.properties?.name || "Unknown";
-                    const count = counts.get(String(name).toLowerCase()) || 0;
-                    tooltip.textContent = `${name}: ${count}`;
+                    const aliases = countryAliases(name);
+                    let contributions = 0;
+                    let contributors = 0;
+                    aliases.forEach((alias) => {
+                        contributions = Math.max(contributions, contributionCounts.get(alias) || 0);
+                        contributors = Math.max(contributors, peopleCounts.get(alias) || 0);
+                    });
+                    tooltip.textContent = `${name}: ${contributions} contributions, ${contributors} contributors`;
                     tooltip.style.left = `${event.clientX + 12}px`;
                     tooltip.style.top = `${event.clientY + 12}px`;
                     tooltip.style.opacity = "1";
@@ -586,8 +1010,11 @@
                 });
         }
 
-        async function loadHeatmap() {
-            const data = await fetchJSON("/api/contributors/heatmap");
+        async function loadHeatmap(year = null) {
+            const url = year != null
+                ? `/api/contributors/heatmap?year=${encodeURIComponent(year)}`
+                : "/api/contributors/heatmap";
+            const data = await fetchJSON(url);
             renderHeatmap(data);
         }
 

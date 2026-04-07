@@ -25,7 +25,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 // Handle file upload
-router.post("/api/upload", async (req, res) => {
+router.post("/api/upload", checkAuthenticated, async (req, res) => {
     try {
         console.log("Request body:", req.body);
         console.log("Request files:", req.files);
@@ -266,11 +266,15 @@ function checkAuthenticated(req, res, next) {
     res.redirect(`/${lang}/login?error=${i18n.__('Please log in to access this page')}`);
 }
 
-// Upload page routes
-router.get(["/upload", "/:lang([a-z]{2})/upload"], async (req, res) => {
+// Upload page routes — require login
+router.get(["/upload", "/:lang([a-z]{2})/upload"], (req, res) => {
     const lang = req.params.lang || req.query.lang || 'en';
     i18n.setLocale(res, lang);
-    
+
+    if (!req.session.userId) {
+        return res.redirect(`/${lang}/login?error=${encodeURIComponent(i18n.__('Please log in to upload solutions'))}`);
+    }
+
     res.render("upload_page", {
         __: i18n.__,
         lang,

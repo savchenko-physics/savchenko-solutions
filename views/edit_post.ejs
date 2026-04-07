@@ -21,7 +21,6 @@
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
-    <script src="/js/jquery-1.10.1.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
@@ -853,10 +852,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Stix+Two+Math&display=swap" rel="stylesheet">
-
+    <script src="/js/analytics.js"></script>
 </head>
 
 <body>
+    <% if (!userId) { %>
+    <div style="position:fixed;top:0;left:0;right:0;z-index:2000;background:#c0392b;color:#fff;text-align:center;padding:6px 12px;font-size:14px;">
+        <%= lang === 'ru' ? 'Войдите, чтобы сохранить изменения' : 'Log in to save your changes' %> &mdash;
+        <a href="/<%= lang %>/login" style="color:#fff;text-decoration:underline;font-weight:600;"><%= lang === 'ru' ? 'Войти' : 'Log in' %></a>
+    </div>
+    <% } %>
     <header class="header-style">
         <div style="display: flex; align-items: center;" class="header-left">
             <a href="../../<%= lang %>" class="submit-button"
@@ -878,6 +883,7 @@
                     <%= __('post.backLink') %>
                 </span>
             </a>
+            <% if (userId) { %>
             <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
                 <button type="submit" id="save-button" class="submit-button"
@@ -888,6 +894,13 @@
                     </span>
                 </button>
             </form>
+            <% } else { %>
+            <a href="/<%= lang %>/login" class="submit-button"
+                style="font-size: 16px; color: #fff; opacity: 0.6; background-color: #666; border-radius: 1px; box-shadow: none; padding: 10px 18px; text-decoration: none; pointer-events: auto;">
+                <i class="fa fa-save" aria-hidden="true"></i>
+                <span><%= lang === 'ru' ? 'Войдите для сохранения' : 'Log in to save' %></span>
+            </a>
+            <% } %>
         </div>
     </header>
 
@@ -1459,6 +1472,7 @@
 
         const saveForm = document.getElementById('save-form');
         const saveButton = document.getElementById('save-button');
+        const isLoggedIn = !!saveForm;
         const saveModal = document.getElementById('save-message-modal');
         const saveModalText = document.getElementById('save-msg-modal-text');
         const saveModalClose = document.getElementById('save-msg-modal-close');
@@ -1486,6 +1500,7 @@
         });
 
         async function submitSave() {
+            if (!isLoggedIn) return;
             const content = editor.getValue();
             document.getElementById('hidden-content').value = content;
             saveButton.disabled = true;
@@ -1540,10 +1555,12 @@
             }
         }
 
-        saveForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            submitSave();
-        });
+        if (isLoggedIn) {
+            saveForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                submitSave();
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && saveModal.getAttribute('aria-hidden') === 'false') {

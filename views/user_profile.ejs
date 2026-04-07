@@ -999,12 +999,38 @@
             return res.json();
         }
 
-        function heatColor(value, max) {
-            if (!value) return heatColors[0];
-            const ratio = max > 0 ? value / max : 0;
-            if (ratio >= 0.75) return heatColors[4];
-            if (ratio >= 0.5) return heatColors[3];
-            if (ratio >= 0.25) return heatColors[2];
+        function buildHeatScale(dayCounts) {
+            const positives = (dayCounts || [])
+                .map((x) => Number(x.count || 0))
+                .filter((n) => n > 0)
+                .sort((a, b) => a - b);
+
+            if (!positives.length) {
+                return { thresholds: [1, 1, 1, 1], cap: 1 };
+            }
+
+            const percentile = (p) => {
+                const idx = Math.max(0, Math.min(positives.length - 1, Math.floor((positives.length - 1) * p)));
+                return positives[idx];
+            };
+
+            const cap = Math.max(1, percentile(0.95));
+            const q1 = Math.max(1, percentile(0.25));
+            const q2 = Math.max(q1, percentile(0.5));
+            const q3 = Math.max(q2, percentile(0.75));
+            const q4 = Math.max(q3, cap);
+            return { thresholds: [q1, q2, q3, q4], cap };
+        }
+
+        function heatColor(value, scaleMeta) {
+            const n = Number(value || 0);
+            if (n <= 0) return heatColors[0];
+            const clamped = Math.min(n, scaleMeta.cap);
+            const [t1, t2, t3, t4] = scaleMeta.thresholds;
+            if (clamped >= t4) return heatColors[4];
+            if (clamped >= t3) return heatColors[3];
+            if (clamped >= t2) return heatColors[2];
+            if (clamped >= t1) return heatColors[1];
             return heatColors[1];
         }
 
@@ -1222,7 +1248,7 @@
             const grid = document.getElementById("user-heatmap");
             const months = document.getElementById("user-months");
             const days = buildCalendarDays(dayCounts, view);
-            const max = dayCounts.reduce((m, x) => Math.max(m, Number(x.count || 0)), 0);
+            const scaleMeta = buildHeatScale(dayCounts);
 
             grid.innerHTML = "";
             months.innerHTML = "";
@@ -1266,7 +1292,7 @@
                 cell.className = "heat-cell";
                 cell.style.gridColumn = String(day.week + 1);
                 cell.style.gridRow = String(day.dow + 1);
-                cell.style.background = heatColor(day.count, max);
+                cell.style.background = heatColor(day.count, scaleMeta);
                 let tipText;
                 if (lang === "ru") {
                     const ruDate = day.date.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });

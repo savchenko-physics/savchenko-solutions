@@ -246,6 +246,10 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                         WHERE content_changed = true
                           AND invisible = false
                           AND user_id IS NOT NULL
+                        UNION
+                        SELECT DISTINCT user_id
+                        FROM github_contributions
+                        WHERE user_id IS NOT NULL
                     )
                     SELECT COUNT(DISTINCT TRIM(u.country_location))::int AS value
                     FROM contributor_users cu
@@ -299,27 +303,40 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
 
     app.get("/api/contributors/map", async (_req, res) => {
         try {
-            const payload = await withCache("contributors:map", async () => {
+            const payload = await withCache("contributors:map:v3", async () => {
                 await hydrateMissingCountries(pool);
 
                 const result = await pool.query(
                     `
-                    WITH contributor_users AS (
-                        SELECT DISTINCT user_id
+                    WITH combined AS (
+                        SELECT user_id
                         FROM contributions
                         WHERE content_changed = true
                           AND invisible = false
                           AND user_id IS NOT NULL
+                        UNION ALL
+                        SELECT user_id
+                        FROM github_contributions
+                        WHERE user_id IS NOT NULL
                     )
                     SELECT
-                        TRIM(u.country_location) AS country,
-                        COUNT(*)::int AS contributors
-                    FROM contributor_users cu
-                    JOIN users u ON u.id = cu.user_id
+                        CASE
+                            WHEN c.user_id = 28 THEN 'United States'
+                            ELSE TRIM(u.country_location)
+                        END AS country,
+                        COUNT(DISTINCT c.user_id)::int AS contributors,
+                        COUNT(*)::int AS contributions,
+                        COUNT(*)::int AS total_contributions
+                    FROM combined c
+                    JOIN users u ON u.id = c.user_id
                     WHERE u.country_location IS NOT NULL
                       AND TRIM(u.country_location) <> ''
-                    GROUP BY TRIM(u.country_location)
-                    ORDER BY contributors DESC, country ASC
+                    GROUP BY
+                        CASE
+                            WHEN c.user_id = 28 THEN 'United States'
+                            ELSE TRIM(u.country_location)
+                        END
+                    ORDER BY contributions DESC, contributors DESC, country ASC
                 `
                 );
                 return result.rows;
@@ -332,28 +349,93 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/contributors/heatmap", async (_req, res) => {
+    app.get("/api/contributors/heatmap", async (req, res) => {
         try {
-            const payload = await withCache("contributors:heatmap", async () => {
-                const result = await pool.query(
+            const rawYear = req.query.year;
+            const parsedYear = rawYear !== undefined && rawYear !== "" ? parseInt(String(rawYear), 10) : NaN;
+            const yearFilter =
+                Number.isFinite(parsedYear) && parsedYear >= 1970 && parsedYear <= 2100 ? parsedYear : null;
+            const cacheKey = `contributors:heatmap:${yearFilter ?? "rolling"}`;
+
+            const payload = await withCache(cacheKey, async () => {
+                const yearsResult = await pool.query(
                     `
-                    SELECT day::date, COUNT(*)::int AS count
-                    FROM (
-                        SELECT DATE(edited_at) AS day
-                        FROM contributions
-                        WHERE content_changed = true
-                          AND invisible = false
-                          AND edited_at > NOW() - INTERVAL '12 months'
-                        UNION ALL
-                        SELECT DATE(edited_at) AS day
-                        FROM github_contributions
-                        WHERE edited_at > NOW() - INTERVAL '12 months'
-                    ) src
-                    GROUP BY day
-                    ORDER BY day ASC
+                    WITH bounds AS (
+                        SELECT
+                            MIN(EXTRACT(YEAR FROM edited_at)::int) AS min_y,
+                            MAX(EXTRACT(YEAR FROM edited_at)::int) AS max_y
+                        FROM (
+                            SELECT edited_at
+                            FROM contributions
+                            WHERE content_changed = true
+                              AND invisible = false
+                            UNION ALL
+                            SELECT edited_at
+                            FROM github_contributions
+                        ) s
+                        WHERE edited_at IS NOT NULL
+                    )
+                    SELECT generate_series(bounds.min_y, bounds.max_y)::int AS y
+                    FROM bounds
+                    WHERE bounds.min_y IS NOT NULL
+                      AND bounds.max_y IS NOT NULL
+                    ORDER BY y DESC
                 `
                 );
-                return result.rows;
+                const years = yearsResult.rows.map((r) => r.y).filter((y) => y != null);
+
+                let result;
+                if (yearFilter != null) {
+                    result = await pool.query(
+                        `
+                        SELECT day::date, COUNT(*)::int AS count
+                        FROM (
+                            SELECT DATE(edited_at) AS day
+                            FROM contributions
+                            WHERE content_changed = true
+                              AND invisible = false
+                              AND edited_at >= make_date($1, 1, 1)
+                              AND edited_at < make_date($1 + 1, 1, 1)
+                            UNION ALL
+                            SELECT DATE(edited_at) AS day
+                            FROM github_contributions
+                            WHERE edited_at >= make_date($1, 1, 1)
+                              AND edited_at < make_date($1 + 1, 1, 1)
+                        ) src
+                        GROUP BY day
+                        ORDER BY day ASC
+                    `,
+                        [yearFilter]
+                    );
+                } else {
+                    result = await pool.query(
+                        `
+                        SELECT day::date, COUNT(*)::int AS count
+                        FROM (
+                            SELECT DATE(edited_at) AS day
+                            FROM contributions
+                            WHERE content_changed = true
+                              AND invisible = false
+                              AND edited_at > NOW() - INTERVAL '12 months'
+                            UNION ALL
+                            SELECT DATE(edited_at) AS day
+                            FROM github_contributions
+                            WHERE edited_at > NOW() - INTERVAL '12 months'
+                        ) src
+                        GROUP BY day
+                        ORDER BY day ASC
+                    `
+                    );
+                }
+
+                const view =
+                    yearFilter != null ? { kind: "year", year: yearFilter } : { kind: "rolling" };
+
+                return {
+                    years,
+                    view,
+                    days: result.rows,
+                };
             });
             res.set("Cache-Control", "public, max-age=3600");
             res.json(payload);
