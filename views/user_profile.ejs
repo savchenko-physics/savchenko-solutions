@@ -1,447 +1,1179 @@
 <!DOCTYPE html>
-<html lang="<%= typeof lang !== 'undefined' ? lang : 'en' %>">
-
+<html lang="<%= lang %>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="content-language" content="en">
-    <meta name="keywords" content="<%= __('meta.keywords') %>">
-    <meta name="description" content="<%= __('meta.description') %>">
-    <meta name="author" content="<%= __('meta.author') %>">
-    <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM">
-    <meta property="og:title" content="<%= fullName %> <%= __('profile.title') %>">
-    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png">
-    <meta property="og:description" content="<%= __('meta.ogDescription') %>">
-    <meta name="yandex-verification" content="6cfda41f74038368">
-    <title>
-        <%= fullName %> <%= __('profile.title') %>
-    </title>
+    <title>@<%= username %> - Contributor Profile</title>
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
-    <script src="/js/jquery-1.10.1.min.js"></script>
-
-    <!-- Bootstrap 5 (via CDN) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-    <!-- Google Fonts: Roboto -->
+    <!-- Bootstrap 5: required for main_site_header (navbar, grid, collapse) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-    <!-- Optional: Bootstrap Icons for Social Links -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css" />
-    <!-- Your Custom Styles -->
-    <link rel="stylesheet" href="/css/user_profile.css" />
     <link rel="stylesheet" href="/css/design-system.css" />
     <link rel="stylesheet" href="/css/main_page.css" />
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <style>
+        :root {
+            --sv-primary: #1a1a2e;
+            --sv-text: #2d2d2d;
+            --sv-secondary: #6c757d;
+            --sv-border: #dee2e6;
+            --sv-bg: #ffffff;
+            --sv-card: #f8f9fa;
+            --sv-heat-0: #ebedf0;
+            --sv-heat-1: #b3c6d9;
+            --sv-heat-2: #6d93b8;
+            --sv-heat-3: #3a6a9e;
+            --sv-heat-4: #1a1a2e;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #ffffff;
-            color: #2d2d2d;
+            margin: 0;
+            background: var(--sv-bg);
+            color: var(--sv-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        .savchenko-color {
-            color: #1a1a2e;
-            font-weight: 700;
-        }
-
-        .profile-shell {
-            max-width: 920px;
+        .profile-page {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 1rem;
+            padding: 20px 16px 32px;
         }
 
-        .profile-hero {
-            text-align: center;
-            padding: 2rem 0.25rem 1.5rem;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .profile-hero img {
-            width: 96px;
-            height: 96px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 1px solid #dee2e6;
-        }
-
-        .profile-hero h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin: 0.75rem 0 0.5rem;
-        }
-
-        .profile-meta {
-            font-size: 0.95rem;
-            color: #6c757d;
-            margin: 0.25rem 0;
-        }
-
-        .profile-bio {
-            margin-top: 1rem;
-            font-size: 1rem;
-            line-height: 1.55;
-            color: #2d2d2d;
+        .card {
+            border: 1px solid var(--sv-border);
+            border-radius: 8px;
+            background: var(--sv-bg);
+            padding: 14px;
+            margin-bottom: 16px;
         }
 
         .section-title {
-            border-bottom: 1px solid #dee2e6;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+            color: var(--sv-primary);
+            margin: 0 0 12px;
+            font-size: 17px;
             font-weight: 600;
-            font-size: 1rem;
-            color: #1a1a2e;
         }
 
-        .card-contribution {
-            transition: border-color 0.15s ease;
-        }
-
-        .card-contribution:hover {
-            border-color: #adb5bd;
-        }
-
-        .footer-modern {
-            background: #343a40;
-            color: #fff;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(26, 26, 46, 0.35); }
-            70% { box-shadow: 0 0 0 10px rgba(26, 26, 46, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(26, 26, 46, 0); }
-        }
-
-        .animate-badge {
-            animation: pulse 2.5s infinite;
+        .profile-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 10px;
         }
 
         .profile-main {
-            max-width: 920px;
-            margin: 0 auto;
+            display: flex;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--sv-border);
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .profile-names {
+            min-width: 0;
+        }
+
+        .name-line {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--sv-primary);
+            line-height: 1.15;
+            margin: 0;
+        }
+
+        .username-line {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: var(--sv-secondary);
+        }
+
+        .institution-line {
+            margin: 4px 0 0;
+            font-size: 14px;
+            color: var(--sv-secondary);
+        }
+
+        .bio {
+            margin: 8px 0 0;
+            font-size: 14px;
+            color: var(--sv-text);
+            line-height: 1.45;
+            max-width: 760px;
+        }
+
+        .verified-check {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            color: #fff;
+            background: var(--sv-primary);
+            font-size: 11px;
+        }
+
+        .social-row {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .social-link {
+            color: var(--sv-secondary);
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            color: var(--sv-primary);
+        }
+
+        .edit-link {
+            color: var(--sv-primary);
+            font-size: 13px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .stat-tile {
+            border: 1px solid var(--sv-border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            background: var(--sv-bg);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            line-height: 1.05;
+            color: #1a1a2e !important;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            margin-top: 6px;
+            font-size: 13px;
+            color: #6c757d !important;
+        }
+
+        .profile-page .stat-tile .stat-value,
+        .profile-page #platform-overview-grid .stat-value {
+            color: #1a1a2e !important;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .heatmap-shell {
+            overflow-x: auto;
+        }
+
+        .heatmap-wrap {
+            display: flex;
+            gap: 8px;
+            min-width: 760px;
+        }
+
+        .heatmap-y {
+            width: 30px;
+            color: var(--sv-secondary);
+            font-size: 11px;
+            padding-top: 18px;
+        }
+
+        .heatmap-y div {
+            height: 13px;
+            line-height: 13px;
+            margin-bottom: 2px;
+        }
+
+        .heatmap-main {
+            flex: 1;
+        }
+
+        .heatmap-months {
+            display: grid;
+            grid-template-columns: repeat(53, 11px);
+            gap: 2px;
+            height: 16px;
+            margin-bottom: 2px;
+            color: var(--sv-secondary);
+            font-size: 10px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(53, 11px);
+            grid-auto-rows: 11px;
+            gap: 2px;
+        }
+
+        .heat-cell {
+            width: 11px;
+            height: 11px;
+            border-radius: 2px;
+            background: var(--sv-heat-0);
+        }
+
+        .streak-line {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* GitHub-inspired “latest commit” strip */
+        .contrib-latest {
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .contrib-latest-inner {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 16px;
+        }
+
+        .contrib-latest-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .contrib-avatar-wrap {
+            flex-shrink: 0;
+            line-height: 0;
+        }
+
+        .contrib-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            vertical-align: middle;
+            border: 1px solid #d0d7de;
+            background: #fff;
+        }
+
+        .contrib-author-link {
+            color: #57606a;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .contrib-author-link:hover {
+            color: #1a1a2e;
+            text-decoration: underline;
+        }
+
+        .contrib-title-wrap {
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .contrib-title-link {
+            color: #1a1a2e;
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .contrib-title-link:hover {
+            text-decoration: underline;
+        }
+
+        .contrib-problem-link {
+            color: #57606a;
+            font-weight: 400;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .contrib-problem-link:hover {
+            color: #1a1a2e;
+            text-decoration: underline;
+        }
+
+        .contrib-lang {
+            display: inline-block;
+            padding: 0 6px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #57606a;
+            border: 1px solid #d0d7de;
+            border-radius: 999px;
+            text-transform: uppercase;
+            line-height: 1.35;
+        }
+
+        .contrib-meta-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #57606a;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .contrib-hash {
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+            font-size: 12px;
+            color: #57606a;
+            text-decoration: none;
+        }
+
+        .contrib-hash:hover {
+            color: #1a1a2e;
+            text-decoration: underline;
+        }
+
+        .contrib-time {
+            color: #57606a;
+            white-space: nowrap;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .tiny-link {
+            color: var(--sv-primary);
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .chapter-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .chapter-table th,
+        .chapter-table td {
+            border-bottom: 1px solid var(--sv-border);
+            padding: 8px 6px;
+            text-align: left;
+        }
+
+        .chapter-table th {
+            color: var(--sv-secondary);
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .progress-track {
+            width: 120px;
+            height: 5px;
+            background: #ebedf0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--sv-primary);
+        }
+
+        .collab-row {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .collab-item {
+            text-decoration: none;
+            color: var(--sv-text);
+            min-width: 78px;
+            text-align: center;
+        }
+
+        .collab-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--sv-border);
+        }
+
+        .collab-name {
+            margin-top: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a1a2e;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 96px;
+        }
+
+        .collab-count {
+            margin-top: 2px;
+            font-size: 11px;
+            color: #6c757d;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .footer-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--sv-secondary);
+            font-size: 13px;
+        }
+
+        .radar-card {
+            display: block;
+        }
+
+        .mobile-chapters {
+            display: none;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
+            background-size: 200% 100%;
+            animation: pulse 1.2s linear infinite;
+            border-radius: 4px;
+            color: transparent;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 0% 0%; }
+            100% { background-position: -200% 0%; }
+        }
+
+        @media (max-width: 992px) {
+            .stats-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+            .radar-card {
+                display: none;
+            }
+            .mobile-chapters {
+                display: block;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .profile-page {
+                padding: 16px 12px 24px;
+            }
+            .name-line {
+                font-size: 20px;
+            }
         }
     </style>
 </head>
-
-<body class="bg-white">
-
+<body>
     <%- include('default/main_site_header') %>
 
-    <section class="profile-shell">
-        <div class="profile-hero">
-            <% if (profilePicture) { %>
-                <img src="<%= profilePicture %>" alt="<%= fullName %>'s Profile Picture" />
-            <% } else { %>
-                <img src="/img/profile_images/Default_placeholder.svg" alt="Placeholder" />
-            <% } %>
-            <% if (username === "emixter") { %>
-                <h1 class="d-flex flex-wrap justify-content-center align-items-center gap-2">
-                    Eugene Dubrovin (emixter)
-                    <span class="badge bg-primary text-white fs-6 animate-badge">Emeritus Collaborator</span>
-                </h1>
-            <% } else { %>
-                <h1><%= fullName %> <span class="text-muted" style="font-weight:500;">(@<%= username %>)</span></h1>
-            <% } %>
-            <% if (typeof institution !== 'undefined' && institution) { %>
-                <p class="profile-meta mb-0"><%= institution %></p>
-            <% } %>
-            <% if (countryLocation) { %>
-                <p class="profile-meta mb-0">
-                    <% if (countryFlagEmoji) { %><span aria-hidden="true"><%= countryFlagEmoji %></span> <% } %><%= countryLocation %>
-                </p>
-            <% } %>
-            <p class="profile-meta mb-0">
-                <%= lang === 'ru' ? 'Подтверждённый пользователь' : 'Verified' %>:
-                <span class="<%= isVerifiedUser ? 'text-success' : 'text-secondary' %>">
-                    <%= isVerifiedUser ? (lang === 'ru' ? 'да' : 'yes') : (lang === 'ru' ? 'нет' : 'no') %>
-                </span>
-            </p>
-            <% if (bio) { %>
-                <p class="profile-bio text-start" style="max-width: 640px; margin-left: auto; margin-right: auto;"><%= bio %></p>
-            <% } %>
-        </div>
-    </section>
-
-    <main class="container my-5" style="max-width: 920px;">
-        <!-- Stats row -->
-        <div class="row mb-5">
-            <div class="col-12 col-md-6 mb-4 mb-md-0">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h2 class="section-title">Contributions</h2>
-                        <% if (fullName) { %>
-                            <p><strong>Full Name:</strong> <%= fullName %></p>
-                        <% } %>
-                        <p><strong>Username:</strong> <%= username %></p>
-                        <% if (totalContributions > 0) { %>
-                            <p><strong>Total Contributions:</strong> <%= totalContributions %></p>
-                        <% } %>
-                        <% if (uniqueSolutions > 0) { %>
-                            <p><strong>Unique Solutions:</strong> <%= uniqueSolutions %></p>
-                        <% } %>
-                        <% if (uniqueTranslations > 0) { %>
-                            <p><strong>Unique Translations:</strong> <%= uniqueTranslations %></p>
-                        <% } %>
+    <main class="profile-page">
+        <section class="card">
+            <div class="profile-head">
+                <div class="profile-main">
+                    <img id="profile-avatar" class="profile-avatar" src="/img/profile_images/Default_placeholder.svg" alt="Profile avatar">
+                    <div class="profile-names">
+                        <h1 id="name-line" class="name-line skeleton">Contributor Name</h1>
+                        <p id="username-line" class="username-line">@<%= username %></p>
+                        <p id="institution-line" class="institution-line" style="display:none;"></p>
+                        <p id="bio-line" class="bio" style="display:none;"></p>
+                        <div id="social-row" class="social-row"></div>
                     </div>
                 </div>
+                <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;">Edit Profile</a>
             </div>
-            <div class="col-12 col-md-6">
-                <% if (username === "emixter") { %>
-                    <div class="card border-0 rounded-3 shadow-sm">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="bi bi-award-fill text-warning me-2 fs-5"></i>
-                                <h6 class="fw-bold text-primary mb-0">С благодарностью и уважением</h6>
+        </section>
+
+        <section class="stats-row">
+            <article class="stat-tile">
+                <div id="stat-solutions" class="stat-value">—</div>
+                <div class="stat-label">Solutions</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-edits" class="stat-value">—</div>
+                <div class="stat-label">Edits</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-translations" class="stat-value">—</div>
+                <div class="stat-label">Translations</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-likes" class="stat-value">—</div>
+                <div class="stat-label">Likes Received</div>
+            </article>
+        </section>
+
+        <section class="profile-grid">
+            <div>
+                <section class="card">
+                    <h2 class="section-title">Contribution Heatmap</h2>
+                    <div class="heatmap-shell">
+                        <div class="heatmap-wrap">
+                            <div class="heatmap-y">
+                                <div></div>
+                                <div>Mon</div>
+                                <div></div>
+                                <div>Wed</div>
+                                <div></div>
+                                <div>Fri</div>
+                                <div></div>
                             </div>
-                            
-                            <p class="text-muted mb-3 small">
-                                Евгений Дубровин (emixter) внёс один из самых значимых вкладов в этот проект — 
-                                <strong>более 300 подробных решений</strong>, каждое из которых отличается точностью, глубиной и любовью к физике.
-                            </p>
-                            
-                            <blockquote class="border-start border-3 border-primary ps-3 mb-2">
-                                <p class="fst-italic text-muted mb-1 small">
-                                    "Был рад познакомиться и прикоснуться к тому, что вы делаете для популяризации физики"
-                                </p>
-                            </blockquote>
-                            
-                            <blockquote class="border-start border-3 border-primary ps-3 mb-3">
-                                <p class="fst-italic text-muted mb-3 small">
-                                    "Надеюсь, в ближайшем будущем вы осуществите, среди прочего, мою мечту — полное собрание решений задачника Савченко"
-                                </p>
-                                <footer class="blockquote-footer mb-0">
-                                    <small>Евгений Дубровин</small>
-                                </footer>
-                            </blockquote>
-                            
-                            <p class="fw-semibold text-primary mb-0 small">
-                                Мы продолжаем воплощать эту мечту. Спасибо тебе, Евгений.
-                            </p>
-                        </div>
-                    </div>
-                <% } %>
-                <% if (username !== "emixter") { %>
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-
-                        <h2 class="section-title"><%= lang === 'ru' ? 'Ссылки' : 'Links' %></h2>
-                        <ul class="list-unstyled mb-0">
-                            <% if (!linkedin && !github && !personalWebsite) { %>
-                                <li class="text-muted"><%= lang === 'ru' ? 'Не указано' : 'No links provided' %></li>
-                            <% } else { %>
-                                <% if (linkedin) { %>
-                                    <li class="mb-2">
-                                        <i class="bi bi-linkedin me-1"></i>
-                                        <a href="<%= linkedin %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none">LinkedIn</a>
-                                    </li>
-                                <% } %>
-                                <% if (github) { %>
-                                    <li class="mb-2">
-                                        <i class="bi bi-github me-1"></i>
-                                        <a href="<%= github %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none">GitHub</a>
-                                    </li>
-                                <% } %>
-                                <% if (personalWebsite) { %>
-                                    <li class="mb-2">
-                                        <i class="bi bi-globe me-1"></i>
-                                        <a href="<%= personalWebsite %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none"><%= lang === 'ru' ? 'Сайт' : 'Website' %></a>
-                                    </li>
-                                <% } %>
-                            <% } %>
-                        </ul>
-                        </div>
-                </div>
-
-                <% } %>
-            </div>
-        </div>
-        <!-- /Stats row -->
-
-        <!-- Contributions and Collaborators -->   
-         <% if (contributions && contributions.length > 0) { %> 
-        <div class="row">
-            <!-- Recent Contributions -->
-            <% if (contributions && contributions.length > 0) { %>
-            <div class="col-12 col-lg-7">
-                <h2 class="section-title">Recent Contributions</h2>
-                <div class="row row-cols-1 g-3" id="contributions-list">
-                    <% contributions.forEach(contribution=> { %>
-                        <div class="col">
-                            <div class="card card-contribution shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title mb-1">
-                                        <a href="/<%= contribution.language %>/<%= contribution.problem_name %>"
-                                            class="text-decoration-none">
-                                            <%= contribution.problem_name %>
-                                        </a>
-                                        <small class="text-muted">(<%= contribution.language %>)</small>
-                                    </h5>
-                                    <p class="card-text text-muted mb-2">
-                                        <em>
-                                            <%= new Date(contribution.edited_at).toLocaleString() %>
-                                        </em>
-                                    </p>
-                                    <a href="/<%= lang %>/contributions/<%= contribution.id %>"
-                                        class="btn btn-sm btn-outline-primary">
-                                        View Changes
-                                    </a>
-                                </div>
+                            <div class="heatmap-main">
+                                <div id="user-months" class="heatmap-months"></div>
+                                <div id="user-heatmap" class="heatmap-grid"></div>
                             </div>
                         </div>
-                        <% }) %>
-                </div>
-                <!-- "Show More" Button -->
-                <% if (hasMore) { %>
-                    <div class="text-center mt-3">
-                        <button id="show-more" class="btn btn-primary">Show More</button>
                     </div>
-                <% } %>
-            </div>
-            <% } else { %>
-            <div class="col-12 col-lg-7">
-                <h2 class="section-title">Recent tests</h2>
-                <p class="text-muted">No tests yet.</p>
-            </div>
-            <% } %>
-            <!-- /Recent Contributions -->
+                    <div id="streak-line" class="streak-line"></div>
+                </section>
 
-            <!-- Frequent Collaborators -->
-            <div class="col-12 col-lg-5 mt-4 mt-lg-0">
-                <h2 class="section-title">Frequent Collaborators</h2>
-                <% if (frequentCollaborators.length> 0) { %>
-                    <ul class="list-group">
-                        <% frequentCollaborators.forEach(collaborator=> { %>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <a href="/user/<%= collaborator.collaborator_username %>" class="text-decoration-none">
-                                    <%= collaborator.collaborator_username %>
-                                </a>
-                                <span class="badge bg-primary rounded-pill">
-                                    <%= collaborator.collaboration_count %>
-                                </span>
-                            </li>
-                            <% }) %>
-                    </ul>
-                    <% } else { %>
-                        <p class="text-muted">No frequent collaborators found.</p>
-                        <% } %>
+                <section class="card">
+                    <h2 class="section-title">Contribution Timeline</h2>
+                    <canvas id="timeline-chart" height="120"></canvas>
+                    <p id="timeline-summary" class="streak-line"></p>
+                </section>
+
+                <section class="card mobile-chapters">
+                    <h2 class="section-title">Chapter Breakdown</h2>
+                    <div style="overflow-x:auto;">
+                        <table class="chapter-table">
+                            <thead>
+                                <tr>
+                                    <th>Chapter</th>
+                                    <th>Solved</th>
+                                    <th>Total</th>
+                                    <th>Completion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mobile-chapter-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">Recent Contributions</h2>
+                    <p class="sr-only">Latest contributions: id, problem, language, and link to the diff, in a compact row similar to a commit on GitHub.</p>
+                    <div id="recent-list" class="recent-list"></div>
+                    <a id="show-all-link" class="tiny-link" href="#" style="display:none;">Show all contributions</a>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">Chapter Breakdown</h2>
+                    <div style="overflow-x:auto;">
+                        <table class="chapter-table">
+                            <thead>
+                                <tr>
+                                    <th>Chapter</th>
+                                    <th>Solved</th>
+                                    <th>Total</th>
+                                    <th>Completion</th>
+                                </tr>
+                            </thead>
+                            <tbody id="chapter-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <h2 class="section-title">Frequent Collaborators</h2>
+                    <div id="collab-row" class="collab-row"></div>
+                </section>
+
+                <section id="sankey-card" class="card" style="display:none;">
+                    <h2 class="section-title">Chapter → Section → Status</h2>
+                    <label for="sankey-chapter" style="font-size:13px;color:#6c757d;">Chapter</label>
+                    <select id="sankey-chapter" style="margin-left:8px;"></select>
+                    <svg id="sankey-svg" viewBox="0 0 900 360" style="width:100%;height:360px;display:block;"></svg>
+                </section>
+
+                <section id="platform-overview-card" class="card" style="display:none;">
+                    <h2 class="section-title">Platform Overview</h2>
+                    <div id="platform-overview-grid" class="stats-row" style="grid-template-columns:repeat(3,minmax(0,1fr));"></div>
+                </section>
+
+                <section class="card">
+                    <div class="footer-stats">
+                        <span id="member-since">Member since —</span>
+                        <span id="last-active">Last active —</span>
+                    </div>
+                </section>
             </div>
-            <!-- /Frequent Collaborators -->
-        </div>
-        <% } %>
-        <!-- /Contributions and Collaborators -->
+
+            <aside class="radar-card">
+                <section class="card">
+                    <h2 class="section-title">Physics Coverage</h2>
+                    <canvas id="radar-chart" width="280" height="280"></canvas>
+                </section>
+            </aside>
+        </section>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer-modern py-4 mt-5">
-        <div class="container">
-          <div class="row align-items-center text-center text-md-start">
-            <div class="col-md-6 mb-4 mb-md-0">
-              <!-- Brand / Title -->
-              <a href="/<%= lang %>/" class="d-inline-flex align-items-center text-decoration-none mb-3">
-                <img
-                  src="/img/logo_main.svg"
-                  alt="<%= __('title') %> Logo"
-                  style="height: 32px;"
-                  class="me-2"
-                />
-                <span class="fw-bold h5 mb-0 text-white"><%= __('title') %></span>
-              </a>
-              <!-- Copyright & Basic Info -->
-              <p class="mb-0">
-                <small>
-                  © <strong>Savchenko Solutions</strong>, 2023-2025
-                  <br />
-                  All solutions are contributed by their respective authors and are
-                  based on original textbook content, which remains the property of
-                  the textbook authors.
-                </small>
-              </p>
-            </div>
-            
-            <!-- License & Contact -->
-            <div class="col-md-6 text-md-end">
-              <p class="small mb-2">
-                Unless otherwise noted, solutions are provided under the
-                <strong>CC BY-SA 4.0</strong> license.
-                Commercial use of any material requires written permission.
-              </p>
-              <p class="small mb-0">
-                Contact: 
-                <a
-                  href="mailto:aliaksandr@melnichenka.com"
-                  class="text-decoration-none text-white"
-                >
-                  aliaksandr@melnichenka.com
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
-    
-    <!-- /Footer -->
+    <%- include('default/modern_footer') %>
+    <%- include('default/main_site_footer_scripts') %>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
     <script>
-        $(document).ready(function () {
-            let offset = <%= offset %>;
-            const userId = '<%= userId %>';
-            const lang = '<%= lang %>';
+        const username = "<%= username %>";
+        const lang = "<%= lang %>";
+        const heatColors = ["#ebedf0", "#b3c6d9", "#6d93b8", "#3a6a9e", "#1a1a2e"];
+        let profileAuthor = {
+            username: username,
+            fullName: username,
+            profilePicture: "/img/profile_images/Default_placeholder.svg",
+        };
+        let contribPage = 1;
+        let radarChart = null;
+        let timelineChart = null;
 
-            $('#show-more').click(async function () {
-                try {
-                    const response = await fetch(`/api/contributions/${userId}?offset=${offset}`);
-                    const newContributions = await response.json();
+        function fmtMonthYear(dateInput) {
+            if (!dateInput) return "—";
+            const d = new Date(dateInput);
+            return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+        }
 
-                    if (newContributions.length > 0) {
-                        newContributions.forEach(contribution => {
-                            $('#contributions-list').append(`
-                <div class="col">
-                  <div class="card card-contribution shadow-sm">
-                    <div class="card-body">
-                      <h5 class="card-title mb-1">
-                        <a
-                          href="/${contribution.language}/${contribution.problem_name}"
-                          class="text-decoration-none"
-                        >
-                          ${contribution.problem_name}
-                        </a>
-                        <small class="text-muted">(${contribution.language})</small>
-                      </h5>
-                      <p class="card-text text-muted mb-2">
-                        <em>${new Date(contribution.edited_at).toLocaleString()}</em>
-                      </p>
-                      <a
-                        href="/${lang}/contributions/${contribution.id}"
-                        class="btn btn-sm btn-outline-primary"
-                      >
-                        View Changes
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              `);
-                        });
+        function relTime(dateInput) {
+            if (!dateInput) return "—";
+            const d = new Date(dateInput).getTime();
+            const diff = Math.floor((Date.now() - d) / 1000);
+            if (diff < 60) return "just now";
+            if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;
+            if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`;
+            if (diff < 31536000) return `${Math.floor(diff / 2592000)} months ago`;
+            return `${Math.floor(diff / 31536000)} years ago`;
+        }
 
-                        // Update the offset for the next batch
-                        offset += newContributions.length;
-
-                        // If we fetched fewer items than expected, no more remain
-                        if (newContributions.length < 25) {
-                            $('#show-more').remove();
-                        }
-                    } else {
-                        $('#show-more').remove();
-                    }
-                } catch (error) {
-                    console.error('Error fetching more contributions:', error);
-                }
+        function fmtCommitDate(iso) {
+            if (!iso) return "—";
+            const d = new Date(iso);
+            return d.toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
             });
+        }
+
+        function escapeHtml(s) {
+            if (s == null || s === undefined) return "";
+            return String(s)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Failed: ${url}`);
+            return res.json();
+        }
+
+        function heatColor(value, max) {
+            if (!value) return heatColors[0];
+            const ratio = max > 0 ? value / max : 0;
+            if (ratio >= 0.75) return heatColors[4];
+            if (ratio >= 0.5) return heatColors[3];
+            if (ratio >= 0.25) return heatColors[2];
+            return heatColors[1];
+        }
+
+        function buildCalendarDays(dayCounts) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(today);
+            start.setDate(start.getDate() - 364);
+            const startDay = (start.getDay() + 6) % 7;
+            start.setDate(start.getDate() - startDay);
+
+            const result = [];
+            const countMap = new Map(dayCounts.map((x) => [String(x.day).slice(0, 10), x.count]));
+            for (let i = 0; i < 371; i += 1) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const key = d.toISOString().slice(0, 10);
+                result.push({
+                    date: d,
+                    count: countMap.get(key) || 0,
+                    week: Math.floor(i / 7),
+                    dow: (d.getDay() + 6) % 7,
+                });
+            }
+            return result;
+        }
+
+        function calculateStreaks(dayCounts) {
+            const set = new Set(dayCounts.filter((x) => x.count > 0).map((x) => String(x.day).slice(0, 10)));
+            const sortedDays = [...set].sort();
+            let longest = 0;
+            let current = 0;
+            let run = 0;
+            let prev = null;
+
+            sortedDays.forEach((key) => {
+                const day = new Date(key + "T00:00:00Z");
+                if (!prev) {
+                    run = 1;
+                } else {
+                    const diff = Math.round((day - prev) / 86400000);
+                    run = diff === 1 ? run + 1 : 1;
+                }
+                if (run > longest) longest = run;
+                prev = day;
+            });
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            for (let i = 0; i < 365; i += 1) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                if (set.has(key)) current += 1;
+                else break;
+            }
+            return { longest, current };
+        }
+
+        function renderHeatmap(dayCounts) {
+            const grid = document.getElementById("user-heatmap");
+            const months = document.getElementById("user-months");
+            const days = buildCalendarDays(dayCounts);
+            const max = dayCounts.reduce((m, x) => Math.max(m, x.count), 0);
+
+            grid.innerHTML = "";
+            months.innerHTML = "";
+
+            const labels = new Array(53).fill("");
+            for (const day of days) {
+                if (day.date.getDate() === 1) {
+                    labels[day.week] = day.date.toLocaleDateString("en-US", { month: "short" });
+                }
+            }
+            labels.forEach((m) => {
+                const div = document.createElement("div");
+                div.textContent = m;
+                months.appendChild(div);
+            });
+
+            days.forEach((day) => {
+                const cell = document.createElement("div");
+                cell.className = "heat-cell";
+                cell.style.gridColumn = String(day.week + 1);
+                cell.style.gridRow = String(day.dow + 1);
+                cell.style.background = heatColor(day.count, max);
+                const dateLabel = day.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                cell.title = `${day.count} contributions on ${dateLabel}`;
+                grid.appendChild(cell);
+            });
+
+            const total = dayCounts.reduce((sum, x) => sum + Number(x.count || 0), 0);
+            const streaks = calculateStreaks(dayCounts);
+            document.getElementById("streak-line").textContent =
+                `${total.toLocaleString()} contributions in the last year. Longest streak: ${streaks.longest} days. Current streak: ${streaks.current} days.`;
+        }
+
+        function renderHeader(data) {
+            const user = data.user;
+            profileAuthor = {
+                username: user.username,
+                fullName: user.fullName || user.username,
+                profilePicture: user.profilePicture || "/img/profile_images/Default_placeholder.svg",
+            };
+            const nameEl = document.getElementById("name-line");
+            nameEl.classList.remove("skeleton");
+            nameEl.textContent = `${user.fullName}${user.countryFlag ? ` ${user.countryFlag}` : ""}`;
+            if (user.isVerifiedUser) {
+                const badge = document.createElement("span");
+                badge.className = "verified-check";
+                badge.innerHTML = "&#10003;";
+                badge.title = "Verified";
+                nameEl.appendChild(badge);
+            }
+
+            document.getElementById("profile-avatar").src = user.profilePicture || "/img/profile_images/Default_placeholder.svg";
+            document.getElementById("username-line").textContent = `@${user.username}`;
+
+            const institution = document.getElementById("institution-line");
+            if (user.institution) {
+                institution.style.display = "block";
+                institution.textContent = user.institution;
+            }
+
+            const bioLine = document.getElementById("bio-line");
+            if (user.bio) {
+                bioLine.style.display = "block";
+                bioLine.textContent = user.bio;
+            }
+
+            if (data.isOwnProfile) {
+                document.getElementById("edit-profile-link").style.display = "inline";
+            }
+
+            const socialRow = document.getElementById("social-row");
+            const links = [
+                { url: user.github, icon: "bi-github", title: "GitHub" },
+                { url: user.linkedin, icon: "bi-linkedin", title: "LinkedIn" },
+                { url: user.website, icon: "bi-globe2", title: "Website" },
+            ].filter((x) => x.url && String(x.url).trim() !== "");
+            links.forEach((x) => {
+                const a = document.createElement("a");
+                a.className = "social-link";
+                a.href = x.url;
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.title = x.title;
+                a.innerHTML = `<i class="bi ${x.icon}"></i>`;
+                socialRow.appendChild(a);
+            });
+
+            document.getElementById("stat-solutions").textContent = Number(data.stats.solutions || 0).toLocaleString();
+            document.getElementById("stat-edits").textContent = Number(data.stats.edits || 0).toLocaleString();
+            document.getElementById("stat-translations").textContent = Number(data.stats.translations || 0).toLocaleString();
+            document.getElementById("stat-likes").textContent = Number(data.stats.likesReceived || 0).toLocaleString();
+
+            document.getElementById("member-since").textContent = `Member since ${fmtMonthYear(data.footer.memberSince)}`;
+            document.getElementById("last-active").textContent = `Last active ${relTime(data.footer.lastActiveAt)}`;
+
+            const collabRow = document.getElementById("collab-row");
+            collabRow.innerHTML = "";
+            (data.collaborators || []).forEach((c) => {
+                const a = document.createElement("a");
+                a.className = "collab-item";
+                a.href = `/user/${encodeURIComponent(c.username)}`;
+                a.title = c.fullName ? `${c.fullName} (@${c.username})` : `@${c.username}`;
+                const uname = escapeHtml(c.username);
+                const pic = escapeHtml(c.profilePicture || "/img/profile_images/Default_placeholder.svg");
+                const count = Number(c.sharedProblems || 0).toLocaleString();
+                a.innerHTML = `
+                    <img class="collab-avatar" src="${pic}" alt="@${uname}">
+                    <div class="collab-name">${uname}</div>
+                    <div class="collab-count">${count}</div>
+                `;
+                collabRow.appendChild(a);
+            });
+
+            if (data.platformOverview) {
+                const card = document.getElementById("platform-overview-card");
+                const grid = document.getElementById("platform-overview-grid");
+                card.style.display = "block";
+                const items = [
+                    ["Total platform solutions", data.platformOverview.total_platform_solutions],
+                    ["Total registered users", data.platformOverview.total_registered_users],
+                    ["Total page views", data.platformOverview.total_page_views],
+                    ["Total unique visitors", data.platformOverview.unique_visitors],
+                    ["Solutions personally authored", data.platformOverview.solutions_personally_authored],
+                    ["Solutions translated", data.platformOverview.solutions_translated],
+                ];
+                grid.innerHTML = "";
+                items.forEach(([label, value]) => {
+                    const cell = document.createElement("article");
+                    cell.className = "stat-tile";
+                    cell.innerHTML = `
+                        <div class="stat-value" style="font-size:24px;color:#1a1a2e;">${Number(value || 0).toLocaleString()}</div>
+                        <div class="stat-label">${label}</div>
+                    `;
+                    grid.appendChild(cell);
+                });
+            }
+
+            if (data.canShowSankey) {
+                document.getElementById("sankey-card").style.display = "block";
+                loadSankey();
+            }
+        }
+
+        async function renderTimeline() {
+            const data = await fetchJSON(`/api/user/${username}/timeline`);
+            const labels = data.months.map((x) => x.label);
+            const values = data.months.map((x) => x.count);
+            const ctx = document.getElementById("timeline-chart");
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: "#1a1a2e",
+                        borderRadius: 2,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    animation: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: "#6c757d", maxRotation: 0, autoSkip: true } },
+                        y: { ticks: { color: "#6c757d" }, beginAtZero: true },
+                    },
+                },
+            });
+            if (data.mostActive) {
+                document.getElementById("timeline-summary").textContent =
+                    `Most active month: ${data.mostActive.label} (${data.mostActive.count} contributions)`;
+            }
+        }
+
+        function renderBreakdownRows(rows, targetId) {
+            const tbody = document.getElementById(targetId);
+            tbody.innerHTML = "";
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.chapterName}</td>
+                    <td>${row.solved}</td>
+                    <td>${row.total}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, row.percentage)}%;"></div></div>
+                            <span>${row.percentage.toFixed(1)}%</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function renderRadarAndBreakdown() {
+            const data = await fetchJSON(`/api/user/${username}/radar`);
+            const labels = data.radarAxes.map((x) => x.label);
+            const values = data.radarAxes.map((x) => x.value);
+            const ctx = document.getElementById("radar-chart");
+            if (radarChart) radarChart.destroy();
+            radarChart = new Chart(ctx, {
+                type: "radar",
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: "rgba(26, 26, 46, 0.20)",
+                        borderColor: "#1a1a2e",
+                        borderWidth: 1.5,
+                        pointRadius: 2,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    animation: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        r: {
+                            angleLines: { color: "#dee2e6" },
+                            grid: { color: "#dee2e6" },
+                            pointLabels: { color: "#6c757d", font: { size: 11 } },
+                            ticks: { display: false, beginAtZero: true },
+                        },
+                    },
+                },
+            });
+
+            renderBreakdownRows(data.breakdown, "chapter-body");
+            renderBreakdownRows(data.breakdown, "mobile-chapter-body");
+        }
+
+        function appendContributionRows(rows) {
+            const list = document.getElementById("recent-list");
+            const pa = profileAuthor;
+            const authorUser = escapeHtml(pa.username);
+            const avatarSrc = escapeHtml(pa.profilePicture);
+            rows.forEach((row) => {
+                const id = row.id;
+                const diffHref = `/${row.language}/contributions/${id}`;
+                const problemHref = `/${row.language}/${encodeURIComponent(row.problem_name)}`;
+                const pn = escapeHtml(row.problem_name);
+                const lng = escapeHtml(row.language);
+                const dateStr = fmtCommitDate(row.edited_at);
+                const isoAttr = escapeHtml(row.edited_at);
+                const ariaContribution = lang === "ru"
+                    ? `Вклад ${id}, задача ${row.problem_name}`
+                    : `Contribution ${id}, problem ${row.problem_name}`;
+                const wrap = document.createElement("div");
+                wrap.className = "contrib-latest";
+                wrap.setAttribute("role", "group");
+                wrap.setAttribute("aria-label", ariaContribution);
+                wrap.innerHTML = `
+                    <div class="contrib-latest-inner">
+                        <div class="contrib-latest-author">
+                            <a href="/user/${authorUser}" class="contrib-avatar-wrap" aria-hidden="true" tabindex="-1">
+                                <img class="contrib-avatar" src="${avatarSrc}" width="20" height="20" alt="">
+                            </a>
+                            <a class="contrib-author-link" href="/user/${authorUser}">${authorUser}</a>
+                            <span class="contrib-title-wrap">
+                                <a class="contrib-title-link" href="${diffHref}">#${id}</a>
+                                <span class="contrib-sep" aria-hidden="true" style="color:#57606a;">·</span>
+                                <a class="contrib-problem-link" href="${problemHref}">${pn}</a>
+                                <span class="contrib-lang">${lng}</span>
+                            </span>
+                        </div>
+                        <div class="contrib-meta-right">
+                            <a class="contrib-hash" href="${diffHref}" title="${ariaContribution}">#${id}</a>
+                            <span aria-hidden="true">·</span>
+                            <time class="contrib-time" datetime="${isoAttr}" title="${relTime(row.edited_at)}">${dateStr}</time>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(wrap);
+            });
+        }
+
+        async function loadContributions() {
+            const data = await fetchJSON(`/api/user/${username}/contributions?page=${contribPage}&limit=20`);
+            appendContributionRows(data.rows || []);
+            const link = document.getElementById("show-all-link");
+            if (data.hasNext) {
+                link.style.display = "inline";
+            } else if (contribPage === 1 && (!data.rows || data.rows.length === 0)) {
+                document.getElementById("recent-list").innerHTML = `<div class="contrib-time" style="padding:4px 0;">${lang === "ru" ? "Нет недавних вкладов." : "No recent contributions."}</div>`;
+                link.style.display = "none";
+            } else {
+                link.style.display = "none";
+            }
+        }
+
+        async function renderSankey(chapter = null) {
+            const query = chapter ? `?chapter=${chapter}` : "";
+            const data = await fetchJSON(`/api/user/${username}/sankey${query}`);
+            const select = document.getElementById("sankey-chapter");
+            if (!select.dataset.bound) {
+                select.innerHTML = data.chapters.map((c) => `<option value="${c.number}">${c.number}. ${c.name}</option>`).join("");
+                select.dataset.bound = "1";
+                select.addEventListener("change", () => {
+                    renderSankey(select.value).catch(console.error);
+                });
+            }
+            select.value = String(data.selectedChapter);
+
+            const svg = d3.select("#sankey-svg");
+            svg.selectAll("*").remove();
+            const width = 900;
+            const height = 360;
+            const g = svg.append("g");
+            const sankey = d3.sankey()
+                .nodeWidth(14)
+                .nodePadding(14)
+                .extent([[1, 1], [width - 1, height - 6]]);
+
+            const graph = sankey({
+                nodes: data.nodes.map((d) => ({ ...d })),
+                links: data.links.map((d) => ({ ...d })),
+            });
+
+            g.append("g")
+                .selectAll("rect")
+                .data(graph.nodes)
+                .join("rect")
+                .attr("x", (d) => d.x0)
+                .attr("y", (d) => d.y0)
+                .attr("height", (d) => Math.max(1, d.y1 - d.y0))
+                .attr("width", (d) => d.x1 - d.x0)
+                .attr("fill", (d) => (d.name === "Solved" ? "#1a1a2e" : (d.name === "Unsolved" ? "#dee2e6" : "#6d93b8")));
+
+            g.append("g")
+                .attr("fill", "none")
+                .selectAll("g")
+                .data(graph.links)
+                .join("path")
+                .attr("d", d3.sankeyLinkHorizontal())
+                .attr("stroke", (d) => d.target.name === "Solved" ? "#1a1a2e" : "#b8c2cc")
+                .attr("stroke-opacity", 0.45)
+                .attr("stroke-width", (d) => Math.max(1, d.width));
+
+            g.append("g")
+                .style("font", "11px sans-serif")
+                .attr("fill", "#2d2d2d")
+                .selectAll("text")
+                .data(graph.nodes)
+                .join("text")
+                .attr("x", (d) => d.x0 < width / 2 ? d.x1 + 4 : d.x0 - 4)
+                .attr("y", (d) => (d.y1 + d.y0) / 2)
+                .attr("dy", "0.35em")
+                .attr("text-anchor", (d) => d.x0 < width / 2 ? "start" : "end")
+                .text((d) => d.name);
+        }
+
+        async function loadSankey() {
+            try {
+                await renderSankey();
+            } catch (_error) {
+                document.getElementById("sankey-card").style.display = "none";
+            }
+        }
+
+        async function init() {
+            const [stats, heatmap] = await Promise.all([
+                fetchJSON(`/api/user/${username}/stats`),
+                fetchJSON(`/api/user/${username}/heatmap`),
+            ]);
+            renderHeader(stats);
+            renderHeatmap(heatmap);
+            await Promise.all([renderTimeline(), renderRadarAndBreakdown(), loadContributions()]);
+            document.getElementById("show-all-link").addEventListener("click", async (e) => {
+                e.preventDefault();
+                contribPage += 1;
+                await loadContributions();
+            });
+        }
+
+        init().catch((error) => {
+            console.error("Profile page failed to load:", error);
         });
     </script>
-    <%- include('default/main_site_footer_scripts') %>
 </body>
-
 </html>

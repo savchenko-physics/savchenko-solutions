@@ -3,834 +3,631 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><% if (lang === 'en') { %>Contributors Leaderboard<% } else { %>Рейтинг участников<% } %> - Savchenko Solutions</title>
-    <meta name="description" content="<% if (lang === 'en') { %>Complete leaderboard of all contributors to Savchenko Solutions physics problems database<% } else { %>Полный рейтинг всех участников базы данных решений задач по физике Savchenko Solutions<% } %>">
+    <title>Contributors - Savchenko Solutions</title>
+    <meta name="description" content="Savchenko Solutions contributor leaderboard and activity data.">
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
-    
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5: required for main_site_header (navbar, grid, collapse) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/design-system.css" />
     <link rel="stylesheet" href="/css/main_page.css" />
-    
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
     <style>
         :root {
-            --primary-color: #0066cc;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --info-color: #17a2b8;
-            
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8f9fa;
-            --bg-tertiary: #e9ecef;
-            --bg-dark: #212529;
-            
-            --border-color: #dee2e6;
-            --border-color-light: #e9ecef;
-            
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --text-muted: #8e9297;
-            
-            --gold: linear-gradient(135deg, #ffd700, #ffed4e);
-            --silver: linear-gradient(135deg, #c0c0c0, #e8e8e8);
-            --bronze: linear-gradient(135deg, #cd7f32, #deb887);
-            
-            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
-            
-            --border-radius: 0.375rem;
-            --border-radius-lg: 0.75rem;
-            --border-radius-xl: 1rem;
+            --sv-primary: #1a1a2e;
+            --sv-text: #2d2d2d;
+            --sv-secondary: #6c757d;
+            --sv-border: #dee2e6;
+            --sv-bg: #ffffff;
+            --sv-card: #f8f9fa;
+            --sv-heat-0: #ebedf0;
+            --sv-heat-1: #b3c6d9;
+            --sv-heat-2: #6d93b8;
+            --sv-heat-3: #3a6a9e;
+            --sv-heat-4: #1a1a2e;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            line-height: 1.5;
+            margin: 0;
+            color: var(--sv-text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: var(--sv-bg);
         }
 
-        /* Modern leaderboard container */
-        .leaderboard-container {
-            max-width: 1400px;
+        .contributors-page {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* Page header */
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: var(--border-radius-xl);
-            padding: 3rem 2rem;
-            margin-bottom: 2rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/></svg>');
-            animation: headerFloat 20s infinite linear;
-        }
-
-        @keyframes headerFloat {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(-100px, -100px) rotate(360deg); }
-        }
-
-        .page-header-content {
-            position: relative;
-            z-index: 2;
+            padding: 20px 16px 32px;
         }
 
         .page-title {
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .page-subtitle {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            margin-bottom: 2rem;
-        }
-
-        /* Stats cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius-lg);
-            padding: 2rem;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 900;
-            display: block;
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-label {
-            font-size: 1rem;
-            opacity: 0.9;
-            font-weight: 500;
-        }
-
-        /* Leaderboard table */
-        .leaderboard-card {
-            background: var(--bg-primary);
-            border-radius: var(--border-radius-xl);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            margin-bottom: 2rem;
-        }
-
-        .leaderboard-header {
-            background: var(--bg-dark);
-            color: white;
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .leaderboard-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--sv-primary);
             margin: 0;
         }
 
-        .page-info {
-            font-size: 0.9rem;
-            opacity: 0.8;
+        .page-subtitle {
+            margin: 8px 0 24px;
+            color: var(--sv-secondary);
+            font-size: 15px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .stat-tile {
+            border: 1px solid var(--sv-border);
+            background: var(--sv-bg);
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--sv-primary);
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        .card {
+            border: 1px solid var(--sv-border);
+            background: var(--sv-bg);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            margin: 0 0 12px;
+            color: var(--sv-primary);
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        #world-map {
+            width: 100%;
+            height: 300px;
+            display: block;
+        }
+
+        .map-tooltip {
+            position: fixed;
+            pointer-events: none;
+            background: var(--sv-bg);
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: var(--sv-text);
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 120ms linear;
         }
 
         .leaderboard-table {
             width: 100%;
-            margin: 0;
+            border-collapse: collapse;
         }
 
         .leaderboard-table thead th {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            font-weight: 700;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 1.5rem 1rem;
-            border: none;
-            text-align: center;
+            font-size: 13px;
+            color: var(--sv-secondary);
+            text-align: left;
+            border-bottom: 1px solid var(--sv-border);
+            padding: 10px 8px;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
         }
 
         .leaderboard-table tbody td {
-            padding: 1.5rem 1rem;
-            border-color: var(--border-color-light);
+            border-bottom: 1px solid var(--sv-border);
+            padding: 9px 8px;
+            font-size: 14px;
             vertical-align: middle;
-            text-align: center;
         }
 
-        .leaderboard-table tbody tr {
-            transition: all 0.3s ease;
+        .leaderboard-table tbody tr:nth-child(even) {
+            background: var(--sv-card);
         }
 
         .leaderboard-table tbody tr:hover {
-            background: var(--bg-secondary);
-            transform: translateX(5px);
+            background: #eef2f6;
         }
 
-        /* Rank badges */
-        .rank-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
+        .leaderboard-table tbody tr {
+            cursor: pointer;
         }
 
-        .rank-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-weight: 900;
-            font-size: 1.1rem;
-            font-family: 'JetBrains Mono', monospace;
-            position: relative;
-        }
-
-        .rank-badge.gold {
-            background: var(--gold);
-            color: #b8860b;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
-            animation: goldGlow 2s ease-in-out infinite alternate;
-        }
-
-        .rank-badge.silver {
-            background: var(--silver);
-            color: #666;
-            box-shadow: 0 6px 20px rgba(192, 192, 192, 0.4);
-        }
-
-        .rank-badge.bronze {
-            background: var(--bronze);
-            color: #8b4513;
-            box-shadow: 0 6px 20px rgba(205, 127, 50, 0.4);
-        }
-
-        .rank-badge.regular {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 2px solid var(--border-color);
+        .top-rank {
             font-weight: 700;
         }
 
-        @keyframes goldGlow {
-            0% { box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4); }
-            100% { box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6); }
-        }
-
-        .medal-icon {
-            font-size: 1.5rem;
-            margin-left: 0.5rem;
-        }
-
-        /* User info */
-        .user-info {
+        .contributor-cell {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            justify-content: flex-start;
-            text-align: left;
-            max-width: 400px;
+            gap: 9px;
+            min-width: 220px;
         }
 
-        .user-avatar {
-            width: 60px;
-            height: 60px;
+        .avatar {
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid var(--border-color);
-            transition: all 0.3s ease;
+            border: 1px solid var(--sv-border);
+            background: #fff;
         }
 
-        .user-avatar:hover {
-            border-color: var(--primary-color);
-            transform: scale(1.05);
+        .contributor-main {
+            line-height: 1.2;
         }
 
-        .user-details {
+        .contributor-name {
+            color: var(--sv-text);
+            font-size: 14px;
+        }
+
+        .contributor-username {
+            color: var(--sv-secondary);
+            font-size: 12px;
+        }
+
+        .pagination-row {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .btn-nav {
+            border: 1px solid var(--sv-border);
+            background: var(--sv-bg);
+            color: var(--sv-primary);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 13px;
+        }
+
+        .btn-nav:disabled {
+            color: var(--sv-secondary);
+            background: var(--sv-card);
+        }
+
+        .heatmap-shell {
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .heatmap-wrap {
+            display: flex;
+            gap: 8px;
+            min-width: 760px;
+        }
+
+        .heatmap-y {
+            width: 30px;
+            color: var(--sv-secondary);
+            font-size: 11px;
+            padding-top: 18px;
+        }
+
+        .heatmap-y div {
+            height: 13px;
+            line-height: 13px;
+            margin-bottom: 2px;
+        }
+
+        .heatmap-main {
             flex: 1;
-            min-width: 0;
         }
 
-        .user-name {
-            font-weight: 700;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .user-name:hover {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .verified-badge {
-            color: var(--primary-color);
-            font-size: 0.9rem;
-        }
-
-        .user-username {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-top: 0.25rem;
-        }
-
-        .user-meta {
-            display: flex;
-            gap: 1rem;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .user-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-
-        /* Score display */
-        .score-display {
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--primary-color);
-        }
-
-        /* Contributions display */
-        .contributions-info {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .contributions-primary {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--success-color);
-        }
-
-        .contributions-secondary {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        .progress-bar-container {
-            width: 80px;
-            height: 6px;
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--success-color), var(--info-color));
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        /* Country flag */
-        .country-flag {
-            width: 24px;
+        .heatmap-months {
+            display: grid;
+            grid-template-columns: repeat(53, 11px);
+            gap: 2px;
             height: 16px;
+            margin-bottom: 2px;
+            color: var(--sv-secondary);
+            font-size: 10px;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(53, 11px);
+            grid-auto-rows: 11px;
+            gap: 2px;
+        }
+
+        .heat-cell {
+            width: 11px;
+            height: 11px;
             border-radius: 2px;
-            object-fit: cover;
-            margin-right: 0.5rem;
+            background: var(--sv-heat-0);
         }
 
-        /* Social links */
-        .social-links {
-            display: flex;
-            gap: 0.5rem;
+        .skeleton {
+            background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
+            background-size: 200% 100%;
+            animation: pulse 1.2s linear infinite;
+            border-radius: 4px;
+            color: transparent;
         }
 
-        .social-link {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-decoration: none;
-            transition: color 0.3s ease;
+        @keyframes pulse {
+            0% { background-position: 0% 0%; }
+            100% { background-position: -200% 0%; }
         }
 
-        .social-link:hover {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        /* Responsive design */
-        @media (max-width: 1200px) {
-            .leaderboard-container {
-                padding: 1rem 0.5rem;
+        @media (max-width: 900px) {
+            .stats-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 
         @media (max-width: 768px) {
-            .page-title {
-                font-size: 2rem;
+            .contributors-page {
+                padding: 16px 12px 24px;
             }
-
-            .page-header {
-                padding: 2rem 1rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .user-info {
-                flex-direction: column;
-                text-align: center;
-                gap: 0.75rem;
-            }
-
-            .user-avatar {
-                width: 50px;
-                height: 50px;
-            }
-
             .leaderboard-table thead th,
             .leaderboard-table tbody td {
-                padding: 1rem 0.5rem;
-                font-size: 0.85rem;
+                font-size: 12px;
+                padding: 8px 6px;
             }
-
-            .score-display {
-                font-size: 1.2rem;
+            .contributor-cell {
+                min-width: 170px;
             }
-
-            .rank-badge {
-                width: 40px;
-                height: 40px;
-                font-size: 0.9rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .user-meta {
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-        }
-
-        /* Animation for table rows */
-        .leaderboard-table tbody tr.contributor-row {
-            opacity: 0;
-            animation: fadeInUp 0.6s ease forwards;
-        }
-
-        .leaderboard-table tbody tr.contributor-row[data-index="0"] { animation-delay: 0s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="1"] { animation-delay: 0.1s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="2"] { animation-delay: 0.2s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="3"] { animation-delay: 0.3s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="4"] { animation-delay: 0.4s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="5"] { animation-delay: 0.5s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="6"] { animation-delay: 0.6s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="7"] { animation-delay: 0.7s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="8"] { animation-delay: 0.8s; }
-        .leaderboard-table tbody tr.contributor-row[data-index="9"] { animation-delay: 0.9s; }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Pagination styling */
-        .pagination-wrapper {
-            display: flex;
-            justify-content: center;
-            margin-top: 2rem;
-        }
-
-        .pagination .page-link {
-            color: var(--primary-color);
-            border-color: var(--border-color);
-            padding: 0.75rem 1.25rem;
-            margin: 0 0.125rem;
-            border-radius: var(--border-radius);
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .pagination .page-link:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-
-        .pagination .page-item.disabled .page-link {
-            color: var(--text-muted);
-            background: var(--bg-tertiary);
         }
     </style>
 </head>
-
 <body>
     <%- include('default/main_site_header') %>
 
-    <div class="leaderboard-container">
-        <!-- Page Header -->
-        <div class="page-header">
-            <div class="page-header-content">
-                <h1 class="page-title">
-                    🏆 <% if (lang === 'en') { %>Contributors Leaderboard<% } else { %>Рейтинг участников<% } %>
-                </h1>
-                <p class="page-subtitle">
-                    <% if (lang === 'en') { %>
-                        Celebrating the brilliant minds advancing physics education worldwide
-                    <% } else { %>
-                        Чествуем блестящие умы, развивающие физическое образование по всему миру
-                    <% } %>
-                </p>
+    <main class="contributors-page">
+        <h1 class="page-title">Contributors</h1>
+        <p id="contributors-subtitle" class="page-subtitle skeleton">Loading contributor summary...</p>
 
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <span class="stat-number"><%= totalContributors %></span>
-                        <div class="stat-label">
-                            <% if (lang === 'en') { %>Total Contributors<% } else { %>Всего участников<% } %>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number"><%= totalPages %></span>
-                        <div class="stat-label">
-                            <% if (lang === 'en') { %>Total Pages<% } else { %>Всего страниц<% } %>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number"><%= currentPage %></span>
-                        <div class="stat-label">
-                            <% if (lang === 'en') { %>Current Page<% } else { %>Текущая страница<% } %>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-number">500+</span>
-                        <div class="stat-label">
-                            <% if (lang === 'en') { %>Solutions Shared<% } else { %>Решений поделено<% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <section class="stats-row">
+            <article class="stat-tile">
+                <div id="stat-contributors" class="stat-value skeleton">0000</div>
+                <div class="stat-label">Contributors</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-solutions" class="stat-value skeleton">0000</div>
+                <div class="stat-label">Solutions</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-countries" class="stat-value skeleton">0000</div>
+                <div class="stat-label">Countries</div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-languages" class="stat-value" style="font-size: 20px;">Russian, English</div>
+                <div class="stat-label">Languages</div>
+            </article>
+        </section>
 
-        <!-- Leaderboard Table -->
-        <div class="leaderboard-card">
-            <div class="leaderboard-header">
-                <h2 class="leaderboard-title">
-                    🥇 <% if (lang === 'en') { %>Physics Champions<% } else { %>Чемпионы физики<% } %>
-                </h2>
-                <div class="page-info">
-                    <% if (lang === 'en') { %>
-                        Page <%= currentPage %> of <%= totalPages %>
-                    <% } else { %>
-                        Страница <%= currentPage %> из <%= totalPages %>
-                    <% } %>
-                </div>
-            </div>
+        <section class="card">
+            <h2 class="section-title">Geographic Distribution</h2>
+            <svg id="world-map" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
+        </section>
 
-            <div class="table-responsive">
-                <table class="table leaderboard-table">
+        <section class="card">
+            <h2 class="section-title">Leaderboard</h2>
+            <div style="overflow-x:auto;">
+                <table class="leaderboard-table">
                     <thead>
                         <tr>
-                            <th style="width: 12%;">
-                                <% if (lang === 'en') { %>Rank<% } else { %>Место<% } %>
-                            </th>
-                            <th style="width: 40%;">
-                                <% if (lang === 'en') { %>Contributor<% } else { %>Участник<% } %>
-                            </th>
-                            <th style="width: 16%;">
-                                <% if (lang === 'en') { %>Score<% } else { %>Рейтинг<% } %>
-                            </th>
-                            <th style="width: 16%;">
-                                <% if (lang === 'en') { %>Problems<% } else { %>Задачи<% } %>
-                            </th>
-                            <th style="width: 16%;">
-                                <% if (lang === 'en') { %>Joined<% } else { %>Присоединился<% } %>
-                            </th>
+                            <th data-sort="rank">Rank</th>
+                            <th data-sort="contributor">Contributor</th>
+                            <th data-sort="solutions">Solutions</th>
+                            <th data-sort="score">Score</th>
+                            <th data-sort="joined">Joined</th>
+                            <th data-sort="lastActive">Last Active</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <% contributors.forEach((contributor, index) => { %>
-                            <tr class="contributor-row" data-index="<%= index %>">
-                                <td>
-                                    <div class="rank-container">
-                                        <div class="rank-badge <%= 
-                                            contributor.position === 1 ? 'gold' : 
-                                            contributor.position === 2 ? 'silver' : 
-                                            contributor.position === 3 ? 'bronze' : 'regular' 
-                                        %>">
-                                            <%= contributor.position %>
-                                        </div>
-                                        <% if (contributor.position === 1) { %>
-                                            <span class="medal-icon">🥇</span>
-                                        <% } else if (contributor.position === 2) { %>
-                                            <span class="medal-icon">🥈</span>
-                                        <% } else if (contributor.position === 3) { %>
-                                            <span class="medal-icon">🥉</span>
-                                        <% } %>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="user-info">
-                                        <img src="<%= contributor.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" 
-                                             alt="<%= contributor.full_name || contributor.username %>" 
-                                             class="user-avatar">
-                                        <div class="user-details">
-                                            <a href="/user/<%= contributor.username %>" class="user-name">
-                                                <%= contributor.full_name || contributor.username %>
-                                                <% if (contributor.is_verified_user) { %>
-                                                    <i class="fas fa-check-circle verified-badge" title="Verified"></i>
-                                                <% } %>
-                                            </a>
-                                            <div class="user-username">@<%= contributor.username %></div>
-                                            <div class="user-meta">
-                                                <% if (contributor.country_location && contributor.country_flag_emoji) { %>
-                                                    <div class="user-meta-item">
-                                                        <span class="country-flag-emoji" aria-hidden="true"><%= contributor.country_flag_emoji %></span>
-                                                        <span><%= contributor.country_location %></span>
-                                                    </div>
-                                                <% } else if (contributor.country_location) { %>
-                                                    <div class="user-meta-item">
-                                                        <i class="fas fa-map-marker-alt"></i>
-                                                        <span><%= contributor.country_location %></span>
-                                                    </div>
-                                                <% } %>
-                                                <% if (contributor.github) { %>
-                                                    <a href="<%= contributor.github %>" class="social-link" target="_blank">
-                                                        <i class="fab fa-github"></i>
-                                                    </a>
-                                                <% } %>
-                                                <% if (contributor.linkedin) { %>
-                                                    <a href="<%= contributor.linkedin %>" class="social-link" target="_blank">
-                                                        <i class="fab fa-linkedin"></i>
-                                                    </a>
-                                                <% } %>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="score-display"><%= contributor.rank %></div>
-                                </td>
-                                <td>
-                                    <div class="contributions-info">
-                                        <div class="contributions-primary"><%= contributor.unique_contributions %></div>
-                                        <div class="contributions-secondary">
-                                            <%= contributor.total_contributions %> 
-                                            <% if (lang === 'en') { %>total<% } else { %>всего<% } %>
-                                        </div>
-                                        <div class="progress-bar-container">
-                                            <div class="progress-bar" data-width="<%= Math.min(100, contributor.unique_contributions) %>"></div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="font-size: 0.9rem; color: var(--text-secondary);">
-                                        <div>
-                                            <%
-                                                const date = new Date(contributor.first_contribution_date || contributor.created_at);
-                                                const locale = lang === 'en' ? 'en-US' : 'ru-RU';
-                                                const options = { year: 'numeric', month: 'short' };
-                                            %>
-                                            <%= date.toLocaleDateString(locale, options) %>
-                                        </div>
-                                        <div style="font-size: 0.75rem; color: var(--text-muted);">
-                                            <i class="fas fa-clock"></i>
-                                            <%= Math.floor((new Date() - new Date(contributor.first_contribution_date || contributor.created_at)) / (1000 * 60 * 60 * 24)) %> 
-                                            <% if (lang === 'en') { %>days ago<% } else { %>дней назад<% } %>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        <% }); %>
-                    </tbody>
+                    <tbody id="leaderboard-body"></tbody>
                 </table>
             </div>
-        </div>
-
-        <!-- Pagination -->
-        <% if (totalPages > 1) { %>
-            <div class="pagination-wrapper">
-                <nav aria-label="Contributors pagination">
-                    <ul class="pagination pagination-lg">
-                        <% if (hasPrevPage) { %>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<%= currentPage - 1 %>">
-                                    <i class="fas fa-chevron-left me-2"></i>
-                                    <% if (lang === 'en') { %>Previous<% } else { %>Назад<% } %>
-                                </a>
-                            </li>
-                        <% } %>
-
-                        <% 
-                            const startPage = Math.max(1, currentPage - 2);
-                            const endPage = Math.min(totalPages, currentPage + 2);
-                        %>
-
-                        <% if (startPage > 1) { %>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1">1</a>
-                            </li>
-                            <% if (startPage > 2) { %>
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            <% } %>
-                        <% } %>
-
-                        <% for (let i = startPage; i <= endPage; i++) { %>
-                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
-                                <a class="page-link" href="?page=<%= i %>"><%= i %></a>
-                            </li>
-                        <% } %>
-
-                        <% if (endPage < totalPages) { %>
-                            <% if (endPage < totalPages - 1) { %>
-                                <li class="page-item disabled">
-                                    <span class="page-link">...</span>
-                                </li>
-                            <% } %>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<%= totalPages %>"><%= totalPages %></a>
-                            </li>
-                        <% } %>
-
-                        <% if (hasNextPage) { %>
-                            <li class="page-item">
-                                <a class="page-link" href="?page=<%= currentPage + 1 %>">
-                                    <% if (lang === 'en') { %>Next<% } else { %>Далее<% } %>
-                                    <i class="fas fa-chevron-right ms-2"></i>
-                                </a>
-                            </li>
-                        <% } %>
-                    </ul>
-                </nav>
+            <div class="pagination-row">
+                <button id="prev-page" class="btn-nav" type="button">Previous</button>
+                <span id="page-info" style="font-size:13px;color:#6c757d;align-self:center;">Page 1</span>
+                <button id="next-page" class="btn-nav" type="button">Next</button>
             </div>
-        <% } %>
-    </div>
+        </section>
 
-    <!-- Include modern footer -->
+        <section class="card">
+            <h2 class="section-title">Platform Contribution Activity (Last 12 Months)</h2>
+            <div class="heatmap-shell">
+                <div class="heatmap-wrap">
+                    <div class="heatmap-y">
+                        <div></div>
+                        <div>Mon</div>
+                        <div></div>
+                        <div>Wed</div>
+                        <div></div>
+                        <div>Fri</div>
+                        <div></div>
+                    </div>
+                    <div class="heatmap-main">
+                        <div id="platform-months" class="heatmap-months"></div>
+                        <div id="platform-heatmap" class="heatmap-grid"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="map-tooltip" class="map-tooltip"></div>
+
     <%- include('default/modern_footer') %>
+    <%- include('default/main_site_footer_scripts') %>
 
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script>
-        // Enhanced animations and interactions
-        document.addEventListener('DOMContentLoaded', () => {
-            // Animate table rows on load
-            const tableRows = document.querySelectorAll('.leaderboard-table tbody tr');
-            tableRows.forEach((row, index) => {
-                setTimeout(() => {
-                    row.style.opacity = '1';
-                }, index * 100);
-            });
+        const lang = "<%= lang %>";
+        const state = {
+            page: 1,
+            limit: 25,
+            sortBy: "score",
+            sortOrder: "desc",
+            total: 0,
+        };
 
-            // Add hover effects for user avatars
-            const avatars = document.querySelectorAll('.user-avatar');
-            avatars.forEach(avatar => {
-                avatar.addEventListener('mouseenter', () => {
-                    avatar.style.transform = 'scale(1.1) rotate(5deg)';
+        const heatColors = ["#ebedf0", "#b3c6d9", "#6d93b8", "#3a6a9e", "#1a1a2e"];
+
+        function fmtMonthYear(dateInput) {
+            if (!dateInput) return "N/A";
+            const d = new Date(dateInput);
+            return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+        }
+
+        function fmtLong(dateInput) {
+            if (!dateInput) return "N/A";
+            const d = new Date(dateInput);
+            return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        }
+
+        function setStat(id, value, removeSkeleton = true) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = value;
+            if (removeSkeleton) el.classList.remove("skeleton");
+        }
+
+        function heatColor(value, max) {
+            if (!value) return heatColors[0];
+            const ratio = max > 0 ? value / max : 0;
+            if (ratio >= 0.75) return heatColors[4];
+            if (ratio >= 0.5) return heatColors[3];
+            if (ratio >= 0.25) return heatColors[2];
+            return heatColors[1];
+        }
+
+        function buildCalendarDays(dayCounts) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const start = new Date(today);
+            start.setDate(start.getDate() - 364);
+
+            const startDay = (start.getDay() + 6) % 7;
+            start.setDate(start.getDate() - startDay);
+
+            const result = [];
+            const countMap = new Map(dayCounts.map((x) => [String(x.day).slice(0, 10), x.count]));
+            for (let i = 0; i < 371; i += 1) {
+                const d = new Date(start);
+                d.setDate(start.getDate() + i);
+                const key = d.toISOString().slice(0, 10);
+                result.push({
+                    date: d,
+                    count: countMap.get(key) || 0,
+                    week: Math.floor(i / 7),
+                    dow: (d.getDay() + 6) % 7,
                 });
-                avatar.addEventListener('mouseleave', () => {
-                    avatar.style.transform = 'scale(1) rotate(0deg)';
+            }
+            return result;
+        }
+
+        function renderHeatmap(dayCounts) {
+            const grid = document.getElementById("platform-heatmap");
+            const months = document.getElementById("platform-months");
+            if (!grid || !months) return;
+
+            const days = buildCalendarDays(dayCounts);
+            const max = dayCounts.reduce((m, x) => Math.max(m, x.count), 0);
+
+            grid.innerHTML = "";
+            months.innerHTML = "";
+
+            const labels = new Array(53).fill("");
+            for (const day of days) {
+                if (day.date.getDate() === 1) {
+                    labels[day.week] = day.date.toLocaleDateString("en-US", { month: "short" });
+                }
+            }
+            labels.forEach((m) => {
+                const div = document.createElement("div");
+                div.textContent = m;
+                months.appendChild(div);
+            });
+
+            days.forEach((day) => {
+                const cell = document.createElement("div");
+                cell.className = "heat-cell";
+                cell.style.gridColumn = String(day.week + 1);
+                cell.style.gridRow = String(day.dow + 1);
+                cell.style.background = heatColor(day.count, max);
+                const dateLabel = day.date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                cell.title = `${day.count} contributions on ${dateLabel}`;
+                grid.appendChild(cell);
+            });
+        }
+
+        async function fetchJSON(url) {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`Failed: ${url}`);
+            return res.json();
+        }
+
+        async function loadStats() {
+            const stats = await fetchJSON("/api/contributors/stats");
+            setStat("stat-contributors", stats.contributors.toLocaleString());
+            setStat("stat-solutions", stats.solutions.toLocaleString());
+            setStat("stat-countries", stats.countries.toLocaleString());
+            setStat("stat-languages", stats.languages || "Russian, English", false);
+
+            const subtitle = document.getElementById("contributors-subtitle");
+            subtitle.classList.remove("skeleton");
+            subtitle.textContent = `${stats.contributors.toLocaleString()} people from ${stats.countries.toLocaleString()} countries maintaining ${stats.solutions.toLocaleString()} solutions under Creative Commons.`;
+        }
+
+        function renderRows(rows) {
+            const tbody = document.getElementById("leaderboard-body");
+            tbody.innerHTML = "";
+
+            rows.forEach((row) => {
+                const tr = document.createElement("tr");
+                tr.addEventListener("click", () => {
+                    window.location.href = `/user/${row.username}`;
+                });
+
+                const rankClass = row.rank <= 3 ? "top-rank" : "";
+                const countryPrefix = row.countryFlag ? `${row.countryFlag} ` : "";
+                tr.innerHTML = `
+                    <td class="${rankClass}">${row.rank}</td>
+                    <td>
+                        <div class="contributor-cell">
+                            <img class="avatar" src="${row.profilePicture}" alt="${row.fullName}">
+                            <div class="contributor-main">
+                                <div class="contributor-name">${countryPrefix}${row.fullName}</div>
+                                <div class="contributor-username">@${row.username}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${Number(row.solutions || 0).toLocaleString()}</td>
+                    <td>${Number(row.score || 0).toLocaleString()}</td>
+                    <td>${fmtMonthYear(row.joinedAt)}</td>
+                    <td>${fmtLong(row.lastActiveAt)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function loadLeaderboard() {
+            const query = new URLSearchParams({
+                page: String(state.page),
+                limit: String(state.limit),
+                sortBy: state.sortBy,
+                sortOrder: state.sortOrder,
+            });
+            const data = await fetchJSON(`/api/contributors/leaderboard?${query.toString()}`);
+            state.total = data.total;
+            renderRows(data.rows);
+
+            document.getElementById("prev-page").disabled = !data.hasPrev;
+            document.getElementById("next-page").disabled = !data.hasNext;
+            const totalPages = Math.max(1, Math.ceil((data.total || 0) / state.limit));
+            document.getElementById("page-info").textContent = `Page ${state.page} of ${totalPages}`;
+        }
+
+        async function loadMap() {
+            const [geojson, mapData] = await Promise.all([
+                fetchJSON("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+                fetchJSON("/api/contributors/map"),
+            ]);
+
+            const counts = new Map(mapData.map((x) => [String(x.country).toLowerCase(), Number(x.contributors || 0)]));
+            const max = Math.max(0, ...mapData.map((x) => Number(x.contributors || 0)));
+            const svg = d3.select("#world-map");
+            svg.selectAll("*").remove();
+
+            const width = 960;
+            const height = 300;
+            const projection = d3.geoNaturalEarth1().fitSize([width, height], geojson);
+            const path = d3.geoPath().projection(projection);
+            const scale = d3.scaleLinear().domain([0, Math.max(1, max)]).range(["#ffffff", "#1a1a2e"]);
+            const tooltip = document.getElementById("map-tooltip");
+
+            svg.selectAll("path.country")
+                .data(geojson.features)
+                .join("path")
+                .attr("class", "country")
+                .attr("d", path)
+                .attr("fill", (d) => {
+                    const name = String(d.properties?.name || "").toLowerCase();
+                    const count = counts.get(name) || 0;
+                    return scale(count);
+                })
+                .attr("stroke", "#dee2e6")
+                .attr("stroke-opacity", 0.7)
+                .attr("stroke-width", 0.6)
+                .on("mousemove", (event, d) => {
+                    const name = d.properties?.name || "Unknown";
+                    const count = counts.get(String(name).toLowerCase()) || 0;
+                    tooltip.textContent = `${name}: ${count}`;
+                    tooltip.style.left = `${event.clientX + 12}px`;
+                    tooltip.style.top = `${event.clientY + 12}px`;
+                    tooltip.style.opacity = "1";
+                })
+                .on("mouseleave", () => {
+                    tooltip.style.opacity = "0";
+                });
+        }
+
+        async function loadHeatmap() {
+            const data = await fetchJSON("/api/contributors/heatmap");
+            renderHeatmap(data);
+        }
+
+        function bindSortEvents() {
+            document.querySelectorAll("th[data-sort]").forEach((th) => {
+                th.addEventListener("click", async () => {
+                    const key = th.getAttribute("data-sort");
+                    if (state.sortBy === key) {
+                        state.sortOrder = state.sortOrder === "desc" ? "asc" : "desc";
+                    } else {
+                        state.sortBy = key;
+                        state.sortOrder = key === "contributor" || key === "joined" ? "asc" : "desc";
+                    }
+                    state.page = 1;
+                    await loadLeaderboard();
                 });
             });
+        }
 
-            // Progress bar animation
-            const progressBars = document.querySelectorAll('.progress-bar');
-            progressBars.forEach(bar => {
-                const width = bar.getAttribute('data-width') + '%';
-                bar.style.width = '0%';
-                setTimeout(() => {
-                    bar.style.width = width;
-                }, 200);
+        function bindPagination() {
+            document.getElementById("prev-page").addEventListener("click", async () => {
+                if (state.page <= 1) return;
+                state.page -= 1;
+                await loadLeaderboard();
             });
+            document.getElementById("next-page").addEventListener("click", async () => {
+                state.page += 1;
+                await loadLeaderboard();
+            });
+        }
 
-            // Add sparkle effect to gold medal
-            const goldBadges = document.querySelectorAll('.rank-badge.gold');
-            goldBadges.forEach(badge => {
-                setInterval(() => {
-                    badge.style.transform = 'scale(1.1)';
-                    setTimeout(() => {
-                        badge.style.transform = 'scale(1)';
-                    }, 200);
-                }, 3000);
-            });
-        });
+        async function init() {
+            bindSortEvents();
+            bindPagination();
+            await Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap()]);
+        }
 
-        // Smooth scroll for pagination
-        document.querySelectorAll('.pagination .page-link').forEach(link => {
-            link.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
+        init().catch((error) => {
+            console.error("Contributors page failed to load:", error);
         });
     </script>
-    <%- include('default/main_site_search_script') %>
 </body>
-</html> 
+</html>
