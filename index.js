@@ -94,7 +94,8 @@ const registerLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 100,
+    // Effectively unlimited API requests (practical infinity)
+    max: Number.MAX_SAFE_INTEGER,
     message: { error: 'Too many API requests, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
