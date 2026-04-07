@@ -15,15 +15,26 @@ async function getContributionsList(req, res) {
     i18n.setLocale(res, lang);
 
     try {
+        const rawLimit = parseInt(req.query.limit, 10);
+        const rawOffset = parseInt(req.query.offset, 10);
+        const limit = Number.isFinite(rawLimit) ? Math.min(500, Math.max(50, rawLimit)) : 250;
+        const offset = Number.isFinite(rawOffset) ? Math.max(0, rawOffset) : 0;
+
         let result;
+        let stats;
+        let totalRows = 0;
         if (problemName === 'all') {
-            result = await pool.query(
+            const [rowsResult, statsResult] = await Promise.all([
+                pool.query(
                 `SELECT
                     c.id, c.user_id, c.edited_at, c.problem_name, c.language, c.content_changed, c.source,
                     u.username,
                     u.full_name,
                     u.profile_picture,
-                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.edited_at <= c.edited_at) AS edit_number
+                    CASE
+                        WHEN ROW_NUMBER() OVER (PARTITION BY c.problem_name ORDER BY c.edited_at ASC, c.id ASC) = 1
+                        THEN 1 ELSE 0
+                    END AS is_new
                 FROM (
                     SELECT
                         id, user_id, edited_at, problem_name, language, false AS content_changed, 'github' AS source
@@ -32,22 +43,46 @@ async function getContributionsList(req, res) {
                     SELECT
                         id, user_id, edited_at, problem_name, language, content_changed, 'direct' AS source
                     FROM contributions
-                    WHERE invisible = false
                 ) c
                 LEFT JOIN users u ON c.user_id = u.id
-                WHERE c.language = $1
                 ORDER BY c.edited_at DESC
-                LIMIT 100`,
-                [lang]
-            );
+                LIMIT $1 OFFSET $2
+                `,
+                [limit, offset]
+            ),
+                pool.query(
+                    `SELECT
+                        COUNT(*)::int AS total,
+                        COUNT(DISTINCT problem_name)::int AS unique_problems,
+                        COUNT(DISTINCT user_id)::int AS unique_contributors
+                    FROM (
+                        SELECT user_id, problem_name, language
+                        FROM github_contributions
+                        UNION ALL
+                        SELECT user_id, problem_name, language
+                        FROM contributions
+                    ) c`
+                ),
+            ]);
+            result = rowsResult;
+            stats = {
+                total: statsResult.rows[0]?.total || 0,
+                uniqueProblems: statsResult.rows[0]?.unique_problems || 0,
+                uniqueContributors: statsResult.rows[0]?.unique_contributors || 0,
+            };
+            totalRows = Number(stats.total || 0);
         } else {
-            result = await pool.query(
+            const [rowsResult, statsResult] = await Promise.all([
+                pool.query(
                 `SELECT
                     c.id, c.user_id, c.edited_at, c.problem_name, c.language, c.content_changed, c.source,
                     u.username,
                     u.full_name,
                     u.profile_picture,
-                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.edited_at <= c.edited_at) AS edit_number
+                    CASE
+                        WHEN ROW_NUMBER() OVER (PARTITION BY c.problem_name ORDER BY c.edited_at ASC, c.id ASC) = 1
+                        THEN 1 ELSE 0
+                    END AS is_new
                 FROM (
                     SELECT
                         id, user_id, edited_at, problem_name, language, false AS content_changed, 'github' AS source
@@ -56,23 +91,42 @@ async function getContributionsList(req, res) {
                     SELECT
                         id, user_id, edited_at, problem_name, language, content_changed, 'direct' AS source
                     FROM contributions
-                    WHERE invisible = false
                 ) c
                 LEFT JOIN users u ON c.user_id = u.id
                 WHERE c.problem_name = $1 AND c.language = $2
-                ORDER BY c.edited_at DESC`,
-                [problemName, lang]
-            );
+                ORDER BY c.edited_at DESC
+                LIMIT $3 OFFSET $4`,
+                [problemName, lang, limit, offset]
+            ),
+                pool.query(
+                    `SELECT
+                        COUNT(*)::int AS total,
+                        COUNT(DISTINCT problem_name)::int AS unique_problems,
+                        COUNT(DISTINCT user_id)::int AS unique_contributors
+                    FROM (
+                        SELECT user_id, problem_name, language
+                        FROM github_contributions
+                        UNION ALL
+                        SELECT user_id, problem_name, language
+                        FROM contributions
+                    ) c
+                    WHERE c.problem_name = $1 AND c.language = $2`,
+                    [problemName, lang]
+                ),
+            ]);
+            result = rowsResult;
+            stats = {
+                total: statsResult.rows[0]?.total || 0,
+                uniqueProblems: statsResult.rows[0]?.unique_problems || 0,
+                uniqueContributors: statsResult.rows[0]?.unique_contributors || 0,
+            };
+            totalRows = Number(stats.total || 0);
         }
 
         const contributions = result.rows.map(row => ({
             ...row,
-            isNew: parseInt(row.edit_number) === 1
+            isNew: Number(row.is_new) === 1
         }));
-
-        // Compute stats
-        const uniqueProblems = new Set(contributions.map(c => c.problem_name)).size;
-        const uniqueContributors = new Set(contributions.filter(c => c.username).map(c => c.username)).size;
 
         // Group by date
         const grouped = {};
@@ -92,10 +146,13 @@ async function getContributionsList(req, res) {
             problemName,
             contributions,
             grouped,
-            stats: {
-                total: contributions.length,
-                uniqueProblems,
-                uniqueContributors
+            stats,
+            pagination: {
+                limit,
+                offset,
+                shown: contributions.length,
+                hasMore: offset + contributions.length < totalRows,
+                nextOffset: offset + contributions.length,
             },
             formatDate: (date) => {
                 return new Date(date).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {

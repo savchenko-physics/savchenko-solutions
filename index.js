@@ -1394,10 +1394,10 @@ async function getRecentContributions(limit) {
         const result = await pool.query(
             `SELECT c.id, c.problem_name, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
                     u.username,
-                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible = false AND c2.edited_at <= c.edited_at) AS edit_number
+                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE AND c2.edited_at <= c.edited_at) AS edit_number
              FROM contributions c
              LEFT JOIN users u ON c.user_id = u.id
-             WHERE c.invisible = false
+             WHERE c.invisible IS NOT TRUE
              ORDER BY c.edited_at DESC LIMIT $1`,
             [limit]
         );

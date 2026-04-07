@@ -83,7 +83,7 @@
             gap: 6px;
             padding: 8px 16px;
             background: #1a1a2e;
-            color: #fff;
+            color: #fff !important;
             border-radius: 6px;
             text-decoration: none;
             font-size: 14px;
@@ -93,7 +93,7 @@
         }
         .cl-cta:hover {
             background: #2d2d4e;
-            color: #fff;
+            color: #fff !important;
         }
 
         /* Stats bar */
@@ -168,13 +168,37 @@
             flex-shrink: 0;
             width: 32px;
             justify-content: center;
+            position: relative;
+        }
+        /* Vertical line connecting dots */
+        .cl-commit-row .cl-commit-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: #dee2e6;
+            transform: translateX(-50%);
+        }
+        .cl-commit-row:first-child .cl-commit-badge::before {
+            top: 50%;
+        }
+        .cl-commit-row:last-child .cl-commit-badge::before {
+            bottom: 50%;
+        }
+        .cl-commit-row:only-child .cl-commit-badge::before {
+            display: none;
         }
         .cl-commit-dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background: #1a1a2e;
+            border: 2px solid #fff;
+            box-sizing: content-box;
             position: relative;
+            z-index: 1;
         }
         .cl-commit-dot::before,
         .cl-commit-dot::after {
@@ -341,6 +365,26 @@
             margin: 0;
         }
 
+        .cl-show-more-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 18px 0 8px;
+        }
+        .cl-show-more-btn {
+            border: 1px solid #dee2e6;
+            background: #fff;
+            color: #1a5276;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .cl-show-more-btn:hover {
+            background: #f8f9fa;
+            color: #0d3b54;
+        }
+
         /* Responsive */
         @media (max-width: 640px) {
             .cl-header-row {
@@ -479,6 +523,17 @@
             </div>
         </div>
         <% }); %>
+
+        <% if (pagination && pagination.hasMore) { %>
+        <div class="cl-show-more-wrap">
+            <a
+                class="cl-show-more-btn"
+                href="/<%= lang %>/contributions/<%= problemName %>?offset=<%= pagination.nextOffset %>&limit=<%= pagination.limit %>">
+                <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %>
+                (<%= stats.total - pagination.nextOffset %>)
+            </a>
+        </div>
+        <% } %>
 
         <!-- Contribute banner -->
         <div class="cl-contribute-banner">

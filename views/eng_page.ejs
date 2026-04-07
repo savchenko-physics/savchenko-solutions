@@ -1407,6 +1407,17 @@
     /* ===== Commit Thread (Recent Changes) ===== */
     .commit-thread {
       position: relative;
+      padding-left: 0;
+    }
+    /* Continuous vertical line through dot centers */
+    .commit-thread::before {
+      content: '';
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      background: #dee2e6;
     }
     .commit-entry {
       display: flex;
@@ -1415,26 +1426,15 @@
       padding: 6px 0;
       position: relative;
     }
-    /* Vertical line connecting dots */
-    .commit-thread .commit-entry:not(:last-child) .commit-dot-wrapper::after {
-      content: '';
-      position: absolute;
-      left: 50%;
-      top: 100%;
-      width: 2px;
-      height: calc(100% - 4px);
-      background: #dee2e6;
-      transform: translateX(-50%);
-      pointer-events: none;
-    }
     .commit-dot-wrapper {
       display: flex;
       align-items: center;
       flex-shrink: 0;
       width: 28px;
       height: 16px;
-      margin-top: 4px;
+      margin-top: 3px;
       position: relative;
+      z-index: 1;
     }
     .commit-hline {
       flex: 1;
@@ -1446,7 +1446,9 @@
       height: 10px;
       border-radius: 50%;
       background: #1a1a2e;
+      border: 2px solid #fff;
       flex-shrink: 0;
+      box-sizing: content-box;
     }
     .commit-entry.new-solution .commit-dot {
       background: #27ae60;
