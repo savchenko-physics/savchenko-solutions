@@ -515,7 +515,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                         ) t
                     )
                     SELECT
-                        (SELECT COUNT(DISTINCT CASE WHEN language = 'ru' THEN problem_name END)::int FROM pair_union) AS solutions,
+                        (SELECT COUNT(DISTINCT problem_name)::int FROM pair_union WHERE problem_name IS NOT NULL) AS solutions,
                         (SELECT n FROM edits_count) AS edits,
                         (SELECT COUNT(DISTINCT CASE WHEN language = 'en' THEN problem_name END)::int FROM pair_union) AS translations,
                         (SELECT likes_received FROM liked) AS likes_received,
@@ -659,34 +659,91 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
     app.get("/api/user/:username/heatmap", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
-            const payload = await withCache(`user:${username}:heatmap`, async () => {
+            const rawYear = req.query.year;
+            const parsedYear = rawYear !== undefined && rawYear !== "" ? parseInt(String(rawYear), 10) : NaN;
+            const yearFilter =
+                Number.isFinite(parsedYear) && parsedYear >= 1970 && parsedYear <= 2100 ? parsedYear : null;
+
+            const cacheKey = `user:${username}:heatmap:${yearFilter ?? "rolling"}`;
+            const payload = await withCache(cacheKey, async () => {
                 const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
                 if (user.rows.length === 0) return null;
                 const userId = user.rows[0].id;
 
-                const result = await pool.query(
+                const yearsResult = await pool.query(
                     `
-                    SELECT day::date, COUNT(*)::int AS count
+                    SELECT DISTINCT EXTRACT(YEAR FROM edited_at)::int AS y
                     FROM (
-                        SELECT DATE(edited_at) AS day
-                        FROM contributions
-                        WHERE user_id = $1
-                          AND content_changed = true
-                          AND invisible = false
-                          AND edited_at > NOW() - INTERVAL '12 months'
+                        SELECT edited_at FROM contributions
+                        WHERE user_id = $1 AND content_changed = true AND invisible = false
                         UNION ALL
-                        SELECT DATE(edited_at) AS day
-                        FROM github_contributions
+                        SELECT edited_at FROM github_contributions
                         WHERE user_id = $1
-                          AND edited_at > NOW() - INTERVAL '12 months'
-                    ) src
-                    GROUP BY day
-                    ORDER BY day ASC
+                    ) s
+                    WHERE edited_at IS NOT NULL
+                    ORDER BY y DESC
                 `,
                     [userId]
                 );
+                const years = yearsResult.rows.map((r) => r.y).filter((y) => y != null);
 
-                return result.rows;
+                let result;
+                if (yearFilter != null) {
+                    result = await pool.query(
+                        `
+                        SELECT day::date, COUNT(*)::int AS count
+                        FROM (
+                            SELECT DATE(edited_at) AS day
+                            FROM contributions
+                            WHERE user_id = $1
+                              AND content_changed = true
+                              AND invisible = false
+                              AND edited_at >= make_date($2, 1, 1)
+                              AND edited_at < make_date($2 + 1, 1, 1)
+                            UNION ALL
+                            SELECT DATE(edited_at) AS day
+                            FROM github_contributions
+                            WHERE user_id = $1
+                              AND edited_at >= make_date($2, 1, 1)
+                              AND edited_at < make_date($2 + 1, 1, 1)
+                        ) src
+                        GROUP BY day
+                        ORDER BY day ASC
+                    `,
+                        [userId, yearFilter]
+                    );
+                } else {
+                    result = await pool.query(
+                        `
+                        SELECT day::date, COUNT(*)::int AS count
+                        FROM (
+                            SELECT DATE(edited_at) AS day
+                            FROM contributions
+                            WHERE user_id = $1
+                              AND content_changed = true
+                              AND invisible = false
+                              AND edited_at > NOW() - INTERVAL '12 months'
+                            UNION ALL
+                            SELECT DATE(edited_at) AS day
+                            FROM github_contributions
+                            WHERE user_id = $1
+                              AND edited_at > NOW() - INTERVAL '12 months'
+                        ) src
+                        GROUP BY day
+                        ORDER BY day ASC
+                    `,
+                        [userId]
+                    );
+                }
+
+                const view =
+                    yearFilter != null ? { kind: "year", year: yearFilter } : { kind: "rolling" };
+
+                return {
+                    years,
+                    view,
+                    days: result.rows,
+                };
             });
             if (!payload) {
                 return res.status(404).json({ error: "User not found" });
