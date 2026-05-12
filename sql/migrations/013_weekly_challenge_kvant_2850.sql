@@ -8,7 +8,7 @@ UPDATE challenges SET is_active = false WHERE is_active = true;
 -- Insert new weekly challenge
 INSERT INTO challenges (title, problem_statement, solution, difficulty, week_start, week_end, is_active, created_by)
 VALUES (
-  'Two Stones from a Tower (Kvant F2850)',
+  'Two Stones from a Tower (Kvant F2850)|Два камня с башни (Квант Ф2850)',
   'С вершины башни высотой $h$ с одинаковыми скоростями, равными $v$, и направленными перпендикулярно одна к другой, под разными углами к горизонту одновременно брошены два камня так, что их движение происходит в одной вертикальной плоскости. Через некоторое время после броска, как раз непосредственно перед падением одного камня на землю, оказалось, что векторы скоростей камней направлены под одинаковыми углами к горизонту.
 
 Определите величину этого угла $\varphi$ и расстояние между камнями $l$ в этот момент времени.

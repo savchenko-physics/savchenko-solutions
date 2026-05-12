@@ -2,6 +2,36 @@ const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
 const i18n = require('i18n');
+const { parseMarkdown } = require('./utils');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const sharp = require('sharp');
+
+const challengeStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'img', 'challenges', String(req.params.id));
+        fs.mkdirSync(dir, { recursive: true });
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        cb(null, `${req.session.userId}_${Date.now()}${ext}`);
+    }
+});
+
+const challengeUpload = multer({
+    storage: challengeStorage,
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowedExt = /\.(jpe?g|png|gif|webp|heic)$/i.test(file.originalname);
+        const okMime = !file.mimetype || /image\/(jpeg|png|gif|webp|heic)/i.test(file.mimetype);
+        if (okMime && allowedExt) {
+            return cb(null, true);
+        }
+        cb(new Error('Only image files are allowed'));
+    }
+});
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -68,6 +98,9 @@ router.get('/', async (req, res) => {
             [now]
         );
         const currentChallenge = currentResult.rows[0] || null;
+        if (currentChallenge && currentChallenge.problem_statement) {
+            currentChallenge.problem_statement = parseMarkdown(currentChallenge.problem_statement);
+        }
 
         // Submission count for current challenge
         let submissionCount = 0;
@@ -170,6 +203,9 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
 
         const challenge = challengeResult.rows[0];
+        if (challenge.problem_statement) {
+            challenge.problem_statement = parseMarkdown(challenge.problem_statement);
+        }
         const now = new Date().toISOString().split('T')[0];
         const isExpired = challenge.week_end < now;
 
@@ -192,7 +228,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         let correctSubmissions = [];
         if (isExpired) {
             const csResult = await pool.query(
-                `SELECT cs.content, cs.submitted_at, u.username, u.profile_picture
+                `SELECT cs.content, cs.image_path, cs.submitted_at, u.username, u.profile_picture
                  FROM challenge_submissions cs
                  JOIN users u ON cs.user_id = u.id
                  WHERE cs.challenge_id = $1 AND cs.is_correct = true
@@ -221,9 +257,9 @@ router.post('/:id(\\d+)/submit', requireAuth, async (req, res) => {
         }
 
         const challengeId = parseInt(req.params.id);
-        const { content } = req.body;
+        const { content, imagePath } = req.body;
 
-        if (!content || !content.trim()) {
+        if ((!content || !content.trim()) && !imagePath) {
             return res.status(400).json({ error: 'Submission content is required' });
         }
 
@@ -244,18 +280,98 @@ router.post('/:id(\\d+)/submit', requireAuth, async (req, res) => {
         }
 
         // Upsert submission (one per user per challenge)
+        const trimmedContent = content ? content.trim() : '';
         await pool.query(
-            `INSERT INTO challenge_submissions (challenge_id, user_id, content, submitted_at)
-             VALUES ($1, $2, $3, NOW())
+            `INSERT INTO challenge_submissions (challenge_id, user_id, content, image_path, submitted_at)
+             VALUES ($1, $2, $3, $4, NOW())
              ON CONFLICT (challenge_id, user_id)
-             DO UPDATE SET content = $3, submitted_at = NOW()`,
-            [challengeId, req.session.userId, content.trim()]
+             DO UPDATE SET content = $3, image_path = COALESCE($4, challenge_submissions.image_path), submitted_at = NOW()`,
+            [challengeId, req.session.userId, trimmedContent, imagePath || null]
         );
 
         res.json({ success: true, message: 'Submission saved' });
     } catch (err) {
         console.error('Challenge submit error:', err);
         res.status(500).json({ error: 'Failed to save submission' });
+    }
+});
+
+// POST /compete/:id/upload-image — upload handwritten solution photo
+router.post('/:id(\\d+)/upload-image', requireAuth, challengeUpload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        if (!(await hasChallengesTable())) {
+            return res.status(400).json({ error: 'Challenges not available' });
+        }
+
+        const challengeId = parseInt(req.params.id);
+
+        const challengeResult = await pool.query(
+            'SELECT week_start, week_end FROM challenges WHERE id = $1',
+            [challengeId]
+        );
+        if (challengeResult.rows.length === 0) {
+            fs.unlinkSync(req.file.path);
+            return res.status(404).json({ error: 'Challenge not found' });
+        }
+
+        const challenge = challengeResult.rows[0];
+        const now = new Date().toISOString().split('T')[0];
+        if (now < challenge.week_start || now > challenge.week_end) {
+            fs.unlinkSync(req.file.path);
+            return res.status(400).json({ error: 'This challenge is not currently active' });
+        }
+
+        const imagePath = `/img/challenges/${challengeId}/${req.file.filename}`;
+
+        let width, height;
+        try {
+            const metadata = await sharp(req.file.path).metadata();
+            width = metadata.width;
+            height = metadata.height;
+        } catch (_e) {
+            width = null;
+            height = null;
+        }
+
+        res.json({ success: true, imagePath, width, height });
+    } catch (err) {
+        console.error('Challenge image upload error:', err);
+        res.status(500).json({ error: 'Failed to upload image' });
+    }
+});
+
+// POST /compete/:id/remove-image — remove uploaded image from submission
+router.post('/:id(\\d+)/remove-image', requireAuth, async (req, res) => {
+    try {
+        if (!(await hasChallengesTable())) {
+            return res.status(400).json({ error: 'Challenges not available' });
+        }
+
+        const challengeId = parseInt(req.params.id);
+        const subResult = await pool.query(
+            'SELECT image_path FROM challenge_submissions WHERE challenge_id = $1 AND user_id = $2',
+            [challengeId, req.session.userId]
+        );
+
+        if (subResult.rows.length > 0 && subResult.rows[0].image_path) {
+            const filePath = path.join(__dirname, subResult.rows[0].image_path);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+            await pool.query(
+                'UPDATE challenge_submissions SET image_path = NULL WHERE challenge_id = $1 AND user_id = $2',
+                [challengeId, req.session.userId]
+            );
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Remove challenge image error:', err);
+        res.status(500).json({ error: 'Failed to remove image' });
     }
 });
 

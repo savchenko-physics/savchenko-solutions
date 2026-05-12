@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= challenge.title || (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id %> — <%= __('title') %></title>
+  <title><%= (challenge.title ? (challenge.title.includes('|') ? (lang === 'ru' ? challenge.title.split('|')[1] : challenge.title.split('|')[0]) : challenge.title) : (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id) %> — <%= __('title') %></title>
 
   <script type="application/ld+json">
   {
       "@context": "https://schema.org",
       "@type": "Article",
-      "name": "<%= (challenge.title || (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id).replace(/"/g, '\\"') %>",
+      "name": "<%= (challenge.title ? (challenge.title.includes('|') ? (lang === 'ru' ? challenge.title.split('|')[1] : challenge.title.split('|')[0]) : challenge.title) : (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id).replace(/"/g, '\\"') %>",
       "educationalLevel": "University",
       "learningResourceType": "Challenge Problem",
       "url": "https://savchenkosolutions.com/compete/<%= challenge.id %>",
@@ -53,7 +53,7 @@
     .challenge-title { font-size: 24px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.5rem; }
     .challenge-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; font-size: 14px; color: #6c757d; }
     .difficulty-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #1a1a2e; color: #fff; }
-    .challenge-statement { font-size: 15px; line-height: 1.8; padding: 1.25rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 2rem; white-space: pre-line; }
+    .challenge-statement { font-size: 15px; line-height: 1.8; padding: 1.25rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; margin-bottom: 2rem; }
     .expired-banner { background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 0.75rem 1rem; font-size: 14px; color: #856404; margin-bottom: 1.5rem; }
 
     .solution-section { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #dee2e6; }
@@ -75,12 +75,36 @@
     .preview-box { margin-top: 1rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: 6px; background: #fafafa; display: none; }
     .preview-toggle { font-size: 13px; color: #1a5276; cursor: pointer; margin-top: 0.5rem; display: inline-block; }
     .existing-sub { background: #eaf7ef; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem 1rem; font-size: 14px; color: #155724; margin-bottom: 1rem; }
+
+    .image-upload-area { margin-top: 1rem; margin-bottom: 1rem; }
+    .image-upload-label { font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; display: block; }
+    .image-drop-zone { border: 2px dashed #dee2e6; border-radius: 8px; padding: 1.5rem; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .image-drop-zone:hover, .image-drop-zone.drag-over { border-color: #1a5276; background: #f0f7fb; }
+    .image-drop-zone p { margin: 0; font-size: 14px; color: #6c757d; }
+    .image-drop-zone .drop-icon { font-size: 24px; color: #6c757d; margin-bottom: 0.5rem; }
+    .image-preview-container { position: relative; display: inline-block; margin-top: 0.75rem; }
+    .image-preview-container img { max-width: 100%; max-height: 400px; border-radius: 6px; border: 1px solid #dee2e6; }
+    .image-remove-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; line-height: 24px; text-align: center; cursor: pointer; padding: 0; }
+    .image-remove-btn:hover { background: #c0392b; }
+    .image-uploading { font-size: 13px; color: #6c757d; margin-top: 0.5rem; }
+    .submission-image { max-width: 100%; max-height: 500px; border-radius: 6px; border: 1px solid #dee2e6; margin-top: 0.5rem; }
+    .or-divider { text-align: center; font-size: 13px; color: #6c757d; margin: 1rem 0; position: relative; }
+    .or-divider::before, .or-divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #dee2e6; }
+    .or-divider::before { left: 0; }
+    .or-divider::after { right: 0; }
   </style>
 </head>
 <body>
   <%- include('../default/main_site_header') %>
 
-  <% const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US'; %>
+  <%
+    const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US';
+    function localTitle(t, id) {
+      if (!t) return (lang === 'ru' ? 'Задача #' : 'Challenge #') + id;
+      const parts = t.split('|');
+      return lang === 'ru' && parts.length > 1 ? parts[1] : parts[0];
+    }
+  %>
 
   <div class="challenge-container">
     <a href="/compete" class="back-link">
@@ -88,7 +112,7 @@
       <%= __('challengesPage.allChallenges') %>
     </a>
 
-    <h1 class="challenge-title"><%= challenge.title || (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id %></h1>
+    <h1 class="challenge-title"><%= localTitle(challenge.title, challenge.id) %></h1>
 
     <div class="challenge-meta">
       <% if (challenge.difficulty) { %>
@@ -108,12 +132,12 @@
     <div class="expired-banner"><%= __('challengesPage.challengeEnded') %></div>
     <% } %>
 
-    <div class="challenge-statement"><%= challenge.problem_statement %></div>
+    <div class="challenge-statement"><%- challenge.problem_statement %></div>
 
     <% if (!isExpired) { %>
       <!-- Countdown -->
       <div style="font-size: 14px; color: #6c757d; margin-bottom: 1.5rem;">
-        <%= __('challengesPage.timeRemaining') %>: <strong id="challengeCountdown" data-end="<%= challenge.week_end %>"></strong>
+        <%= __('challengesPage.timeRemaining') %>: <strong id="challengeCountdown" data-end="<%= new Date(challenge.week_end).toISOString().slice(0, 10) %>"></strong>
       </div>
 
       <!-- Submission Form -->
@@ -125,6 +149,30 @@
           <%= __('challengesPage.submittedOn') %> <%= new Date(userSubmission.submitted_at).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>. <%= __('challengesPage.canUpdateBelow') %>
         </div>
         <% } %>
+        <!-- Image upload -->
+        <div class="image-upload-area">
+          <label class="image-upload-label"><%= lang === 'ru' ? 'Фото рукописного решения' : 'Photo of handwritten solution' %></label>
+          <div id="imageDropZone" class="image-drop-zone" <% if (userSubmission && userSubmission.image_path) { %>style="display: none;"<% } %> onclick="document.getElementById('imageFileInput').click()">
+            <div class="drop-icon"><i class="fas fa-camera"></i></div>
+            <p><%= lang === 'ru' ? 'Перетащите фото или нажмите для выбора' : 'Drag and drop a photo or click to browse' %></p>
+            <p style="font-size: 12px; margin-top: 4px;"><%= lang === 'ru' ? 'JPG, PNG, WebP, HEIC — до 10 МБ' : 'JPG, PNG, WebP, HEIC — up to 10 MB' %></p>
+          </div>
+          <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,.jpg,.jpeg,.png,.gif,.webp,.heic" style="display: none;" />
+          <div id="imageUploading" class="image-uploading" style="display: none;"><%= lang === 'ru' ? 'Загрузка...' : 'Uploading...' %></div>
+          <div id="imagePreviewContainer" class="image-preview-container" style="display: none;">
+            <img id="imagePreview" src="" alt="Uploaded solution" />
+            <button type="button" class="image-remove-btn" onclick="removeImage()" title="<%= lang === 'ru' ? 'Удалить' : 'Remove' %>">&times;</button>
+          </div>
+          <% if (userSubmission && userSubmission.image_path) { %>
+          <div id="existingImageContainer" class="image-preview-container" style="margin-top: 0.75rem;">
+            <img src="<%= userSubmission.image_path %>" alt="Uploaded solution" />
+            <button type="button" class="image-remove-btn" onclick="removeExistingImage()" title="<%= lang === 'ru' ? 'Удалить' : 'Remove' %>">&times;</button>
+          </div>
+          <% } %>
+        </div>
+
+        <div class="or-divider"><%= lang === 'ru' ? 'и / или' : 'and / or' %></div>
+
         <p style="font-size: 13px; color: #6c757d; margin-bottom: 0.75rem;"><%= __('challengesPage.latexHint') %></p>
         <textarea id="submissionEditor"><%= userSubmission ? userSubmission.content : '' %></textarea>
         <div>
@@ -163,7 +211,12 @@
             <a href="/user/<%= sub.username %>" style="color: #1a5276; font-weight: 500;"><%= sub.username %></a>
             &middot; <%= new Date(sub.submitted_at).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }) %>
           </div>
+          <% if (sub.image_path) { %>
+          <img src="<%= sub.image_path %>" alt="Handwritten solution" class="submission-image" />
+          <% } %>
+          <% if (sub.content) { %>
           <div class="correct-sub-content"><%- sub.content %></div>
+          <% } %>
         </div>
         <% }); %>
       </div>
@@ -203,7 +256,11 @@
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      el.textContent = days + 'd ' + hours + 'h ' + mins + 'm';
+      const lang = '<%= lang %>';
+      const dLabel = lang === 'ru' ? 'д' : 'd';
+      const hLabel = lang === 'ru' ? 'ч' : 'h';
+      const mLabel = lang === 'ru' ? 'м' : 'm';
+      el.textContent = days + dLabel + ' ' + hours + hLabel + ' ' + mins + mLabel;
     }
     update();
     setInterval(update, 60000);
@@ -221,20 +278,117 @@
     });
   }
 
+  // Image upload state
+  let uploadedImagePath = null;
+  const challengeId = <%= challenge.id %>;
+
+  // Image upload handling
+  const dropZone = document.getElementById('imageDropZone');
+  const fileInput = document.getElementById('imageFileInput');
+  const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+  const imagePreview = document.getElementById('imagePreview');
+  const imageUploading = document.getElementById('imageUploading');
+
+  if (dropZone) {
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) handleImageFile(files[0]);
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files.length > 0) handleImageFile(fileInput.files[0]);
+    });
+  }
+
+  async function handleImageFile(file) {
+    if (file.size > 10 * 1024 * 1024) {
+      const msg = document.getElementById('submitMsg');
+      msg.className = 'submit-msg error';
+      msg.textContent = '<%= lang === "ru" ? "Файл слишком большой (макс. 10 МБ)" : "File too large (max 10 MB)" %>';
+      return;
+    }
+
+    dropZone.style.display = 'none';
+    imageUploading.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const resp = await fetch('/compete/' + challengeId + '/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await resp.json();
+      if (data.success) {
+        uploadedImagePath = data.imagePath;
+        imagePreview.src = data.imagePath;
+        imagePreviewContainer.style.display = 'inline-block';
+        const existingContainer = document.getElementById('existingImageContainer');
+        if (existingContainer) existingContainer.style.display = 'none';
+      } else {
+        dropZone.style.display = '';
+        const msg = document.getElementById('submitMsg');
+        msg.className = 'submit-msg error';
+        msg.textContent = data.error || 'Upload failed';
+      }
+    } catch (err) {
+      dropZone.style.display = '';
+      const msg = document.getElementById('submitMsg');
+      msg.className = 'submit-msg error';
+      msg.textContent = '<%= lang === "ru" ? "Ошибка загрузки" : "Upload error" %>';
+    }
+    imageUploading.style.display = 'none';
+    fileInput.value = '';
+  }
+
+  function removeImage() {
+    uploadedImagePath = null;
+    imagePreviewContainer.style.display = 'none';
+    imagePreview.src = '';
+    dropZone.style.display = '';
+  }
+
+  async function removeExistingImage() {
+    try {
+      const resp = await fetch('/compete/' + challengeId + '/remove-image', { method: 'POST' });
+      const data = await resp.json();
+      if (data.success) {
+        const container = document.getElementById('existingImageContainer');
+        if (container) container.remove();
+        dropZone.style.display = '';
+      }
+    } catch (_e) { /* ignore */ }
+  }
+
   // Submit solution
   const t = {
     submitting: "<%= __('challengesPage.submitting') %>",
     saved: "<%= __('challengesPage.submissionSaved') %>",
     updateSubmission: "<%= __('challengesPage.updateSubmission') %>",
-    writeSolutionFirst: "<%= __('challengesPage.writeSolutionFirst') %>",
+    writeSolutionFirst: "<%= lang === 'ru' ? 'Напишите решение или загрузите фото.' : 'Please write your solution or upload a photo.' %>",
     networkError: "<%= __('challengesPage.networkError') %>",
   };
 
   async function submitSolution() {
     const btn = document.getElementById('submitBtn');
     const msg = document.getElementById('submitMsg');
-    const content = editor ? editor.getValue() : textarea.value;
-    if (!content.trim()) {
+    const content = editor ? editor.getValue() : (textarea ? textarea.value : '');
+    const existingImage = document.getElementById('existingImageContainer');
+    const hasExistingImage = existingImage && existingImage.style.display !== 'none';
+
+    if (!content.trim() && !uploadedImagePath && !hasExistingImage) {
       msg.className = 'submit-msg error';
       msg.textContent = t.writeSolutionFirst;
       return;
@@ -243,10 +397,12 @@
     btn.textContent = t.submitting;
     msg.textContent = '';
     try {
-      const resp = await fetch('/compete/<%= challenge.id %>/submit', {
+      const body = { content: content.trim() };
+      if (uploadedImagePath) body.imagePath = uploadedImagePath;
+      const resp = await fetch('/compete/' + challengeId + '/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content.trim() }),
+        body: JSON.stringify(body),
       });
       const data = await resp.json();
       if (data.success) {
