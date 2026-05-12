@@ -1,0 +1,873 @@
+/* === design-system.css === */
+/* Savchenko Solutions — global design tokens (academic, no bright accents, no gradients) */
+:root {
+  --ss-navy: #1a1a2e;
+  --ss-white: #ffffff;
+  --ss-body-text: #2d2d2d;
+  --ss-text-secondary: #6c757d;
+  --ss-heading: #1a1a2e;
+  --ss-link: #1a5276;
+  --ss-link-hover: #0d3b54;
+  --ss-link-visited: #4a235a;
+  --ss-page-bg: #ffffff;
+  --ss-card-bg: #f8f9fa;
+  --ss-header-bg: #1a1a2e;
+  --ss-footer-bg: #1a1a2e;
+  --ss-footer-text: #cccccc;
+  --ss-border-light: #e0e0e0;
+  --ss-border-card: #dee2e6;
+  --ss-primary-btn: #1a1a2e;
+  --ss-primary-btn-hover: #2c2c4a;
+  --ss-code-bg: #f5f5f5;
+}
+
+/* Base typography */
+body {
+  color: var(--ss-body-text);
+  background-color: var(--ss-page-bg);
+}
+
+h1,
+h2,
+h3 {
+  color: var(--ss-heading);
+}
+
+/* Global links (navbar / buttons override below) */
+a:link {
+  color: var(--ss-link);
+}
+
+a:visited {
+  color: var(--ss-link-visited);
+}
+
+a:hover {
+  color: var(--ss-link-hover);
+}
+
+/* Cards / sections */
+.ss-card,
+.content-card {
+  background-color: var(--ss-card-bg);
+  border: 1px solid var(--ss-border-card);
+}
+
+/* Site footer (include class="site-footer" on <footer>) */
+.site-footer {
+  background-color: var(--ss-footer-bg);
+  color: var(--ss-footer-text);
+  padding: 0;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-footer a:link,
+.site-footer a:visited {
+  color: #d4d4d4;
+}
+
+.site-footer a:hover {
+  color: var(--ss-white);
+}
+
+.site-footer strong {
+  color: #e8e8e8;
+}
+
+.site-footer small {
+  color: var(--ss-footer-text);
+}
+
+/* Primary solid button (forms) */
+.btn-ss-primary {
+  background-color: var(--ss-primary-btn) !important;
+  color: var(--ss-white) !important;
+  border-color: var(--ss-primary-btn) !important;
+}
+
+.btn-ss-primary:hover,
+.btn-ss-primary:focus {
+  background-color: var(--ss-primary-btn-hover) !important;
+  border-color: var(--ss-primary-btn-hover) !important;
+  color: var(--ss-white) !important;
+}
+
+/* Code blocks (pre); inline <code> left to page-specific styles */
+pre {
+  background-color: var(--ss-code-bg);
+  color: var(--ss-body-text);
+  border: 1px solid var(--ss-border-light);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+}
+
+
+/* === main_page.css === */
+/* Base resets and font — colors from /css/design-system.css */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: var(--ss-page-bg);
+  color: var(--ss-body-text);
+}
+
+/* ----------------------------
+   HERO SECTION (white bar — brand navy is in text/tokens, not bar fill)
+---------------------------- */
+.hero-section {
+  background: var(--ss-white);
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  border-bottom: 1px solid var(--ss-border-light);
+  /* Do not inherit page body fonts (e.g. Inter on study-guide, about content tweaks) */
+  font-family: 'Roboto', sans-serif;
+}
+
+/* css-latex/style.css sets h1,h2,h3,h4 { font-family: Linux Libertine } — override for nav chrome */
+.hero-section h1,
+.hero-section p,
+.hero-section .navbar,
+.hero-section .navbar-nav,
+.hero-section input,
+.hero-section button {
+  font-family: 'Roboto', sans-serif;
+}
+
+.navbar {
+  background: transparent !important;
+  border: none;
+}
+
+.navbar-brand {
+  font-size: 1.2rem;
+  color: var(--ss-heading) !important;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.site-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0;
+  color: var(--ss-heading);
+}
+
+.site-motto {
+  font-size: 0.75rem;
+  margin-bottom: 0;
+  color: var(--ss-text-secondary);
+}
+
+.hero-section .navbar .navbar-brand,
+.hero-section .navbar .navbar-brand:visited,
+.hero-section .navbar .navbar-brand:hover {
+  color: var(--ss-heading) !important;
+  text-decoration: none !important;
+}
+
+.hero-section .navbar .navbar-nav .nav-link {
+  color: var(--ss-body-text) !important;
+}
+
+.hero-section .navbar .nav-link:hover {
+  color: var(--ss-heading) !important;
+}
+
+.hero-content {
+  flex: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  /* For very small screens, reduce top/bottom space */
+}
+
+.hero-subtitle {
+  font-weight: 300;
+  font-size: 2rem;
+}
+
+.searchbar-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.searchbar-input {
+  border-radius: 25px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  background-color: var(--ss-white);
+  color: var(--ss-body-text);
+  border: 1px solid var(--ss-border-light);
+}
+
+.hero-tagline {
+  font-size: 1.1rem;
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Search Results container */
+.search-results ul {
+  padding: 0.5rem 1rem;
+}
+
+/* Language Switch — dark text on white header */
+.language-switch a,
+.language-switch a:visited,
+.language-switch a:hover {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--ss-heading) !important;
+}
+
+.hero-section .language-nav-link,
+.hero-section .language-nav-link:visited,
+.hero-section .language-nav-link:hover {
+  color: var(--ss-heading) !important;
+}
+
+/* Search hit rows only — do not override no-results CTAs (blue Upload pill uses white text) */
+.hero-section .search-results a.cdx-menu-item__content {
+  color: var(--ss-link) !important;
+}
+.hero-section .search-results a.cdx-menu-item__content:hover {
+  color: var(--ss-link-hover) !important;
+}
+
+.hero-section .search-results a.search-dropdown-upload-cta,
+.hero-section .search-results a.search-dropdown-upload-cta:hover,
+.hero-section .search-results a.search-dropdown-upload-cta:focus {
+  color: #fff !important;
+}
+
+/* ----------------------------
+   GLOBAL CARD STYLES
+---------------------------- */
+.content-card {
+  background-color: #fff;
+  border-radius: 10px;
+}
+
+/* Spacing helpers for readability */
+.mb-5 {
+  margin-bottom: 3rem !important;
+}
+
+/* ----------------------------
+   TEAM & CORE TEAM LINKS
+---------------------------- */
+.core-team {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.core-team a {
+  text-decoration: none;
+  color: var(--ss-link);
+  font-weight: 500;
+}
+.core-team a:hover {
+  text-decoration: underline;
+  color: var(--ss-link-hover);
+}
+
+/* ----------------------------
+   CHAPTERS & PROBLEMS
+---------------------------- */
+.chapter-block {
+  background-color: var(--ss-card-bg);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--ss-border-card);
+}
+
+.chapter-title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ss-text-secondary);
+}
+
+.chapter-name {
+  color: var(--ss-heading);
+  font-weight: 600;
+}
+
+.section-title {
+  font-weight: 500;
+  color: var(--ss-text-secondary);
+}
+
+.problems-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem 1.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #ddd;
+}
+
+.problem-item {
+  text-align: center;
+}
+
+.problem-link {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  margin: 2px;
+  background: var(--ss-white);
+  border-radius: 6px;
+  border: 1px solid var(--ss-border-light);
+  color: var(--ss-link);
+  font-size: 1rem;
+  text-decoration: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.problem-link:hover {
+  background: var(--ss-card-bg);
+  border-color: var(--ss-link);
+  color: var(--ss-link-hover);
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(26, 82, 118, 0.12);
+}
+
+/* ----------------------------
+   EDIT/UPLOAD BUTTON
+---------------------------- */
+.edit-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0 !important;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+  background: var(--ss-white);
+  border: 1px solid var(--ss-border-light);
+  border-radius: 6px;
+  color: var(--ss-link);
+  text-decoration: none !important;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Header Upload / Log in — outline on white bar */
+.hero-section .navbar .edit-button.header-upload-btn.btn-outline-dark {
+  --bs-btn-color: var(--ss-navy);
+  --bs-btn-border-color: var(--ss-border-light);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--ss-primary-btn);
+  --bs-btn-hover-border-color: var(--ss-primary-btn);
+  --bs-btn-active-color: #ffffff;
+  --bs-btn-active-bg: var(--ss-primary-btn-hover);
+  --bs-btn-active-border-color: var(--ss-primary-btn-hover);
+  --bs-btn-focus-shadow-rgb: 26, 26, 46;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--bs-btn-color);
+  border-color: var(--bs-btn-border-color);
+  background-color: transparent;
+}
+
+.header-upload-btn .upload-icon {
+  stroke: currentColor;
+}
+
+.upload-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edit-button:hover {
+  color: var(--ss-link-hover);
+  border-color: var(--ss-link);
+  background: var(--ss-card-bg);
+}
+
+/* Header pills: do not apply generic .edit-button:hover */
+.hero-section .navbar .edit-button.header-upload-btn:hover,
+.hero-section .navbar .edit-button.header-upload-btn:focus-visible {
+  color: var(--bs-btn-hover-color, #fff);
+  background-color: var(--bs-btn-hover-bg, var(--ss-primary-btn));
+  border-color: var(--bs-btn-hover-border-color, var(--ss-primary-btn));
+}
+
+/* eng_page chapter row upload — outline navy on light content background */
+.chapter-upload-pill.btn-outline-dark {
+  --bs-btn-color: var(--ss-navy);
+  --bs-btn-border-color: var(--ss-navy);
+  --bs-btn-hover-color: #ffffff;
+  --bs-btn-hover-bg: var(--ss-primary-btn-hover);
+  --bs-btn-hover-border-color: var(--ss-primary-btn-hover);
+  font-weight: 600;
+  color: var(--bs-btn-color);
+  border-color: var(--bs-btn-border-color);
+  background-color: transparent;
+}
+
+.chapter-upload-pill.btn-outline-dark:hover,
+.chapter-upload-pill.btn-outline-dark:focus-visible {
+  color: var(--bs-btn-hover-color, #fff);
+  background-color: var(--bs-btn-hover-bg, var(--ss-primary-btn-hover));
+  border-color: var(--bs-btn-hover-border-color, var(--ss-primary-btn-hover));
+}
+
+/* ----------------------------
+   TABLES (Top Authors, etc.)
+---------------------------- */
+.top-authors {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.top-authors h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.table {
+  margin: 0 auto;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.table th {
+  background-color: #f9f9f9;
+  font-weight: bold;
+}
+
+.table td:first-child {
+  font-size: 1.2rem;
+}
+
+.table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+.table thead th {
+  background-color: #fff !important;
+  border-bottom: 2px solid #ddd !important;
+  font-weight: bold;
+}
+
+.table thead th,
+.table tbody td {
+  border: none;
+  /* Remove other borders */
+}
+
+/* ----------------------------
+   TIMELINE
+---------------------------- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  width: 90%;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #ccc;
+}
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  margin: 20px 0;
+  padding-left: 60px;
+  width: 100%;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 22px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+}
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  left: 34px;
+  top: 30px;
+  width: 16px;
+  height: 2px;
+  background-color: #ccc;
+}
+.timeline-content {
+  background: #ffffff;
+  padding: 10px 15px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  font-family: 'Roboto', sans-serif;
+  width: 100%;
+}
+
+/* Remove old timeline styles */
+.tl-content,
+.tl-header,
+.tl-body,
+.tl-marker,
+.tl-title,
+.tl-time {
+  display: none;
+}
+
+/* ----------------------------
+   POPUP & OVERLAY
+---------------------------- */
+#edit-popup {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  z-index: 1000;
+  background: #fff;
+  padding: 35px;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 450px;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+#edit-popup.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+#edit-popup h3 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+#edit-popup input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 25px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  transition: border-color 0.2s;
+}
+
+#edit-popup input:focus {
+  outline: none;
+  border-color: var(--ss-link);
+}
+
+#edit-popup button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+#submit-problem {
+  background-color: var(--ss-primary-btn);
+  color: var(--ss-white);
+}
+
+#submit-problem:hover {
+  background-color: var(--ss-primary-btn-hover);
+}
+
+#cancel-edit {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+#cancel-edit:hover {
+  background-color: #e0e0e0;
+}
+
+#popup-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0);
+  transition: all 0.3s ease-in-out;
+}
+
+#popup-overlay.active {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+/* ----------------------------
+   FOOTER
+---------------------------- */
+footer.site-footer {
+  font-size: 0.9rem;
+  font-family: 'Roboto', sans-serif;
+}
+
+footer.site-footer p {
+  margin: 0.2rem 0;
+}
+
+footer:not(.site-footer) {
+  font-size: 0.9rem;
+}
+
+footer:not(.site-footer) p {
+  margin: 0.2rem 0;
+}
+
+/* ---------------------------------------
+   MEDIA QUERIES FOR EXTRA SMALL SCREENS
+---------------------------------------- */
+@media (max-width: 576px) {
+  .hero-subtitle {
+    font-size: 1.5rem; /* slightly smaller on very small screens */
+  }
+  .hero-tagline {
+    font-size: 1rem;   /* reduce tagline size on extra small screens */
+  }
+  .hero-content {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* PDF Download Button */
+.pdf-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 1rem;
+  text-decoration: none;
+  border-radius: 12px;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.pdf-download-btn:hover {
+  /* transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); */
+  color: #333;
+  text-decoration: none;
+}
+
+.pdf-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ss-white);
+  padding: 0.75rem;
+  border-radius: 10px;
+  color: var(--ss-navy);
+}
+
+.pdf-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--ss-text-secondary);
+}
+
+.pdf-action {
+  font-weight: 600;
+  color: var(--ss-link);
+}
+
+
+/* === solutions.css === */
+/* solutions.css — consolidated from general.css, style.css, StyleMobile.css */
+
+/* Task / solution content layout */
+.task {
+   max-width: 750px;
+   margin: auto;
+   text-align: justify;
+}
+
+.StatementDiv {
+   display: block;
+   margin-left: auto;
+   margin-right: auto;
+   width: 50%;
+}
+
+.ScreenS {
+   display: block;
+   margin-left: auto;
+   margin-right: auto;
+   max-width: 80%;
+   height: auto;
+}
+
+/* Solution text container */
+.solutions {
+   max-width: 600px;
+   margin: 0 auto;
+   padding: 10px;
+   padding-top: 20px;
+   text-align: justify;
+}
+
+ul {
+   text-align: center;
+   list-style-position: inside;
+   font-size: 18px;
+}
+
+/* Video embed */
+.video-container {
+   position: relative;
+   left: 10%;
+   width: 100%;
+   padding-bottom: 56.25%; /* 16:9 aspect ratio */
+}
+
+.video {
+   position: absolute;
+   top: 0;
+   left: 0;
+   width: 80%;
+   height: 100%;
+}
+
+/* Statement images */
+.Statement {
+   max-width: 300px;
+   max-height: 250px;
+}
+
+.TxtSolutions {
+   font-size: 16px;
+}
+
+/* Horizontal rules — color-coded sections */
+hr {
+   -webkit-border-radius: 3px;
+   -moz-border-radius: 3px;
+   border-radius: 3px;
+   border: none;
+   height: 6px;
+}
+
+.odd hr {
+   background: #82d120;
+}
+
+.even hr {
+   background: #3b59f2;
+}
+
+.red hr {
+   background: #ff9500;
+}
+
+/* Back-to-top button */
+.back-to-top {
+   display: block;
+   float: left;
+   padding: 7px 15px;
+   font-weight: 500;
+   color: #999;
+   background-color: #eee;
+   border-radius: 4px;
+}
+
+.back-to-top.affix {
+   position: fixed;
+   z-index: 200;
+   right: 15px;
+   bottom: 15px;
+}
+
+.back-to-top.affix-top {
+   color: #ffffff;
+   background-color: #ffffff;
+   padding: 0;
+   height: 0;
+}
+
+.back-to-top:hover {
+   color: #fff;
+   text-decoration: none;
+   background-color: #999;
+}
+
+/* Mobile overrides */
+@media screen and (max-width: 768px) {
+   .video-container {
+      left: 0;
+      width: 80%;
+   }
+
+   .video {
+      width: 100%;
+   }
+
+   .Statement {
+      max-width: 250px;
+   }
+
+   .back-to-top {
+      font-size: 14px;
+      padding: 8px;
+   }
+
+   hr {
+      height: 4px;
+      margin: 10px 0;
+   }
+}

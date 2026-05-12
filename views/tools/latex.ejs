@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Редактор формул LaTeX — Пишите физические уравнения с предпросмотром' : 'LaTeX Equation Editor — Write Physics Equations with Live Preview' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Бесплатный онлайн-редактор формул LaTeX с предпросмотром MathJax. Шаблоны для распространённых физических уравнений: законы Ньютона, уравнения Максвелла, уравнение Шрёдингера и другие.' : 'Free online LaTeX equation editor with live MathJax preview. Includes templates for common physics equations: Newton\'s laws, Maxwell\'s equations, Schrodinger equation, and more.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/latex" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "<%= lang === 'ru' ? 'Редактор формул LaTeX' : 'LaTeX Equation Editor' %>",
+        "description": "<%= lang === 'ru' ? 'Бесплатный онлайн-редактор формул LaTeX с предпросмотром MathJax. Шаблоны для распространённых физических уравнений.' : 'Free online LaTeX equation editor with live MathJax preview. Includes templates for common physics equations.' %>",
+        "url": "https://savchenkosolutions.com/<%= lang %>/tools/latex",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "Savchenko Solutions",
+            "url": "https://savchenkosolutions.com"
+        }
+    }
+    </script>
+    <script src="/js/analytics.js"></script>
+
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        .latex-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1rem 2rem;
+        }
+        .latex-header {
+            margin-bottom: 0.75rem;
+        }
+        .latex-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 0.25rem;
+        }
+        .latex-header p {
+            color: #6c757d;
+            font-size: 15px;
+            margin: 0;
+        }
+
+        /* Template button rows */
+        .template-section {
+            margin-bottom: 0.5rem;
+        }
+        .template-section-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.3rem;
+        }
+        .template-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .template-btn {
+            font-family: 'STIX Two Math', 'Cambria Math', serif;
+            font-size: 15px;
+            padding: 3px 10px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            color: #2d2d2d;
+            cursor: pointer;
+            transition: border-color 0.15s;
+            white-space: nowrap;
+            line-height: 1.4;
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
+        }
+        .template-btn:hover {
+            border-color: #1a1a2e;
+            background: #eef1f5;
+        }
+        .template-btn.physics-btn {
+            background: #eef2ff;
+        }
+        .template-btn.physics-btn:hover {
+            border-color: #1a1a2e;
+            background: #dde5ff;
+        }
+
+        /* Editor panels */
+        .editor-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        @media (max-width: 767px) {
+            .editor-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 0.3rem;
+        }
+
+        #latexInput {
+            width: 100%;
+            min-height: 200px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            resize: vertical;
+            outline: none;
+            color: #2d2d2d;
+            background: #fff;
+            line-height: 1.6;
+        }
+        #latexInput:focus {
+            border-color: #1a1a2e;
+        }
+        #latexInput::placeholder {
+            color: #adb5bd;
+        }
+
+        .preview-panel {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: auto;
+        }
+        .preview-panel .MathJax_Display {
+            margin: 0 !important;
+        }
+        #previewContent {
+            width: 100%;
+            text-align: center;
+            font-size: 18px;
+            color: #2d2d2d;
+            word-break: break-word;
+        }
+        .preview-placeholder {
+            color: #adb5bd;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 0 16px;
+            height: 36px;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: opacity 0.15s;
+        }
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .action-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .copy-feedback {
+            font-size: 12px;
+            color: #27ae60;
+            font-family: 'Inter', sans-serif;
+            margin-left: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .copy-feedback.visible {
+            opacity: 1;
+        }
+
+        /* Button groups for categorization */
+        .template-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: stretch;
+        }
+        .template-group + .template-group {
+            padding-left: 10px;
+            border-left: 1px solid #e9ecef;
+        }
+        .template-group-label {
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: #adb5bd;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            align-self: center;
+            padding-right: 2px;
+            white-space: nowrap;
+        }
+        @media (max-width: 767px) {
+            .template-group + .template-group {
+                padding-left: 0;
+                border-left: none;
+            }
+        }
+
+        /* Symbols section (full-width inline) */
+        .symbols-section {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .symbols-header {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .symbols-tabs {
+            display: flex;
+            flex: 1;
+            overflow-x: auto;
+        }
+        .symbols-tab {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 10px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: #6c757d;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .symbols-tab:hover {
+            color: #2d2d2d;
+        }
+        .symbols-tab.active {
+            color: #1a1a2e;
+            border-bottom-color: #1a1a2e;
+        }
+        .symbols-collapse-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            border-left: 1px solid #dee2e6;
+            color: #6c757d;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+        .symbols-collapse-btn:hover {
+            color: #1a1a2e;
+        }
+        .symbols-collapse-btn svg {
+            transition: transform 0.2s;
+        }
+        .symbols-section.collapsed .symbols-collapse-btn svg {
+            transform: rotate(180deg);
+        }
+        .symbols-section.collapsed .symbols-grid-wrap {
+            display: none;
+        }
+        .symbols-section.collapsed .symbols-header {
+            border-bottom: none;
+        }
+        .symbols-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+            gap: 3px;
+            padding: 6px;
+            max-height: 132px;
+            overflow-y: auto;
+        }
+        .symbol-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 38px;
+            font-family: 'STIX Two Math', serif;
+            font-size: 19px;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            color: #2d2d2d;
+            cursor: pointer;
+            transition: background 0.1s, border-color 0.1s;
+        }
+        .symbol-btn:hover {
+            background: #eef1f5;
+            border-color: #1a1a2e;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 13px;
+            color: #6c757d;
+            text-decoration: none;
+            margin-bottom: 0.5rem;
+        }
+        .back-link:hover {
+            color: #1a1a2e;
+        }
+        .back-link svg {
+            width: 14px;
+            height: 14px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <div class="latex-container">
+        <a href="/<%= lang %>/tools" class="back-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <%= lang === 'ru' ? 'Все инструменты' : 'All Tools' %>
+        </a>
+
+        <div class="latex-header">
+            <h1><%= lang === 'ru' ? 'Редактор формул LaTeX' : 'LaTeX Equation Editor' %></h1>
+            <p><%= lang === 'ru' ? 'Пишите физические уравнения с предпросмотром MathJax. Нажмите на шаблон, чтобы вставить его.' : 'Write physics equations with live MathJax preview. Click a template to insert it.' %></p>
+        </div>
+
+        <div class="template-section">
+            <div class="template-buttons" id="mathTemplates">
+                <div class="template-group">
+                    <span class="template-group-label"><%= lang === 'ru' ? 'Структура' : 'Layout' %></span>
+                    <button class="template-btn" data-insert="\\frac{}{}" data-mode="insert" title="<%= lang === 'ru' ? 'Дробь' : 'Fraction' %>">\(\frac{a}{b}\)</button>
+                    <button class="template-btn" data-insert="\\sqrt{}" data-mode="insert" title="<%= lang === 'ru' ? 'Квадратный корень' : 'Square root' %>">\(\sqrt{x}\)</button>
+                    <button class="template-btn" data-insert="\\sqrt[n]{}" data-mode="insert" title="<%= lang === 'ru' ? 'Корень n-й степени' : 'nth root' %>">\(\sqrt[n]{x}\)</button>
+                    <button class="template-btn" data-insert="^{}" data-mode="insert" title="<%= lang === 'ru' ? 'Верхний индекс' : 'Superscript' %>">\(x^{n}\)</button>
+                    <button class="template-btn" data-insert="_{}" data-mode="insert" title="<%= lang === 'ru' ? 'Нижний индекс' : 'Subscript' %>">\(x_{n}\)</button>
+                    <button class="template-btn" data-insert="\\begin{pmatrix} a &amp; b \\\\ c &amp; d \\end{pmatrix}" data-mode="insert" title="<%= lang === 'ru' ? 'Матрица 2x2' : '2x2 Matrix' %>">\(\begin{pmatrix}a &amp; b \\ c &amp; d\end{pmatrix}\)</button>
+                </div>
+                <div class="template-group">
+                    <span class="template-group-label"><%= lang === 'ru' ? 'Функции' : 'Functions' %></span>
+                    <button class="template-btn" data-insert="\\sin " data-mode="insert" title="<%= lang === 'ru' ? 'Синус' : 'Sine' %>">\(\sin\)</button>
+                    <button class="template-btn" data-insert="\\cos " data-mode="insert" title="<%= lang === 'ru' ? 'Косинус' : 'Cosine' %>">\(\cos\)</button>
+                    <button class="template-btn" data-insert="\\tan " data-mode="insert" title="<%= lang === 'ru' ? 'Тангенс' : 'Tangent' %>">\(\tan\)</button>
+                    <button class="template-btn" data-insert="\\arctan " data-mode="insert" title="<%= lang === 'ru' ? 'Арктангенс' : 'Arctangent' %>">\(\arctan\)</button>
+                    <button class="template-btn" data-insert="\\ln " data-mode="insert" title="<%= lang === 'ru' ? 'Натуральный логарифм' : 'Natural logarithm' %>">\(\ln\)</button>
+                    <button class="template-btn" data-insert="\\log " data-mode="insert" title="<%= lang === 'ru' ? 'Логарифм' : 'Logarithm' %>">\(\log\)</button>
+                    <button class="template-btn" data-insert="\\lim_{x \\to a}" data-mode="insert" title="<%= lang === 'ru' ? 'Предел' : 'Limit' %>">\(\lim_{x \to a}\)</button>
+                </div>
+                <div class="template-group">
+                    <span class="template-group-label"><%= lang === 'ru' ? 'Анализ' : 'Calculus' %></span>
+                    <button class="template-btn" data-insert="\\frac{d }{d t}" data-mode="insert" title="<%= lang === 'ru' ? 'Производная' : 'Derivative' %>">\(\frac{d}{dt}\)</button>
+                    <button class="template-btn" data-insert="\\frac{\\partial}{\\partial x}" data-mode="insert" title="<%= lang === 'ru' ? 'Частная производная' : 'Partial derivative' %>">\(\frac{\partial}{\partial x}\)</button>
+                    <button class="template-btn" data-insert="\\int_{a}^{b} f(x)\\,dx" data-mode="insert" title="<%= lang === 'ru' ? 'Определённый интеграл' : 'Definite integral' %>">\(\int_{a}^{b}\)</button>
+                    <button class="template-btn" data-insert="\\oint" data-mode="insert" title="<%= lang === 'ru' ? 'Контурный интеграл' : 'Contour integral' %>">\(\oint\)</button>
+                    <button class="template-btn" data-insert="\\sum_{i=1}^{N}" data-mode="insert" title="<%= lang === 'ru' ? 'Сумма' : 'Summation' %>">\(\sum_{i=1}^{N}\)</button>
+                </div>
+                <div class="template-group">
+                    <span class="template-group-label"><%= lang === 'ru' ? 'Обозначения' : 'Notation' %></span>
+                    <button class="template-btn" data-insert="\\vec{}" data-mode="insert" title="<%= lang === 'ru' ? 'Вектор' : 'Vector' %>">\(\vec{F}\)</button>
+                    <button class="template-btn" data-insert="\\times" data-mode="insert" title="<%= lang === 'ru' ? 'Векторное произведение' : 'Cross product' %>">\(\times\)</button>
+                    <button class="template-btn" data-insert="\\cdot" data-mode="insert" title="<%= lang === 'ru' ? 'Скалярное произведение' : 'Dot product' %>">\(\cdot\)</button>
+                    <button class="template-btn" data-insert="\\infty" data-mode="insert" title="<%= lang === 'ru' ? 'Бесконечность' : 'Infinity' %>">\(\infty\)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Symbols section (full-width tabbed bar) -->
+        <div class="template-section">
+            <div class="symbols-section" id="symbolsSection">
+                <div class="symbols-header">
+                    <div class="symbols-tabs" id="symbolsTabs">
+                        <button class="symbols-tab active" data-tab="greek"><%= lang === 'ru' ? 'Греческие' : 'Greek' %></button>
+                        <button class="symbols-tab" data-tab="arrows"><%= lang === 'ru' ? 'Стрелки' : 'Arrows' %></button>
+                        <button class="symbols-tab" data-tab="operators"><%= lang === 'ru' ? 'Операторы' : 'Operators' %></button>
+                        <button class="symbols-tab" data-tab="relations"><%= lang === 'ru' ? 'Отношения' : 'Relations' %></button>
+                        <button class="symbols-tab" data-tab="delimiters"><%= lang === 'ru' ? 'Скобки' : 'Delimiters' %></button>
+                        <button class="symbols-tab" data-tab="logic"><%= lang === 'ru' ? 'Логика' : 'Logic' %></button>
+                        <button class="symbols-tab" data-tab="accents"><%= lang === 'ru' ? 'Акценты' : 'Accents' %></button>
+                        <button class="symbols-tab" data-tab="misc"><%= lang === 'ru' ? 'Прочее' : 'Misc' %></button>
+                    </div>
+                    <button class="symbols-collapse-btn" id="symbolsCollapseBtn" title="<%= lang === 'ru' ? 'Свернуть символы' : 'Collapse symbols' %>">
+                        <svg width="12" height="7" viewBox="0 0 12 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l5 5 5-5"/></svg>
+                    </button>
+                </div>
+                <div class="symbols-grid-wrap" id="symbolsGridWrap">
+                        <div class="symbols-grid" id="symbols-greek">
+                            <button class="symbol-btn" data-insert="\\alpha" data-mode="insert">&#x1D6FC;</button>
+                            <button class="symbol-btn" data-insert="\\beta" data-mode="insert">&#x1D6FD;</button>
+                            <button class="symbol-btn" data-insert="\\gamma" data-mode="insert">&#x1D6FE;</button>
+                            <button class="symbol-btn" data-insert="\\delta" data-mode="insert">&#x1D6FF;</button>
+                            <button class="symbol-btn" data-insert="\\varepsilon" data-mode="insert">&#x1D700;</button>
+                            <button class="symbol-btn" data-insert="\\zeta" data-mode="insert">&#x1D701;</button>
+                            <button class="symbol-btn" data-insert="\\eta" data-mode="insert">&#x1D702;</button>
+                            <button class="symbol-btn" data-insert="\\theta" data-mode="insert">&#x1D703;</button>
+                            <button class="symbol-btn" data-insert="\\iota" data-mode="insert">&#x1D704;</button>
+                            <button class="symbol-btn" data-insert="\\ell" data-mode="insert">&#x2113;</button>
+                            <button class="symbol-btn" data-insert="\\kappa" data-mode="insert">&#x1D705;</button>
+                            <button class="symbol-btn" data-insert="\\lambda" data-mode="insert">&#x1D706;</button>
+                            <button class="symbol-btn" data-insert="\\mu" data-mode="insert">&#x1D707;</button>
+                            <button class="symbol-btn" data-insert="\\nu" data-mode="insert">&#x1D708;</button>
+                            <button class="symbol-btn" data-insert="\\xi" data-mode="insert">&#x1D709;</button>
+                            <button class="symbol-btn" data-insert="\\pi" data-mode="insert">&#x1D70B;</button>
+                            <button class="symbol-btn" data-insert="\\rho" data-mode="insert">&#x1D70C;</button>
+                            <button class="symbol-btn" data-insert="\\sigma" data-mode="insert">&#x1D70E;</button>
+                            <button class="symbol-btn" data-insert="\\tau" data-mode="insert">&#x1D70F;</button>
+                            <button class="symbol-btn" data-insert="\\upsilon" data-mode="insert">&#x1D710;</button>
+                            <button class="symbol-btn" data-insert="\\varphi" data-mode="insert">&#x1D711;</button>
+                            <button class="symbol-btn" data-insert="\\chi" data-mode="insert">&#x1D712;</button>
+                            <button class="symbol-btn" data-insert="\\psi" data-mode="insert">&#x1D713;</button>
+                            <button class="symbol-btn" data-insert="\\omega" data-mode="insert">&#x1D714;</button>
+                            <button class="symbol-btn" data-insert="\\epsilon" data-mode="insert">&#x03F5;</button>
+                            <button class="symbol-btn" data-insert="\\vartheta" data-mode="insert">&#x03D1;</button>
+                            <button class="symbol-btn" data-insert="\\phi" data-mode="insert">&#x03D5;</button>
+                            <button class="symbol-btn" data-insert="\\varpi" data-mode="insert">&#x03D6;</button>
+                            <button class="symbol-btn" data-insert="\\varrho" data-mode="insert">&#x03F1;</button>
+                            <button class="symbol-btn" data-insert="\\varsigma" data-mode="insert">&#x03C2;</button>
+                            <button class="symbol-btn" data-insert="\\digamma" data-mode="insert">&#x03DD;</button>
+                            <button class="symbol-btn" data-insert="\\Gamma" data-mode="insert">&Gamma;</button>
+                            <button class="symbol-btn" data-insert="\\Delta" data-mode="insert">&Delta;</button>
+                            <button class="symbol-btn" data-insert="\\Theta" data-mode="insert">&Theta;</button>
+                            <button class="symbol-btn" data-insert="\\Lambda" data-mode="insert">&Lambda;</button>
+                            <button class="symbol-btn" data-insert="\\Xi" data-mode="insert">&Xi;</button>
+                            <button class="symbol-btn" data-insert="\\Pi" data-mode="insert">&Pi;</button>
+                            <button class="symbol-btn" data-insert="\\Sigma" data-mode="insert">&Sigma;</button>
+                            <button class="symbol-btn" data-insert="\\Upsilon" data-mode="insert">&Upsilon;</button>
+                            <button class="symbol-btn" data-insert="\\Phi" data-mode="insert">&Phi;</button>
+                            <button class="symbol-btn" data-insert="\\Psi" data-mode="insert">&Psi;</button>
+                            <button class="symbol-btn" data-insert="\\Omega" data-mode="insert">&Omega;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-arrows" style="display:none">
+                            <button class="symbol-btn" data-insert="\\leftarrow" data-mode="insert">&larr;</button>
+                            <button class="symbol-btn" data-insert="\\rightarrow" data-mode="insert">&rarr;</button>
+                            <button class="symbol-btn" data-insert="\\leftrightarrow" data-mode="insert">&harr;</button>
+                            <button class="symbol-btn" data-insert="\\uparrow" data-mode="insert">&uarr;</button>
+                            <button class="symbol-btn" data-insert="\\downarrow" data-mode="insert">&darr;</button>
+                            <button class="symbol-btn" data-insert="\\Leftarrow" data-mode="insert">&lArr;</button>
+                            <button class="symbol-btn" data-insert="\\Rightarrow" data-mode="insert">&rArr;</button>
+                            <button class="symbol-btn" data-insert="\\Leftrightarrow" data-mode="insert">&hArr;</button>
+                            <button class="symbol-btn" data-insert="\\mapsto" data-mode="insert">&#x21A6;</button>
+                            <button class="symbol-btn" data-insert="\\nearrow" data-mode="insert">&#x2197;</button>
+                            <button class="symbol-btn" data-insert="\\searrow" data-mode="insert">&#x2198;</button>
+                            <button class="symbol-btn" data-insert="\\rightleftharpoons" data-mode="insert">&#x21CC;</button>
+                            <button class="symbol-btn" data-insert="\\leftharpoonup" data-mode="insert">&#x21BC;</button>
+                            <button class="symbol-btn" data-insert="\\rightharpoonup" data-mode="insert">&#x21C0;</button>
+                            <button class="symbol-btn" data-insert="\\leftharpoondown" data-mode="insert">&#x21BD;</button>
+                            <button class="symbol-btn" data-insert="\\rightharpoondown" data-mode="insert">&#x21C1;</button>
+                            <button class="symbol-btn" data-insert="\\Uparrow" data-mode="insert">&#x21D1;</button>
+                            <button class="symbol-btn" data-insert="\\Downarrow" data-mode="insert">&#x21D3;</button>
+                            <button class="symbol-btn" data-insert="\\updownarrow" data-mode="insert">&#x2195;</button>
+                            <button class="symbol-btn" data-insert="\\Updownarrow" data-mode="insert">&#x21D5;</button>
+                            <button class="symbol-btn" data-insert="\\longleftarrow" data-mode="insert">&#x27F5;</button>
+                            <button class="symbol-btn" data-insert="\\longrightarrow" data-mode="insert">&#x27F6;</button>
+                            <button class="symbol-btn" data-insert="\\longleftrightarrow" data-mode="insert">&#x27F7;</button>
+                            <button class="symbol-btn" data-insert="\\Longleftarrow" data-mode="insert">&#x27F8;</button>
+                            <button class="symbol-btn" data-insert="\\Longrightarrow" data-mode="insert">&#x27F9;</button>
+                            <button class="symbol-btn" data-insert="\\Longleftrightarrow" data-mode="insert">&#x27FA;</button>
+                            <button class="symbol-btn" data-insert="\\longmapsto" data-mode="insert">&#x27FC;</button>
+                            <button class="symbol-btn" data-insert="\\hookleftarrow" data-mode="insert">&#x21A9;</button>
+                            <button class="symbol-btn" data-insert="\\hookrightarrow" data-mode="insert">&#x21AA;</button>
+                            <button class="symbol-btn" data-insert="\\swarrow" data-mode="insert">&#x2199;</button>
+                            <button class="symbol-btn" data-insert="\\nwarrow" data-mode="insert">&#x2196;</button>
+                            <button class="symbol-btn" data-insert="\\rightsquigarrow" data-mode="insert">&#x21DD;</button>
+                            <button class="symbol-btn" data-insert="\\leftrightsquigarrow" data-mode="insert">&#x21AD;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-operators" style="display:none">
+                            <button class="symbol-btn" data-insert="\\times" data-mode="insert">&times;</button>
+                            <button class="symbol-btn" data-insert="\\div" data-mode="insert">&divide;</button>
+                            <button class="symbol-btn" data-insert="\\cap" data-mode="insert">&cap;</button>
+                            <button class="symbol-btn" data-insert="\\cup" data-mode="insert">&cup;</button>
+                            <button class="symbol-btn" data-insert="\\cdot" data-mode="insert">&sdot;</button>
+                            <button class="symbol-btn" data-insert="\\cdots" data-mode="insert">&ctdot;</button>
+                            <button class="symbol-btn" data-insert="\\bullet" data-mode="insert">&#x2219;</button>
+                            <button class="symbol-btn" data-insert="\\circ" data-mode="insert">&#x25E6;</button>
+                            <button class="symbol-btn" data-insert="\\wedge" data-mode="insert">&and;</button>
+                            <button class="symbol-btn" data-insert="\\vee" data-mode="insert">&or;</button>
+                            <button class="symbol-btn" data-insert="\\setminus" data-mode="insert">\</button>
+                            <button class="symbol-btn" data-insert="\\oplus" data-mode="insert">&oplus;</button>
+                            <button class="symbol-btn" data-insert="\\otimes" data-mode="insert">&otimes;</button>
+                            <button class="symbol-btn" data-insert="\\sum" data-mode="insert">&sum;</button>
+                            <button class="symbol-btn" data-insert="\\prod" data-mode="insert">&prod;</button>
+                            <button class="symbol-btn" data-insert="\\bigcap" data-mode="insert">&#x22C2;</button>
+                            <button class="symbol-btn" data-insert="\\bigcup" data-mode="insert">&#x22C3;</button>
+                            <button class="symbol-btn" data-insert="\\int" data-mode="insert">&int;</button>
+                            <button class="symbol-btn" data-insert="\\iint" data-mode="insert">&#x222C;</button>
+                            <button class="symbol-btn" data-insert="\\iiint" data-mode="insert">&#x222D;</button>
+                            <button class="symbol-btn" data-insert="\\iiiint" data-mode="insert">&#x2A0C;</button>
+                            <button class="symbol-btn" data-insert="\\oint" data-mode="insert">&#x222E;</button>
+                            <button class="symbol-btn" data-insert="\\pm" data-mode="insert">&#xB1;</button>
+                            <button class="symbol-btn" data-insert="\\mp" data-mode="insert">&#x2213;</button>
+                            <button class="symbol-btn" data-insert="\\ast" data-mode="insert">&#x2217;</button>
+                            <button class="symbol-btn" data-insert="\\star" data-mode="insert">&#x22C6;</button>
+                            <button class="symbol-btn" data-insert="\\dagger" data-mode="insert">&#x2020;</button>
+                            <button class="symbol-btn" data-insert="\\ddagger" data-mode="insert">&#x2021;</button>
+                            <button class="symbol-btn" data-insert="\\amalg" data-mode="insert">&#x2A3F;</button>
+                            <button class="symbol-btn" data-insert="\\odot" data-mode="insert">&#x2299;</button>
+                            <button class="symbol-btn" data-insert="\\ominus" data-mode="insert">&#x2296;</button>
+                            <button class="symbol-btn" data-insert="\\oslash" data-mode="insert">&#x2298;</button>
+                            <button class="symbol-btn" data-insert="\\diamond" data-mode="insert">&#x22C4;</button>
+                            <button class="symbol-btn" data-insert="\\sqcap" data-mode="insert">&#x2293;</button>
+                            <button class="symbol-btn" data-insert="\\sqcup" data-mode="insert">&#x2294;</button>
+                            <button class="symbol-btn" data-insert="\\uplus" data-mode="insert">&#x228E;</button>
+                            <button class="symbol-btn" data-insert="\\wr" data-mode="insert">&#x2240;</button>
+                            <button class="symbol-btn" data-insert="\\triangleleft" data-mode="insert">&#x25C1;</button>
+                            <button class="symbol-btn" data-insert="\\triangleright" data-mode="insert">&#x25B7;</button>
+                            <button class="symbol-btn" data-insert="\\bigvee" data-mode="insert">&#x22C1;</button>
+                            <button class="symbol-btn" data-insert="\\bigwedge" data-mode="insert">&#x22C0;</button>
+                            <button class="symbol-btn" data-insert="\\biguplus" data-mode="insert">&#x2A04;</button>
+                            <button class="symbol-btn" data-insert="\\bigoplus" data-mode="insert">&#x2A01;</button>
+                            <button class="symbol-btn" data-insert="\\bigotimes" data-mode="insert">&#x2A02;</button>
+                            <button class="symbol-btn" data-insert="\\bigodot" data-mode="insert">&#x2A00;</button>
+                            <button class="symbol-btn" data-insert="\\bigsqcup" data-mode="insert">&#x2A06;</button>
+                            <button class="symbol-btn" data-insert="\\coprod" data-mode="insert">&#x2210;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-relations" style="display:none">
+                            <button class="symbol-btn" data-insert="\\neq" data-mode="insert">&ne;</button>
+                            <button class="symbol-btn" data-insert="\\leq" data-mode="insert">&le;</button>
+                            <button class="symbol-btn" data-insert="\\geq" data-mode="insert">&ge;</button>
+                            <button class="symbol-btn" data-insert="\\ll" data-mode="insert">&Lt;</button>
+                            <button class="symbol-btn" data-insert="\\gg" data-mode="insert">&Gt;</button>
+                            <button class="symbol-btn" data-insert="\\prec" data-mode="insert">&#x227A;</button>
+                            <button class="symbol-btn" data-insert="\\succ" data-mode="insert">&#x227B;</button>
+                            <button class="symbol-btn" data-insert="\\in" data-mode="insert">&isin;</button>
+                            <button class="symbol-btn" data-insert="\\notin" data-mode="insert">&notin;</button>
+                            <button class="symbol-btn" data-insert="\\ni" data-mode="insert">&ni;</button>
+                            <button class="symbol-btn" data-insert="\\subset" data-mode="insert">&sub;</button>
+                            <button class="symbol-btn" data-insert="\\subseteq" data-mode="insert">&sube;</button>
+                            <button class="symbol-btn" data-insert="\\supset" data-mode="insert">&sup;</button>
+                            <button class="symbol-btn" data-insert="\\sim" data-mode="insert">&#x2243;</button>
+                            <button class="symbol-btn" data-insert="\\approx" data-mode="insert">&asymp;</button>
+                            <button class="symbol-btn" data-insert="\\equiv" data-mode="insert">&equiv;</button>
+                            <button class="symbol-btn" data-insert="\\cong" data-mode="insert">&cong;</button>
+                            <button class="symbol-btn" data-insert="\\mid" data-mode="insert">&#x2223;</button>
+                            <button class="symbol-btn" data-insert="\\nmid" data-mode="insert">&#x2224;</button>
+                            <button class="symbol-btn" data-insert="\\parallel" data-mode="insert">&#x2225;</button>
+                            <button class="symbol-btn" data-insert="\\perp" data-mode="insert">&#x27C2;</button>
+                            <button class="symbol-btn" data-insert="\\leqslant" data-mode="insert">&#x2A7D;</button>
+                            <button class="symbol-btn" data-insert="\\geqslant" data-mode="insert">&#x2A7E;</button>
+                            <button class="symbol-btn" data-insert="\\nless" data-mode="insert">&#x226E;</button>
+                            <button class="symbol-btn" data-insert="\\ngtr" data-mode="insert">&#x226F;</button>
+                            <button class="symbol-btn" data-insert="\\nleq" data-mode="insert">&#x2270;</button>
+                            <button class="symbol-btn" data-insert="\\ngeq" data-mode="insert">&#x2271;</button>
+                            <button class="symbol-btn" data-insert="\\preceq" data-mode="insert">&#x2AAF;</button>
+                            <button class="symbol-btn" data-insert="\\succeq" data-mode="insert">&#x2AB0;</button>
+                            <button class="symbol-btn" data-insert="\\supseteq" data-mode="insert">&#x2287;</button>
+                            <button class="symbol-btn" data-insert="\\nsubseteq" data-mode="insert">&#x2288;</button>
+                            <button class="symbol-btn" data-insert="\\nsupseteq" data-mode="insert">&#x2289;</button>
+                            <button class="symbol-btn" data-insert="\\sqsubseteq" data-mode="insert">&#x2291;</button>
+                            <button class="symbol-btn" data-insert="\\sqsupseteq" data-mode="insert">&#x2292;</button>
+                            <button class="symbol-btn" data-insert="\\propto" data-mode="insert">&#x221D;</button>
+                            <button class="symbol-btn" data-insert="\\simeq" data-mode="insert">&#x2243;</button>
+                            <button class="symbol-btn" data-insert="\\doteq" data-mode="insert">&#x2250;</button>
+                            <button class="symbol-btn" data-insert="\\asymp" data-mode="insert">&#x224D;</button>
+                            <button class="symbol-btn" data-insert="\\vdash" data-mode="insert">&#x22A2;</button>
+                            <button class="symbol-btn" data-insert="\\dashv" data-mode="insert">&#x22A3;</button>
+                            <button class="symbol-btn" data-insert="\\models" data-mode="insert">&#x22A8;</button>
+                            <button class="symbol-btn" data-insert="\\bowtie" data-mode="insert">&#x22C8;</button>
+                            <button class="symbol-btn" data-insert="\\smile" data-mode="insert">&#x2323;</button>
+                            <button class="symbol-btn" data-insert="\\frown" data-mode="insert">&#x2322;</button>
+                            <button class="symbol-btn" data-insert="\\nprec" data-mode="insert">&#x2280;</button>
+                            <button class="symbol-btn" data-insert="\\nsucc" data-mode="insert">&#x2281;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-misc" style="display:none">
+                            <button class="symbol-btn" data-insert="\\infty" data-mode="insert">&infin;</button>
+                            <button class="symbol-btn" data-insert="\\partial" data-mode="insert">&#x1D715;</button>
+                            <button class="symbol-btn" data-insert="\\nabla" data-mode="insert">&nabla;</button>
+                            <button class="symbol-btn" data-insert="\\emptyset" data-mode="insert">&#x2300;</button>
+                            <button class="symbol-btn" data-insert="\\forall" data-mode="insert">&forall;</button>
+                            <button class="symbol-btn" data-insert="\\exists" data-mode="insert">&exist;</button>
+                            <button class="symbol-btn" data-insert="\\neg" data-mode="insert">&not;</button>
+                            <button class="symbol-btn" data-insert="\\Re" data-mode="insert">&real;</button>
+                            <button class="symbol-btn" data-insert="\\Im" data-mode="insert">&image;</button>
+                            <button class="symbol-btn" data-insert="\\square" data-mode="insert">&#x25A1;</button>
+                            <button class="symbol-btn" data-insert="\\triangle" data-mode="insert">&#x25B3;</button>
+                            <button class="symbol-btn" data-insert="\\aleph" data-mode="insert">&alefsym;</button>
+                            <button class="symbol-btn" data-insert="\\wp" data-mode="insert">&weierp;</button>
+                            <button class="symbol-btn" data-insert="\\#" data-mode="insert">#</button>
+                            <button class="symbol-btn" data-insert="\\$" data-mode="insert">$</button>
+                            <button class="symbol-btn" data-insert="\\%" data-mode="insert">%</button>
+                            <button class="symbol-btn" data-insert="\\&amp;" data-mode="insert">&amp;</button>
+                            <button class="symbol-btn" data-insert="\\{" data-mode="insert">{</button>
+                            <button class="symbol-btn" data-insert="\\}" data-mode="insert">}</button>
+                            <button class="symbol-btn" data-insert="\\langle" data-mode="insert">&#x27E8;</button>
+                            <button class="symbol-btn" data-insert="\\rangle" data-mode="insert">&#x27E9;</button>
+                            <button class="symbol-btn" data-insert="\\hbar" data-mode="insert">&#x210F;</button>
+                            <button class="symbol-btn" data-insert="\\imath" data-mode="insert">&#x1D6A4;</button>
+                            <button class="symbol-btn" data-insert="\\jmath" data-mode="insert">&#x1D6A5;</button>
+                            <button class="symbol-btn" data-insert="\\angle" data-mode="insert">&#x2220;</button>
+                            <button class="symbol-btn" data-insert="\\measuredangle" data-mode="insert">&#x2221;</button>
+                            <button class="symbol-btn" data-insert="\\sphericalangle" data-mode="insert">&#x2222;</button>
+                            <button class="symbol-btn" data-insert="\\complement" data-mode="insert">&#x2201;</button>
+                            <button class="symbol-btn" data-insert="\\prime" data-mode="insert">&#x2032;</button>
+                            <button class="symbol-btn" data-insert="\\backprime" data-mode="insert">&#x2035;</button>
+                            <button class="symbol-btn" data-insert="\\natural" data-mode="insert">&#x266E;</button>
+                            <button class="symbol-btn" data-insert="\\flat" data-mode="insert">&#x266D;</button>
+                            <button class="symbol-btn" data-insert="\\sharp" data-mode="insert">&#x266F;</button>
+                            <button class="symbol-btn" data-insert="\\ldots" data-mode="insert">&#x2026;</button>
+                            <button class="symbol-btn" data-insert="\\vdots" data-mode="insert">&#x22EE;</button>
+                            <button class="symbol-btn" data-insert="\\ddots" data-mode="insert">&#x22F1;</button>
+                            <button class="symbol-btn" data-insert="\\eth" data-mode="insert">&#x00F0;</button>
+                            <button class="symbol-btn" data-insert="\\mho" data-mode="insert">&#x2127;</button>
+                            <button class="symbol-btn" data-insert="\\circledR" data-mode="insert">&#x00AE;</button>
+                            <button class="symbol-btn" data-insert="\\circledS" data-mode="insert">&#x24C8;</button>
+                            <button class="symbol-btn" data-insert="\\clubsuit" data-mode="insert">&#x2663;</button>
+                            <button class="symbol-btn" data-insert="\\diamondsuit" data-mode="insert">&#x2662;</button>
+                            <button class="symbol-btn" data-insert="\\heartsuit" data-mode="insert">&#x2661;</button>
+                            <button class="symbol-btn" data-insert="\\spadesuit" data-mode="insert">&#x2660;</button>
+                            <button class="symbol-btn" data-insert="\\surd" data-mode="insert">&#x221A;</button>
+                            <button class="symbol-btn" data-insert="\\checkmark" data-mode="insert">&#x2713;</button>
+                            <button class="symbol-btn" data-insert="\\maltese" data-mode="insert">&#x2720;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-delimiters" style="display:none">
+                            <button class="symbol-btn" data-insert="\\langle" data-mode="insert">&#x27E8;</button>
+                            <button class="symbol-btn" data-insert="\\rangle" data-mode="insert">&#x27E9;</button>
+                            <button class="symbol-btn" data-insert="\\lceil" data-mode="insert">&#x2308;</button>
+                            <button class="symbol-btn" data-insert="\\rceil" data-mode="insert">&#x2309;</button>
+                            <button class="symbol-btn" data-insert="\\lfloor" data-mode="insert">&#x230A;</button>
+                            <button class="symbol-btn" data-insert="\\rfloor" data-mode="insert">&#x230B;</button>
+                            <button class="symbol-btn" data-insert="\\{" data-mode="insert">{</button>
+                            <button class="symbol-btn" data-insert="\\}" data-mode="insert">}</button>
+                            <button class="symbol-btn" data-insert="\\vert" data-mode="insert">&#x007C;</button>
+                            <button class="symbol-btn" data-insert="\\Vert" data-mode="insert">&#x2016;</button>
+                            <button class="symbol-btn" data-insert="\\backslash" data-mode="insert">&#x005C;</button>
+                            <button class="symbol-btn" data-insert="\\ulcorner" data-mode="insert">&#x231C;</button>
+                            <button class="symbol-btn" data-insert="\\urcorner" data-mode="insert">&#x231D;</button>
+                            <button class="symbol-btn" data-insert="\\llcorner" data-mode="insert">&#x231E;</button>
+                            <button class="symbol-btn" data-insert="\\lrcorner" data-mode="insert">&#x231F;</button>
+                            <button class="symbol-btn" data-insert="\\lgroup" data-mode="insert">&#x27EE;</button>
+                            <button class="symbol-btn" data-insert="\\rgroup" data-mode="insert">&#x27EF;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-logic" style="display:none">
+                            <button class="symbol-btn" data-insert="\\forall" data-mode="insert">&#x2200;</button>
+                            <button class="symbol-btn" data-insert="\\exists" data-mode="insert">&#x2203;</button>
+                            <button class="symbol-btn" data-insert="\\nexists" data-mode="insert">&#x2204;</button>
+                            <button class="symbol-btn" data-insert="\\neg" data-mode="insert">&#x00AC;</button>
+                            <button class="symbol-btn" data-insert="\\land" data-mode="insert">&#x2227;</button>
+                            <button class="symbol-btn" data-insert="\\lor" data-mode="insert">&#x2228;</button>
+                            <button class="symbol-btn" data-insert="\\top" data-mode="insert">&#x22A4;</button>
+                            <button class="symbol-btn" data-insert="\\bot" data-mode="insert">&#x22A5;</button>
+                            <button class="symbol-btn" data-insert="\\vdash" data-mode="insert">&#x22A2;</button>
+                            <button class="symbol-btn" data-insert="\\dashv" data-mode="insert">&#x22A3;</button>
+                            <button class="symbol-btn" data-insert="\\models" data-mode="insert">&#x22A8;</button>
+                            <button class="symbol-btn" data-insert="\\vDash" data-mode="insert">&#x22A8;</button>
+                            <button class="symbol-btn" data-insert="\\Vdash" data-mode="insert">&#x22A9;</button>
+                            <button class="symbol-btn" data-insert="\\Vvdash" data-mode="insert">&#x22AA;</button>
+                            <button class="symbol-btn" data-insert="\\therefore" data-mode="insert">&#x2234;</button>
+                            <button class="symbol-btn" data-insert="\\because" data-mode="insert">&#x2235;</button>
+                            <button class="symbol-btn" data-insert="\\varnothing" data-mode="insert">&#x2205;</button>
+                            <button class="symbol-btn" data-insert="\\emptyset" data-mode="insert">&#x2300;</button>
+                            <button class="symbol-btn" data-insert="\\in" data-mode="insert">&#x2208;</button>
+                            <button class="symbol-btn" data-insert="\\notin" data-mode="insert">&#x2209;</button>
+                            <button class="symbol-btn" data-insert="\\subset" data-mode="insert">&#x2282;</button>
+                            <button class="symbol-btn" data-insert="\\supset" data-mode="insert">&#x2283;</button>
+                            <button class="symbol-btn" data-insert="\\subseteq" data-mode="insert">&#x2286;</button>
+                            <button class="symbol-btn" data-insert="\\supseteq" data-mode="insert">&#x2287;</button>
+                            <button class="symbol-btn" data-insert="\\aleph" data-mode="insert">&#x2135;</button>
+                            <button class="symbol-btn" data-insert="\\beth" data-mode="insert">&#x2136;</button>
+                            <button class="symbol-btn" data-insert="\\gimel" data-mode="insert">&#x2137;</button>
+                            <button class="symbol-btn" data-insert="\\daleth" data-mode="insert">&#x2138;</button>
+                        </div>
+                        <div class="symbols-grid" id="symbols-accents" style="display:none">
+                            <button class="symbol-btn" data-insert="\\hat{}" data-mode="insert">x&#x0302;</button>
+                            <button class="symbol-btn" data-insert="\\bar{}" data-mode="insert">x&#x0304;</button>
+                            <button class="symbol-btn" data-insert="\\tilde{}" data-mode="insert">x&#x0303;</button>
+                            <button class="symbol-btn" data-insert="\\vec{}" data-mode="insert">x&#x20D7;</button>
+                            <button class="symbol-btn" data-insert="\\dot{}" data-mode="insert">x&#x0307;</button>
+                            <button class="symbol-btn" data-insert="\\ddot{}" data-mode="insert">x&#x0308;</button>
+                            <button class="symbol-btn" data-insert="\\acute{}" data-mode="insert">x&#x0301;</button>
+                            <button class="symbol-btn" data-insert="\\grave{}" data-mode="insert">x&#x0300;</button>
+                            <button class="symbol-btn" data-insert="\\breve{}" data-mode="insert">x&#x0306;</button>
+                            <button class="symbol-btn" data-insert="\\check{}" data-mode="insert">x&#x030C;</button>
+                            <button class="symbol-btn" data-insert="\\mathring{}" data-mode="insert">x&#x030A;</button>
+                            <button class="symbol-btn" data-insert="\\widehat{}" data-mode="insert" style="font-size:16px">x&#x0302;y</button>
+                            <button class="symbol-btn" data-insert="\\widetilde{}" data-mode="insert" style="font-size:16px">x&#x0303;y</button>
+                            <button class="symbol-btn" data-insert="\\overline{}" data-mode="insert" style="font-size:16px">x&#x0305;</button>
+                            <button class="symbol-btn" data-insert="\\underline{}" data-mode="insert" style="font-size:16px">x&#x0332;</button>
+                            <button class="symbol-btn" data-insert="\\overbrace{}" data-mode="insert">&#x23DE;</button>
+                            <button class="symbol-btn" data-insert="\\underbrace{}" data-mode="insert">&#x23DF;</button>
+                            <button class="symbol-btn" data-insert="\\overrightarrow{}" data-mode="insert" style="font-size:16px">x&#x20D7;</button>
+                            <button class="symbol-btn" data-insert="\\overleftarrow{}" data-mode="insert" style="font-size:16px">x&#x20D6;</button>
+                            <button class="symbol-btn" data-insert="\\mathbb{}" data-mode="insert" style="font-size:16px">&#x211D;</button>
+                            <button class="symbol-btn" data-insert="\\mathcal{}" data-mode="insert" style="font-size:16px">&#x1D49C;</button>
+                            <button class="symbol-btn" data-insert="\\mathfrak{}" data-mode="insert" style="font-size:16px">&#x1D504;</button>
+                            <button class="symbol-btn" data-insert="\\mathscr{}" data-mode="insert" style="font-size:16px">&#x1D49E;</button>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2: Mechanics (top formulas by corpus frequency) -->
+        <div class="template-section">
+            <div class="template-section-label"><%= lang === 'ru' ? 'Механика' : 'Mechanics' %></div>
+            <div class="template-buttons" id="mechanicsTemplates">
+                <button class="template-btn physics-btn" data-insert="mg" data-mode="insert" title="<%= lang === 'ru' ? 'Сила тяжести' : 'Weight' %>">\(mg\)</button>
+                <button class="template-btn physics-btn" data-insert="\\vec{F} = m\\vec{a}" data-mode="replace" title="<%= lang === 'ru' ? 'Второй закон Ньютона' : 'Newton\'s second law' %>">\(\vec{F}\!=\!m\vec{a}\)</button>
+                <button class="template-btn physics-btn" data-insert="\\frac{mv^{2}}{2}" data-mode="insert" title="<%= lang === 'ru' ? 'Кинетическая энергия' : 'Kinetic energy' %>">\(\frac{mv^2}{2}\)</button>
+                <button class="template-btn physics-btn" data-insert="mgh" data-mode="insert" title="<%= lang === 'ru' ? 'Потенциальная энергия' : 'Gravitational potential energy' %>">\(mgh\)</button>
+                <button class="template-btn physics-btn" data-insert="v = \\frac{l}{t}" data-mode="replace" title="<%= lang === 'ru' ? 'Скорость' : 'Velocity' %>">\(v=\frac{l}{t}\)</button>
+                <button class="template-btn physics-btn" data-insert="F_{\\text{fr}} = \\mu N" data-mode="replace" title="<%= lang === 'ru' ? 'Сила трения' : 'Friction force' %>">\(F_{\text{fr}}\!=\!\mu N\)</button>
+                <button class="template-btn physics-btn" data-insert="F = kx" data-mode="replace" title="<%= lang === 'ru' ? 'Закон Гука' : 'Hooke\'s law' %>">\(F\!=\!kx\)</button>
+                <button class="template-btn physics-btn" data-insert="\\frac{kx^{2}}{2}" data-mode="insert" title="<%= lang === 'ru' ? 'Энергия упругой деформации' : 'Elastic potential energy' %>">\(\frac{kx^2}{2}\)</button>
+                <button class="template-btn physics-btn" data-insert="\\frac{v^{2}}{R}" data-mode="insert" title="<%= lang === 'ru' ? 'Центростремительное ускорение' : 'Centripetal acceleration' %>">\(\frac{v^2}{R}\)</button>
+                <button class="template-btn physics-btn" data-insert="h = \\frac{gt^{2}}{2}" data-mode="replace" title="<%= lang === 'ru' ? 'Путь свободного падения' : 'Free-fall distance' %>">\(h=\frac{gt^2}{2}\)</button>
+                <button class="template-btn physics-btn" data-insert="s = v_{0}t + \\frac{at^{2}}{2}" data-mode="replace" title="<%= lang === 'ru' ? 'Кинематическое уравнение' : 'Kinematic equation' %>">\(s=v_0 t+\frac{at^2}{2}\)</button>
+                <button class="template-btn physics-btn" data-insert="v = \\omega R" data-mode="replace" title="<%= lang === 'ru' ? 'Линейная скорость из угловой' : 'Linear from angular velocity' %>">\(v\!=\!\omega R\)</button>
+            </div>
+        </div>
+
+        <!-- Row 3: Fields, Waves & Optics -->
+        <div class="template-section">
+            <div class="template-section-label"><%= lang === 'ru' ? 'Поля, волны и оптика' : 'Fields, Waves &amp; Optics' %></div>
+            <div class="template-buttons" id="fieldsTemplates">
+                <button class="template-btn physics-btn" data-insert="\\varepsilon = -\\frac{d\\Phi}{dt}" data-mode="replace" title="<%= lang === 'ru' ? 'Закон Фарадея' : 'Faraday\'s law' %>">\(\varepsilon\!=\!-\frac{d\Phi}{dt}\)</button>
+                <button class="template-btn physics-btn" data-insert="E = h\\nu" data-mode="replace" title="<%= lang === 'ru' ? 'Энергия фотона' : 'Photon energy' %>">\(E\!=\!h\nu\)</button>
+                <button class="template-btn physics-btn" data-insert="T = \\frac{2\\pi}{\\omega}" data-mode="replace" title="<%= lang === 'ru' ? 'Период' : 'Period' %>">\(T=\frac{2\pi}{\omega}\)</button>
+                <button class="template-btn physics-btn" data-insert="\\frac{1}{F} = \\frac{1}{d_{1}} + \\frac{1}{d_{2}}" data-mode="replace" title="<%= lang === 'ru' ? 'Формула тонкой линзы' : 'Thin lens equation' %>">\(\frac{1}{F}=\frac{1}{d_1}+\frac{1}{d_2}\)</button>
+                <button class="template-btn physics-btn" data-insert="\\Phi = BS\\cos\\alpha" data-mode="replace" title="<%= lang === 'ru' ? 'Магнитный поток' : 'Magnetic flux' %>">\(\Phi\!=\!BS\cos\alpha\)</button>
+                <button class="template-btn physics-btn" data-insert="n_{1}\\sin\\alpha = n_{2}\\sin\\beta" data-mode="replace" title="<%= lang === 'ru' ? 'Закон Снеллиуса' : 'Snell\'s law' %>">\(n_1\sin\alpha\!=\!n_2\sin\beta\)</button>
+                <button class="template-btn physics-btn" data-insert="T = 2\\pi\\sqrt{\\frac{l}{g}}" data-mode="replace" title="<%= lang === 'ru' ? 'Период маятника' : 'Pendulum period' %>">\(T=2\pi\sqrt{\frac{l}{g}}\)</button>
+                <button class="template-btn physics-btn" data-insert="Q = I^{2}Rt" data-mode="replace" title="<%= lang === 'ru' ? 'Закон Джоуля-Ленца' : 'Joule heating' %>">\(Q\!=\!I^2Rt\)</button>
+                <button class="template-btn physics-btn" data-insert="pV = \\nu RT" data-mode="replace" title="<%= lang === 'ru' ? 'Уравнение идеального газа' : 'Ideal gas law' %>">\(pV\!=\!\nu RT\)</button>
+                <button class="template-btn physics-btn" data-insert="F = G\\frac{m_{1}m_{2}}{r^{2}}" data-mode="replace" title="<%= lang === 'ru' ? 'Закон всемирного тяготения' : 'Gravitational force' %>">\(F=G\frac{m_1 m_2}{r^2}\)</button>
+                <button class="template-btn physics-btn" data-insert="B = \\frac{\\mu_{0}I}{2\\pi r}" data-mode="replace" title="<%= lang === 'ru' ? 'Магнитное поле провода' : 'Magnetic field of a wire' %>">\(B=\frac{\mu_0 I}{2\pi r}\)</button>
+                <button class="template-btn physics-btn" data-insert="\\frac{1}{\\sqrt{1 - \\frac{v^{2}}{c^{2}}}}" data-mode="insert" title="<%= lang === 'ru' ? 'Фактор Лоренца' : 'Lorentz factor' %>">\(\frac{1}{\sqrt{1-\frac{v^2}{c^2}}}\)</button>
+            </div>
+        </div>
+
+        <!-- Editor panels -->
+        <div class="editor-panels">
+            <div>
+                <div class="panel-label"><%= lang === 'ru' ? 'Ввод LaTeX' : 'LaTeX Input' %></div>
+                <textarea id="latexInput" placeholder="<%= lang === 'ru' ? 'Введите LaTeX, например E = mc^2' : 'Type LaTeX here, e.g. E = mc^2' %>"></textarea>
+            </div>
+            <div>
+                <div class="panel-label"><%= lang === 'ru' ? 'Предпросмотр' : 'Preview' %></div>
+                <div class="preview-panel" id="previewPanel">
+                    <div id="previewContent">
+                        <span class="preview-placeholder"><%= lang === 'ru' ? 'Ваше уравнение появится здесь...' : 'Your equation will appear here...' %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-buttons">
+            <button class="action-btn" id="copyLatexBtn" title="<%= lang === 'ru' ? 'Копировать LaTeX в буфер обмена' : 'Copy LaTeX to clipboard' %>">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <%= lang === 'ru' ? 'Копировать LaTeX' : 'Copy LaTeX' %>
+            </button>
+            <button class="action-btn" id="copyImageBtn" title="<%= lang === 'ru' ? 'Копировать уравнение как PNG' : 'Copy equation as PNG image' %>">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <%= lang === 'ru' ? 'Копировать изображение' : 'Copy as Image' %>
+            </button>
+            <span class="copy-feedback" id="copyFeedback"></span>
+        </div>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+    <%- include('../default/main_site_search_script') %>
+
+    <script>
+    (function () {
+        var pageLang = "<%= lang %>";
+
+        const textarea = document.getElementById('latexInput');
+        const previewContent = document.getElementById('previewContent');
+        const previewPanel = document.getElementById('previewPanel');
+        const copyLatexBtn = document.getElementById('copyLatexBtn');
+        const copyImageBtn = document.getElementById('copyImageBtn');
+        const copyFeedback = document.getElementById('copyFeedback');
+
+        let debounceTimer = null;
+        const DEBOUNCE_MS = 300;
+        let isTypesetting = false;
+
+        // --- Live preview with debounce ---
+        function updatePreview() {
+            const latex = textarea.value.trim();
+
+            if (!latex) {
+                previewContent.innerHTML = '<span class="preview-placeholder">' + (pageLang === "ru" ? "Ваше уравнение появится здесь..." : "Your equation will appear here...") + '</span>';
+                return;
+            }
+
+            previewContent.innerHTML = '$$' + escapeHtml(latex) + '$$';
+
+            if (!isTypesetting && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                isTypesetting = true;
+                MathJax.typesetPromise([previewContent]).then(function () {
+                    isTypesetting = false;
+                });
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        textarea.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updatePreview, DEBOUNCE_MS);
+        });
+
+        // --- Insert at cursor / replace ---
+        function insertAtCursor(text) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+            textarea.value = before + text + after;
+            const cursorPos = start + text.length;
+            textarea.setSelectionRange(cursorPos, cursorPos);
+            textarea.focus();
+            triggerPreview();
+        }
+
+        function replaceAll(text) {
+            textarea.value = text;
+            textarea.focus();
+            triggerPreview();
+        }
+
+        function triggerPreview() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(updatePreview, 50);
+        }
+
+        // Decode HTML entities from data attributes (&#10; for newlines, &amp; for &)
+        function decodeDataInsert(raw) {
+            const el = document.createElement('textarea');
+            el.innerHTML = raw;
+            return el.value.replace(/\\\\/g, '\\');
+        }
+
+        // --- Symbols collapse toggle ---
+        const symbolsSection = document.getElementById('symbolsSection');
+        document.getElementById('symbolsCollapseBtn').addEventListener('click', function () {
+            symbolsSection.classList.toggle('collapsed');
+        });
+
+        // --- Symbols tab switching ---
+        document.querySelectorAll('.symbols-tab').forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.symbols-tab').forEach(function (t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                const target = this.getAttribute('data-tab');
+                symbolsSection.querySelectorAll('.symbols-grid').forEach(function (g) {
+                    g.style.display = g.id === 'symbols-' + target ? 'grid' : 'none';
+                });
+                if (symbolsSection.classList.contains('collapsed')) {
+                    symbolsSection.classList.remove('collapsed');
+                }
+            });
+        });
+
+        // --- Typeset MathJax in template buttons ---
+        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+            MathJax.startup.promise.then(function () {
+                var targets = ['mathTemplates', 'mechanicsTemplates', 'fieldsTemplates'].map(function (id) {
+                    return document.getElementById(id);
+                }).filter(Boolean);
+                MathJax.typesetPromise(targets);
+            });
+        }
+
+        // --- Template button handlers ---
+        document.querySelectorAll('[data-insert]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const raw = this.getAttribute('data-insert');
+                const text = decodeDataInsert(raw);
+                const mode = this.getAttribute('data-mode');
+
+                if (mode === 'replace') {
+                    replaceAll(text);
+                } else {
+                    insertAtCursor(text);
+                }
+            });
+        });
+
+        // --- Copy LaTeX ---
+        function showFeedback(msg) {
+            copyFeedback.textContent = msg;
+            copyFeedback.classList.add('visible');
+            setTimeout(function () {
+                copyFeedback.classList.remove('visible');
+            }, 2000);
+        }
+
+        copyLatexBtn.addEventListener('click', function () {
+            const latex = textarea.value.trim();
+            if (!latex) return;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(latex).then(function () {
+                    showFeedback(pageLang === "ru" ? "Скопировано!" : "Copied!");
+                }).catch(function () {
+                    fallbackCopy(latex);
+                });
+            } else {
+                fallbackCopy(latex);
+            }
+        });
+
+        function fallbackCopy(text) {
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            try {
+                document.execCommand('copy');
+                showFeedback(pageLang === "ru" ? "Скопировано!" : "Copied!");
+            } catch (e) {
+                showFeedback(pageLang === "ru" ? "Ошибка копирования" : "Copy failed");
+            }
+            document.body.removeChild(temp);
+        }
+
+        // --- Copy as Image ---
+        copyImageBtn.addEventListener('click', function () {
+            const latex = textarea.value.trim();
+            if (!latex) return;
+
+            copyImageBtn.disabled = true;
+            showFeedback(pageLang === "ru" ? "Рендеринг..." : "Rendering...");
+
+            // Wait for MathJax to finish, then capture
+            const doCapture = function () {
+                html2canvas(previewPanel, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false
+                }).then(function (canvas) {
+                    canvas.toBlob(function (blob) {
+                        if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+                            const item = new ClipboardItem({ 'image/png': blob });
+                            navigator.clipboard.write([item]).then(function () {
+                                showFeedback(pageLang === "ru" ? "Скопировано как изображение!" : "Copied as image!");
+                                copyImageBtn.disabled = false;
+                            }).catch(function () {
+                                downloadBlob(blob);
+                                copyImageBtn.disabled = false;
+                            });
+                        } else {
+                            downloadBlob(blob);
+                            copyImageBtn.disabled = false;
+                        }
+                    }, 'image/png');
+                }).catch(function () {
+                    showFeedback(pageLang === "ru" ? "Ошибка рендеринга" : "Render failed");
+                    copyImageBtn.disabled = false;
+                });
+            };
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([previewPanel]).then(doCapture);
+            } else {
+                doCapture();
+            }
+        });
+
+        function downloadBlob(blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'equation.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showFeedback(pageLang === "ru" ? "Скачано как PNG" : "Downloaded as PNG");
+        }
+    })();
+    </script>
+</body>
+</html>

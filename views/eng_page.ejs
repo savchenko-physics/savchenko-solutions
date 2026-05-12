@@ -299,11 +299,53 @@
           </div>
           <% }); %>
         </div>
+
+        <!-- Problempedia callout removed for now -->
+
+        <!-- Latest from the Blog (in main column) -->
+        <div id="blogWidgetMain" style="display:none; margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 16px; font-weight: 600; color: #2d2d2d; margin: 0;">
+              <%= lang === 'ru' ? 'Блог' : 'Latest from the Blog' %>
+            </h3>
+            <a href="/blog" style="font-size: 13px; color: #1a5276; text-decoration: none; font-weight: 500;">
+              <%= lang === 'ru' ? 'Все' : 'View all' %> &rarr;
+            </a>
+          </div>
+          <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;"></div>
+        </div>
       </div>
 
       <!-- RIGHT COLUMN: Sticky Sidebar -->
       <div class="home-sidebar">
         <div class="sidebar-sticky">
+
+          <!-- Challenge of the Week Widget -->
+          <% if (typeof challengeWidget !== 'undefined' && challengeWidget) { %>
+          <div class="sidebar-section" style="margin-bottom: 1.25rem;">
+            <div style="padding: 1rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+              <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #1a1a2e; margin-bottom: 0.4rem;">
+                <%= lang === 'ru' ? 'Задача недели' : 'Challenge of the Week' %>
+              </div>
+              <p style="font-size: 14px; color: #2d2d2d; margin: 0 0 0.5rem 0; line-height: 1.4;">
+                <%
+                  const challengePreview = (challengeWidget.problem_statement || '')
+                    .replace(/\$([^$]+)\$/g, '$1')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                %>
+                <%= challengePreview.length > 100 ? challengePreview.substring(0, 100) + '...' : challengePreview %>
+              </p>
+              <div style="font-size: 13px; color: #6c757d; margin-bottom: 0.5rem;">
+                <span id="homeWidgetCountdown" data-end="<%= challengeWidget.week_end %>"></span>
+                &middot; <%= challengeWidget.submission_count %> <%= lang === 'ru' ? 'решений' : 'submissions' %>
+              </div>
+              <a href="/compete/<%= challengeWidget.id %>" style="display: inline-block; background: #1a1a2e; color: #fff; padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none;">
+                <%= lang === 'ru' ? 'Попробовать' : 'Try it' %>
+              </a>
+            </div>
+          </div>
+          <% } %>
 
           <!-- Top Authors -->
           <div class="sidebar-section">
@@ -378,6 +420,8 @@
               <%= lang === 'ru' ? 'Посмотреть все' : 'View all' %> &rarr;
             </a>
           </div>
+
+          <!-- Blog widget moved to main column -->
 
         </div>
       </div>
@@ -1216,6 +1260,7 @@
     .section-count {
       font-size: 12px;
       color: #6c757d;
+      white-space: nowrap;
     }
     .problem-dots {
       display: flex;
@@ -1413,7 +1458,7 @@
     .commit-thread::before {
       content: '';
       position: absolute;
-      left: 14px;
+      left: 13px;
       top: 12px;
       bottom: 12px;
       width: 2px;
@@ -1431,8 +1476,7 @@
       align-items: center;
       flex-shrink: 0;
       width: 28px;
-      height: 16px;
-      margin-top: 3px;
+      margin-top: 2px;
       position: relative;
       z-index: 1;
     }
@@ -1442,13 +1486,14 @@
       background: #dee2e6;
     }
     .commit-dot {
-      width: 10px;
-      height: 10px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       background: #1a1a2e;
       border: 2px solid #fff;
       flex-shrink: 0;
-      box-sizing: content-box;
+      box-sizing: border-box;
+      aspect-ratio: 1;
     }
     .commit-entry.new-solution .commit-dot {
       background: #27ae60;
@@ -1701,6 +1746,59 @@
           card.classList.toggle('open');
         });
       });
+
+      // Blog widget (main column cards)
+      fetch('/blog/api/posts?limit=3')
+        .then(r => r.json())
+        .then(posts => {
+          if (!posts.length) return;
+          const widget = document.getElementById('blogWidgetMain');
+          const list = document.getElementById('blogWidgetMainList');
+          const lang = '<%= lang %>';
+          let html = '';
+          posts.forEach(p => {
+            const date = new Date(p.published_at).toLocaleDateString(
+              lang === 'ru' ? 'ru-RU' : 'en-US',
+              { month: 'short', day: 'numeric', year: 'numeric' }
+            );
+            const excerpt = (p.excerpt || '').length > 120 ? p.excerpt.slice(0, 120) + '...' : (p.excerpt || '');
+            const author = p.author_username || '';
+            html += '<a href="/blog/' + p.slug + '" style="display: block; padding: 1rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; text-decoration: none; transition: border-color 0.15s;">' +
+              '<div style="font-weight: 600; color: #2d2d2d; font-size: 14px; margin-bottom: 4px; line-height: 1.4;">' + p.title + '</div>' +
+              '<div style="color: #6c757d; font-size: 13px; line-height: 1.5; margin-bottom: 6px;">' + excerpt + '</div>' +
+              '<div style="color: #8c959f; font-size: 12px;">' + (author ? author + ' · ' : '') + date + '</div>' +
+              '</a>';
+          });
+          list.innerHTML = html;
+          widget.style.display = 'block';
+        })
+        .catch(() => {});
+
+      // Challenge widget countdown
+      const cwEl = document.getElementById('homeWidgetCountdown');
+      if (cwEl) {
+        const rawEnd = (cwEl.dataset.end || '').trim();
+        let cwEnd = null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(rawEnd)) {
+          const parts = rawEnd.split('-').map(Number);
+          cwEnd = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+        } else if (rawEnd) {
+          cwEnd = new Date(rawEnd);
+        }
+        if (!cwEnd || Number.isNaN(cwEnd.getTime())) {
+          cwEl.textContent = '—';
+          return;
+        }
+        function cwUpdate() {
+          const diff = cwEnd - new Date();
+          if (diff <= 0) { cwEl.textContent = 'Expired'; return; }
+          const d = Math.floor(diff / 86400000);
+          const h = Math.floor((diff % 86400000) / 3600000);
+          cwEl.textContent = d + 'd ' + h + 'h left';
+        }
+        cwUpdate();
+        setInterval(cwUpdate, 60000);
+      }
     });
   </script>
 </body>

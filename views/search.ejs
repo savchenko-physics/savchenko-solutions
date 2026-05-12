@@ -1,133 +1,148 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="content-language" content="en" />
-    <meta name="keywords"
-        content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda" />
-    <meta name="description" content="Contributors of Savchenko Solutions" />
+    <meta http-equiv="content-language" content="<%= lang %>" />
+    <meta name="description" content="Search Savchenko Solutions" />
     <meta name="author" content="Aliaksandr Melnichenka" />
-    <meta name="date" content="2023-10" scheme="YYYY-MM" />
-    <meta property="og:title" content="Contributors of Savchenko Solutions" />
+    <meta property="og:title" content="Global Search - Savchenko Solutions" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
-    <meta property="og:description" content="Contributors of Savchenko Solutions" />
-    <meta name="yandex-verification" content="6cfda41f74038368" />
+    <meta property="og:description" content="Search Savchenko Solutions" />
     <%- include('default/main_site_header_head') %>
     <link rel="stylesheet" href="/css/css-latex/style.css" />
-    <link rel="stylesheet" href="/css/css-latex/login.css" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
-    <title>Global Search</title>
+    <title><%= lang === 'ru' ? 'Поиск' : 'Search' %> - Savchenko Solutions</title>
     <style>
-        /* .container {
-                max-width: 800px;
-                margin: 20px auto;
-                padding: 20px;
-                background: #fff;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            } */
-        body {
-            font-family: 'Roboto', Arial, sans-serif;
+        .search-page-container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 32px 16px;
         }
-
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-
-        #search-form {
+        .search-page-form {
             display: flex;
-            flex-direction: row;
-            align-items: stretch;
             gap: 0;
             width: 100%;
-            max-width: 720px;
-            margin: 0 auto;
+            margin-bottom: 20px;
         }
-
-        #search-form input[type="text"] {
-            font-family: 'Arial', 'Roboto', sans-serif;
-            flex: 1 1 auto;
-            min-width: 0;
-            width: auto;
-            padding: 12px 14px;
-            font-size: 1.125rem;
-            line-height: 1.4;
-            border: 1px solid #ccc;
+        .search-page-form input[type="text"] {
+            flex: 1;
+            padding: 10px 14px;
+            font-size: 1rem;
+            border: 1px solid #dee2e6;
             border-right: none;
+            border-radius: 6px 0 0 6px;
             outline: none;
+            height: 40px;
+            box-sizing: border-box;
         }
-
-        #search-form .submit-button {
-            font-family: 'Arial', 'Roboto', sans-serif;
-            flex: 0 0 auto;
-            width: auto !important;
-            max-width: none;
-            padding: 0 12px;
-            min-width: 0;
+        .search-page-form input[type="text"]:focus {
+            border-color: #1a5276;
+        }
+        .search-page-form button {
+            padding: 0 20px;
             font-size: 0.875rem;
             font-weight: 600;
-            line-height: 1.2;
-            background-color: var(--ss-primary-btn, #1a1a2e);
-            color: var(--ss-white, #fff);
-            border: 1px solid var(--ss-primary-btn, #1a1a2e);
-            border-radius: 0;
+            background: #1a1a2e;
+            color: #fff;
+            border: 1px solid #1a1a2e;
+            border-radius: 0 6px 6px 0;
             cursor: pointer;
-            white-space: nowrap;
+            height: 40px;
+            box-sizing: border-box;
         }
-
-        #search-form .submit-button:hover {
-            background-color: var(--ss-primary-btn-hover, #2c2c4a);
-            border-color: var(--ss-primary-btn-hover, #2c2c4a);
+        .search-page-form button:hover {
+            background: #2c2c4a;
         }
-
-        .result {
-            margin-bottom: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
+        .search-results-count {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 16px;
         }
-
-        .result:last-child {
-            border-bottom: none;
+        .search-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 24px;
         }
-
-        .result h2 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            line-height: 1.35;
+        .search-filter-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 13px;
+            border: 1px solid #dee2e6;
+            border-radius: 16px;
+            background: #fff;
+            color: #2d2d2d;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.15s, border-color 0.15s;
         }
-
-        .result-snippet {
-            margin: 6px 0 4px;
-            color: #444;
-            font-size: 1.05rem;
-            line-height: 1.55;
-        }
-
-        .result-meta {
-            margin: 0;
-            font-size: 0.75rem;
-            color: #888;
-            line-height: 1.3;
-        }
-
-        .result a {
-            color: #36c;
+        .search-filter-pill:hover {
+            background: #f8f9fa;
+            border-color: #adb5bd;
+            color: #2d2d2d;
             text-decoration: none;
         }
-
-        .result a:hover {
+        .search-filter-pill.active {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+        .search-result-card {
+            padding: 16px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .search-result-card:last-child {
+            border-bottom: none;
+        }
+        .search-result-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+        }
+        .search-result-name a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .search-result-name a:hover {
+            color: #0d3b54;
             text-decoration: underline;
         }
-
-        .no-results {
-            color: #999;
+        .search-result-context {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 0 0 6px 0;
+        }
+        .search-result-snippet {
+            font-size: 14px;
+            color: #2d2d2d;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .search-lang-badge {
+            display: inline-block;
+            background: #e9ecef;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-size: 11px;
+            color: #6c757d;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        .search-no-results {
+            text-align: center;
+            padding: 48px 16px;
+            color: #6c757d;
+        }
+        .search-no-results p {
+            font-size: 15px;
+            margin-top: 12px;
+        }
+        .search-no-results a {
+            color: #1a5276;
         }
     </style>
     <script src="/js/analytics.js"></script>
@@ -135,70 +150,128 @@
 
 <body class="auth-page">
     <%- include('default/header.ejs') %>
-        <br>
-        <div class="container">
-            <h1><%= __('menu.search') %></h1>
-            <form id="search-form" action="/<%= lang === 'ru' ? 'ru/' : '' %>global-search" method="get">
-                <input type="text" id="search-query" name="search" 
-                    placeholder="<%= __('menu.searchPlaceholder') %>"
-                    value="<%= searchTerm %>" required>
-                <button type="submit" class="submit-button"><%= __('menu.searchButton') %></button>
-            </form>
-            <br>
-            <div id="results">
-                <% if (results.length === 0) { %>
-                    <p class="no-results"><%= !searchTerm || String(searchTerm).trim() === '' ? __('menu.searchTypeToSeeResults') : __('menu.resultsNotFound') %></p>
-                <% } else { %>
-                    <% results.forEach(result => { %>
-                        <div class="result">
-                            <h2><a href="<%= result.relativePath %>">
-                                <%= result.name %>
-                            </a></h2>
-                            <p class="result-snippet"><%- result.snippet %></p>
-                            <p class="result-meta">Line: <%= result.lineNumber %></p>
-                        </div>
-                    <% }); %>
-                <% } %>
-            </div>
+    <div class="search-page-container">
+        <h1 style="font-size: 22px; font-weight: 600; margin-bottom: 20px;"><%= lang === 'ru' ? 'Поиск' : 'Search' %></h1>
+
+        <form class="search-page-form" action="/global-search" method="get">
+            <input type="hidden" name="lang" value="<%= lang %>">
+            <input type="text" name="search" id="search-query"
+                placeholder="<%= __('menu.searchPlaceholder') %>"
+                value="<%= searchTerm %>" autofocus>
+            <button type="submit"><%= __('menu.searchButton') %></button>
+        </form>
+
+        <% if (searchTerm && results.length > 0) { %>
+            <p class="search-results-count">
+                <%= lang === 'ru' ? 'Найдено' : 'Found' %> <%= results.length %> <%= lang === 'ru' ? 'результатов для' : 'results for' %> "<%= searchTerm %>"
+            </p>
+        <% } %>
+
+        <% if (searchTerm) { %>
+        <div class="search-filters" id="search-filters">
+            <span class="search-filter-pill active" data-filter="all"><%= lang === 'ru' ? 'Все' : 'All' %></span>
+            <span class="search-filter-pill" data-filter="en">English</span>
+            <span class="search-filter-pill" data-filter="ru"><%= lang === 'ru' ? 'Русский' : 'Russian' %></span>
+            <% if (typeof chapters !== 'undefined' && chapters.length > 0) { %>
+                <% chapters.forEach(function(ch) { %>
+                    <span class="search-filter-pill" data-filter="ch-<%= ch.num %>">
+                        <%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.num %>
+                    </span>
+                <% }); %>
+            <% } %>
         </div>
+        <% } %>
 
-        <%- include('default/main_site_footer_scripts') %>
-        <%- include('default/footer_en.ejs') %>
-            <script>
-                const form = document.getElementById('search-form');
-                const queryInput = document.getElementById('search-query');
-                const resultsContainer = document.getElementById('results');
-
-                form.addEventListener('submit', async (event) => {
-                    event.preventDefault();
-
-                    const query = queryInput.value.trim();
-                    if (!query) return;
-
-                    resultsContainer.innerHTML = '<p>Loading...</p>';
-
-                    try {
-                        // Use a relative URL for fetching search results
-                        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-                        const data = await response.json();
-
-                        if (data.results.length === 0) {
-                            resultsContainer.innerHTML = `<p class="no-results">${'<%= __("menu.resultsNotFound") %>'}</p>`;
-                            return;
-                        }
-
-                        resultsContainer.innerHTML = data.results.map(result => `
-                    <div class="result">
-                        <h2><a href="${result.relativePath}">${result.name} (${result.lang})</a></h2>
-                        <p class="result-snippet">${result.snippet}</p>
-                        <p class="result-meta">Line: ${result.lineNumber}</p>
+        <div id="results">
+            <% if (searchTerm && results.length === 0) { %>
+                <div class="search-no-results">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6c757d" stroke-width="1.5">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <p>
+                        <%= lang === 'ru'
+                            ? 'Решения не найдены для "' + searchTerm + '". Попробуйте поискать по главам или загрузить решение.'
+                            : 'No solutions found for "' + searchTerm + '". Try browsing by chapter or upload a solution.' %>
+                    </p>
+                    <a href="/<%= lang %>"><%= lang === 'ru' ? 'К главам' : 'Browse chapters' %></a>
+                </div>
+            <% } else if (!searchTerm) { %>
+                <p style="color: #6c757d;"><%= __('menu.searchTypeToSeeResults') %></p>
+            <% } else { %>
+                <% results.forEach(function(result) { %>
+                    <div class="search-result-card" data-lang="<%= result.lang %>" data-chapter="<%= result.chapterNum %>">
+                        <p class="search-result-name">
+                            <a href="<%= result.relativePath %>"><%= result.name %></a>
+                            <span class="search-lang-badge"><%= result.lang %></span>
+                        </p>
+                        <% if (result.chapter || result.section) { %>
+                            <p class="search-result-context">
+                                <% if (result.chapter) { %><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= result.chapterNum %>: <%= result.chapter %><% } %><% if (result.chapter && result.section) { %> &rsaquo; <% } %><%= result.section || '' %>
+                            </p>
+                        <% } %>
+                        <p class="search-result-snippet"><%= result.snippet %></p>
                     </div>
-                `).join('');
-                    } catch (error) {
-                        resultsContainer.innerHTML = `<p class="no-results">${'<%= __("menu.errorLoadingResults") %>'}</p>`;
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+
+    <%- include('default/main_site_footer_scripts') %>
+    <%- include('default/footer_en.ejs') %>
+
+    <script>
+    (function() {
+        const filters = document.getElementById('search-filters');
+        if (!filters) return;
+
+        const pills = filters.querySelectorAll('.search-filter-pill');
+        const cards = document.querySelectorAll('.search-result-card');
+
+        pills.forEach(function(pill) {
+            pill.addEventListener('click', function() {
+                pills.forEach(function(p) { p.classList.remove('active'); });
+                pill.classList.add('active');
+
+                const filter = pill.getAttribute('data-filter');
+
+                cards.forEach(function(card) {
+                    const cardLang = card.getAttribute('data-lang');
+                    const cardChapter = card.getAttribute('data-chapter');
+
+                    if (filter === 'all') {
+                        card.style.display = '';
+                    } else if (filter === 'en' || filter === 'ru') {
+                        card.style.display = cardLang === filter ? '' : 'none';
+                    } else if (filter.startsWith('ch-')) {
+                        const chNum = filter.replace('ch-', '');
+                        card.style.display = cardChapter === chNum ? '' : 'none';
                     }
                 });
-            </script>
+
+                // Update visible count
+                const visible = document.querySelectorAll('.search-result-card:not([style*="display: none"])').length;
+                const countEl = document.querySelector('.search-results-count');
+                if (countEl) {
+                    const term = '<%= searchTerm %>';
+                    const lang = '<%= lang %>';
+                    countEl.textContent = (lang === 'ru' ? 'Найдено ' : 'Found ') + visible + (lang === 'ru' ? ' результатов для "' : ' results for "') + term + '"';
+                }
+            });
+        });
+    })();
+
+    (function() {
+        const term = '<%= searchTerm.replace(/\'/g, "\\\\'") %>';
+        if (!term) return;
+        const terms = term.trim().split(/\s+/).filter(function(t) { return t.length > 1; });
+        if (!terms.length) return;
+        const pattern = new RegExp('(' + terms.map(function(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')', 'gi');
+        document.querySelectorAll('.search-result-snippet').forEach(function(el) {
+            el.innerHTML = el.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(pattern, '<mark style="background:#fff3cd;padding:0 1px;border-radius:2px;">$1</mark>');
+        });
+    })();
+    </script>
 </body>
 
 </html>

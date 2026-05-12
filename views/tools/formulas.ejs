@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Формулы для МФО — Полный справочник формул по физике' : 'Formulas for IPhO — Complete Physics Formula Sheet' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Полный справочник формул для МФО с поиском: математика, кинематика, механика, колебания, оптика, цепи, электромагнетизм, термодинамика, квантовая механика, законы Кеплера и теория относительности.' : 'Complete searchable IPhO formula sheet: mathematics, kinematics, mechanics, oscillations, optics, circuits, electromagnetism, thermodynamics, quantum mechanics, Kepler laws, and relativity.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/formulas" />
+    <meta property="og:title" content="<%= lang === 'ru' ? 'Формулы для МФО — Savchenko Solutions' : 'Formulas for IPhO — Savchenko Solutions' %>" />
+    <meta property="og:description" content="<%= lang === 'ru' ? 'Интерактивный справочник формул по физике. Более 200 формул в 13 разделах.' : 'Complete interactive IPhO physics formula reference. 200+ formulas across 13 sections.' %>" />
+    <meta property="og:url" content="https://savchenkosolutions.com/<%= lang %>/tools/formulas" />
+    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "<%= lang === 'ru' ? 'Формулы для МФО' : 'Formulas for IPhO' %>",
+        "description": "<%= lang === 'ru' ? 'Полный справочник формул для МФО с поиском: математика, кинематика, механика, колебания, оптика, цепи, электромагнетизм, термодинамика, квантовая механика, законы Кеплера и теория относительности.' : 'Complete searchable IPhO formula sheet covering mathematics, kinematics, mechanics, oscillations, optics, circuits, electromagnetism, thermodynamics, quantum mechanics, Kepler laws, and relativity.' %>",
+        "url": "https://savchenkosolutions.com/<%= lang %>/tools/formulas",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "Savchenko Solutions",
+            "url": "https://savchenkosolutions.com"
+        }
+    }
+    </script>
+    <script src="/js/analytics.js"></script>
+
+    <style>
+        /* ---- Layout ---- */
+        .formulas-wrapper {
+            display: flex;
+            gap: 2rem;
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem 3rem;
+        }
+        .chapter-sidebar {
+            position: sticky;
+            top: 80px;
+            align-self: flex-start;
+            width: 220px;
+            min-width: 220px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding: 0.75rem 0;
+        }
+        .chapter-sidebar a {
+            display: block;
+            padding: 6px 12px;
+            font-size: 13px;
+            color: #6c757d;
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            line-height: 1.4;
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .chapter-sidebar a:hover,
+        .chapter-sidebar a.active {
+            color: #1a1a2e;
+            border-left-color: #1a1a2e;
+        }
+        .formulas-main {
+            flex: 1;
+            min-width: 0;
+            max-width: 900px;
+        }
+
+        /* ---- Search ---- */
+        .formula-search {
+            position: sticky;
+            top: 70px;
+            z-index: 10;
+            background: #fff;
+            padding: 0.75rem 0 1rem;
+        }
+        .formula-search input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 14px 0 42px;
+            font-size: 15px;
+            color: #2d2d2d;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #f8f9fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center / 18px no-repeat;
+        }
+        .formula-search input:focus {
+            border-color: #1a1a2e;
+            background-color: #fff;
+        }
+        .search-count {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 6px;
+            display: none;
+        }
+
+        /* ---- Chapter sections ---- */
+        .chapter-section {
+            margin-bottom: 2.5rem;
+        }
+        .chapter-section h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin: 0 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        /* ---- Formula cards ---- */
+        .formula-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            transition: box-shadow 0.15s;
+        }
+        .formula-card:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .formula-card h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 0.5rem;
+        }
+        .formula-display {
+            font-size: 17px;
+            margin: 0.4rem 0;
+            overflow-x: auto;
+        }
+        .formula-vars {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 0.35rem 0 0;
+            line-height: 1.55;
+        }
+
+        /* ---- Mobile chapter dropdown ---- */
+        .chapter-dropdown-mobile {
+            display: none;
+        }
+        .chapter-dropdown-mobile select {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 12px;
+            font-size: 14px;
+            color: #2d2d2d;
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+        }
+
+        /* ---- No results ---- */
+        .no-results {
+            display: none;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+            font-size: 15px;
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 991px) {
+            .chapter-sidebar { display: none; }
+            .chapter-dropdown-mobile { display: block; }
+            .formulas-wrapper { padding: 1rem; }
+        }
+
+        /* ---- Print ---- */
+        @media print {
+            .formula-search, .chapter-sidebar, .no-print, .chapter-dropdown-mobile { display: none !important; }
+            .formula-card { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<%- include('../default/main_site_header') %>
+
+<div class="formulas-wrapper">
+
+    <!-- ========== SIDEBAR (desktop) ========== -->
+    <nav class="chapter-sidebar no-print" aria-label="<%= lang === 'ru' ? 'Навигация по разделам' : 'Chapter navigation' %>">
+        <a href="#ch-1"><%= lang === 'ru' ? 'I. Математика' : 'I. Mathematics' %></a>
+        <a href="#ch-2"><%= lang === 'ru' ? 'II. Общие рекомендации' : 'II. General Recommendations' %></a>
+        <a href="#ch-3"><%= lang === 'ru' ? 'III. Кинематика' : 'III. Kinematics' %></a>
+        <a href="#ch-4"><%= lang === 'ru' ? 'IV. Механика' : 'IV. Mechanics' %></a>
+        <a href="#ch-5"><%= lang === 'ru' ? 'V. Колебания и волны' : 'V. Oscillations & Waves' %></a>
+        <a href="#ch-6"><%= lang === 'ru' ? 'VI. Геометрическая оптика' : 'VI. Geometrical Optics' %></a>
+        <a href="#ch-7"><%= lang === 'ru' ? 'VII. Волновая оптика' : 'VII. Wave Optics' %></a>
+        <a href="#ch-8"><%= lang === 'ru' ? 'VIII. Цепи' : 'VIII. Circuits' %></a>
+        <a href="#ch-9"><%= lang === 'ru' ? 'IX. Электромагнетизм' : 'IX. Electromagnetism' %></a>
+        <a href="#ch-10"><%= lang === 'ru' ? 'X. Термодинамика' : 'X. Thermodynamics' %></a>
+        <a href="#ch-11"><%= lang === 'ru' ? 'XI. Квантовая механика' : 'XI. Quantum Mechanics' %></a>
+        <a href="#ch-12"><%= lang === 'ru' ? 'XII. Законы Кеплера' : 'XII. Kepler Laws' %></a>
+        <a href="#ch-13"><%= lang === 'ru' ? 'XIII. Теория относительности' : 'XIII. Relativity' %></a>
+    </nav>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="formulas-main">
+
+        <div style="margin-bottom:1rem;">
+            <a href="/<%= lang %>/tools" style="font-size:13px;color:#6c757d;text-decoration:none;">&larr; <%= lang === 'ru' ? 'Назад к инструментам' : 'Back to Tools' %></a>
+        </div>
+
+        <h1 style="font-family:'Inter',sans-serif;font-size:26px;font-weight:600;color:#2d2d2d;margin:0 0 0.25rem;"><%= lang === 'ru' ? 'Формулы для МФО' : 'Formulas for IPhO' %></h1>
+        <p style="font-size:14px;color:#6c757d;margin:0 0 1rem;"><%= lang === 'ru' ? 'На основе справочника формул МФО Яана Калды (версия от 4 июля 2018 г.). Используйте строку поиска для быстрого нахождения любой формулы.' : 'Based on the IPhO formula sheet by Jaan Kalda (v. July 4, 2018). Use the search bar to find any formula instantly.' %></p>
+
+        <!-- Mobile chapter dropdown -->
+        <div class="chapter-dropdown-mobile no-print">
+            <select id="chapterSelect" aria-label="<%= lang === 'ru' ? 'Перейти к разделу' : 'Jump to chapter' %>">
+                <option value=""><%= lang === 'ru' ? 'Перейти к разделу...' : 'Jump to chapter...' %></option>
+                <option value="ch-1"><%= lang === 'ru' ? 'I. Математика' : 'I. Mathematics' %></option>
+                <option value="ch-2"><%= lang === 'ru' ? 'II. Общие рекомендации' : 'II. General Recommendations' %></option>
+                <option value="ch-3"><%= lang === 'ru' ? 'III. Кинематика' : 'III. Kinematics' %></option>
+                <option value="ch-4"><%= lang === 'ru' ? 'IV. Механика' : 'IV. Mechanics' %></option>
+                <option value="ch-5"><%= lang === 'ru' ? 'V. Колебания и волны' : 'V. Oscillations &amp; Waves' %></option>
+                <option value="ch-6"><%= lang === 'ru' ? 'VI. Геометрическая оптика' : 'VI. Geometrical Optics' %></option>
+                <option value="ch-7"><%= lang === 'ru' ? 'VII. Волновая оптика' : 'VII. Wave Optics' %></option>
+                <option value="ch-8"><%= lang === 'ru' ? 'VIII. Цепи' : 'VIII. Circuits' %></option>
+                <option value="ch-9"><%= lang === 'ru' ? 'IX. Электромагнетизм' : 'IX. Electromagnetism' %></option>
+                <option value="ch-10"><%= lang === 'ru' ? 'X. Термодинамика' : 'X. Thermodynamics' %></option>
+                <option value="ch-11"><%= lang === 'ru' ? 'XI. Квантовая механика' : 'XI. Quantum Mechanics' %></option>
+                <option value="ch-12"><%= lang === 'ru' ? 'XII. Законы Кеплера' : 'XII. Kepler Laws' %></option>
+                <option value="ch-13"><%= lang === 'ru' ? 'XIII. Теория относительности' : 'XIII. Relativity' %></option>
+            </select>
+        </div>
+
+        <!-- Search bar -->
+        <div class="formula-search no-print">
+            <input type="text" id="formulaSearchInput" placeholder="<%= lang === 'ru' ? 'Поиск формул (напр. Бернулли, Снеллиус, Лоренц...)' : 'Search formulas (e.g. Bernoulli, Snell, Lorentz...)' %>" autocomplete="off" />
+            <div class="search-count" id="searchCount"></div>
+        </div>
+
+        <div class="no-results" id="noResults"><%= lang === 'ru' ? 'Формулы по вашему запросу не найдены.' : 'No formulas match your search.' %></div>
+
+
+        <!-- ============================================================
+             I — MATHEMATICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-1">
+            <h2><%= lang === 'ru' ? 'I. Математика' : 'I. Mathematics' %></h2>
+
+            <div class="formula-card" data-keywords="taylor series expansion approximation truncate ряд тейлора разложение приближение">
+                <h3><%= lang === 'ru' ? '1. Ряд Тейлора' : '1. Taylor Series' %></h3>
+                <div class="formula-display">$$F(x) = F(x_0) + \sum \frac{F^{(n)}(x_0)}{n!}(x - x_0)^n$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Линейное приближение' : 'Linear approximation' %>: \(F(x) \approx F(x_0) + F'(x_0)(x - x_0)\). <%= lang === 'ru' ? 'При' : 'For' %> \(|x| \ll 1\): \(\sin x \approx x\), \(\cos x \approx 1 - x^2/2\), \(e^x \approx 1 + x\), \(\ln(1+x) \approx x\), \((1+x)^n \approx 1 + nx\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="perturbation method iterative approximation non-perturbed метод возмущений итерационный приближение">
+                <h3><%= lang === 'ru' ? '2. Метод возмущений' : '2. Perturbation Method' %></h3>
+                <div class="formula-display">$$x = x^{(0)} + x^{(1)} + x^{(2)} + \cdots$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Решение ищется итерационно, используя решение «невозмущённой» (напрямую решаемой) задачи в качестве нулевого приближения; поправки для следующего приближения вычисляются на основе предыдущего.' : 'Find the solution iteratively using the solution to the "non-perturbed" (directly solvable) problem as the 0th approximation; corrections for the next approximation are calculated on the basis of the previous one.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="linear differential equation constant coefficients characteristic equation линейное дифференциальное уравнение постоянные коэффициенты характеристическое">
+                <h3><%= lang === 'ru' ? '3. Линейное ДУ с постоянными коэффициентами' : '3. Linear Differential Equation with Constant Coefficients' %></h3>
+                <div class="formula-display">$$ay'' + by' + cy = 0 \quad\Rightarrow\quad y = Ae^{\lambda_1 x} + Be^{\lambda_2 x}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? '\\(\\lambda_{1,2}\\) — корни характеристического уравнения \\(a\\lambda^2 + b\\lambda + c = 0\\) (если \\(\\lambda_1 \\neq \\lambda_2\\)). Если решение комплексное с \\(\\lambda_{1,2} = \\gamma \\pm i\\omega\\), то \\(y = Ce^{\\gamma x}\\sin(\\omega x + \\varphi_0)\\).' : '\\(\\lambda_{1,2}\\) are solutions of the characteristic equation \\(a\\lambda^2 + b\\lambda + c = 0\\) (if \\(\\lambda_1 \\neq \\lambda_2\\)). If the solution is complex with \\(\\lambda_{1,2} = \\gamma \\pm i\\omega\\), then \\(y = Ce^{\\gamma x}\\sin(\\omega x + \\varphi_0)\\).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="complex numbers euler formula modulus argument imaginary комплексные числа формула эйлера модуль аргумент мнимый">
+                <h3><%= lang === 'ru' ? '4. Комплексные числа' : '4. Complex Numbers' %></h3>
+                <div class="formula-display">$$z = a + bi = |z|e^{i\varphi}$$</div>
+                <p class="formula-vars">\(\bar{z} = a - ib = |z|e^{-i\varphi}\), \(|z|^2 = z\bar{z} = a^2 + b^2\), \(\varphi = \arg z = \arcsin\frac{b}{|z|}\). \(\text{Re}\,z = (z+\bar{z})/2\), \(\text{Im}\,z = (z-\bar{z})/2\). \(|z_1 z_2| = |z_1||z_2|\), \(\arg z_1 z_2 = \arg z_1 + \arg z_2\). <%= lang === 'ru' ? 'Формула Эйлера' : "Euler's formula" %>: \(e^{i\varphi} = \cos\varphi + i\sin\varphi\). \(\cos\varphi = \frac{e^{i\varphi}+e^{-i\varphi}}{2}\), \(\sin\varphi = \frac{e^{i\varphi}-e^{-i\varphi}}{2i}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="cross product dot product vector distributive scalar векторное скалярное произведение вектор">
+                <h3><%= lang === 'ru' ? '5. Векторное и скалярное произведения' : '5. Cross and Dot Products' %></h3>
+                <div class="formula-display">
+                    $$\vec{a}\cdot\vec{b} = ab\cos\varphi = a_x b_x + a_y b_y + a_z b_z$$
+                    $$|\vec{a}\times\vec{b}| = ab\sin\varphi$$
+                </div>
+                <p class="formula-vars">\(\vec{a}\times\vec{b} = -\vec{b}\times\vec{a} \perp \vec{a},\vec{b}\). <%= lang === 'ru' ? 'Компоненты' : 'Components' %>: \(\vec{a}\times\vec{b} = (a_y b_z - b_y a_z)\vec{e}_x + (a_z b_x - b_z a_x)\vec{e}_y + \cdots\). <%= lang === 'ru' ? 'Правило BAC-CAB' : 'BAC-CAB rule' %>: \(\vec{a}\times[\vec{b}\times\vec{c}] = \vec{b}(\vec{a}\cdot\vec{c}) - \vec{c}(\vec{a}\cdot\vec{b})\). <%= lang === 'ru' ? 'Смешанное произведение (объём параллелепипеда)' : 'Mixed product (volume of parallelepiped)' %>: \((\vec{a},\vec{b},\vec{c}) \equiv \vec{a}\cdot[\vec{b}\times\vec{c}] = [\vec{a}\times\vec{b}]\cdot\vec{c}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="cosine law sine law triangle sides angles теорема косинусов синусов треугольник стороны углы">
+                <h3><%= lang === 'ru' ? '6. Теоремы косинусов и синусов' : '6. Cosine and Sine Laws' %></h3>
+                <div class="formula-display">
+                    $$c^2 = a^2 + b^2 - 2ab\cos\varphi$$
+                    $$\frac{a}{\sin\alpha} = \frac{b}{\sin\beta} = 2R$$
+                </div>
+                <p class="formula-vars">\(R\) — <%= lang === 'ru' ? 'радиус описанной окружности треугольника.' : 'the circumradius of the triangle.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="trigonometric identities sin cos tan addition double angle product sum тригонометрические тождества сложение двойной угол">
+                <h3><%= lang === 'ru' ? '7. Тригонометрические тождества' : '7. Trigonometric Identities' %></h3>
+                <div class="formula-display">
+                    $$\sin(\alpha\pm\beta) = \sin\alpha\cos\beta \pm \cos\alpha\sin\beta$$
+                    $$\cos(\alpha\pm\beta) = \cos\alpha\cos\beta \mp \sin\alpha\sin\beta$$
+                </div>
+                <p class="formula-vars">\(\tan(\alpha\pm\beta) = \frac{\tan\alpha + \tan\beta}{1 \mp \tan\alpha\tan\beta}\). <%= lang === 'ru' ? 'Двойной угол' : 'Double angle' %>: \(\cos^2\alpha = \frac{1+\cos 2\alpha}{2}\), \(\sin^2\alpha = \frac{1-\cos 2\alpha}{2}\). <%= lang === 'ru' ? 'Произведение в сумму' : 'Product-to-sum' %>: \(\cos\alpha\cos\beta = \frac{\cos(\alpha+\beta)+\cos(\alpha-\beta)}{2}\). <%= lang === 'ru' ? 'Сумма в произведение' : 'Sum-to-product' %>: \(\cos\alpha + \cos\beta = 2\cos\frac{\alpha+\beta}{2}\cos\frac{\alpha-\beta}{2}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="inscribed angle circle cyclic quadrilateral circumcircle вписанный угол окружность четырёхугольник">
+                <h3><%= lang === 'ru' ? '8. Теорема о вписанном угле' : '8. Inscribed Angle Theorem' %></h3>
+                <div class="formula-display">$$\theta_{\text{inscribed}} = \tfrac{1}{2}\,\theta_{\text{central}}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Вписанный угол равен половине центрального угла, опирающегося на ту же дугу. Следствия: гипотенуза прямоугольного треугольника является диаметром описанной окружности; если противоположные углы четырёхугольника в сумме дают 180, он является вписанным.' : 'An angle inscribed in a circle is half of the central angle that subtends the same arc. Corollaries: the hypotenuse of a right triangle is the diameter of its circumcircle; if opposite angles of a quadrilateral are supplementary, it is a cyclic quadrilateral.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="triangle area heron formula inradius circumradius площадь треугольника формула герона вписанная описанная">
+                <h3><%= lang === 'ru' ? '9. Площадь треугольника' : '9. Triangle Area' %></h3>
+                <div class="formula-display">$$S = \tfrac{1}{2}\,a\,h_a = pr = \sqrt{p(p-a)(p-b)(p-c)} = \frac{abc}{4R}$$</div>
+                <p class="formula-vars">\(h_a\) — <%= lang === 'ru' ? 'высота к стороне' : 'altitude to side' %> \(a\), \(p\) — <%= lang === 'ru' ? 'полупериметр' : 'semi-perimeter' %>, \(r\) — <%= lang === 'ru' ? 'радиус вписанной окружности' : 'inradius' %>, \(R\) — <%= lang === 'ru' ? 'радиус описанной окружности.' : 'circumradius.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="centroid median intersection triangle center of mass центр масс медиана треугольник пересечение">
+                <h3><%= lang === 'ru' ? '10. Центроид треугольника' : '10. Triangle Centroid' %></h3>
+                <div class="formula-display">$$\vec{r}_G = \frac{\vec{r}_A + \vec{r}_B + \vec{r}_C}{3}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Центроид — точка пересечения медиан, делящая каждую медиану в отношении 2:1, считая от вершины к середине стороны.' : 'The centroid is the intersection point of the medians and divides each median in the ratio 2:1 from vertex to midpoint.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="derivatives differentiation chain rule product rule trigonometric exponential производные дифференцирование цепное правило">
+                <h3><%= lang === 'ru' ? '12. Производные' : '12. Derivatives' %></h3>
+                <div class="formula-display">
+                    $$(fg)' = fg' + f'g, \qquad f[g(x)]' = f'[g(x)]\,g'(x)$$
+                </div>
+                <p class="formula-vars">\((\sin x)' = \cos x\), \((\cos x)' = -\sin x\), \((e^x)' = e^x\), \((\ln x)' = 1/x\), \((x^n)' = nx^{n-1}\), \((\arctan x)' = 1/(1+x^2)\), \((\arcsin x)' = 1/\sqrt{1-x^2}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="integration integral substitution power rule antiderivative интегрирование интеграл подстановка первообразная">
+                <h3><%= lang === 'ru' ? '13. Интегрирование' : '13. Integration' %></h3>
+                <div class="formula-display">$$\int x^n\,dx = \frac{x^{n+1}}{n+1}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Формулы интегрирования обратны формулам дифференцирования. Частный случай метода подстановки' : 'Integration formulas are the inverses of derivative formulas. Substitution method special case' %>: \(\int f(ax+b)\,dx = F(ax+b)/a\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="conic sections ellipse hyperbola parabola focus конические сечения эллипс гипербола парабола фокус">
+                <h3><%= lang === 'ru' ? '14. Конические сечения' : '14. Conic Sections' %></h3>
+                <div class="formula-display">$$a_{11}x^2 + 2a_{12}xy + a_{22}y^2 + a_1 x + a_2 y + a_0 = 0$$</div>
+                <p class="formula-vars">\(a_{11} = a_{22}\) — <%= lang === 'ru' ? 'окружность' : 'circle' %>; \(a_{11}(a_{11}a_{22}-a_{12}^2) > 0\) — <%= lang === 'ru' ? 'эллипс' : 'ellipse' %>; \(< 0\) — <%= lang === 'ru' ? 'гипербола' : 'hyperbola' %>; \(a_{11}a_{22}=a_{12}^2\) — <%= lang === 'ru' ? 'парабола' : 'parabola' %>. <%= lang === 'ru' ? 'Эллипс' : 'Ellipse' %>: \(l_1 + l_2 = 2a\), \(\alpha_1 = \alpha_2\), \(A = \pi ab\). <%= lang === 'ru' ? 'Гипербола' : 'Hyperbola' %>: \(l_1 - l_2 = 2a\). <%= lang === 'ru' ? 'Парабола' : 'Parabola' %>: \(l + h = \text{const}\), \(\alpha_1 = \alpha_2\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="newton iterative method root finding trapezoidal numerical integration метод ньютона итерационный численные методы трапеции">
+                <h3><%= lang === 'ru' ? '15. Численные методы' : '15. Numerical Methods' %></h3>
+                <div class="formula-display">
+                    $$x_{n+1} = x_n - \frac{f(x_n)}{f'(x_n)}$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Итерационный метод Ньютона для нахождения корней \\(f(x) = 0\\). Формула трапеций' : "Newton's iterative method for finding roots \\(f(x) = 0\\). Trapezoidal rule" %>: \(\int_a^b f(x)\,dx \approx \frac{b-a}{2n}[f(x_0) + 2f(x_1) + \cdots + 2f(x_{n-1}) + f(x_n)]\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="vector derivative integral component triangle rule производная интеграл вектор компонента правило треугольника">
+                <h3><%= lang === 'ru' ? '16. Производные и интегралы векторов' : '16. Derivatives and Integrals of Vectors' %></h3>
+                <div class="formula-display">$$\frac{d\vec{v}}{dt} = \frac{dv_x}{dt}\vec{e}_x + \frac{dv_y}{dt}\vec{e}_y + \frac{dv_z}{dt}\vec{e}_z$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Дифференцируйте/интегрируйте покомпонентно; альтернативно — дифференцируйте, применяя правило треугольника для разности двух бесконечно близких векторов.' : 'Differentiate/integrate each component; alternatively differentiate by applying the triangle rule for the difference of two infinitesimally close vectors.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             II — GENERAL RECOMMENDATIONS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-2">
+            <h2><%= lang === 'ru' ? 'II. Общие рекомендации' : 'II. General Recommendations' %></h2>
+
+            <div class="formula-card" data-keywords="dimensional analysis check verify plausibility special cases размерность проверка правдоподобие частные случаи">
+                <h3><%= lang === 'ru' ? '1. Проверка формул на правильность' : '1. Check Formulas for Veracity' %></h3>
+                <div class="formula-display">$$[F] = [m][a] = \text{kg}\cdot\text{m/s}^2 = \text{N}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'а) Проверьте размерности; б) протестируйте простые частные случаи (два параметра равны, один параметр стремится к 0 или \\(\\infty\\)); в) оцените правдоподобие качественного поведения решения.' : 'a) Examine dimensions; b) test simple special cases (two parameters equal, one parameter tends to 0 or \\(\\infty\\)); c) verify the plausibility of the solution\'s qualitative behaviour.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="coincidence problem text hint equal quantities совпадение задача подсказка равные величины">
+                <h3><%= lang === 'ru' ? '2. Необычные совпадения' : '2. Extraordinary Coincidences' %></h3>
+                <div class="formula-display">$$\text{If two quantities are given equal} \Rightarrow \text{look there for the key}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если в условии задачи есть необычное совпадение (напр. две величины равны), то именно там может быть ключ к решению.' : 'If there is an extraordinary coincidence in the problem text (e.g. two things are equal), then the key to the solution might be there.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="postpone calculations simplify initial equations откладывать вычисления упрощать уравнения">
+                <h3><%= lang === 'ru' ? '4. Откладывайте вычисления' : '4. Postpone Calculations' %></h3>
+                <div class="formula-display">$$\text{Algebra first, numbers last}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Откладывайте длительные математические вычисления на самый конец (когда всё остальное сделано), записывая все исходные уравнения, которые необходимо упростить.' : 'Postpone long and time-consuming mathematical calculations to the very end (when everything else is done) while writing down all the initial equations which need to be simplified.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="difficult problem simple solution olympiad hint сложная задача простое решение олимпиада">
+                <h3><%= lang === 'ru' ? '5. Безнадёжно сложные задачи' : '5. Hopelessly Difficult Problems' %></h3>
+                <div class="formula-display">$$\text{Difficult problem} \Rightarrow \text{simple solution and simple answer}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если задача кажется безнадёжно сложной, обычно у неё очень простое решение (и простой ответ). Это верно только для олимпиадных задач, которые заведомо решаемы.' : 'If the problem seems to be hopelessly difficult, it has usually a very simple solution (and a simple answer). This is valid only for Olympiad problems, which are definitely solvable.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             III — KINEMATICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-3">
+            <h2><%= lang === 'ru' ? 'III. Кинематика' : 'III. Kinematics' %></h2>
+
+            <div class="formula-card" data-keywords="velocity displacement acceleration integral area graph translational скорость перемещение ускорение поступательное движение">
+                <h3><%= lang === 'ru' ? '1. Поступательное движение точки/твёрдого тела' : '1. Translational Motion of a Point/Rigid Body' %></h3>
+                <div class="formula-display">
+                    $$\vec{v} = \frac{d\vec{x}}{dt}, \quad \vec{x} = \int\vec{v}\,dt$$
+                    $$\vec{a} = \frac{d\vec{v}}{dt} = \frac{d^2\vec{x}}{dt^2}, \quad \vec{v} = \int\vec{a}\,dt$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Также' : 'Also' %>: \(t = \int v_x^{-1}\,dx = \int a_x^{-1}\,dv_x\), \(x = \int \frac{v_x}{a_x}\,dv_x\). <%= lang === 'ru' ? 'При' : 'If' %> \(a = \text{const}\): \(x = v_0 t + at^2/2 = (v^2 - v_0^2)/2a\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="rotational motion angular velocity angular acceleration tangential centripetal вращательное движение угловая скорость ускорение тангенциальное центростремительное">
+                <h3><%= lang === 'ru' ? '2. Вращательное движение' : '2. Rotational Motion' %></h3>
+                <div class="formula-display">
+                    $$\omega = \frac{d\varphi}{dt}, \quad \varepsilon = \frac{d\omega}{dt}$$
+                    $$\vec{a} = \vec{\tau}\frac{dv}{dt} + \vec{n}\frac{v^2}{R}$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Аналогично поступательному движению.' : 'Analogous to translational motion.' %> \(\vec{\tau}\) — <%= lang === 'ru' ? 'единичный касательный вектор' : 'tangential unit vector' %>, \(\vec{n}\) — <%= lang === 'ru' ? 'единичный нормальный вектор' : 'normal unit vector' %>, \(R\) — <%= lang === 'ru' ? 'радиус кривизны.' : 'radius of curvature.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="rigid body instantaneous center rotation velocity constraint perpendicular твёрдое тело мгновенный центр вращения скорость перпендикуляр">
+                <h3><%= lang === 'ru' ? '4. Движение твёрдого тела' : '4. Motion of a Rigid Body' %></h3>
+                <div class="formula-display">$$v_A\cos\alpha = v_B\cos\beta$$</div>
+                <p class="formula-vars">\(\vec{v}_A, \vec{v}_B\) — <%= lang === 'ru' ? 'скорости точек A и B' : 'velocities of points A and B' %>; \(\alpha, \beta\) — <%= lang === 'ru' ? 'углы между \\(\\vec{v}_A, \\vec{v}_B\\) и прямой AB. Мгновенный центр вращения находится как точка пересечения перпендикуляров к \\(\\vec{v}_A\\) и \\(\\vec{v}_B\\).' : 'angles formed by \\(\\vec{v}_A, \\vec{v}_B\\) with line AB. The instantaneous center of rotation can be found as the intersection point of perpendiculars to \\(\\vec{v}_A\\) and \\(\\vec{v}_B\\).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="non-inertial reference frame coriolis centrifugal relative velocity acceleration неинерциальная система отсчёта кориолисово центробежное относительная скорость">
+                <h3><%= lang === 'ru' ? '5. Неинерциальные системы отсчёта' : '5. Non-Inertial Reference Frames' %></h3>
+                <div class="formula-display">
+                    $$\vec{v}_2 = \vec{v}_0 + \vec{v}_1$$
+                    $$\vec{a}_2 = \vec{a}_0 + \vec{a}_1 + \omega^2\vec{R} + \vec{a}_{\text{Cor}}$$
+                </div>
+                <p class="formula-vars">\(\vec{a}_{\text{Cor}} \perp \vec{v}_1, \vec{\omega}\); \(\vec{a}_{\text{Cor}} = 0\) <%= lang === 'ru' ? 'при' : 'if' %> \(\vec{v}_1 = 0\). <%= lang === 'ru' ? 'Индекс 0 — система отсчёта, 1 — относительно системы, 2 — абсолютное.' : 'Subscript 0 — frame, 1 — relative to frame, 2 — absolute.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="ballistic trajectory projectile reachable region optimal angle баллистическая траектория снаряд достижимая область оптимальный угол">
+                <h3><%= lang === 'ru' ? '6. Баллистическая задача' : '6. Ballistic Problem' %></h3>
+                <div class="formula-display">$$y \le \frac{v_0^2}{2g} - \frac{gx^2}{2v_0^2}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Граница достижимой области. Для оптимальной баллистической траектории начальная и конечная скорости перпендикулярны.' : 'Reachable region boundary. For an optimal ballistic trajectory, initial and final velocities are perpendicular.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="fermat huygens fastest path minimum time ферма гюйгенс кратчайший путь минимальное время">
+                <h3><%= lang === 'ru' ? '7. Быстрейшие пути' : '7. Fastest Paths' %></h3>
+                <div class="formula-display">$$\delta\!\int \frac{ds}{v} = 0$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для нахождения быстрейших путей можно использовать принципы Ферма и Гюйгенса.' : "For finding fastest paths, Fermat's and Huygens's principles can be used." %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             IV — MECHANICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-4">
+            <h2><%= lang === 'ru' ? 'IV. Механика' : 'IV. Mechanics' %></h2>
+
+            <div class="formula-card" data-keywords="equilibrium rigid body force torque 2D static balance равновесие твёрдое тело сила момент статика">
+                <h3><%= lang === 'ru' ? '1. Равновесие твёрдого тела (2D)' : '1. 2D Equilibrium of a Rigid Body' %></h3>
+                <div class="formula-display">$$\sum F_x = 0, \quad \sum F_y = 0, \quad \sum M = 0$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? '2 уравнения для сил, 1 для моментов. Момент часто удобнее, так как «неинтересные» силы можно устранить выбором начала координат. Если силы приложены только к 2 точкам, линии действия совпадают; для 3 точек — пересекаются в одной точке.' : '2 equations for force, 1 for torque. Torque is often better since "boring" forces can be eliminated by a proper choice of origin. If forces are applied only to 2 points, the net force lines coincide; for 3 points, the 3 lines meet at a single point.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="friction combined force normal angle arctan mu contact трение суммарная сила нормальная угол контакт">
+                <h3><%= lang === 'ru' ? '2. Суммарная контактная сила' : '2. Combined Contact Force' %></h3>
+                <div class="formula-display">$$\vec{F}_{\text{contact}} = \vec{N} + \vec{f}, \quad \tan\theta_{\max} = \mu$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Нормальная сила и сила трения могут быть объединены в одну силу, приложенную к точке контакта под углом \\(\\arctan\\mu\\) к нормальной силе.' : 'Normal force and friction force can be combined into a single force, applied to the contact point under angle \\(\\arctan\\mu\\) with respect to the normal force.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="newton second law translational rotational torque moment inertia angular второй закон ньютона поступательное вращательное момент инерция">
+                <h3><%= lang === 'ru' ? '3. Второй закон Ньютона (поступательное и вращательное движение)' : "3. Newton's 2nd Law (Translational and Rotational)" %></h3>
+                <div class="formula-display">
+                    $$\vec{F} = m\vec{a}, \qquad \vec{M} = I\vec{\varepsilon}$$
+                </div>
+                <p class="formula-vars">\(\vec{M} = \vec{r}\times\vec{F}\). <%= lang === 'ru' ? 'Для 2D-геометрии \\(M\\) и \\(\\varepsilon\\) — скаляры, и \\(M = Fl = F_t r\\), где \\(l\\) — плечо силы.' : 'For 2D geometry, \\(M\\) and \\(\\varepsilon\\) are scalars and \\(M = Fl = F_t r\\), where \\(l\\) is the arm of a force.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="generalized coordinates potential energy kinetic energy equation of motion lagrangian обобщённые координаты потенциальная кинетическая энергия уравнение движения">
+                <h3><%= lang === 'ru' ? '4. Обобщённые координаты' : '4. Generalized Coordinates' %></h3>
+                <div class="formula-display">$$K = \tfrac{1}{2}\mu\dot{\xi}^2, \quad \mu\ddot{\xi} = -\frac{d\Pi(\xi)}{d\xi}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Пусть состояние системы определяется параметром \\(\\xi\\) с потенциальной энергией \\(\\Pi = \\Pi(\\xi)\\) и кинетической энергией \\(K = \\frac{1}{2}\\mu\\dot\\xi^2\\). Следовательно, для поступательного движения: сила — производная потенциальной энергии.' : 'Let the system\'s state be defined by a parameter \\(\\xi\\) with potential energy \\(\\Pi = \\Pi(\\xi)\\) and kinetic energy \\(K = \\frac{1}{2}\\mu\\dot\\xi^2\\). Hence for translational motion: force is the derivative of potential energy.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="center mass momentum angular momentum kinetic energy system particles центр масс импульс момент импульса кинетическая энергия система частиц">
+                <h3><%= lang === 'ru' ? '5. Система материальных точек' : '5. System of Mass Points' %></h3>
+                <div class="formula-display">
+                    $$\vec{r}_c = \frac{\sum m_i \vec{r}_i}{\sum m_j}, \quad \vec{P} = \sum m_i \vec{v}_i$$
+                    $$\vec{L} = \sum m_i \vec{r}_i \times \vec{v}_i, \quad K = \sum \tfrac{1}{2}m_i v_i^2$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Момент инерции относительно оси z' : 'Moment of inertia about the z-axis' %>: \(I_z = \sum m_i(x_i^2 + y_i^2) = \int(x^2 + y^2)\,dm\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="center mass frame kinetic energy angular momentum decomposition koenig theorem система центра масс кинетическая энергия момент импульса теорема кёнига">
+                <h3><%= lang === 'ru' ? '6. Система центра масс' : '6. Center-of-Mass Frame' %></h3>
+                <div class="formula-display">
+                    $$\vec{L} = \vec{L}_c + M_\Sigma \vec{R}_c \times \vec{v}_c$$
+                    $$K = K_c + \tfrac{1}{2}M_\Sigma v_c^2$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Индекс \\(c\\) обозначает величины относительно центра масс.' : 'Index \\(c\\) denotes quantities relative to the mass center.' %> \(\vec{P} = \vec{P}_c + M_\Sigma\vec{v}_c\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="steiner parallel axis theorem moment inertia distance теорема штейнера параллельная ось момент инерции расстояние">
+                <h3><%= lang === 'ru' ? '7. Теорема Штейнера (о параллельных осях)' : "7. Steiner's (Parallel Axis) Theorem" %></h3>
+                <div class="formula-display">$$I = I_c + mb^2$$</div>
+                <p class="formula-vars">\(b\) — <%= lang === 'ru' ? 'расстояние от центра масс до оси вращения' : 'distance of the mass center from the rotation axis' %>, \(I_c\) — <%= lang === 'ru' ? 'момент инерции относительно оси, проходящей через центр масс.' : 'moment of inertia about the axis through the mass center.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="newton second law momentum angular momentum force torque time derivative второй закон ньютона импульс момент импульса сила">
+                <h3><%= lang === 'ru' ? '8. Второй закон Ньютона для систем' : "8. Newton's 2nd Law for Systems" %></h3>
+                <div class="formula-display">$$\vec{F}_\Sigma = \frac{d\vec{P}}{dt}, \qquad \vec{M}_\Sigma = \frac{d\vec{L}}{dt}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'С \\(\\vec{P}\\) и \\(\\vec{L}\\) из пункта 5.' : 'With \\(\\vec{P}\\) and \\(\\vec{L}\\) from point 5.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="physical pendulum reduced length frequency oscillation физический маятник приведённая длина частота колебания">
+                <h3><%= lang === 'ru' ? '11. Физический маятник' : '11. Physical Pendulum' %></h3>
+                <div class="formula-display">
+                    $$\omega^2(l) = \frac{g}{l + I/(ml)}$$
+                    $$\tilde{l} = l + I/(ml)$$
+                </div>
+                <p class="formula-vars">\(\tilde{l}\) — <%= lang === 'ru' ? 'приведённая длина.' : 'reduced length.' %> \(\omega(l) = \omega(\tilde{l}-l) = \sqrt{g/\tilde{l}}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="moment inertia coefficients cylinder sphere shell rod square момент инерции коэффициенты цилиндр сфера оболочка стержень">
+                <h3><%= lang === 'ru' ? '12. Коэффициенты моментов инерции' : '12. Moments of Inertia Coefficients' %></h3>
+                <div class="formula-display">$$I = \alpha\, m R^2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Цилиндр' : 'Cylinder' %>: \(\alpha = 1/2\). <%= lang === 'ru' ? 'Сплошная сфера' : 'Solid sphere' %>: \(\alpha = 2/5\). <%= lang === 'ru' ? 'Тонкая сферическая оболочка' : 'Thin spherical shell' %>: \(\alpha = 2/3\). <%= lang === 'ru' ? 'Стержень (относительно центра)' : 'Rod (about center)' %>: \(\alpha = 1/12\) (<%= lang === 'ru' ? 'относительно конца' : 'about endpoint' %>: \(\alpha = 1/3\)). <%= lang === 'ru' ? 'Квадрат' : 'Square' %>: \(\alpha = 1/6\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="conservation laws energy momentum angular momentum elastic friction законы сохранения энергия импульс момент импульса упругий трение">
+                <h3><%= lang === 'ru' ? '13. Законы сохранения' : '13. Conservation Laws' %></h3>
+                <div class="formula-display">
+                    $$E = \text{const} \quad (\text{elastic, no friction})$$
+                    $$\vec{P} = \text{const} \quad (\text{no net external force})$$
+                    $$\vec{L} = \text{const} \quad (\text{no net external torque})$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Закон сохранения импульса может выполняться только вдоль одной оси. Закон сохранения момента импульса (плечи внешних сил равны 0) может быть записан относительно 2 или 3 точек, заменяя закон сохранения линейного импульса.' : 'Momentum conservation can hold only along one axis. Angular momentum (arms of external forces are 0) can be written relative to 2 or 3 points, then substitutes conservation of linear momentum.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="non-inertial frame inertial force centrifugal coriolis fictitious неинерциальная система сила инерции центробежная кориолисова фиктивная">
+                <h3><%= lang === 'ru' ? '14. Дополнительные силы в неинерциальных системах' : '14. Additional Forces in Non-Inertial Frames' %></h3>
+                <div class="formula-display">
+                    $$\vec{F}_{\text{inertial}} = -m\vec{a}$$
+                    $$\vec{F}_{\text{centrifugal}} = m\omega^2\vec{R}$$
+                    $$\vec{F}_{\text{Cor}} = 2m\vec{v}\times\vec{\Omega}$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Сила Кориолиса перпендикулярна скорости и не совершает работы.' : 'Coriolis force is perpendicular to velocity and does no work.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="collision elastic inelastic momentum angular momentum energy contact friction столкновение упругое неупругое импульс энергия контакт трение">
+                <h3><%= lang === 'ru' ? '16. Столкновение двух тел' : '16. Collision of Two Bodies' %></h3>
+                <div class="formula-display">
+                    $$\sum \vec{p}_{\text{before}} = \sum \vec{p}_{\text{after}}$$
+                    $$\sum E_{\text{before}} = \sum E_{\text{after}} \quad (\text{elastic})$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Сохраняются: а) суммарный импульс, б) суммарный момент импульса, в) момент импульса одного тела относительно точки удара, г) полная энергия (упругое). Если скольжение прекращается при ударе, конечные скорости точек контакта имеют равные проекции на плоскость контакта. Если скольжение не прекращается, переданный импульс образует угол \\(\\arctan\\mu\\) с нормалью.' : "Conserved: a) net momentum, b) net angular momentum, c) angular momentum of one body w.r.t. impact point, d) total energy (elastic). If sliding stops during impact, final velocities of contact points have equal projections to the contact plane. If sliding doesn't stop, the momentum delivered forms angle \\(\\arctan\\mu\\) with the normal." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="instantaneous center rotation rigid body velocity мгновенный центр вращения твёрдое тело скорость">
+                <h3><%= lang === 'ru' ? '17. Мгновенный центр вращения' : '17. Instantaneous Center of Rotation' %></h3>
+                <div class="formula-display">$$v_P = \omega \cdot CP$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Любое движение твёрдого тела можно представить как вращение вокруг мгновенного центра вращения \\(C\\). Замечание: расстояние от точки тела \\(P\\) до \\(C\\) не равно радиусу кривизны траектории \\(P\\).' : 'Every motion of a rigid body can be represented as a rotation around the instantaneous center of rotation \\(C\\). NB: distance of a body point \\(P\\) from \\(C\\) is not equal to the radius of curvature of the trajectory of \\(P\\).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="string tension massive hanging pressure radius curvature surface натяжение нить струна массивная висячая давление радиус кривизна поверхность">
+                <h3><%= lang === 'ru' ? '18. Натяжение нити' : '18. Tension in a String' %></h3>
+                <div class="formula-display">$$N = \frac{T}{R}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для массивной висящей нити горизонтальная компонента натяжения постоянна, а вертикальная меняется в зависимости от массы нити под ней. Сила давления (на единицу длины) нити на гладкую поверхность равна \\(N = T/R\\). Аналогия: давление поверхностного натяжения \\(p = 2\\sigma/R\\).' : "For a massive hanging string, tension's horizontal component is constant and vertical changes according to the string's mass underneath. Pressure force (per unit length) of a string on a smooth surface is \\(N = T/R\\). Analogy: surface tension pressure \\(p = 2\\sigma/R\\)." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="liquid surface equipotential pressure incompressible potential energy поверхность жидкости эквипотенциальная давление несжимаемая потенциальная энергия">
+                <h3><%= lang === 'ru' ? '19. Форма поверхности жидкости' : '19. Liquid Surface Shape' %></h3>
+                <div class="formula-display">$$p = p_0 - w$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Поверхность жидкости принимает эквипотенциальную форму (пренебрегая поверхностным натяжением). В несжимаемой жидкости \\(p = p_0 - w\\), где \\(w\\) — объёмная плотность потенциальной энергии.' : 'Liquid surface takes an equipotential shape (neglecting surface tension). In an incompressible liquid, \\(p = p_0 - w\\), where \\(w\\) is the volume density of potential energy.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="bernoulli law incompressible fluid pressure velocity potential streamline закон бернулли несжимаемая жидкость давление скорость потенциал линия тока">
+                <h3><%= lang === 'ru' ? '20. Закон Бернулли' : "20. Bernoulli's Law" %></h3>
+                <div class="formula-display">$$p + \tfrac{1}{2}\rho v^2 + \rho\varphi = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для несжимаемой жидкости. В однородном гравитационном поле \\(\\varphi = gh\\). Для газа с удельной теплоёмкостью \\(c_p\\)' : 'For incompressible fluid. In a homogeneous gravitational field, \\(\\varphi = gh\\). For a gas of specific heat \\(c_p\\)' %>: \(\frac{1}{2}v^2 + c_p T = \text{const}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="momentum continuity streamlines pressure density velocity непрерывность импульса линии тока давление плотность скорость">
+                <h3><%= lang === 'ru' ? '21. Непрерывность импульса' : '21. Momentum Continuity' %></h3>
+                <div class="formula-display">$$p + \rho v^2 = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Справедливо вдоль прямых линий тока.' : 'Valid along straight streamlines.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="adiabatic invariant oscillation phase plane area conserved slow change адиабатический инвариант колебания фазовая плоскость площадь сохраняется">
+                <h3><%= lang === 'ru' ? '22. Адиабатический инвариант' : '22. Adiabatic Invariant' %></h3>
+                <div class="formula-display">$$\oint p\,dx = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если относительное изменение параметров колебательной системы мало за один период, площадь петли на фазовой плоскости (в координатах \\(p\\text{-}x\\)) сохраняется с очень высокой точностью.' : 'If the relative change of the parameters of an oscillating system is small during one period, the area of the loop drawn on the phase plane (in \\(p\\text{-}x\\) coordinates) is conserved with very high accuracy.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="stability equilibrium minimum potential energy virtual displacement perturbation устойчивость равновесие минимум потенциальная энергия виртуальное смещение">
+                <h3><%= lang === 'ru' ? '23. Устойчивость' : '23. Stability' %></h3>
+                <div class="formula-display">$$\frac{d^2 U}{dx^2}\bigg|_{x_0} > 0 \quad\Rightarrow\quad \text{stable}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для исследования устойчивости используйте: а) принцип минимума потенциальной энергии, или б) принцип малого виртуального смещения.' : 'For studying stability use: a) principle of minimum potential energy, or b) principle of small virtual displacement.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="virial theorem average kinetic potential energy finite bounded orbit теорема вириала средняя кинетическая потенциальная энергия конечное ограниченное">
+                <h3><%= lang === 'ru' ? '24. Теорема вириала' : '24. Virial Theorem' %></h3>
+                <div class="formula-display">
+                    $$F \propto |\vec{r}|: \quad \langle K\rangle = \langle\Pi\rangle$$
+                    $$F \propto |\vec{r}|^{-2}: \quad 2\langle K\rangle = -\langle\Pi\rangle$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для финитного (ограниченного) движения; \\(\\langle\\cdot\\rangle\\) обозначает средние по времени.' : 'For finite (bounded) movement; \\(\\langle\\cdot\\rangle\\) denotes time averages.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="tsiolkovsky rocket equation mass ratio exhaust velocity delta v циолковский ракета уравнение масса скорость истечения">
+                <h3><%= lang === 'ru' ? '25. Формула Циолковского' : '25. Tsiolkovsky Rocket Equation' %></h3>
+                <div class="formula-display">$$\Delta v = u\ln\frac{M}{m}$$</div>
+                <p class="formula-vars">\(u\) — <%= lang === 'ru' ? 'скорость истечения' : 'exhaust velocity' %>, \(M\) — <%= lang === 'ru' ? 'начальная масса' : 'initial mass' %>, \(m\) — <%= lang === 'ru' ? 'конечная масса.' : 'final mass.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             V — OSCILLATIONS AND WAVES
+        ============================================================ -->
+        <section class="chapter-section" id="ch-5">
+            <h2><%= lang === 'ru' ? 'V. Колебания и волны' : 'V. Oscillations and Waves' %></h2>
+
+            <div class="formula-card" data-keywords="damped oscillator decay exponential underdamped frequency gamma затухающий осциллятор затухание экспоненциальный частота">
+                <h3><%= lang === 'ru' ? '1. Затухающий осциллятор' : '1. Damped Oscillator' %></h3>
+                <div class="formula-display">
+                    $$\ddot{x} + 2\gamma\dot{x} + \omega_0^2 x = 0 \quad (\gamma < \omega_0)$$
+                    $$x = x_0 e^{-\gamma t}\sin\!\left(t\sqrt{\omega_0^2 - \gamma^2} - \varphi_0\right)$$
+                </div>
+                <p class="formula-vars">\(\gamma\) — <%= lang === 'ru' ? 'коэффициент затухания' : 'damping coefficient' %>, \(\omega_0\) — <%= lang === 'ru' ? 'собственная частота.' : 'natural frequency.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="coupled oscillators equation motion matrix eigenmode связанные осцилляторы уравнение движения матрица собственная мода">
+                <h3><%= lang === 'ru' ? '2. Связанные осцилляторы' : '2. Coupled Oscillators' %></h3>
+                <div class="formula-display">$$\ddot{x}_i = \sum_j a_{ij} x_j$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Уравнение движения для системы связанных осцилляторов.' : 'Equation of motion for a system of coupled oscillators.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="eigenmode eigenfrequency normal mode superposition coupled system собственная мода частота суперпозиция связанная система нормальные колебания">
+                <h3><%= lang === 'ru' ? '3. Собственные моды' : '3. Eigenmodes' %></h3>
+                <div class="formula-display">$$x_j = \sum_i X_i x_{j0}\sin(\omega_i t + \varphi_{ij} + \phi_i)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Система из \\(N\\) связанных осцилляторов имеет \\(N\\) собственных мод с собственными частотами \\(\\omega_i\\). Общее решение — суперпозиция всех собственных колебаний с \\(2N\\) постоянными интегрирования \\(X_i\\) и \\(\\phi_i\\).' : 'A system of \\(N\\) coupled oscillators has \\(N\\) eigenmodes with eigenfrequencies \\(\\omega_i\\). General solution is a superposition of all eigenmotions with \\(2N\\) integration constants \\(X_i\\) and \\(\\phi_i\\).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="small oscillations equilibrium potential energy effective spring constant frequency малые колебания равновесие потенциальная энергия эффективная жёсткость частота">
+                <h3><%= lang === 'ru' ? '4. Малые колебания вблизи равновесия' : '4. Small Oscillations Near Equilibrium' %></h3>
+                <div class="formula-display">$$\omega^2 = \frac{\kappa}{\mu}, \quad \kappa = \Pi''(0)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для системы с обобщённой координатой \\(\\xi\\), кинетической энергией \\(K = \\frac{1}{2}\\mu\\dot\\xi^2\\) и равновесием при \\(\\xi = 0\\)' : 'For a system with generalized coordinate \\(\\xi\\), kinetic energy \\(K = \\frac{1}{2}\\mu\\dot\\xi^2\\), and equilibrium at \\(\\xi = 0\\)' %>: \(\Pi(\xi) \approx \frac{1}{2}\kappa\xi^2\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="wave phase wave vector angular frequency wavelength phase velocity group velocity dispersion волна фаза волновой вектор угловая частота длина волны фазовая групповая скорость дисперсия">
+                <h3><%= lang === 'ru' ? '5. Фаза волны и скорости' : '5. Wave Phase and Velocities' %></h3>
+                <div class="formula-display">
+                    $$\varphi = kx - \omega t + \varphi_0$$
+                    $$v_f = \nu\lambda = \omega/k, \quad v_g = d\omega/dk$$
+                </div>
+                <p class="formula-vars">\(k = 2\pi/\lambda\) — <%= lang === 'ru' ? 'волновой вектор. Значение в точке' : 'wave vector. The value at' %> \((x,t)\) <%= lang === 'ru' ? 'равно' : 'is' %> \(a_0\cos\varphi = \text{Re}\,(a_0 e^{i\varphi})\). \(v_f\) — <%= lang === 'ru' ? 'фазовая скорость' : 'phase velocity' %>, \(v_g\) — <%= lang === 'ru' ? 'групповая скорость.' : 'group velocity.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="standing wave superposition counter-propagating linear electromagnetic стоячая волна суперпозиция встречные линейные электромагнитные">
+                <h3><%= lang === 'ru' ? '6. Стоячие волны и суперпозиция' : '6. Standing Waves and Superposition' %></h3>
+                <div class="formula-display">$$e^{i(kx-\omega t)} + e^{i(-kx-\omega t)} = 2e^{-i\omega t}\cos kx$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для линейных волн (электромагнитных, малоамплитудных звуковых и водных) любой импульс можно рассматривать как суперпозицию синусоидальных волн. Стоячая волна — сумма двух одинаковых встречных волн.' : 'For linear waves (electromagnetic, small-amplitude sound and water waves), any pulse can be considered as a superposition of sinusoidal waves. A standing wave is the sum of two identical counter-propagating waves.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="speed sound gas adiabatic pressure density specific heat ratio gamma скорость звук газ адиабатический давление плотность показатель адиабаты">
+                <h3><%= lang === 'ru' ? '7. Скорость звука в газе' : '7. Speed of Sound in a Gas' %></h3>
+                <div class="formula-display">$$c_s = \sqrt{(\partial p/\partial\rho)_{\text{adiab}}} = \sqrt{\gamma p/\rho} = \bar{v}\sqrt{\gamma/3}$$</div>
+                <p class="formula-vars">\(\gamma\) — <%= lang === 'ru' ? 'показатель адиабаты' : 'specific heat ratio' %>, \(p\) — <%= lang === 'ru' ? 'давление' : 'pressure' %>, \(\rho\) — <%= lang === 'ru' ? 'плотность' : 'density' %>, \(\bar{v}\) — <%= lang === 'ru' ? 'среднеквадратичная скорость молекул.' : 'RMS molecular speed.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="speed sound elastic material young modulus density скорость звук упругий материал модуль юнга плотность">
+                <h3><%= lang === 'ru' ? '8. Скорость звука в упругом материале' : '8. Speed of Sound in Elastic Material' %></h3>
+                <div class="formula-display">$$c_s = \sqrt{E/\rho}$$</div>
+                <p class="formula-vars">\(E\) — <%= lang === 'ru' ? 'модуль Юнга' : "Young's modulus" %>, \(\rho\) — <%= lang === 'ru' ? 'плотность.' : 'density.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="speed waves shallow water string tension linear density скорость волны мелкая вода струна натяжение линейная плотность">
+                <h3><%= lang === 'ru' ? '9. Скорость волн на мелкой воде и в струнах' : '9. Speed of Waves in Shallow Water and Strings' %></h3>
+                <div class="formula-display">
+                    $$v = \sqrt{gh} \quad (\text{shallow water, } h \ll \lambda)$$
+                    $$v = \sqrt{T/\rho_{\text{lin}}} \quad (\text{string})$$
+                </div>
+                <p class="formula-vars">\(h\) — <%= lang === 'ru' ? 'глубина воды' : 'water depth' %>, \(T\) — <%= lang === 'ru' ? 'натяжение струны' : 'string tension' %>, \(\rho_{\text{lin}}\) — <%= lang === 'ru' ? 'линейная плотность.' : 'linear mass density.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="doppler effect frequency source observer moving sound эффект доплера частота источник наблюдатель движущийся звук">
+                <h3><%= lang === 'ru' ? '10. Эффект Доплера' : '10. Doppler Effect' %></h3>
+                <div class="formula-display">$$\nu = \nu_0\,\frac{1 + v_\parallel/c_s}{1 - u_\parallel/c_s}$$</div>
+                <p class="formula-vars">\(\nu_0\) — <%= lang === 'ru' ? 'излучаемая частота' : 'emitted frequency' %>, \(v_\parallel\) — <%= lang === 'ru' ? 'компонента скорости наблюдателя вдоль луча зрения' : 'observer velocity component along line of sight' %>, \(u_\parallel\) — <%= lang === 'ru' ? 'компонента скорости источника' : 'source velocity component' %>, \(c_s\) — <%= lang === 'ru' ? 'скорость звука.' : 'speed of sound.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="huygens principle wavefront construction step imaginary source perpendicular принцип гюйгенса волновой фронт построение мнимый источник перпендикуляр">
+                <h3><%= lang === 'ru' ? '11. Принцип Гюйгенса' : "11. Huygens' Principle" %></h3>
+                <div class="formula-display">$$\Delta x = c_s \Delta t$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Волновой фронт можно строить пошагово, помещая мнимый источник волн в каждую точку предыдущего фронта. Результат — кривые, разделённые расстоянием \\(\\Delta x = c_s\\Delta t\\). Волны распространяются перпендикулярно волновому фронту.' : 'Wavefront can be constructed step by step, placing an imaginary wave source in every point of the previous wavefront. Results are curves separated by distance \\(\\Delta x = c_s\\Delta t\\). Waves travel perpendicular to the wavefront.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             VI — GEOMETRICAL OPTICS & PHOTOMETRY
+        ============================================================ -->
+        <section class="chapter-section" id="ch-6">
+            <h2><%= lang === 'ru' ? 'VI. Геометрическая оптика. Фотометрия' : 'VI. Geometrical Optics. Photometry' %></h2>
+
+            <div class="formula-card" data-keywords="fermat principle least time path light refraction reflection принцип ферма наименьшее время путь свет преломление отражение">
+                <h3><%= lang === 'ru' ? '1. Принцип Ферма' : "1. Fermat's Principle" %></h3>
+                <div class="formula-display">$$\delta\!\int n\,ds = 0$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Путь волны из точки A в точку B таков, что волна проходит его за наименьшее время.' : "The wave's path from point A to point B is such that the wave travels the least time." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="snell law refraction refractive index angle incidence закон снеллиуса преломление показатель преломления угол падения">
+                <h3><%= lang === 'ru' ? '2. Закон Снеллиуса' : "2. Snell's Law" %></h3>
+                <div class="formula-display">$$\frac{\sin\alpha_1}{\sin\alpha_2} = \frac{n_2}{n_1} = \frac{v_1}{v_2}$$</div>
+                <p class="formula-vars">\(n_1, n_2\) — <%= lang === 'ru' ? 'показатели преломления' : 'refractive indices' %>, \(\alpha_1, \alpha_2\) — <%= lang === 'ru' ? 'углы падения и преломления' : 'angles of incidence and refraction' %>, \(v_1, v_2\) — <%= lang === 'ru' ? 'скорости волн.' : 'wave speeds.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="continuously varying refraction index total internal reflection curvature radius непрерывное преломление полное внутреннее отражение радиус кривизны">
+                <h3><%= lang === 'ru' ? '3. Непрерывное преломление' : '3. Continuous Refraction' %></h3>
+                <div class="formula-display">$$n' = n/r$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если показатель преломления меняется непрерывно, разделите среду на слои с постоянным \\(n\\) и примените закон Снеллиуса. Луч может распространяться вдоль слоя с постоянным \\(n\\), если условие полного внутреннего отражения выполнено предельно: \\(n\' = n/r\\), где \\(r\\) — радиус кривизны.' : "If the refraction index changes continuously, divide the media into layers of constant \\(n\\) and apply Snell's law. Light ray can travel along a layer of constant \\(n\\) if the total internal reflection requirement is marginally satisfied: \\(n' = n/r\\), where \\(r\\) is the curvature radius." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="photon momentum conservation wave vector refraction z-dependent сохранение импульса фотон волновой вектор преломление">
+                <h3><%= lang === 'ru' ? '4. Сохранение компонент импульса фотона' : '4. Conservation of Photon Momentum Components' %></h3>
+                <div class="formula-display">$$k_x, k_y = \text{const}, \quad |\vec{k}|/n = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если показатель преломления зависит только от \\(z\\), поперечные компоненты импульса фотона \\(p_x, p_y\\) и энергия сохраняются.' : "If refraction index depends only on \\(z\\), the photon's transverse momentum components \\(p_x, p_y\\) and energy are conserved." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="thin lens equation focal length image object distance diopter формула тонкой линзы фокусное расстояние изображение предмет диоптрия">
+                <h3><%= lang === 'ru' ? '5. Формула тонкой линзы' : '5. Thin Lens Equation' %></h3>
+                <div class="formula-display">$$\frac{1}{a} + \frac{1}{b} = \frac{1}{f} \equiv D$$</div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'расстояние до предмета' : 'object distance' %>, \(b\) — <%= lang === 'ru' ? 'расстояние до изображения' : 'image distance' %>, \(f\) — <%= lang === 'ru' ? 'фокусное расстояние' : 'focal length' %>, \(D\) — <%= lang === 'ru' ? 'оптическая сила. Обращайте внимание на знаки.' : 'optical power. Pay attention to signs.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="newton lens equation focal plane image object distance focus формула ньютона линза фокальная плоскость изображение предмет">
+                <h3><%= lang === 'ru' ? '6. Формула Ньютона для линзы' : "6. Newton's Lens Equation" %></h3>
+                <div class="formula-display">$$x_1 x_2 = f^2$$</div>
+                <p class="formula-vars">\(x_1, x_2\) — <%= lang === 'ru' ? 'расстояния изображения и предмета от фокальных плоскостей.' : 'distances of the image and the object from the focal planes.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="ray construction lens center focus focal plane optical axis image геометрическое построение лучей линза центр фокус оптическая ось">
+                <h3><%= lang === 'ru' ? '8. Геометрическое построение лучей' : '8. Geometric Ray Constructions' %></h3>
+                <div class="formula-display">$$\text{4 rules for ray tracing through lenses}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'а) Луч через центр линзы не преломляется; б) луч, параллельный оптической оси, проходит через фокус; в) после преломления параллельные лучи встречаются в фокальной плоскости; г) изображение плоскости — плоскость; эти две плоскости пересекаются на плоскости линзы.' : 'a) Ray through the lens center does not refract; b) ray parallel to the optical axis passes through the focus; c) after refraction, initially parallel rays meet at the focal plane; d) image of a plane is a plane; these two planes meet at the plane of the lens.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="luminous flux intensity illuminance lumen candela lux solid angle photometry световой поток сила света освещённость люмен кандела люкс телесный угол фотометрия">
+                <h3><%= lang === 'ru' ? '9. Фотометрия' : '9. Photometry' %></h3>
+                <div class="formula-display">
+                    $$I = \Phi/\Omega \quad [\text{cd}]$$
+                    $$E = \Phi/S \quad [\text{lx}]$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Световой поток \\(\\Phi\\) [люмен]: энергия света, взвешенная по чувствительности глаза. Сила света \\(I\\) [кандела]: поток на единицу телесного угла. Освещённость \\(E\\) [люкс]: поток на единицу площади.' : 'Luminous flux \\(\\Phi\\) [lumen]: energy of light weighted by eye sensitivity. Luminous intensity \\(I\\) [candela]: flux per solid angle. Illuminance \\(E\\) [lux]: flux per unit area.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="gauss theorem luminous flux point source illuminance distance inverse square теорема гаусса световой поток точечный источник освещённость расстояние">
+                <h3><%= lang === 'ru' ? '10. Теорема Гаусса для светового потока' : '10. Gauss Theorem for Luminous Flux' %></h3>
+                <div class="formula-display">$$\Phi = 4\pi\sum I_i, \qquad E = I/r^2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Поток через замкнутую поверхность, окружающую точечные источники с силой света \\(I_i\\), равен \\(\\Phi = 4\\pi\\sum I_i\\). Для одного источника на расстоянии \\(r\\)' : 'The flux through a closed surface surrounding point sources of intensity \\(I_i\\) is \\(\\Phi = 4\\pi\\sum I_i\\). For a single source at distance \\(r\\)' %>: \(E = I/r^2\).</p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             VII — WAVE OPTICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-7">
+            <h2><%= lang === 'ru' ? 'VII. Волновая оптика' : 'VII. Wave Optics' %></h2>
+
+            <div class="formula-card" data-keywords="diffraction huygens principle obstacle wavefront amplitude sum дифракция принцип гюйгенса препятствие волновой фронт амплитуда">
+                <h3><%= lang === 'ru' ? '1. Дифракция (принцип Гюйгенса)' : "1. Diffraction (Huygens' Principle)" %></h3>
+                <div class="formula-display">$$A = \sum_i A_i e^{i\varphi_i}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если препятствия разрезают волновой фронт на фрагменты, разделите фронт на малые части, служащие мнимыми точечными источниками света; амплитуда волны в точке наблюдения — сумма вкладов этих источников.' : 'If obstacles cut the wavefront into fragments, divide the wavefront into small pieces which serve as imaginary point-like light sources; the wave amplitude at the observation site is the sum over the contributions of these sources.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="double slit two slit interference young maxima fringe pattern двойная щель интерференция юнг максимумы полосы">
+                <h3><%= lang === 'ru' ? '2. Интерференция от двух щелей' : '2. Two-Slit Interference' %></h3>
+                <div class="formula-display">
+                    $$\varphi_{\max} = \arcsin\!\left(\frac{n\lambda}{a}\right), \quad n \in \mathbb{Z}$$
+                    $$I \propto \cos^2\!\left(k\frac{a}{2}\sin\varphi\right)$$
+                </div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'расстояние между щелями' : 'slit separation' %>, \(d \ll a, \lambda\) — <%= lang === 'ru' ? 'ширина щели много меньше расстояния и длины волны' : 'slit width is much smaller than separation and wavelength' %>, \(k = 2\pi/\lambda\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="single slit diffraction minima central maximum intensity дифракция одна щель минимумы центральный максимум интенсивность">
+                <h3><%= lang === 'ru' ? '3. Дифракция на одной щели' : '3. Single-Slit Diffraction' %></h3>
+                <div class="formula-display">
+                    $$\varphi_{\min} = \arcsin\!\left(\frac{n\lambda}{d}\right), \quad n \in \mathbb{Z},\; n \neq 0$$
+                </div>
+                <p class="formula-vars">\(d\) — <%= lang === 'ru' ? 'ширина щели. Центральный максимум имеет удвоенную ширину.' : 'slit width. The central maximum is double-wide.' %> \(I \propto \sin^2\!\left(k\frac{d}{2}\sin\varphi\right)/\varphi\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="diffraction grating spectral resolving power order slits maxima дифракционная решётка спектральная разрешающая способность порядок щели максимумы">
+                <h3><%= lang === 'ru' ? '4. Дифракционная решётка' : '4. Diffraction Grating' %></h3>
+                <div class="formula-display">$$\frac{\lambda}{\Delta\lambda} = nN$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Главные максимумы такие же, как для двух щелей; ширина главных максимумов такая же, как для одной щели при' : 'Main maxima same as two-slit case; width of main maxima same as single slit with' %> \(d\) <%= lang === 'ru' ? '— полная длина решётки.' : '— net grating length.' %> \(n\) — <%= lang === 'ru' ? 'порядок,' : 'order number,' %> \(N\) — <%= lang === 'ru' ? 'число щелей.' : 'number of slits.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="resolving power spectral device optical path difference beams разрешающая способность спектральный прибор оптическая разность хода лучи">
+                <h3><%= lang === 'ru' ? '5. Разрешающая способность спектрального прибора' : '5. Resolving Power of a Spectral Device' %></h3>
+                <div class="formula-display">$$\frac{\lambda}{\Delta\lambda} = \frac{L}{\lambda}$$</div>
+                <p class="formula-vars">\(L\) — <%= lang === 'ru' ? 'оптическая разность хода между крайними лучами.' : 'optical path difference between the shortest and longest beams.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="prism resolving power dispersion spectral призма разрешающая способность дисперсия спектральная">
+                <h3><%= lang === 'ru' ? '6. Разрешающая способность призмы' : '6. Resolving Power of a Prism' %></h3>
+                <div class="formula-display">$$\frac{\lambda}{\Delta\lambda} = a\frac{dn}{d\lambda}$$</div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'длина основания призмы,' : 'base length of the prism,' %> \(dn/d\lambda\) — <%= lang === 'ru' ? 'дисперсия материала призмы.' : 'dispersion of the prism material.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="rayleigh criterion angular resolution telescope lens diffraction limit критерий рэлея угловое разрешение телескоп линза дифракционный предел">
+                <h3><%= lang === 'ru' ? '7. Угловое разрешение (критерий Рэлея)' : '7. Angular Resolution (Rayleigh Criterion)' %></h3>
+                <div class="formula-display">$$\varphi = 1.22\,\lambda/d$$</div>
+                <p class="formula-vars">\(d\) — <%= lang === 'ru' ? 'диаметр апертуры. При таком угле центр одного точечного источника попадает на первый дифракционный минимум другого.' : 'aperture diameter. For that angle, the center of one point falls onto the first diffraction minimum of the other point.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="bragg diffraction crystal x-ray reflection planes glancing angle lattice брэгг дифракция кристалл рентгеновский отражение плоскости угол скольжения решётка">
+                <h3><%= lang === 'ru' ? '8. Дифракция Брэгга' : '8. Bragg Diffraction' %></h3>
+                <div class="formula-display">$$2a\sin\alpha = k\lambda$$</div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'расстояние между соседними кристаллическими плоскостями,' : 'distance between neighbouring crystal planes,' %> \(\alpha\) — <%= lang === 'ru' ? 'угол скольжения,' : 'glancing angle,' %> \(k\) — <%= lang === 'ru' ? 'порядок отражения.' : 'order of reflection.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="reflection phase shift optically denser dielectric thin film semi-transparent отражение сдвиг фазы оптически более плотная среда диэлектрик тонкая плёнка полупрозрачная">
+                <h3><%= lang === 'ru' ? '9. Сдвиг фазы при отражении' : '9. Reflection Phase Shift' %></h3>
+                <div class="formula-display">$$\Delta\varphi = \pi \quad (<%= lang === 'ru' ? '\\text{отражение от более плотной среды}' : '\\text{reflection from denser medium}' %>)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Отражение от оптически более плотной диэлектрической среды вносит сдвиг фазы' : 'Reflection from an optically denser dielectric medium introduces a phase shift of' %> \(\pi\). <%= lang === 'ru' ? 'Для полупрозрачных тонких плёнок:' : 'For semi-transparent thin films:' %> \(\varphi_\to + \varphi_\leftarrow = \pi\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="fabry perot interferometer resolving power transmission mirrors reflectivity finesse фабри перо интерферометр разрешающая способность пропускание зеркала отражательная способность">
+                <h3><%= lang === 'ru' ? '10. Интерферометр Фабри — Перо' : '10. Fabry-Perot Interferometer' %></h3>
+                <div class="formula-display">$$\frac{\nu}{\Delta\nu} \approx \frac{2a}{\lambda(1-r)}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Два параллельных полупрозрачных зеркала с большой отражательной способностью' : 'Two parallel semi-transparent mirrors with large reflectivity' %> \(r\) (\(1-r \ll 1\)). \(a\) — <%= lang === 'ru' ? 'расстояние между зеркалами.' : 'mirror separation.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="coherent electromagnetic waves electric field vector diagram energy flux intensity poynting когерентные электромагнитные волны электрическое поле векторная диаграмма поток энергии интенсивность">
+                <h3><%= lang === 'ru' ? '11. Когерентные ЭМ-волны и интенсивность' : '11. Coherent EM Waves and Intensity' %></h3>
+                <div class="formula-display">$$I = cn\varepsilon_0 E^2 = \frac{c}{n\mu_0}B^2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Электрические поля складываются; можно использовать векторную диаграмму, где угол между векторами — сдвиг фаз. Дисперсия:' : 'Electric fields are added; vector diagram can be used with angle between vectors as the phase shift. Dispersion:' %> \(n = n(\omega) = \sqrt{\varepsilon(\omega)}\). \(E, B\) — <%= lang === 'ru' ? 'среднеквадратичные значения.' : 'RMS values.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="malus law polarization intensity angle linearly polarized закон малюса поляризация интенсивность угол линейно поляризованный">
+                <h3><%= lang === 'ru' ? '12. Закон Малюса' : "12. Malus' Law" %></h3>
+                <div class="formula-display">$$I = I_0\cos^2\varphi$$</div>
+                <p class="formula-vars">\(\varphi\) — <%= lang === 'ru' ? 'угол между плоскостями поляризации. Справедлив для линейно поляризованного света.' : 'angle between the polarization planes. Valid for linearly polarized light.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="quarter wave plate phase shift circular polarization linear components четвертьволновая пластинка сдвиг фазы круговая поляризация линейные компоненты">
+                <h3><%= lang === 'ru' ? '13. Четвертьволновая пластинка' : '13. Quarter-Wave Plate' %></h3>
+                <div class="formula-display">$$\Delta\varphi = \pi/2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Пластинка' : '' %>\(\lambda/4\)<%= lang === 'ru' ? ' вносит сдвиг фаз' : '-plate introduces a phase shift of' %> \(\pi/2\) <%= lang === 'ru' ? 'между линейно поляризованными компонентами.' : 'between linearly polarized components.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="brewster angle polarization reflection refraction perpendicular tangent refractive index угол брюстера поляризация отражение преломление перпендикулярный показатель преломления">
+                <h3><%= lang === 'ru' ? '14. Угол Брюстера' : "14. Brewster's Angle" %></h3>
+                <div class="formula-display">$$\tan\varphi_B = n$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Отражённый и преломлённый лучи перпендикулярны. Отражённый луч полностью поляризован.' : 'Reflected and refracted rays are perpendicular. The reflected ray is completely polarized.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             VIII — CIRCUITS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-8">
+            <h2><%= lang === 'ru' ? 'VIII. Электрические цепи' : 'VIII. Circuits' %></h2>
+
+            <div class="formula-card" data-keywords="ohm law resistance power series parallel current voltage закон ома сопротивление мощность последовательное параллельное ток напряжение">
+                <h3><%= lang === 'ru' ? '1. Закон Ома и мощность' : "1. Ohm's Law and Power" %></h3>
+                <div class="formula-display">
+                    $$U = IR, \quad P = UI$$
+                    $$R_{\text{<%= lang === 'ru' ? 'посл' : 'series' %>}} = \sum R_i, \quad R_{\parallel}^{-1} = \sum R_i^{-1}$$
+                </div>
+                <p class="formula-vars">\(U\) — <%= lang === 'ru' ? 'напряжение,' : 'voltage,' %> \(I\) — <%= lang === 'ru' ? 'ток,' : 'current,' %> \(R\) — <%= lang === 'ru' ? 'сопротивление,' : 'resistance,' %> \(P\) — <%= lang === 'ru' ? 'мощность.' : 'power.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="kirchhoff kirchoff law node loop junction current voltage sum contour кирхгоф закон узел контур ток напряжение сумма">
+                <h3><%= lang === 'ru' ? '2. Законы Кирхгофа' : "2. Kirchhoff's Laws" %></h3>
+                <div class="formula-display">
+                    $$\sum_{\text{<%= lang === 'ru' ? 'узел' : 'node' %>}} I = 0, \qquad \sum_{\text{<%= lang === 'ru' ? 'контур' : 'contour' %>}} U = 0$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Первый закон: сумма токов в любом узле равна нулю. Второй закон: сумма падений напряжения по замкнутому контуру равна нулю.' : 'First law: sum of currents at any node is zero. Second law: sum of voltage drops around any closed loop is zero.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="node potential loop current equivalent circuit delta star wye transformation узловые потенциалы контурные токи эквивалентная схема треугольник звезда преобразование">
+                <h3><%= lang === 'ru' ? '3. Методы упрощения уравнений' : '3. Methods to Reduce Equations' %></h3>
+                <div class="formula-display">$$<%= lang === 'ru' ? '\\text{Узловые потенциалы}' : '\\text{Node potentials}' %> \quad | \quad <%= lang === 'ru' ? '\\text{Контурные токи}' : '\\text{Loop currents}' %> \quad | \quad \Delta \leftrightarrow Y$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Метод узловых потенциалов; метод контурных токов; эквивалентные схемы (любая трёхполюсная цепь преобразуется между' : 'Method of node potentials; method of loop currents; equivalent circuits (any 3-terminal network can be transformed between' %> \(\Delta\) <%= lang === 'ru' ? 'и' : 'and' %> \(Y\); <%= lang === 'ru' ? 'двухполюсник с ЭДС сводится к' : '2-terminal with emf becomes' %> \(r\) <%= lang === 'ru' ? 'и' : 'and' %> \(\mathcal{E}\) <%= lang === 'ru' ? 'последовательно).' : 'in series).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="infinite chain self-similarity resistance grid electrical images бесконечная цепь самоподобие сопротивление сетка электрические изображения">
+                <h3><%= lang === 'ru' ? '4. Бесконечные резисторные сети' : '4. Infinite Resistor Networks' %></h3>
+                <div class="formula-display">$$R_{\text{<%= lang === 'ru' ? 'цепь' : 'chain' %>}} = \frac{R}{2} + \sqrt{\frac{R^2}{4} + RR'}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Сопротивление бесконечной цепочки: используйте самоподобие. Сопротивление между соседними узлами бесконечной сетки: используйте обобщённый метод электрических изображений.' : 'Resistance of an infinite chain: use self-similarity. Resistance between neighbour nodes of an infinite grid: use the generalized method of electrical images.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="ac alternating current impedance complex resistance capacitor inductor reactance phase power переменный ток импеданс комплексное сопротивление конденсатор катушка реактивное сопротивление фаза мощность">
+                <h3><%= lang === 'ru' ? '5. Цепи переменного тока' : '5. AC Circuits' %></h3>
+                <div class="formula-display">
+                    $$Z_R = R, \quad Z_C = \frac{1}{i\omega C}, \quad Z_L = i\omega L$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Применяйте правила постоянного тока (пп. 1-4), заменяя' : 'Apply DC rules (pts. 1-4) while substituting' %> \(R\) <%= lang === 'ru' ? 'на' : 'with' %> \(Z\). <%= lang === 'ru' ? 'Фазовый угол:' : 'Phase angle:' %> \(\varphi = \arg Z\). \(U_{\text{<%= lang === 'ru' ? 'эфф' : 'eff' %>}} = |Z|I_{\text{<%= lang === 'ru' ? 'эфф' : 'eff' %>}}\). <%= lang === 'ru' ? 'Мощность:' : 'Power:' %> \(P = |U||I|\cos(\arg Z) = \sum I_i^2 R_i\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="time constant RC LR LC characteristic relaxation exponential decay circuit постоянная времени характерное время релаксация экспоненциальный затухание цепь">
+                <h3><%= lang === 'ru' ? '6. Характерные времена' : '6. Characteristic Times' %></h3>
+                <div class="formula-display">$$\tau_{RC} = RC, \quad \tau_{LR} = L/R, \quad \omega_{LC} = 1/\sqrt{LC}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Релаксация к стационарному распределению тока происходит экспоненциально,' : 'Relaxation to stationary current distribution is exponential,' %> \(\propto e^{-t/\tau}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="energy conservation circuit charge potential drop emf work heat сохранение энергии цепь заряд падение потенциала ЭДС работа теплота">
+                <h3><%= lang === 'ru' ? '7. Сохранение энергии в цепях' : '7. Energy Conservation in Circuits' %></h3>
+                <div class="formula-display">$$\Delta W + Q = Uq$$</div>
+                <p class="formula-vars">\(q\) — <%= lang === 'ru' ? 'заряд, прошедший через разность потенциалов' : 'charge that has crossed a potential drop' %> \(U\). <%= lang === 'ru' ? 'Работа ЭДС:' : 'Work of emf is' %> \(A = \mathcal{E}q\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="capacitor energy inductor energy stored electric magnetic field конденсатор энергия катушка индуктивность запасённая электрическое магнитное поле">
+                <h3><%= lang === 'ru' ? '8. Запасённая энергия' : '8. Stored Energy' %></h3>
+                <div class="formula-display">$$W_C = \tfrac{1}{2}CU^2, \qquad W_L = \tfrac{1}{2}LI^2$$</div>
+                <p class="formula-vars">\(C\) — <%= lang === 'ru' ? 'ёмкость,' : 'capacitance,' %> \(U\) — <%= lang === 'ru' ? 'напряжение,' : 'voltage,' %> \(L\) — <%= lang === 'ru' ? 'индуктивность,' : 'inductance,' %> \(I\) — <%= lang === 'ru' ? 'ток.' : 'current.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="emf faraday induction magnetic flux inductance self ЭДС фарадей индукция магнитный поток индуктивность самоиндукция">
+                <h3><%= lang === 'ru' ? '9. Закон электромагнитной индукции Фарадея' : "9. Faraday's Law of Induction" %></h3>
+                <div class="formula-display">$$\mathcal{E} = -\frac{d\Phi}{dt} = -\frac{d(LI)}{dt}, \quad \Phi = BS$$</div>
+                <p class="formula-vars">\(\Phi\) — <%= lang === 'ru' ? 'магнитный поток,' : 'magnetic flux,' %> \(B\) — <%= lang === 'ru' ? 'магнитное поле,' : 'magnetic field,' %> \(S\) — <%= lang === 'ru' ? 'площадь,' : 'area,' %> \(L\) — <%= lang === 'ru' ? 'индуктивность.' : 'inductance.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="nonlinear element graphical method intersection U-I characteristic stability нелинейный элемент графический метод пересечение вольт-амперная характеристика устойчивость">
+                <h3><%= lang === 'ru' ? '10. Нелинейные элементы' : '10. Nonlinear Elements' %></h3>
+                <div class="formula-display">$$<%= lang === 'ru' ? '\\text{ВАХ}' : '\\text{U-I curve}' %> \cap <%= lang === 'ru' ? '\\text{нагрузочная прямая}' : '\\text{load line}' %> = <%= lang === 'ru' ? '\\text{рабочая точка}' : '\\text{operating point}' %>$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Графический метод: найдите решение в координатах' : 'Graphical method: find the solution in' %> \(U\text{-}I\) <%= lang === 'ru' ? 'как точку пересечения нелинейной кривой и прямой, представляющей законы Ома/Кирхгофа. При нескольких точках пересечения исследуйте устойчивость.' : 'coordinates as an intersection point of a nonlinear curve and a line representing Ohm/Kirchhoff laws. In case of many intersection points, study stability.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="short long time limit capacitor inductor quasi-equilibrium transient малое большое время предел конденсатор катушка квазиравновесие переходный процесс">
+                <h3><%= lang === 'ru' ? '11. Пределы малых и больших времён' : '11. Short- and Long-Time Limits' %></h3>
+                <div class="formula-display">
+                    $$t \gg \tau: \quad I_C \approx 0,\; \mathcal{E}_L \approx 0$$
+                    $$t \ll \tau: \quad C <%= lang === 'ru' ? '\\text{ закорочен},\\;' : '\\text{ short-circuited},\\;' %> L <%= lang === 'ru' ? '\\text{ разомкнут}' : '\\text{ broken}' %>$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'При' : 'For' %> \(t_{\text{<%= lang === 'ru' ? 'набл' : 'obs' %>}} \gg \tau\)<%= lang === 'ru' ? ' достигается квазиравновесие:' : ', quasiequilibrium is reached:' %> \(I_C \approx 0\) (<%= lang === 'ru' ? 'провод «разомкнут» у' : 'wire "broken" near' %> \(C\)) <%= lang === 'ru' ? 'и' : 'and' %> \(\mathcal{E}_L \approx 0\) (\(L\) <%= lang === 'ru' ? 'фактически закорочен).' : 'effectively short-circuited).' %> <%= lang === 'ru' ? 'При' : 'For' %> \(t_{\text{<%= lang === 'ru' ? 'набл' : 'obs' %>}} \ll \tau\): \(C\) <%= lang === 'ru' ? '«закорочен», а' : 'is "short-circuited" and' %> \(L\) <%= lang === 'ru' ? '«разомкнут».' : 'is "broken".' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="inductor current continuous function continuity катушка ток непрерывная функция непрерывность">
+                <h3><%= lang === 'ru' ? '12. Непрерывность тока через катушку индуктивности' : '12. Current Continuity Through an Inductor' %></h3>
+                <div class="formula-display">$$I_L(t^+) = I_L(t^-)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Если' : 'If' %> \(L \neq 0\), <%= lang === 'ru' ? 'то' : 'then' %> \(I(t)\) <%= lang === 'ru' ? '— непрерывная функция.' : 'is a continuous function.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="superconductor superconducting contour magnetic flux constant persistent current сверхпроводник сверхпроводящий контур магнитный поток постоянный незатухающий ток">
+                <h3><%= lang === 'ru' ? '13. Сверхпроводящий контур' : '13. Superconducting Contour' %></h3>
+                <div class="formula-display">$$\Phi = \text{const}, \quad LI = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Через сверхпроводящий контур магнитный поток' : 'Through a superconducting contour, magnetic flux' %> \(\Phi = \text{const}\). <%= lang === 'ru' ? 'При отсутствии внешнего' : 'With no external' %> \(B\): \(LI = \text{const}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="mutual inductance coupling coefficient transformer flux linkage взаимная индуктивность коэффициент связи трансформатор потокосцепление">
+                <h3><%= lang === 'ru' ? '14. Взаимная индуктивность' : '14. Mutual Inductance' %></h3>
+                <div class="formula-display">
+                    $$\Phi_1 = L_1 I_1 + L_{12} I_2$$
+                    $$L_{12} = L_{21} \equiv M, \quad M \le \sqrt{L_1 L_2}$$
+                </div>
+                <p class="formula-vars">\(I_2\) — <%= lang === 'ru' ? 'ток во втором контуре.' : 'current in a second contour.' %> \(M\) — <%= lang === 'ru' ? 'взаимная индуктивность.' : 'mutual inductance.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             IX — ELECTROMAGNETISM
+        ============================================================ -->
+        <section class="chapter-section" id="ch-9">
+            <h2><%= lang === 'ru' ? 'IX. Электромагнетизм' : 'IX. Electromagnetism' %></h2>
+
+            <div class="formula-card" data-keywords="coulomb law force potential energy charge electrostatic kepler кулон закон сила потенциальная энергия заряд электростатика кеплер">
+                <h3><%= lang === 'ru' ? '1. Закон Кулона' : "1. Coulomb's Law" %></h3>
+                <div class="formula-display">$$F = \frac{kq_1 q_2}{r^2}, \qquad \Pi = \frac{kq_1 q_2}{r}$$</div>
+                <p class="formula-vars">\(k = 1/(4\pi\varepsilon_0)\). <%= lang === 'ru' ? 'Законы Кеплера применимы для силы' : "Kepler's laws are applicable for" %> \(1/r^2\)<%= lang === 'ru' ? '.' : ' force.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="gauss law electric field flux enclosed charge magnetic field divergence gravity гаусс закон электрическое поле поток заряд магнитное поле дивергенция гравитация">
+                <h3><%= lang === 'ru' ? '2. Теорема Гаусса' : "2. Gauss's Law" %></h3>
+                <div class="formula-display">
+                    $$\oint \vec{B}\cdot d\vec{S} = 0$$
+                    $$\oint \varepsilon\varepsilon_0 \vec{E}\cdot d\vec{S} = Q$$
+                    $$\oint \vec{g}\cdot d\vec{S} = -4\pi GM$$
+                </div>
+                <p class="formula-vars">\(Q\) — <%= lang === 'ru' ? 'заключённый заряд,' : 'enclosed charge,' %> \(M\) — <%= lang === 'ru' ? 'заключённая масса.' : 'enclosed mass.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="circulation theorem ampere law faraday line integral electric magnetic field current теорема о циркуляции ампер фарадей криволинейный интеграл электрическое магнитное поле ток">
+                <h3><%= lang === 'ru' ? '3. Теоремы о циркуляции' : '3. Circulation Theorems' %></h3>
+                <div class="formula-display">
+                    $$\oint \vec{E}\cdot d\vec{l} = 0 \;(= -\dot\Phi)$$
+                    $$\oint \frac{\vec{B}\cdot d\vec{l}}{\mu\mu_0} = I$$
+                    $$\oint \vec{g}\cdot d\vec{l} = 0$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Криволинейные интегралы по замкнутым контурам. Первое уравнение принимает вид' : 'Line integrals around closed loops. The first equation becomes' %> \(-\dot\Phi\) <%= lang === 'ru' ? 'при переменном магнитном потоке (закон Фарадея).' : 'for time-varying magnetic flux (Faraday\'s law).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="biot savart law magnetic field current element wire center circular loop био савар закон магнитное поле ток элемент проводник центр круговой виток">
+                <h3><%= lang === 'ru' ? '4. Закон Био — Савара' : '4. Biot-Savart Law' %></h3>
+                <div class="formula-display">$$d\vec{B} = \frac{\mu\mu_0 I}{4\pi}\frac{d\vec{l}\times\vec{e}_r}{r^2}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'В центре кругового тока:' : 'At the center of a circular current:' %> \(B = \frac{\mu_0 I}{2r}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="lorentz force charge velocity magnetic electric field wire current лоренц сила заряд скорость магнитное электрическое поле проводник ток">
+                <h3><%= lang === 'ru' ? '5. Сила Лоренца' : '5. Lorentz Force' %></h3>
+                <div class="formula-display">
+                    $$\vec{F} = e(\vec{v}\times\vec{B} + \vec{E})$$
+                    $$\vec{F} = I\vec{l}\times\vec{B}$$
+                </div>
+                <p class="formula-vars">\(e\) — <%= lang === 'ru' ? 'заряд,' : 'charge,' %> \(\vec{v}\) — <%= lang === 'ru' ? 'скорость,' : 'velocity,' %> \(I\) — <%= lang === 'ru' ? 'ток,' : 'current,' %> \(\vec{l}\) — <%= lang === 'ru' ? 'вектор длины проводника.' : 'wire length vector.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="gauss law applications wire surface sphere cylinder charge density electric magnetic field применения теоремы гаусса провод поверхность сфера цилиндр плотность заряда электрическое магнитное поле">
+                <h3><%= lang === 'ru' ? '6. Поля из теорем Гаусса и о циркуляции' : "6. Fields from Gauss's and Circulation Laws" %></h3>
+                <div class="formula-display">
+                    $$<%= lang === 'ru' ? '\\text{Провод:}' : '\\text{Wire:}' %>\; E = \frac{\sigma}{2\pi\varepsilon_0 r},\quad B = \frac{I\mu_0}{2\pi r}$$
+                    $$<%= lang === 'ru' ? '\\text{Плоскость:}' : '\\text{Surface:}' %>\; E = \frac{\sigma}{2\varepsilon_0},\quad B = \frac{\mu_0 j}{2}$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Внутри однородно заряженных сферы/цилиндра/слоя с однородными' : 'Inside a uniformly charged sphere/cylinder/layer of homogeneous' %> \(\rho\) <%= lang === 'ru' ? 'или' : 'or' %> \(\vec{j}\): \(\vec{E} = \frac{\rho}{d\varepsilon_0}\vec{r}\), \(\vec{B} = \frac{1}{d}\mu_0\vec{j}\times\vec{r}\), <%= lang === 'ru' ? 'где' : 'where' %> \(d = 3\) (<%= lang === 'ru' ? 'шар' : 'ball' %>), \(d = 2\) (<%= lang === 'ru' ? 'цилиндр' : 'cylinder' %>), \(d = 1\) (<%= lang === 'ru' ? 'слой' : 'layer' %>).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="solenoid magnetic field inductance flux turns volume solid angle соленоид магнитное поле индуктивность поток витки объём телесный угол">
+                <h3><%= lang === 'ru' ? '7. Соленоид' : '7. Solenoid' %></h3>
+                <div class="formula-display">
+                    $$B = In\mu\mu_0 \quad (<%= lang === 'ru' ? '\\text{внутри, длинный}' : '\\text{inside, long}' %>)$$
+                    $$L = Vn^2\mu\mu_0$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Вне длинного соленоида:' : 'Outside a long solenoid:' %> \(B = 0\). <%= lang === 'ru' ? 'Поток:' : 'Flux:' %> \(\Phi = NBS\), <%= lang === 'ru' ? 'индуктивность:' : 'inductance:' %> \(L = \Phi/I\). <%= lang === 'ru' ? 'Короткий соленоид:' : 'Short solenoid:' %> \(B_\parallel = \frac{In\mu\mu_0\Omega}{4\pi}\) (\(\Omega\) — <%= lang === 'ru' ? 'телесный угол).' : 'solid angle).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="potential energy system charges electrostatic interaction sum pairs потенциальная энергия система зарядов электростатическое взаимодействие сумма пар">
+                <h3><%= lang === 'ru' ? '9. Потенциальная энергия системы зарядов' : '9. Potential Energy of Charges' %></h3>
+                <div class="formula-display">$$\Pi = k\sum_{i>j}\frac{q_i q_j}{r_{ij}} = \frac{1}{2}\int\varphi(\vec{r})\,dq$$</div>
+                <p class="formula-vars">\(\varphi(\vec{r})\) — <%= lang === 'ru' ? 'потенциал в точке' : 'potential at position' %> \(\vec{r}\), \(dq = \rho(\vec{r})\,dV\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="conductor shield charge electric field hollow sphere superposition проводник экранирование заряд электрическое поле полая сфера суперпозиция">
+                <h3><%= lang === 'ru' ? '13. Экранирование проводником' : '13. Conductor Shielding' %></h3>
+                <div class="formula-display">$$\vec{E}_{\text{<%= lang === 'ru' ? 'внутри' : 'inside' %>}} = 0$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Проводник экранирует заряды и электрические поля. Распределение зарядов внутри полой сферы не видно снаружи (она выглядит как проводящий шар с полным зарядом' : 'A conductor shields charges and electric fields. Charge distribution inside a hollow sphere cannot be seen from outside (it appears as a conducting ball carrying total charge' %> \(Q\)).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="capacitance plane sphere coaxial parallel plate cylindrical formula ёмкость плоский сфера коаксиальный параллельные пластины цилиндрический формула">
+                <h3><%= lang === 'ru' ? '14. Ёмкости' : '14. Capacitances' %></h3>
+                <div class="formula-display">
+                    $$C_{\text{<%= lang === 'ru' ? 'плоск' : 'plane' %>}} = \frac{\varepsilon\varepsilon_0 S}{d}, \quad C_{\text{<%= lang === 'ru' ? 'сфера' : 'sphere' %>}} = 4\pi\varepsilon\varepsilon_0 r$$
+                    $$C_{\text{<%= lang === 'ru' ? 'коакс' : 'coax' %>}} = \frac{2\pi\varepsilon\varepsilon_0 l}{\ln(R/r)}$$
+                </div>
+                <p class="formula-vars">\(S\) — <%= lang === 'ru' ? 'площадь пластин,' : 'plate area,' %> \(d\) — <%= lang === 'ru' ? 'расстояние между пластинами,' : 'plate separation,' %> \(r\) — <%= lang === 'ru' ? 'радиус сферы,' : 'sphere radius,' %> \(R, r\) — <%= lang === 'ru' ? 'внешний/внутренний радиусы коаксиального кабеля,' : 'outer/inner radii of coaxial cable,' %> \(l\) — <%= lang === 'ru' ? 'длина кабеля.' : 'cable length.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="dipole moment electric magnetic charge current area дипольный момент электрический магнитный заряд ток площадь">
+                <h3><%= lang === 'ru' ? '15. Дипольный момент' : '15. Dipole Moment' %></h3>
+                <div class="formula-display">$$\vec{d}_e = \sum q_i\vec{r}_i = \vec{l}\,q, \qquad \vec{d}_\mu = I\vec{S}$$</div>
+                <p class="formula-vars">\(\vec{d}_e\) — <%= lang === 'ru' ? 'электрический дипольный момент,' : 'electric dipole moment,' %> \(\vec{d}_\mu\) — <%= lang === 'ru' ? 'магнитный дипольный момент,' : 'magnetic dipole moment,' %> \(\vec{l}\) — <%= lang === 'ru' ? 'вектор разделения,' : 'separation vector,' %> \(I\) — <%= lang === 'ru' ? 'ток,' : 'current,' %> \(\vec{S}\) — <%= lang === 'ru' ? 'вектор площади контура.' : 'loop area vector.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="dipole energy torque field external uniform диполь энергия момент сил поле внешнее однородное">
+                <h3><%= lang === 'ru' ? '16. Энергия и момент сил диполя' : '16. Energy and Torque of a Dipole' %></h3>
+                <div class="formula-display">
+                    $$W = -\vec{d}\cdot\vec{E}\;(\vec{B})$$
+                    $$\vec{M} = \vec{d}\times\vec{E}\;(\vec{B})$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Энергия и момент сил диполя во внешнем поле.' : 'Energy and torque of a dipole in an external field.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="dipole field potential electric magnetic inverse cube поле диполя потенциал электрический магнитный обратный куб">
+                <h3><%= lang === 'ru' ? '17. Поле диполя' : '17. Dipole Field' %></h3>
+                <div class="formula-display">$$\varphi = k\frac{\vec{d}\cdot\vec{e}_r}{r^2}, \qquad E, B \propto r^{-3}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Потенциал и поле диполя убывают как' : 'Potential and field of a dipole fall off as' %> \(1/r^2\) <%= lang === 'ru' ? 'и' : 'and' %> \(1/r^3\) <%= lang === 'ru' ? 'соответственно.' : 'respectively.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="force dipole gradient field interaction two dipoles inverse fourth power сила диполь градиент поле взаимодействие два диполя обратная четвёртая степень">
+                <h3><%= lang === 'ru' ? '18. Сила, действующая на диполь' : '18. Force on a Dipole' %></h3>
+                <div class="formula-display">$$F = (\vec{E}\,\vec{d}_e)', \quad F = (\vec{B}\,\vec{d}_\mu)'$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Сила пропорциональна градиенту поля. Взаимодействие двух диполей:' : 'Force is proportional to the field gradient. Interaction between two dipoles:' %> \(F \propto r^{-4}\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="electric magnetic images grounded plane superconducting sphere fictive charge mirror электрические магнитные изображения заземлённая плоскость сверхпроводящая сфера фиктивный заряд зеркало">
+                <h3><%= lang === 'ru' ? '20. Метод изображений' : '20. Method of Images' %></h3>
+                <div class="formula-display">$$q' = -q \quad (<%= lang === 'ru' ? '\\text{заземлённая плоскость на расстоянии } d' : '\\text{grounded plane at distance } d' %>)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Заземлённые (сверхпроводящие для магнитов) плоскости действуют как зеркала. Поле заземлённой (или изолированной) сферы можно найти как поле одного (или двух) фиктивных зарядов внутри сферы.' : 'Grounded (superconducting for magnets) planes act as mirrors. Field of a grounded (or isolated) sphere can be found as a field of one (or two) fictive charge(s) inside the sphere.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="polarization ball cylinder homogeneous field superposition charged dielectric поляризация шар цилиндр однородное поле суперпозиция заряженный диэлектрик">
+                <h3><%= lang === 'ru' ? '21. Поляризация в однородном поле' : '21. Polarization in Homogeneous Field' %></h3>
+                <div class="formula-display">$$\vec{d} \propto \vec{E}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Поляризация шара (цилиндра) в однородном электрическом поле: суперпозиция однородно заряженных (+\\(\\rho\\) и -\\(\\rho\\)) шаров (цилиндров).' : "Ball's (cylinder's) polarization in a homogeneous electric field: superposition of homogeneously charged (+\\(\\rho\\) and -\\(\\rho\\)) balls (cylinders)." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="eddy currents power dissipation drag magnetic braking skin effect вихревые токи мощность рассеяние торможение магнитное скин-эффект">
+                <h3><%= lang === 'ru' ? '22. Вихревые токи' : '22. Eddy Currents' %></h3>
+                <div class="formula-display">
+                    $$P \sim \frac{B^2 v^2}{\rho}$$
+                    $$F\tau \sim \frac{B^2 a^3 d}{\rho}$$
+                </div>
+                <p class="formula-vars">\(d\) — <%= lang === 'ru' ? 'толщина,' : 'thickness,' %> \(a\) — <%= lang === 'ru' ? 'размер,' : 'size,' %> \(\rho\) — <%= lang === 'ru' ? 'удельное сопротивление,' : 'resistivity,' %> \(v\) — <%= lang === 'ru' ? 'скорость.' : 'velocity.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="cycloid drift magnetic field charge particle crossed fields generalized momentum angular циклоида дрейф магнитное поле заряд частица скрещённые поля обобщённый импульс угловой">
+                <h3><%= lang === 'ru' ? '24. Заряд в магнитном поле' : '24. Charge in Magnetic Field' %></h3>
+                <div class="formula-display">
+                    $$v_{\text{<%= lang === 'ru' ? 'дрейф' : 'drift' %>}} = E/B = F/(eB)$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Заряд в однородном' : 'Charge in homogeneous' %> \(\vec{B}\) <%= lang === 'ru' ? 'движется по циклоиде со скоростью дрейфа' : 'moves along a cycloid with drift speed' %> \(v = E/B\). <%= lang === 'ru' ? 'Обобщённый импульс сохраняется:' : 'Generalized momentum conserved:' %> \(p'_x = mv_x - Byq\), \(p'_y = mv_y + Bxq\). <%= lang === 'ru' ? 'Обобщённый момент импульса:' : 'Generalized angular momentum:' %> \(L' = L + \frac{1}{2}Bqr^2\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="mhd generator magnetohydrodynamic emf resistance МГД генератор магнитогидродинамический ЭДС сопротивление">
+                <h3><%= lang === 'ru' ? '25. МГД-генератор' : '25. MHD Generator' %></h3>
+                <div class="formula-display">$$\mathcal{E} = vBa, \quad r = \rho a/(bc)$$</div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'длина вдоль направления' : 'length along the direction of' %> \(\vec{E}\), \(v\) — <%= lang === 'ru' ? 'скорость потока,' : 'flow velocity,' %> \(B\) — <%= lang === 'ru' ? 'магнитное поле,' : 'magnetic field,' %> \(b, c\) — <%= lang === 'ru' ? 'другие размеры.' : 'other dimensions.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="hysteresis B-H loop magnetic core coil thermal energy dissipation cycle ferromagnetic гистерезис петля магнитный сердечник катушка тепловая энергия рассеяние цикл ферромагнитный">
+                <h3><%= lang === 'ru' ? '26. Гистерезис' : '26. Hysteresis' %></h3>
+                <div class="formula-display">$$W_{\text{<%= lang === 'ru' ? 'цикл' : 'cycle' %>}} = \oint B\,dH$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'S-образная кривая (петля) в координатах' : 'S-shaped curve (loop) in' %> \(B\text{-}H\)<%= lang === 'ru' ? ': площадь петли даёт плотность тепловой энергии рассеяния за один цикл.' : ' coordinates: the loop area gives the thermal energy dissipation density per one cycle.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="fields matter dielectric polarization magnetization D H permittivity permeability поля вещество диэлектрик поляризация намагниченность диэлектрическая проницаемость магнитная проницаемость">
+                <h3><%= lang === 'ru' ? '27. Поля в веществе' : '27. Fields in Matter' %></h3>
+                <div class="formula-display">
+                    $$\vec{D} = \varepsilon\varepsilon_0\vec{E} = \varepsilon_0\vec{E} + \vec{P}$$
+                    $$\vec{H} = \vec{B}/(\mu\mu_0) = \vec{B}/\mu_0 - \vec{J}$$
+                </div>
+                <p class="formula-vars">\(\vec{P}\) — <%= lang === 'ru' ? 'вектор диэлектрической поляризации (объёмная плотность дипольного момента).' : 'dielectric polarization vector (volume density of dipole moment).' %> \(\vec{J}\) — <%= lang === 'ru' ? 'вектор намагниченности (объёмная плотность магнитного момента).' : 'magnetization vector (volume density of magnetic moment).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="boundary conditions interface tangential normal continuous electric magnetic field dielectric граничные условия поверхность раздела тангенциальный нормальный непрерывный электрическое магнитное поле диэлектрик">
+                <h3><%= lang === 'ru' ? '28. Граничные условия' : '28. Boundary Conditions' %></h3>
+                <div class="formula-display">$$E_t,\; D_n,\; H_t,\; B_n \quad <%= lang === 'ru' ? '\\text{непрерывны}' : '\\text{are continuous}' %>$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'На границе раздела двух сред: тангенциальная' : 'At an interface between two substances: tangential' %> \(E\), <%= lang === 'ru' ? 'нормальная' : 'normal' %> \(D\) (= \(\varepsilon E_t\)), <%= lang === 'ru' ? 'тангенциальная' : 'tangential' %> \(H\) (= \(B_t/\mu\)) <%= lang === 'ru' ? 'и нормальная' : 'and normal' %> \(B\) <%= lang === 'ru' ? 'непрерывны.' : 'are continuous.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="energy density electromagnetic field electric magnetic stored volume плотность энергии электромагнитное поле электрическое магнитное запасённая объём">
+                <h3><%= lang === 'ru' ? '29. Плотность энергии' : '29. Energy Density' %></h3>
+                <div class="formula-display">$$W = \tfrac{1}{2}\left(\varepsilon\varepsilon_0 E^2 + \frac{B^2}{\mu\mu_0}\right)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Энергия, запасённая в единице объёма электромагнитного поля.' : 'Energy stored per unit volume in electromagnetic fields.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="current density conductivity resistivity ohm microscopic плотность тока проводимость удельное сопротивление ом микроскопический">
+                <h3><%= lang === 'ru' ? '31. Плотность тока' : '31. Current Density' %></h3>
+                <div class="formula-display">$$\vec{j} = ne\vec{v} = \sigma\vec{E} = \vec{E}/\rho$$</div>
+                <p class="formula-vars">\(n\) — <%= lang === 'ru' ? 'концентрация носителей заряда,' : 'charge carrier density,' %> \(e\) — <%= lang === 'ru' ? 'заряд,' : 'charge,' %> \(\vec{v}\) — <%= lang === 'ru' ? 'скорость дрейфа,' : 'drift velocity,' %> \(\sigma\) — <%= lang === 'ru' ? 'проводимость,' : 'conductivity,' %> \(\rho\) — <%= lang === 'ru' ? 'удельное сопротивление.' : 'resistivity.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="lenz law induced current opposition change flux magnetic ленц закон индуцированный ток противодействие изменение поток магнитный">
+                <h3><%= lang === 'ru' ? '32. Правило Ленца' : "32. Lenz's Law" %></h3>
+                <div class="formula-display">$$<%= lang === 'ru' ? '\\text{Система противодействует изменениям}' : '\\text{System responds so as to oppose changes}' %>$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Индуцированный ток течёт в таком направлении, чтобы противодействовать изменению магнитного потока, его вызвавшему.' : 'The induced current flows in a direction such that it opposes the change in magnetic flux that produced it.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             X — THERMODYNAMICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-10">
+            <h2><%= lang === 'ru' ? 'X. Термодинамика' : 'X. Thermodynamics' %></h2>
+
+            <div class="formula-card" data-keywords="ideal gas law pressure volume temperature moles molar mass equation of state идеальный газ закон давление объём температура моли молярная масса уравнение состояния">
+                <h3><%= lang === 'ru' ? '1. Уравнение идеального газа' : '1. Ideal Gas Law' %></h3>
+                <div class="formula-display">$$pV = \frac{m}{\mu}RT$$</div>
+                <p class="formula-vars">\(p\) — <%= lang === 'ru' ? 'давление,' : 'pressure,' %> \(V\) — <%= lang === 'ru' ? 'объём,' : 'volume,' %> \(m\) — <%= lang === 'ru' ? 'масса,' : 'mass,' %> \(\mu\) — <%= lang === 'ru' ? 'молярная масса,' : 'molar mass,' %> \(R\) — <%= lang === 'ru' ? 'газовая постоянная,' : 'gas constant,' %> \(T\) — <%= lang === 'ru' ? 'температура.' : 'temperature.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="internal energy degrees of freedom mole equipartition thermal внутренняя энергия степени свободы моль равнораспределение тепловой">
+                <h3><%= lang === 'ru' ? '2. Внутренняя энергия' : '2. Internal Energy' %></h3>
+                <div class="formula-display">$$U = \frac{i}{2}RT \quad (<%= lang === 'ru' ? '\\text{на моль}' : '\\text{per mole}' %>)$$</div>
+                <p class="formula-vars">\(i\) — <%= lang === 'ru' ? 'число степеней свободы (3 для одноатомного, 5 для двухатомного при умеренных' : 'number of degrees of freedom (3 for monatomic, 5 for diatomic at moderate' %> \(T\)).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="molar volume standard conditions liters ideal gas молярный объём нормальные условия литры идеальный газ">
+                <h3><%= lang === 'ru' ? '3. Молярный объём при нормальных условиях' : '3. Molar Volume at Standard Conditions' %></h3>
+                <div class="formula-display">$$V_m = 22{,}4\;<%= lang === 'ru' ? '\\text{л}' : '\\text{L}' %>$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Объём одного моля идеального газа при нормальных условиях (0 °C, 1 атм).' : 'Volume of one mole of ideal gas at standard conditions (0 C, 1 atm).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="adiabatic process isentropic no heat exchange gamma exponent pressure volume temperature адиабатический процесс изоэнтропийный без теплообмена показатель давление объём температура">
+                <h3><%= lang === 'ru' ? '4. Адиабатические процессы' : '4. Adiabatic Processes' %></h3>
+                <div class="formula-display">$$pV^\gamma = \text{const}, \qquad TV^{\gamma-1} = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Медленные по сравнению со скоростью звука, без теплообмена.' : 'Slow compared to the speed of sound, with no heat exchange.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="heat capacity ratio gamma specific heat cp cv degrees freedom adiabatic index показатель адиабаты теплоёмкость удельная степени свободы">
+                <h3><%= lang === 'ru' ? '5. Показатель адиабаты' : '5. Heat Capacity Ratio' %></h3>
+                <div class="formula-display">$$\gamma = \frac{c_p}{c_v} = \frac{i+2}{i}$$</div>
+                <p class="formula-vars">\(c_p\) — <%= lang === 'ru' ? 'теплоёмкость при постоянном давлении,' : 'specific heat at constant pressure,' %> \(c_v\) — <%= lang === 'ru' ? 'при постоянном объёме,' : 'at constant volume,' %> \(i\) — <%= lang === 'ru' ? 'число степеней свободы.' : 'degrees of freedom.' %> \(\gamma = c_p/c_v = (i+2)/i\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="boltzmann distribution barometric exponential altitude potential energy temperature density больцман распределение барометрическая экспоненциальный высота потенциальная энергия температура плотность">
+                <h3><%= lang === 'ru' ? '6. Распределение Больцмана' : '6. Boltzmann Distribution' %></h3>
+                <div class="formula-display">$$\rho = \rho_0 e^{-\mu gh/(RT)} = \rho_0 e^{-U/(kT)}$$</div>
+                <p class="formula-vars">\(\rho_0\) — <%= lang === 'ru' ? 'плотность на уровне отсчёта,' : 'density at reference level,' %> \(\mu\) — <%= lang === 'ru' ? 'молярная масса,' : 'molar mass,' %> \(h\) — <%= lang === 'ru' ? 'высота,' : 'height,' %> \(U\) — <%= lang === 'ru' ? 'потенциальная энергия,' : 'potential energy,' %> \(k\) — <%= lang === 'ru' ? 'постоянная Больцмана.' : 'Boltzmann constant.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="maxwell distribution speed probability molecular velocity gaussian максвелл распределение скорость вероятность молекулярная гауссовский">
+                <h3><%= lang === 'ru' ? '7. Распределение Максвелла по скоростям' : '7. Maxwell Speed Distribution' %></h3>
+                <div class="formula-display">$$f(v) \propto e^{-mv^2/(2kT)}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Даёт долю молекул со скоростью' : 'Gives the fraction of molecules having speed' %> \(v\). \(m\) — <%= lang === 'ru' ? 'масса молекулы,' : 'molecular mass,' %> \(k\) — <%= lang === 'ru' ? 'постоянная Больцмана,' : 'Boltzmann constant,' %> \(T\) — <%= lang === 'ru' ? 'температура.' : 'temperature.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="atmospheric pressure hydrostatic change height density thin layer атмосферное давление гидростатическое изменение высота плотность тонкий слой">
+                <h3><%= lang === 'ru' ? '8. Атмосферное давление' : '8. Atmospheric Pressure' %></h3>
+                <div class="formula-display">$$\Delta p = \rho g\Delta h \quad (<%= lang === 'ru' ? '\\text{если } \\Delta p \\ll p' : '\\text{if } \\Delta p \\ll p' %>)$$</div>
+                <p class="formula-vars">\(\rho\) — <%= lang === 'ru' ? 'плотность воздуха,' : 'air density,' %> \(\Delta h\) — <%= lang === 'ru' ? 'изменение высоты.' : 'height change.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="kinetic theory pressure rms speed mean molecular density number boltzmann flux кинетическая теория давление среднеквадратичная скорость молекулярная плотность число больцман поток">
+                <h3><%= lang === 'ru' ? '9. Молекулярно-кинетическая теория газов' : '9. Kinetic Theory of Gases' %></h3>
+                <div class="formula-display">
+                    $$p = \tfrac{1}{3}mn\bar{v}^2 = nkT$$
+                    $$\bar{v} = \sqrt{3kT/m}, \quad \nu = \tfrac{1}{4}n\bar{v}S$$
+                </div>
+                <p class="formula-vars">\(n\) — <%= lang === 'ru' ? 'концентрация,' : 'number density,' %> \(m\) — <%= lang === 'ru' ? 'масса молекулы,' : 'molecular mass,' %> \(\bar{v}\) — <%= lang === 'ru' ? 'среднеквадратичная скорость,' : 'RMS speed,' %> \(\nu\) — <%= lang === 'ru' ? 'молекулярный поток через площадь' : 'molecular flux through area' %> \(S\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="carnot cycle efficiency isothermal adiabatic reversible maximum heat engine карно цикл КПД изотермический адиабатический обратимый максимальный тепловой двигатель">
+                <h3><%= lang === 'ru' ? '10. Цикл Карно' : '10. Carnot Cycle' %></h3>
+                <div class="formula-display">$$\eta = \frac{T_1 - T_2}{T_1}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? '2 адиабатических + 2 изотермических процесса.' : '2 adiabatic + 2 isothermal processes.' %> \(T_1\) — <%= lang === 'ru' ? 'горячий резервуар,' : 'hot reservoir,' %> \(T_2\) — <%= lang === 'ru' ? 'холодный резервуар. Можно вывести в координатах' : 'cold reservoir. Can be derived using' %> \(S\text{-}T\)<%= lang === 'ru' ? '.' : ' coordinates.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="heat pump inverse carnot coefficient performance cooling heating refrigerator тепловой насос обратный карно коэффициент полезного действия охлаждение нагрев холодильник">
+                <h3><%= lang === 'ru' ? '11. Тепловой насос (обратный цикл Карно)' : '11. Heat Pump (Inverse Carnot)' %></h3>
+                <div class="formula-display">$$\eta = \frac{T_1}{T_1 - T_2}$$</div>
+                <p class="formula-vars">\(T_1\) — <%= lang === 'ru' ? 'горячая сторона,' : 'hot side,' %> \(T_2\) — <%= lang === 'ru' ? 'холодная сторона.' : 'cold side.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="entropy heat temperature reversible irreversible change энтропия теплота температура обратимый необратимый изменение">
+                <h3><%= lang === 'ru' ? '12. Энтропия' : '12. Entropy' %></h3>
+                <div class="formula-display">$$dS = \frac{dQ}{T}$$</div>
+                <p class="formula-vars">\(S\) — <%= lang === 'ru' ? 'энтропия,' : 'entropy,' %> \(Q\) — <%= lang === 'ru' ? 'теплота,' : 'heat,' %> \(T\) — <%= lang === 'ru' ? 'температура (для обратимых процессов).' : 'temperature (for reversible processes).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="first law thermodynamics internal energy heat work conservation первое начало термодинамика внутренняя энергия теплота работа сохранение">
+                <h3><%= lang === 'ru' ? '13. Первое начало термодинамики' : '13. First Law of Thermodynamics' %></h3>
+                <div class="formula-display">$$\delta U = \delta Q + \delta A$$</div>
+                <p class="formula-vars">\(\delta U\) — <%= lang === 'ru' ? 'изменение внутренней энергии,' : 'change in internal energy,' %> \(\delta Q\) — <%= lang === 'ru' ? 'подведённая теплота,' : 'heat added,' %> \(\delta A\) — <%= lang === 'ru' ? 'работа, совершённая над системой.' : 'work done on the system.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="second law thermodynamics entropy increase irreversible carnot maximum efficiency второе начало термодинамика энтропия возрастание необратимый карно максимальный КПД">
+                <h3><%= lang === 'ru' ? '14. Второе начало термодинамики' : '14. Second Law of Thermodynamics' %></h3>
+                <div class="formula-display">$$\Delta S \ge 0, \qquad \eta_{\text{<%= lang === 'ru' ? 'реал' : 'real' %>}} \le \eta_{\text{<%= lang === 'ru' ? 'Карно' : 'Carnot' %>}}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Полная энтропия изолированной системы никогда не убывает. Ни один тепловой двигатель не может превысить КПД Карно.' : 'Total entropy of an isolated system never decreases. No heat engine can exceed Carnot efficiency.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="gas work pressure volume integral isobaric adiabatic expansion compression piston работа газа давление объём интеграл изобарический адиабатический расширение сжатие поршень">
+                <h3><%= lang === 'ru' ? '15. Работа газа' : '15. Gas Work' %></h3>
+                <div class="formula-display">$$A = \int p\,dV, \quad A_{\text{<%= lang === 'ru' ? 'адиаб' : 'adiab' %>}} = \frac{i}{2}\Delta(pV)$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Работа газа при расширении. Для адиабатических процессов:' : 'Work done by gas in expansion. For adiabatic processes:' %> \(A = \frac{i}{2}\Delta(pV)\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="dalton law partial pressure mixture gases total sum дальтон закон парциальное давление смесь газы сумма">
+                <h3><%= lang === 'ru' ? '16. Закон Дальтона' : "16. Dalton's Law" %></h3>
+                <div class="formula-display">$$p = \sum p_i$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Полное давление газовой смеси равно сумме парциальных давлений каждого компонента.' : 'Total pressure of a gas mixture equals the sum of the partial pressures of each component.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="boiling saturated vapour pressure interface two liquids phase transition evaporation кипение насыщенный пар давление граница раздела две жидкости фазовый переход испарение">
+                <h3><%= lang === 'ru' ? '17. Кипение' : '17. Boiling' %></h3>
+                <div class="formula-display">$$p_v = p_0$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Кипение происходит, когда давление насыщенного пара равно внешнему давлению' : 'Boiling occurs when the pressure of the saturated vapour equals the external pressure' %> \(p_0\). <%= lang === 'ru' ? 'На границе раздела двух жидкостей:' : 'At the interface between two liquids:' %> \(p_{v1} + p_{v2} = p_0\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="heat flux conduction thermal conductivity fourier temperature gradient resistance analogy тепловой поток теплопроводность фурье температурный градиент сопротивление аналогия">
+                <h3><%= lang === 'ru' ? '18. Теплопроводность' : '18. Heat Conduction' %></h3>
+                <div class="formula-display">$$P = \frac{kS\Delta T}{l}$$</div>
+                <p class="formula-vars">\(k\) — <%= lang === 'ru' ? 'теплопроводность,' : 'thermal conductivity,' %> \(S\) — <%= lang === 'ru' ? 'площадь сечения,' : 'cross-sectional area,' %> \(\Delta T\) — <%= lang === 'ru' ? 'разность температур,' : 'temperature difference,' %> \(l\) — <%= lang === 'ru' ? 'длина. Аналогия с цепями постоянного тока:' : 'length. Analogy to DC circuits:' %> \(P \leftrightarrow I\), \(\Delta T \leftrightarrow U\), \(k \leftrightarrow 1/\rho\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="heat capacity temperature dependent integral solid debye dulong petit lattice теплоёмкость температурная зависимость интеграл твёрдое тело дебай дюлонг пти решётка">
+                <h3><%= lang === 'ru' ? '19. Теплоёмкость' : '19. Heat Capacity' %></h3>
+                <div class="formula-display">$$Q = \int c(T)\,dT$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Твёрдые тела: при низких температурах' : 'Solids: for low temperatures,' %> \(c \propto T^3\); <%= lang === 'ru' ? 'при высоких' : 'for high' %> \(T\), \(c = 3Nk\), <%= lang === 'ru' ? 'где' : 'where' %> \(N\) — <%= lang === 'ru' ? 'число ионов в кристаллической решётке (закон Дюлонга — Пти).' : 'number of ions in the crystal lattice (Dulong-Petit law).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="surface tension energy force pressure capillary laplace young bubble meniscus поверхностное натяжение энергия сила давление капиллярный лаплас юнг пузырь мениск">
+                <h3><%= lang === 'ru' ? '20. Поверхностное натяжение' : '20. Surface Tension' %></h3>
+                <div class="formula-display">$$U = S\sigma, \quad F = l\sigma, \quad p = 2\sigma/R$$</div>
+                <p class="formula-vars">\(\sigma\) — <%= lang === 'ru' ? 'коэффициент поверхностного натяжения,' : 'surface tension coefficient,' %> \(S\) — <%= lang === 'ru' ? 'площадь поверхности,' : 'surface area,' %> \(l\) — <%= lang === 'ru' ? 'длина границы,' : 'length of boundary,' %> \(R\) — <%= lang === 'ru' ? 'радиус кривизны.' : 'radius of curvature.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="stefan boltzmann law thermal radiation power temperature emissivity gray body black body стефан больцман закон тепловое излучение мощность температура излучательная способность серое тело чёрное тело">
+                <h3><%= lang === 'ru' ? '21. Закон Стефана — Больцмана' : '21. Stefan-Boltzmann Law' %></h3>
+                <div class="formula-display">$$P = \varepsilon\sigma T^4$$</div>
+                <p class="formula-vars">\(\varepsilon\) — <%= lang === 'ru' ? 'излучательная способность (1 для абсолютно чёрного тела),' : 'emissivity (1 for a perfect black body),' %> \(\sigma\) — <%= lang === 'ru' ? 'постоянная Стефана — Больцмана,' : 'Stefan-Boltzmann constant,' %> \(T\) — <%= lang === 'ru' ? 'абсолютная температура. Для серого тела.' : 'absolute temperature. For a gray body.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="wien displacement law peak wavelength frequency temperature maximum spectrum вин закон смещения пик длина волны частота температура максимум спектр">
+                <h3><%= lang === 'ru' ? '22. Закон смещения Вина' : "22. Wien's Displacement Law" %></h3>
+                <div class="formula-display">
+                    $$f_{\max} = Ak_B T/h \quad (A \approx 2.8)$$
+                    $$\lambda_{\max} = hc/(A'k_B T) \quad (A' \approx 5)$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Связывает частоту (или длину волны) пика теплового излучения с температурой излучающего тела.' : 'Relates the peak frequency (or wavelength) of thermal radiation to the temperature of the emitting body.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             XI — QUANTUM MECHANICS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-11">
+            <h2><%= lang === 'ru' ? 'XI. Квантовая механика' : 'XI. Quantum Mechanics' %></h2>
+
+            <div class="formula-card" data-keywords="de broglie relation momentum wavelength energy frequency photon planck wave particle де бройль соотношение импульс длина волны энергия частота фотон планк волна частица">
+                <h3><%= lang === 'ru' ? '1. Соотношения де Бройля' : '1. de Broglie Relations' %></h3>
+                <div class="formula-display">$$\vec{p} = \hbar\vec{k} \quad (|\vec{p}| = h/\lambda), \qquad E = \hbar\omega = h\nu$$</div>
+                <p class="formula-vars">\(\hbar = h/(2\pi)\) — <%= lang === 'ru' ? 'приведённая постоянная Планка,' : 'reduced Planck constant,' %> \(\vec{k}\) — <%= lang === 'ru' ? 'волновой вектор,' : 'wave vector,' %> \(\omega\) — <%= lang === 'ru' ? 'угловая частота,' : 'angular frequency,' %> \(\nu\) — <%= lang === 'ru' ? 'частота.' : 'frequency.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="uncertainty principle heisenberg momentum position energy time indeterminacy принцип неопределённости гейзенберг импульс координата энергия время">
+                <h3><%= lang === 'ru' ? '3. Принцип неопределённости' : '3. Uncertainty Principle' %></h3>
+                <div class="formula-display">
+                    $$\Delta p\,\Delta x \ge \frac{\hbar}{2}, \quad \Delta E\,\Delta t \ge \frac{\hbar}{2}, \quad \Delta\omega\,\Delta t \ge \frac{1}{2}$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для качественных оценок с негладкими формами лучше подходит' : 'For qualitative estimates with non-smooth shapes,' %> \(h\)<%= lang === 'ru' ? ':' : ' serves better:' %> \(\Delta p\,\Delta x \approx h\)<%= lang === 'ru' ? ' и т.д.' : ', etc.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="spectra energy levels transition frequency emission absorption spectral lines lifetime width спектр энергетические уровни переход частота излучение поглощение спектральные линии время жизни ширина">
+                <h3><%= lang === 'ru' ? '4. Спектральные линии' : '4. Spectral Lines' %></h3>
+                <div class="formula-display">$$h\nu = E_n - E_m$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Ширина спектральных линий связана со временем жизни:' : 'Width of spectral lines is related to the lifetime:' %> \(\Gamma\tau \approx \hbar\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="harmonic oscillator quantum energy levels zero point eigenfrequency phonon гармонический осциллятор квантовый энергетические уровни нулевая точка собственная частота фонон">
+                <h3><%= lang === 'ru' ? '5. Квантовый гармонический осциллятор' : '5. Quantum Harmonic Oscillator' %></h3>
+                <div class="formula-display">$$E_n = \left(n + \tfrac{1}{2}\right)h\nu_0$$</div>
+                <p class="formula-vars">\(\nu_0\) — <%= lang === 'ru' ? 'собственная частота. Для нескольких собственных частот:' : 'eigenfrequency. For many eigenfrequencies:' %> \(E = \sum_i h n_i \nu_i\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="tunneling tunnel effect barrier penetration width energy туннелирование туннельный эффект барьер проникновение ширина энергия">
+                <h3><%= lang === 'ru' ? '6. Туннельный эффект' : '6. Tunnelling Effect' %></h3>
+                <div class="formula-display">$$\Gamma\tau \approx \hbar, \quad \tau = l/\sqrt{\Gamma/m}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Барьер' : 'A barrier' %> \(\Gamma\) <%= lang === 'ru' ? 'шириной' : 'with width' %> \(l\) <%= lang === 'ru' ? 'легко проницаем, если' : 'is easily penetrable if' %> \(\Gamma\tau \approx \hbar\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="bohr model hydrogen atom energy levels orbit quantization integer wavelength electron бор модель водород атом энергетические уровни орбита квантование целое длина волны электрон">
+                <h3><%= lang === 'ru' ? '7. Модель Бора' : "7. Bohr's Model" %></h3>
+                <div class="formula-display">$$E_n \propto -1/n^2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'На классически вычисленной круговой орбите укладывается целое число длин волн:' : 'In a classically calculated circular orbit, there is an integer number of wavelengths:' %> \(\lambda = h/(mv)\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="compton scattering photon electron wavelength shift angle комптон рассеяние фотон электрон длина волны сдвиг угол">
+                <h3><%= lang === 'ru' ? '8. Эффект Комптона' : '8. Compton Effect' %></h3>
+                <div class="formula-display">$$\Delta\lambda = \lambda_C(1 - \cos\theta)$$</div>
+                <p class="formula-vars">\(\lambda_C\) — <%= lang === 'ru' ? 'комптоновская длина волны электрона. При рассеянии фотона на электроне длина волны фотона увеличивается.' : "Compton wavelength of the electron. If a photon is scattered from an electron, the photon's wavelength increases." %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="photoelectric effect work function kinetic energy photon threshold frequency voltage фотоэффект работа выхода кинетическая энергия фотон пороговая частота напряжение">
+                <h3><%= lang === 'ru' ? '9. Фотоэффект' : '9. Photoelectric Effect' %></h3>
+                <div class="formula-display">$$A + \tfrac{1}{2}mv^2 = h\nu$$</div>
+                <p class="formula-vars">\(A\) — <%= lang === 'ru' ? 'работа выхода. Фототок начинается при задерживающем напряжении' : 'work function. Photocurrent starts at counter-voltage' %> \(U = -(h\nu - A)/e\), <%= lang === 'ru' ? 'насыщается при больших прямых напряжениях.' : 'saturates for large forward voltages.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             XII — KEPLER LAWS
+        ============================================================ -->
+        <section class="chapter-section" id="ch-12">
+            <h2><%= lang === 'ru' ? 'XII. Законы Кеплера' : 'XII. Kepler Laws' %></h2>
+
+            <div class="formula-card" data-keywords="gravitational force potential energy newton universal gravitation inverse square mass distance гравитационная сила потенциальная энергия ньютон всемирное тяготение обратный квадрат масса расстояние">
+                <h3><%= lang === 'ru' ? '1. Гравитационная сила и потенциал' : '1. Gravitational Force and Potential' %></h3>
+                <div class="formula-display">$$F = \frac{GMm}{r^2}, \qquad \Pi = -\frac{GMm}{r}$$</div>
+                <p class="formula-vars">\(G\) — <%= lang === 'ru' ? 'гравитационная постоянная,' : 'gravitational constant,' %> \(M, m\) — <%= lang === 'ru' ? 'массы,' : 'masses,' %> \(r\) — <%= lang === 'ru' ? 'расстояние между центрами.' : 'distance between centers.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="kepler first law orbit ellipse parabola hyperbola focus trajectory conic section кеплер первый закон орбита эллипс парабола гипербола фокус траектория коническое сечение">
+                <h3><%= lang === 'ru' ? '2. I закон Кеплера' : "2. Kepler's I Law" %></h3>
+                <div class="formula-display">$$<%= lang === 'ru' ? '\\text{траектория}' : '\\text{trajectory}' %> = <%= lang === 'ru' ? '\\text{эллипс, парабола или гипербола}' : '\\text{ellipse, parabola, or hyperbola}' %>$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Траектория каждой из двух гравитационно взаимодействующих точечных масс — эллипс, парабола или гипербола с фокусом в центре масс системы.' : 'The trajectory of each of two gravitationally interacting point masses is an ellipse, parabola, or hyperbola, with a focus at the center of mass of the system.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="kepler second law equal areas angular momentum conservation radius vector sector кеплер второй закон равные площади момент импульса сохранение радиус-вектор сектор">
+                <h3><%= lang === 'ru' ? '3. II закон Кеплера (закон площадей)' : "3. Kepler's II Law (Equal Areas)" %></h3>
+                <div class="formula-display">$$\frac{dA}{dt} = \frac{L}{2m} = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для точечной массы в поле центральной силы радиус-вектор заметает равные площади за равные промежутки времени (сохранение момента импульса).' : 'For a point mass in a central force field, the radius vector sweeps equal areas in equal times (conservation of angular momentum).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="kepler third law period semi-major axis ratio orbital elliptic revolution кеплер третий закон период большая полуось отношение орбитальный эллиптический обращение">
+                <h3><%= lang === 'ru' ? '4. III закон Кеплера' : "4. Kepler's III Law" %></h3>
+                <div class="formula-display">$$\frac{T_1^2}{T_2^2} = \frac{a_1^3}{a_2^3}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Для двух точечных масс на эллиптических орбитах в поле' : 'For two point masses in elliptic orbits in an' %> \(r^{-2}\) <%= lang === 'ru' ? 'периоды обращения относятся как большие полуоси в степени' : 'force field, revolution periods relate as the semi-major axes to the power of' %> \(3/2\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="total energy orbit gravitational semi-major axis bound elliptic circular полная энергия орбита гравитационный большая полуось связанный эллиптический круговой">
+                <h3><%= lang === 'ru' ? '5. Полная энергия орбиты' : '5. Total Orbital Energy' %></h3>
+                <div class="formula-display">$$E = -\frac{GMm}{2a}$$</div>
+                <p class="formula-vars">\(a\) — <%= lang === 'ru' ? 'большая полуось. Полная энергия' : 'semi-major axis. Total energy' %> (\(K + \Pi\)) <%= lang === 'ru' ? 'тела в гравитационном поле зависит только от большой полуоси.' : 'of a body in a gravitational field depends only on the semi-major axis.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="small ellipticity circular orbit shifted focus approximation nearly circular малый эксцентриситет круговая орбита смещённый фокус приближение почти круговая">
+                <h3><%= lang === 'ru' ? '6. Почти круговые орбиты' : '6. Nearly Circular Orbits' %></h3>
+                <div class="formula-display">$$\varepsilon = d/a \ll 1$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'При малых эксцентриситетах' : 'For small ellipticities' %> \(\varepsilon \ll 1\) <%= lang === 'ru' ? 'траектории можно считать круговыми со смещёнными фокусами.' : 'trajectories can be considered as having circular shapes with shifted foci.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="ellipse properties focal distances reflection area semi-major semi-minor эллипс свойства фокальные расстояния отражение площадь большая полуось малая полуось">
+                <h3><%= lang === 'ru' ? '7. Свойства эллипса' : '7. Properties of an Ellipse' %></h3>
+                <div class="formula-display">$$l_1 + l_2 = 2a, \quad \alpha_1 = \alpha_2, \quad S = \pi ab$$</div>
+                <p class="formula-vars">\(l_1, l_2\) — <%= lang === 'ru' ? 'расстояния до фокусов,' : 'distances to the foci,' %> \(\alpha_1 = \alpha_2\) — <%= lang === 'ru' ? 'свойство отражения (свет из одного фокуса отражается в другой),' : 'reflection property (light from one focus is reflected to the other),' %> \(a, b\) — <%= lang === 'ru' ? 'большая и малая полуоси.' : 'semi-major and semi-minor axes.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="runge lenz vector eccentricity ellipticity conserved orbit constant рунге ленц вектор эксцентриситет сохраняющийся орбита постоянная">
+                <h3><%= lang === 'ru' ? '9. Вектор Рунге — Ленца' : '9. Runge-Lenz Vector' %></h3>
+                <div class="formula-display">$$\vec{\varepsilon} = \frac{\vec{L}\times\vec{v}}{GMm} + \vec{e}_r = \text{const}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Вектор Рунге — Ленца (вектор эксцентриситета) — сохраняющаяся величина для кеплеровских орбит, направленная вдоль большой полуоси к перицентру.' : 'The Runge-Lenz (ellipticity) vector is a conserved quantity for Kepler orbits, pointing along the semi-major axis toward periapsis.' %></p>
+            </div>
+        </section>
+
+
+        <!-- ============================================================
+             XIII — THEORY OF RELATIVITY
+        ============================================================ -->
+        <section class="chapter-section" id="ch-13">
+            <h2><%= lang === 'ru' ? 'XIII. Теория относительности' : 'XIII. Theory of Relativity' %></h2>
+
+            <div class="formula-card" data-keywords="lorentz transformation boost coordinates time momentum mass gamma factor special relativity лоренц преобразования буст координаты время импульс масса гамма-фактор специальная теория относительности">
+                <h3><%= lang === 'ru' ? '1. Преобразования Лоренца' : '1. Lorentz Transformations' %></h3>
+                <div class="formula-display">
+                    $$x' = \gamma(x - vt), \quad y' = y, \quad t' = \gamma\!\left(t - \frac{vx}{c^2}\right)$$
+                    $$p'_x = \gamma(p_x - mv), \quad m' = \gamma\!\left(m - \frac{p_x v}{c^2}\right)$$
+                </div>
+                <p class="formula-vars">\(\gamma = 1/\sqrt{1 - v^2/c^2}\). <%= lang === 'ru' ? 'Вращение 4-мерного пространства-времени (геометрия Минковского).' : 'Rotation of 4D spacetime (Minkowski geometry).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="four-vector invariant interval spacetime energy momentum rest mass length четырёхвектор инвариант интервал пространство-время энергия импульс масса покоя длина">
+                <h3><%= lang === 'ru' ? '2. Длина 4-вектора (инвариант)' : '2. Length of 4-Vector (Invariant)' %></h3>
+                <div class="formula-display">
+                    $$s^2 = c^2 t^2 - x^2 - y^2 - z^2$$
+                    $$m_0^2 c^2 = m^2 c^2 - p_x^2 - p_y^2 - p_z^2$$
+                </div>
+                <p class="formula-vars">\(s\) — <%= lang === 'ru' ? 'интервал,' : 'spacetime interval,' %> \(m_0\) — <%= lang === 'ru' ? 'масса покоя. Это лоренц-инварианты.' : 'rest mass. These are Lorentz invariants.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="relativistic velocity addition composition speed light limit релятивистское сложение скоростей скорость света предел">
+                <h3><%= lang === 'ru' ? '3. Релятивистское сложение скоростей' : '3. Relativistic Velocity Addition' %></h3>
+                <div class="formula-display">$$w = \frac{u + v}{1 + uv/c^2}$$</div>
+                <p class="formula-vars">\(u, v\) — <%= lang === 'ru' ? 'скорости двух объектов,' : 'velocities of two objects,' %> \(w\) — <%= lang === 'ru' ? 'суммарная скорость. Гарантирует' : 'combined velocity. Ensures' %> \(w \le c\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="relativistic doppler effect frequency redshift blueshift approaching receding релятивистский доплер эффект частота красное смещение синее смещение приближение удаление">
+                <h3><%= lang === 'ru' ? '4. Релятивистский эффект Доплера' : '4. Relativistic Doppler Effect' %></h3>
+                <div class="formula-display">$$\nu' = \nu_0\sqrt{\frac{1 - v/c}{1 + v/c}}$$</div>
+                <p class="formula-vars">\(\nu_0\) — <%= lang === 'ru' ? 'частота излучения,' : 'emitted frequency,' %> \(v\) — <%= lang === 'ru' ? 'относительная скорость (положительная при удалении).' : 'relative velocity (positive for recession).' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="length contraction lorentz fitzgerald shortening proper length rest frame moving сокращение длины лоренц фитцджеральд собственная длина система покоя движущаяся">
+                <h3><%= lang === 'ru' ? '6. Сокращение длины' : '6. Length Contraction' %></h3>
+                <div class="formula-display">$$l' = l_0/\gamma$$</div>
+                <p class="formula-vars">\(l_0\) — <%= lang === 'ru' ? 'собственная длина (система покоя),' : 'proper length (rest frame),' %> \(l'\) — <%= lang === 'ru' ? 'длина в движущейся системе отсчёта.' : 'length measured in the moving frame.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="time dilation slowing clock proper time moving frame twin paradox замедление времени часы собственное время движущаяся система парадокс близнецов">
+                <h3><%= lang === 'ru' ? '7. Замедление времени' : '7. Time Dilation' %></h3>
+                <div class="formula-display">$$t' = t_0\gamma$$</div>
+                <p class="formula-vars">\(t_0\) — <%= lang === 'ru' ? 'собственное время (в системе покоя часов),' : 'proper time (measured in the rest frame of the clock),' %> \(t'\) — <%= lang === 'ru' ? 'время, измеренное движущимся наблюдателем.' : 'time measured by a moving observer.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="relativity simultaneity relative simultaneous events separated space относительность одновременности одновременные события разделённые пространство">
+                <h3><%= lang === 'ru' ? '8. Относительность одновременности' : '8. Relativity of Simultaneity' %></h3>
+                <div class="formula-display">$$\Delta t = -\gamma v\Delta x / c^2$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Два события, одновременных в одной системе отсчёта' : 'Two events simultaneous in one frame' %> (\(\Delta t = 0\)), <%= lang === 'ru' ? 'разделены во времени на' : 'are separated in time by' %> \(\Delta t' = -\gamma v\Delta x/c^2\) <%= lang === 'ru' ? 'в системе, движущейся со скоростью' : 'in a frame moving with velocity' %> \(v\).</p>
+            </div>
+
+            <div class="formula-card" data-keywords="relativistic newton second law force momentum derivative mass energy gamma релятивистский ньютон второй закон сила импульс производная масса энергия гамма">
+                <h3><%= lang === 'ru' ? '9. Релятивистский закон Ньютона' : "9. Relativistic Newton's Law" %></h3>
+                <div class="formula-display">$$\vec{F} = \frac{d\vec{p}}{dt} = \frac{d}{dt}(m\vec{v}), \quad m = m_0\gamma$$</div>
+                <p class="formula-vars">\(m_0\) — <%= lang === 'ru' ? 'масса покоя,' : 'rest mass,' %> \(\vec{p} = m_0\gamma\vec{v}\) — <%= lang === 'ru' ? 'релятивистский импульс.' : 'relativistic momentum.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="ultrarelativistic approximation high energy limit speed light momentum ультрарелятивистское приближение высокая энергия предел скорость света импульс">
+                <h3><%= lang === 'ru' ? '10. Ультрарелятивистское приближение' : '10. Ultrarelativistic Approximation' %></h3>
+                <div class="formula-display">$$v \approx c, \quad p \approx mc, \quad \sqrt{1 - v^2/c^2} \approx \sqrt{2(1 - v/c)}$$</div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Справедливо, когда кинетическая энергия значительно превышает энергию покоя.' : 'Valid when the kinetic energy is much greater than the rest energy.' %></p>
+            </div>
+
+            <div class="formula-card" data-keywords="lorentz transformation electric magnetic field parallel perpendicular boost frame electromagnetic лоренц преобразование электрическое магнитное поле параллельный перпендикулярный буст система отсчёта электромагнитный">
+                <h3><%= lang === 'ru' ? '11. Преобразования Лоренца для полей E и B' : '11. Lorentz Transformation for E-B Fields' %></h3>
+                <div class="formula-display">
+                    $$\vec{B}'_\parallel = \vec{B}_\parallel, \quad \vec{E}'_\parallel = \vec{E}_\parallel$$
+                    $$\vec{E}'_\perp = \gamma(\vec{E}_\perp + \vec{v}\times\vec{B}_\perp)$$
+                    $$\vec{B}'_\perp = \gamma\!\left(\vec{B}_\perp - \vec{v}\times\frac{\vec{E}_\perp}{c^2}\right)$$
+                </div>
+                <p class="formula-vars"><%= lang === 'ru' ? 'Параллельные компоненты не меняются; перпендикулярные компоненты смешиваются при преобразованиях Лоренца.' : 'Parallel components are unchanged; perpendicular components mix under Lorentz boosts.' %></p>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<%- include('../default/modern_footer') %>
+
+<!-- MathJax 3 -->
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    var pageLang = "<%= lang %>";
+
+    const searchInput = document.getElementById('formulaSearchInput');
+    const searchCount = document.getElementById('searchCount');
+    const noResults = document.getElementById('noResults');
+    const chapterSelect = document.getElementById('chapterSelect');
+    const allCards = document.querySelectorAll('.formula-card');
+    const allSections = document.querySelectorAll('.chapter-section');
+    const sidebarLinks = document.querySelectorAll('.chapter-sidebar a');
+
+    /* ---- Search ---- */
+    let debounceTimer = null;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(filterFormulas, 150);
+    });
+
+    function filterFormulas() {
+        const query = searchInput.value.trim().toLowerCase();
+
+        if (!query) {
+            allCards.forEach(function(card) { card.style.display = ''; });
+            allSections.forEach(function(sec) { sec.style.display = ''; });
+            searchCount.style.display = 'none';
+            noResults.style.display = 'none';
+            return;
+        }
+
+        const terms = query.split(/\s+/);
+        let visible = 0;
+
+        allCards.forEach(function(card) {
+            const keywords = (card.getAttribute('data-keywords') || '').toLowerCase();
+            const text = card.textContent.toLowerCase();
+            const haystack = keywords + ' ' + text;
+
+            const match = terms.every(function(term) {
+                return haystack.indexOf(term) !== -1;
+            });
+
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        /* Hide empty chapter sections */
+        allSections.forEach(function(sec) {
+            const cards = sec.querySelectorAll('.formula-card');
+            let hasVisible = false;
+            cards.forEach(function(card) {
+                if (card.style.display !== 'none') hasVisible = true;
+            });
+            sec.style.display = hasVisible ? '' : 'none';
+        });
+
+        if (pageLang === 'ru') {
+            var mod10 = visible % 10;
+            var mod100 = visible % 100;
+            var word;
+            if (mod10 === 1 && mod100 !== 11) {
+                word = 'формула найдена';
+            } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+                word = 'формулы найдено';
+            } else {
+                word = 'формул найдено';
+            }
+            searchCount.textContent = visible + ' ' + word;
+        } else {
+            searchCount.textContent = visible + ' formula' + (visible === 1 ? '' : 's') + ' found';
+        }
+        searchCount.style.display = 'block';
+        noResults.style.display = visible === 0 ? 'block' : 'none';
+    }
+
+    /* ---- Sidebar smooth scroll ---- */
+    sidebarLinks.forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            sidebarLinks.forEach(function(l) { l.classList.remove('active'); });
+            this.classList.add('active');
+        });
+    });
+
+    /* ---- Mobile chapter dropdown ---- */
+    if (chapterSelect) {
+        chapterSelect.addEventListener('change', function() {
+            const id = this.value;
+            if (!id) return;
+            const target = document.getElementById(id);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            this.value = '';
+        });
+    }
+
+    /* ---- Highlight sidebar on scroll ---- */
+    function updateSidebarActive() {
+        let current = '';
+        allSections.forEach(function(sec) {
+            const rect = sec.getBoundingClientRect();
+            if (rect.top <= 120) {
+                current = sec.id;
+            }
+        });
+        sidebarLinks.forEach(function(link) {
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+    window.addEventListener('scroll', updateSidebarActive, { passive: true });
+    updateSidebarActive();
+})();
+</script>
+
+</body>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Банк задач по физике' : 'Physics Problem Bank' %> — Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru'
+        ? totalProblems + ' задач из ' + sources.length + ' источников: МФО, АФО, ЕФО, USAPhO, BPhO, Иродов и другие.'
+        : totalProblems + ' problems from ' + sources.length + ' sources: IPhO, APhO, EuPhO, USAPhO, BPhO, Irodov, and more.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/bank" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .bank-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+        .bank-header { margin-bottom: 2rem; }
+        .bank-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 0.25rem 0;
+        }
+        .bank-header p { color: #6c757d; font-size: 15px; margin: 0; }
+
+        /* Search */
+        .bank-search { margin-bottom: 1.5rem; }
+        .bank-search-input {
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 1rem;
+            font-size: 14px;
+            width: 100%;
+        }
+        .bank-search-input:focus { outline: none; border-color: #1a1a2e; }
+
+        /* Filter row */
+        .bank-filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 2rem; }
+        .bank-filter-select {
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 0.75rem;
+            font-size: 13px;
+            background: #fff;
+            color: #2d2d2d;
+        }
+        .topic-pill {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            background: #f8f9fa;
+            transition: all 0.15s;
+        }
+        .topic-pill:hover, .topic-pill--active {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+
+        /* Random button */
+        .random-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: opacity 0.15s;
+        }
+        .random-btn,
+        .random-btn:visited,
+        .random-btn:hover,
+        .random-btn:focus,
+        .random-btn:active {
+            color: #fff !important;
+            text-decoration: none;
+        }
+        .random-btn:hover { opacity: 0.85; }
+
+        /* Source cards */
+        .source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .source-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: #2d2d2d;
+            transition: box-shadow 0.15s;
+        }
+        .source-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.08); color: #2d2d2d; }
+        .source-card-name {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+        .source-card-meta {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 0;
+        }
+        .source-card-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-top: 0.5rem;
+        }
+
+        /* POTD */
+        .potd-card {
+            background: #fff;
+            border: 2px solid #1a1a2e;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .potd-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #1a1a2e;
+            margin-bottom: 0.5rem;
+        }
+        .potd-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 0.5rem 0;
+        }
+        .potd-title a { color: #1a5276; text-decoration: none; }
+        .potd-title a:hover { text-decoration: underline; }
+        .potd-meta { font-size: 13px; color: #6c757d; }
+
+        /* Recent problems */
+        .recent-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .problem-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            text-decoration: none;
+            color: #2d2d2d;
+            transition: box-shadow 0.15s;
+        }
+        .problem-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.08); color: #2d2d2d; }
+        .problem-card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 0 0.35rem 0;
+        }
+        .problem-card-meta { font-size: 13px; color: #6c757d; }
+        .diff-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+        }
+        .diff-easy { background: #27ae60; }
+        .diff-medium { background: #f39c12; }
+        .diff-hard { background: #c0392b; }
+
+        /* Section titles */
+        .section-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .search-results-area { display: none; margin-bottom: 2rem; }
+        .search-results-area.active { display: block; }
+        .search-result-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item a { color: #1a5276; text-decoration: none; font-weight: 500; }
+        .search-result-item a:hover { text-decoration: underline; }
+        .search-result-meta { font-size: 13px; color: #6c757d; }
+
+        @media (max-width: 767px) {
+            .source-grid { grid-template-columns: 1fr; }
+            .recent-grid { grid-template-columns: 1fr; }
+            .bank-filters { gap: 0.5rem; }
+        }
+    </style>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Physics Problem Bank",
+        "description": "<%= totalProblems %> physics olympiad problems from IPhO, USAPhO, Irodov, and more.",
+        "url": "https://savchenkosolutions.com/bank",
+        "isPartOf": { "@type": "WebSite", "name": "Savchenko Solutions" }
+    }
+    </script>
+    <script src="/js/analytics.js"></script>
+</head>
+
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <main class="bank-container">
+        <!-- Header -->
+        <div class="bank-header">
+            <h1><%= lang === 'ru' ? 'Банк задач по физике' : 'Physics Problem Bank' %></h1>
+            <p><%= totalProblems %> <%= lang === 'ru' ? 'задач из' : 'problems from' %> <%= sources.length %> <%= lang === 'ru' ? 'источников. Фильтруйте по теме, сложности или олимпиаде.' : 'sources. Filter by topic, difficulty, or competition.' %></p>
+        </div>
+
+        <!-- Search -->
+        <div class="bank-search">
+            <input
+                type="text"
+                id="bankSearchInput"
+                class="bank-search-input"
+                placeholder="<%= lang === 'ru' ? 'Поиск по ключевому слову, теме или номеру задачи...' : 'Search by keyword, topic, or problem number...' %>"
+            />
+        </div>
+
+        <!-- Filters -->
+        <div class="bank-filters">
+            <select id="bankFilterSource" class="bank-filter-select">
+                <option value=""><%= lang === 'ru' ? 'Все источники' : 'All sources' %></option>
+                <% sources.forEach(function(s) { %>
+                    <option value="<%= s.slug %>"><%= s.name %></option>
+                <% }); %>
+            </select>
+
+            <select id="bankFilterDifficulty" class="bank-filter-select">
+                <option value=""><%= lang === 'ru' ? 'Любая сложность' : 'Any difficulty' %></option>
+                <% for (let d = 1; d <= 10; d++) { %>
+                    <option value="<%= d %>"><%= d %>/10</option>
+                <% } %>
+            </select>
+
+            <a href="/bank/random" class="random-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/>
+                </svg>
+                <%= lang === 'ru' ? 'Случайная задача' : 'Random Problem' %>
+            </a>
+        </div>
+
+        <!-- Topic pills -->
+        <% if (allTopics.length > 0) { %>
+        <div style="margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <% allTopics.forEach(function(t) { %>
+                <a href="/bank/topic/<%= t %>" class="topic-pill"><%= t.charAt(0).toUpperCase() + t.slice(1).replace(/-/g, ' ') %></a>
+            <% }); %>
+        </div>
+        <% } %>
+
+        <!-- Search results (shown dynamically) -->
+        <div id="bankSearchResults" class="search-results-area">
+            <h3 class="section-title"><%= lang === 'ru' ? 'Результаты поиска' : 'Search Results' %></h3>
+            <div id="bankSearchList"></div>
+            <p id="bankSearchEmpty" style="display:none; color: #6c757d;">
+                <%= lang === 'ru' ? 'Ничего не найдено.' : 'No results found.' %>
+            </p>
+        </div>
+
+        <!-- Problem of the Day -->
+        <% if (potd) { %>
+        <div class="potd-card">
+            <div class="potd-label"><%= lang === 'ru' ? 'Задача дня' : 'Problem of the Day' %></div>
+            <h3 class="potd-title">
+                <a href="/bank/problem/<%= potd.id %>"><%= potd.title || (potd.source_name + ' — ' + (potd.problem_number || 'Problem')) %></a>
+            </h3>
+            <div class="potd-meta">
+                <a href="/bank/source/<%= potd.source_slug %>" style="color: #1a5276; text-decoration: none;"><%= potd.source_name %></a>
+                <% if (potd.year) { %> · <%= potd.year %><% } %>
+                <% if (potd.difficulty) { %>
+                    · <span class="diff-badge <%= potd.difficulty <= 3 ? 'diff-easy' : potd.difficulty <= 6 ? 'diff-medium' : 'diff-hard' %>"><%= potd.difficulty %>/10</span>
+                <% } %>
+            </div>
+        </div>
+        <% } %>
+
+        <!-- Sources -->
+        <h2 class="section-title"><%= lang === 'ru' ? 'Источники' : 'Sources' %></h2>
+        <div class="source-grid">
+            <% sources.forEach(function(s) { %>
+            <a href="/bank/source/<%= s.slug %>" class="source-card">
+                <h3 class="source-card-name"><%= s.name %></h3>
+                <p class="source-card-meta"><%= s.country %></p>
+                <div class="source-card-count"><%= s.problem_count %></div>
+                <p class="source-card-meta"><%= lang === 'ru' ? 'задач' : 'problems' %></p>
+            </a>
+            <% }); %>
+        </div>
+
+        <!-- Recent problems -->
+        <% if (recentProblems.length > 0) { %>
+        <h2 class="section-title"><%= lang === 'ru' ? 'Недавно добавленные' : 'Recently Added' %></h2>
+        <div class="recent-grid">
+            <% recentProblems.forEach(function(p) { %>
+            <a href="/bank/problem/<%= p.id %>" class="problem-card">
+                <h4 class="problem-card-title"><%= p.title || (p.source_name + ' #' + (p.problem_number || p.id)) %></h4>
+                <div class="problem-card-meta">
+                    <%= p.source_name %>
+                    <% if (p.difficulty) { %>
+                        · <span class="diff-badge <%= p.difficulty <= 3 ? 'diff-easy' : p.difficulty <= 6 ? 'diff-medium' : 'diff-hard' %>"><%= p.difficulty %>/10</span>
+                    <% } %>
+                    <% if (p.topics && p.topics.length) { %>
+                        · <%= p.topics.slice(0, 3).join(', ') %>
+                    <% } %>
+                </div>
+            </a>
+            <% }); %>
+        </div>
+        <% } %>
+
+        <!-- Submit CTA -->
+        <div style="text-align: center; padding: 2rem 0 1rem;">
+            <p style="color: #6c757d; font-size: 15px; margin-bottom: 1rem;">
+                <%= lang === 'ru' ? 'Знаете хорошую задачу? Добавьте её в банк.' : 'Know a good problem? Add it to the bank.' %>
+            </p>
+            <a href="/bank/submit" class="random-btn" style="background: #1a5276;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <%= lang === 'ru' ? 'Добавить задачу' : 'Submit a Problem' %>
+            </a>
+        </div>
+    </main>
+
+    <%- include('../default/modern_footer') %>
+
+    <script>
+        (function() {
+            const input = document.getElementById('bankSearchInput');
+            const sourceFilter = document.getElementById('bankFilterSource');
+            const diffFilter = document.getElementById('bankFilterDifficulty');
+            const resultsArea = document.getElementById('bankSearchResults');
+            const resultsList = document.getElementById('bankSearchList');
+            const emptyMsg = document.getElementById('bankSearchEmpty');
+
+            let debounce = null;
+
+            function doSearch() {
+                const q = input.value.trim();
+                const source = sourceFilter.value;
+                const difficulty = diffFilter.value;
+
+                if (!q && !source && !difficulty) {
+                    resultsArea.classList.remove('active');
+                    return;
+                }
+
+                const params = new URLSearchParams();
+                if (q) params.set('q', q);
+                if (source) params.set('source', source);
+                if (difficulty) params.set('difficulty', difficulty);
+
+                fetch('/bank/api/search?' + params.toString())
+                    .then(function(r) { return r.json(); })
+                    .then(function(data) {
+                        resultsArea.classList.add('active');
+                        resultsList.innerHTML = '';
+                        emptyMsg.style.display = data.problems.length === 0 ? 'block' : 'none';
+
+                        data.problems.forEach(function(p) {
+                            const div = document.createElement('div');
+                            div.className = 'search-result-item';
+
+                            let diffHtml = '';
+                            if (p.difficulty) {
+                                const cls = p.difficulty <= 3 ? 'diff-easy' : p.difficulty <= 6 ? 'diff-medium' : 'diff-hard';
+                                diffHtml = ' <span class="diff-badge ' + cls + '">' + p.difficulty + '/10</span>';
+                            }
+
+                            div.innerHTML = '<a href="/bank/problem/' + p.id + '">' +
+                                (p.title || p.source_name + ' #' + (p.problem_number || p.id)) +
+                                '</a>' +
+                                '<div class="search-result-meta">' + p.source_name +
+                                (p.year ? ' · ' + p.year : '') + diffHtml + '</div>';
+
+                            resultsList.appendChild(div);
+                        });
+                    })
+                    .catch(function() {});
+            }
+
+            input.addEventListener('input', function() {
+                clearTimeout(debounce);
+                debounce = setTimeout(doSearch, 300);
+            });
+            sourceFilter.addEventListener('change', doSearch);
+            diffFilter.addEventListener('change', doSearch);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="<%= lang === 'ru' ? 'Еженедельные задачи по физике — проверьте навыки и соревнуйтесь в рейтинге.' : 'Weekly physics challenges — test your problem-solving skills and compete on the leaderboard.' %>" />
+  <title><%= __('challengesPage.currentChallenge') %> — <%= __('title') %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+  };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .challenges-container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .challenges-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; }
+    @media (max-width: 768px) { .challenges-layout { grid-template-columns: 1fr; } }
+
+    .page-title { font-size: 28px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.25rem; }
+    .page-subtitle { font-size: 15px; color: #6c757d; margin-bottom: 2rem; }
+
+    .challenge-hero { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.75rem; margin-bottom: 2rem; }
+    .challenge-hero-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #1a1a2e; margin-bottom: 0.5rem; }
+    .challenge-hero-title { font-size: 22px; font-weight: 600; margin-bottom: 0.75rem; }
+    .challenge-meta { display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+    .difficulty-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #1a1a2e; color: #fff; }
+    .countdown { font-size: 14px; font-weight: 500; color: #6c757d; }
+    .countdown-value { color: #1a1a2e; font-weight: 600; }
+    .submission-count { font-size: 13px; color: #6c757d; }
+    .challenge-statement { font-size: 15px; line-height: 1.7; margin: 1rem 0; padding: 1rem; background: #fff; border: 1px solid #ebedf0; border-radius: 6px; }
+    .challenge-actions { margin-top: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn-challenge { display: inline-block; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none; border: none; cursor: pointer; }
+    .btn-challenge-primary { background: #1a1a2e; color: #fff; }
+    .btn-challenge-primary:hover { background: #0d0d1a; color: #fff; }
+    .btn-challenge-outline { background: transparent; border: 1px solid #dee2e6; color: #2d2d2d; }
+    .btn-challenge-outline:hover { background: #f8f9fa; }
+
+    .no-challenge { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+
+    .past-section { margin-top: 2rem; }
+    .past-title { font-size: 18px; font-weight: 600; margin-bottom: 1rem; }
+    .past-list { list-style: none; padding: 0; margin: 0; }
+    .past-item { padding: 0.75rem 0; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .past-item:last-child { border-bottom: none; }
+    .past-item-left { flex: 1; min-width: 0; }
+    .past-item-title { font-size: 14px; font-weight: 500; color: #1a5276; text-decoration: none; }
+    .past-item-title:hover { color: #0d3b54; }
+    .past-item-meta { font-size: 12px; color: #6c757d; margin-top: 2px; }
+    .past-item-right { font-size: 13px; color: #27ae60; font-weight: 500; white-space: nowrap; }
+
+    .sidebar-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem; }
+    .sidebar-card-title { font-size: 15px; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .leaderboard-list { list-style: none; padding: 0; margin: 0; }
+    .leaderboard-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0; font-size: 13px; }
+    .lb-rank { width: 22px; text-align: center; font-weight: 600; color: #6c757d; }
+    .lb-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
+    .lb-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .lb-name a { color: #1a5276; text-decoration: none; }
+    .lb-name a:hover { color: #0d3b54; }
+    .lb-score { font-weight: 600; color: #2d2d2d; }
+    .lb-streak { font-size: 11px; color: #6c757d; }
+
+    .submitted-banner { background: #eaf7ef; border: 1px solid #c3e6cb; border-radius: 6px; padding: 0.75rem 1rem; font-size: 14px; color: #155724; margin-top: 1rem; }
+
+    /* Submission form */
+    .submission-form { margin-top: 1.5rem; }
+    .submission-form textarea { width: 100%; min-height: 200px; padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-family: "JetBrains Mono", monospace; font-size: 14px; resize: vertical; }
+    .submission-form textarea:focus { outline: none; border-color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="challenges-container">
+    <h1 class="page-title"><%= __('challengesPage.title') %></h1>
+    <p class="page-subtitle"><%= __('challengesPage.subtitle') %></p>
+
+    <div class="challenges-layout">
+      <!-- LEFT: Current Challenge + Past -->
+      <div>
+        <% if (currentChallenge) { %>
+        <div class="challenge-hero">
+          <div class="challenge-hero-label"><%= __('challengesPage.currentChallenge') %></div>
+          <h2 class="challenge-hero-title"><%= currentChallenge.title || (lang === 'ru' ? 'Задача #' : 'Weekly Challenge #') + currentChallenge.id %></h2>
+          <div class="challenge-meta">
+            <% if (currentChallenge.difficulty) { %>
+              <span class="difficulty-badge"><%= __('challengesPage.difficulty') %>: <%= currentChallenge.difficulty %>/10</span>
+            <% } %>
+            <span class="countdown" id="challengeCountdown" data-end="<%= currentChallenge.week_end %>"></span>
+            <span class="submission-count"><%= submissionCount %> <%= __('challengesPage.submissionsSoFar') %></span>
+          </div>
+          <div class="challenge-statement">
+            <%- currentChallenge.problem_statement %>
+          </div>
+          <div class="challenge-actions">
+            <% if (typeof username !== 'undefined' && username) { %>
+              <a href="/compete/<%= currentChallenge.id %>" class="btn-challenge btn-challenge-primary">
+                <%= userSubmission ? __('challengesPage.viewEditSubmission') : __('challengesPage.submitSolution') %>
+              </a>
+            <% } else { %>
+              <a href="/<%= lang %>/login?error=<%= lang === 'ru' ? 'Войдите для отправки решения' : 'Log in to submit challenge solutions' %>" class="btn-challenge btn-challenge-primary"><%= __('challengesPage.loginToSubmit') %></a>
+            <% } %>
+            <a href="/compete/<%= currentChallenge.id %>" class="btn-challenge btn-challenge-outline"><%= __('challengesPage.viewDetails') %></a>
+          </div>
+          <% if (userSubmission) { %>
+          <div class="submitted-banner">
+            <%= __('challengesPage.submittedBanner') %>
+          </div>
+          <% } %>
+        </div>
+        <% } else { %>
+        <div class="no-challenge">
+          <p style="font-size: 16px; font-weight: 500;"><%= __('challengesPage.noActiveChallenge') %></p>
+          <p><%= __('challengesPage.checkBackSoon') %></p>
+        </div>
+        <% } %>
+
+        <!-- Past Challenges -->
+        <% if (pastChallenges.length > 0) { %>
+        <div class="past-section">
+          <h3 class="past-title"><%= __('challengesPage.pastChallenges') %></h3>
+          <ul class="past-list">
+            <% const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US'; %>
+            <% pastChallenges.forEach(function(ch) { %>
+            <li class="past-item">
+              <div class="past-item-left">
+                <a href="/compete/<%= ch.id %>" class="past-item-title"><%= ch.title || (lang === 'ru' ? 'Задача #' : 'Challenge #') + ch.id %></a>
+                <div class="past-item-meta">
+                  <%= new Date(ch.week_start).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }) %> &ndash;
+                  <%= new Date(ch.week_end).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                  <% if (ch.difficulty) { %> &middot; <%= __('challengesPage.difficulty') %> <%= ch.difficulty %>/10<% } %>
+                </div>
+              </div>
+              <div class="past-item-right">
+                <%= ch.correct_count %> <%= __('challengesPage.correct') %>
+                <% if (ch.solution) { %>&middot; <a href="/compete/<%= ch.id %>" style="color: #1a5276; font-size: 12px;"><%= __('challengesPage.viewSolution') %></a><% } %>
+              </div>
+            </li>
+            <% }); %>
+          </ul>
+        </div>
+        <% } %>
+      </div>
+
+      <!-- RIGHT: Leaderboard Sidebar -->
+      <div>
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">
+            <span><%= __('challengesPage.leaderboardTitle') %></span>
+            <a href="/compete/leaderboard" style="font-size: 12px; color: #1a5276; text-decoration: none;"><%= __('challengesPage.viewAll') %></a>
+          </div>
+          <% if (leaderboard.length > 0) { %>
+          <ul class="leaderboard-list">
+            <% leaderboard.slice(0, 20).forEach(function(entry, idx) { %>
+            <li class="leaderboard-row">
+              <span class="lb-rank"><%= idx + 1 %></span>
+              <img src="<%= entry.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                   alt="" class="lb-avatar" />
+              <span class="lb-name"><a href="/user/<%= entry.username %>"><%= entry.username %></a></span>
+              <span class="lb-score"><%= entry.total_score %></span>
+              <span class="lb-streak" title="<%= __('challengesPage.streak') %>"><%= entry.current_streak %>w</span>
+            </li>
+            <% }); %>
+          </ul>
+          <% } else { %>
+          <p style="font-size: 13px; color: #6c757d; text-align: center; padding: 1rem 0;"><%= __('challengesPage.noScoresYet') %></p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../default/modern_footer') %>
+
+  <script>
+  // Countdown timer
+  (function() {
+    const el = document.getElementById('challengeCountdown');
+    if (!el) return;
+    const endDate = new Date(el.dataset.end + 'T23:59:59');
+    const remainingLabel = "<%= __('challengesPage.remaining') %>";
+    const expiredLabel = "<%= __('challengesPage.expired') %>";
+    function update() {
+      const now = new Date();
+      const diff = endDate - now;
+      if (diff <= 0) {
+        el.innerHTML = '<span class="countdown-value">' + expiredLabel + '</span>';
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      el.innerHTML = '<span class="countdown-value">' + days + 'd ' + hours + 'h ' + mins + 'm</span> ' + remainingLabel;
+    }
+    update();
+    setInterval(update, 60000);
+  })();
+  </script>
+  <%- include('../default/main_site_search_script') %>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

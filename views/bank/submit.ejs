@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Добавить задачу' : 'Submit a Problem' %> — Physics Problem Bank | Savchenko Solutions</title>
+    <meta name="description" content="Submit a physics problem to the Problem Bank at Savchenko Solutions." />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- CodeMirror for statement/solution editing -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
+
+    <style>
+        .submit-container { max-width: 820px; margin: 0 auto; padding: 2rem 1rem; }
+        .submit-header { margin-bottom: 2rem; }
+        .submit-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px; font-weight: 600; color: #2d2d2d; margin: 0 0 0.25rem 0;
+        }
+        .submit-breadcrumb { font-size: 13px; color: #6c757d; margin-bottom: 1rem; }
+        .submit-breadcrumb a { color: #1a5276; text-decoration: none; }
+        .submit-breadcrumb a:hover { text-decoration: underline; }
+
+        .form-label-bank {
+            font-size: 14px; font-weight: 600; color: #2d2d2d;
+            margin-bottom: 0.35rem; display: block;
+        }
+        .form-hint { font-size: 12px; color: #6c757d; margin-bottom: 0.5rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-input {
+            height: 40px; border: 1px solid #dee2e6; border-radius: 6px;
+            padding: 0 0.75rem; font-size: 14px; width: 100%;
+        }
+        .form-input:focus { outline: none; border-color: #1a1a2e; }
+        .form-select-bank {
+            height: 40px; border: 1px solid #dee2e6; border-radius: 6px;
+            padding: 0 0.75rem; font-size: 14px; width: 100%; background: #fff;
+        }
+        .form-select-bank:focus { outline: none; border-color: #1a1a2e; }
+
+        /* Language tabs for statement/solution */
+        .lang-tabs { display: flex; gap: 0; margin-bottom: 0; }
+        .lang-tab {
+            padding: 0.5rem 1rem; font-size: 13px; font-weight: 500;
+            border: 1px solid #dee2e6; border-bottom: none;
+            background: #f8f9fa; color: #6c757d; cursor: pointer;
+            border-radius: 6px 6px 0 0;
+        }
+        .lang-tab.active { background: #fff; color: #2d2d2d; border-bottom: 1px solid #fff; margin-bottom: -1px; z-index: 1; }
+        .lang-tab-content { display: none; }
+        .lang-tab-content.active { display: block; }
+
+        .cm-wrapper {
+            border: 1px solid #dee2e6; border-radius: 0 6px 6px 6px;
+            overflow: hidden;
+        }
+        .cm-wrapper .CodeMirror { height: 200px; font-size: 14px; }
+
+        /* Difficulty slider */
+        .diff-slider-row { display: flex; align-items: center; gap: 0.75rem; }
+        .diff-slider-row input[type="range"] { flex: 1; }
+        .diff-slider-val { font-size: 16px; font-weight: 600; min-width: 28px; text-align: center; }
+
+        /* Topics */
+        .topics-input-wrap { position: relative; }
+        .topic-chip {
+            display: inline-flex; align-items: center; gap: 0.25rem;
+            padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 12px;
+            background: #1a1a2e; color: #fff; margin: 0.15rem 0.15rem 0.15rem 0;
+        }
+        .topic-chip-x { cursor: pointer; font-size: 14px; line-height: 1; }
+        .topic-suggestions {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 0 0 6px 6px;
+            max-height: 150px; overflow-y: auto; display: none;
+        }
+        .topic-suggestions.open { display: block; }
+        .topic-suggestion {
+            padding: 0.4rem 0.75rem; font-size: 13px; cursor: pointer;
+        }
+        .topic-suggestion:hover { background: #f8f9fa; }
+
+        .submit-btn {
+            background: #1a1a2e; color: #fff; border: none; padding: 0.6rem 2rem;
+            border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer;
+        }
+        .submit-btn:hover { opacity: 0.85; }
+
+        .alert-error {
+            background: #fdf0ef; border: 1px solid #f5c6cb; border-radius: 6px;
+            padding: 0.75rem 1rem; color: #c0392b; font-size: 14px; margin-bottom: 1.5rem;
+        }
+    </style>
+    <script src="/js/analytics.js"></script>
+</head>
+
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <main class="submit-container">
+        <div class="submit-breadcrumb">
+            <a href="/bank"><%= lang === 'ru' ? 'Банк задач' : 'Problem Bank' %></a>
+            <span> / </span>
+            <span><%= lang === 'ru' ? 'Добавить задачу' : 'Submit a Problem' %></span>
+        </div>
+
+        <div class="submit-header">
+            <h1><%= lang === 'ru' ? 'Добавить задачу' : 'Submit a Problem' %></h1>
+            <p style="font-size: 14px; color: #6c757d;">
+                <%= lang === 'ru'
+                    ? 'Задача будет отправлена на модерацию и появится после проверки.'
+                    : 'Your problem will be submitted for review and appear once approved.' %>
+            </p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert-error"><%= error %></div>
+        <% } %>
+
+        <form method="POST" action="/bank/submit">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label class="form-label-bank"><%= lang === 'ru' ? 'Источник' : 'Source' %> *</label>
+                        <select name="source_id" class="form-select-bank" required>
+                            <option value=""><%= lang === 'ru' ? 'Выберите источник' : 'Select a source' %></option>
+                            <option value="1">International Physics Olympiad (IPhO)</option>
+                            <option value="2">Asian Physics Olympiad (APhO)</option>
+                            <option value="3">European Physics Olympiad (EuPhO)</option>
+                            <option value="4">USAPhO</option>
+                            <option value="5">BPhO</option>
+                            <option value="6">Irodov</option>
+                            <option value="7">User Submitted</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="form-label-bank"><%= lang === 'ru' ? 'Год' : 'Year' %></label>
+                        <input type="number" name="year" class="form-input" min="1900" max="2100" placeholder="2024" />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="form-label-bank">#</label>
+                        <input type="text" name="problem_number" class="form-input" placeholder="1" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label-bank"><%= lang === 'ru' ? 'Название' : 'Title' %> *</label>
+                <input type="text" name="title" class="form-input" required placeholder="<%= lang === 'ru' ? 'Например: IPhO 2024 Problem 1 — Mechanics' : 'E.g., IPhO 2024 Problem 1 — Mechanics' %>" />
+            </div>
+
+            <!-- Statement (EN / RU tabs) -->
+            <div class="form-group">
+                <label class="form-label-bank"><%= lang === 'ru' ? 'Условие' : 'Problem Statement' %> *</label>
+                <div class="form-hint"><%= lang === 'ru' ? 'Поддерживается LaTeX: $...$ для формул.' : 'LaTeX supported: $...$ for inline math.' %></div>
+                <div class="lang-tabs">
+                    <div class="lang-tab active" data-target="stmt-en">EN</div>
+                    <div class="lang-tab" data-target="stmt-ru">RU</div>
+                </div>
+                <div id="stmt-en" class="lang-tab-content active">
+                    <div class="cm-wrapper">
+                        <textarea name="statement_en" id="stmtEnArea"></textarea>
+                    </div>
+                </div>
+                <div id="stmt-ru" class="lang-tab-content">
+                    <div class="cm-wrapper">
+                        <textarea name="statement_ru" id="stmtRuArea"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solution (EN / RU tabs) -->
+            <div class="form-group">
+                <label class="form-label-bank"><%= lang === 'ru' ? 'Решение (необязательно)' : 'Solution (optional)' %></label>
+                <div class="lang-tabs">
+                    <div class="lang-tab active" data-target="sol-en">EN</div>
+                    <div class="lang-tab" data-target="sol-ru">RU</div>
+                </div>
+                <div id="sol-en" class="lang-tab-content active">
+                    <div class="cm-wrapper">
+                        <textarea name="solution_en" id="solEnArea"></textarea>
+                    </div>
+                </div>
+                <div id="sol-ru" class="lang-tab-content">
+                    <div class="cm-wrapper">
+                        <textarea name="solution_ru" id="solRuArea"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topics -->
+            <div class="form-group">
+                <label class="form-label-bank"><%= lang === 'ru' ? 'Темы' : 'Topics' %></label>
+                <div class="topics-input-wrap" id="topicsWrap">
+                    <div id="topicChips" style="margin-bottom: 0.25rem;"></div>
+                    <input type="text" id="topicInput" class="form-input" placeholder="<%= lang === 'ru' ? 'Введите тему...' : 'Type a topic...' %>" autocomplete="off" />
+                    <div class="topic-suggestions" id="topicSuggestions"></div>
+                    <input type="hidden" name="topics" id="topicsHidden" value="" />
+                </div>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="form-group">
+                <label class="form-label-bank"><%= lang === 'ru' ? 'Оценка сложности' : 'Difficulty Estimate' %></label>
+                <div class="diff-slider-row">
+                    <input type="range" name="difficulty" min="1" max="10" value="5" id="diffInput" />
+                    <span class="diff-slider-val" id="diffVal">5</span>
+                    <span style="font-size:13px; color:#6c757d;">/10</span>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <%= lang === 'ru' ? 'Отправить на проверку' : 'Submit for Review' %>
+            </button>
+        </form>
+    </main>
+
+    <%- include('../default/modern_footer') %>
+
+    <script>
+        // Language tabs
+        document.querySelectorAll('.lang-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                const group = this.parentElement;
+                const parent = group.parentElement;
+                group.querySelectorAll('.lang-tab').forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+                parent.querySelectorAll('.lang-tab-content').forEach(function(c) { c.classList.remove('active'); });
+                document.getElementById(this.dataset.target).classList.add('active');
+            });
+        });
+
+        // CodeMirror instances
+        const cmConfig = { mode: 'stex', lineWrapping: true, lineNumbers: false };
+        const cmStmtEn = CodeMirror.fromTextArea(document.getElementById('stmtEnArea'), cmConfig);
+        const cmStmtRu = CodeMirror.fromTextArea(document.getElementById('stmtRuArea'), cmConfig);
+        const cmSolEn = CodeMirror.fromTextArea(document.getElementById('solEnArea'), cmConfig);
+        const cmSolRu = CodeMirror.fromTextArea(document.getElementById('solRuArea'), cmConfig);
+
+        // Refresh CodeMirror when tab becomes visible
+        document.querySelectorAll('.lang-tab').forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                setTimeout(function() {
+                    cmStmtEn.refresh(); cmStmtRu.refresh();
+                    cmSolEn.refresh(); cmSolRu.refresh();
+                }, 10);
+            });
+        });
+
+        // Sync CodeMirror to textarea on submit
+        document.querySelector('form').addEventListener('submit', function() {
+            cmStmtEn.save(); cmStmtRu.save();
+            cmSolEn.save(); cmSolRu.save();
+        });
+
+        // Difficulty slider
+        document.getElementById('diffInput').addEventListener('input', function() {
+            document.getElementById('diffVal').textContent = this.value;
+        });
+
+        // Topics autocomplete
+        (function() {
+            const knownTopics = <%- JSON.stringify(knownTopics) %>;
+            const input = document.getElementById('topicInput');
+            const suggestions = document.getElementById('topicSuggestions');
+            const chipsEl = document.getElementById('topicChips');
+            const hidden = document.getElementById('topicsHidden');
+            let selected = [];
+
+            function render() {
+                chipsEl.innerHTML = selected.map(function(t) {
+                    return '<span class="topic-chip">' + t +
+                        ' <span class="topic-chip-x" data-topic="' + t + '">&times;</span></span>';
+                }).join('');
+                hidden.value = selected.join(',');
+
+                chipsEl.querySelectorAll('.topic-chip-x').forEach(function(x) {
+                    x.addEventListener('click', function() {
+                        selected = selected.filter(function(s) { return s !== x.dataset.topic; });
+                        render();
+                    });
+                });
+            }
+
+            input.addEventListener('input', function() {
+                const val = this.value.trim().toLowerCase();
+                if (!val) { suggestions.classList.remove('open'); return; }
+
+                const matches = knownTopics.filter(function(t) {
+                    return t.indexOf(val) !== -1 && selected.indexOf(t) === -1;
+                });
+
+                if (matches.length === 0) {
+                    suggestions.classList.remove('open');
+                    return;
+                }
+
+                suggestions.innerHTML = matches.map(function(m) {
+                    return '<div class="topic-suggestion" data-topic="' + m + '">' +
+                        m.charAt(0).toUpperCase() + m.slice(1).replace(/-/g, ' ') + '</div>';
+                }).join('');
+                suggestions.classList.add('open');
+
+                suggestions.querySelectorAll('.topic-suggestion').forEach(function(s) {
+                    s.addEventListener('click', function() {
+                        selected.push(this.dataset.topic);
+                        input.value = '';
+                        suggestions.classList.remove('open');
+                        render();
+                    });
+                });
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = this.value.trim().toLowerCase().replace(/\s+/g, '-');
+                    if (val && selected.indexOf(val) === -1) {
+                        selected.push(val);
+                        this.value = '';
+                        suggestions.classList.remove('open');
+                        render();
+                    }
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#topicsWrap')) {
+                    suggestions.classList.remove('open');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

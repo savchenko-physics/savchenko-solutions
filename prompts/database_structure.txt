@@ -1,0 +1,1044 @@
+NOTICE:  ################################################################
+NOTICE:  DATABASE FULL REPORT - Generated 2026-04-06 20:40:37.53383+00
+NOTICE:  ################################################################
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: alternative_solutions | ROWS: 0
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('alternative_solutions_id_seq'::regclass) maxlen=none distinct=0
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=50 distinct=0
+NOTICE:    language [character varying] nullable=NO default=none maxlen=5 distinct=0
+NOTICE:    title [character varying] nullable=NO default=none maxlen=200 distinct=0
+NOTICE:    content [text] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    method_type [character varying] nullable=YES default=none maxlen=50 distinct=0
+NOTICE:    difficulty_level [integer] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=0
+NOTICE:    updated_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=0
+NOTICE:    likes_count [integer] nullable=YES default=0 maxlen=none distinct=0
+NOTICE:    dislikes_count [integer] nullable=YES default=0 maxlen=none distinct=0
+NOTICE:    is_verified [boolean] nullable=YES default=false maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: alternative_solutions_pkey = CREATE UNIQUE INDEX alternative_solutions_pkey ON public.alternative_solutions USING btree (id)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: comments | ROWS: 14
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('comments_id_seq'::regclass) maxlen=none distinct=14
+NOTICE:    solution_id [integer] nullable=NO default=none maxlen=none distinct=7
+NOTICE:    comment_text [text] nullable=NO default=none maxlen=none distinct=14
+NOTICE:    author [character varying] nullable=YES default=none maxlen=100 distinct=2
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=CURRENT_TIMESTAMP maxlen=none distinct=14
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    images [ARRAY] nullable=YES default=none maxlen=none distinct=5
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: solution_id -> solutions.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: comments_pkey = CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10,"solution_id":9,"comment_text":"Clarified objectives in introduction.","author":"astrosander","created_at":"2025-04-08T07:36:38.7195","user_id":null,"images":null}
+NOTICE:    ROW: {"id":11,"solution_id":9,"comment_text":"Final image assets uploaded.","author":"astrosander","created_at":"2025-04-08T07:49:02.593218","user_id":null,"images":["1744098542587-413181570.png"]}
+NOTICE:    ROW: {"id":12,"solution_id":12,"comment_text":"Проверка синтаксиса LaTex $$\\frac{M_{Марс}}{M_{Земля}}\\approx 0,1$$","author":null,"created_at":"2025-04-10T14:05:55.227106","user_id":null,"images":null}
+NOTICE:  TOP VALUES for comments.solution_id:
+NOTICE:    9: 4
+NOTICE:    1: 4
+NOTICE:    12: 2
+NOTICE:    7: 1
+NOTICE:    2: 1
+NOTICE:  TOP VALUES for comments.author:
+NOTICE:    astrosander: 10
+NOTICE:    alex: 1
+NOTICE:  TOP VALUES for comments.user_id:
+NOTICE:  DATE RANGE: created_at: 2025-04-07 19:21:02.436046 to 2025-09-13 13:57:03.367251
+NOTICE:  NULL COUNTS:
+NOTICE:    author has 3 NULLs (21.428571428571427.1f%)
+NOTICE:    user_id has 14 NULLs (100.1f%)
+NOTICE:    images has 9 NULLs (64.28571428571429.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: contributions | ROWS: 6311
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('contributions_id_seq'::regclass) maxlen=none distinct=6311
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=71
+NOTICE:    edited_at [timestamp without time zone] nullable=YES default=none maxlen=none distinct=6310
+NOTICE:    problem_name [character varying] nullable=YES default=none maxlen=20 distinct=1430
+NOTICE:    language [character varying] nullable=YES default=none maxlen=2 distinct=2
+NOTICE:    original_content [text] nullable=YES default=none maxlen=none distinct=4916
+NOTICE:    new_content [text] nullable=YES default=none maxlen=none distinct=5801
+NOTICE:    ip_address [character varying] nullable=YES default=none maxlen=45 distinct=610
+NOTICE:    content_changed [boolean] nullable=YES default=false maxlen=none distinct=2
+NOTICE:    coauthors [text] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    full_name [character varying] nullable=YES default=none maxlen=255 distinct=20
+NOTICE:    invisible [boolean] nullable=YES default=false maxlen=none distinct=2
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: contributions_pkey = CREATE UNIQUE INDEX contributions_pkey ON public.contributions USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":11494,"user_id":28,"edited_at":"2024-11-27T20:26:39.801638","problem_name":"1.1.14","language":"ru","original_content":null,"new_content":null,"ip_address":null,"content_changed":true,"coauthors":null,"full_name":null,"invisible":false}
+NOTICE:    ROW: {"id":11495,"user_id":28,"edited_at":"2024-11-27T20:36:14.403862","problem_name":"1.3.20","language":"ru","original_content":null,"new_content":null,"ip_address":null,"content_changed":true,"coauthors":null,"full_name":null,"invisible":false}
+NOTICE:    ROW: {"id":11496,"user_id":28,"edited_at":"2024-11-27T20:36:28.410881","problem_name":"2.1.25","language":"ru","original_content":null,"new_content":null,"ip_address":null,"content_changed":true,"coauthors":null,"full_name":null,"invisible":false}
+NOTICE:  TOP VALUES for contributions.user_id:
+NOTICE:    28: 1502
+NOTICE:    232: 902
+NOTICE:    176: 358
+NOTICE:    757: 246
+NOTICE:    54: 187
+NOTICE:  TOP VALUES for contributions.problem_name:
+NOTICE:    2.4.44: 59
+NOTICE:    1.1.1: 54
+NOTICE:    1.1.10: 42
+NOTICE:    6.4.8: 38
+NOTICE:    2.8.16: 38
+NOTICE:  TOP VALUES for contributions.language:
+NOTICE:    ru: 4331
+NOTICE:    en: 1980
+NOTICE:  TOP VALUES for contributions.ip_address:
+NOTICE:    67.217.243.45: 1096
+NOTICE:    192.68.112.171: 752
+NOTICE:    46.150.81.44: 424
+NOTICE:    178.162.240.105: 402
+NOTICE:    91.232.110.67: 206
+NOTICE:  TOP VALUES for contributions.content_changed:
+NOTICE:    true: 5200
+NOTICE:    false: 1111
+NOTICE:  TOP VALUES for contributions.full_name:
+NOTICE:    Yuldashev Ulugbek: 15
+NOTICE:    Роберт еселидзе: 9
+NOTICE:    Гость: 8
+NOTICE:    Георгій: 5
+NOTICE:    Tsotne Shengelia: 4
+NOTICE:  TOP VALUES for contributions.invisible:
+NOTICE:    false: 4718
+NOTICE:    true: 1593
+NOTICE:  DATE RANGE: edited_at: 2024-11-27 20:26:39.801638 to 2026-04-06 16:22:22.092338
+NOTICE:  NULL COUNTS:
+NOTICE:    user_id has 2157 NULLs (34.17841863413088.1f%)
+NOTICE:    original_content has 183 NULLs (2.8996989383615905.1f%)
+NOTICE:    new_content has 183 NULLs (2.8996989383615905.1f%)
+NOTICE:    ip_address has 183 NULLs (2.8996989383615905.1f%)
+NOTICE:    coauthors has 6311 NULLs (100.1f%)
+NOTICE:    full_name has 6242 NULLs (98.90667089209317.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: github_contributions | ROWS: 11493
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('"github-contributions_id_seq"'::regclass) maxlen=none distinct=11493
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=3
+NOTICE:    edited_at [timestamp without time zone] nullable=YES default=none maxlen=none distinct=470
+NOTICE:    problem_name [character varying] nullable=YES default=none maxlen=20 distinct=747
+NOTICE:    language [character varying] nullable=YES default=none maxlen=2 distinct=2
+NOTICE:    original_content [text] nullable=YES default=none maxlen=none distinct=10480
+NOTICE:    new_content [text] nullable=YES default=none maxlen=none distinct=11457
+NOTICE:    caption [text] nullable=YES default=none maxlen=none distinct=450
+NOTICE:    commit [text] nullable=NO default=''::text maxlen=none distinct=470
+NOTICE:    coauthors [text] nullable=YES default=none maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: github-contributions_pkey = CREATE UNIQUE INDEX "github-contributions_pkey" ON public.github_contributions USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10000,"user_id":28,"edited_at":"2024-10-06T00:02:17","problem_name":"1.4.18","language":"en","original_content":"<!DOCTYPE html>\n<html lang=\"en\">\n\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"content-language\" content=\"en\">\n    <meta name=\"keywords\" content=\"Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda\">\n    <meta name=\"description\" content=\"A boy who can swim at half the speed of a river wants to swim acr
+NOTICE:    ROW: {"id":10001,"user_id":28,"edited_at":"2024-10-06T00:02:17","problem_name":"2.1.36","language":"ru","original_content":"<!DOCTYPE html>\n<html lang=\"ru\">\n\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta http-equiv=\"content-language\" content=\"ru\">\n    <meta name=\"keywords\" content=\"решение, савченко, оливер, яковлевич, о.я., сборник задач по физике, решебник\">\n    <meta name=\"description\" content=\"Решение задачника Савенко О.Я.\">\n    <meta property=\"og:title\" content=\"Решебник Савченко\">\n    <
+NOTICE:    ROW: {"id":10002,"user_id":28,"edited_at":"2024-10-06T00:02:17","problem_name":"1.1.10","language":"ru","original_content":"\n\n<html>\n  <head>\n    <title>Решебник Савченко</title>\n    <meta name=\"keywords\" content=\"решение, савченко, оливер, яковлевич, о.я., сборник задач по физике, решебник\">\n    <meta name=\"description\" content=\"Решение задачника Савенко О.Я.\">\n    <meta http-equiv=\"content-language\" content=\"ru\">\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta property=\"og:title\" content=\"Решебник Савче
+NOTICE:  TOP VALUES for github_contributions.user_id:
+NOTICE:    28: 11395
+NOTICE:    34: 63
+NOTICE:    68: 35
+NOTICE:  TOP VALUES for github_contributions.problem_name:
+NOTICE:    7.1.22: 39
+NOTICE:    1.1.1: 38
+NOTICE:    3.2.1: 38
+NOTICE:    1.1.2: 37
+NOTICE:    1.1.10: 37
+NOTICE:  TOP VALUES for github_contributions.language:
+NOTICE:    ru: 8988
+NOTICE:    en: 2505
+NOTICE:  DATE RANGE: edited_at: 2023-10-10 08:46:34 to 2024-11-05 02:03:25
+NOTICE:  NULL COUNTS:
+NOTICE:    coauthors has 11493 NULLs (100.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: page_views | ROWS: 498751
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=255 distinct=1837
+NOTICE:    language [character varying] nullable=NO default=none maxlen=10 distinct=25
+NOTICE:    date [date] nullable=NO default=none maxlen=none distinct=447
+NOTICE:    views [integer] nullable=YES default=0 maxlen=none distinct=84
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: problem_name
+NOTICE:    PK: language
+NOTICE:    PK: date
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: page_views_pkey = CREATE UNIQUE INDEX page_views_pkey ON public.page_views USING btree (problem_name, language, date)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"problem_name":"01.1.02","language":"ru","date":"2025-01-14","views":2}
+NOTICE:    ROW: {"problem_name":"01.1.02","language":"ru","date":"2025-01-18","views":1}
+NOTICE:    ROW: {"problem_name":"01.1.02","language":"ru","date":"2025-01-21","views":1}
+NOTICE:  TOP VALUES for page_views.problem_name:
+NOTICE:    1.1.1: 889
+NOTICE:    1.1.2: 854
+NOTICE:    1.1.12: 849
+NOTICE:    1.1.5: 829
+NOTICE:    1.1.7: 817
+NOTICE:  TOP VALUES for page_views.language:
+NOTICE:    ru: 365684
+NOTICE:    en: 133015
+NOTICE:    wp-admin: 9
+NOTICE:    .git: 5
+NOTICE:    wp-content: 5
+NOTICE:  TOP VALUES for page_views.views:
+NOTICE:    1: 201084
+NOTICE:    2: 128968
+NOTICE:    3: 73960
+NOTICE:    4: 40467
+NOTICE:    5: 21229
+NOTICE:  DATE RANGE: date: 2025-01-12 to 2026-04-06
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: page_views_old | ROWS: 517533
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=255 distinct=794
+NOTICE:    language [character varying] nullable=NO default=none maxlen=10 distinct=2
+NOTICE:    date [date] nullable=NO default=none maxlen=none distinct=502
+NOTICE:    views [integer] nullable=YES default=0 maxlen=none distinct=75
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: problem_name
+NOTICE:    PK: language
+NOTICE:    PK: date
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: page_views_old_pkey = CREATE UNIQUE INDEX page_views_old_pkey ON public.page_views_old USING btree (problem_name, language, date)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"problem_name":"10.1.15","language":"en","date":"2023-09-01","views":0}
+NOTICE:    ROW: {"problem_name":"10.1.15","language":"en","date":"2023-09-02","views":0}
+NOTICE:    ROW: {"problem_name":"10.1.15","language":"en","date":"2023-09-03","views":0}
+NOTICE:  TOP VALUES for page_views_old.problem_name:
+NOTICE:    3.1.4: 1002
+NOTICE:    1.3.25: 1002
+NOTICE:    2.1.1: 1002
+NOTICE:    2.7.44: 1002
+NOTICE:    3.1.12: 1002
+NOTICE:  TOP VALUES for page_views_old.language:
+NOTICE:    ru: 350700
+NOTICE:    en: 166833
+NOTICE:  TOP VALUES for page_views_old.views:
+NOTICE:    0: 427342
+NOTICE:    1: 50835
+NOTICE:    2: 19623
+NOTICE:    3: 8871
+NOTICE:    4: 4415
+NOTICE:  DATE RANGE: date: 2023-08-31 to 2025-01-13
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: recent_views | ROWS: 1218521
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('recent_views_id_seq'::regclass) maxlen=none distinct=1218521
+NOTICE:    ip_address [character varying] nullable=YES default=none maxlen=45 distinct=192311
+NOTICE:    problem_name [character varying] nullable=YES default=none maxlen=255 distinct=1524
+NOTICE:    language [character varying] nullable=YES default=none maxlen=10 distinct=2
+NOTICE:    timestamp [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=1218390
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: recent_views_pkey = CREATE UNIQUE INDEX recent_views_pkey ON public.recent_views USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1000000,"ip_address":"128.1.194.181","problem_name":"8.1.8","language":"ru","timestamp":"2026-02-04T16:52:42.257957"}
+NOTICE:    ROW: {"id":1000001,"ip_address":"128.1.194.174","problem_name":"8.1.9","language":"ru","timestamp":"2026-02-04T16:52:47.005625"}
+NOTICE:    ROW: {"id":1000002,"ip_address":"157.55.39.53","problem_name":"2.1.60","language":"ru","timestamp":"2026-02-04T16:52:56.574468"}
+NOTICE:  TOP VALUES for recent_views.ip_address:
+NOTICE:    216.244.66.200: 20115
+NOTICE:    84.237.49.174: 14576
+NOTICE:    136.243.228.195: 10786
+NOTICE:    66.249.75.231: 5605
+NOTICE:    114.119.152.161: 4715
+NOTICE:  TOP VALUES for recent_views.problem_name:
+NOTICE:    1.1.1: 6152
+NOTICE:    1.1.2: 3942
+NOTICE:    2.2.29: 3908
+NOTICE:    2.1.11: 3424
+NOTICE:    2.2.12: 3388
+NOTICE:  TOP VALUES for recent_views.language:
+NOTICE:    ru: 890967
+NOTICE:    en: 327554
+NOTICE:  DATE RANGE: timestamp: 2025-01-13 20:51:32.342896 to 2026-04-06 20:40:51.942042
+NOTICE:  NULL COUNTS:
+NOTICE:    ip_address has 30 NULLs (0.0024620010652257945.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: sections | ROWS: 0
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('sections_id_seq'::regclass) maxlen=none distinct=0
+NOTICE:    number [character varying] nullable=NO default=none maxlen=10 distinct=0
+NOTICE:    russian_title [text] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    english_title [text] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    entries_count [integer] nullable=NO default=none maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: sections_pkey = CREATE UNIQUE INDEX sections_pkey ON public.sections USING btree (id)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: session | ROWS: 1587
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    sid [character varying] nullable=NO default=none maxlen=none distinct=1587
+NOTICE:    sess [json] nullable=NO default=none maxlen=none distinct=-1
+NOTICE:    expire [timestamp without time zone] nullable=NO default=none maxlen=none distinct=1466
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: sid
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: session_pkey = CREATE UNIQUE INDEX session_pkey ON public.session USING btree (sid)
+NOTICE:    IDX: IDX_session_expire = CREATE INDEX "IDX_session_expire" ON public.session USING btree (expire)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"sid":"03QMYN1fGtnCgkfVCXDpYGU6nNn9Og7-","sess":{"cookie":{"originalMaxAge":31536000000,"expires":"2026-04-07T20:19:52.993Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"userId":28,"username":"astrosander","lang":"en"},"expire":"2026-04-07T23:36:24"}
+NOTICE:    ROW: {"sid":"06nuvqUKI8jb7Bp0yrIRQsKNpoDcIut9","sess":{"cookie":{"originalMaxAge":31536000000,"expires":"2026-06-07T15:55:12.474Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"flash":{}},"expire":"2026-06-07T15:55:13"}
+NOTICE:    ROW: {"sid":"0bfAzJbPBkjmE6COt8TrTOQlinoQeKN2","sess":{"cookie":{"originalMaxAge":31536000000,"expires":"2026-10-03T18:55:52.939Z","secure":false,"httpOnly":true,"path":"/","sameSite":"lax"},"flash":{}},"expire":"2026-10-03T18:55:53"}
+NOTICE:  TOP VALUES for session.sid:
+NOTICE:    D44_M2WausI2iXERlxPH8VlCaoyVLEjg: 1
+NOTICE:    2T_vS3fWi04l5nlXvk_If4XpSGgzkfyp: 1
+NOTICE:    -0Jf59B5d12wfxAVt4Q4rZRCMIux5c82: 1
+NOTICE:    C0xcT6usK7Q_IGXagwTLi9UMlJIK3xbr: 1
+NOTICE:    -lrzJbJmAegUPYO8g8it8o-Mg6laL0kt: 1
+NOTICE:  DATE RANGE: expire: 2026-04-07 02:46:46 to 2027-04-06 20:28:50
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: solution_comments | ROWS: 89
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('solution_comments_id_seq'::regclass) maxlen=none distinct=89
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=16
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=50 distinct=48
+NOTICE:    language [character varying] nullable=NO default=none maxlen=5 distinct=2
+NOTICE:    content [text] nullable=NO default=none maxlen=none distinct=89
+NOTICE:    parent_id [integer] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=89
+NOTICE:    updated_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=89
+NOTICE:    is_deleted [boolean] nullable=YES default=false maxlen=none distinct=1
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: parent_id -> solution_comments.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: solution_comments_pkey = CREATE UNIQUE INDEX solution_comments_pkey ON public.solution_comments USING btree (id)
+NOTICE:    IDX: idx_solution_comments_problem = CREATE INDEX idx_solution_comments_problem ON public.solution_comments USING btree (problem_name, language)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10,"user_id":232,"problem_name":"14.2.1","language":"ru","content":"Таинственным образом вы забыли возвести в квадрат отношение скорости корабля к скорости света. В ответе задачника ошибка.","parent_id":null,"created_at":"2025-06-22T19:43:32.820324","updated_at":"2025-06-22T19:43:32.820324","is_deleted":false}
+NOTICE:    ROW: {"id":11,"user_id":232,"problem_name":"11.1.1","language":"ru","content":"В задаче спрашивают максимальное напряжение электрического поля, а не ЭДС индукции. Напряжение электрического поля это векторное произведение     E = v× B, это означает, что вектор эл.напряжения перпендикулярен скорости и вектору магнитной индукции, а направление перпендикулярное скорости это направление вдоль крыльев самолёта, поэтому напряжение эл.поля между крайними точками крыльев будет максимальным. Кстати, у Боинга (любых модификаций) размах крыльев меньше, чем длина самого самолёта.","parent_id":null,"created_at":
+NOTICE:    ROW: {"id":12,"user_id":232,"problem_name":"13.1.20","language":"ru","content":"Нет, тут нет никакого доказательства того, что вне зависимости от ширины пучка лучей, все они соберутся в фокусе. Это не решение задачи повышенной трудности.","parent_id":null,"created_at":"2025-06-22T20:25:24.366013","updated_at":"2025-06-22T20:25:24.366013","is_deleted":false}
+NOTICE:  TOP VALUES for solution_comments.user_id:
+NOTICE:    232: 39
+NOTICE:    176: 21
+NOTICE:    28: 6
+NOTICE:    2210: 3
+NOTICE:    1383: 3
+NOTICE:  TOP VALUES for solution_comments.problem_name:
+NOTICE:    6.4.8: 10
+NOTICE:    3.5.17: 5
+NOTICE:    7.4.36: 4
+NOTICE:    4.2.22: 4
+NOTICE:    5.9.17: 4
+NOTICE:  TOP VALUES for solution_comments.language:
+NOTICE:    ru: 83
+NOTICE:    en: 6
+NOTICE:  TOP VALUES for solution_comments.parent_id:
+NOTICE:  TOP VALUES for solution_comments.is_deleted:
+NOTICE:    false: 89
+NOTICE:  DATE RANGE: created_at: 2025-06-19 21:44:23.421296 to 2026-04-05 16:45:50.150681
+NOTICE:  DATE RANGE: updated_at: 2025-06-19 21:44:23.421296 to 2026-04-05 16:45:50.150681
+NOTICE:  NULL COUNTS:
+NOTICE:    parent_id has 89 NULLs (100.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: solution_likes | ROWS: 325
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('solution_likes_id_seq'::regclass) maxlen=none distinct=325
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=54
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=50 distinct=241
+NOTICE:    language [character varying] nullable=NO default=none maxlen=5 distinct=2
+NOTICE:    is_like [boolean] nullable=NO default=none maxlen=none distinct=2
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=325
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: solution_likes_pkey = CREATE UNIQUE INDEX solution_likes_pkey ON public.solution_likes USING btree (id)
+NOTICE:    IDX: solution_likes_user_id_problem_name_language_key = CREATE UNIQUE INDEX solution_likes_user_id_problem_name_language_key ON public.solution_likes USING btree (user_id, problem_name, language)
+NOTICE:    IDX: idx_solution_likes_problem = CREATE INDEX idx_solution_likes_problem ON public.solution_likes USING btree (problem_name, language)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":100,"user_id":176,"problem_name":"6.2.14","language":"ru","is_like":true,"created_at":"2025-08-11T05:26:42.171941"}
+NOTICE:    ROW: {"id":102,"user_id":1496,"problem_name":"2.1.1","language":"ru","is_like":true,"created_at":"2025-08-12T08:28:35.511677"}
+NOTICE:    ROW: {"id":103,"user_id":759,"problem_name":"10.1.13","language":"ru","is_like":true,"created_at":"2025-08-12T14:37:16.291704"}
+NOTICE:  TOP VALUES for solution_likes.user_id:
+NOTICE:    176: 100
+NOTICE:    232: 53
+NOTICE:    28: 35
+NOTICE:    1383: 19
+NOTICE:    759: 11
+NOTICE:  TOP VALUES for solution_likes.problem_name:
+NOTICE:    3.1.14: 5
+NOTICE:    4.2.19: 4
+NOTICE:    1.1.1: 4
+NOTICE:    2.4.41: 4
+NOTICE:    13.3.3: 3
+NOTICE:  TOP VALUES for solution_likes.language:
+NOTICE:    ru: 284
+NOTICE:    en: 41
+NOTICE:  TOP VALUES for solution_likes.is_like:
+NOTICE:    true: 306
+NOTICE:    false: 19
+NOTICE:  DATE RANGE: created_at: 2025-06-19 21:44:56.89801 to 2026-04-06 16:30:15.46756
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: solution_reports | ROWS: 51
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('solution_reports_id_seq'::regclass) maxlen=none distinct=51
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=9
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=50 distinct=46
+NOTICE:    language [character varying] nullable=NO default=none maxlen=10 distinct=2
+NOTICE:    reason [text] nullable=NO default=none maxlen=none distinct=51
+NOTICE:    ip_address [inet] nullable=YES default=none maxlen=none distinct=47
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=51
+NOTICE:    status [character varying] nullable=YES default='pending'::character varying maxlen=20 distinct=1
+NOTICE:    reviewed_by [integer] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    reviewed_at [timestamp without time zone] nullable=YES default=none maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: reviewed_by -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: solution_reports_pkey = CREATE UNIQUE INDEX solution_reports_pkey ON public.solution_reports USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10,"user_id":null,"problem_name":"4.5.22","language":"ru","reason":"ошибки вместо формул","ip_address":"178.76.241.35","created_at":"2025-07-28T09:56:57.577555","status":"pending","reviewed_by":null,"reviewed_at":null}
+NOTICE:    ROW: {"id":11,"user_id":null,"problem_name":"5.5.6","language":"ru","reason":"В последних выражениях на странице допущена ошибка: в ответе должен быть знак \"+\"","ip_address":"178.121.30.233","created_at":"2025-08-03T14:42:47.994173","status":"pending","reviewed_by":null,"reviewed_at":null}
+NOTICE:    ROW: {"id":12,"user_id":null,"problem_name":"5.2.9","language":"ru","reason":"не тот номер)","ip_address":"57.128.184.15","created_at":"2025-08-04T14:49:10.564104","status":"pending","reviewed_by":null,"reviewed_at":null}
+NOTICE:  TOP VALUES for solution_reports.user_id:
+NOTICE:    1640: 3
+NOTICE:    28: 2
+NOTICE:    2165: 1
+NOTICE:    1887: 1
+NOTICE:    1889: 1
+NOTICE:  TOP VALUES for solution_reports.problem_name:
+NOTICE:    3.3.2: 2
+NOTICE:    1.2.8: 2
+NOTICE:    4.1.6: 2
+NOTICE:    4.1.12: 2
+NOTICE:    3.1.14: 2
+NOTICE:  TOP VALUES for solution_reports.language:
+NOTICE:    ru: 45
+NOTICE:    en: 6
+NOTICE:  TOP VALUES for solution_reports.status:
+NOTICE:    pending: 51
+NOTICE:  TOP VALUES for solution_reports.reviewed_by:
+NOTICE:  DATE RANGE: created_at: 2025-06-20 00:02:54.750737 to 2026-03-19 16:10:58.678749
+NOTICE:  DATE RANGE: <NULL>
+NOTICE:  NULL COUNTS:
+NOTICE:    user_id has 39 NULLs (76.47058823529412.1f%)
+NOTICE:    reviewed_by has 51 NULLs (100.1f%)
+NOTICE:    reviewed_at has 51 NULLs (100.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: solutions | ROWS: 11
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('solutions_id_seq'::regclass) maxlen=none distinct=11
+NOTICE:    title [character varying] nullable=NO default=none maxlen=255 distinct=9
+NOTICE:    content [text] nullable=NO default=none maxlen=none distinct=10
+NOTICE:    subject [character varying] nullable=YES default=none maxlen=100 distinct=7
+NOTICE:    difficulty [character varying] nullable=YES default=none maxlen=50 distinct=4
+NOTICE:    problem_book [character varying] nullable=YES default=none maxlen=255 distinct=7
+NOTICE:    status [character varying] nullable=YES default='Unverified'::character varying maxlen=50 distinct=4
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=CURRENT_TIMESTAMP maxlen=none distinct=11
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=1
+NOTICE:    language [character varying] nullable=YES default=none maxlen=2 distinct=2
+NOTICE:    files [ARRAY] nullable=YES default=none maxlen=none distinct=7
+NOTICE:    anonymous_name [character varying] nullable=YES default=none maxlen=100 distinct=0
+NOTICE:    method [character varying] nullable=YES default=none maxlen=10 distinct=2
+NOTICE:    author [character varying] nullable=YES default=none maxlen=255 distinct=3
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: solutions_pkey = CREATE UNIQUE INDEX solutions_pkey ON public.solutions USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10,"title":"Exponential Function Challenge","content":"Explore and analyze the behavior of the function $x^x$ with derivatives and graphs.","subject":"Physics","difficulty":"Medium","problem_book":null,"status":"Unverified","created_at":"2025-04-08T08:05:19.354484","user_id":null,"language":"en","files":["1744099519350-207037954.png"],"anonymous_name":null,"method":"latex","author":"Aliaksandr"}
+NOTICE:    ROW: {"id":11,"title":"2.6.10","content":"s","subject":"Физика","difficulty":"easy","problem_book":"Савченко. Сила тяготения. Законы Кеплера","status":"Unverified","created_at":"2025-04-08T11:17:35.368488","user_id":null,"language":"ru","files":null,"anonymous_name":null,"method":"latex","author":"emixter"}
+NOTICE:    ROW: {"id":12,"title":"2.6.10","content":"Спутник Марса Фобос обращается вокруг него по орбите радиуса 9400 км с периодом 7 ч 39 мин. Во сколько раз масса Марса меньше массы Земли?\r\n\r\nИз закона всемирного тяготения и второго закона Ньютона найдём, что масса Марса выражается через параметри орбиты Фобоса следующим образом:\r\n\r\n$$M_{Марс}=\\frac{4\\pi^{2}R^{3}}{GT^{2}}$$\r\n\r\nПодстановка числовых выражений даёт :\r\n\r\n$$M_{Марс}=6,48\\cdot 10^{23} \\text{ кг}$$\r\n\r\nЕсли разделить на массу Земли: $M_{Земля}=5,97\\cdot 10^{24} \\text{ кг}$, то получится:\r\n\r\n$$\\frac{M_{Марс}}{M_{Земля
+NOTICE:  TOP VALUES for solutions.title:
+NOTICE:    2.6.10: 2
+NOTICE:    Projectile Motion Analysis: 2
+NOTICE:    Newton’s Laws Application: 1
+NOTICE:    Test of the solution: 1
+NOTICE:    Electric Circuits 101: 1
+NOTICE:  TOP VALUES for solutions.subject:
+NOTICE:    Physics: 4
+NOTICE:    Физика: 2
+NOTICE:    Mechanics: 1
+NOTICE:    Thermodynamics: 1
+NOTICE:    Algebra: 1
+NOTICE:  TOP VALUES for solutions.difficulty:
+NOTICE:    Medium: 4
+NOTICE:    Easy: 3
+NOTICE:    easy: 2
+NOTICE:    Hard: 2
+NOTICE:  TOP VALUES for solutions.problem_book:
+NOTICE:    Савченко. Сила тяготения. Законы Кеплера: 2
+NOTICE:    Dkskaldka: 2
+NOTICE:    jkdjsak: 1
+NOTICE:    2.1.24: 1
+NOTICE:    lklkdaslkl: 1
+NOTICE:  TOP VALUES for solutions.status:
+NOTICE:    Unverified: 7
+NOTICE:    Verified: 2
+NOTICE:    Proccessing: 1
+NOTICE:    Requires Review: 1
+NOTICE:  TOP VALUES for solutions.user_id:
+NOTICE:    28: 7
+NOTICE:  TOP VALUES for solutions.language:
+NOTICE:    en: 7
+NOTICE:    ru: 2
+NOTICE:  TOP VALUES for solutions.anonymous_name:
+NOTICE:  TOP VALUES for solutions.method:
+NOTICE:    latex: 7
+NOTICE:    scans: 2
+NOTICE:  TOP VALUES for solutions.author:
+NOTICE:    emixter: 2
+NOTICE:    astrosander: 1
+NOTICE:    Aliaksandr: 1
+NOTICE:  DATE RANGE: created_at: 2025-04-07 19:20:45.434941 to 2025-04-08 11:33:27.01894
+NOTICE:  NULL COUNTS:
+NOTICE:    problem_book has 2 NULLs (18.181818181818183.1f%)
+NOTICE:    user_id has 4 NULLs (36.36363636363637.1f%)
+NOTICE:    language has 2 NULLs (18.181818181818183.1f%)
+NOTICE:    files has 4 NULLs (36.36363636363637.1f%)
+NOTICE:    anonymous_name has 11 NULLs (100.1f%)
+NOTICE:    method has 2 NULLs (18.181818181818183.1f%)
+NOTICE:    author has 7 NULLs (63.63636363636363.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: special_contributions | ROWS: 8
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('special_contributions_id_seq'::regclass) maxlen=none distinct=8
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=1
+NOTICE:    problem_name [character varying] nullable=YES default=none maxlen=255 distinct=4
+NOTICE:    language [character varying] nullable=YES default=none maxlen=10 distinct=2
+NOTICE:    edited_at [timestamp without time zone] nullable=YES default=CURRENT_TIMESTAMP maxlen=none distinct=8
+NOTICE:    old_content [text] nullable=YES default=none maxlen=none distinct=4
+NOTICE:    new_content [text] nullable=YES default=none maxlen=none distinct=5
+NOTICE:    ip_address [character varying] nullable=YES default=none maxlen=45 distinct=5
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: special_contributions_pkey = CREATE UNIQUE INDEX special_contributions_pkey ON public.special_contributions USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1,"user_id":28,"problem_name":"1.2.7","language":"en","edited_at":"2025-01-18T05:38:53.211349","old_content":"###  Statement\r\n\r\n$1.2.7.$ The bus moves for $20$ seconds in a straight line to the stop, passing a distance of $310 \\text{ m}$. Its initial speed is $15~\\mathrm{\\frac{m}{s}}$. Prove that the velocity of the bus changes in direction.\r\n\r\n### Solution\r\n\r\nSince the bus comes to a complete stop at the end, the average speed is\r\n\r\ntest👀\r\n\r\n$$\r\nv_\\text{average}=\\frac{15+0}{2}~ \\mathrm{\\frac{m}{s}}=7.5~ \\mathrm{\\frac{m}{s}}\r\n$$\r\n\r\nIf there is an equa
+NOTICE:    ROW: {"id":2,"user_id":28,"problem_name":"1.2.7","language":"en","edited_at":"2025-01-18T05:39:40.720026","old_content":"###  Statement\r\n\r\n$1.2.7.$ The bus moves for $20$ seconds in a straight line to the stop, passing a distance of $310 \\text{ m}$. Its initial speed is $15~\\mathrm{\\frac{m}{s}}$. Prove that the velocity of the bus changes in direction.\r\n\r\n### Solution\r\n\r\nSince the bus comes to a complete stop at the end, the average speed is\r\n\r\ntest👀\r\n\r\n$$\r\nv_\\text{average}=\\frac{15+0}{2}~ \\mathrm{\\frac{m}{s}}=7.5~ \\mathrm{\\frac{m}{s}}\r\n$$\r\n\r\nIf there is an equa
+NOTICE:    ROW: {"id":3,"user_id":28,"problem_name":"1.2.7","language":"en","edited_at":"2025-01-18T05:46:33.736292","old_content":"###  Statement\r\n\r\n$1.2.7.$ The bus moves for $20$ seconds in a straight line to the stop, passing a distance of $310 \\text{ m}$. Its initial speed is $15~\\mathrm{\\frac{m}{s}}$. Prove that the velocity of the bus changes in direction.\r\n\r\n### Solution\r\n\r\nSince the bus comes to a complete stop at the end, the average speed is\r\n\r\ntest👀\r\n\r\n$$\r\nv_\\text{average}=\\frac{15+0}{2}~ \\mathrm{\\frac{m}{s}}=7.5~ \\mathrm{\\frac{m}{s}}\r\n$$\r\n\r\nIf there is an equa
+NOTICE:  TOP VALUES for special_contributions.user_id:
+NOTICE:    28: 5
+NOTICE:  TOP VALUES for special_contributions.problem_name:
+NOTICE:    9.2.12: 3
+NOTICE:    1.2.7: 3
+NOTICE:    4.5.9: 1
+NOTICE:    1.3.16: 1
+NOTICE:  TOP VALUES for special_contributions.language:
+NOTICE:    en: 7
+NOTICE:    ru: 1
+NOTICE:  TOP VALUES for special_contributions.ip_address:
+NOTICE:    ::1: 3
+NOTICE:    67.217.243.45: 2
+NOTICE:    192.68.112.171: 1
+NOTICE:    178.162.240.105: 1
+NOTICE:    76.78.177.26: 1
+NOTICE:  DATE RANGE: edited_at: 2025-01-18 05:38:53.211349 to 2026-03-12 16:21:13.664074
+NOTICE:  NULL COUNTS:
+NOTICE:    user_id has 3 NULLs (37.5.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: starred_solutions | ROWS: 14
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('starred_solutions_id_seq'::regclass) maxlen=none distinct=14
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=10
+NOTICE:    problem_name [character varying] nullable=NO default=none maxlen=50 distinct=13
+NOTICE:    language [character varying] nullable=NO default=none maxlen=5 distinct=2
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=14
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: starred_solutions_pkey = CREATE UNIQUE INDEX starred_solutions_pkey ON public.starred_solutions USING btree (id)
+NOTICE:    IDX: starred_solutions_user_id_problem_name_language_key = CREATE UNIQUE INDEX starred_solutions_user_id_problem_name_language_key ON public.starred_solutions USING btree (user_id, problem_name, language)
+NOTICE:    IDX: idx_starred_solutions_user = CREATE INDEX idx_starred_solutions_user ON public.starred_solutions USING btree (user_id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":10,"user_id":28,"problem_name":"1.2.17","language":"en","created_at":"2025-09-30T01:20:19.372151"}
+NOTICE:    ROW: {"id":13,"user_id":1887,"problem_name":"5.5.35","language":"ru","created_at":"2025-10-08T17:39:31.061517"}
+NOTICE:    ROW: {"id":18,"user_id":759,"problem_name":"11.6.9","language":"ru","created_at":"2025-10-30T16:47:42.091422"}
+NOTICE:  TOP VALUES for starred_solutions.user_id:
+NOTICE:    176: 3
+NOTICE:    759: 2
+NOTICE:    28: 2
+NOTICE:    2210: 1
+NOTICE:    1383: 1
+NOTICE:  TOP VALUES for starred_solutions.problem_name:
+NOTICE:    1.1.23: 2
+NOTICE:    2.4.20: 1
+NOTICE:    2.5.38: 1
+NOTICE:    3.3.34: 1
+NOTICE:    3.1.4: 1
+NOTICE:  TOP VALUES for starred_solutions.language:
+NOTICE:    ru: 10
+NOTICE:    en: 4
+NOTICE:  DATE RANGE: created_at: 2025-06-19 21:45:35.076826 to 2026-04-06 14:24:29.590814
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: user_achievements | ROWS: 0
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('user_achievements_id_seq'::regclass) maxlen=none distinct=0
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    achievement_type [character varying] nullable=NO default=none maxlen=50 distinct=0
+NOTICE:    achievement_data [jsonb] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    earned_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: user_achievements_pkey = CREATE UNIQUE INDEX user_achievements_pkey ON public.user_achievements USING btree (id)
+NOTICE:    IDX: user_achievements_user_id_achievement_type_key = CREATE UNIQUE INDEX user_achievements_user_id_achievement_type_key ON public.user_achievements USING btree (user_id, achievement_type)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: user_activities | ROWS: 487
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('user_activities_id_seq'::regclass) maxlen=none distinct=487
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=66
+NOTICE:    activity_type [character varying] nullable=NO default=none maxlen=50 distinct=3
+NOTICE:    target_user_id [integer] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    target_problem [character varying] nullable=YES default=none maxlen=50 distinct=269
+NOTICE:    target_language [character varying] nullable=YES default=none maxlen=5 distinct=2
+NOTICE:    metadata [jsonb] nullable=YES default=none maxlen=none distinct=91
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=487
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:    FK: target_user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: user_activities_pkey = CREATE UNIQUE INDEX user_activities_pkey ON public.user_activities USING btree (id)
+NOTICE:    IDX: idx_user_activities_user = CREATE INDEX idx_user_activities_user ON public.user_activities USING btree (user_id)
+NOTICE:    IDX: idx_user_activities_type = CREATE INDEX idx_user_activities_type ON public.user_activities USING btree (activity_type)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":100,"user_id":232,"activity_type":"like","target_user_id":null,"target_problem":"4.1.13","target_language":"ru","metadata":{"isLike": true},"created_at":"2025-08-02T13:07:04.095381"}
+NOTICE:    ROW: {"id":101,"user_id":1383,"activity_type":"like","target_user_id":null,"target_problem":"2.6.6","target_language":"ru","metadata":{"isLike": true},"created_at":"2025-08-02T19:57:49.333709"}
+NOTICE:    ROW: {"id":102,"user_id":1383,"activity_type":"like","target_user_id":null,"target_problem":"2.6.36","target_language":"ru","metadata":{"isLike": true},"created_at":"2025-08-02T20:29:32.296389"}
+NOTICE:  TOP VALUES for user_activities.user_id:
+NOTICE:    176: 127
+NOTICE:    232: 95
+NOTICE:    28: 45
+NOTICE:    1383: 25
+NOTICE:    759: 25
+NOTICE:  TOP VALUES for user_activities.activity_type:
+NOTICE:    like: 374
+NOTICE:    comment: 89
+NOTICE:    star: 24
+NOTICE:  TOP VALUES for user_activities.target_user_id:
+NOTICE:  TOP VALUES for user_activities.target_problem:
+NOTICE:    6.4.8: 15
+NOTICE:    11.6.9: 10
+NOTICE:    2.6.15: 9
+NOTICE:    1.1.1: 6
+NOTICE:    4.2.22: 6
+NOTICE:  TOP VALUES for user_activities.target_language:
+NOTICE:    ru: 431
+NOTICE:    en: 56
+NOTICE:  DATE RANGE: created_at: 2025-06-19 21:44:23.9078 to 2026-04-06 16:30:15.517538
+NOTICE:  NULL COUNTS:
+NOTICE:    target_user_id has 487 NULLs (100.1f%)
+NOTICE:    metadata has 24 NULLs (4.9281314168377826.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: user_follows | ROWS: 0
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('user_follows_id_seq'::regclass) maxlen=none distinct=0
+NOTICE:    follower_id [integer] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    following_id [integer] nullable=NO default=none maxlen=none distinct=0
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: follower_id -> users.id
+NOTICE:    FK: following_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: user_follows_pkey = CREATE UNIQUE INDEX user_follows_pkey ON public.user_follows USING btree (id)
+NOTICE:    IDX: user_follows_follower_id_following_id_key = CREATE UNIQUE INDEX user_follows_follower_id_following_id_key ON public.user_follows USING btree (follower_id, following_id)
+NOTICE:    IDX: idx_user_follows_follower = CREATE INDEX idx_user_follows_follower ON public.user_follows USING btree (follower_id)
+NOTICE:    IDX: idx_user_follows_following = CREATE INDEX idx_user_follows_following ON public.user_follows USING btree (following_id)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: user_interests | ROWS: 4
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('user_interests_id_seq'::regclass) maxlen=none distinct=4
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=2
+NOTICE:    interest_tag [character varying] nullable=NO default=none maxlen=50 distinct=3
+NOTICE:    proficiency_level [integer] nullable=YES default=1 maxlen=none distinct=1
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=2
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: user_interests_pkey = CREATE UNIQUE INDEX user_interests_pkey ON public.user_interests USING btree (id)
+NOTICE:    IDX: user_interests_user_id_interest_tag_key = CREATE UNIQUE INDEX user_interests_user_id_interest_tag_key ON public.user_interests USING btree (user_id, interest_tag)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1,"user_id":176,"interest_tag":"Electromagnetism","proficiency_level":1,"created_at":"2025-07-07T01:55:51.781659"}
+NOTICE:    ROW: {"id":2,"user_id":2239,"interest_tag":"Mechanics","proficiency_level":1,"created_at":"2026-04-04T18:11:54.156385"}
+NOTICE:    ROW: {"id":3,"user_id":2239,"interest_tag":"Optics","proficiency_level":1,"created_at":"2026-04-04T18:11:54.156385"}
+NOTICE:  TOP VALUES for user_interests.user_id:
+NOTICE:    2239: 3
+NOTICE:    176: 1
+NOTICE:  TOP VALUES for user_interests.interest_tag:
+NOTICE:    Electromagnetism: 2
+NOTICE:    Optics: 1
+NOTICE:    Mechanics: 1
+NOTICE:  TOP VALUES for user_interests.proficiency_level:
+NOTICE:    1: 4
+NOTICE:  DATE RANGE: created_at: 2025-07-07 01:55:51.781659 to 2026-04-04 18:11:54.156385
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: user_preferences | ROWS: 1
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('user_preferences_id_seq'::regclass) maxlen=none distinct=1
+NOTICE:    user_id [integer] nullable=NO default=none maxlen=none distinct=1
+NOTICE:    email_notifications [boolean] nullable=YES default=true maxlen=none distinct=1
+NOTICE:    push_notifications [boolean] nullable=YES default=true maxlen=none distinct=1
+NOTICE:    public_profile [boolean] nullable=YES default=true maxlen=none distinct=1
+NOTICE:    show_online_status [boolean] nullable=YES default=true maxlen=none distinct=1
+NOTICE:    preferred_language [character varying] nullable=YES default='en'::character varying maxlen=5 distinct=1
+NOTICE:    theme_preference [character varying] nullable=YES default='light'::character varying maxlen=20 distinct=1
+NOTICE:    privacy_level [character varying] nullable=YES default='public'::character varying maxlen=20 distinct=1
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=1
+NOTICE:    updated_at [timestamp without time zone] nullable=YES default=now() maxlen=none distinct=1
+NOTICE:    show_country_on_leaderboard [boolean] nullable=YES default=true maxlen=none distinct=1
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: user_id -> users.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: user_preferences_pkey = CREATE UNIQUE INDEX user_preferences_pkey ON public.user_preferences USING btree (id)
+NOTICE:    IDX: user_preferences_user_id_key = CREATE UNIQUE INDEX user_preferences_user_id_key ON public.user_preferences USING btree (user_id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1,"user_id":28,"email_notifications":true,"push_notifications":true,"public_profile":true,"show_online_status":false,"preferred_language":"en","theme_preference":"light","privacy_level":"public","created_at":"2026-04-06T19:41:59.975643","updated_at":"2026-04-06T19:42:25.898952","show_country_on_leaderboard":true}
+NOTICE:  TOP VALUES for user_preferences.user_id:
+NOTICE:    28: 1
+NOTICE:  TOP VALUES for user_preferences.email_notifications:
+NOTICE:    true: 1
+NOTICE:  TOP VALUES for user_preferences.push_notifications:
+NOTICE:    true: 1
+NOTICE:  TOP VALUES for user_preferences.public_profile:
+NOTICE:    true: 1
+NOTICE:  TOP VALUES for user_preferences.show_online_status:
+NOTICE:    false: 1
+NOTICE:  TOP VALUES for user_preferences.preferred_language:
+NOTICE:    en: 1
+NOTICE:  TOP VALUES for user_preferences.theme_preference:
+NOTICE:    light: 1
+NOTICE:  TOP VALUES for user_preferences.privacy_level:
+NOTICE:    public: 1
+NOTICE:  TOP VALUES for user_preferences.show_country_on_leaderboard:
+NOTICE:    true: 1
+NOTICE:  DATE RANGE: created_at: 2026-04-06 19:41:59.975643 to 2026-04-06 19:41:59.975643
+NOTICE:  DATE RANGE: updated_at: 2026-04-06 19:42:25.898952 to 2026-04-06 19:42:25.898952
+NOTICE:  NULL COUNTS:
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: users | ROWS: 710
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('users_id_seq'::regclass) maxlen=none distinct=710
+NOTICE:    username [character varying] nullable=NO default=none maxlen=50 distinct=710
+NOTICE:    password [character varying] nullable=NO default=none maxlen=255 distinct=709
+NOTICE:    email [character varying] nullable=NO default=none maxlen=255 distinct=710
+NOTICE:    full_name [character varying] nullable=NO default=none maxlen=255 distinct=703
+NOTICE:    reset_token [character varying] nullable=YES default=none maxlen=255 distinct=0
+NOTICE:    reset_token_expires [timestamp without time zone] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    country_location [character varying] nullable=YES default=none maxlen=255 distinct=8
+NOTICE:    is_verified_user [boolean] nullable=YES default=false maxlen=none distinct=2
+NOTICE:    bio [text] nullable=YES default=none maxlen=none distinct=15
+NOTICE:    profile_picture [character varying] nullable=YES default=none maxlen=255 distinct=15
+NOTICE:    registration_ip_location [character varying] nullable=YES default=none maxlen=255 distinct=13
+NOTICE:    last_ip_location [character varying] nullable=YES default=none maxlen=255 distinct=13
+NOTICE:    linkedin [character varying] nullable=YES default=none maxlen=255 distinct=5
+NOTICE:    github [character varying] nullable=YES default=none maxlen=255 distinct=7
+NOTICE:    instagram [character varying] nullable=YES default=none maxlen=255 distinct=10
+NOTICE:    personal_website [character varying] nullable=YES default=none maxlen=255 distinct=4
+NOTICE:    created_at [timestamp with time zone] nullable=YES default=none maxlen=none distinct=0
+NOTICE:    institution [text] nullable=YES default=none maxlen=none distinct=1
+NOTICE:    pending_email [character varying] nullable=YES default=none maxlen=255 distinct=0
+NOTICE:    email_change_token [character varying] nullable=YES default=none maxlen=64 distinct=0
+NOTICE:    email_change_expires [timestamp with time zone] nullable=YES default=none maxlen=none distinct=0
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:  INDEXES:
+NOTICE:    IDX: users_pkey = CREATE UNIQUE INDEX users_pkey ON public.users USING btree (id)
+NOTICE:    IDX: users_username_key = CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username)
+NOTICE:    IDX: unique_email = CREATE UNIQUE INDEX unique_email ON public.users USING btree (email)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1002,"username":"riSpBcqQdFHcqet","password":"$2b$10$p.d3nt59mXzTtH0ykOereOTqUasM0WDttZc4dherSy3GkbyNFY.9e","email":"percoequardao1985@yahoo.com","full_name":"SqGMMtPMxctr","reset_token":null,"reset_token_expires":null,"country_location":null,"is_verified_user":false,"bio":null,"profile_picture":null,"registration_ip_location":null,"last_ip_location":null,"linkedin":null,"github":null,"instagram":null,"personal_website":null,"created_at":null,"institution":null,"pending_email":null,"email_change_token":null,"email_change_expires":null}
+NOTICE:    ROW: {"id":1006,"username":"asanmanty","password":"$2b$10$1XD.GK2e3IU9fDd6VHBY5.eGCWzWF6gHe2yxmIqYd3ZxipFN5grXS","email":"asanmanty@gmail.com","full_name":"asan mantov","reset_token":null,"reset_token_expires":null,"country_location":null,"is_verified_user":false,"bio":null,"profile_picture":null,"registration_ip_location":null,"last_ip_location":null,"linkedin":null,"github":null,"instagram":null,"personal_website":null,"created_at":null,"institution":null,"pending_email":null,"email_change_token":null,"email_change_expires":null}
+NOTICE:    ROW: {"id":1007,"username":"vOAkVENrTu","password":"$2b$10$2GMB2VTt4OlGBEfNeAE8H.CgqcKgbTeve/4WYyUWk.hiu6.1/AUdC","email":"zedekiawalkereq@gmail.com","full_name":"rTHKpRawdBsbtll","reset_token":null,"reset_token_expires":null,"country_location":null,"is_verified_user":false,"bio":null,"profile_picture":null,"registration_ip_location":null,"last_ip_location":null,"linkedin":null,"github":null,"instagram":null,"personal_website":null,"created_at":null,"institution":null,"pending_email":null,"email_change_token":null,"email_change_expires":null}
+NOTICE:  TOP VALUES for users.username:
+NOTICE:    ivSGSnUvQH: 1
+NOTICE:    AjnGTAPKITwQZevvwpsYIKzm: 1
+NOTICE:    YilVRkBKrlZSqdDoNwjckMu: 1
+NOTICE:    XUytLjiRAUSWY: 1
+NOTICE:    pklvAvYE: 1
+NOTICE:  TOP VALUES for users.email:
+NOTICE:    wubernisx@gmail.com: 1
+NOTICE:    nonicasenp1@gmail.com: 1
+NOTICE:    amosmcconnell50@gmail.com: 1
+NOTICE:    edkgdkti@immenseignite.info: 1
+NOTICE:    nurasyl0923@gmail.com: 1
+NOTICE:  TOP VALUES for users.full_name:
+NOTICE:    Pavlikhin Denis: 2
+NOTICE:    Clerk Maxwell: 2
+NOTICE:    Marcos Zaragoza: 2
+NOTICE:    Михаил: 2
+NOTICE:    Alice: 2
+NOTICE:  TOP VALUES for users.country_location:
+NOTICE:    Belarus: 10
+NOTICE:    Russia: 7
+NOTICE:    : 4
+NOTICE:    Kazakhstan: 3
+NOTICE:    Cuba: 2
+NOTICE:  TOP VALUES for users.is_verified_user:
+NOTICE:    false: 696
+NOTICE:    true: 14
+NOTICE:  TOP VALUES for users.profile_picture:
+NOTICE:    \img\profile_images\76.jpg: 1
+NOTICE:    \img\profile_images\73.jpg: 1
+NOTICE:    \img\profile_images\77.jpg: 1
+NOTICE:    \img\profile_images\32.jpg: 1
+NOTICE:    \img\profile_images\54.jpg: 1
+NOTICE:  TOP VALUES for users.registration_ip_location:
+NOTICE:    178.57.109.66: 1
+NOTICE:    37.215.7.93: 1
+NOTICE:    37.215.1.199: 1
+NOTICE:    37.214.25.200: 1
+NOTICE:    185.24.53.252: 1
+NOTICE:  TOP VALUES for users.last_ip_location:
+NOTICE:    188.0.152.216: 1
+NOTICE:    37.214.24.25: 1
+NOTICE:    178.91.169.161: 1
+NOTICE:    79.139.154.184: 1
+NOTICE:    62.122.105.203: 1
+NOTICE:  TOP VALUES for users.linkedin:
+NOTICE:    : 3
+NOTICE:    https://www.linkedin.com/in/andrei-yersh-33b28a2a5/: 1
+NOTICE:    https://www.linkedin.com/in/astrosander/: 1
+NOTICE:    https://www.linkedin.com/in/luis-daniel-fern%C3%A1ndez-quintana-9684581a0/: 1
+NOTICE:    https://www.linkedin.com/in/stefannicov/: 1
+NOTICE:  TOP VALUES for users.github:
+NOTICE:    : 3
+NOTICE:    https://github.com/Andrew0209: 1
+NOTICE:    https://github.com/astrosander: 1
+NOTICE:    https://github.com/chender335: 1
+NOTICE:    https://github.com/Jepkins: 1
+NOTICE:  TOP VALUES for users.instagram:
+NOTICE:    https://www.instagram.com/illyapal/: 1
+NOTICE:    https://www.instagram.com/diikann_/: 1
+NOTICE:    : 1
+NOTICE:    https://www.instagram.com/andreimax1416/profilecard/?igsh=MW9zOWR2Y3d3cDR1aQ==: 1
+NOTICE:    https://www.instagram.com/a.iorsh/: 1
+NOTICE:  TOP VALUES for users.personal_website:
+NOTICE:    : 2
+NOTICE:    https://melnichenka.com/: 1
+NOTICE:    https://physway.github.io/: 1
+NOTICE:    https://vk.com/the_raspberrygirl: 1
+NOTICE:  TOP VALUES for users.pending_email:
+NOTICE:  DATE RANGE: <NULL>
+NOTICE:  DATE RANGE: <NULL>
+NOTICE:  DATE RANGE: <NULL>
+NOTICE:  NULL COUNTS:
+NOTICE:    reset_token has 710 NULLs (100.1f%)
+NOTICE:    reset_token_expires has 710 NULLs (100.1f%)
+NOTICE:    country_location has 681 NULLs (95.91549295774648.1f%)
+NOTICE:    bio has 693 NULLs (97.60563380281691.1f%)
+NOTICE:    profile_picture has 695 NULLs (97.88732394366197.1f%)
+NOTICE:    registration_ip_location has 697 NULLs (98.16901408450704.1f%)
+NOTICE:    last_ip_location has 697 NULLs (98.16901408450704.1f%)
+NOTICE:    linkedin has 703 NULLs (99.01408450704226.1f%)
+NOTICE:    github has 701 NULLs (98.73239436619718.1f%)
+NOTICE:    instagram has 700 NULLs (98.59154929577466.1f%)
+NOTICE:    personal_website has 705 NULLs (99.29577464788733.1f%)
+NOTICE:    created_at has 710 NULLs (100.1f%)
+NOTICE:    institution has 709 NULLs (99.85915492957747.1f%)
+NOTICE:    pending_email has 710 NULLs (100.1f%)
+NOTICE:    email_change_token has 710 NULLs (100.1f%)
+NOTICE:    email_change_expires has 710 NULLs (100.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ========================================
+NOTICE:  TABLE: votes | ROWS: 4
+NOTICE:  ========================================
+NOTICE:  COLUMNS:
+NOTICE:    id [integer] nullable=NO default=nextval('votes_id_seq'::regclass) maxlen=none distinct=4
+NOTICE:    solution_id [integer] nullable=NO default=none maxlen=none distinct=3
+NOTICE:    vote_value [integer] nullable=NO default=none maxlen=none distinct=2
+NOTICE:    voter [character varying] nullable=YES default=none maxlen=100 distinct=1
+NOTICE:    created_at [timestamp without time zone] nullable=YES default=CURRENT_TIMESTAMP maxlen=none distinct=4
+NOTICE:    user_id [integer] nullable=YES default=none maxlen=none distinct=1
+NOTICE:  PRIMARY KEYS:
+NOTICE:    PK: id
+NOTICE:  FOREIGN KEYS:
+NOTICE:    FK: solution_id -> solutions.id
+NOTICE:  INDEXES:
+NOTICE:    IDX: votes_pkey = CREATE UNIQUE INDEX votes_pkey ON public.votes USING btree (id)
+NOTICE:  SAMPLE ROWS:
+NOTICE:    ROW: {"id":1,"solution_id":1,"vote_value":-1,"voter":"AnonymousUser123","created_at":"2025-04-07T19:20:53.07518","user_id":null}
+NOTICE:    ROW: {"id":2,"solution_id":6,"vote_value":1,"voter":null,"created_at":"2025-04-08T07:08:24.421935","user_id":28}
+NOTICE:    ROW: {"id":3,"solution_id":1,"vote_value":1,"voter":null,"created_at":"2025-04-08T07:10:08.073233","user_id":28}
+NOTICE:  TOP VALUES for votes.solution_id:
+NOTICE:    1: 2
+NOTICE:    9: 1
+NOTICE:    6: 1
+NOTICE:  TOP VALUES for votes.vote_value:
+NOTICE:    1: 3
+NOTICE:    -1: 1
+NOTICE:  TOP VALUES for votes.voter:
+NOTICE:    AnonymousUser123: 1
+NOTICE:  TOP VALUES for votes.user_id:
+NOTICE:    28: 3
+NOTICE:  DATE RANGE: created_at: 2025-04-07 19:20:53.07518 to 2025-04-08 07:48:46.781987
+NOTICE:  NULL COUNTS:
+NOTICE:    voter has 3 NULLs (75.1f%)
+NOTICE:    user_id has 1 NULLs (25.1f%)
+NOTICE:  ----------------------------------------
+NOTICE:  
+NOTICE:  ################################################################
+NOTICE:  ALL FOREIGN KEY RELATIONSHIPS:
+NOTICE:  ################################################################
+NOTICE:    alternative_solutions.user_id -> users.id
+NOTICE:    comments.user_id -> users.id
+NOTICE:    comments.solution_id -> solutions.id
+NOTICE:    contributions.user_id -> users.id
+NOTICE:    contributions.user_id -> users.id
+NOTICE:    contributions.user_id -> users.id
+NOTICE:    contributions.user_id -> users.id
+NOTICE:    github_contributions.user_id -> users.id
+NOTICE:    github_contributions.user_id -> users.id
+NOTICE:    github_contributions.user_id -> users.id
+NOTICE:    github_contributions.user_id -> users.id
+NOTICE:    solution_comments.user_id -> users.id
+NOTICE:    solution_comments.parent_id -> solution_comments.id
+NOTICE:    solution_likes.user_id -> users.id
+NOTICE:    solution_reports.reviewed_by -> users.id
+NOTICE:    solution_reports.user_id -> users.id
+NOTICE:    solutions.user_id -> users.id
+NOTICE:    starred_solutions.user_id -> users.id
+NOTICE:    user_achievements.user_id -> users.id
+NOTICE:    user_activities.user_id -> users.id
+NOTICE:    user_activities.target_user_id -> users.id
+NOTICE:    user_follows.follower_id -> users.id
+NOTICE:    user_follows.following_id -> users.id
+NOTICE:    user_interests.user_id -> users.id
+NOTICE:    user_preferences.user_id -> users.id
+NOTICE:    votes.solution_id -> solutions.id
+NOTICE:  
+NOTICE:  ################################################################
+NOTICE:  TABLE SIZES:
+NOTICE:  ################################################################
+NOTICE:    recent_views: 106 MB
+NOTICE:    github_contributions: 76 MB
+NOTICE:    page_views: 48 MB
+NOTICE:    page_views_old: 43 MB
+NOTICE:    contributions: 16 MB
+NOTICE:    session: 696 kB
+NOTICE:    users: 312 kB
+NOTICE:    user_activities: 144 kB
+NOTICE:    solution_likes: 112 kB
+NOTICE:    solution_comments: 96 kB
+NOTICE:    special_contributions: 80 kB
+NOTICE:    solution_reports: 64 kB
+NOTICE:    starred_solutions: 56 kB
+NOTICE:    user_interests: 40 kB
+NOTICE:    user_preferences: 40 kB
+NOTICE:    comments: 32 kB
+NOTICE:    user_follows: 32 kB
+NOTICE:    solutions: 32 kB
+NOTICE:    user_achievements: 24 kB
+NOTICE:    votes: 24 kB
+NOTICE:    alternative_solutions: 16 kB
+NOTICE:    sections: 16 kB
+DO
+
+Query returned successfully in 47 secs 578 msec.

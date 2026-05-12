@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= post.title %> — Savchenko Solutions Blog</title>
+    <meta name="description" content="<%= post.excerpt %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/blog/<%= post.slug %>" />
+
+    <!-- JSON-LD BlogPosting schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "<%= post.title.replace(/"/g, '\\"') %>",
+      "description": "<%= (post.excerpt || '').replace(/"/g, '\\"') %>",
+      "author": {
+        "@type": "Person",
+        "name": "<%= post.author_username %>"
+      },
+      "datePublished": "<%= post.published_at ? new Date(post.published_at).toISOString() : '' %>",
+      "dateModified": "<%= new Date(post.updated_at).toISOString() %>",
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://savchenkosolutions.com/blog/<%= post.slug %>"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Savchenko Solutions",
+        "url": "https://savchenkosolutions.com"
+      },
+      "wordCount": <%= post.content.split(/\s+/).length %>,
+      "inLanguage": "<%= post.language || lang %>"
+    }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+
+    <!-- MathJax -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .blog-post-container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Post header */
+        .blog-post-header {
+            margin-bottom: 2rem;
+        }
+        .blog-post-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d2d2d;
+            line-height: 1.3;
+            margin: 0 0 1rem 0;
+        }
+        .blog-author-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .blog-author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .blog-author-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+        .blog-author-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .blog-author-name:hover {
+            text-decoration: underline;
+        }
+        .blog-author-meta {
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        /* Post content — markdown rendering */
+        .blog-content {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #2d2d2d;
+            margin-bottom: 2rem;
+        }
+        .blog-content h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 2rem 0 1rem;
+        }
+        .blog-content h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 1.5rem 0 0.75rem;
+        }
+        .blog-content p {
+            margin-bottom: 1rem;
+        }
+        .blog-content ul, .blog-content ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        .blog-content li {
+            margin-bottom: 0.35rem;
+        }
+        .blog-content strong {
+            font-weight: 600;
+        }
+        .blog-content blockquote {
+            border-left: 3px solid #dee2e6;
+            padding-left: 1rem;
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+        .blog-content code {
+            background: #f8f9fa;
+            padding: 0.15rem 0.35rem;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .blog-content hr {
+            border: none;
+            border-top: 1px solid #dee2e6;
+            margin: 2rem 0;
+        }
+        .blog-content a {
+            color: #1a5276;
+        }
+        .blog-content a:hover {
+            color: #0d3b54;
+        }
+        .blog-content em {
+            font-style: italic;
+        }
+
+        /* Tags */
+        .blog-post-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+        .tag-pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            background: #f8f9fa;
+            transition: all 0.15s;
+        }
+        .tag-pill:hover {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+
+        /* Prev/Next navigation */
+        .blog-post-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.5rem 0;
+            border-top: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 2rem;
+        }
+        .blog-post-nav a {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            text-decoration: none;
+            max-width: 45%;
+        }
+        .blog-post-nav a:hover .blog-nav-title {
+            color: #1a5276;
+        }
+        .blog-nav-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .blog-nav-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d2d2d;
+            transition: color 0.15s;
+        }
+        .blog-post-nav-next {
+            text-align: right;
+            margin-left: auto;
+        }
+
+        /* Comments */
+        .blog-comments {
+            margin-top: 0;
+        }
+        .blog-comments-header {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin-bottom: 1rem;
+        }
+        .blog-comments-header .comment-count {
+            color: #6c757d;
+            font-weight: 400;
+        }
+        .blog-comment-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        .blog-comment-item:last-child {
+            border-bottom: none;
+        }
+        .comment-author-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+        }
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .comment-username {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .comment-username:hover {
+            text-decoration: underline;
+        }
+        .comment-time {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 0.5rem;
+        }
+        .comment-body {
+            font-size: 14px;
+            color: #2d2d2d;
+            line-height: 1.6;
+        }
+        .comment-reply-link {
+            font-size: 12px;
+            color: #1a5276;
+            cursor: pointer;
+            text-decoration: none;
+            margin-top: 0.25rem;
+            display: inline-block;
+        }
+        .comment-reply-link:hover {
+            text-decoration: underline;
+        }
+        .comment-replies {
+            margin-left: 40px;
+            padding-left: 12px;
+            border-left: 2px solid #ebedf0;
+        }
+        .comment-form-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            margin-top: 1rem;
+        }
+        .comment-input {
+            flex: 1;
+            min-height: 42px;
+            max-height: 160px;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .comment-input:focus {
+            border-color: #1a5276;
+            outline: none;
+        }
+        .comment-submit-btn {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .comment-submit-btn:hover {
+            background: #2c2c4a;
+        }
+        .comment-login-prompt {
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .comment-login-prompt a {
+            color: #1a5276;
+        }
+        .reply-form {
+            margin-top: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: flex-start;
+        }
+        .reply-input {
+            flex: 1;
+            min-height: 36px;
+            padding: 0.35rem 0.65rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            resize: none;
+        }
+        .reply-input:focus {
+            border-color: #1a5276;
+            outline: none;
+        }
+        .reply-submit-btn {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.35rem 0.75rem;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .reply-submit-btn:hover {
+            background: #2c2c4a;
+        }
+
+        .blog-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 14px;
+            color: #6c757d;
+            text-decoration: none;
+            margin-bottom: 1.5rem;
+        }
+        .blog-back-link:hover {
+            color: #1a5276;
+        }
+
+        @media (max-width: 768px) {
+            .blog-post-container { padding: 1rem 0.75rem; }
+            .blog-post-header h1 { font-size: 24px; }
+            .blog-post-nav { flex-direction: column; }
+            .blog-post-nav a { max-width: 100%; }
+            .blog-post-nav-next { text-align: left; }
+        }
+    </style>
+</head>
+<body>
+    <%
+    const tagTranslations = {
+        'announcement': 'объявление',
+        'beginners': 'для начинающих',
+        'community': 'сообщество',
+        'guide': 'руководство',
+        'history': 'история',
+        'meta': 'мета',
+        'study-tips': 'советы',
+        'physics': 'физика',
+        'olympiad': 'олимпиада',
+        'solutions': 'решения',
+        'tutorial': 'туториал',
+        'news': 'новости',
+        'update': 'обновление',
+        'education': 'образование',
+        'mechanics': 'механика',
+        'thermodynamics': 'термодинамика',
+        'electrodynamics': 'электродинамика',
+        'optics': 'оптика',
+    };
+    function tagLabel(tag) {
+        if (lang === 'ru' && tagTranslations[tag]) return tagTranslations[tag];
+        return tag;
+    }
+    %>
+    <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <div class="blog-post-container">
+        <a href="/blog" class="blog-back-link">&larr; <%= lang === 'ru' ? 'Все записи' : 'All posts' %></a>
+
+        <div class="blog-post-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <h1><%= post.title %></h1>
+                <% if (userId && (post.author_id === userId || username === 'astrosander')) { %>
+                <a href="/blog/<%= post.slug %>/edit" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 13px; color: #6c757d; text-decoration: none; padding: 0.3rem 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; margin-top: 0.3rem;">
+                    <i class="fas fa-pen" style="font-size: 11px;"></i> <%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
+                </a>
+                <% } %>
+            </div>
+            <div class="blog-author-info">
+                <img
+                    src="<%= post.author_avatar || '/img/profile_images/Default_placeholder.svg' %>"
+                    alt="<%= post.author_username %>"
+                    class="blog-author-avatar"
+                    width="40" height="40"
+                />
+                <div class="blog-author-details">
+                    <a href="/user/<%= post.author_username %>" class="blog-author-name"><%= post.author_username %></a>
+                    <span class="blog-author-meta">
+                        <%= new Date(post.published_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                        &middot;
+                        <%= readingTime %> <%= lang === 'ru' ? 'мин чтения' : 'min read' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="blog-content" id="blogContent">
+            <%- renderMarkdown(post.content) %>
+        </div>
+
+        <% if (post.tags && post.tags.length > 0) { %>
+        <div class="blog-post-tags">
+            <% post.tags.forEach(tag => { %>
+                <a href="/blog/tag/<%= tag %>" class="tag-pill"><%= tagLabel(tag) %></a>
+            <% }); %>
+        </div>
+        <% } %>
+
+        <% if (prevPost || nextPost) { %>
+        <div class="blog-post-nav">
+            <% if (prevPost) { %>
+            <a href="/blog/<%= prevPost.slug %>">
+                <span class="blog-nav-label">&larr; <%= lang === 'ru' ? 'Предыдущая' : 'Previous' %></span>
+                <span class="blog-nav-title"><%= prevPost.title %></span>
+            </a>
+            <% } else { %>
+            <span></span>
+            <% } %>
+            <% if (nextPost) { %>
+            <a href="/blog/<%= nextPost.slug %>" class="blog-post-nav-next">
+                <span class="blog-nav-label"><%= lang === 'ru' ? 'Следующая' : 'Next' %> &rarr;</span>
+                <span class="blog-nav-title"><%= nextPost.title %></span>
+            </a>
+            <% } %>
+        </div>
+        <% } %>
+
+        <!-- Comments Section -->
+        <div class="blog-comments">
+            <h3 class="blog-comments-header">
+                <%= lang === 'ru' ? 'Комментарии' : 'Comments' %>
+                <span class="comment-count">(<%= comments.length + Object.values(childMap).reduce((s, a) => s + a.length, 0) %>)</span>
+            </h3>
+
+            <% if (comments.length === 0) { %>
+                <p style="color: #6c757d; font-size: 14px;"><%= lang === 'ru' ? 'Пока нет комментариев. Будьте первым!' : 'No comments yet. Be the first!' %></p>
+            <% } %>
+
+            <% comments.forEach(comment => { %>
+            <div class="blog-comment-item" id="comment-<%= comment.id %>">
+                <div class="comment-author-row">
+                    <img src="<%= comment.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" />
+                    <a href="/user/<%= comment.username %>" class="comment-username"><%= comment.username %></a>
+                    <span class="comment-time"><%= new Date(comment.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                </div>
+                <div class="comment-body"><%= comment.content %></div>
+                <% if (userId) { %>
+                    <span class="comment-reply-link" onclick="showReplyForm(<%= comment.id %>)"><%= lang === 'ru' ? 'Ответить' : 'Reply' %></span>
+                    <div id="reply-form-<%= comment.id %>" style="display:none;"></div>
+                <% } %>
+                <% if (childMap[comment.id]) { %>
+                <div class="comment-replies">
+                    <% childMap[comment.id].forEach(reply => { %>
+                    <div class="blog-comment-item" id="comment-<%= reply.id %>">
+                        <div class="comment-author-row">
+                            <img src="<%= reply.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" />
+                            <a href="/user/<%= reply.username %>" class="comment-username"><%= reply.username %></a>
+                            <span class="comment-time"><%= new Date(reply.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                        </div>
+                        <div class="comment-body"><%= reply.content %></div>
+                    </div>
+                    <% }); %>
+                </div>
+                <% } %>
+            </div>
+            <% }); %>
+
+            <!-- Add Comment -->
+            <% if (userId) { %>
+            <div class="comment-form-row">
+                <textarea class="comment-input" id="commentInput" placeholder="<%= lang === 'ru' ? 'Написать комментарий...' : 'Write a comment...' %>" rows="2"></textarea>
+                <button class="comment-submit-btn" id="commentSubmit"><%= lang === 'ru' ? 'Отправить' : 'Post' %></button>
+            </div>
+            <% } else { %>
+            <p class="comment-login-prompt">
+                <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Войдите' : 'Log in' %></a> <%= lang === 'ru' ? 'чтобы оставить комментарий.' : 'to leave a comment.' %>
+            </p>
+            <% } %>
+        </div>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+
+    <script>
+    const SLUG = '<%= post.slug %>';
+    const LANG = '<%= lang %>';
+    const DEFAULT_AVATAR = '/img/profile_images/Default_placeholder.svg';
+
+    // Submit top-level comment
+    const submitBtn = document.getElementById('commentSubmit');
+    const commentInput = document.getElementById('commentInput');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            const content = commentInput.value.trim();
+            if (!content) return;
+            submitBtn.disabled = true;
+            try {
+                const resp = await fetch('/blog/' + SLUG + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    appendComment(data.comment, null);
+                    commentInput.value = '';
+                } else {
+                    alert(data.error || 'Error posting comment');
+                }
+            } catch {
+                alert('Network error');
+            }
+            submitBtn.disabled = false;
+        });
+    }
+
+    // Reply form
+    function showReplyForm(parentId) {
+        const container = document.getElementById('reply-form-' + parentId);
+        if (!container || container.children.length > 0) return;
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div class="reply-form">
+                <textarea class="reply-input" placeholder="${LANG === 'ru' ? 'Ваш ответ...' : 'Your reply...'}" rows="1"></textarea>
+                <button class="reply-submit-btn" onclick="submitReply(${parentId})">${LANG === 'ru' ? 'Отправить' : 'Reply'}</button>
+            </div>`;
+    }
+
+    async function submitReply(parentId) {
+        const container = document.getElementById('reply-form-' + parentId);
+        const textarea = container.querySelector('textarea');
+        const content = textarea.value.trim();
+        if (!content) return;
+        const btn = container.querySelector('button');
+        btn.disabled = true;
+        try {
+            const resp = await fetch('/blog/' + SLUG + '/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content, parent_id: parentId }),
+            });
+            const data = await resp.json();
+            if (data.success) {
+                appendComment(data.comment, parentId);
+                container.style.display = 'none';
+                container.innerHTML = '';
+            } else {
+                alert(data.error || 'Error posting reply');
+            }
+        } catch {
+            alert('Network error');
+        }
+        btn.disabled = false;
+    }
+
+    function appendComment(comment, parentId) {
+        const dateStr = new Date(comment.created_at).toLocaleDateString(
+            LANG === 'ru' ? 'ru-RU' : 'en-US',
+            { year: 'numeric', month: 'short', day: 'numeric' }
+        );
+        const html = `
+            <div class="blog-comment-item" id="comment-${comment.id}">
+                <div class="comment-author-row">
+                    <img src="${comment.profile_picture || DEFAULT_AVATAR}" alt="" class="comment-avatar" width="32" height="32" />
+                    <a href="/user/${comment.username}" class="comment-username">${comment.username}</a>
+                    <span class="comment-time">${dateStr}</span>
+                </div>
+                <div class="comment-body">${escapeHtml(comment.content)}</div>
+            </div>`;
+
+        if (parentId) {
+            const parentEl = document.getElementById('comment-' + parentId);
+            let repliesDiv = parentEl.querySelector('.comment-replies');
+            if (!repliesDiv) {
+                repliesDiv = document.createElement('div');
+                repliesDiv.className = 'comment-replies';
+                parentEl.appendChild(repliesDiv);
+            }
+            repliesDiv.insertAdjacentHTML('beforeend', html);
+        } else {
+            const commentsSection = document.querySelector('.blog-comments');
+            const formRow = commentsSection.querySelector('.comment-form-row') || commentsSection.querySelector('.comment-login-prompt');
+            if (formRow) {
+                formRow.insertAdjacentHTML('beforebegin', html);
+            }
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    </script>
+</body>
+</html>

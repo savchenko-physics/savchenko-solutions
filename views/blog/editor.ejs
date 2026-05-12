@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= post ? (lang === 'ru' ? 'Редактировать' : 'Edit') + ': ' + post.title : (lang === 'ru' ? 'Новая запись' : 'New Post') %> — Savchenko Solutions Blog</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
+
+    <!-- MathJax -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .editor-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem;
+        }
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .editor-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0;
+        }
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .editor-fields {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            align-items: end;
+        }
+        .editor-field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+        }
+        .editor-field input,
+        .editor-field select {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 0.75rem;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .editor-field input:focus,
+        .editor-field select:focus {
+            border-color: #1a5276;
+            outline: none;
+        }
+
+        /* Toolbar */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            padding: 6px 8px;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            background: #f8f9fa;
+        }
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 30px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #495057;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.12s;
+            padding: 0;
+        }
+        .toolbar-btn:hover {
+            background: #e9ecef;
+            color: #2d2d2d;
+        }
+        .toolbar-btn:active {
+            background: #dee2e6;
+        }
+        .toolbar-btn[title]:hover::after {
+            content: attr(title);
+        }
+        .toolbar-sep {
+            width: 1px;
+            height: 20px;
+            background: #dee2e6;
+            margin: 0 4px;
+        }
+        .toolbar-btn .fa-heading {
+            font-size: 13px;
+        }
+        .toolbar-btn-text {
+            font-size: 11px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .editor-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            min-height: 500px;
+        }
+        .editor-pane-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+        .CodeMirror {
+            border: 1px solid #dee2e6;
+            border-radius: 0 0 6px 6px;
+            height: 500px;
+            font-size: 14px;
+        }
+        .preview-pane {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1.25rem;
+            height: calc(500px + 43px);
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.7;
+            color: #2d2d2d;
+            background: #fff;
+        }
+        .preview-pane h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 1.5rem 0 0.75rem;
+        }
+        .preview-pane h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem;
+        }
+        .preview-pane h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 17px;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem;
+        }
+        .preview-pane ul, .preview-pane ol {
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .preview-pane blockquote {
+            border-left: 3px solid #dee2e6;
+            padding-left: 1rem;
+            color: #6c757d;
+            margin: 1rem 0;
+        }
+        .preview-pane code {
+            background: #f8f9fa;
+            padding: 0.15rem 0.35rem;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .preview-pane pre {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .preview-pane pre code {
+            background: none;
+            padding: 0;
+        }
+        .preview-pane hr {
+            border: none;
+            border-top: 1px solid #dee2e6;
+            margin: 1.5rem 0;
+        }
+        .preview-pane img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+        .preview-pane a {
+            color: #1a5276;
+        }
+        .preview-pane del {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .btn-draft {
+            background: #f8f9fa;
+            color: #2d2d2d;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-draft:hover {
+            background: #e9ecef;
+        }
+        .btn-publish {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-publish:hover {
+            background: #2c2c4a;
+        }
+        .autosave-status {
+            font-size: 12px;
+            color: #6c757d;
+            align-self: center;
+        }
+
+        /* Image upload overlay */
+        .editor-pane-wrap {
+            position: relative;
+        }
+        .drop-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 46, 0.08);
+            border: 2px dashed #1a5276;
+            border-radius: 6px;
+            z-index: 10;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a5276;
+            pointer-events: none;
+        }
+        .drop-overlay.active {
+            display: flex;
+        }
+        .upload-progress {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 11;
+            display: none;
+        }
+
+        /* Hidden file input */
+        #imageFileInput {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .editor-container { padding: 1rem 0.5rem; }
+            .editor-fields { grid-template-columns: 1fr; }
+            .editor-split { grid-template-columns: 1fr; }
+            .CodeMirror { height: 300px; }
+            .preview-pane { height: calc(300px + 43px); }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1><%= post ? (lang === 'ru' ? 'Редактировать запись' : 'Edit Post') : (lang === 'ru' ? 'Новая запись' : 'New Post') %></h1>
+            <div class="editor-actions">
+                <span class="autosave-status" id="autosaveStatus"></span>
+                <button class="btn-draft" id="saveDraftBtn"><%= lang === 'ru' ? 'Сохранить черновик' : 'Save Draft' %></button>
+                <button class="btn-publish" id="publishBtn"><%= lang === 'ru' ? 'Опубликовать' : 'Publish' %></button>
+            </div>
+        </div>
+
+        <div class="editor-fields">
+            <div class="editor-field">
+                <label for="titleInput"><%= lang === 'ru' ? 'Заголовок' : 'Title' %></label>
+                <input type="text" id="titleInput" placeholder="<%= lang === 'ru' ? 'Заголовок записи' : 'Post title' %>" value="<%= post ? post.title : '' %>" />
+            </div>
+            <div class="editor-field">
+                <label for="tagsInput"><%= lang === 'ru' ? 'Теги (через запятую)' : 'Tags (comma-separated)' %></label>
+                <input type="text" id="tagsInput" placeholder="physics, optics, mechanics" value="<%= post && post.tags ? post.tags.join(', ') : '' %>" />
+            </div>
+            <div class="editor-field">
+                <label for="langSelect"><%= lang === 'ru' ? 'Язык' : 'Language' %></label>
+                <select id="langSelect">
+                    <option value="en" <%= (!post || post.language === 'en') ? 'selected' : '' %>>English</option>
+                    <option value="ru" <%= (post && post.language === 'ru') ? 'selected' : '' %>>Russian</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="editor-split">
+            <div>
+                <div class="editor-pane-label"><%= lang === 'ru' ? 'Markdown' : 'Markdown' %></div>
+
+                <!-- Formatting toolbar -->
+                <div class="editor-toolbar" id="editorToolbar">
+                    <button class="toolbar-btn" data-action="bold" title="<%= lang === 'ru' ? 'Жирный (Ctrl+B)' : 'Bold (Ctrl+B)' %>"><i class="fas fa-bold"></i></button>
+                    <button class="toolbar-btn" data-action="italic" title="<%= lang === 'ru' ? 'Курсив (Ctrl+I)' : 'Italic (Ctrl+I)' %>"><i class="fas fa-italic"></i></button>
+                    <button class="toolbar-btn" data-action="strikethrough" title="<%= lang === 'ru' ? 'Зачёркнутый' : 'Strikethrough' %>"><i class="fas fa-strikethrough"></i></button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" data-action="h1" title="<%= lang === 'ru' ? 'Заголовок 1' : 'Heading 1' %>"><span class="toolbar-btn-text">H1</span></button>
+                    <button class="toolbar-btn" data-action="h2" title="<%= lang === 'ru' ? 'Заголовок 2' : 'Heading 2' %>"><span class="toolbar-btn-text">H2</span></button>
+                    <button class="toolbar-btn" data-action="h3" title="<%= lang === 'ru' ? 'Заголовок 3' : 'Heading 3' %>"><span class="toolbar-btn-text">H3</span></button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" data-action="link" title="<%= lang === 'ru' ? 'Ссылка (Ctrl+K)' : 'Link (Ctrl+K)' %>"><i class="fas fa-link"></i></button>
+                    <button class="toolbar-btn" data-action="image" title="<%= lang === 'ru' ? 'Загрузить изображение' : 'Upload image' %>"><i class="fas fa-image"></i></button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" data-action="quote" title="<%= lang === 'ru' ? 'Цитата' : 'Quote' %>"><i class="fas fa-quote-left"></i></button>
+                    <button class="toolbar-btn" data-action="code" title="<%= lang === 'ru' ? 'Код' : 'Inline code' %>"><i class="fas fa-code"></i></button>
+                    <button class="toolbar-btn" data-action="codeblock" title="<%= lang === 'ru' ? 'Блок кода' : 'Code block' %>"><i class="fas fa-file-code"></i></button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" data-action="ul" title="<%= lang === 'ru' ? 'Маркированный список' : 'Bullet list' %>"><i class="fas fa-list-ul"></i></button>
+                    <button class="toolbar-btn" data-action="ol" title="<%= lang === 'ru' ? 'Нумерованный список' : 'Numbered list' %>"><i class="fas fa-list-ol"></i></button>
+                    <div class="toolbar-sep"></div>
+                    <button class="toolbar-btn" data-action="hr" title="<%= lang === 'ru' ? 'Горизонтальная линия' : 'Horizontal rule' %>"><i class="fas fa-minus"></i></button>
+                    <button class="toolbar-btn" data-action="math" title="<%= lang === 'ru' ? 'Формула LaTeX' : 'LaTeX formula' %>"><i class="fas fa-square-root-variable"></i></button>
+                    <button class="toolbar-btn" data-action="mathblock" title="<%= lang === 'ru' ? 'Блок формул' : 'Display math' %>"><span class="toolbar-btn-text">$$</span></button>
+                </div>
+
+                <div class="editor-pane-wrap">
+                    <textarea id="editorTextarea" style="display:none;"><%= post ? post.content : '' %></textarea>
+                    <div class="drop-overlay" id="dropOverlay"><%= lang === 'ru' ? 'Отпустите для загрузки изображения' : 'Drop to upload image' %></div>
+                    <div class="upload-progress" id="uploadProgress"></div>
+                </div>
+
+                <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/svg+xml,image/webp" />
+            </div>
+            <div>
+                <div class="editor-pane-label"><%= lang === 'ru' ? 'Предпросмотр' : 'Preview' %></div>
+                <div class="preview-pane" id="previewPane"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const IS_EDIT = <%= post ? 'true' : 'false' %>;
+    const POST_SLUG = '<%= post ? post.slug : '' %>';
+    const STORAGE_KEY = 'blog_draft_' + (POST_SLUG || 'new');
+    const LANG = '<%= lang %>';
+
+    // ─── Init CodeMirror ────────────────────────────────────────
+    const cm = CodeMirror.fromTextArea(document.getElementById('editorTextarea'), {
+        mode: 'markdown',
+        lineWrapping: true,
+        lineNumbers: true,
+        tabSize: 4,
+        indentWithTabs: false,
+        extraKeys: {
+            'Ctrl-B': () => toolbarAction('bold'),
+            'Cmd-B': () => toolbarAction('bold'),
+            'Ctrl-I': () => toolbarAction('italic'),
+            'Cmd-I': () => toolbarAction('italic'),
+            'Ctrl-K': () => toolbarAction('link'),
+            'Cmd-K': () => toolbarAction('link'),
+        },
+    });
+
+    // Restore from localStorage if creating a new post
+    if (!IS_EDIT) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const data = JSON.parse(saved);
+                if (data.content) cm.setValue(data.content);
+                if (data.title) document.getElementById('titleInput').value = data.title;
+                if (data.tags) document.getElementById('tagsInput').value = data.tags;
+                if (data.language) document.getElementById('langSelect').value = data.language;
+            } catch {}
+        }
+    }
+
+    // ─── Toolbar Actions ────────────────────────────────────────
+    function toolbarAction(action) {
+        cm.focus();
+        const sel = cm.getSelection();
+        const cursor = cm.getCursor();
+        const line = cm.getLine(cursor.line);
+
+        switch (action) {
+            case 'bold':
+                if (sel) {
+                    cm.replaceSelection('**' + sel + '**');
+                } else {
+                    cm.replaceRange('**text**', cursor);
+                    cm.setSelection(
+                        { line: cursor.line, ch: cursor.ch + 2 },
+                        { line: cursor.line, ch: cursor.ch + 6 }
+                    );
+                }
+                break;
+
+            case 'italic':
+                if (sel) {
+                    cm.replaceSelection('*' + sel + '*');
+                } else {
+                    cm.replaceRange('*text*', cursor);
+                    cm.setSelection(
+                        { line: cursor.line, ch: cursor.ch + 1 },
+                        { line: cursor.line, ch: cursor.ch + 5 }
+                    );
+                }
+                break;
+
+            case 'strikethrough':
+                if (sel) {
+                    cm.replaceSelection('~~' + sel + '~~');
+                } else {
+                    cm.replaceRange('~~text~~', cursor);
+                    cm.setSelection(
+                        { line: cursor.line, ch: cursor.ch + 2 },
+                        { line: cursor.line, ch: cursor.ch + 6 }
+                    );
+                }
+                break;
+
+            case 'h1':
+                setLinePrefix('# ');
+                break;
+            case 'h2':
+                setLinePrefix('## ');
+                break;
+            case 'h3':
+                setLinePrefix('### ');
+                break;
+
+            case 'link': {
+                const url = sel && /^https?:\/\//.test(sel) ? sel : 'url';
+                const text = sel && !/^https?:\/\//.test(sel) ? sel : (LANG === 'ru' ? 'текст ссылки' : 'link text');
+                cm.replaceSelection('[' + text + '](' + url + ')');
+                break;
+            }
+
+            case 'image':
+                document.getElementById('imageFileInput').click();
+                break;
+
+            case 'quote':
+                if (sel) {
+                    cm.replaceSelection(sel.split('\n').map(l => '> ' + l).join('\n'));
+                } else {
+                    setLinePrefix('> ');
+                }
+                break;
+
+            case 'code':
+                if (sel) {
+                    cm.replaceSelection('`' + sel + '`');
+                } else {
+                    cm.replaceRange('`code`', cursor);
+                    cm.setSelection(
+                        { line: cursor.line, ch: cursor.ch + 1 },
+                        { line: cursor.line, ch: cursor.ch + 5 }
+                    );
+                }
+                break;
+
+            case 'codeblock': {
+                const block = sel || '';
+                const before = cursor.ch === 0 ? '' : '\n';
+                cm.replaceSelection(before + '```\n' + block + '\n```\n');
+                break;
+            }
+
+            case 'ul':
+                if (sel) {
+                    cm.replaceSelection(sel.split('\n').map(l => '- ' + l).join('\n'));
+                } else {
+                    setLinePrefix('- ');
+                }
+                break;
+
+            case 'ol':
+                if (sel) {
+                    cm.replaceSelection(sel.split('\n').map((l, i) => (i + 1) + '. ' + l).join('\n'));
+                } else {
+                    setLinePrefix('1. ');
+                }
+                break;
+
+            case 'hr': {
+                const before2 = cursor.ch === 0 ? '' : '\n';
+                cm.replaceRange(before2 + '\n---\n\n', cursor);
+                break;
+            }
+
+            case 'math':
+                if (sel) {
+                    cm.replaceSelection('$' + sel + '$');
+                } else {
+                    cm.replaceRange('$E = mc^2$', cursor);
+                    cm.setSelection(
+                        { line: cursor.line, ch: cursor.ch + 1 },
+                        { line: cursor.line, ch: cursor.ch + 9 }
+                    );
+                }
+                break;
+
+            case 'mathblock': {
+                const formula = sel || 'F = ma';
+                const before3 = cursor.ch === 0 ? '' : '\n';
+                cm.replaceSelection(before3 + '\n$$\n' + formula + '\n$$\n');
+                break;
+            }
+        }
+    }
+
+    function setLinePrefix(prefix) {
+        const cursor = cm.getCursor();
+        const line = cm.getLine(cursor.line);
+        const stripped = line.replace(/^#{1,6}\s+|^>\s+|^-\s+|^\d+\.\s+/, '');
+        cm.replaceRange(prefix + stripped, { line: cursor.line, ch: 0 }, { line: cursor.line, ch: line.length });
+    }
+
+    // Bind toolbar buttons
+    document.getElementById('editorToolbar').addEventListener('click', (e) => {
+        const btn = e.target.closest('.toolbar-btn');
+        if (btn && btn.dataset.action) {
+            e.preventDefault();
+            toolbarAction(btn.dataset.action);
+        }
+    });
+
+    // ─── Image Upload ───────────────────────────────────────────
+    const progressEl = document.getElementById('uploadProgress');
+
+    async function uploadImage(file) {
+        if (file.size > 5 * 1024 * 1024) {
+            alert(LANG === 'ru' ? 'Файл слишком большой (макс. 5 МБ)' : 'File too large (max 5 MB)');
+            return;
+        }
+
+        progressEl.style.display = 'block';
+        progressEl.textContent = LANG === 'ru' ? 'Загрузка...' : 'Uploading...';
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const resp = await fetch('/blog/upload-image', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.success) {
+                const cursor = cm.getCursor();
+                const md = '![' + file.name.replace(/\.[^.]+$/, '') + '](' + data.url + ')';
+                cm.replaceRange(md + '\n', cursor);
+                progressEl.textContent = LANG === 'ru' ? 'Загружено' : 'Uploaded';
+            } else {
+                progressEl.textContent = data.error || 'Upload failed';
+            }
+        } catch {
+            progressEl.textContent = 'Network error';
+        }
+
+        setTimeout(() => { progressEl.style.display = 'none'; }, 2000);
+    }
+
+    // File input trigger
+    document.getElementById('imageFileInput').addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+            uploadImage(e.target.files[0]);
+            e.target.value = '';
+        }
+    });
+
+    // Drag and drop on editor
+    const editorWrap = document.querySelector('.editor-pane-wrap');
+    const dropOverlay = document.getElementById('dropOverlay');
+    let dragCounter = 0;
+
+    editorWrap.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        dragCounter++;
+        if (e.dataTransfer.types.includes('Files')) {
+            dropOverlay.classList.add('active');
+        }
+    });
+    editorWrap.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            dropOverlay.classList.remove('active');
+        }
+    });
+    editorWrap.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+    editorWrap.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragCounter = 0;
+        dropOverlay.classList.remove('active');
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            uploadImage(file);
+        }
+    });
+
+    // Paste image from clipboard
+    cm.on('paste', (instance, e) => {
+        const items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        for (const item of items) {
+            if (item.type.startsWith('image/')) {
+                e.preventDefault();
+                uploadImage(item.getAsFile());
+                return;
+            }
+        }
+    });
+
+    // ─── Markdown Preview ───────────────────────────────────────
+    function mdToHtml(md) {
+        let html = md
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        // Fenced code blocks
+        html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
+            return '<pre><code>' + code.trim() + '</code></pre>';
+        });
+
+        // Headers
+        html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+        html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+        html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+        // Bold / italic / strikethrough
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+        // Inline code
+        html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+        // Images
+        html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
+
+        // Links
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+        // Horizontal rule
+        html = html.replace(/^---$/gm, '<hr />');
+
+        // Ordered list items
+        html = html.replace(/^\d+\.\s+(.+)$/gm, '<oli>$1</oli>');
+
+        // Unordered list items
+        html = html.replace(/^- (.+)$/gm, '<uli>$1</uli>');
+
+        // Blockquotes
+        html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+        // Paragraphs
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = '<p>' + html + '</p>';
+        html = html.replace(/<p><\/p>/g, '');
+
+        // Clean up block elements inside paragraphs
+        const blocks = ['h[1-3]', 'hr \\/', 'pre', 'blockquote', 'uli', 'oli'];
+        for (const b of blocks) {
+            html = html.replace(new RegExp('<p>(<' + b + '>)', 'g'), '$1');
+            html = html.replace(new RegExp('(</' + b.replace(/\s.*/, '') + '>)</p>', 'g'), '$1');
+        }
+
+        // Group list items
+        html = html.replace(/(<uli>.*?<\/uli>\n?)+/g, (match) => {
+            return '<ul>' + match.replace(/<\/?uli>/g, (t) => t === '<uli>' ? '<li>' : '</li>') + '</ul>';
+        });
+        html = html.replace(/(<oli>.*?<\/oli>\n?)+/g, (match) => {
+            return '<ol>' + match.replace(/<\/?oli>/g, (t) => t === '<oli>' ? '<li>' : '</li>') + '</ol>';
+        });
+
+        // Clean any remaining custom tags
+        html = html.replace(/<\/?[ou]li>/g, '');
+
+        return html;
+    }
+
+    let previewTimer = null;
+    function updatePreview() {
+        const preview = document.getElementById('previewPane');
+        preview.innerHTML = mdToHtml(cm.getValue());
+        if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+            MathJax.typesetPromise([preview]);
+        }
+    }
+
+    cm.on('change', () => {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(updatePreview, 300);
+    });
+
+    updatePreview();
+
+    // ─── Auto-save ──────────────────────────────────────────────
+    setInterval(() => {
+        const data = {
+            title: document.getElementById('titleInput').value,
+            content: cm.getValue(),
+            tags: document.getElementById('tagsInput').value,
+            language: document.getElementById('langSelect').value,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        document.getElementById('autosaveStatus').textContent =
+            (LANG === 'ru' ? 'Сохранено локально ' : 'Saved locally ') +
+            new Date().toLocaleTimeString();
+    }, 30000);
+
+    // ─── Save / Publish ─────────────────────────────────────────
+    async function savePost(action) {
+        const title = document.getElementById('titleInput').value.trim();
+        const content = cm.getValue().trim();
+        const tags = document.getElementById('tagsInput').value;
+        const language = document.getElementById('langSelect').value;
+
+        if (!title || !content) {
+            alert(LANG === 'ru' ? 'Заголовок и содержание обязательны' : 'Title and content are required');
+            return;
+        }
+
+        const url = IS_EDIT ? '/blog/' + POST_SLUG : '/blog';
+
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, content, tags, language, action }),
+            });
+            const data = await resp.json();
+            if (data.success) {
+                localStorage.removeItem(STORAGE_KEY);
+                if (action === 'publish') {
+                    window.location.href = '/blog/' + data.slug;
+                } else {
+                    alert(LANG === 'ru' ? 'Черновик сохранён' : 'Draft saved');
+                }
+            } else {
+                alert(data.error || 'Error saving post');
+            }
+        } catch {
+            alert('Network error');
+        }
+    }
+
+    document.getElementById('saveDraftBtn').addEventListener('click', () => savePost('draft'));
+    document.getElementById('publishBtn').addEventListener('click', () => savePost('publish'));
+    </script>
+</body>
+</html>

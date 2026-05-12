@@ -133,6 +133,16 @@
                 stroke-linecap: round;
                 stroke-linejoin: round;
             }
+
+            /* Reset css-latex serif/justify leaking into header and footer */
+            body.study-guide-page > header,
+            body.study-guide-page > header *,
+            body.study-guide-page > footer,
+            body.study-guide-page > footer * {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                text-align: left;
+                hyphens: none;
+            }
         </style>
     <script src="/js/analytics.js"></script>
 </head>
@@ -251,9 +261,24 @@
             <%= __('studyGuide.registration.conclusion') %>
         </p>
 
-        <%- include('default/main_site_footer_scripts') %>
-        <%- include('default/footer_en.ejs') %>
+        <div style="margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin: 0 0 0.5rem 0;">
+            <%= lang === 'ru' ? 'Учебные пути' : 'Study Paths' %>
+          </h3>
+          <p style="font-size: 14px; color: #6c757d; margin: 0 0 1rem 0;">
+            <%= lang === 'ru'
+              ? 'Не знаете, с чего начать? Выберите один из наших тщательно подобранных учебных путей, которые проведут вас от простого к сложному.'
+              : 'Not sure where to start? Follow one of our curated study paths that guide you from easy to hard problems.' %>
+          </p>
+          <a href="/paths" style="display: inline-block; background: #1a1a2e; color: #fff; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 14px; font-weight: 500; text-decoration: none;">
+            <%= lang === 'ru' ? 'Смотреть учебные пути' : 'Browse Study Paths' %> &rarr;
+          </a>
+        </div>
+
     </div>
+
+    <%- include('default/modern_footer') %>
+    <%- include('default/main_site_footer_scripts') %>
 </body>
 
 </html>

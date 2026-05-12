@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contributors - Savchenko Solutions</title>
-    <meta name="description" content="Savchenko Solutions contributor leaderboard and activity data.">
+    <title><%= __('contributorsPage.metaTitle') %></title>
+    <meta name="description" content="<%= __('contributorsPage.metaDescription') %>">
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
@@ -296,7 +296,6 @@
         .heatmap-wrap {
             display: flex;
             gap: 8px;
-            min-width: 760px;
         }
 
         .heatmap-y {
@@ -318,7 +317,7 @@
 
         .heatmap-months {
             display: grid;
-            grid-template-columns: repeat(53, 11px);
+            grid-template-columns: repeat(53, 1fr);
             gap: 2px;
             height: 16px;
             margin-bottom: 2px;
@@ -328,14 +327,13 @@
 
         .heatmap-grid {
             display: grid;
-            grid-template-columns: repeat(53, 11px);
-            grid-auto-rows: 11px;
+            grid-template-columns: repeat(53, 1fr);
+            grid-auto-rows: 1fr;
             gap: 2px;
         }
 
         .heat-cell {
-            width: 11px;
-            height: 11px;
+            aspect-ratio: 1;
             border-radius: 2px;
             background: var(--sv-heat-0);
             cursor: default;
@@ -442,59 +440,59 @@
     <%- include('default/main_site_header') %>
 
     <main class="contributors-page">
-        <h1 class="page-title">Contributors</h1>
-        <p id="contributors-subtitle" class="page-subtitle skeleton">Loading contributor summary...</p>
+        <h1 class="page-title"><%= __('contributorsPage.title') %></h1>
+        <p id="contributors-subtitle" class="page-subtitle skeleton"><%= __('contributorsPage.loadingSummary') %></p>
 
         <section class="stats-row">
             <article class="stat-tile">
                 <div id="stat-contributors" class="stat-value skeleton">0000</div>
-                <div class="stat-label">Contributors</div>
+                <div class="stat-label"><%= __('contributorsPage.statContributors') %></div>
             </article>
             <article class="stat-tile">
                 <div id="stat-solutions" class="stat-value skeleton">0000</div>
-                <div class="stat-label">Solutions</div>
+                <div class="stat-label"><%= __('contributorsPage.statSolutions') %></div>
             </article>
             <article class="stat-tile">
                 <div id="stat-countries" class="stat-value skeleton">0000</div>
-                <div class="stat-label">Countries</div>
+                <div class="stat-label"><%= __('contributorsPage.statCountries') %></div>
             </article>
             <article class="stat-tile">
-                <div id="stat-languages" class="stat-value" style="font-size: 20px;">Russian, English</div>
-                <div class="stat-label">Languages</div>
+                <div id="stat-languages" class="stat-value" style="font-size: 20px;"><%= __('contributorsPage.languagesValue') %></div>
+                <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
             </article>
         </section>
 
         <section class="card">
-            <h2 class="section-title">Geographic Distribution</h2>
+            <h2 class="section-title"><%= __('contributorsPage.geoDistribution') %></h2>
             <svg id="world-map" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
         </section>
 
         <section class="card">
-            <h2 class="section-title">Leaderboard</h2>
+            <h2 class="section-title"><%= __('contributorsPage.leaderboard') %></h2>
             <div style="overflow-x:auto;">
                 <table class="leaderboard-table">
                     <thead>
                         <tr>
-                            <th data-sort="rank">Rank</th>
-                            <th data-sort="contributor">Contributor</th>
-                            <th data-sort="solutions">Solutions</th>
-                            <th data-sort="score">Score</th>
-                            <th data-sort="joined">Joined</th>
-                            <th data-sort="lastActive">Last Active</th>
+                            <th data-sort="rank"><%= __('contributorsPage.rank') %></th>
+                            <th data-sort="contributor"><%= __('contributorsPage.contributor') %></th>
+                            <th data-sort="solutions"><%= __('contributorsPage.solutions') %></th>
+                            <th data-sort="score"><%= __('contributorsPage.score') %></th>
+                            <th data-sort="joined"><%= __('contributorsPage.joined') %></th>
+                            <th data-sort="lastActive"><%= __('contributorsPage.lastActive') %></th>
                         </tr>
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
                 </table>
             </div>
             <div class="pagination-row">
-                <button id="prev-page" class="btn-nav" type="button">Previous</button>
-                <span id="page-info" style="font-size:13px;color:#6c757d;align-self:center;">Page 1</span>
-                <button id="next-page" class="btn-nav" type="button">Next</button>
+                <button id="prev-page" class="btn-nav" type="button"><%= __('contributorsPage.previous') %></button>
+                <span id="page-info" style="font-size:13px;color:#6c757d;align-self:center;"></span>
+                <button id="next-page" class="btn-nav" type="button"><%= __('contributorsPage.next') %></button>
             </div>
         </section>
 
         <section class="card">
-            <h2 class="section-title">Platform Contribution Activity</h2>
+            <h2 class="section-title"><%= __('contributorsPage.activityTitle') %></h2>
             <div class="heatmap-summary-row">
                 <p id="platform-heatmap-summary" class="heatmap-summary" aria-live="polite"></p>
             </div>
@@ -504,11 +502,11 @@
                         <div class="heatmap-wrap">
                             <div class="heatmap-y">
                                 <div></div>
-                                <div>Mon</div>
+                                <div><%= __('contributorsPage.mon') %></div>
                                 <div></div>
-                                <div>Wed</div>
+                                <div><%= __('contributorsPage.wed') %></div>
                                 <div></div>
-                                <div>Fri</div>
+                                <div><%= __('contributorsPage.fri') %></div>
                                 <div></div>
                             </div>
                             <div class="heatmap-main">
@@ -518,7 +516,7 @@
                         </div>
                     </div>
                     <div class="heatmap-legend" aria-hidden="true">
-                        <span>Less</span>
+                        <span><%= __('contributorsPage.less') %></span>
                         <div class="heatmap-legend-scale">
                             <span class="heatmap-legend-cell" style="background:#ebedf0;"></span>
                             <span class="heatmap-legend-cell" style="background:#b3c6d9;"></span>
@@ -526,7 +524,7 @@
                             <span class="heatmap-legend-cell" style="background:#3a6a9e;"></span>
                             <span class="heatmap-legend-cell" style="background:#1a1a2e;"></span>
                         </div>
-                        <span>More</span>
+                        <span><%= __('contributorsPage.more') %></span>
                     </div>
                 </div>
                 <ul id="platform-heatmap-year-nav" class="heatmap-year-nav" aria-label="Contribution period"></ul>
@@ -543,6 +541,15 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script>
         const lang = "<%= lang %>";
+        const dateLocale = lang === "ru" ? "ru-RU" : "en-US";
+        const t = {
+            loadingSummary: "<%= __('contributorsPage.loadingSummary') %>",
+            languagesValue: "<%= __('contributorsPage.languagesValue') %>",
+            rollingPeriod: "<%= __('contributorsPage.rollingPeriod') %>",
+            contributionsLastYear: "<%= __('contributorsPage.contributionsLastYear') %>",
+            contributionsIn: "<%= __('contributorsPage.contributionsIn') %>",
+            pageOf: "<%= __('contributorsPage.pageOf') %>",
+        };
         const state = {
             page: 1,
             limit: 25,
@@ -556,13 +563,13 @@
         function fmtMonthYear(dateInput) {
             if (!dateInput) return "N/A";
             const d = new Date(dateInput);
-            return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+            return d.toLocaleDateString(dateLocale, { month: "short", year: "numeric" });
         }
 
         function fmtLong(dateInput) {
             if (!dateInput) return "N/A";
             const d = new Date(dateInput);
-            return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            return d.toLocaleDateString(dateLocale, { month: "short", day: "numeric", year: "numeric" });
         }
 
         function setStat(id, value, removeSkeleton = true) {
@@ -744,7 +751,7 @@
             };
 
             const rolling = !view || view.kind === "rolling";
-            addBtn("12 months", rolling, null);
+            addBtn(t.rollingPeriod, rolling, null);
             const yearsList = Array.isArray(years) ? years.filter((y) => Number.isFinite(Number(y))).map(Number) : [];
             const navYears = yearsList.length > 0
                 ? (() => {
@@ -759,16 +766,6 @@
                 const active = view && view.kind === "year" && view.year === y;
                 addBtn(String(y), active, y);
             });
-        }
-
-        function ordinalDayEn(n) {
-            const j = n % 10;
-            const k = n % 100;
-            if (k >= 11 && k <= 13) return `${n}th`;
-            if (j === 1) return `${n}st`;
-            if (j === 2) return `${n}nd`;
-            if (j === 3) return `${n}rd`;
-            return `${n}th`;
         }
 
         function renderHeatmap(payload) {
@@ -793,7 +790,7 @@
             for (const day of days) {
                 if (day.date.getDate() === 1) {
                     if (view.kind === "year" && day.date.getFullYear() !== view.year) continue;
-                    labels[day.week] = day.date.toLocaleDateString("en-US", { month: "short" });
+                    labels[day.week] = day.date.toLocaleDateString(dateLocale, { month: "short" });
                 }
             }
             labels.forEach((m) => {
@@ -808,9 +805,8 @@
                 cell.style.gridColumn = String(day.week + 1);
                 cell.style.gridRow = String(day.dow + 1);
                 cell.style.background = heatColor(day.count, scaleMeta);
-                const monthLong = day.date.toLocaleDateString("en-US", { month: "long" });
-                const contribWord = day.count === 1 ? "contribution" : "contributions";
-                const tipText = `${day.count} ${contribWord} on ${monthLong} ${ordinalDayEn(day.date.getDate())}.`;
+                const tipDate = day.date.toLocaleDateString(dateLocale, { month: "long", day: "numeric" });
+                const tipText = `${day.count} — ${tipDate}`;
                 cell.setAttribute("data-heatmap-tip", tipText);
                 cell.setAttribute("aria-label", tipText);
                 cell.addEventListener("mouseenter", () => {
@@ -824,9 +820,9 @@
             const total = dayCounts.reduce((sum, x) => sum + Number(x.count || 0), 0);
             if (summaryEl) {
                 if (view.kind === "rolling") {
-                    summaryEl.innerHTML = `<strong>${total.toLocaleString("en-US")}</strong> contributions in the last year`;
+                    summaryEl.innerHTML = `<strong>${total.toLocaleString(dateLocale)}</strong> ${t.contributionsLastYear}`;
                 } else {
-                    summaryEl.innerHTML = `<strong>${total.toLocaleString("en-US")}</strong> contributions in ${view.year}`;
+                    summaryEl.innerHTML = `<strong>${total.toLocaleString(dateLocale)}</strong> ${t.contributionsIn} ${view.year}`;
                 }
             }
         }
@@ -842,11 +838,15 @@
             setStat("stat-contributors", stats.contributors.toLocaleString());
             setStat("stat-solutions", stats.solutions.toLocaleString());
             setStat("stat-countries", stats.countries.toLocaleString());
-            setStat("stat-languages", stats.languages || "Russian, English", false);
+            setStat("stat-languages", stats.languages || t.languagesValue, false);
 
             const subtitle = document.getElementById("contributors-subtitle");
             subtitle.classList.remove("skeleton");
-            subtitle.textContent = `${stats.contributors.toLocaleString()} people from ${stats.countries.toLocaleString()} countries maintaining ${stats.solutions.toLocaleString()} solutions under Creative Commons.`;
+            if (lang === "ru") {
+                subtitle.textContent = `${stats.contributors.toLocaleString(dateLocale)} участников из ${stats.countries.toLocaleString(dateLocale)} стран поддерживают ${stats.solutions.toLocaleString(dateLocale)} решений под Creative Commons.`;
+            } else {
+                subtitle.textContent = `${stats.contributors.toLocaleString(dateLocale)} people from ${stats.countries.toLocaleString(dateLocale)} countries maintaining ${stats.solutions.toLocaleString(dateLocale)} solutions under Creative Commons.`;
+            }
         }
 
         function renderRows(rows) {
@@ -895,7 +895,7 @@
             document.getElementById("prev-page").disabled = !data.hasPrev;
             document.getElementById("next-page").disabled = !data.hasNext;
             const totalPages = Math.max(1, Math.ceil((data.total || 0) / state.limit));
-            document.getElementById("page-info").textContent = `Page ${state.page} of ${totalPages}`;
+            document.getElementById("page-info").textContent = `${state.page} ${t.pageOf} ${totalPages}`;
         }
 
         async function loadMap() {
@@ -935,9 +935,7 @@
             const contributionCounts = new Map();
             const peopleCounts = new Map();
             mapData.forEach((x) => {
-                const contributions = Number(
-                    x.total_contributions ?? x.contributions ?? 0
-                );
+                const contributions = Number(x.total_contributions ?? x.contributions ?? 0);
                 const contributors = Number(x.contributors || 0);
                 countryAliases(x.country).forEach((alias) => {
                     contributionCounts.set(alias, (contributionCounts.get(alias) || 0) + contributions);
@@ -970,42 +968,44 @@
             const path = d3.geoPath().projection(projection);
             const scale = d3.scaleLog()
                 .domain([Math.max(1, minPositiveContributions), Math.max(1, capContributions)])
-                .range(["#b7cce0", "#1a1a2e"])
+                .range([0.18, 1])
                 .clamp(true);
+
             const tooltip = document.getElementById("map-tooltip");
 
-            svg.selectAll("path.country")
+            svg.selectAll("path")
                 .data(geojson.features)
-                .join("path")
-                .attr("class", "country")
+                .enter()
+                .append("path")
                 .attr("d", path)
+                .attr("stroke", "#fff")
+                .attr("stroke-width", 0.5)
                 .attr("fill", (d) => {
-                    const aliases = countryAliases(d.properties?.name || "");
-                    let count = 0;
-                    aliases.forEach((alias) => {
-                        count = Math.max(count, contributionCounts.get(alias) || 0);
-                    });
+                    const name = normalizeCountryKey(d.properties.name);
+                    const count = contributionCounts.get(name) || 0;
                     if (count <= 0) return "#ebedf0";
-                    return scale(Math.max(1, Math.min(count, capContributions)));
+                    const t = scale(Math.max(1, count));
+                    return d3.interpolateRgb("#b3c6d9", "#1a1a2e")(t);
                 })
-                .attr("stroke", "#dee2e6")
-                .attr("stroke-opacity", 0.7)
-                .attr("stroke-width", 0.6)
-                .on("mousemove", (event, d) => {
-                    const name = d.properties?.name || "Unknown";
-                    const aliases = countryAliases(name);
-                    let contributions = 0;
-                    let contributors = 0;
-                    aliases.forEach((alias) => {
-                        contributions = Math.max(contributions, contributionCounts.get(alias) || 0);
-                        contributors = Math.max(contributors, peopleCounts.get(alias) || 0);
-                    });
-                    tooltip.textContent = `${name}: ${contributions} contributions, ${contributors} contributors`;
+                .on("mouseenter", function (event, d) {
+                    const name = normalizeCountryKey(d.properties.name);
+                    const count = contributionCounts.get(name) || 0;
+                    const people = peopleCounts.get(name) || 0;
+                    if (count > 0) {
+                        d3.select(this).attr("stroke", "#1a1a2e").attr("stroke-width", 1.5);
+                        tooltip.style.opacity = "1";
+                        const contribLabel = lang === "ru"
+                            ? `${people} уч., ${count} вкл.`
+                            : `${people} contributor${people !== 1 ? "s" : ""}, ${count} contribution${count !== 1 ? "s" : ""}`;
+                        tooltip.innerHTML = `<strong>${d.properties.name}</strong><br>${contribLabel}`;
+                    }
+                })
+                .on("mousemove", (event) => {
                     tooltip.style.left = `${event.clientX + 12}px`;
-                    tooltip.style.top = `${event.clientY + 12}px`;
-                    tooltip.style.opacity = "1";
+                    tooltip.style.top = `${event.clientY - 28}px`;
                 })
-                .on("mouseleave", () => {
+                .on("mouseleave", function () {
+                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.5);
                     tooltip.style.opacity = "0";
                 });
         }
@@ -1018,42 +1018,32 @@
             renderHeatmap(data);
         }
 
-        function bindSortEvents() {
-            document.querySelectorAll("th[data-sort]").forEach((th) => {
-                th.addEventListener("click", async () => {
-                    const key = th.getAttribute("data-sort");
-                    if (state.sortBy === key) {
-                        state.sortOrder = state.sortOrder === "desc" ? "asc" : "desc";
-                    } else {
-                        state.sortBy = key;
-                        state.sortOrder = key === "contributor" || key === "joined" ? "asc" : "desc";
-                    }
-                    state.page = 1;
-                    await loadLeaderboard();
-                });
-            });
-        }
-
-        function bindPagination() {
-            document.getElementById("prev-page").addEventListener("click", async () => {
-                if (state.page <= 1) return;
-                state.page -= 1;
+        document.querySelectorAll("th[data-sort]").forEach((th) => {
+            th.addEventListener("click", async () => {
+                const key = th.getAttribute("data-sort");
+                if (state.sortBy === key) {
+                    state.sortOrder = state.sortOrder === "desc" ? "asc" : "desc";
+                } else {
+                    state.sortBy = key;
+                    state.sortOrder = "desc";
+                }
+                state.page = 1;
                 await loadLeaderboard();
             });
-            document.getElementById("next-page").addEventListener("click", async () => {
-                state.page += 1;
-                await loadLeaderboard();
-            });
-        }
+        });
 
-        async function init() {
-            bindSortEvents();
-            bindPagination();
-            await Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap()]);
-        }
+        document.getElementById("prev-page").addEventListener("click", async () => {
+            if (state.page <= 1) return;
+            state.page -= 1;
+            await loadLeaderboard();
+        });
+        document.getElementById("next-page").addEventListener("click", async () => {
+            state.page += 1;
+            await loadLeaderboard();
+        });
 
-        init().catch((error) => {
-            console.error("Contributors page failed to load:", error);
+        Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap()]).catch((err) => {
+            console.error("Contributors page failed to load:", err);
         });
     </script>
 </body>

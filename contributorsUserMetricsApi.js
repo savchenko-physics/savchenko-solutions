@@ -194,6 +194,7 @@ function sortSafeContributors(rows, sortBy, sortOrder) {
     const map = {
         rank: (a, b) => compareNum(a.rank_position, b.rank_position),
         contributor: (a, b) => compareText(a.full_name || a.username, b.full_name || b.username),
+        country: (a, b) => compareText(a.country_location || "", b.country_location || ""),
         solutions: (a, b) => compareNum(a.unique_solutions, b.unique_solutions),
         score: (a, b) => compareNum(a.score, b.score),
         joined: (a, b) => compareText(a.joined_at || "", b.joined_at || ""),
@@ -259,37 +260,22 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 `
                 );
 
-                const languageRows = await pool.query(
+                const totalEditsCount = await pool.query(
                     `
-                    SELECT DISTINCT language
-                    FROM (
-                        SELECT language
-                        FROM contributions
-                        WHERE content_changed = true
-                          AND invisible = false
-                          AND language IN ('ru', 'en')
-                        UNION
-                        SELECT language
-                        FROM github_contributions
-                        WHERE language IN ('ru', 'en')
-                    ) src
-                    ORDER BY language
+                    SELECT (
+                        (SELECT COUNT(*)::int FROM contributions
+                         WHERE content_changed = true AND invisible = false)
+                        +
+                        (SELECT COUNT(*)::int FROM github_contributions)
+                    ) AS value
                 `
                 );
-
-                const languages = languageRows.rows
-                    .map((r) => r.language)
-                    .filter(Boolean);
-
-                const languageLabel = languages.includes("ru") && languages.includes("en")
-                    ? "Russian, English"
-                    : languages.join(", ");
 
                 return {
                     contributors: contributorsCount.rows[0]?.value || 0,
                     solutions: solutionsCount.rows[0]?.value || 0,
                     countries: countriesCount.rows[0]?.value || 0,
-                    languages: languageLabel || "Russian, English",
+                    totalEdits: totalEditsCount.rows[0]?.value || 0,
                 };
             });
 
@@ -730,8 +716,20 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             if (!payload) {
                 return res.status(404).json({ error: "User not found" });
             }
+
+            // Follow status checked outside cache (changes frequently)
+            const result = { ...payload };
+            result.isFollowing = false;
+            if (req.session.userId && req.session.userId !== payload.user.id) {
+                const followCheck = await pool.query(
+                    "SELECT id FROM user_follows WHERE follower_id = $1 AND following_id = $2",
+                    [req.session.userId, payload.user.id]
+                );
+                result.isFollowing = followCheck.rows.length > 0;
+            }
+
             res.set("Cache-Control", "public, max-age=3600");
-            res.json(payload);
+            res.json(result);
         } catch (error) {
             console.error("Failed to load user stats:", error);
             res.status(500).json({ error: "Failed to load user stats" });

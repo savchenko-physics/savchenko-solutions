@@ -1,6 +1,7 @@
 // Import the sitemap generation script
 require('./sitemap');
 
+const compression = require('compression');
 const express = require("express");
 const path = require("path");
 const fs = require("fs"); // Import fs module
@@ -32,9 +33,23 @@ const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 
 const rateLimit = require('express-rate-limit');
+const { router: adminRouter, isIpBlocked } = require('./admin');
+const searchIndex = require('./searchIndex');
+const blogRouter = require('./blog');
+const toolsRouter = require('./tools');
+const bankRouter = require('./bank');
+const forumRouter = require('./forum');
+const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
+const { router: pathsRouter, getPathsForProblem } = require('./paths');
+const notifications = require('./notifications');
 
 const app = express();
 const PORT = 3000;
+
+app.set('trust proxy', 1);
+
+// Gzip compression — first middleware for best coverage
+app.use(compression());
 
 // Require SESSION_SECRET — refuse to start with the insecure default
 if (!process.env.SESSION_SECRET) {
@@ -124,8 +139,8 @@ app.set("view engine", "ejs");
 app.use('/api/', apiLimiter);
 
 app.use(express.static(path.join(__dirname, "posts")));
-app.use("/img", express.static(path.join(__dirname, "img"))); // Serve images from img folder
-app.use("/css", express.static(path.join(__dirname, "css")));
+app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: '30d' }));
+app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d' }));
 app.use("/en", express.static(path.join(__dirname, "en")));
 app.use("/theory", express.static(path.join(__dirname, "theory")));
 app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
@@ -133,23 +148,35 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 // The src directory contains Python scripts and CSV data — must not be publicly served.
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
-app.use("/js", express.static(path.join(__dirname, "js")));
+app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, "public")));
+
+app.use((req, res, next) => {
+    const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
+    if (langMatch) {
+        req.session.lang = langMatch[1];
+    }
+    next();
+});
 
 app.use((req, res, next) => {
     res.locals.username = req.session.username || null;
     res.locals.profilePicture = null;
+    res.locals.unreadNotificationCount = 0;
     if (!req.session.userId) {
         return next();
     }
-    pool
-        .query("SELECT profile_picture FROM users WHERE id = $1", [req.session.userId])
-        .then((result) => {
-            res.locals.profilePicture = result.rows[0]?.profile_picture || null;
+    Promise.all([
+        pool.query("SELECT profile_picture FROM users WHERE id = $1", [req.session.userId]),
+        notifications.getUnreadCount(req.session.userId),
+    ])
+        .then(([profileResult, unreadCount]) => {
+            res.locals.profilePicture = profileResult.rows[0]?.profile_picture || null;
+            res.locals.unreadNotificationCount = unreadCount;
             next();
         })
         .catch((err) => {
-            console.error("Error loading profile picture for header:", err);
+            console.error("Error loading user context for header:", err);
             next();
         });
 });
@@ -285,6 +312,8 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
         );
         const preferences = preferencesResult.rows[0] || {};
 
+        const notificationSettings = preferences.notification_settings || notifications.DEFAULT_NOTIFICATION_SETTINGS;
+
         res.render("user_settings", {
             __: i18n.__,
             lang,
@@ -299,6 +328,7 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
             personalWebsite: user.personal_website,
             profilePicture: user.profile_picture || `/img/profile_images/${user.id}.png`,
             preferences,
+            notificationSettings,
             countryNames: getSortedCountryNames(),
             error: req.query.error || "",
             success: req.query.success || "",
@@ -472,17 +502,30 @@ app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
     i18n.setLocale(res, lang);
     const { publicProfile, emailNotifications, showCountryOnLeaderboard } = req.body;
 
+    // Build notification_settings from form checkboxes
+    const notifSettings = {
+        comment_on_solution: !!req.body.notif_comment_on_solution,
+        reply_to_comment: !!req.body.notif_reply_to_comment,
+        solution_liked: !!req.body.notif_solution_liked,
+        new_follower: !!req.body.notif_new_follower,
+        forum_reply: !!req.body.notif_forum_reply,
+        challenge_result: !!req.body.notif_challenge_result,
+        report_resolved: true, // always on
+        forum_solution: true,  // always on
+    };
+
     try {
         await pool.query(
-            `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level, show_country_on_leaderboard)
-             VALUES ($1, $2, false, $3, 'public', $4)
+            `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level, show_country_on_leaderboard, notification_settings)
+             VALUES ($1, $2, false, $3, 'public', $4, $5)
              ON CONFLICT (user_id)
              DO UPDATE SET
                 public_profile = EXCLUDED.public_profile,
                 email_notifications = EXCLUDED.email_notifications,
                 show_country_on_leaderboard = EXCLUDED.show_country_on_leaderboard,
+                notification_settings = EXCLUDED.notification_settings,
                 updated_at = NOW()`,
-            [req.session.userId, !!publicProfile, !!emailNotifications, !!showCountryOnLeaderboard]
+            [req.session.userId, !!publicProfile, !!emailNotifications, !!showCountryOnLeaderboard, JSON.stringify(notifSettings)]
         );
 
         res.redirect(
@@ -723,12 +766,26 @@ app.post("/api/follow/:userId", checkAuthenticated, async (req, res) => {
                 "INSERT INTO user_follows (follower_id, following_id) VALUES ($1, $2)",
                 [followerId, userId]
             );
-            
+
             // Log activity
             await pool.query(
                 "INSERT INTO user_activities (user_id, activity_type, target_user_id) VALUES ($1, $2, $3)",
                 [followerId, 'follow', userId]
             );
+
+            // Notify the followed user
+            try {
+                const followerResult = await pool.query('SELECT username FROM users WHERE id = $1', [followerId]);
+                const followerName = followerResult.rows[0]?.username || 'Someone';
+                await notifications.createNotification(
+                    parseInt(userId),
+                    'new_follower',
+                    `${followerName} started following you`,
+                    null,
+                    `/user/${followerName}`,
+                    followerId
+                );
+            } catch (notifErr) { console.error('Notification error (follow):', notifErr); }
 
             res.json({ following: true, message: "Followed successfully" });
         }
@@ -783,7 +840,35 @@ app.post("/api/solutions/:problemName/:language/like", checkAuthenticated, async
                 "INSERT INTO user_activities (user_id, activity_type, target_problem, target_language, metadata) VALUES ($1, $2, $3, $4, $5)",
                 [userId, 'like', problemName, language, JSON.stringify({ isLike })]
             );
-            
+
+            // Notify primary contributor (debounce: max 1 like notification per problem per hour)
+            if (isLike) {
+                try {
+                    const likerResult = await pool.query('SELECT username FROM users WHERE id = $1', [userId]);
+                    const likerName = likerResult.rows[0]?.username || 'Someone';
+                    const contribResult = await pool.query(
+                        `SELECT DISTINCT user_id FROM contributions
+                         WHERE problem_name = $1 AND user_id IS NOT NULL AND user_id != $2
+                         ORDER BY user_id LIMIT 1`,
+                        [problemName, userId]
+                    );
+                    if (contribResult.rows.length > 0) {
+                        const recipientId = contribResult.rows[0].user_id;
+                        const hasRecent = await notifications.hasRecentLikeNotification(recipientId, problemName);
+                        if (!hasRecent) {
+                            await notifications.createNotification(
+                                recipientId,
+                                'solution_liked',
+                                `${likerName} liked your solution for ${problemName}`,
+                                null,
+                                `/${language}/${problemName}`,
+                                userId
+                            );
+                        }
+                    }
+                } catch (notifErr) { console.error('Notification error (like):', notifErr); }
+            }
+
             res.json({ action: 'added', isLike });
         }
     } catch (error) {
@@ -961,6 +1046,47 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
             [userId, 'comment', problemName, language, JSON.stringify({ commentId: result.rows[0].id })]
         );
 
+        // Notify: if this is a reply, notify parent comment author
+        if (parentId) {
+            try {
+                const parentResult = await pool.query(
+                    'SELECT user_id FROM solution_comments WHERE id = $1', [parentId]
+                );
+                if (parentResult.rows.length > 0 && parentResult.rows[0].user_id) {
+                    await notifications.createNotification(
+                        parentResult.rows[0].user_id,
+                        'reply_to_comment',
+                        `${user.username} replied to your comment`,
+                        `On problem ${problemName}`,
+                        `/${language}/${problemName}`,
+                        userId
+                    );
+                }
+            } catch (notifErr) { console.error('Notification error (reply):', notifErr); }
+        }
+
+        // Notify: all contributors of this problem (except the commenter)
+        try {
+            const contribResult = await pool.query(
+                `SELECT DISTINCT user_id FROM contributions
+                 WHERE problem_name = $1 AND user_id IS NOT NULL AND user_id != $2
+                 UNION
+                 SELECT DISTINCT user_id FROM github_contributions
+                 WHERE problem_name = $1 AND user_id IS NOT NULL AND user_id != $2`,
+                [problemName, userId]
+            );
+            for (const row of contribResult.rows) {
+                await notifications.createNotification(
+                    row.user_id,
+                    'comment_on_solution',
+                    `${user.username} commented on ${problemName}`,
+                    content.trim().slice(0, 100),
+                    `/${language}/${problemName}`,
+                    userId
+                );
+            }
+        } catch (notifErr) { console.error('Notification error (comment):', notifErr); }
+
         res.json({
             id: result.rows[0].id,
             content: content.trim(),
@@ -975,6 +1101,81 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to add comment" });
+    }
+});
+
+// ─── Notification API ────────────────────────────────────────
+
+// Get notifications for current user (JSON)
+app.get("/api/notifications", checkAuthenticated, async (req, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit) || 20, 50);
+        const offset = parseInt(req.query.offset) || 0;
+        const items = await notifications.getNotifications(req.session.userId, limit, offset);
+        res.json({ notifications: items });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to get notifications" });
+    }
+});
+
+// Mark single notification as read
+app.post("/api/notifications/:id/read", checkAuthenticated, async (req, res) => {
+    try {
+        await notifications.markAsRead(parseInt(req.params.id), req.session.userId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+});
+
+// Mark all notifications as read
+app.post("/api/notifications/read-all", checkAuthenticated, async (req, res) => {
+    try {
+        await notifications.markAllAsRead(req.session.userId);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to mark notifications as read" });
+    }
+});
+
+// Full notifications page
+app.get("/notifications", checkAuthenticated, async (req, res) => {
+    const lang = req.session.lang || 'en';
+    i18n.setLocale(res, lang);
+    try {
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const perPage = 50;
+        const offset = (page - 1) * perPage;
+        const [items, total] = await Promise.all([
+            notifications.getNotifications(req.session.userId, perPage, offset),
+            notifications.getNotificationCount(req.session.userId),
+        ]);
+        const totalPages = Math.ceil(total / perPage);
+
+        // Get current user info for header
+        const currentUserResult = await pool.query(
+            "SELECT username, profile_picture FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        const currentUser = currentUserResult.rows[0];
+
+        res.render("notifications", {
+            __: i18n.__,
+            lang,
+            notifications: items,
+            page,
+            totalPages,
+            total,
+            usernameCurrent: currentUser?.username || null,
+            profilePictureCurrent: currentUser?.profile_picture || DEFAULT_PROFILE_AVATAR,
+            sessionUsername: req.session.username || null,
+        });
+    } catch (error) {
+        console.error(error);
+        res.redirect(`/${lang}/?error=Failed to load notifications`);
     }
 });
 
@@ -1187,6 +1388,140 @@ app.get("/en/login", checkNotAuthenticated, (req, res) => {
     });
 });
 
+// Forgot password
+app.get("/forgot-password", (req, res) => {
+    const lang = req.query.lang || 'en';
+    i18n.setLocale(res, lang);
+    res.render("forgot_password", {
+        __: i18n.__,
+        lang,
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.post("/forgot-password", async (req, res) => {
+    const { email, lang = 'en' } = req.body;
+    i18n.setLocale(res, lang);
+
+    try {
+        const result = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+
+        if (result.rows.length > 0) {
+            const token = crypto.randomBytes(32).toString('hex');
+            const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+            await pool.query(
+                "UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3",
+                [token, expires, result.rows[0].id]
+            );
+
+            const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
+            console.log('Password reset link:', resetUrl);
+        }
+
+        // Always show the same message (don't reveal if email exists)
+        res.redirect(`/forgot-password?lang=${lang}&success=${encodeURIComponent(
+            lang === 'ru'
+                ? 'Если аккаунт с таким адресом существует, ссылка для сброса была отправлена.'
+                : 'If an account exists with that email, a reset link has been sent.'
+        )}`);
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        res.redirect(`/forgot-password?lang=${lang}&error=${encodeURIComponent(
+            lang === 'ru' ? 'Произошла ошибка. Попробуйте позже.' : 'Something went wrong. Please try again.'
+        )}`);
+    }
+});
+
+// Reset password
+app.get("/reset-password", async (req, res) => {
+    const { token, lang: queryLang } = req.query;
+    const lang = queryLang || 'en';
+    i18n.setLocale(res, lang);
+
+    if (!token) {
+        return res.redirect(`/${lang}/login`);
+    }
+
+    try {
+        const result = await pool.query(
+            "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.render("reset_password", {
+                __: i18n.__,
+                lang,
+                token: "",
+                error: lang === 'ru'
+                    ? 'Ссылка для сброса недействительна или истекла.'
+                    : 'This reset link is invalid or has expired.',
+            });
+        }
+
+        res.render("reset_password", {
+            __: i18n.__,
+            lang,
+            token,
+            error: "",
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.redirect(`/${lang}/login`);
+    }
+});
+
+app.post("/reset-password", async (req, res) => {
+    const { token, password, confirmPassword, lang = 'en' } = req.body;
+    i18n.setLocale(res, lang);
+
+    if (!token || !password || !confirmPassword) {
+        return res.redirect(`/${lang}/login`);
+    }
+
+    if (password !== confirmPassword) {
+        return res.redirect(`/reset-password?token=${token}&lang=${lang}&error=${encodeURIComponent(
+            lang === 'ru' ? 'Пароли не совпадают.' : 'Passwords do not match.'
+        )}`);
+    }
+
+    if (password.length < 8) {
+        return res.redirect(`/reset-password?token=${token}&lang=${lang}&error=${encodeURIComponent(
+            lang === 'ru' ? 'Пароль должен быть не менее 8 символов.' : 'Password must be at least 8 characters.'
+        )}`);
+    }
+
+    try {
+        const result = await pool.query(
+            "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
+            [token]
+        );
+
+        if (result.rows.length === 0) {
+            return res.redirect(`/${lang}/login?error=${encodeURIComponent(
+                lang === 'ru' ? 'Ссылка для сброса недействительна или истекла.' : 'Reset link is invalid or has expired.'
+            )}`);
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.query(
+            "UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2",
+            [hashedPassword, result.rows[0].id]
+        );
+
+        res.redirect(`/${lang}/login?success=${encodeURIComponent(
+            lang === 'ru' ? 'Пароль обновлён. Войдите в аккаунт.' : 'Password updated. Please log in.'
+        )}`);
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.redirect(`/${lang}/login?error=${encodeURIComponent(
+            lang === 'ru' ? 'Произошла ошибка.' : 'Something went wrong.'
+        )}`);
+    }
+});
+
 app.get("/register", checkNotAuthenticated, (req, res) => {
     i18n.setLocale(res, 'en'); // Default to English for register
     res.render("register", {
@@ -1362,9 +1697,12 @@ app.get("/logout", (req, res) => {
 app.get("/", async (req, res) => {
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
-    const recentContributions = await getRecentContributions(10);
-    const topAuthors = await getTopAuthors();
-    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats(lang);
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+        getRecentContributions(10),
+        getTopAuthors(),
+        renderUnsolvedList.getSolutionProgressStats(lang),
+        getCurrentChallengeWidget(),
+    ]);
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -1386,7 +1724,8 @@ app.get("/", async (req, res) => {
         lang,
         recentContributions,
         topAuthors,
-        solutionProgress
+        solutionProgress,
+        challengeWidget,
     });
 });
 
@@ -1450,9 +1789,12 @@ registerContributorAndUserMetricsApi({
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-    const recentContributions = await getRecentContributions(10);
-    const topAuthors = await getTopAuthors();
-    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats('ru');
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+        getRecentContributions(10),
+        getTopAuthors(),
+        renderUnsolvedList.getSolutionProgressStats('ru'),
+        getCurrentChallengeWidget(),
+    ]);
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -1473,18 +1815,45 @@ app.get("/ru", async (req, res) => {
         lang: 'ru',
         recentContributions,
         topAuthors,
-        solutionProgress
+        solutionProgress,
+        challengeWidget,
     });
 });
+
+// Admin dashboard
+app.use('/admin', adminRouter);
+
+// Blog
+app.use('/:lang(en|ru)/blog', blogRouter);
+app.use('/blog', blogRouter);
+
+// Physics tools
+app.use('/:lang/tools', toolsRouter);
+app.use('/tools', toolsRouter);
+
+// Problem Bank
+app.use('/bank', bankRouter);
+
+// Discussion Forum
+app.use('/discuss', forumRouter);
+
+// Weekly Challenges
+app.use('/compete', challengesRouter);
+
+// Study Paths
+app.use('/paths', pathsRouter);
 
 // Remove the old upload routes and add the new router
 app.use('/', uploadRouter);
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-    const recentContributions = await getRecentContributions(10);
-    const topAuthors = await getTopAuthors();
-    const solutionProgress = await renderUnsolvedList.getSolutionProgressStats('en');
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+        getRecentContributions(10),
+        getTopAuthors(),
+        renderUnsolvedList.getSolutionProgressStats('en'),
+        getCurrentChallengeWidget(),
+    ]);
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -1505,7 +1874,8 @@ app.get("/en", async (req, res) => {
         lang: 'en',
         recentContributions,
         topAuthors,
-        solutionProgress
+        solutionProgress,
+        challengeWidget,
     });
 });
 
@@ -1646,22 +2016,8 @@ app.get("/:lang/edit/:name", (req, res) => {
     }
 });
 
-// Define a list of blocked IPs
-const blockedIPs = [
-    '88.150.230.32',
-    '176.193.25.172',
-    '77.37.146.158',
-    '79.139.132.133',
-    '178.176.78.181',
-    '65.109.58.154',
-    '83.220.238.208',
-    '178.176.77.74',
-    '109.252.153.135',
-    '176.59.207.161',
-    '5.228.81.203',
-    '81.57.75.160',
-    '82.194.13.2'
-];
+// IP blocklist is now in the database (blocked_ips table).
+// Use isIpBlocked(ip) from admin.js to check.
 
 function editSaveWantsJson(req) {
     const accept = req.get("Accept") || "";
@@ -1736,8 +2092,9 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
         // Check for emojis in the content
         const emojiRegex = /[\u{1F600}-\u{1F64F}]/u; // Basic emoji range
 
-        // Check if the client's IP is blocked
-        if (blockedIPs.includes(clientIp) || emojiRegex.test(content)) {
+        // Check if the client's IP is blocked (database lookup)
+        const ipBlocked = await isIpBlocked(clientIp);
+        if (ipBlocked || emojiRegex.test(content)) {
             // Save to a special database or table
             await pool.query(
                 `INSERT INTO special_contributions (
@@ -1796,6 +2153,8 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
             [userId, name, lang, originalContent, content, clientIp, contentChanged]
         );
 
+        searchIndex.rebuildIndex();
+
         if (editSaveWantsJson(req)) {
             return res.json({ ok: true, redirect: `/${lang}/${name}` });
         }
@@ -1818,192 +2177,19 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
 app.get("/file-list", renderFileList);
 
 app.get("/search", searchLimiter, (req, res) => {
-    const query = req.query.q?.toLowerCase();
-    const userLang = req.query.lang || res.getLocale() || 'en'; // Get language from query params first
-    
+    const query = req.query.q?.trim();
+    const userLang = req.query.lang || res.getLocale() || 'en';
+
     if (!query) {
         return res.json({ results: [] });
     }
 
+    const results = searchIndex.search(query, userLang, 15);
 
-    const searchDirectory = path.join(__dirname, "posts");
-    const results = [];
-    const processedFiles = new Set();
-
-    const truncateWithHighlight = (name, text, query, maxLength = 60) => {
-        // Remove the name and clean up special characters
-        text = convertLatexToPlainText(text) // Use the enhanced convertLatexToPlainText function
-            .replace(name, "")
-            .replace(/#{1,3}\s*/g, "")
-            .replace(/Statement\s*\./g, "")
-            .replace(/Условие\s*\./g, "")
-            .replace(/Условие:\s*\./g, "")
-            .replace(/Условие:/g, "")
-            .replace(/^\s*\./g, "");
-
-        const matchIndex = text.toLowerCase().indexOf(query);
-
-        if (matchIndex === -1) {
-            return text.slice(0, maxLength); // Fallback: return the truncated text
-        }
-
-        const start = Math.max(0, matchIndex - Math.floor((maxLength - query.length) / 2));
-        const end = Math.min(text.length, start + maxLength);
-
-        let snippet = text.slice(start, end);
-
-        // Ensure no partial words at the boundaries
-        if (start > 0) snippet = `...${snippet}`;
-        if (end < text.length) snippet = `${snippet}...`;
-
-        // Highlight the query term
-        return snippet.replace(new RegExp(query, "gi"), (match) => `<strong>${match}</strong>`);
-    };
-
-    const searchFiles = (directory) => {
-        // Get list of language directories
-        const langDirs = fs.readdirSync(directory).filter(dir => 
-            fs.statSync(path.join(directory, dir)).isDirectory()
-        );
-        
-        // Reorder directories to put userLang first
-        const orderedDirs = [
-            ...langDirs.filter(dir => dir === userLang),
-            ...langDirs.filter(dir => dir !== userLang)
-        ];
-
-        const langResults = {
-            primary: [],   // Results in user's language
-            secondary: []  // Results in other language
-        };
-
-        // Search through directories in the preferred order
-        orderedDirs.forEach(langDir => {
-            const langPath = path.join(directory, langDir);
-            const files = fs.readdirSync(langPath);
-
-            // First pass: search file names
-            files.forEach((file) => {
-                const fullPath = path.join(langPath, file);
-                if (file.endsWith(".md")) {
-                    const fileKey = `${langDir}_${file}`;
-                    if (processedFiles.has(fileKey)) return;
-
-                    const name = file.replace(".md", "");
-                    const nameLower = name.toLowerCase();
-                    
-                    if (nameLower.includes(query)) {
-                        const fileContents = fs.readFileSync(fullPath, "utf8");
-                        const firstFiveLines = fileContents.split("\n").slice(0, 5).join(" ");
-                        
-                        // Clean up the text for display, but don't search within it
-                        let cleanedText = convertLatexToPlainText(firstFiveLines)
-                            .replace(name, "")
-                            .replace(/\$/g, "")
-                            .replace(/_/g, "")
-                            .replace(".$", "")
-                            .replace("\^", "")
-                            .replace("\*", "")
-                            .replace(/#{1,3}\s*/g, "")
-                            .replace("\ell", "l")
-                            .replace(/Statement\s*\./g, "")
-                            .replace(/Условие\s*\./g, "")
-                            .replace(/Условие:\s*\./g, "")
-                            .replace(/Условие:/g, "")
-                            .replace(/Условие/g, "")
-                            .replace(/^\s*\./g, "") // Remove leading periods (and any whitespace before them)
-                            .replace(/\{[^}]*\}/g, ""); // Remove anything between curly braces
-
-                        const result = {
-                            lang: langDir,
-                            name,
-                            relativePath: `/${langDir}/${name}`,
-                            snippet: cleanedText.slice(0, 120) + " ...", // Add ellipsis after truncation
-                            lineNumber: 1,
-                            isFileNameMatch: true,
-                            confidence: nameLower === query && langDir === userLang ? 'high' : 'medium'
-                        };
-
-                        if (langDir === userLang) {
-                            langResults.primary.push(result);
-                        } else {
-                            langResults.secondary.push(result);
-                        }
-
-                        processedFiles.add(fileKey);
-                    }
-                }
-            });
-
-            // Second pass: search file contents
-            files.forEach((file) => {
-                const fullPath = path.join(langPath, file);
-                if (file.endsWith(".md")) {
-                    const fileKey = `${langDir}_${file}`;
-                    if (processedFiles.has(fileKey)) return;
-
-                    let fileContents = fs.readFileSync(fullPath, "utf8");
-                    
-                    // Join lines with space to handle headings without newlines
-                    const searchableContent = fileContents.split("\n").join(" ");
-
-                    if (searchableContent.toLowerCase().includes(query)) {
-                        const name = file.replace(".md", "");
-                        const snippet = truncateWithHighlight(name, searchableContent, query);
-
-                        const result = {
-                            lang: langDir,
-                            name,
-                            relativePath: `/${langDir}/${name}`,
-                            snippet: snippet,
-                            lineNumber: 1, // Line number becomes less relevant with joined content
-                            isFileNameMatch: false
-                        };
-                        
-                        if (langDir === userLang) {
-                            langResults.primary.push(result);
-                        } else {
-                            langResults.secondary.push(result);
-                        }
-
-                        processedFiles.add(fileKey);
-                    }
-                }
-            });
-        });
-
-        // console.log(langResults.primary);
-        // console.log(langResults.secondary);
-        const sortResults = (a, b) => {
-            // Sort by confidence first
-            if ((a.confidence === 'high') !== (b.confidence === 'high')) {
-                return a.confidence === 'high' ? -1 : 1;
-            }
-            // Then by filename match
-            if (a.isFileNameMatch !== b.isFileNameMatch) {
-                return b.isFileNameMatch ? 1 : -1;
-            }
-            // Finally by name
-            return a.name.localeCompare(b.name);
-        };
-
-
-        langResults.primary.sort(sortResults);
-        langResults.secondary.sort(sortResults);
-
-        // Combine results with preferred language first
-        results.push(...langResults.primary, ...langResults.secondary);
-    };
-
-    searchFiles(searchDirectory);
-
-    // Limit to the first 10 results
-    const limitedResults = results.slice(0, 10);
-
-    res.json({ results: limitedResults });
+    res.json({ results });
 });
 
-app.get("/global-search", async (req, res) => {
+app.get("/global-search", (req, res) => {
     const query = req.query.search?.trim() || "";
     const lang = req.query.lang || 'en';
 
@@ -2013,6 +2199,7 @@ app.get("/global-search", async (req, res) => {
         __: i18n.__,
         lang,
         username: req.session.username || null,
+        chapters: searchIndex.getChapterList(lang),
     };
 
     if (!query) {
@@ -2023,24 +2210,13 @@ app.get("/global-search", async (req, res) => {
         });
     }
 
-    try {
-        const baseUrl = `${req.protocol}://${req.get('host')}`;
-        const response = await fetch(`${baseUrl}/search?q=${encodeURIComponent(query)}`);
-        const data = await response.json();
+    const results = searchIndex.search(query, lang, 50);
 
-        res.render("search", {
-            ...searchLocals,
-            results: data.results,
-            searchTerm: query,
-        });
-    } catch (error) {
-        console.error("Error fetching search results:", error);
-        res.render("search", {
-            ...searchLocals,
-            results: [],
-            searchTerm: query,
-        });
-    }
+    res.render("search", {
+        ...searchLocals,
+        results,
+        searchTerm: query,
+    });
 });
 
 // Update the route to handle contributions with an ID
@@ -2153,6 +2329,9 @@ const sandboxPool = new Pool({
 // Pass the pool to the sandbox app
 require('./sandbox/sandbox-app')(sandboxPool);
 
+// Build search index before starting server
+searchIndex.buildIndex();
+
 // Start the main server
 app.listen(PORT, () => {
     console.log(`Main server listening on port ${PORT}`);
@@ -2163,9 +2342,15 @@ async function getTopAuthors() {
     try {
         const query = `
             WITH all_contributions AS (
-                SELECT user_id, problem_name FROM contributions WHERE user_id != 28
+                SELECT user_id, problem_name FROM contributions
+                WHERE user_id != 28
+                  AND user_id IS NOT NULL
+                  AND content_changed = true
+                  AND invisible = false
                 UNION ALL
-                SELECT user_id, problem_name FROM github_contributions WHERE user_id != 28
+                SELECT user_id, problem_name FROM github_contributions
+                WHERE user_id != 28
+                  AND user_id IS NOT NULL
             ),
             user_stats AS (
                 SELECT 

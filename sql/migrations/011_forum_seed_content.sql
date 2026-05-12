@@ -1,0 +1,14 @@
+-- Migration 011: Seed forum with real content
+-- This migration is executed via scripts/seed-forum.js rather than raw SQL,
+-- because it reads solution_comments from the database to generate forum topics.
+--
+-- Run: node scripts/seed-forum.js
+--
+-- What it does:
+-- 1. Reads all non-deleted solution_comments, groups by problem_name
+-- 2. Creates a forum topic per problem in "Solution Discussion" category
+-- 3. First comment becomes the opening post, rest become replies
+-- 4. Creates survey-derived topics in Platform Feedback, Physics & Olympiads, General
+-- 5. Sets reply_count, last_reply_at, last_reply_by on each topic
+--
+-- Idempotent: skips if forum_topics already has content.

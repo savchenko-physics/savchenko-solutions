@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <title>Admin Dashboard — Savchenko Solutions</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <style>
+    :root {
+      --admin-nav: #1a1a2e;
+      --admin-success: #27ae60;
+      --admin-danger: #c0392b;
+      --admin-border: #dee2e6;
+      --admin-bg-alt: #f8f9fa;
+      --admin-text: #2d2d2d;
+      --admin-muted: #6c757d;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--admin-text);
+      background: #fff;
+      margin: 0;
+    }
+    .admin-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    .admin-sidebar {
+      width: 200px;
+      background: var(--admin-nav);
+      color: #fff;
+      flex-shrink: 0;
+      padding: 20px 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+    .admin-sidebar h2 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0 16px;
+      margin-bottom: 20px;
+      color: rgba(255,255,255,0.7);
+    }
+    .admin-sidebar a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      color: rgba(255,255,255,0.8);
+      text-decoration: none;
+      font-size: 14px;
+      border-left: 3px solid transparent;
+    }
+    .admin-sidebar a:hover {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+    .admin-sidebar a.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border-left-color: #fff;
+    }
+    .admin-sidebar .back-link {
+      margin-top: auto;
+      border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 10px;
+      margin-top: 30px;
+    }
+    .badge-count {
+      background: var(--admin-danger);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      min-width: 20px;
+      text-align: center;
+    }
+    .admin-content {
+      margin-left: 200px;
+      flex: 1;
+      padding: 30px;
+      max-width: 1200px;
+    }
+    .admin-content h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      color: var(--admin-nav);
+    }
+    /* Stat cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fff;
+    }
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--admin-nav);
+      line-height: 1.2;
+    }
+    .stat-card .stat-label {
+      font-size: 13px;
+      color: var(--admin-muted);
+      margin-top: 4px;
+    }
+    /* Tables */
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .admin-table th {
+      background: var(--admin-nav);
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .admin-table th a {
+      color: #fff;
+      text-decoration: none;
+    }
+    .admin-table th a:hover {
+      text-decoration: underline;
+    }
+    .admin-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--admin-border);
+      vertical-align: middle;
+    }
+    .admin-table tr:nth-child(even) td {
+      background: var(--admin-bg-alt);
+    }
+    .admin-table tr:nth-child(odd) td {
+      background: #fff;
+    }
+    /* Buttons */
+    .btn-admin-success {
+      background: var(--admin-success);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-admin-success:hover { background: #219a52; color: #fff; }
+    .btn-admin-danger {
+      background: var(--admin-danger);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-admin-danger:hover { background: #a93226; color: #fff; }
+    .btn-admin-outline {
+      background: #fff;
+      color: var(--admin-nav);
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-admin-outline:hover { background: var(--admin-bg-alt); }
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-resolved { background: #d4edda; color: #155724; }
+    .status-dismissed { background: #f8d7da; color: #721c24; }
+    /* Activity log */
+    .activity-log {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .activity-log li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--admin-border);
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .activity-log .activity-time {
+      color: var(--admin-muted);
+      font-size: 12px;
+      white-space: nowrap;
+      margin-left: 12px;
+    }
+    /* Diff view */
+    .diff-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1050;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .diff-modal-backdrop.show { display: flex; }
+    .diff-modal {
+      background: #fff;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 1000px;
+      max-height: 80vh;
+      overflow: auto;
+      padding: 24px;
+    }
+    .diff-modal h3 { margin-top: 0; font-size: 16px; }
+    .diff-pane {
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      overflow: auto;
+      font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .diff-pane table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .diff-pane td {
+      padding: 0 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      vertical-align: top;
+    }
+    .diff-pane .diff-ln {
+      width: 1px;
+      padding: 0 8px;
+      text-align: right;
+      color: rgba(0,0,0,0.3);
+      user-select: none;
+      border-right: 1px solid var(--admin-border);
+      font-size: 11px;
+    }
+    .diff-pane .diff-marker {
+      width: 1px;
+      padding: 0 6px;
+      user-select: none;
+      font-weight: 600;
+    }
+    .diff-line-del { background: #ffeef0; }
+    .diff-line-del .diff-marker { color: #cb2431; }
+    .diff-line-add { background: #e6ffec; }
+    .diff-line-add .diff-marker { color: #22863a; }
+    .diff-line-ctx { background: #fff; }
+    .diff-line-ctx .diff-marker { color: transparent; }
+    .diff-hunk {
+      background: #f1f8ff;
+      color: rgba(0,0,0,0.4);
+      font-size: 11px;
+      padding: 4px 12px;
+      border-top: 1px solid var(--admin-border);
+      border-bottom: 1px solid var(--admin-border);
+    }
+    .diff-char-del { background: #fdb8c0; border-radius: 2px; }
+    .diff-char-add { background: #acf2bd; border-radius: 2px; }
+    /* Pagination */
+    .admin-pagination {
+      display: flex;
+      gap: 6px;
+      margin-top: 16px;
+      align-items: center;
+    }
+    .admin-pagination a, .admin-pagination span {
+      padding: 5px 10px;
+      border: 1px solid var(--admin-border);
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 13px;
+      color: var(--admin-text);
+    }
+    .admin-pagination .current {
+      background: var(--admin-nav);
+      color: #fff;
+      border-color: var(--admin-nav);
+    }
+    /* Search input */
+    .admin-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .admin-search input {
+      height: 40px;
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 14px;
+      width: 280px;
+    }
+    /* IP form */
+    .ip-add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .ip-add-form label {
+      font-size: 12px;
+      color: var(--admin-muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    .ip-add-form input {
+      height: 40px;
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+    /* Chart containers */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    .chart-box {
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .chart-box h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: var(--admin-nav);
+    }
+    @media (max-width: 768px) {
+      .admin-sidebar { display: none; }
+      .admin-content { margin-left: 0; }
+      .chart-grid { grid-template-columns: 1fr; }
+      .diff-pane { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <nav class="admin-sidebar">
+    <h2>Admin</h2>
+    <a href="/admin" class="<%= tab === 'overview' ? 'active' : '' %>">Overview</a>
+    <a href="/admin/reports" class="<%= tab === 'reports' ? 'active' : '' %>">
+      Reports
+      <% if (typeof stats !== 'undefined' && stats.pendingReports > 0) { %>
+        <span class="badge-count"><%= stats.pendingReports %></span>
+      <% } else if (typeof pendingReportsCount !== 'undefined' && pendingReportsCount > 0) { %>
+        <span class="badge-count"><%= pendingReportsCount %></span>
+      <% } %>
+    </a>
+    <a href="/admin/flagged" class="<%= tab === 'flagged' ? 'active' : '' %>">
+      Flagged Edits
+      <% if (typeof stats !== 'undefined' && stats.flaggedEdits > 0) { %>
+        <span class="badge-count"><%= stats.flaggedEdits %></span>
+      <% } %>
+    </a>
+    <a href="/admin/users" class="<%= tab === 'users' ? 'active' : '' %>">Users</a>
+    <a href="/admin/blocked-ips" class="<%= tab === 'blocked-ips' ? 'active' : '' %>">IP Blocklist</a>
+    <a href="/admin/stats" class="<%= tab === 'stats' ? 'active' : '' %>">Platform Stats</a>
+    <a href="/admin/challenges" class="<%= tab === 'challenges' ? 'active' : '' %>">Challenges</a>
+    <div class="back-link">
+      <a href="/en">Back to site</a>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main class="admin-content">
+
+<% if (tab === 'overview') { %>
+    <!-- ═══ OVERVIEW ═══ -->
+    <h1>Dashboard Overview</h1>
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.totalUsers %></div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.totalSolutions %></div>
+        <div class="stat-label">Total Solutions</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.pendingReports %></div>
+        <div class="stat-label">Pending Reports</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.flaggedEdits %></div>
+        <div class="stat-label">Flagged Edits</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.contributionsToday %></div>
+        <div class="stat-label">Contributions Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= stats.activeUsersWeek %></div>
+        <div class="stat-label">Active Users (7d)</div>
+      </div>
+    </div>
+
+    <h2 style="font-size:16px; font-weight:600; margin-bottom:12px;">Recent Admin Activity</h2>
+    <% if (recentActions.length === 0) { %>
+      <p style="color: var(--admin-muted); font-size: 14px;">No admin actions recorded yet.</p>
+    <% } else { %>
+      <ul class="activity-log">
+        <% recentActions.forEach(function(a) { %>
+          <li>
+            <span>
+              <strong><%= a.username || 'Admin' %></strong>
+              <% if (a.action_type === 'resolve_report') { %> resolved report #<%= a.target_id %>
+              <% } else if (a.action_type === 'dismiss_report') { %> dismissed report #<%= a.target_id %>
+              <% } else if (a.action_type === 'approve_edit') { %> approved flagged edit
+                <% if (a.details && a.details.problem) { %> for <%= a.details.problem %><% } %>
+              <% } else if (a.action_type === 'reject_edit') { %> rejected flagged edit
+                <% if (a.details && a.details.problem) { %> for <%= a.details.problem %><% } %>
+              <% } else if (a.action_type === 'toggle_verify_user') { %>
+                <% if (a.details && a.details.verified) { %>verified<% } else { %>unverified<% } %> user
+                <% if (a.details && a.details.username) { %> <%= a.details.username %><% } %>
+              <% } else if (a.action_type === 'block_ip') { %> blocked IP
+                <% if (a.details && a.details.ip) { %> <%= a.details.ip %><% } %>
+              <% } else if (a.action_type === 'unblock_ip') { %> unblocked IP
+                <% if (a.details && a.details.ip) { %> <%= a.details.ip %><% } %>
+              <% } else { %> <%= a.action_type %>
+              <% } %>
+            </span>
+            <span class="activity-time"><%= new Date(a.created_at).toLocaleString() %></span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+
+<% } else if (tab === 'reports') { %>
+    <!-- ═══ REPORTS ═══ -->
+    <h1>Solution Reports</h1>
+    <div style="margin-bottom: 16px;">
+      <% if (showAll) { %>
+        <a href="/admin/reports" class="btn-admin-outline" style="text-decoration:none;">Show pending only</a>
+      <% } else { %>
+        <a href="/admin/reports?all=1" class="btn-admin-outline" style="text-decoration:none;">Show all</a>
+      <% } %>
+    </div>
+    <% if (reports.length === 0) { %>
+      <p style="color: var(--admin-muted);">No reports to display.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Lang</th>
+          <th>Reason</th>
+          <th>Reporter</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% reports.forEach(function(r) { %>
+        <tr>
+          <td><a href="/<%= r.language || 'en' %>/<%= r.problem_name %>" target="_blank"><%= r.problem_name %></a></td>
+          <td><%= (r.language || '').toUpperCase() %></td>
+          <td style="max-width:300px; word-break:break-word;"><%= r.reason %></td>
+          <td><%= r.reporter_name || 'Anonymous' %></td>
+          <td style="white-space:nowrap;"><%= new Date(r.created_at).toLocaleDateString() %></td>
+          <td>
+            <span class="status-badge status-<%= r.status || 'pending' %>"><%= r.status || 'pending' %></span>
+          </td>
+          <td style="white-space:nowrap;">
+            <% if (!r.status || r.status === 'pending') { %>
+              <form method="POST" action="/admin/reports/<%= r.id %>/resolve" style="display:inline;">
+                <button type="submit" class="btn-admin-success">Resolve</button>
+              </form>
+              <form method="POST" action="/admin/reports/<%= r.id %>/dismiss" style="display:inline; margin-left:4px;">
+                <button type="submit" class="btn-admin-danger">Dismiss</button>
+              </form>
+            <% } else { %>
+              —
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+<% } else if (tab === 'flagged') { %>
+    <!-- ═══ FLAGGED EDITS ═══ -->
+    <h1>Flagged Edits</h1>
+    <% if (flagged.length === 0) { %>
+      <p style="color: var(--admin-muted);">No flagged edits to display.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>Lang</th>
+          <th>Editor</th>
+          <th>Date</th>
+          <th>Content Preview</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% flagged.forEach(function(f) { %>
+        <tr>
+          <td><a href="/<%= f.language || 'en' %>/<%= f.problem_name %>" target="_blank"><%= f.problem_name %></a></td>
+          <td><%= (f.language || '').toUpperCase() %></td>
+          <td><%= f.editor_name || f.ip_address || 'Unknown' %></td>
+          <td style="white-space:nowrap;"><%= new Date(f.edited_at).toLocaleDateString() %></td>
+          <td style="max-width:300px; word-break:break-word; font-size:12px; color:var(--admin-muted);">
+            <%= (f.new_content || '').substring(0, 200) %><% if ((f.new_content || '').length > 200) { %>...<% } %>
+          </td>
+          <td style="white-space:nowrap;">
+            <button class="btn-admin-outline" onclick="showDiff(<%= f.id %>)">Diff</button>
+            <form method="POST" action="/admin/flagged/<%= f.id %>/approve" style="display:inline; margin-left:4px;">
+              <button type="submit" class="btn-admin-success">Approve</button>
+            </form>
+            <form method="POST" action="/admin/flagged/<%= f.id %>/reject" style="display:inline; margin-left:4px;">
+              <button type="submit" class="btn-admin-danger">Reject</button>
+            </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+    <!-- Diff modal -->
+    <div class="diff-modal-backdrop" id="diffModal">
+      <div class="diff-modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 id="diffTitle">Diff View</h3>
+          <button class="btn-admin-outline" onclick="closeDiff()">&times; Close</button>
+        </div>
+        <div class="diff-pane" id="diffPane"></div>
+      </div>
+    </div>
+
+<% } else if (tab === 'users') { %>
+    <!-- ═══ USERS ═══ -->
+    <h1>Users (<%= totalUsers %>)</h1>
+    <form class="admin-search" method="GET" action="/admin/users">
+      <input type="text" name="search" value="<%= search %>" placeholder="Search by username or email..." />
+      <button type="submit" class="btn-admin-outline">Search</button>
+      <% if (search) { %>
+        <a href="/admin/users" class="btn-admin-outline" style="text-decoration:none;">Clear</a>
+      <% } %>
+    </form>
+    <%
+      function sortUrl(col) {
+        const newDir = (sort === col && dir === 'asc') ? 'desc' : 'asc';
+        const params = new URLSearchParams({ sort: col, dir: newDir, page: 1 });
+        if (search) params.set('search', search);
+        return '/admin/users?' + params.toString();
+      }
+      function sortArrow(col) {
+        if (sort !== col) return '';
+        return dir === 'asc' ? ' ↑' : ' ↓';
+      }
+    %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th><a href="<%= sortUrl('id') %>">ID<%= sortArrow('id') %></a></th>
+          <th><a href="<%= sortUrl('username') %>">Username<%= sortArrow('username') %></a></th>
+          <th><a href="<%= sortUrl('full_name') %>">Full Name<%= sortArrow('full_name') %></a></th>
+          <th><a href="<%= sortUrl('email') %>">Email<%= sortArrow('email') %></a></th>
+          <th><a href="<%= sortUrl('country_location') %>">Country<%= sortArrow('country_location') %></a></th>
+          <th><a href="<%= sortUrl('is_verified_user') %>">Verified<%= sortArrow('is_verified_user') %></a></th>
+          <th><a href="<%= sortUrl('contribution_count') %>">Edits<%= sortArrow('contribution_count') %></a></th>
+          <th><a href="<%= sortUrl('created_at') %>">Registered<%= sortArrow('created_at') %></a></th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(function(u) { %>
+        <tr>
+          <td><%= u.id %></td>
+          <td><%= u.username %></td>
+          <td><%= u.full_name || '' %></td>
+          <td><%= u.email || '' %></td>
+          <td><%= u.country_location || '' %></td>
+          <td>
+            <% if (u.is_verified_user) { %>
+              <span class="status-badge status-resolved">Yes</span>
+            <% } else { %>
+              <span class="status-badge status-dismissed">No</span>
+            <% } %>
+          </td>
+          <td><%= u.contribution_count %></td>
+          <td style="white-space:nowrap;"><%= u.created_at ? new Date(u.created_at).toLocaleDateString() : '' %></td>
+          <td style="white-space:nowrap;">
+            <form method="POST" action="/admin/users/<%= u.id %>/verify?page=<%= page %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" style="display:inline;">
+              <button type="submit" class="<%= u.is_verified_user ? 'btn-admin-danger' : 'btn-admin-success' %>" style="font-size:12px;">
+                <%= u.is_verified_user ? 'Unverify' : 'Verify' %>
+              </button>
+            </form>
+            <a href="/user/<%= u.username %>" target="_blank" class="btn-admin-outline" style="text-decoration:none; margin-left:4px; font-size:12px;">Profile</a>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% if (totalPages > 1) { %>
+    <div class="admin-pagination">
+      <% if (page > 1) { %>
+        <a href="/admin/users?page=<%= page - 1 %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">Prev</a>
+      <% } %>
+      <% for (let p = 1; p <= totalPages; p++) { %>
+        <% if (p === page) { %>
+          <span class="current"><%= p %></span>
+        <% } else if (Math.abs(p - page) < 3 || p === 1 || p === totalPages) { %>
+          <a href="/admin/users?page=<%= p %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>"><%= p %></a>
+        <% } else if (Math.abs(p - page) === 3) { %>
+          <span>...</span>
+        <% } %>
+      <% } %>
+      <% if (page < totalPages) { %>
+        <a href="/admin/users?page=<%= page + 1 %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>">Next</a>
+      <% } %>
+    </div>
+    <% } %>
+
+<% } else if (tab === 'blocked-ips') { %>
+    <!-- ═══ IP BLOCKLIST ═══ -->
+    <h1>IP Blocklist</h1>
+    <form class="ip-add-form" method="POST" action="/admin/blocked-ips/add">
+      <div>
+        <label>IP Address</label>
+        <input type="text" name="ip_address" placeholder="e.g. 192.168.1.1" required />
+      </div>
+      <div>
+        <label>Reason (optional)</label>
+        <input type="text" name="reason" placeholder="Reason for blocking" style="width:300px;" />
+      </div>
+      <button type="submit" class="btn-admin-danger" style="height:40px;">Block IP</button>
+    </form>
+    <% if (blockedIps.length === 0) { %>
+      <p style="color: var(--admin-muted);">No blocked IPs.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>IP Address</th>
+          <th>Reason</th>
+          <th>Blocked By</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% blockedIps.forEach(function(ip) { %>
+        <tr>
+          <td><code><%= ip.ip_address %></code></td>
+          <td><%= ip.reason || '—' %></td>
+          <td><%= ip.blocked_by_name || '—' %></td>
+          <td style="white-space:nowrap;"><%= new Date(ip.blocked_at).toLocaleDateString() %></td>
+          <td>
+            <form method="POST" action="/admin/blocked-ips/<%= ip.id %>/remove" style="display:inline;">
+              <button type="submit" class="btn-admin-danger">Remove</button>
+            </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+<% } else if (tab === 'stats') { %>
+    <!-- ═══ PLATFORM STATS ═══ -->
+    <h1>Platform Stats</h1>
+    <div class="chart-grid">
+      <div class="chart-box">
+        <h3>Daily Contributions (30 days)</h3>
+        <canvas id="chartContributions"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>New Registrations (weekly, 3 months)</h3>
+        <canvas id="chartRegistrations"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Daily Page Views (30 days)</h3>
+        <canvas id="chartPageViews"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Top 10 Most Viewed Problems</h3>
+        <canvas id="chartTopProblems"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Language Distribution</h3>
+        <canvas id="chartLangDist" style="max-height:250px;"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>Top 10 Contributor IPs</h3>
+        <table class="admin-table" id="topIpsTable">
+          <thead><tr><th>IP Address</th><th>Edit Count</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+<% } else if (tab === 'challenges') { %>
+    <!-- ═══ CHALLENGES ═══ -->
+    <h1>Challenge Management</h1>
+
+    <% if (typeof challengesList !== 'undefined' && challengesList.length > 0) { %>
+    <table class="report-table" style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+      <thead>
+        <tr>
+          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6; text-align: left;">Challenge</th>
+          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Dates</th>
+          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Submissions</th>
+          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% challengesList.forEach(function(ch) { %>
+        <tr>
+          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0;">
+            <strong><%= ch.title || 'Challenge #' + ch.id %></strong>
+            <% if (ch.is_active) { %><span style="color: #27ae60; font-size: 12px; margin-left: 4px;">(active)</span><% } %>
+          </td>
+          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px;">
+            <%= new Date(ch.week_start).toLocaleDateString() %> &ndash; <%= new Date(ch.week_end).toLocaleDateString() %>
+          </td>
+          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center;"><%= ch.submission_count %></td>
+          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center;">
+            <a href="/admin/challenges/<%= ch.id %>" style="color: #1a5276; font-size: 13px;">Review</a>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } else { %>
+    <p style="color: #6c757d;">No challenges yet.</p>
+    <% } %>
+
+    <!-- Review individual challenge submissions -->
+    <% if (typeof reviewChallenge !== 'undefined' && reviewChallenge) { %>
+    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #dee2e6;">
+      <h2 style="font-size: 18px;">Submissions for: <%= reviewChallenge.title || 'Challenge #' + reviewChallenge.id %></h2>
+      <% if (typeof challengeSubmissions !== 'undefined' && challengeSubmissions.length > 0) { %>
+        <% challengeSubmissions.forEach(function(sub) { %>
+        <div style="padding: 1rem; margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 6px; background: <%= sub.is_correct === true ? '#f8fff8' : sub.is_correct === false ? '#fff5f5' : '#fff' %>;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <img src="<%= sub.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" style="width: 20px; height: 20px; border-radius: 50%; vertical-align: middle;" />
+              <strong><a href="/user/<%= sub.username %>" style="color: #1a5276;"><%= sub.username %></a></strong>
+              <span style="font-size: 12px; color: #6c757d; margin-left: 4px;"><%= new Date(sub.submitted_at).toLocaleString() %></span>
+            </div>
+            <div>
+              <% if (sub.is_correct === null) { %>
+                <form method="POST" action="/admin/challenges/<%= reviewChallenge.id %>/review/<%= sub.id %>" style="display: inline;">
+                  <input type="hidden" name="verdict" value="correct" />
+                  <button type="submit" style="padding: 4px 12px; background: #27ae60; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Correct</button>
+                </form>
+                <form method="POST" action="/admin/challenges/<%= reviewChallenge.id %>/review/<%= sub.id %>" style="display: inline; margin-left: 4px;">
+                  <input type="hidden" name="verdict" value="incorrect" />
+                  <button type="submit" style="padding: 4px 12px; background: #c0392b; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Incorrect</button>
+                </form>
+              <% } else { %>
+                <span style="font-size: 13px; font-weight: 600; color: <%= sub.is_correct ? '#27ae60' : '#c0392b' %>;"><%= sub.is_correct ? 'Correct' : 'Incorrect' %></span>
+              <% } %>
+            </div>
+          </div>
+          <div style="font-size: 14px; line-height: 1.6; padding: 0.5rem; background: #f8f9fa; border-radius: 4px;"><%- sub.content %></div>
+        </div>
+        <% }); %>
+      <% } else { %>
+      <p style="color: #6c757d;">No submissions yet.</p>
+      <% } %>
+    </div>
+    <% } %>
+<% } %>
+
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<% if (tab === 'flagged') { %>
+<script>
+(function() {
+  const CTX = 3;
+
+  function lineDiff(oldText, newText) {
+    const oldL = oldText.split('\n'), newL = newText.split('\n');
+    const m = oldL.length, n = newL.length;
+    const dp = Array.from({ length: m + 1 }, function() { return new Uint16Array(n + 1); });
+    for (let i = m - 1; i >= 0; i--)
+      for (let j = n - 1; j >= 0; j--)
+        dp[i][j] = oldL[i] === newL[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    const res = [];
+    let i = 0, j = 0;
+    while (i < m || j < n) {
+      if (i < m && j < n && oldL[i] === newL[j]) {
+        res.push({ type: 'ctx', oln: i + 1, nln: j + 1, text: oldL[i] });
+        i++; j++;
+      } else if (j < n && (i >= m || dp[i][j + 1] >= dp[i + 1][j])) {
+        res.push({ type: 'add', oln: null, nln: j + 1, text: newL[j] });
+        j++;
+      } else {
+        res.push({ type: 'del', oln: i + 1, nln: null, text: oldL[i] });
+        i++;
+      }
+    }
+    return res;
+  }
+
+  function charDiff(a, b) {
+    if (a.length > 400 || b.length > 400) return null;
+    const m = a.length, n = b.length;
+    const dp = Array.from({ length: m + 1 }, function() { return new Uint16Array(n + 1); });
+    for (let i = m - 1; i >= 0; i--)
+      for (let j = n - 1; j >= 0; j--)
+        dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    const aM = new Uint8Array(m), bM = new Uint8Array(n);
+    let i = 0, j = 0;
+    while (i < m && j < n) {
+      if (a[i] === b[j]) { i++; j++; }
+      else if (dp[i + 1][j] >= dp[i][j + 1]) { aM[i] = 1; i++; }
+      else { bM[j] = 1; j++; }
+    }
+    while (i < m) { aM[i] = 1; i++; }
+    while (j < n) { bM[j] = 1; j++; }
+    return { aM: aM, bM: bM };
+  }
+
+  function esc(c) {
+    if (c === '&') return '&amp;';
+    if (c === '<') return '&lt;';
+    if (c === '>') return '&gt;';
+    return c;
+  }
+
+  function renderMarked(text, marks, cls) {
+    let h = '', inH = false;
+    for (let i = 0; i < text.length; i++) {
+      if (marks[i] && !inH) { h += '<span class="' + cls + '">'; inH = true; }
+      else if (!marks[i] && inH) { h += '</span>'; inH = false; }
+      h += esc(text[i]);
+    }
+    if (inH) h += '</span>';
+    return h;
+  }
+
+  function escFull(s) {
+    let h = '';
+    for (let i = 0; i < s.length; i++) h += esc(s[i]);
+    return h;
+  }
+
+  function row(cls, oln, nln, marker, content) {
+    return '<tr class="' + cls + '">'
+      + '<td class="diff-ln">' + (oln !== null ? oln : '') + '</td>'
+      + '<td class="diff-ln">' + (nln !== null ? nln : '') + '</td>'
+      + '<td class="diff-marker">' + marker + '</td>'
+      + '<td>' + content + '</td></tr>';
+  }
+
+  function hunkRow(text) {
+    return '<tr><td colspan="4" class="diff-hunk">' + text + '</td></tr>';
+  }
+
+  window.showDiff = function(id) {
+    fetch('/admin/flagged/' + id + '/diff')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        document.getElementById('diffTitle').textContent = 'Diff: ' + data.problemName + ' (' + data.language.toUpperCase() + ')';
+        const lines = lineDiff(data.oldContent, data.newContent);
+
+        const isChg = lines.map(function(l) { return l.type !== 'ctx'; });
+        if (!isChg.some(Boolean)) {
+          document.getElementById('diffPane').innerHTML = '<div class="diff-hunk">Files are identical</div>';
+          document.getElementById('diffModal').classList.add('show');
+          return;
+        }
+
+        const show = new Uint8Array(lines.length);
+        for (let i = 0; i < lines.length; i++) {
+          if (isChg[i]) {
+            for (let j = Math.max(0, i - CTX); j <= Math.min(lines.length - 1, i + CTX); j++) show[j] = 1;
+          }
+        }
+
+        let html = '<table>', i = 0;
+        while (i < lines.length) {
+          if (!show[i]) {
+            let n = 0;
+            while (i < lines.length && !show[i]) { n++; i++; }
+            html += hunkRow('@@ ' + n + ' unchanged line' + (n > 1 ? 's' : '') + ' @@');
+            continue;
+          }
+
+          if (lines[i].type === 'del') {
+            const dels = [];
+            while (i < lines.length && lines[i].type === 'del' && show[i]) { dels.push(lines[i]); i++; }
+            const adds = [];
+            while (i < lines.length && lines[i].type === 'add' && show[i]) { adds.push(lines[i]); i++; }
+            const pairs = Math.min(dels.length, adds.length);
+
+            for (let p = 0; p < pairs; p++) {
+              const cd = charDiff(dels[p].text, adds[p].text);
+              if (cd) {
+                html += row('diff-line-del', dels[p].oln, '', '&minus;', renderMarked(dels[p].text, cd.aM, 'diff-char-del'));
+                html += row('diff-line-add', '', adds[p].nln, '+', renderMarked(adds[p].text, cd.bM, 'diff-char-add'));
+              } else {
+                html += row('diff-line-del', dels[p].oln, '', '&minus;', escFull(dels[p].text));
+                html += row('diff-line-add', '', adds[p].nln, '+', escFull(adds[p].text));
+              }
+            }
+            for (let p = pairs; p < dels.length; p++)
+              html += row('diff-line-del', dels[p].oln, '', '&minus;', escFull(dels[p].text));
+            for (let p = pairs; p < adds.length; p++)
+              html += row('diff-line-add', '', adds[p].nln, '+', escFull(adds[p].text));
+          } else {
+            const l = lines[i];
+            html += row('diff-line-ctx', l.oln, l.nln, ' ', escFull(l.text));
+            i++;
+          }
+        }
+        html += '</table>';
+        document.getElementById('diffPane').innerHTML = html;
+        document.getElementById('diffModal').classList.add('show');
+      });
+  };
+
+  window.closeDiff = function() {
+    document.getElementById('diffModal').classList.remove('show');
+  };
+
+  document.getElementById('diffModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDiff();
+  });
+})();
+</script>
+<% } %>
+
+<% if (tab === 'stats') { %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function() {
+  const chartColors = {
+    primary: '#1a1a2e',
+    success: '#27ae60',
+    danger: '#c0392b',
+    blue: '#1a5276',
+    muted: '#6c757d',
+  };
+
+  fetch('/admin/stats/data')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      // Daily contributions
+      new Chart(document.getElementById('chartContributions'), {
+        type: 'line',
+        data: {
+          labels: data.dailyContributions.map(function(d) { return d.day ? d.day.substring(5, 10) : ''; }),
+          datasets: [{
+            label: 'Contributions',
+            data: data.dailyContributions.map(function(d) { return parseInt(d.count); }),
+            borderColor: chartColors.primary,
+            backgroundColor: 'rgba(26,26,46,0.1)',
+            fill: true,
+            tension: 0.3,
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Weekly registrations
+      new Chart(document.getElementById('chartRegistrations'), {
+        type: 'bar',
+        data: {
+          labels: data.weeklyRegistrations.map(function(d) { return d.week ? d.week.substring(5, 10) : ''; }),
+          datasets: [{
+            label: 'New Users',
+            data: data.weeklyRegistrations.map(function(d) { return parseInt(d.count); }),
+            backgroundColor: chartColors.blue,
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Daily page views
+      new Chart(document.getElementById('chartPageViews'), {
+        type: 'line',
+        data: {
+          labels: data.dailyPageViews.map(function(d) { return d.day ? d.day.substring(5, 10) : ''; }),
+          datasets: [{
+            label: 'Page Views',
+            data: data.dailyPageViews.map(function(d) { return parseInt(d.count); }),
+            borderColor: chartColors.success,
+            backgroundColor: 'rgba(39,174,96,0.1)',
+            fill: true,
+            tension: 0.3,
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+
+      // Top problems (horizontal bar)
+      new Chart(document.getElementById('chartTopProblems'), {
+        type: 'bar',
+        data: {
+          labels: data.topProblems.map(function(d) { return d.problem_name; }),
+          datasets: [{
+            label: 'Views',
+            data: data.topProblems.map(function(d) { return parseInt(d.views); }),
+            backgroundColor: chartColors.primary,
+          }]
+        },
+        options: { responsive: true, indexAxis: 'y', plugins: { legend: { display: false } } }
+      });
+
+      // Language distribution (pie)
+      const langLabels = data.langDistribution.map(function(d) { return d.language.toUpperCase(); });
+      const langData = data.langDistribution.map(function(d) { return parseInt(d.count); });
+      new Chart(document.getElementById('chartLangDist'), {
+        type: 'pie',
+        data: {
+          labels: langLabels,
+          datasets: [{
+            data: langData,
+            backgroundColor: [chartColors.primary, chartColors.danger],
+          }]
+        },
+        options: { responsive: true }
+      });
+
+      // Top IPs table
+      const tbody = document.querySelector('#topIpsTable tbody');
+      data.topIps.forEach(function(ip) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td><code>' + ip.ip_address + '</code></td><td>' + ip.edit_count + '</td>';
+        tbody.appendChild(tr);
+      });
+    });
+})();
+</script>
+<% } %>
+
+</body>
+</html>

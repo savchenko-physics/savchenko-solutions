@@ -8,6 +8,7 @@ const fileUpload = require('express-fileupload');
 const { Pool } = require("pg");
 require("dotenv").config();
 const { getLanguageData} = require("./parents");
+const searchIndex = require('./searchIndex');
 
 // Add pool configuration
 const pool = new Pool({
@@ -155,11 +156,23 @@ router.post("/api/upload", checkAuthenticated, async (req, res) => {
                 }
 
                 const filePath = path.join(uploadDir, file.name);
-                
+
                 // Use Sharp to process and save the image
                 const imageBuffer = file.data;
                 await sharp(imageBuffer)
                     .toFile(filePath);
+
+                // Generate WebP version for non-SVG/GIF images
+                if (/\.(jpg|jpeg|png)$/i.test(file.name)) {
+                    try {
+                        const webpPath = filePath.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+                        await sharp(imageBuffer)
+                            .webp({ quality: 85 })
+                            .toFile(webpPath);
+                    } catch (err) {
+                        console.error("Error creating WebP version:", err);
+                    }
+                }
 
                 // Get image dimensions using Sharp
                 try {
@@ -232,6 +245,8 @@ ${imageResults.map(img => {
             ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8)`,
             [userId, problemName, lang, '', content, clientIp, false, fullName]
         );
+
+        searchIndex.rebuildIndex();
 
         return res.json({
             success: true,

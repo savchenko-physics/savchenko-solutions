@@ -178,9 +178,9 @@ function escapeLatex(input) {
 // Custom renderer to handle inline LaTeX blocks
 const renderer = new marked.Renderer();
 
-renderer.codespan = function (code) {
+renderer.codespan = function (token) {
+    const code = typeof token === 'string' ? token : token.text;
     if (code.startsWith("latex:")) {
-        // Remove "latex:" tag, escape LaTeX-specific characters, and wrap in HTML to avoid Markdown parsing
         return `<code>${escapeLatex(code.slice(6))}</code>`;
     }
     return `<code>${code}</code>`;
@@ -477,17 +477,53 @@ const transformImageMarkdown = (htmlContent) => {
             console.log(scalePercentage);
         }
 
+        const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
+        const hasWebpVariant = /\.(jpg|jpeg|png)$/i.test(filename);
+
+        const imgTag = `<img src="../../img/${folder}/${filename}"
+          loading="lazy" alt="${altText}"
+          width="${scalePercentage}"
+          style="width: min(${scalePercentage}, 100vw);" />`;
+
+        const pictureHtml = hasWebpVariant
+            ? `<picture>
+          <source srcset="../../img/${folder}/${webpFilename}" type="image/webp">
+          ${imgTag}
+        </picture>`
+            : imgTag;
+
         return `<center style="margin-top: 5px; margin-bottom: 5px;">
       <figure>
-        <img src="..\\..\\img\\${folder}\\${filename}"
-          loading="lazy" alt="${altText}" 
-          width="${scalePercentage}" 
-          style="width: min(${scalePercentage}, 100vw);" />
+        ${pictureHtml}
         <figcaption>${altText}</figcaption>
       </figure>
       </center>`;
     });
 };
+
+/**
+ * Auto-link #X.X.X patterns to Savchenko solution pages (in rendered HTML).
+ * Skips patterns already inside <a> tags or <code> blocks.
+ * lang defaults to 'en'.
+ */
+function autoLinkProblemRefs(html, lang = 'en') {
+    // Match #X.X.X where X are digits, not inside existing tags
+    return html.replace(
+        /(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
+        `<a href="/${lang}/$1" class="problem-ref" style="color:#1a5276;font-weight:500;text-decoration:none;">#$1</a>`
+    );
+}
+
+/**
+ * Auto-link @username mentions to user profile pages (in rendered HTML).
+ * Skips patterns already inside <a> tags.
+ */
+function autoLinkUserMentions(html) {
+    return html.replace(
+        /(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
+        '<a href="/user/$1" class="user-mention" style="color:#1a5276;font-weight:500;text-decoration:none;">@$1</a>'
+    );
+}
 
 module.exports = {
     parseMarkdown,
@@ -499,4 +535,6 @@ module.exports = {
     isValidSolutionLang,
     isValidSolutionProblemName,
     sanitizeParsedMarkdownHtml,
+    autoLinkProblemRefs,
+    autoLinkUserMentions,
 };

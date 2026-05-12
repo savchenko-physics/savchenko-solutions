@@ -26,22 +26,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
     </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/mode/multiplex.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/selection/active-line.min.js"></script>
     <script
@@ -857,9 +854,14 @@
 
 <body>
     <% if (!userId) { %>
-    <div style="position:fixed;top:0;left:0;right:0;z-index:2000;background:#c0392b;color:#fff;text-align:center;padding:6px 12px;font-size:14px;">
-        <%= lang === 'ru' ? 'Войдите, чтобы сохранить изменения' : 'Log in to save your changes' %> &mdash;
-        <a href="/<%= lang %>/login" style="color:#fff;text-decoration:underline;font-weight:600;"><%= lang === 'ru' ? 'Войти' : 'Log in' %></a>
+    <div id="edit-login-banner" style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 12px 16px; margin: 82px 16px 0 16px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
+        <span style="font-size: 14px; color: #856404;">
+            <%= lang === 'ru'
+                ? 'Вы можете просматривать изменения, но для сохранения нужно'
+                : 'You can preview edits, but you need to' %>
+            <a href="/<%= lang %>/login" style="color: #1a5276; font-weight: 500;"><%= lang === 'ru' ? 'войти' : 'log in' %></a><%= lang === 'ru' ? '.' : ' to save changes.' %>
+        </span>
+        <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: #856404; cursor: pointer; font-size: 18px; padding: 0 4px;">&times;</button>
     </div>
     <% } %>
     <header class="header-style">
@@ -1390,7 +1392,9 @@
             html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
             html = html.replace(/\\\*/g, "*");
             preview.innerHTML = html;
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([preview]);
+            }
         }
 
         // Add the transformImageMarkdown function

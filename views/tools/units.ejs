@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Конвертер физических единиц — Перевод между СИ, СГС и другими системами' : 'Physics Unit Converter — Convert Between SI, CGS, and More' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Бесплатный конвертер физических единиц: перевод между СИ, СГС и другими системами единиц. Поддерживает длину, массу, время, энергию, силу, давление, температуру, электрические и скоростные единицы. Значения NIST/CODATA.' : 'Free physics unit converter: convert between SI, CGS, and other unit systems. Supports length, mass, time, energy, force, pressure, temperature, electric, and velocity units with NIST/CODATA values.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/units" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "<%= lang === 'ru' ? 'Конвертер физических единиц' : 'Physics Unit Converter' %>",
+        "description": "<%= lang === 'ru' ? 'Перевод между СИ, СГС и другими системами единиц. Поддерживает длину, массу, время, энергию, силу, давление, температуру, электрические и скоростные единицы.' : 'Convert between SI, CGS, and other unit systems used in physics. Supports length, mass, time, energy, force, pressure, temperature, electric, and velocity units.' %>",
+        "url": "https://savchenkosolutions.com/<%= lang %>/tools/units",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "Savchenko Solutions",
+            "url": "https://savchenkosolutions.com"
+        }
+    }
+    </script>
+    <script src="/js/analytics.js"></script>
+
+    <style>
+        .units-container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .units-header {
+            margin-bottom: 2rem;
+        }
+        .units-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 0.5rem;
+        }
+        .units-header p {
+            color: #6c757d;
+            font-size: 15px;
+            margin: 0;
+        }
+
+        /* Category tabs */
+        .category-tabs {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+        .category-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+        .category-tabs::-webkit-scrollbar-thumb {
+            background: #dee2e6;
+            border-radius: 2px;
+        }
+        .category-tab {
+            flex-shrink: 0;
+            padding: 0.5rem 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            background: #f8f9fa;
+            color: #2d2d2d;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .category-tab:hover {
+            background: #e9ecef;
+            border-color: #ced4da;
+        }
+        .category-tab.active {
+            background: #1a1a2e;
+            color: #ffffff;
+            border-color: #1a1a2e;
+        }
+
+        /* Electric sub-category tabs */
+        .subcategory-tabs {
+            display: flex;
+            gap: 0.375rem;
+            overflow-x: auto;
+            padding-bottom: 0.375rem;
+            margin-bottom: 1.25rem;
+            -webkit-overflow-scrolling: touch;
+        }
+        .subcategory-tab {
+            flex-shrink: 0;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 16px;
+            background: #ffffff;
+            color: #6c757d;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+        .subcategory-tab:hover {
+            background: #f8f9fa;
+            border-color: #ced4da;
+        }
+        .subcategory-tab.active {
+            background: #1a1a2e;
+            color: #ffffff;
+            border-color: #1a1a2e;
+        }
+
+        /* Converter panel */
+        .converter-panel {
+            max-width: 700px;
+            margin: 0 auto;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        .converter-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        .converter-side {
+            flex: 1;
+            min-width: 0;
+        }
+        .converter-side label {
+            display: block;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0.375rem;
+        }
+        .converter-side input {
+            width: 100%;
+            height: 48px;
+            padding: 0 0.75rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 18px;
+            color: #2d2d2d;
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .converter-side input:focus {
+            border-color: #1a1a2e;
+        }
+        .converter-side input[readonly] {
+            background: #f0f0f0;
+            color: #2d2d2d;
+            cursor: default;
+        }
+        .converter-side select {
+            width: 100%;
+            height: 40px;
+            padding: 0 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #2d2d2d;
+            background: #ffffff;
+            margin-top: 0.5rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .converter-side select:focus {
+            border-color: #1a1a2e;
+        }
+
+        /* Swap button */
+        .swap-col {
+            display: flex;
+            align-items: center;
+            padding-top: 22px;
+        }
+        .swap-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1a1a2e;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .swap-btn:hover {
+            background: #2a2a4e;
+        }
+        .swap-btn svg {
+            fill: #ffffff;
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Formula display */
+        .formula-display {
+            max-width: 700px;
+            margin: 1.25rem auto 0;
+            padding: 0.75rem 1rem;
+            background: #f0f0f0;
+            border-radius: 6px;
+            text-align: center;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 15px;
+            color: #2d2d2d;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Back link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            color: #6c757d;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            margin-bottom: 1.25rem;
+            transition: color 0.15s;
+        }
+        .back-link:hover {
+            color: #1a5276;
+        }
+
+        /* Responsive */
+        @media (max-width: 576px) {
+            .converter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .swap-col {
+                padding-top: 0;
+                justify-content: center;
+                padding: 0.25rem 0;
+            }
+            .swap-btn svg {
+                transform: rotate(90deg);
+            }
+            .converter-side input {
+                font-size: 16px;
+                height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <main class="units-container">
+        <a href="/<%= lang %>/tools" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            <%= lang === 'ru' ? 'Назад к инструментам' : 'Back to Tools' %>
+        </a>
+
+        <div class="units-header">
+            <h1><%= lang === 'ru' ? 'Конвертер единиц' : 'Unit Converter' %></h1>
+            <p><%= lang === 'ru' ? 'Перевод между СИ, СГС и другими системами единиц в физике. Все коэффициенты пересчёта используют рекомендованные значения NIST/CODATA.' : 'Convert between SI, CGS, and other unit systems used in physics. All conversion factors use NIST/CODATA recommended values.' %></p>
+        </div>
+
+        <!-- Category tabs -->
+        <div class="category-tabs" id="categoryTabs">
+            <button class="category-tab active" data-category="length"><%= lang === 'ru' ? 'Длина' : 'Length' %></button>
+            <button class="category-tab" data-category="mass"><%= lang === 'ru' ? 'Масса' : 'Mass' %></button>
+            <button class="category-tab" data-category="time"><%= lang === 'ru' ? 'Время' : 'Time' %></button>
+            <button class="category-tab" data-category="energy"><%= lang === 'ru' ? 'Энергия' : 'Energy' %></button>
+            <button class="category-tab" data-category="force"><%= lang === 'ru' ? 'Сила' : 'Force' %></button>
+            <button class="category-tab" data-category="pressure"><%= lang === 'ru' ? 'Давление' : 'Pressure' %></button>
+            <button class="category-tab" data-category="temperature"><%= lang === 'ru' ? 'Температура' : 'Temperature' %></button>
+            <button class="category-tab" data-category="electric"><%= lang === 'ru' ? 'Электричество' : 'Electric' %></button>
+            <button class="category-tab" data-category="velocity"><%= lang === 'ru' ? 'Скорость' : 'Velocity' %></button>
+        </div>
+
+        <!-- Electric sub-category tabs (hidden by default) -->
+        <div class="subcategory-tabs" id="subcategoryTabs" style="display: none;">
+            <button class="subcategory-tab active" data-subcategory="voltage"><%= lang === 'ru' ? 'Напряжение' : 'Voltage' %></button>
+            <button class="subcategory-tab" data-subcategory="current"><%= lang === 'ru' ? 'Электрический ток' : 'Current' %></button>
+            <button class="subcategory-tab" data-subcategory="resistance"><%= lang === 'ru' ? 'Сопротивление' : 'Resistance' %></button>
+            <button class="subcategory-tab" data-subcategory="charge"><%= lang === 'ru' ? 'Заряд' : 'Charge' %></button>
+            <button class="subcategory-tab" data-subcategory="capacitance"><%= lang === 'ru' ? 'Ёмкость' : 'Capacitance' %></button>
+            <button class="subcategory-tab" data-subcategory="inductance"><%= lang === 'ru' ? 'Индуктивность' : 'Inductance' %></button>
+            <button class="subcategory-tab" data-subcategory="magnetic_field"><%= lang === 'ru' ? 'Магнитное поле' : 'Magnetic field' %></button>
+            <button class="subcategory-tab" data-subcategory="magnetic_flux"><%= lang === 'ru' ? 'Магнитный поток' : 'Magnetic flux' %></button>
+        </div>
+
+        <!-- Converter panel -->
+        <div class="converter-panel">
+            <div class="converter-row">
+                <div class="converter-side">
+                    <label for="inputValue"><%= lang === 'ru' ? 'Из' : 'From' %></label>
+                    <input type="text" id="inputValue" inputmode="decimal" placeholder="0" autocomplete="off" />
+                    <select id="fromUnit"></select>
+                </div>
+                <div class="swap-col">
+                    <button class="swap-btn" id="swapBtn" type="button" title="<%= lang === 'ru' ? 'Поменять местами' : 'Swap units' %>" aria-label="<%= lang === 'ru' ? 'Поменять местами' : 'Swap units' %>">
+                        <svg viewBox="0 0 24 24"><path d="M7.99 17H20v-2H7.99v-3L4 16l3.99 4v-3zM16.01 7H4v2h12.01v3L20 8l-3.99-4v3z"/></svg>
+                    </button>
+                </div>
+                <div class="converter-side">
+                    <label for="outputValue"><%= lang === 'ru' ? 'В' : 'To' %></label>
+                    <input type="text" id="outputValue" readonly placeholder="0" />
+                    <select id="toUnit"></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formula display -->
+        <div class="formula-display" id="formulaDisplay">
+            1 m = 1 m
+        </div>
+    </main>
+
+    <%- include('../default/modern_footer') %>
+
+<script>
+(function () {
+    'use strict';
+
+    var pageLang = "<%= lang %>";
+
+    // =========================================================================
+    // CONVERSION DATA
+    // All factors are TO the base unit (multiply input by factor to get base).
+    // NIST/CODATA 2018 recommended values used where applicable.
+    // =========================================================================
+
+    const categories = {
+        length: {
+            base: 'm',
+            units: {
+                'm':          { label: 'Meter (m)',               labelRu: '\u041C\u0435\u0442\u0440 (m)',               factor: 1 },
+                'cm':         { label: 'Centimeter (cm)',         labelRu: '\u0421\u0430\u043D\u0442\u0438\u043C\u0435\u0442\u0440 (cm)',         factor: 1e-2 },
+                'mm':         { label: 'Millimeter (mm)',         labelRu: '\u041C\u0438\u043B\u043B\u0438\u043C\u0435\u0442\u0440 (mm)',         factor: 1e-3 },
+                'km':         { label: 'Kilometer (km)',          labelRu: '\u041A\u0438\u043B\u043E\u043C\u0435\u0442\u0440 (km)',          factor: 1e3 },
+                'mi':         { label: 'Mile (mi)',               labelRu: '\u041C\u0438\u043B\u044F (mi)',               factor: 1609.344 },
+                'ft':         { label: 'Foot (ft)',               labelRu: '\u0424\u0443\u0442 (ft)',               factor: 0.3048 },
+                'in':         { label: 'Inch (in)',               labelRu: '\u0414\u044E\u0439\u043C (in)',               factor: 0.0254 },
+                'angstrom':   { label: 'Angstrom (\u00C5)',       labelRu: '\u0410\u043D\u0433\u0441\u0442\u0440\u0435\u043C (\u00C5)',       factor: 1e-10 },
+                'nm':         { label: 'Nanometer (nm)',          labelRu: '\u041D\u0430\u043D\u043E\u043C\u0435\u0442\u0440 (nm)',          factor: 1e-9 },
+                'um':         { label: 'Micrometer (\u00B5m)',    labelRu: '\u041C\u0438\u043A\u0440\u043E\u043C\u0435\u0442\u0440 (\u00B5m)',    factor: 1e-6 },
+                'ly':         { label: 'Light-year (ly)',         labelRu: '\u0421\u0432\u0435\u0442\u043E\u0432\u043E\u0439 \u0433\u043E\u0434 (ly)',         factor: 9.4607304725808e15 },
+                'pc':         { label: 'Parsec (pc)',             labelRu: '\u041F\u0430\u0440\u0441\u0435\u043A (pc)',             factor: 3.0856775814913673e16 },
+                'AU':         { label: 'Astronomical unit (AU)',  labelRu: '\u0410\u0441\u0442\u0440\u043E\u043D\u043E\u043C\u0438\u0447\u0435\u0441\u043A\u0430\u044F \u0435\u0434\u0438\u043D\u0438\u0446\u0430 (AU)',  factor: 1.495978707e11 }
+            }
+        },
+        mass: {
+            base: 'kg',
+            units: {
+                'kg':         { label: 'Kilogram (kg)',           labelRu: '\u041A\u0438\u043B\u043E\u0433\u0440\u0430\u043C\u043C (kg)',           factor: 1 },
+                'g':          { label: 'Gram (g)',                labelRu: '\u0413\u0440\u0430\u043C\u043C (g)',                factor: 1e-3 },
+                'mg':         { label: 'Milligram (mg)',          labelRu: '\u041C\u0438\u043B\u043B\u0438\u0433\u0440\u0430\u043C\u043C (mg)',          factor: 1e-6 },
+                'lb':         { label: 'Pound (lb)',              labelRu: '\u0424\u0443\u043D\u0442 (lb)',              factor: 0.45359237 },
+                'oz':         { label: 'Ounce (oz)',              labelRu: '\u0423\u043D\u0446\u0438\u044F (oz)',              factor: 0.028349523125 },
+                'u':          { label: 'Atomic mass unit (u)',    labelRu: '\u0410\u0442\u043E\u043C\u043D\u0430\u044F \u0435\u0434\u0438\u043D\u0438\u0446\u0430 \u043C\u0430\u0441\u0441\u044B (u)',    factor: 1.66053906892e-27 },
+                'eV/c2':      { label: 'eV/c\u00B2',             labelRu: '\u044D\u0412/c\u00B2',             factor: 1.78266192e-36 },
+                'Msun':       { label: 'Solar mass (M\u2299)',    labelRu: '\u041C\u0430\u0441\u0441\u0430 \u0421\u043E\u043B\u043D\u0446\u0430 (M\u2299)',    factor: 1.98892e30 }
+            }
+        },
+        time: {
+            base: 's',
+            units: {
+                's':          { label: 'Second (s)',              labelRu: '\u0421\u0435\u043A\u0443\u043D\u0434\u0430 (s)',              factor: 1 },
+                'ms':         { label: 'Millisecond (ms)',        labelRu: '\u041C\u0438\u043B\u043B\u0438\u0441\u0435\u043A\u0443\u043D\u0434\u0430 (ms)',        factor: 1e-3 },
+                'us':         { label: 'Microsecond (\u00B5s)',   labelRu: '\u041C\u0438\u043A\u0440\u043E\u0441\u0435\u043A\u0443\u043D\u0434\u0430 (\u00B5s)',   factor: 1e-6 },
+                'ns':         { label: 'Nanosecond (ns)',         labelRu: '\u041D\u0430\u043D\u043E\u0441\u0435\u043A\u0443\u043D\u0434\u0430 (ns)',         factor: 1e-9 },
+                'min':        { label: 'Minute (min)',            labelRu: '\u041C\u0438\u043D\u0443\u0442\u0430 (min)',            factor: 60 },
+                'hr':         { label: 'Hour (hr)',               labelRu: '\u0427\u0430\u0441 (hr)',               factor: 3600 },
+                'day':        { label: 'Day',                     labelRu: '\u0421\u0443\u0442\u043A\u0438',                     factor: 86400 },
+                'yr':         { label: 'Year (Julian)',           labelRu: '\u0413\u043E\u0434 (\u044E\u043B\u0438\u0430\u043D\u0441\u043A\u0438\u0439)',           factor: 31557600 }
+            }
+        },
+        energy: {
+            base: 'J',
+            units: {
+                'J':          { label: 'Joule (J)',               labelRu: 'Джоуль (J)',               factor: 1 },
+                'kJ':         { label: 'Kilojoule (kJ)',          labelRu: 'Килоджоуль (kJ)',          factor: 1e3 },
+                'eV':         { label: 'Electronvolt (eV)',       labelRu: 'Электронвольт (eV)',       factor: 1.602176634e-19 },
+                'keV':        { label: 'Kiloelectronvolt (keV)',  labelRu: 'Килоэлектронвольт (keV)',  factor: 1.602176634e-16 },
+                'MeV':        { label: 'Megaelectronvolt (MeV)',  labelRu: 'Мегаэлектронвольт (MeV)',  factor: 1.602176634e-13 },
+                'GeV':        { label: 'Gigaelectronvolt (GeV)',  labelRu: 'Гигаэлектронвольт (GeV)',  factor: 1.602176634e-10 },
+                'cal':        { label: 'Calorie (cal)',           labelRu: 'Калория (cal)',           factor: 4.184 },
+                'kcal':       { label: 'Kilocalorie (kcal)',      labelRu: 'Килокалория (kcal)',      factor: 4184 },
+                'erg':        { label: 'Erg',                     labelRu: 'Эрг',                     factor: 1e-7 },
+                'kWh':        { label: 'Kilowatt-hour (kWh)',     labelRu: 'Киловатт-час (kWh)',     factor: 3.6e6 },
+                'Btu':        { label: 'British thermal unit',    labelRu: 'Британская тепловая единица', factor: 1055.06 }
+            }
+        },
+        force: {
+            base: 'N',
+            units: {
+                'N':          { label: 'Newton (N)',              labelRu: 'Ньютон (N)',              factor: 1 },
+                'dyn':        { label: 'Dyne (dyn)',              labelRu: 'Дина (dyn)',              factor: 1e-5 },
+                'lbf':        { label: 'Pound-force (lbf)',       labelRu: 'Фунт-сила (lbf)',       factor: 4.4482216152605 },
+                'kgf':        { label: 'Kilogram-force (kgf)',    labelRu: 'Килограмм-сила (kgf)',    factor: 9.80665 }
+            }
+        },
+        pressure: {
+            base: 'Pa',
+            units: {
+                'Pa':         { label: 'Pascal (Pa)',             labelRu: '\u041F\u0430\u0441\u043A\u0430\u043B\u044C (Pa)',             factor: 1 },
+                'kPa':        { label: 'Kilopascal (kPa)',        labelRu: '\u041A\u0438\u043B\u043E\u043F\u0430\u0441\u043A\u0430\u043B\u044C (kPa)',        factor: 1e3 },
+                'MPa':        { label: 'Megapascal (MPa)',        labelRu: '\u041C\u0435\u0433\u0430\u043F\u0430\u0441\u043A\u0430\u043B\u044C (MPa)',        factor: 1e6 },
+                'atm':        { label: 'Atmosphere (atm)',        labelRu: '\u0410\u0442\u043C\u043E\u0441\u0444\u0435\u0440\u0430 (atm)',        factor: 101325 },
+                'bar':        { label: 'Bar',                     labelRu: '\u0411\u0430\u0440',                     factor: 1e5 },
+                'mmHg':       { label: 'mmHg (0 \u00B0C)',        labelRu: '\u043C\u043C \u0440\u0442. \u0441\u0442. (0 \u00B0C)',        factor: 133.322387415 },
+                'torr':       { label: 'Torr',                    labelRu: '\u0422\u043E\u0440\u0440',                    factor: 133.32236842105 },
+                'psi':        { label: 'Pounds per sq inch (psi)',labelRu: '\u0424\u0443\u043D\u0442 \u043D\u0430 \u043A\u0432. \u0434\u044E\u0439\u043C (psi)',factor: 6894.757293168 }
+            }
+        },
+        temperature: {
+            base: 'K',
+            special: true,
+            units: {
+                'K':          { label: 'Kelvin (K)',          labelRu: '\u041A\u0435\u043B\u044C\u0432\u0438\u043D (K)' },
+                'C':          { label: 'Celsius (\u00B0C)',   labelRu: '\u0426\u0435\u043B\u044C\u0441\u0438\u0439 (\u00B0C)' },
+                'F':          { label: 'Fahrenheit (\u00B0F)', labelRu: '\u0424\u0430\u0440\u0435\u043D\u0433\u0435\u0439\u0442 (\u00B0F)' },
+                'R':          { label: 'Rankine (\u00B0R)',    labelRu: '\u0420\u0430\u043D\u043A\u0438\u043D (\u00B0R)' }
+            }
+        },
+        velocity: {
+            base: 'm/s',
+            units: {
+                'm/s':        { label: 'Meter per second (m/s)',  labelRu: 'Метр в секунду (m/s)',  factor: 1 },
+                'km/h':       { label: 'Kilometer per hour (km/h)', labelRu: 'Километр в час (km/h)', factor: 1 / 3.6 },
+                'mph':        { label: 'Mile per hour (mph)',     labelRu: 'Миля в час (mph)',     factor: 0.44704 },
+                'ft/s':       { label: 'Foot per second (ft/s)',  labelRu: 'Фут в секунду (ft/s)',  factor: 0.3048 },
+                'kn':         { label: 'Knot (kn)',               labelRu: 'Узел (kn)',               factor: 0.514444444 },
+                'c':          { label: 'Speed of light (c)',      labelRu: 'Скорость света (c)',      factor: 299792458 }
+            }
+        }
+    };
+
+    // Electric sub-categories — each is its own dimension
+    const electricSubs = {
+        voltage: {
+            base: 'V',
+            units: {
+                'V':          { label: 'Volt (V)',                labelRu: 'Вольт (V)',                factor: 1 },
+                'mV':         { label: 'Millivolt (mV)',          labelRu: 'Милливольт (mV)',          factor: 1e-3 },
+                'kV':         { label: 'Kilovolt (kV)',           labelRu: 'Киловольт (kV)',           factor: 1e3 }
+            }
+        },
+        current: {
+            base: 'A',
+            units: {
+                'A':          { label: 'Ampere (A)',              labelRu: '\u0410\u043C\u043F\u0435\u0440 (A)',              factor: 1 },
+                'mA':         { label: 'Milliampere (mA)',        labelRu: '\u041C\u0438\u043B\u043B\u0438\u0430\u043C\u043F\u0435\u0440 (mA)',        factor: 1e-3 },
+                'uA':         { label: 'Microampere (\u00B5A)',   labelRu: '\u041C\u0438\u043A\u0440\u043E\u0430\u043C\u043F\u0435\u0440 (\u00B5A)',   factor: 1e-6 }
+            }
+        },
+        resistance: {
+            base: '\u03A9',
+            units: {
+                'ohm':        { label: 'Ohm (\u03A9)',           labelRu: '\u041E\u043C (\u03A9)',           factor: 1 },
+                'kohm':       { label: 'Kilohm (k\u03A9)',       labelRu: '\u041A\u0438\u043B\u043E\u043E\u043C (k\u03A9)',       factor: 1e3 },
+                'Mohm':       { label: 'Megohm (M\u03A9)',       labelRu: '\u041C\u0435\u0433\u0430\u043E\u043C (M\u03A9)',       factor: 1e6 }
+            }
+        },
+        charge: {
+            base: 'C',
+            units: {
+                'C':          { label: 'Coulomb (C)',             labelRu: '\u041A\u0443\u043B\u043E\u043D (C)',             factor: 1 },
+                'mC':         { label: 'Millicoulomb (mC)',       labelRu: '\u041C\u0438\u043B\u043B\u0438\u043A\u0443\u043B\u043E\u043D (mC)',       factor: 1e-3 },
+                'uC':         { label: 'Microcoulomb (\u00B5C)',  labelRu: '\u041C\u0438\u043A\u0440\u043E\u043A\u0443\u043B\u043E\u043D (\u00B5C)',  factor: 1e-6 },
+                'e':          { label: 'Elementary charge (e)',   labelRu: '\u042D\u043B\u0435\u043C\u0435\u043D\u0442\u0430\u0440\u043D\u044B\u0439 \u0437\u0430\u0440\u044F\u0434 (e)',   factor: 1.602176634e-19 }
+            }
+        },
+        capacitance: {
+            base: 'F',
+            units: {
+                'F':          { label: 'Farad (F)',               labelRu: '\u0424\u0430\u0440\u0430\u0434 (F)',               factor: 1 },
+                'uF':         { label: 'Microfarad (\u00B5F)',    labelRu: '\u041C\u0438\u043A\u0440\u043E\u0444\u0430\u0440\u0430\u0434 (\u00B5F)',    factor: 1e-6 },
+                'nF':         { label: 'Nanofarad (nF)',          labelRu: '\u041D\u0430\u043D\u043E\u0444\u0430\u0440\u0430\u0434 (nF)',          factor: 1e-9 },
+                'pF':         { label: 'Picofarad (pF)',          labelRu: '\u041F\u0438\u043A\u043E\u0444\u0430\u0440\u0430\u0434 (pF)',          factor: 1e-12 }
+            }
+        },
+        inductance: {
+            base: 'H',
+            units: {
+                'H':          { label: 'Henry (H)',               labelRu: '\u0413\u0435\u043D\u0440\u0438 (H)',               factor: 1 },
+                'mH':         { label: 'Millihenry (mH)',         labelRu: '\u041C\u0438\u043B\u043B\u0438\u0433\u0435\u043D\u0440\u0438 (mH)',         factor: 1e-3 },
+                'uH':         { label: 'Microhenry (\u00B5H)',    labelRu: '\u041C\u0438\u043A\u0440\u043E\u0433\u0435\u043D\u0440\u0438 (\u00B5H)',    factor: 1e-6 }
+            }
+        },
+        magnetic_field: {
+            base: 'T',
+            units: {
+                'T':          { label: 'Tesla (T)',               labelRu: '\u0422\u0435\u0441\u043B\u0430 (T)',               factor: 1 },
+                'mT':         { label: 'Millitesla (mT)',         labelRu: '\u041C\u0438\u043B\u043B\u0438\u0442\u0435\u0441\u043B\u0430 (mT)',         factor: 1e-3 },
+                'uT':         { label: 'Microtesla (\u00B5T)',    labelRu: '\u041C\u0438\u043A\u0440\u043E\u0442\u0435\u0441\u043B\u0430 (\u00B5T)',    factor: 1e-6 },
+                'G':          { label: 'Gauss (G)',               labelRu: '\u0413\u0430\u0443\u0441\u0441 (G)',               factor: 1e-4 }
+            }
+        },
+        magnetic_flux: {
+            base: 'Wb',
+            units: {
+                'Wb':         { label: 'Weber (Wb)',              labelRu: 'Вебер (Wb)',              factor: 1 },
+                'mWb':        { label: 'Milliweber (mWb)',        labelRu: 'Милливебер (mWb)',        factor: 1e-3 },
+                'Mx':         { label: 'Maxwell (Mx)',            labelRu: 'Максвелл (Mx)',            factor: 1e-8 }
+            }
+        }
+    };
+
+    // =========================================================================
+    // TEMPERATURE CONVERSION FUNCTIONS
+    // =========================================================================
+
+    function tempToKelvin(value, from) {
+        switch (from) {
+            case 'K': return value;
+            case 'C': return value + 273.15;
+            case 'F': return (value + 459.67) * 5 / 9;
+            case 'R': return value * 5 / 9;
+            default:  return value;
+        }
+    }
+
+    function kelvinTo(value, to) {
+        switch (to) {
+            case 'K': return value;
+            case 'C': return value - 273.15;
+            case 'F': return value * 9 / 5 - 459.67;
+            case 'R': return value * 9 / 5;
+            default:  return value;
+        }
+    }
+
+    // =========================================================================
+    // NUMBER FORMATTING
+    // =========================================================================
+
+    function formatResult(num) {
+        if (num === 0) return '0';
+        if (!isFinite(num)) return 'Infinity';
+        if (isNaN(num)) return 'NaN';
+
+        const abs = Math.abs(num);
+
+        // Use scientific notation for very large or very small numbers
+        if (abs >= 1e12 || (abs < 1e-6 && abs > 0)) {
+            return num.toExponential(8).replace(/\.?0+e/, 'e');
+        }
+
+        // Fixed decimal for moderate numbers
+        if (abs >= 1) {
+            const str = num.toPrecision(10);
+            // Remove trailing zeros after decimal point
+            return str.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+        }
+
+        // Small but not tiny
+        const str = num.toPrecision(8);
+        return str.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+    }
+
+    // Format a number for the formula display using Unicode superscripts
+    function formatFormula(num) {
+        if (num === 0) return '0';
+        if (num === 1) return '1';
+        if (!isFinite(num)) return '\u221E';
+
+        const abs = Math.abs(num);
+        const sign = num < 0 ? '\u2212' : '';
+
+        if (abs >= 1e6 || (abs < 1e-3 && abs > 0)) {
+            const exp = num.toExponential(4).replace(/\.?0+e/, 'e');
+            const parts = exp.split('e');
+            const mantissa = parts[0];
+            const exponent = parseInt(parts[1], 10);
+
+            const superDigits = {
+                '0': '\u2070', '1': '\u00B9', '2': '\u00B2', '3': '\u00B3',
+                '4': '\u2074', '5': '\u2075', '6': '\u2076', '7': '\u2077',
+                '8': '\u2078', '9': '\u2079', '-': '\u207B'
+            };
+            const supStr = String(exponent).split('').map(function (ch) {
+                return superDigits[ch] || ch;
+            }).join('');
+
+            return mantissa + ' \u00D7 10' + supStr;
+        }
+
+        if (abs >= 1) {
+            const str = abs.toPrecision(6);
+            return sign + str.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+        }
+
+        const str = abs.toPrecision(4);
+        return sign + str.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
+    }
+
+    // =========================================================================
+    // DOM REFERENCES
+    // =========================================================================
+
+    const categoryTabs = document.getElementById('categoryTabs');
+    const subcategoryTabs = document.getElementById('subcategoryTabs');
+    const inputEl = document.getElementById('inputValue');
+    const outputEl = document.getElementById('outputValue');
+    const fromSelect = document.getElementById('fromUnit');
+    const toSelect = document.getElementById('toUnit');
+    const swapBtn = document.getElementById('swapBtn');
+    const formulaDisplay = document.getElementById('formulaDisplay');
+
+    let currentCategory = 'length';
+    let currentSubcategory = 'voltage';
+
+    // =========================================================================
+    // POPULATE DROPDOWNS
+    // =========================================================================
+
+    function getActiveData() {
+        if (currentCategory === 'electric') {
+            return electricSubs[currentSubcategory];
+        }
+        return categories[currentCategory];
+    }
+
+    function populateDropdowns() {
+        const data = getActiveData();
+        const unitKeys = Object.keys(data.units);
+
+        fromSelect.innerHTML = '';
+        toSelect.innerHTML = '';
+
+        unitKeys.forEach(function (key) {
+            const unit = data.units[key];
+            const displayLabel = (pageLang === 'ru' && unit.labelRu) ? unit.labelRu : unit.label;
+
+            const optFrom = document.createElement('option');
+            optFrom.value = key;
+            optFrom.textContent = displayLabel;
+            fromSelect.appendChild(optFrom);
+
+            const optTo = document.createElement('option');
+            optTo.value = key;
+            optTo.textContent = displayLabel;
+            toSelect.appendChild(optTo);
+        });
+
+        // Default: first unit "from", second unit "to"
+        if (unitKeys.length >= 2) {
+            fromSelect.value = unitKeys[0];
+            toSelect.value = unitKeys[1];
+        }
+
+        convert();
+    }
+
+    // =========================================================================
+    // CONVERSION
+    // =========================================================================
+
+    function convert() {
+        const raw = inputEl.value.trim();
+        const fromKey = fromSelect.value;
+        const toKey = toSelect.value;
+
+        if (raw === '' || raw === '-') {
+            outputEl.value = '';
+            updateFormula(fromKey, toKey);
+            return;
+        }
+
+        const value = parseFloat(raw);
+        if (isNaN(value)) {
+            outputEl.value = '';
+            updateFormula(fromKey, toKey);
+            return;
+        }
+
+        const data = getActiveData();
+        let result;
+
+        if (currentCategory === 'temperature') {
+            const inKelvin = tempToKelvin(value, fromKey);
+            result = kelvinTo(inKelvin, toKey);
+        } else {
+            const fromFactor = data.units[fromKey].factor;
+            const toFactor = data.units[toKey].factor;
+            const baseValue = value * fromFactor;
+            result = baseValue / toFactor;
+        }
+
+        outputEl.value = formatResult(result);
+        updateFormula(fromKey, toKey);
+    }
+
+    function updateFormula(fromKey, toKey) {
+        const data = getActiveData();
+
+        // Get short symbols
+        const fromSymbol = fromKey;
+        const toSymbol = toKey;
+
+        let conversionOfOne;
+
+        if (currentCategory === 'temperature') {
+            const oneInKelvin = tempToKelvin(1, fromKey);
+            conversionOfOne = kelvinTo(oneInKelvin, toKey);
+        } else {
+            const fromFactor = data.units[fromKey].factor;
+            const toFactor = data.units[toKey].factor;
+            conversionOfOne = fromFactor / toFactor;
+        }
+
+        const formatted = formatFormula(conversionOfOne);
+        formulaDisplay.textContent = '1 ' + fromSymbol + ' = ' + formatted + ' ' + toSymbol;
+    }
+
+    // =========================================================================
+    // EVENT LISTENERS
+    // =========================================================================
+
+    // Category tab clicks
+    categoryTabs.addEventListener('click', function (e) {
+        const tab = e.target.closest('.category-tab');
+        if (!tab) return;
+
+        const cat = tab.dataset.category;
+        if (cat === currentCategory) return;
+
+        // Update active tab
+        categoryTabs.querySelector('.active').classList.remove('active');
+        tab.classList.add('active');
+        currentCategory = cat;
+
+        // Show/hide electric sub-tabs
+        if (cat === 'electric') {
+            subcategoryTabs.style.display = 'flex';
+            currentSubcategory = subcategoryTabs.querySelector('.subcategory-tab.active').dataset.subcategory;
+        } else {
+            subcategoryTabs.style.display = 'none';
+        }
+
+        inputEl.value = '';
+        outputEl.value = '';
+        populateDropdowns();
+    });
+
+    // Electric sub-category tab clicks
+    subcategoryTabs.addEventListener('click', function (e) {
+        const tab = e.target.closest('.subcategory-tab');
+        if (!tab) return;
+
+        const sub = tab.dataset.subcategory;
+        if (sub === currentSubcategory) return;
+
+        subcategoryTabs.querySelector('.active').classList.remove('active');
+        tab.classList.add('active');
+        currentSubcategory = sub;
+
+        inputEl.value = '';
+        outputEl.value = '';
+        populateDropdowns();
+    });
+
+    // Real-time conversion on input
+    inputEl.addEventListener('input', convert);
+
+    // Recalculate when dropdowns change
+    fromSelect.addEventListener('change', convert);
+    toSelect.addEventListener('change', convert);
+
+    // Swap button
+    swapBtn.addEventListener('click', function () {
+        const tmpVal = fromSelect.value;
+        fromSelect.value = toSelect.value;
+        toSelect.value = tmpVal;
+        convert();
+    });
+
+    // Allow numeric input, minus sign, decimal point, and 'e' for scientific notation
+    inputEl.addEventListener('keydown', function (e) {
+        const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight',
+                         'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (allowed.indexOf(e.key) !== -1) return;
+        if (e.ctrlKey || e.metaKey) return;
+
+        // Allow digits, minus, period, e/E
+        if (/^[0-9eE.\-+]$/.test(e.key)) return;
+
+        e.preventDefault();
+    });
+
+    // =========================================================================
+    // INITIALIZE
+    // =========================================================================
+
+    populateDropdowns();
+})();
+</script>
+</body>
+</html>

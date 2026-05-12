@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= __('forumPage.discussion') %> — <%= __('title') %></title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Форум для обсуждения задач по физике, подготовки к олимпиадам и вопросов о платформе.' : 'Forum for discussing physics problems, olympiad preparation, and platform questions.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/discuss" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        .forum-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .forum-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .forum-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0;
+        }
+        .btn-new-topic {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.25rem;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: background 0.15s;
+        }
+        .btn-new-topic,
+        .btn-new-topic:visited,
+        .btn-new-topic:hover,
+        .btn-new-topic:focus,
+        .btn-new-topic:active {
+            color: #fff !important;
+            text-decoration: none;
+        }
+        .btn-new-topic:hover {
+            background: #0d0d1a;
+        }
+        .category-list {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .category-row {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #dee2e6;
+            transition: background 0.1s;
+        }
+        .category-row:last-child {
+            border-bottom: none;
+        }
+        .category-row:hover {
+            background: #f8f9fa;
+        }
+        .category-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-right: 1rem;
+            color: #6c757d;
+        }
+        .category-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .category-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .category-name a {
+            color: #2d2d2d;
+            text-decoration: none;
+        }
+        .category-name a:hover {
+            color: #1a5276;
+        }
+        .category-desc {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 0.15rem 0 0;
+        }
+        .category-stats {
+            display: flex;
+            gap: 1.5rem;
+            flex-shrink: 0;
+            margin: 0 1.5rem;
+            text-align: center;
+        }
+        .stat-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d2d2d;
+        }
+        .stat-label {
+            font-size: 11px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .category-latest {
+            flex-shrink: 0;
+            max-width: 200px;
+            text-align: right;
+        }
+        .latest-title {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .latest-title a {
+            color: #2d2d2d;
+            text-decoration: none;
+        }
+        .latest-title a:hover {
+            color: #1a5276;
+        }
+        .latest-meta {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        @media (max-width: 768px) {
+            .forum-container { padding: 1rem 0.75rem; }
+            .forum-header h1 { font-size: 24px; }
+            .category-stats { display: none; }
+            .category-latest { display: none; }
+            .category-row { padding: 0.75rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <div class="forum-container">
+        <div class="forum-header">
+            <h1><%= __('forumPage.discussion') %></h1>
+            <% if (userId) { %>
+                <a href="/discuss/new" class="btn-new-topic">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    <%= __('forumPage.newTopic') %>
+                </a>
+            <% } else { %>
+                <a href="/<%= lang %>/login" class="btn-new-topic">
+                    <%= __('forumPage.loginToPost') %>
+                </a>
+            <% } %>
+        </div>
+
+        <div class="category-list">
+            <% const categoryIcons = {
+                solutions: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>',
+                physics: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(120 12 12)"/></svg>',
+                feedback: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="12" y1="7" x2="12" y2="13"/></svg>',
+                general: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+            }; %>
+            <% categories.forEach(cat => {
+                const catName = __('forumPage.cat_' + cat.slug + '_name') !== 'forumPage.cat_' + cat.slug + '_name' ? __('forumPage.cat_' + cat.slug + '_name') : cat.name;
+                const catDesc = __('forumPage.cat_' + cat.slug + '_desc') !== 'forumPage.cat_' + cat.slug + '_desc' ? __('forumPage.cat_' + cat.slug + '_desc') : cat.description;
+            %>
+            <div class="category-row">
+                <div class="category-icon">
+                    <%- categoryIcons[cat.slug] || categoryIcons.general %>
+                </div>
+                <div class="category-info">
+                    <p class="category-name">
+                        <a href="/discuss/<%= cat.slug %>"><%= catName %></a>
+                    </p>
+                    <p class="category-desc"><%= catDesc %></p>
+                </div>
+                <div class="category-stats">
+                    <div class="stat-block">
+                        <span class="stat-value"><%= cat.topic_count %></span>
+                        <span class="stat-label"><%= __('forumPage.topics') %></span>
+                    </div>
+                    <div class="stat-block">
+                        <span class="stat-value"><%= cat.post_count %></span>
+                        <span class="stat-label"><%= __('forumPage.posts') %></span>
+                    </div>
+                </div>
+                <div class="category-latest">
+                    <% if (cat.latest_topic) { %>
+                        <div class="latest-title">
+                            <a href="/discuss/<%= cat.slug %>/<%= cat.latest_topic.id %>-<%= cat.latest_topic.slug %>"><%= cat.latest_topic.title %></a>
+                        </div>
+                        <div class="latest-meta">
+                            <%= cat.latest_topic.author_username %> &middot; <%= timeAgo(cat.latest_topic.last_reply_at || cat.latest_topic.created_at) %>
+                        </div>
+                    <% } else { %>
+                        <div class="latest-meta"><%= __('forumPage.noTopicsYet') %></div>
+                    <% } %>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+    <%- include('../default/main_site_search_script') %>
+</body>
+</html>

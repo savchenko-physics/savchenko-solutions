@@ -1,9 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText } = require("./utils"); // Adjust the import based on your utils file
-const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts } = require("./parents");
+const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts, getPrevNextProblems, getSectionProblemsGrid, getRelatedProblems } = require("./parents");
+const { format: formatDate } = require("date-fns");
 const i18n = require('i18n');
 const { Pool } = require("pg");
+const { getPathsForProblem } = require("./paths");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -145,6 +147,134 @@ async function renderPost(req, res) {
                 : `Problem ${name} Solution — ${problemBreadcrumb.sectionTitle} | Savchenko Solutions`)
             : `${name} | ${i18n.__('title')}`;
 
+        // Prev/next navigation
+        const prevNext = getPrevNextProblems(name, lang);
+
+        // Section problems grid for sidebar
+        const sectionGrid = getSectionProblemsGrid(name, lang);
+
+        // Contributor attribution
+        let attribution = null;
+        try {
+            const attrResult = await pool.query(
+                `SELECT DISTINCT c.user_id, u.username, MIN(c.edited_at) as first_edit
+                 FROM contributions c
+                 LEFT JOIN users u ON c.user_id = u.id
+                 WHERE c.problem_name = $1 AND c.language = $2
+                 AND c.content_changed = true AND c.invisible = false
+                 GROUP BY c.user_id, u.username
+                 ORDER BY first_edit ASC`,
+                [name, lang]
+            );
+
+            const ghAttrResult = await pool.query(
+                `SELECT DISTINCT gh.user_id, u.username, MIN(gh.edited_at) as first_edit
+                 FROM github_contributions gh
+                 LEFT JOIN users u ON gh.user_id = u.id
+                 WHERE gh.problem_name = $1 AND gh.language = $2
+                 GROUP BY gh.user_id, u.username
+                 ORDER BY first_edit ASC`,
+                [name, lang]
+            );
+
+            const allContributors = [];
+            for (const row of ghAttrResult.rows) {
+                allContributors.push({
+                    username: row.username || null,
+                    userId: row.user_id,
+                    firstEdit: new Date(row.first_edit),
+                });
+            }
+            for (const row of attrResult.rows) {
+                const exists = allContributors.some(c =>
+                    (c.userId && c.userId === row.user_id) ||
+                    (c.username && c.username === row.username)
+                );
+                if (!exists) {
+                    allContributors.push({
+                        username: row.username || null,
+                        userId: row.user_id,
+                        firstEdit: new Date(row.first_edit),
+                    });
+                }
+            }
+            allContributors.sort((a, b) => a.firstEdit - b.firstEdit);
+
+            if (allContributors.length > 0) {
+                const originalAuthor = allContributors[0];
+                const editors = allContributors.slice(1);
+                const lastUpdatedFormatted = lastModified
+                    ? formatDate(new Date(lastModified), "MMM d, yyyy")
+                    : null;
+
+                attribution = {
+                    originalAuthor: {
+                        username: originalAuthor.username || (lang === 'ru' ? 'Аноним' : 'Anonymous'),
+                        userId: originalAuthor.userId,
+                    },
+                    editors: editors.slice(0, 5).map(e => ({
+                        username: e.username || (lang === 'ru' ? 'Аноним' : 'Anonymous'),
+                        userId: e.userId,
+                    })),
+                    extraEditors: Math.max(0, editors.length - 5),
+                    lastUpdated: lastUpdatedFormatted,
+                };
+            }
+        } catch (err) {
+            console.error("Error fetching contributor attribution:", err);
+        }
+
+        // Problempedia — commented out for now
+        // let bankRelated = [];
+        // try {
+        //     if (problemBreadcrumb && problemBreadcrumb.sectionTitle) {
+        //         const topicKeyword = problemBreadcrumb.sectionTitle.toLowerCase().replace(/\s+/g, '-');
+        //         const bankResult = await pool.query(
+        //             `SELECT bp.id, bp.title, bp.difficulty, bs.name AS source_name
+        //              FROM bank_problems bp
+        //              JOIN bank_sources bs ON bs.id = bp.source_id
+        //              WHERE bp.reviewed = true AND $1 = ANY(bp.topics)
+        //              ORDER BY RANDOM()
+        //              LIMIT 3`,
+        //             [topicKeyword]
+        //         );
+        //         bankRelated = bankResult.rows;
+        //     }
+        // } catch (err) {
+        //     // bank tables may not exist yet — silently ignore
+        // }
+
+        // Edit history (recent edits for inline display)
+        let editHistory = [];
+        try {
+            const histResult = await pool.query(
+                `SELECT id, user_id, edited_at, source, username, profile_picture FROM (
+                    SELECT c.id, c.user_id, c.edited_at, 'direct' AS source, u.username, u.profile_picture
+                    FROM contributions c
+                    LEFT JOIN users u ON c.user_id = u.id
+                    WHERE c.problem_name = $1 AND c.language = $2
+                      AND c.content_changed = true AND c.invisible = false
+                    UNION ALL
+                    SELECT gh.id, gh.user_id, gh.edited_at, 'github' AS source, u.username, u.profile_picture
+                    FROM github_contributions gh
+                    LEFT JOIN users u ON gh.user_id = u.id
+                    WHERE gh.problem_name = $1 AND gh.language = $2
+                ) combined
+                ORDER BY edited_at DESC
+                LIMIT 10`,
+                [name, lang]
+            );
+            editHistory = histResult.rows;
+        } catch (err) {
+            console.error("Error fetching edit history:", err);
+        }
+
+        // Related problems from the same chapter
+        const relatedProblems = getRelatedProblems(name, lang);
+
+        // Study paths containing this problem
+        const problemPaths = await getPathsForProblem(name);
+
         res.render("solution_post", {
             __: i18n.__,
             lang,
@@ -156,12 +286,19 @@ async function renderPost(req, res) {
             username: req.session.username || null,
             title: seoTitle,
             content: html,
-            totalViews, // Pass total views to the template
-            creationDate, // Pass creation date to the template
-            alternateFileExists, // Pass the existence flag to the template
+            totalViews,
+            creationDate,
+            alternateFileExists,
             contributorName,
             lastModified,
             metaDescription: plainDesc,
+            prevProblem: prevNext.prev,
+            nextProblem: prevNext.next,
+            sectionGrid,
+            attribution,
+            relatedProblems,
+            problemPaths,
+            editHistory,
         });
     } else {
         i18n.setLocale(res, lang);
@@ -176,7 +313,7 @@ async function renderPost(req, res) {
 async function getPageViewsData(req, res) {
     const { name } = req.params;
     const result = await pool.query(
-        `SELECT date, COALESCE(SUM(views), 0) AS views 
+        `SELECT TO_CHAR(date, 'YYYY-MM-DD') AS date, COALESCE(SUM(views), 0) AS views
          FROM (
              SELECT date, views FROM page_views_old WHERE problem_name = $1 AND date > NOW() - INTERVAL '30 days'
              UNION ALL

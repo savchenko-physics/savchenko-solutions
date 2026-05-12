@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "sandbox": "node sandbox/sandbox-app.js",
+    "build:css": "node scripts/build-css.js",
+    "build": "npm run build:css",
+    "migrate": "node scripts/run-migrations.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -11,6 +17,7 @@
   "dependencies": {
     "bcrypt": "^5.1.1",
     "body-parser": "^1.20.3",
+    "compression": "^1.8.1",
     "connect-pg-simple": "^10.0.0",
     "csv-parser": "^3.0.0",
     "date-fns": "^4.1.0",
@@ -22,6 +29,7 @@
     "express-flash": "^0.0.2",
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.18.1",
+    "flexsearch": "^0.8.212",
     "i18n": "^0.15.1",
     "js-yaml": "^4.1.0",
     "marked": "^14.1.4",

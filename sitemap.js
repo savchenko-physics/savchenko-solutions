@@ -1,108 +1,261 @@
 const fs = require('fs');
 const path = require('path');
-const { formatISO, subDays, parseISO } = require('date-fns');
+const { formatISO } = require('date-fns');
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
+});
+
+const BASE_URL = 'https://savchenkosolutions.com';
+const publicDir = path.join(__dirname, 'public');
 
 const postsDirectories = [
     path.join(__dirname, 'posts', 'en'),
     path.join(__dirname, 'posts', 'ru')
 ];
 
-const recentSitemapPath = path.join(__dirname, 'public', 'sitemap_recent.xml');
-const olderSitemapPath = path.join(__dirname, 'public', 'sitemap_1.xml');
+function buildUrlset(entries) {
+    const urls = entries.map(e => {
+        let xml = `    <url>\n      <loc>${e.loc}</loc>`;
+        if (e.lastmod) xml += `\n      <lastmod>${e.lastmod}</lastmod>`;
+        if (e.changefreq) xml += `\n      <changefreq>${e.changefreq}</changefreq>`;
+        if (e.priority !== undefined) xml += `\n      <priority>${e.priority}</priority>`;
+        xml += '\n    </url>';
+        return xml;
+    }).join('\n');
 
-function generateSitemaps() {
-    const recentPosts = [];
-    const olderPosts = [];
-    const threeDaysAgo = subDays(new Date(), 3);
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+}
+
+function writeIfChanged(filePath, content) {
+    if (!fs.existsSync(filePath) || fs.readFileSync(filePath, 'utf8') !== content) {
+        fs.writeFileSync(filePath, content);
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-sitemap: Solutions                                             */
+/* ------------------------------------------------------------------ */
+function generateSolutionsSitemap() {
+    const entries = [];
 
     postsDirectories.forEach(postsDirectory => {
+        const lang = postsDirectory.includes('ru') ? 'ru' : 'en';
         const files = fs.readdirSync(postsDirectory);
         files.forEach(file => {
             if (file.endsWith('.md')) {
                 const filePath = path.join(postsDirectory, file);
-                
                 const stats = fs.statSync(filePath);
-                const lastModified = stats.mtime;
-
-                const postEntry = {
-                    loc: `https://savchenkosolutions.com/${postsDirectory.includes('ru') ? 'ru' : 'en'}/${file.replace('.md', '')}`,
-                    lastmod: formatISO(lastModified)
-                };
-
-                if (lastModified > threeDaysAgo) {
-                    recentPosts.push(postEntry);
-                } else {
-                    olderPosts.push(postEntry);
-                }
+                entries.push({
+                    loc: `${BASE_URL}/${lang}/${file.replace('.md', '')}`,
+                    lastmod: formatISO(stats.mtime),
+                    changefreq: 'weekly',
+                    priority: 0.8
+                });
             }
         });
     });
 
-    // Sort posts by last modified date
-    recentPosts.sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod));
-    olderPosts.sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod));
+    entries.sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod));
 
-    const recentSitemapContent = `
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
-        http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
-    ${recentPosts.map(post => `
-        <url>
-            <loc>${post.loc}</loc>
-            <lastmod>${post.lastmod}</lastmod>
-        </url>
-    `).join('\n')}
-</urlset>
-    `.trim();
-
-    const olderSitemapContent = `
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
-        http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
-    ${olderPosts.map(post => `
-        <url>
-            <loc>${post.loc}</loc>
-            <lastmod>${post.lastmod}</lastmod>
-        </url>
-    `).join('\n')}
-</urlset>
-    `.trim();
-
-    // Check and write recent sitemap if content has changed
-    if (!fs.existsSync(recentSitemapPath) || fs.readFileSync(recentSitemapPath, 'utf8') !== recentSitemapContent) {
-        fs.writeFileSync(recentSitemapPath, recentSitemapContent);
-    }
-
-    // Check and write older sitemap if content has changed
-    if (!fs.existsSync(olderSitemapPath) || fs.readFileSync(olderSitemapPath, 'utf8') !== olderSitemapContent) {
-        fs.writeFileSync(olderSitemapPath, olderSitemapContent);
-    }
-
-    // Update the sitemap.xml with the current date and time
-    const currentDate = new Date().toISOString();
-    const recentSitemapLastMod = fs.existsSync(recentSitemapPath) ? fs.statSync(recentSitemapPath).mtime.toISOString() : currentDate;
-    const olderSitemapLastMod = fs.existsSync(olderSitemapPath) ? fs.statSync(olderSitemapPath).mtime.toISOString() : currentDate;
-
-    const sitemapIndexContent = `
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <sitemap>
-        <loc>https://savchenkosolutions.com/sitemap_recent.xml</loc>
-        <lastmod>${recentSitemapLastMod}</lastmod>
-    </sitemap>
-    <sitemap>
-        <loc>https://savchenkosolutions.com/sitemap_1.xml</loc>
-        <lastmod>${olderSitemapLastMod}</lastmod>
-    </sitemap>
-</sitemapindex>
-    `;
-
-    fs.writeFileSync(path.join(__dirname, 'public', 'sitemap.xml'), sitemapIndexContent.trim());
+    const content = buildUrlset(entries);
+    writeIfChanged(path.join(publicDir, 'sitemap_solutions.xml'), content);
 }
 
-setInterval(() => {
-    generateSitemaps();
-}, 1000);
+/* ------------------------------------------------------------------ */
+/*  Sub-sitemap: Blog                                                  */
+/* ------------------------------------------------------------------ */
+async function generateBlogSitemap() {
+    try {
+        const { rows } = await pool.query(`
+            SELECT slug, updated_at, created_at
+            FROM blog_posts
+            WHERE is_published = true
+            ORDER BY COALESCE(updated_at, created_at) DESC
+        `);
+
+        const entries = rows.map(p => ({
+            loc: `${BASE_URL}/blog/${p.slug}`,
+            lastmod: formatISO(new Date(p.updated_at || p.created_at)),
+            changefreq: 'monthly',
+            priority: 0.7
+        }));
+
+        writeIfChanged(path.join(publicDir, 'sitemap_blog.xml'), buildUrlset(entries));
+    } catch (err) {
+        // Blog tables may not exist yet
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-sitemap: Bank problems                                         */
+/* ------------------------------------------------------------------ */
+async function generateBankSitemap() {
+    try {
+        const { rows } = await pool.query(`
+            SELECT id, updated_at, created_at
+            FROM bank_problems
+            ORDER BY id
+        `);
+
+        const entries = rows.map(p => ({
+            loc: `${BASE_URL}/bank/problem/${p.id}`,
+            lastmod: formatISO(new Date(p.updated_at || p.created_at)),
+            changefreq: 'monthly',
+            priority: 0.7
+        }));
+
+        writeIfChanged(path.join(publicDir, 'sitemap_bank.xml'), buildUrlset(entries));
+    } catch (err) {
+        // Bank tables may not exist yet
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-sitemap: Forum topics                                          */
+/* ------------------------------------------------------------------ */
+async function generateForumSitemap() {
+    try {
+        const { rows } = await pool.query(`
+            SELECT ft.id, ft.slug, ft.created_at, ft.last_reply_at, fc.slug AS category_slug
+            FROM forum_topics ft
+            JOIN forum_categories fc ON ft.category_id = fc.id
+            ORDER BY COALESCE(ft.last_reply_at, ft.created_at) DESC
+        `);
+
+        const entries = rows.map(t => ({
+            loc: `${BASE_URL}/discuss/${t.category_slug}/${t.id}-${t.slug}`,
+            lastmod: formatISO(new Date(t.last_reply_at || t.created_at)),
+            changefreq: 'weekly',
+            priority: 0.5
+        }));
+
+        writeIfChanged(path.join(publicDir, 'sitemap_forum.xml'), buildUrlset(entries));
+    } catch (err) {
+        // Forum tables may not exist yet
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-sitemap: Static / misc pages                                   */
+/* ------------------------------------------------------------------ */
+async function generateStaticSitemap() {
+    const now = formatISO(new Date());
+
+    const entries = [
+        // Home
+        { loc: `${BASE_URL}/`, changefreq: 'daily', priority: 1.0, lastmod: now },
+        { loc: `${BASE_URL}/en/`, changefreq: 'daily', priority: 1.0, lastmod: now },
+        { loc: `${BASE_URL}/ru/`, changefreq: 'daily', priority: 1.0, lastmod: now },
+
+        // Main sections
+        { loc: `${BASE_URL}/about`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/study-guide`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/unsolved`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/contributors`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+
+        // Blog index
+        { loc: `${BASE_URL}/blog`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+
+        // Bank index
+        { loc: `${BASE_URL}/bank`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+
+        // Forum index
+        { loc: `${BASE_URL}/discuss`, changefreq: 'daily', priority: 0.6, lastmod: now },
+
+        // Challenges
+        { loc: `${BASE_URL}/compete`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+
+        // Study paths
+        { loc: `${BASE_URL}/paths`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+
+        // Tools
+        { loc: `${BASE_URL}/tools`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/tools/formulas`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/tools/units`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/tools/constants`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/tools/latex`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+    ];
+
+    // Add published study paths
+    try {
+        const { rows } = await pool.query(`
+            SELECT slug, updated_at, created_at
+            FROM learning_paths
+            WHERE is_published = true
+            ORDER BY created_at DESC
+        `);
+        rows.forEach(p => {
+            entries.push({
+                loc: `${BASE_URL}/paths/${p.slug}`,
+                lastmod: formatISO(new Date(p.updated_at || p.created_at)),
+                changefreq: 'monthly',
+                priority: 0.6
+            });
+        });
+    } catch (err) {
+        // Paths table may not exist yet
+    }
+
+    writeIfChanged(path.join(publicDir, 'sitemap_static.xml'), buildUrlset(entries));
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sitemap index                                                      */
+/* ------------------------------------------------------------------ */
+function generateSitemapIndex() {
+    const sitemaps = [
+        'sitemap_solutions.xml',
+        'sitemap_blog.xml',
+        'sitemap_bank.xml',
+        'sitemap_forum.xml',
+        'sitemap_static.xml'
+    ];
+
+    const entries = sitemaps
+        .filter(name => fs.existsSync(path.join(publicDir, name)))
+        .map(name => {
+            const mtime = fs.statSync(path.join(publicDir, name)).mtime.toISOString();
+            return `    <sitemap>\n      <loc>${BASE_URL}/${name}</loc>\n      <lastmod>${mtime}</lastmod>\n    </sitemap>`;
+        })
+        .join('\n');
+
+    const content = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries}
+</sitemapindex>`;
+
+    writeIfChanged(path.join(publicDir, 'sitemap.xml'), content);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main generator                                                     */
+/* ------------------------------------------------------------------ */
+async function generateSitemaps() {
+    try {
+        generateSolutionsSitemap();
+        await Promise.all([
+            generateBlogSitemap(),
+            generateBankSitemap(),
+            generateForumSitemap(),
+            generateStaticSitemap()
+        ]);
+        generateSitemapIndex();
+    } catch (err) {
+        console.error('Sitemap generation error:', err.message);
+    }
+}
+
+// Generate on startup and then every 60 seconds
+generateSitemaps();
+setInterval(generateSitemaps, 60 * 1000);

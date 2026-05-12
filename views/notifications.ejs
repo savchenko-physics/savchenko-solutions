@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= __('notificationsPage.title') %> | <%= __('title') %></title>
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
+    <link rel="icon" type="image/png" href="/img/logo.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <style>
+        :root {
+            --sv-primary: #1a1a2e;
+            --sv-text: #2d2d2d;
+            --sv-secondary: #6c757d;
+            --sv-border: #dee2e6;
+            --sv-bg: #ffffff;
+            --sv-card: #f8f9fa;
+        }
+        body { margin: 0; background: var(--sv-bg); color: var(--sv-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        .notif-page { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .notif-header h1 { font-size: 22px; font-weight: 600; color: var(--sv-primary); margin: 0; }
+        .mark-all-btn {
+            background: none; border: 1px solid var(--sv-border); border-radius: 6px;
+            padding: 6px 14px; font-size: 13px; color: var(--sv-primary); cursor: pointer;
+            font-family: inherit; transition: background 0.15s;
+        }
+        .mark-all-btn:hover { background: var(--sv-card); }
+        .notif-group-label { font-size: 12px; font-weight: 600; color: var(--sv-secondary); text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0; margin-top: 12px; border-bottom: 1px solid var(--sv-border); }
+        .notif-item {
+            display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0;
+            text-decoration: none; color: var(--sv-text); transition: background 0.1s; border-radius: 4px;
+        }
+        .notif-item:hover { background: #f6f8fa; }
+        .notif-item.unread { background: #fff; }
+        .notif-item.read { background: var(--sv-card); border-radius: 4px; padding: 12px 8px; }
+        .notif-icon { flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; background: var(--sv-card); display: flex; align-items: center; justify-content: center; }
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-title { font-size: 14px; line-height: 1.4; }
+        .notif-title.unread { font-weight: 600; }
+        .notif-message { font-size: 13px; color: var(--sv-secondary); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .notif-time { font-size: 12px; color: #999; margin-top: 3px; }
+        .notif-empty { text-align: center; padding: 48px 16px; color: var(--sv-secondary); font-size: 15px; }
+        .pagination-bar { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .pagination-bar a, .pagination-bar span {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 32px; height: 32px; padding: 0 10px; border-radius: 6px;
+            font-size: 13px; text-decoration: none; border: 1px solid var(--sv-border);
+            color: var(--sv-text); transition: background 0.15s;
+        }
+        .pagination-bar a:hover { background: var(--sv-card); }
+        .pagination-bar .active { background: var(--sv-primary); color: #fff; border-color: var(--sv-primary); }
+        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #1a5276; flex-shrink: 0; margin-top: 6px; }
+    </style>
+</head>
+<body>
+    <%- include('default/main_site_header') %>
+
+    <% const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US'; %>
+
+    <div class="notif-page">
+        <div class="notif-header">
+            <h1><%= __('notificationsPage.title') %></h1>
+            <% if (notifications.length > 0) { %>
+            <form action="/api/notifications/read-all" method="POST" id="mark-all-form" style="margin:0;">
+                <button type="submit" class="mark-all-btn"><%= __('notificationsPage.markAllRead') %></button>
+            </form>
+            <% } %>
+        </div>
+
+        <% if (notifications.length === 0) { %>
+            <div class="notif-empty">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#dee2e6" stroke-width="1.5" style="margin-bottom:12px;">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <div><%= __('notificationsPage.noNotifications') %></div>
+            </div>
+        <% } else { %>
+            <%
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+                const weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+
+                const groups = { today: [], yesterday: [], thisWeek: [], earlier: [] };
+                notifications.forEach(function(n) {
+                    const d = new Date(n.created_at);
+                    if (d >= today) groups.today.push(n);
+                    else if (d >= yesterday) groups.yesterday.push(n);
+                    else if (d >= weekAgo) groups.thisWeek.push(n);
+                    else groups.earlier.push(n);
+                });
+
+                const relTimeLabels = {
+                    justNow: __('notificationsPage.justNow'),
+                    mAgo: __('notificationsPage.mAgo'),
+                    hAgo: __('notificationsPage.hAgo'),
+                    dAgo: __('notificationsPage.dAgo'),
+                };
+
+                function relTime(iso) {
+                    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+                    if (diff < 60) return relTimeLabels.justNow;
+                    if (diff < 3600) return Math.floor(diff / 60) + relTimeLabels.mAgo;
+                    if (diff < 86400) return Math.floor(diff / 3600) + relTimeLabels.hAgo;
+                    if (diff < 2592000) return Math.floor(diff / 86400) + relTimeLabels.dAgo;
+                    return new Date(iso).toLocaleDateString(dateLocale);
+                }
+
+                const groupLabels = {
+                    today: __('notificationsPage.today'),
+                    yesterday: __('notificationsPage.yesterday'),
+                    thisWeek: __('notificationsPage.thisWeek'),
+                    earlier: __('notificationsPage.earlier'),
+                };
+
+                function renderGroup(key, items) {
+                    if (!items.length) return '';
+                    let html = '<div class="notif-group-label">' + groupLabels[key] + '</div>';
+                    items.forEach(function(n) {
+                        const cls = n.is_read ? 'notif-item read' : 'notif-item unread';
+                        const titleCls = n.is_read ? 'notif-title' : 'notif-title unread';
+                        html += '<a href="' + (n.link || '#') + '" class="' + cls + '" data-id="' + n.id + '">';
+                        if (!n.is_read) html += '<div class="unread-dot"></div>';
+                        else html += '<div style="width:8px;flex-shrink:0;"></div>';
+                        html += '<div class="notif-body">';
+                        html += '<div class="' + titleCls + '">' + n.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+                        if (n.message) html += '<div class="notif-message">' + n.message.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
+                        html += '<div class="notif-time">' + relTime(n.created_at) + '</div>';
+                        html += '</div></a>';
+                    });
+                    return html;
+                }
+            %>
+            <%- renderGroup('today', groups.today) %>
+            <%- renderGroup('yesterday', groups.yesterday) %>
+            <%- renderGroup('thisWeek', groups.thisWeek) %>
+            <%- renderGroup('earlier', groups.earlier) %>
+        <% } %>
+
+        <% if (totalPages > 1) { %>
+        <div class="pagination-bar">
+            <% if (page > 1) { %>
+                <a href="/notifications?page=<%= page - 1 %>"><%= __('notificationsPage.prev') %></a>
+            <% } %>
+            <% for (let p = 1; p <= totalPages; p++) { %>
+                <% if (p === page) { %>
+                    <span class="active"><%= p %></span>
+                <% } else if (Math.abs(p - page) <= 2 || p === 1 || p === totalPages) { %>
+                    <a href="/notifications?page=<%= p %>"><%= p %></a>
+                <% } else if (Math.abs(p - page) === 3) { %>
+                    <span>...</span>
+                <% } %>
+            <% } %>
+            <% if (page < totalPages) { %>
+                <a href="/notifications?page=<%= page + 1 %>"><%= __('notificationsPage.next') %></a>
+            <% } %>
+        </div>
+        <% } %>
+    </div>
+
+    <%- include('default/modern_footer') %>
+    <%- include('default/main_site_footer_scripts') %>
+    <script>
+    document.querySelectorAll('.notif-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+            const id = el.dataset.id;
+            if (id) fetch('/api/notifications/' + id + '/read', { method: 'POST' }).catch(function(){});
+        });
+    });
+
+    const markAllForm = document.getElementById('mark-all-form');
+    if (markAllForm) {
+        markAllForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetch('/api/notifications/read-all', { method: 'POST' })
+                .then(function() { window.location.reload(); })
+                .catch(function(){});
+        });
+    }
+    </script>
+</body>
+</html>

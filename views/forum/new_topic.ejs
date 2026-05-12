@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= __('forumPage.newTopic') %> — <%= __('forumPage.discussion') %> | <%= __('title') %></title>
+    <meta name="robots" content="noindex" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- MathJax for preview -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
+
+    <style>
+        .forum-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .forum-breadcrumb {
+            font-size: 14px;
+            margin-bottom: 1.5rem;
+            color: #6c757d;
+        }
+        .forum-breadcrumb a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .forum-breadcrumb a:hover {
+            color: #0d3b54;
+        }
+        .forum-container h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d2d2d;
+            margin-bottom: 0.4rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0 0.75rem;
+            font-size: 14px;
+            color: #2d2d2d;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #1a5276;
+            box-shadow: 0 0 0 2px rgba(26, 82, 118, 0.1);
+        }
+        .CodeMirror {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            height: 200px;
+            font-size: 14px;
+        }
+        .preview-panel {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            min-height: 60px;
+            background: #f8f9fa;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+        .preview-toggle {
+            font-size: 13px;
+            color: #1a5276;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 0.5rem;
+        }
+        .preview-toggle:hover {
+            text-decoration: underline;
+        }
+        .form-hint {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .btn-submit {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-submit:hover {
+            background: #0d0d1a;
+        }
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-cancel {
+            background: #f8f9fa;
+            color: #2d2d2d;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 1.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: background 0.15s;
+        }
+        .btn-cancel:hover {
+            background: #e9ecef;
+            color: #2d2d2d;
+        }
+        .error-msg {
+            color: #c0392b;
+            font-size: 14px;
+            margin-top: 0.5rem;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .forum-container { padding: 1rem 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <div class="forum-container">
+        <div class="forum-breadcrumb">
+            <a href="/discuss"><%= __('forumPage.discussion') %></a>
+            <span> / </span>
+            <span><%= __('forumPage.newTopic') %></span>
+        </div>
+
+        <h1><%= __('forumPage.createNewTopic') %></h1>
+
+        <div class="form-group">
+            <label for="topicCategory"><%= __('forumPage.category') %></label>
+            <select id="topicCategory">
+                <option value=""><%= __('forumPage.selectCategory') %></option>
+                <% categories.forEach(cat => {
+                    const cName = __('forumPage.cat_' + cat.slug + '_name') !== 'forumPage.cat_' + cat.slug + '_name' ? __('forumPage.cat_' + cat.slug + '_name') : cat.name;
+                %>
+                    <option value="<%= cat.id %>" <%= selectedCategory === cat.slug ? 'selected' : '' %>><%= cName %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="topicTitle"><%= __('forumPage.title') %></label>
+            <input type="text" id="topicTitle" maxlength="255" placeholder="<%= __('forumPage.titlePlaceholder') %>" />
+        </div>
+
+        <div class="form-group">
+            <label><%= __('forumPage.content') %></label>
+            <div class="form-hint">
+                <%= __('forumPage.latexHint') %>
+            </div>
+            <textarea id="topicContent" rows="8"></textarea>
+            <button class="preview-toggle" id="togglePreview"><%= __('forumPage.showPreview') %></button>
+            <div class="preview-panel" id="previewPanel"></div>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <div class="form-actions">
+            <button class="btn-submit" id="submitTopic">
+                <%= __('forumPage.createTopic') %>
+            </button>
+            <a href="/discuss" class="btn-cancel"><%= __('forumPage.cancel') %></a>
+        </div>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+    <%- include('../default/main_site_search_script') %>
+
+    <script>
+    (function() {
+        const LANG = '<%= lang %>';
+        const t = {
+            showPreview: "<%= __('forumPage.showPreview') %>",
+            hidePreview: "<%= __('forumPage.hidePreview') %>",
+            createTopic: "<%= __('forumPage.createTopic') %>",
+            creating: "<%= __('forumPage.creating') %>",
+            selectCategoryError: "<%= __('forumPage.selectCategoryError') %>",
+            titleRequired: "<%= __('forumPage.titleRequired') %>",
+            contentRequired: "<%= __('forumPage.contentRequired') %>",
+            networkError: "<%= __('forumPage.networkError') %>",
+            failedToCreate: "<%= __('forumPage.failedToCreate') %>",
+        };
+
+        const textarea = document.getElementById('topicContent');
+        let editor = null;
+        if (textarea && typeof CodeMirror !== 'undefined') {
+            editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'stex',
+                lineWrapping: true,
+            });
+        }
+
+        const previewBtn = document.getElementById('togglePreview');
+        const previewPanel = document.getElementById('previewPanel');
+        if (previewBtn && previewPanel) {
+            previewBtn.addEventListener('click', function() {
+                const isShown = previewPanel.style.display === 'block';
+                if (isShown) {
+                    previewPanel.style.display = 'none';
+                    previewBtn.textContent = t.showPreview;
+                } else {
+                    const content = editor ? editor.getValue() : textarea.value;
+                    let html = content
+                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                        .replace(/#(\d+\.\d+\.\d+)/g, '<a href="/' + LANG + '/$1">#$1</a>')
+                        .replace(/@([a-zA-Z0-9_]+)/g, '<a href="/user/$1">@$1</a>')
+                        .replace(/\n/g, '<br>');
+                    previewPanel.innerHTML = html;
+                    previewPanel.style.display = 'block';
+                    previewBtn.textContent = t.hidePreview;
+                    if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                        MathJax.typesetPromise([previewPanel]);
+                    }
+                }
+            });
+        }
+
+        const submitBtn = document.getElementById('submitTopic');
+        const errorMsg = document.getElementById('errorMsg');
+
+        submitBtn.addEventListener('click', async function() {
+            const category_id = document.getElementById('topicCategory').value;
+            const title = document.getElementById('topicTitle').value.trim();
+            const content = editor ? editor.getValue().trim() : textarea.value.trim();
+
+            errorMsg.style.display = 'none';
+
+            if (!category_id) {
+                errorMsg.textContent = t.selectCategoryError;
+                errorMsg.style.display = 'block';
+                return;
+            }
+            if (!title) {
+                errorMsg.textContent = t.titleRequired;
+                errorMsg.style.display = 'block';
+                return;
+            }
+            if (!content) {
+                errorMsg.textContent = t.contentRequired;
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = t.creating;
+
+            try {
+                const res = await fetch('/discuss', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category_id, title, content })
+                });
+                const data = await res.json();
+                if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    errorMsg.textContent = data.error || t.failedToCreate;
+                    errorMsg.style.display = 'block';
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = t.createTopic;
+                }
+            } catch (err) {
+                errorMsg.textContent = t.networkError;
+                errorMsg.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = t.createTopic;
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

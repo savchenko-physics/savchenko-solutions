@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<%= lang %>">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -7,7 +7,6 @@
   <meta name="keywords" content="<%= __('meta.keywords') %>" />
   <meta name="description" content="<%= __('meta.description') %>" />
   <meta name="author" content="<%= __('meta.author') %>" />
-  <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
   <meta property="og:title" content="<%= __('title') %>" />
   <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
   <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
@@ -16,314 +15,238 @@
   <link rel="apple-touch-icon" href="/img/logo.png" />
   <title><%= __('unsolved.title') %></title>
 
-  <!-- Bootstrap 5 (via CDN) -->
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
   />
-
-  <!-- Google Fonts: Roboto -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <!-- Bootstrap Icons -->
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css"
   />
-
   <link rel="stylesheet" href="/css/design-system.css" />
   <link rel="stylesheet" href="/css/main_page.css" />
 
   <style>
-    /* Global Typography & Colors */
     body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f9fafb;
-    }
-    h1, h2, h3, h4, h5, h6 {
-      font-weight: 700;
-      color: #333;
-    }
-
-    /* Unsolved List */
-    .unsolved-list {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px 15px;
-    }
-
-    /* Statistics Card */
-    .statistics-section .card {
-      border: none;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    }
-    .statistics-section .card-body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background-color: #ffffff;
-      border-radius: 8px;
-    }
-    .statistics-section .card-title {
-      font-weight: 700;
     }
 
-    /* Progress Container */
-    .progress-container {
-      flex: 0 0 200px;
-      height: 16px;
-      background-color: #f0f2f5;
+    .unsolved-page {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+    }
+
+    .unsolved-header {
+      margin-bottom: 36px;
+    }
+    .unsolved-header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin: 0 0 4px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .unsolved-header p {
+      font-size: 15px;
+      color: #6c757d;
+      margin: 0;
+    }
+
+    /* Most Requested */
+    .most-wanted {
+      margin-bottom: 40px;
+    }
+    .most-wanted h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin: 0 0 16px;
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .most-wanted-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #dee2e6;
       border-radius: 8px;
       overflow: hidden;
-      position: relative;
+    }
+    .most-wanted-item {
       display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
     }
-    .progress-bar-both,
-    .progress-bar-other,
-    .progress-bar-current {
-      height: 100%;
-      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    .most-wanted-item:last-child {
+      border-bottom: none;
     }
-    .progress-bar-both {
-      background-color: #66bb6a;
+    .most-wanted-item a {
+      color: #1a5276;
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
     }
-    .progress-bar-other {
-      background-color: #64b5f6;
+    .most-wanted-item a:hover {
+      color: #0d3b54;
+      text-decoration: underline;
     }
-    .progress-bar-current {
-      background-color: #66bb6a;
+    .most-wanted-context {
+      color: #6c757d;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .most-wanted-views {
+      color: #6c757d;
+      font-size: 13px;
+      white-space: nowrap;
     }
 
-    .completion-text {
-      color: #666;
-      font-size: 0.9em;
-      flex: 0 0 auto;
+    /* Accordion */
+    .chapter-accordion {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .chapter-row {
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .chapter-row:last-child {
+      border-bottom: none;
+    }
+    .chapter-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      transition: background 100ms ease;
+    }
+    .chapter-header:hover {
+      background: #f8f9fa;
+    }
+    .chapter-toggle {
+      font-size: 12px;
+      color: #6c757d;
+      transition: transform 200ms ease;
+      flex-shrink: 0;
+    }
+    .chapter-row.is-open .chapter-toggle {
+      transform: rotate(90deg);
+    }
+    .chapter-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2d2d2d;
+      flex: 1;
+      min-width: 0;
+    }
+    .chapter-progress-bar {
+      width: 120px;
+      height: 6px;
+      border-radius: 3px;
+      background: #ebedf0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .chapter-progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: #1a1a2e;
+      transition: width 300ms ease;
+    }
+    .chapter-stats {
+      font-size: 13px;
+      color: #6c757d;
+      white-space: nowrap;
       min-width: 60px;
       text-align: right;
     }
 
-    /* Chapter & Section Titles */
-    .chapter-title {
-      margin-top: 30px;
-      margin-bottom: 10px;
-      color: #333;
-      font-weight: 700;
+    .chapter-body {
+      display: none;
+      padding: 0 16px 16px;
     }
-    .section-header {
+    .chapter-row.is-open .chapter-body {
+      display: block;
+    }
+
+    .section-block {
+      margin-top: 16px;
+    }
+    .section-block:first-child {
+      margin-top: 8px;
+    }
+    .section-info {
       display: flex;
       align-items: center;
-      gap: 15px;
-      margin-top: 25px;
-      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
     }
-    .section-title {
-      font-weight: 600;
-      margin-right: auto;
-      margin-bottom: 0;
-      min-width: 230px;
+    .section-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #2d2d2d;
       flex: 1;
-      color: #444;
+    }
+    .section-stats {
+      font-size: 13px;
+      color: #6c757d;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
-    @media (max-width: 991.98px) {
-      .section-header {
-        gap: 10px;
-      }
-      .section-title {
-        font-size: 1.1rem;
-        min-width: auto;
-        width: 100%;
-        white-space: normal;
-        order: -1 !important;
-        margin-bottom: 10px;
-      }
-    }
-
-    /* Pie Chart Container */
-    .pie-chart-container {
-      width: 30px;
-      height: 30px;
-      flex: 0 0 auto;
-    }
-
-    /* Problem Links */
-    .problem-links {
-      margin-top: 10px;
+    .problem-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-start;
+      gap: 6px;
     }
-    
-    .problem-link {
-      flex: 1 1 80px; /* Base flex properties */
+    .problem-chip {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
+      padding: 4px 10px;
+      font-size: 13px;
       font-weight: 500;
-      border-radius: 0.375rem;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
+      color: #1a5276;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
       text-decoration: none;
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      background: linear-gradient(to right, rgba(245, 158, 11, 0.05), rgba(249, 115, 22, 0.05));
-      color: #b45309;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-      margin: 0;
-      text-align: center;
+      transition: border-color 150ms ease, background 150ms ease;
     }
-
-    /* Apply max-width only for screens larger than 576px */
-    @media (min-width: 594px) {
-      .problem-link {
-        max-width: 120px;
-      }
-    }
-
-    .problem-link:hover {
-      border-color: rgba(245, 158, 11, 0.7);
-      background: linear-gradient(to right, rgba(245, 158, 11, 0.1), rgba(249, 115, 22, 0.1));
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .problem-link:focus-visible {
-      outline: none;
-      ring: 1px solid rgba(245, 158, 11, 0.5);
-    }
-
-    .problem-link.exists-other-lang {
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      background: linear-gradient(to right, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.05));
-      color: #1d4ed8;
-    }
-
-    .problem-link.exists-other-lang:hover {
-      border-color: rgba(59, 130, 246, 0.7);
-      background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1));
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-      .problem-link {
-        color: #fbbf24;
-      }
-      
-      .problem-link.exists-other-lang {
-        color: #60a5fa;
-      }
-    }
-
-    p,
-    span,
-    a,
-    li {
-      font-size: 0.95rem;
-      color: #555;
-    }
-
-    /* Footer */
-    .footer-modern {
-            background: linear-gradient(135deg, #343A40 0%, #495057 100%);
-            color: #fff;
-        }
-
-        .footer-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-    .footer-modern a {
-      color: #ffffff;
-    }
-    .footer-modern a:hover {
-      text-decoration: underline;
-    }
-    .footer-modern p {
-      font-size: 0.875rem;
-      color: #ffffff;
-    }
-    
-
-    @media (max-width: 991.98px) {
-      .search {
-        width: 100%;
-        max-width: none;
-      }
-      .search.active {
-        width: 100%;
-      }
-      .navbar-container {
-        flex-direction: column;
-        padding: 10px 15px;
-      }
-      
-      .statistics-section .card-body {
-        padding: 15px;
-      }
-      .progress-container {
-        width: 100%;
-        margin: 10px 0;
-      }
-      
-      .section-header {
-        gap: 10px;
-      }
-      .section-title {
-        font-size: 1.1rem;
-        min-width: auto;
-        width: 100%;
-      }
-      
-      .pie-chart-container {
-        width: 24px;
-        height: 24px;
-      }
-      
-      .problem-link {
-        padding: 8px 16px;
-        margin: 4px;
-        min-width: 80px;
-        text-align: center;
-      }
+    .problem-chip:hover {
+      background: #eef3f7;
+      border-color: #1a5276;
+      color: #0d3b54;
     }
 
     @media (max-width: 576px) {
-      .statistics-section .row {
-        margin: 0 -5px;
+      .unsolved-page {
+        padding: 24px 16px 40px;
       }
-      .statistics-section .col-md-4 {
-        padding: 0 5px;
+      .unsolved-header h1 {
+        font-size: 24px;
       }
-      
-      h1 {
-        font-size: 1.5rem;
+      .chapter-progress-bar {
+        width: 80px;
       }
-      .chapter-title {
-        font-size: 1.3rem;
+      .chapter-name {
+        font-size: 14px;
       }
-      
-      .footer-container .row {
-        text-align: center;
-      }
-      .footer-container .text-md-end {
-        text-align: center !important;
-      }
-      .problem-links {
-        gap: 6px;
-      }
-      
-      .problem-link {
-        flex: 1 1 70px;
-        max-width: 100px;
-        padding: 8px 12px;
+      .most-wanted-context {
+        display: none;
       }
     }
   </style>
@@ -335,374 +258,68 @@
     langSwitchRuUrl: '/ru/unsolved'
   }) %>
 
-  <!-- Main Content -->
-  <div class="unsolved-list">
-    <h1 class="mb-4"><%= __('unsolved.title') %></h1>
-
-    <!-- Statistics Section -->
-    <div class="statistics-section mb-5">
-      <div class="card">
-        <div class="card-body">
-          <div
-            class="d-flex flex-wrap align-items-center justify-content-between mb-3"
-          >
-            <div>
-              <h5 class="card-title mb-0">
-                <%= __('unsolved.overallProgress') %>
-              </h5>
-              <p class="text-muted mb-2">
-                <%= __('unsolved.totalSolved') %>:
-                <span id="progressCounter">0</span>/<%= totalProblems %>
-                (<span id="percentageCounter">0</span>%)
-              </p>
-            </div>
-            <div class="progress-container" style="width: 200px;">
-              <div
-                class="progress-bar-both"
-                style="width: <%= (
-                  (currentLangSolutions / totalProblems) *
-                  100
-                ).toFixed(1) %>%"
-              ></div>
-              <div
-                class="progress-bar-other"
-                style="width: <%= (
-                  ((totalUniqueSolutions - currentLangSolutions) / totalProblems) *
-                  100
-                ).toFixed(1) %>%"
-              ></div>
-            </div>
-          </div>
-          <div class="row g-3">
-            <div class="col-md-4">
-              <div
-                class="d-flex justify-content-between align-items-center"
-              >
-                <span><%= lang.toUpperCase() %> <%= __('unsolved.solutions') %>:</span>
-                <strong><%= currentLangSolutions %></strong>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div
-                class="d-flex justify-content-between align-items-center"
-              >
-                <span><%= (lang === 'en' ? 'RU' : 'EN') %> <%= __('unsolved.solutions') %>:</span>
-                <strong><%= otherLangSolutions %></strong>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div
-                class="d-flex justify-content-between align-items-center"
-              >
-                <span><%= __('unsolved.uniqueSolutions') %>:</span>
-                <strong><%= totalUniqueSolutions %></strong>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <div class="unsolved-page">
+    <div class="unsolved-header">
+      <h1><%= totalProblems - totalUniqueSolutions %> <%= lang === 'ru' ? 'Нерешённых задач' : 'Unsolved Problems' %></h1>
+      <p><%= lang === 'ru' ? 'Помогите завершить самый полный сборник решений Савченко.' : 'Help complete the most comprehensive Savchenko solution set.' %></p>
     </div>
 
-    <% 
-      let currentChapter = null;
-      let currentSection = null;
-      let sectionProblems = [];
-
-      unsolved.forEach(problem => {
-        if (currentChapter !== problem.chapter) {
-          // Display the last section's progress before starting a new chapter
-          if (sectionProblems && sectionProblems.length > 0) {
-    %>
-      <div class="section-header">
-        <h3 class="section-title">
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
-        </h3>
-        <div class="pie-chart-container">
-          <canvas
-            id="pieChart-<%= sectionProblems[0].chapterNum %>-<%= sectionProblems[0].sectionNum %>"
-          ></canvas>
-        </div>
-        <div class="progress-container">
-          <% 
-            const totalInSection = sectionProblems[0].maximum;
-            const unsolvedCount = sectionProblems.length;
-            const otherLangOnlyCount = sectionProblems.filter(p => p.existsInOtherLang).length;
-            const solvedInBothCount = totalInSection - unsolvedCount - otherLangOnlyCount;
-            const solvedInCurrentOnly = unsolvedCount - otherLangOnlyCount;
-          %>
-          <div
-            class="progress-bar-current"
-            style="width: <%= ((totalInSection - unsolvedCount) / totalInSection * 100) %>%"
-          ></div>
-          <div
-            class="progress-bar-other"
-            style="width: <%= (otherLangOnlyCount / totalInSection * 100) %>%"
-          ></div>
-        </div>
-        <span class="completion-text">
-          <%= (totalInSection - unsolvedCount) %>/<%= totalInSection %>
-        </span>
-      </div>
-      <div class="problem-links mb-4">
-        <% sectionProblems.forEach(prob => { %>
-          <a
-            href="/<%= prob.existsInOtherLang ? (lang === 'en' ? 'ru' : 'en') : lang %>/<%= prob.existsInOtherLang ? '' : 'upload#' %><%= prob.problem %>"
-            class="problem-link <%= prob.existsInOtherLang ? 'exists-other-lang' : '' %>"
-            title="<%= prob.existsInOtherLang ? __('unsolved.existsInOtherLang') : '' %>"
-          >
-            <%= prob.problem %>
-          </a>
+    <% if (mostWanted && mostWanted.length > 0) { %>
+    <div class="most-wanted">
+      <h2><%= lang === 'ru' ? 'Самые запрашиваемые' : 'Most Requested' %></h2>
+      <ul class="most-wanted-list">
+        <% mostWanted.forEach(function(mw) { %>
+        <li class="most-wanted-item">
+          <a href="/<%= lang %>/upload#<%= mw.problem %>"><%= mw.problem %></a>
+          <span class="most-wanted-context"><%= mw.chapter %> &mdash; <%= mw.section %></span>
+          <span class="most-wanted-views"><%= lang === 'ru' ? 'просмотров: ' + mw.views : 'viewed ' + mw.views + ' times' %></span>
+        </li>
         <% }); %>
-      </div>
-    <% 
-          }
-          currentChapter = problem.chapter;
-          currentSection = null;
-          sectionProblems = [];
-    %>
-      <h2 class="chapter-title">
-        <%= __('unsolved.chapter') %> 
-        <%= problem.chapterNum %>: 
-        <%= problem.chapter %>
-      </h2>
-    <% 
-        }
-        if (currentSection !== problem.section) {
-          // Display previous section's progress and problems before starting new section
-          if (sectionProblems && sectionProblems.length > 0) {
-    %>
-      <div class="section-header">
-        <h3 class="section-title">
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
-        </h3>
-        <div class="pie-chart-container">
-          <canvas
-            id="pieChart-<%= sectionProblems[0].chapterNum %>-<%= sectionProblems[0].sectionNum %>"
-          ></canvas>
-        </div>
-        <div class="progress-container">
-          <% 
-            const totalInSection = sectionProblems[0].maximum;
-            const unsolvedCount = sectionProblems.length;
-            const otherLangOnlyCount = sectionProblems.filter(p => p.existsInOtherLang).length;
-            const solvedInBothCount = totalInSection - unsolvedCount - otherLangOnlyCount;
-            const solvedInCurrentOnly = unsolvedCount - otherLangOnlyCount;
-          %>
-          <div
-            class="progress-bar-current"
-            style="width: <%= ((totalInSection - unsolvedCount) / totalInSection * 100) %>%"
-          ></div>
-          <div
-            class="progress-bar-other"
-            style="width: <%= (otherLangOnlyCount / totalInSection * 100) %>%"
-          ></div>
-        </div>
-        <span class="completion-text">
-          <%= (totalInSection - unsolvedCount) %>/<%= totalInSection %>
-        </span>
-      </div>
-      <div class="problem-links mb-4">
-        <% sectionProblems.forEach(prob => { %>
-          <a
-            href="/<%= prob.existsInOtherLang ? (lang === 'en' ? 'ru' : 'en') : lang %>/<%= prob.existsInOtherLang ? '' : 'upload#' %><%= prob.problem %>"
-            class="problem-link <%= prob.existsInOtherLang ? 'exists-other-lang' : '' %>"
-            title="<%= prob.existsInOtherLang ? __('unsolved.existsInOtherLang') : '' %>"
-          >
-            <%= prob.problem %>
-          </a>
-        <% }); %>
-      </div>
-    <% 
-          }
-          currentSection = problem.section;
-          sectionProblems = [problem];
-        } else {
-          sectionProblems.push(problem);
-        }
-      });
-      // Display the last section's progress and problems
-      if (sectionProblems && sectionProblems.length > 0) {
-    %>
-      <div class="section-header">
-        <h3 class="section-title">
-          <%= sectionProblems[0].chapterNum %>.<%= sectionProblems[0].sectionNum %>: <%= currentSection %>
-        </h3>
-        <div class="pie-chart-container">
-          <canvas
-            id="pieChart-<%= sectionProblems[0].chapterNum %>-<%= sectionProblems[0].sectionNum %>"
-          ></canvas>
-        </div>
-        <div class="progress-container">
-          <% 
-            const totalInSection = sectionProblems[0].maximum;
-            const unsolvedCount = sectionProblems.length;
-            const otherLangOnlyCount = sectionProblems.filter(p => p.existsInOtherLang).length;
-            const solvedInBothCount = totalInSection - unsolvedCount - otherLangOnlyCount;
-            const solvedInCurrentOnly = unsolvedCount - otherLangOnlyCount;
-          %>
-          <div
-            class="progress-bar-current"
-            style="width: <%= ((totalInSection - unsolvedCount) / totalInSection * 100) %>%"
-          ></div>
-          <div
-            class="progress-bar-other"
-            style="width: <%= (otherLangOnlyCount / totalInSection * 100) %>%"
-          ></div>
-        </div>
-        <span class="completion-text">
-          <%= (totalInSection - unsolvedCount) %>/<%= totalInSection %>
-        </span>
-      </div>
-      <div class="problem-links mb-4">
-        <% sectionProblems.forEach(prob => { %>
-          <a
-            href="/<%= prob.existsInOtherLang ? (lang === 'en' ? 'ru' : 'en') : lang %>/<%= prob.existsInOtherLang ? '' : 'upload#' %><%= prob.problem %>"
-            class="problem-link <%= prob.existsInOtherLang ? 'exists-other-lang' : '' %>"
-            title="<%= prob.existsInOtherLang ? __('unsolved.existsInOtherLang') : '' %>"
-          >
-            <%= prob.problem %>
-          </a>
-        <% }); %>
-      </div>
+      </ul>
+    </div>
     <% } %>
+
+    <div class="chapter-accordion">
+      <% chapterData.forEach(function(ch) { %>
+      <div class="chapter-row">
+        <button type="button" class="chapter-header" aria-expanded="false">
+          <span class="chapter-toggle">&#9654;</span>
+          <span class="chapter-name"><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.chapterNum %>. <%= ch.title %></span>
+          <span class="chapter-progress-bar">
+            <span class="chapter-progress-fill" style="width: <%= ch.total > 0 ? ((ch.solved / ch.total) * 100).toFixed(1) : 0 %>%;"></span>
+          </span>
+          <span class="chapter-stats"><%= ch.solved %> / <%= ch.total %></span>
+        </button>
+        <div class="chapter-body">
+          <% ch.sections.forEach(function(sec) { %>
+          <div class="section-block">
+            <div class="section-info">
+              <span class="section-name"><%= ch.chapterNum %>.<%= sec.sectionNum %>: <%= sec.title %></span>
+              <span class="section-stats"><%= sec.solved %> / <%= sec.total %></span>
+            </div>
+            <div class="problem-grid">
+              <% sec.unsolved.forEach(function(prob) { %>
+              <a href="/<%= lang %>/upload#<%= prob.problem %>" class="problem-chip"><%= prob.problem %></a>
+              <% }); %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+      <% }); %>
+    </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="footer-modern py-4 mt-5">
-    <div class="footer-container">
-        <div class="row align-items-center text-center text-md-start">
-            <div class="col-md-6 mb-4 mb-md-0">
-                <a href="/en/" class="d-inline-flex align-items-center text-decoration-none mb-3">
-                    <img src="/img/logo_main.svg" alt="Savchenko Solutions Logo" style="height: 32px;" class="me-2" />
-                    <span class="fw-bold h5 mb-0 text-white">Savchenko Solutions</span>
-                </a>
-                <p class="mb-0">
-                    <small>
-                        © <strong>Savchenko Solutions</strong>, 2023-2025<br />
-                        All solutions are contributed by their respective authors and are based on original textbook content, which remains the property of the textbook authors.
-                    </small>
-                </p>
-            </div>
-            <div class="col-md-6 text-md-end">
-                <p class="small mb-2">
-                    Unless otherwise noted, solutions are provided under the <strong>CC BY-SA 4.0</strong> license.
-                    Commercial use of any material requires written permission.
-                </p>
-                <p class="small mb-0">
-                    Contact: <a href="mailto:aliaksandr@melnichenka.com" class="text-decoration-none text-white">aliaksandr@melnichenka.com</a>
-                </p>
-            </div>
-        </div>
-    </div>
-</footer>
+  <%- include('default/modern_footer') %>
 
-  <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-  ></script>
-  <!-- Chart.js (for pie charts) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    function createPieChart(elementId, solved, total) {
-      const ctx = document.getElementById(elementId).getContext("2d");
-      const container = document.getElementById(elementId).closest(".section-header");
-      const linksContainer = container.nextElementSibling;
-      const otherLangOnly = linksContainer
-        ? linksContainer.querySelectorAll(".problem-link.exists-other-lang").length
-        : 0;
-      const unsolved = total - solved - otherLangOnly;
-
-      new Chart(ctx, {
-        type: "pie",
-        data: {
-          datasets: [
-            {
-              data: [solved, otherLangOnly, unsolved],
-              backgroundColor: ["#66bb6a", "#64b5f6", "#e0e0e0"],
-              borderWidth: 0,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              display: false,
-            },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function (context) {
-                  const labels = [
-                    "Current Language Solutions",
-                    "Other Language Only",
-                    "Unsolved",
-                  ];
-                  return `${labels[context.dataIndex]}: ${context.parsed}`;
-                },
-              },
-              backgroundColor: 'rgba(50, 50, 50, 0.8)',
-              padding: 12,
-              cornerRadius: 8,
-            },
-          },
-        },
+    document.querySelectorAll('.chapter-header').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        const row = btn.closest('.chapter-row');
+        const isOpen = row.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
-    }
-
-    // Initialize all pie charts
-    document.querySelectorAll(".pie-chart-container canvas").forEach((canvas) => {
-      const [_, chapter, section] = canvas.id.split("-");
-      const container = canvas.closest(".section-header");
-      const completionText =
-        container.querySelector(".completion-text").textContent.split("/");
-      const solved = parseInt(completionText[0]);
-      const total = parseInt(completionText[1]);
-      createPieChart(canvas.id, solved, total);
-    });
-
-    // Add the counter animation
-    function animateValue(obj, start, end, duration) {
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-        obj.textContent = value;
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      window.requestAnimationFrame(step);
-    }
-
-    function animatePercentage(obj, start, end, duration) {
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = (progress * (end - start) + start).toFixed(1);
-        obj.textContent = value;
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      window.requestAnimationFrame(step);
-    }
-
-    // Start the animations when the page loads
-    document.addEventListener('DOMContentLoaded', () => {
-      const progressCounter = document.getElementById('progressCounter');
-      const percentageCounter = document.getElementById('percentageCounter');
-      
-      const totalUniqueSolutions = <%= totalUniqueSolutions %>;
-      const totalProblems = <%= totalProblems %>;
-      const percentage = (totalUniqueSolutions / totalProblems * 100);
-      
-      animateValue(progressCounter, 0, totalUniqueSolutions, 1000);
-      animatePercentage(percentageCounter, 0, percentage, 1000);
     });
   </script>
   <%- include('default/main_site_search_script') %>

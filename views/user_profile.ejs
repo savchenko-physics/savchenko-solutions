@@ -3,11 +3,10 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@<%= username %> - Contributor Profile</title>
+    <title>@<%= username %> - <%= lang === 'ru' ? 'Профиль участника' : 'Contributor Profile' %></title>
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
-    <!-- Bootstrap 5: required for main_site_header (navbar, grid, collapse) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/css/design-system.css" />
@@ -58,12 +57,17 @@
             font-weight: 600;
         }
 
+        /* ── Profile Header ── */
+
+        .profile-header-card {
+            margin-bottom: 16px;
+        }
+
         .profile-head {
             display: flex;
             justify-content: space-between;
             gap: 12px;
             align-items: flex-start;
-            margin-bottom: 10px;
         }
 
         .profile-main {
@@ -117,16 +121,43 @@
             max-width: 760px;
         }
 
+        .bio-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .bio-text.bio-expanded {
+            -webkit-line-clamp: unset;
+            display: block;
+        }
+
+        .bio-toggle {
+            background: none;
+            border: none;
+            color: var(--sv-primary);
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 0 0;
+        }
+
+        .bio-toggle:hover {
+            text-decoration: underline;
+        }
+
         .verified-check {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             width: 18px;
             height: 18px;
-            border-radius: 50%;
-            color: #fff;
-            background: var(--sv-primary);
-            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .verified-check svg {
+            width: 18px;
+            height: 18px;
         }
 
         .social-row {
@@ -146,6 +177,13 @@
             color: var(--sv-primary);
         }
 
+        .profile-actions {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
         .edit-link {
             color: var(--sv-primary);
             font-size: 13px;
@@ -153,10 +191,47 @@
             white-space: nowrap;
         }
 
+        .edit-link:hover {
+            text-decoration: underline;
+        }
+
+        .follow-btn {
+            padding: 6px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid var(--sv-primary);
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .follow-btn--follow {
+            background: var(--sv-primary);
+            color: #fff;
+        }
+
+        .follow-btn--follow:hover {
+            background: #0d0d1a;
+        }
+
+        .follow-btn--following {
+            background: var(--sv-bg);
+            color: var(--sv-primary);
+        }
+
+        .follow-btn--following:hover {
+            border-color: #c0392b;
+            color: #c0392b;
+        }
+
+        /* ── Stats Row ── */
+
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
+            margin-bottom: 16px;
         }
 
         .stat-tile {
@@ -170,80 +245,17 @@
         .stat-value {
             font-size: 32px;
             line-height: 1.05;
-            color: #1a1a2e !important;
+            color: var(--sv-primary);
             font-weight: 700;
         }
 
         .stat-label {
             margin-top: 6px;
             font-size: 13px;
-            color: #6c757d !important;
+            color: var(--sv-secondary);
         }
 
-        .profile-page .stat-tile .stat-value,
-        .profile-page #platform-overview-grid .stat-value {
-            color: #1a1a2e !important;
-        }
-
-        .profile-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 14px;
-            align-items: start;
-        }
-
-        .timeline-radar-card {
-            padding: 10px 12px;
-            margin-bottom: 12px;
-        }
-
-        .timeline-radar-card .section-title {
-            margin: 0 0 8px;
-            font-size: 16px;
-        }
-
-        .timeline-radar-card .timeline-summary {
-            margin-top: 4px;
-        }
-
-        .timeline-radar-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: 12px;
-            align-items: stretch;
-        }
-
-        .timeline-radar-col {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            min-height: 0;
-        }
-
-        .timeline-radar-col.radar-card {
-            border-left: 1px solid var(--sv-border);
-            padding-left: 14px;
-            justify-content: flex-start;
-        }
-
-        .radar-chart-shell {
-            flex: 0 0 auto;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            min-height: 0;
-        }
-
-        #radar-chart {
-            width: 400px !important;
-            height: 240px !important;
-            max-width: 100%;
-        }
-
-        .timeline-radar-col .timeline-wrap,
-        .timeline-radar-col .timeline-summary {
-            max-width: 100%;
-        }
+        /* ── Heatmap ── */
 
         .heatmap-card-head {
             margin-bottom: 8px;
@@ -479,15 +491,70 @@
             color: var(--sv-secondary);
         }
 
+        /* ── Timeline + Radar ── */
+
+        .timeline-radar-card {
+            padding: 6px 12px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-radar-card .section-title {
+            margin: 0 0 4px;
+            font-size: 16px;
+        }
+
+        .timeline-radar-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .timeline-radar-col {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .timeline-radar-col.radar-col {
+            border-left: 1px solid var(--sv-border);
+            padding-left: 14px;
+            justify-content: flex-start;
+        }
+
         .timeline-wrap {
-            max-width: 480px;
+            position: relative;
             width: 100%;
+            flex: 1 1 0;
+            min-height: 200px;
         }
 
         .timeline-summary {
-            max-width: 480px;
             line-height: 1.45;
         }
+
+        .radar-chart-shell {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            min-height: 0;
+        }
+
+        #radar-chart {
+            width: 400px !important;
+            height: 280px !important;
+            max-width: 100%;
+        }
+
+        .radar-empty {
+            text-align: center;
+            padding: 20px 10px;
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        /* ── Recent Contributions ── */
 
         .recent-list {
             display: flex;
@@ -495,7 +562,6 @@
             gap: 8px;
         }
 
-        /* GitHub-inspired “latest commit” strip */
         .contrib-latest {
             background: #f6f8fa;
             border: 1px solid #d0d7de;
@@ -636,6 +702,12 @@
             text-decoration: none;
         }
 
+        .tiny-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Chapter Table ── */
+
         .chapter-table {
             width: 100%;
             border-collapse: collapse;
@@ -657,7 +729,7 @@
 
         .progress-track {
             width: 120px;
-            height: 5px;
+            height: 6px;
             background: #ebedf0;
             border-radius: 10px;
             overflow: hidden;
@@ -667,6 +739,8 @@
             height: 100%;
             background: var(--sv-primary);
         }
+
+        /* ── Collaborators ── */
 
         .collab-row {
             display: flex;
@@ -708,6 +782,8 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ── Footer ── */
+
         .footer-stats {
             display: flex;
             justify-content: space-between;
@@ -716,13 +792,7 @@
             font-size: 13px;
         }
 
-        .radar-card {
-            display: block;
-        }
-
-        .mobile-chapters {
-            display: none;
-        }
+        /* ── Skeleton ── */
 
         .skeleton {
             background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
@@ -737,22 +807,22 @@
             100% { background-position: -200% 0%; }
         }
 
+        /* ── Responsive ── */
+
         @media (max-width: 992px) {
             .stats-row {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
             .timeline-radar-grid {
                 grid-template-columns: 1fr;
             }
-            .timeline-radar-col.radar-card {
+
+            .timeline-radar-col.radar-col {
                 border-left: none;
                 padding-left: 0;
-            }
-            .radar-card {
-                display: none;
-            }
-            .mobile-chapters {
-                display: block;
+                border-top: 1px solid var(--sv-border);
+                padding-top: 14px;
             }
         }
 
@@ -760,9 +830,18 @@
             .profile-page {
                 padding: 16px 12px 24px;
             }
+
             .name-line {
                 font-size: 20px;
             }
+        }
+
+        /* ── Platform Overview ── */
+
+        .platform-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
         }
     </style>
 </head>
@@ -770,171 +849,232 @@
     <%- include('default/main_site_header') %>
 
     <main class="profile-page">
-        <section class="card">
+        <!-- Profile Header -->
+        <section class="card profile-header-card">
             <div class="profile-head">
                 <div class="profile-main">
                     <img id="profile-avatar" class="profile-avatar" src="/img/profile_images/Default_placeholder.svg" alt="Profile avatar">
                     <div class="profile-names">
-                        <h1 id="name-line" class="name-line skeleton">Contributor Name</h1>
+                        <h1 id="name-line" class="name-line skeleton"><%= lang === 'ru' ? 'Имя участника' : 'Contributor Name' %></h1>
                         <p id="username-line" class="username-line">@<%= username %></p>
                         <p id="institution-line" class="institution-line" style="display:none;"></p>
-                        <p id="bio-line" class="bio" style="display:none;"></p>
+                        <div id="bio-line" class="bio" style="display:none;">
+                            <span id="bio-text" class="bio-text"></span>
+                            <button id="bio-toggle" class="bio-toggle" style="display:none;"><%= lang === 'ru' ? 'показать больше' : 'show more' %></button>
+                        </div>
                         <div id="social-row" class="social-row"></div>
                     </div>
                 </div>
-                <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;">Edit Profile</a>
+                <div class="profile-actions">
+                    <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;"><%= lang === 'ru' ? 'Редактировать профиль' : 'Edit Profile' %></a>
+                    <button id="follow-btn" class="follow-btn" style="display:none;" data-user-id="<%= profileUserId %>"></button>
+                </div>
             </div>
         </section>
 
+        <!-- Stats Row -->
         <section class="stats-row">
             <article class="stat-tile">
-                <div id="stat-solutions" class="stat-value">—</div>
-                <div class="stat-label">Solutions</div>
+                <div id="stat-solutions" class="stat-value">&mdash;</div>
+                <div class="stat-label"><%= lang === 'ru' ? 'Решений' : 'Solutions' %></div>
             </article>
             <article class="stat-tile">
-                <div id="stat-edits" class="stat-value">—</div>
-                <div class="stat-label">Edits</div>
+                <div id="stat-edits" class="stat-value">&mdash;</div>
+                <div class="stat-label"><%= lang === 'ru' ? 'Правок' : 'Edits' %></div>
             </article>
             <article class="stat-tile">
-                <div id="stat-translations" class="stat-value">—</div>
-                <div class="stat-label">Translations</div>
+                <div id="stat-translations" class="stat-value">&mdash;</div>
+                <div class="stat-label"><%= lang === 'ru' ? 'Переводов' : 'Translations' %></div>
             </article>
             <article class="stat-tile">
-                <div id="stat-likes" class="stat-value">—</div>
-                <div class="stat-label">Likes Received</div>
+                <div id="stat-likes" class="stat-value">&mdash;</div>
+                <div class="stat-label"><%= lang === 'ru' ? 'Лайков' : 'Likes' %></div>
             </article>
         </section>
 
-        <section class="profile-grid">
-            <div>
-                <section class="card heatmap-card">
-                    <div class="heatmap-card-head">
-                        <h2 class="section-title">Contribution Heatmap</h2>
-                    </div>
-                    <div class="heatmap-summary-row">
-                        <p id="heatmap-contrib-summary" class="heatmap-contrib-summary" aria-live="polite"></p>
-                    </div>
-                    <div class="heatmap-graph-row">
-                        <div class="heatmap-graph-border">
-                            <div class="heatmap-shell">
-                                <div class="heatmap-wrap">
-                                    <div class="heatmap-y">
-                                        <div></div>
-                                        <div>Mon</div>
-                                        <div></div>
-                                        <div>Wed</div>
-                                        <div></div>
-                                        <div>Fri</div>
-                                        <div></div>
-                                    </div>
-                                    <div class="heatmap-main">
-                                        <div id="user-months" class="heatmap-months"></div>
-                                        <div id="user-heatmap" class="heatmap-grid"></div>
-                                    </div>
-                                </div>
+        <!-- Heatmap -->
+        <section class="card heatmap-card">
+            <div class="heatmap-card-head">
+                <h2 class="section-title"><%= lang === 'ru' ? 'Тепловая карта вкладов' : 'Contribution Heatmap' %></h2>
+            </div>
+            <div class="heatmap-summary-row">
+                <p id="heatmap-contrib-summary" class="heatmap-contrib-summary" aria-live="polite"></p>
+            </div>
+            <div class="heatmap-graph-row">
+                <div class="heatmap-graph-border">
+                    <div class="heatmap-shell">
+                        <div class="heatmap-wrap">
+                            <div class="heatmap-y">
+                                <div></div>
+                                <div><%= lang === 'ru' ? 'Пн' : 'Mon' %></div>
+                                <div></div>
+                                <div><%= lang === 'ru' ? 'Ср' : 'Wed' %></div>
+                                <div></div>
+                                <div><%= lang === 'ru' ? 'Пт' : 'Fri' %></div>
+                                <div></div>
                             </div>
-                            <div class="heatmap-legend" aria-hidden="true">
-                                <span>Less</span>
-                                <div class="heatmap-legend-scale">
-                                    <span class="heatmap-legend-cell" style="background:#ebedf0;"></span>
-                                    <span class="heatmap-legend-cell" style="background:#b3c6d9;"></span>
-                                    <span class="heatmap-legend-cell" style="background:#6d93b8;"></span>
-                                    <span class="heatmap-legend-cell" style="background:#3a6a9e;"></span>
-                                    <span class="heatmap-legend-cell" style="background:#1a1a2e;"></span>
-                                </div>
-                                <span>More</span>
+                            <div class="heatmap-main">
+                                <div id="user-months" class="heatmap-months"></div>
+                                <div id="user-heatmap" class="heatmap-grid"></div>
                             </div>
                         </div>
-                        <ul id="heatmap-year-nav" class="heatmap-year-nav" aria-label="Contribution period"></ul>
                     </div>
-                    <div id="streak-line" class="streak-line"></div>
-                    <div id="heatmap-cell-tooltip" class="heatmap-cell-tooltip" role="tooltip" hidden aria-hidden="true"></div>
-                </section>
-
-                <section class="card timeline-radar-card">
-                    <div class="timeline-radar-grid">
-                        <div class="timeline-radar-col">
-                            <h2 class="section-title">Contribution Timeline</h2>
-                            <div class="timeline-wrap">
-                                <canvas id="timeline-chart" height="88"></canvas>
-                                <p id="timeline-summary" class="streak-line timeline-summary"></p>
-                            </div>
+                    <div class="heatmap-legend" aria-hidden="true">
+                        <span><%= lang === 'ru' ? 'Меньше' : 'Less' %></span>
+                        <div class="heatmap-legend-scale">
+                            <span class="heatmap-legend-cell" style="background:#ebedf0;"></span>
+                            <span class="heatmap-legend-cell" style="background:#b3c6d9;"></span>
+                            <span class="heatmap-legend-cell" style="background:#6d93b8;"></span>
+                            <span class="heatmap-legend-cell" style="background:#3a6a9e;"></span>
+                            <span class="heatmap-legend-cell" style="background:#1a1a2e;"></span>
                         </div>
-                        <aside class="timeline-radar-col radar-card">
-                            <h2 class="section-title">Physics Coverage</h2>
-                            <div class="radar-chart-shell">
-                                <canvas id="radar-chart" width="420" height="280"></canvas>
-                            </div>
-                        </aside>
+                        <span><%= lang === 'ru' ? 'Больше' : 'More' %></span>
                     </div>
-                </section>
+                </div>
+                <ul id="heatmap-year-nav" class="heatmap-year-nav" aria-label="<%= lang === 'ru' ? 'Период вкладов' : 'Contribution period' %>"></ul>
+            </div>
+            <div id="streak-line" class="streak-line"></div>
+            <div id="heatmap-cell-tooltip" class="heatmap-cell-tooltip" role="tooltip" hidden aria-hidden="true"></div>
+        </section>
 
-                <section class="card mobile-chapters">
-                    <h2 class="section-title">Chapter Breakdown</h2>
-                    <div style="overflow-x:auto;">
-                        <table class="chapter-table">
-                            <thead>
-                                <tr>
-                                    <th>Chapter</th>
-                                    <th>Solved</th>
-                                    <th>Total</th>
-                                    <th>Completion</th>
-                                </tr>
-                            </thead>
-                            <tbody id="mobile-chapter-body"></tbody>
-                        </table>
+        <!-- Timeline + Radar -->
+        <section class="card timeline-radar-card">
+            <div class="timeline-radar-grid">
+                <div class="timeline-radar-col">
+                    <h2 class="section-title"><%= lang === 'ru' ? 'Хронология вкладов' : 'Contribution Timeline' %></h2>
+                    <div class="timeline-wrap">
+                        <canvas id="timeline-chart" height="200"></canvas>
                     </div>
-                </section>
-
-                <section class="card">
-                    <h2 class="section-title">Recent Contributions</h2>
-                    <p class="sr-only">Latest contributions: id, problem, language, and link to the diff, in a compact row similar to a commit on GitHub.</p>
-                    <div id="recent-list" class="recent-list"></div>
-                    <a id="show-all-link" class="tiny-link" href="#" style="display:none;">Show all contributions</a>
-                </section>
-
-                <section class="card">
-                    <h2 class="section-title">Chapter Breakdown</h2>
-                    <div style="overflow-x:auto;">
-                        <table class="chapter-table">
-                            <thead>
-                                <tr>
-                                    <th>Chapter</th>
-                                    <th>Solved</th>
-                                    <th>Total</th>
-                                    <th>Completion</th>
-                                </tr>
-                            </thead>
-                            <tbody id="chapter-body"></tbody>
-                        </table>
+                    <p id="timeline-summary" class="streak-line timeline-summary"></p>
+                </div>
+                <div id="radar-card" class="timeline-radar-col radar-col">
+                    <h2 class="section-title"><%= lang === 'ru' ? 'Охват физики' : 'Physics Coverage' %></h2>
+                    <div class="radar-chart-shell">
+                        <canvas id="radar-chart" width="400" height="240"></canvas>
                     </div>
-                </section>
-
-                <section class="card">
-                    <h2 class="section-title">Frequent Collaborators</h2>
-                    <div id="collab-row" class="collab-row"></div>
-                </section>
-
-                <section id="sankey-card" class="card" style="display:none;">
-                    <h2 class="section-title">Chapter → Section → Status</h2>
-                    <label for="sankey-chapter" style="font-size:13px;color:#6c757d;">Chapter</label>
-                    <select id="sankey-chapter" style="margin-left:8px;"></select>
-                    <svg id="sankey-svg" viewBox="0 0 900 360" style="width:100%;height:360px;display:block;"></svg>
-                </section>
-
-                <section id="platform-overview-card" class="card" style="display:none;">
-                    <h2 class="section-title">Platform Overview</h2>
-                    <div id="platform-overview-grid" class="stats-row" style="grid-template-columns:repeat(3,minmax(0,1fr));"></div>
-                </section>
-
-                <section class="card">
-                    <div class="footer-stats">
-                        <span id="member-since">Member since —</span>
-                        <span id="last-active">Last active —</span>
-                    </div>
-                </section>
+                </div>
             </div>
         </section>
+
+        <!-- Recent Contributions -->
+        <section class="card contributions-card">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Недавние вклады' : 'Recent Contributions' %></h2>
+            <p class="sr-only"><%= lang === 'ru' ? 'Последние вклады: id, задача, язык и ссылка.' : 'Latest contributions: id, problem, language, and link to the diff.' %></p>
+            <div id="recent-list" class="recent-list"></div>
+            <a id="show-all-link" class="tiny-link" href="#" style="display:none;margin-top:10px;"><%= lang === 'ru' ? 'Показать ещё' : 'Show more' %></a>
+        </section>
+
+        <!-- Chapter Breakdown -->
+        <section class="card chapters-card">
+            <h2 class="section-title"><%= lang === 'ru' ? 'По главам' : 'Chapter Breakdown' %></h2>
+            <div style="overflow-x:auto;">
+                <table class="chapter-table">
+                    <thead>
+                        <tr>
+                            <th><%= lang === 'ru' ? 'Глава' : 'Chapter' %></th>
+                            <th><%= lang === 'ru' ? 'Решено' : 'Solved' %></th>
+                            <th><%= lang === 'ru' ? 'Всего' : 'Total' %></th>
+                            <th><%= lang === 'ru' ? 'Прогресс' : 'Completion' %></th>
+                        </tr>
+                    </thead>
+                    <tbody id="chapter-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Collaborators -->
+        <section class="card collabs-card">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Частые соавторы' : 'Frequent Collaborators' %></h2>
+            <div id="collab-row" class="collab-row"></div>
+        </section>
+
+        <!-- Sankey -->
+        <section id="sankey-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Глава / Раздел / Статус' : 'Chapter / Section / Status' %></h2>
+            <label for="sankey-chapter" style="font-size:13px;color:#6c757d;"><%= lang === 'ru' ? 'Глава' : 'Chapter' %></label>
+            <select id="sankey-chapter" style="margin-left:8px;"></select>
+            <svg id="sankey-svg" viewBox="0 0 900 360" style="width:100%;height:360px;display:block;"></svg>
+        </section>
+
+        <!-- Platform Overview -->
+        <section id="platform-overview-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Обзор платформы' : 'Platform Overview' %></h2>
+            <div id="platform-overview-grid" class="platform-overview-grid"></div>
+        </section>
+
+        <!-- Footer -->
+        <section class="card">
+            <div class="footer-stats">
+                <span id="member-since"><%= lang === 'ru' ? 'Участник с' : 'Member since' %> &mdash;</span>
+                <span id="last-active"><%= lang === 'ru' ? 'Последняя активность' : 'Last active' %> &mdash;</span>
+            </div>
+        </section>
+
+        <% if (typeof isOwner !== 'undefined' && isOwner) { %>
+        <!-- My Activity (owner only) -->
+        <section class="card" style="margin-top:16px;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Моя активность' : 'My Activity' %></h2>
+
+            <!-- Starred Problems -->
+            <div style="margin-bottom:20px;">
+                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Избранные задачи' : 'Starred Problems' %></h3>
+                <% if (starredSolutions && starredSolutions.length > 0) { %>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <% starredSolutions.forEach(function(s) { %>
+                    <a href="/<%= s.language %>/<%= s.problem_name %>" style="display:inline-block;padding:4px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;color:#1a5276;text-decoration:none;transition:background 0.15s;">
+                        <%= s.problem_name %> (<%= s.language %>)
+                    </a>
+                    <% }); %>
+                </div>
+                <% } else { %>
+                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет избранных задач. Добавляйте задачи в избранное для быстрого доступа.' : 'No starred problems yet. Star problems to bookmark them for later.' %></p>
+                <% } %>
+            </div>
+
+            <!-- Recent Forum Activity -->
+            <div style="margin-bottom:20px;">
+                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Активность на форуме' : 'Recent Forum Activity' %></h3>
+                <% if (recentForumActivity && recentForumActivity.length > 0) { %>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <% recentForumActivity.forEach(function(f) { %>
+                    <a href="/discuss/<%= f.category_slug %>/<%= f.topic_id %>-<%= f.slug %>" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;text-decoration:none;color:#2d2d2d;font-size:13px;transition:background 0.15s;">
+                        <span style="color:#6c757d;font-size:12px;flex-shrink:0;width:40px;"><%= f.type === 'topic' ? (lang === 'ru' ? 'Тема' : 'Topic') : (lang === 'ru' ? 'Ответ' : 'Reply') %></span>
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= f.title %></span>
+                    </a>
+                    <% }); %>
+                </div>
+                <% } else { %>
+                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет активности на форуме.' : 'No forum activity yet.' %></p>
+                <% } %>
+            </div>
+
+            <!-- Challenge Submissions -->
+            <div style="margin-bottom:20px;">
+                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Участие в челленджах' : 'Challenge Submissions' %></h3>
+                <% if (challengeHistory && challengeHistory.length > 0) { %>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <% challengeHistory.forEach(function(c) { %>
+                    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
+                        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= c.challenge_title %></span>
+                        <span style="flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;background:<%= c.status === 'reviewed' ? '#e8f8ef' : '#f0f0f0' %>;color:<%= c.status === 'reviewed' ? '#1e6b3a' : '#6c757d' %>;"><%= c.status %></span>
+                        <% if (c.score !== null && c.score !== undefined) { %>
+                        <span style="font-weight:600;color:#1a1a2e;"><%= c.score %>/100</span>
+                        <% } %>
+                    </div>
+                    <% }); %>
+                </div>
+                <% } else { %>
+                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет участия в челленджах.' : 'No challenge submissions yet.' %></p>
+                <% } %>
+            </div>
+
+            <!-- Quick Links -->
+            <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #dee2e6;">
+                <a href="/settings?tab=privacy" style="font-size:13px;color:#1a5276;text-decoration:none;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></a>
+                <a href="/notifications" style="font-size:13px;color:#1a5276;text-decoration:none;"><%= lang === 'ru' ? 'Все уведомления' : 'View All Notifications' %></a>
+            </div>
+        </section>
+        <% } %>
     </main>
 
     <%- include('default/modern_footer') %>
@@ -946,6 +1086,7 @@
     <script>
         const username = "<%= username %>";
         const lang = "<%= lang %>";
+        const sessionUsername = <%- sessionUsername ? JSON.stringify(sessionUsername) : "null" %>;
         const heatColors = ["#ebedf0", "#b3c6d9", "#6d93b8", "#3a6a9e", "#1a1a2e"];
         let profileAuthor = {
             username: username,
@@ -957,15 +1098,23 @@
         let timelineChart = null;
 
         function fmtMonthYear(dateInput) {
-            if (!dateInput) return "—";
+            if (!dateInput) return "\u2014";
             const d = new Date(dateInput);
-            return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+            return d.toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", { month: "short", year: "numeric" });
         }
 
         function relTime(dateInput) {
-            if (!dateInput) return "—";
+            if (!dateInput) return "\u2014";
             const d = new Date(dateInput).getTime();
             const diff = Math.floor((Date.now() - d) / 1000);
+            if (lang === "ru") {
+                if (diff < 60) return "\u0442\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e";
+                if (diff < 3600) return `${Math.floor(diff / 60)} \u043c\u0438\u043d. \u043d\u0430\u0437\u0430\u0434`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)} \u0447. \u043d\u0430\u0437\u0430\u0434`;
+                if (diff < 2592000) return `${Math.floor(diff / 86400)} \u0434\u043d. \u043d\u0430\u0437\u0430\u0434`;
+                if (diff < 31536000) return `${Math.floor(diff / 2592000)} \u043c\u0435\u0441. \u043d\u0430\u0437\u0430\u0434`;
+                return `${Math.floor(diff / 31536000)} \u043b\u0435\u0442 \u043d\u0430\u0437\u0430\u0434`;
+            }
             if (diff < 60) return "just now";
             if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
             if (diff < 86400) return `${Math.floor(diff / 3600)} h ago`;
@@ -975,7 +1124,7 @@
         }
 
         function fmtCommitDate(iso) {
-            if (!iso) return "—";
+            if (!iso) return "\u2014";
             const d = new Date(iso);
             return d.toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", {
                 month: "short",
@@ -998,6 +1147,8 @@
             if (!res.ok) throw new Error(`Failed: ${url}`);
             return res.json();
         }
+
+        /* ── Heatmap ── */
 
         function buildHeatScale(dayCounts) {
             const positives = (dayCounts || [])
@@ -1232,7 +1383,7 @@
             };
 
             const rolling = !view || view.kind === "rolling";
-            addBtn(lang === "ru" ? "12 мес." : "12 months", rolling, null);
+            addBtn(lang === "ru" ? "12 \u043c\u0435\u0441." : "12 months", rolling, null);
             (years || []).forEach((y) => {
                 const active = view && view.kind === "year" && view.year === y;
                 addBtn(String(y), active, y);
@@ -1280,9 +1431,9 @@
             function ruContribWord(n) {
                 const mod10 = n % 10;
                 const mod100 = n % 100;
-                if (mod10 === 1 && mod100 !== 11) return "вклад";
-                if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "вклада";
-                return "вкладов";
+                if (mod10 === 1 && mod100 !== 11) return "\u0432\u043a\u043b\u0430\u0434";
+                if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "\u0432\u043a\u043b\u0430\u0434\u0430";
+                return "\u0432\u043a\u043b\u0430\u0434\u043e\u0432";
             }
 
             bindHeatmapTooltipDismissOnce();
@@ -1315,9 +1466,9 @@
             const total = dayCounts.reduce((sum, x) => sum + Number(x.count || 0), 0);
             const summaryEl = document.getElementById("heatmap-contrib-summary");
             if (view.kind === "rolling") {
-                summaryEl.innerHTML = `<strong>${total.toLocaleString(loc)}</strong> ${lang === "ru" ? "вкладов за последние 12 месяцев" : "contributions in the last year"}`;
+                summaryEl.innerHTML = `<strong>${total.toLocaleString(loc)}</strong> ${lang === "ru" ? "\u0432\u043a\u043b\u0430\u0434\u043e\u0432 \u0437\u0430 \u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0435 12 \u043c\u0435\u0441\u044f\u0446\u0435\u0432" : "contributions in the last year"}`;
             } else {
-                summaryEl.innerHTML = `<strong>${total.toLocaleString(loc)}</strong> ${lang === "ru" ? "вкладов за" : "contributions in"} ${view.year}`;
+                summaryEl.innerHTML = `<strong>${total.toLocaleString(loc)}</strong> ${lang === "ru" ? "\u0432\u043a\u043b\u0430\u0434\u043e\u0432 \u0437\u0430" : "contributions in"} ${view.year}`;
             }
 
             const streaks = calculateStreaks(dayCounts, view);
@@ -1325,17 +1476,17 @@
             const yNow = new Date().getFullYear();
             if (view.kind === "rolling") {
                 streakEl.textContent = lang === "ru"
-                    ? `Серия: ${streaks.longest} дн. Текущая серия: ${streaks.current} дн.`
+                    ? `\u0421\u0435\u0440\u0438\u044f: ${streaks.longest} \u0434\u043d. \u0422\u0435\u043a\u0443\u0449\u0430\u044f \u0441\u0435\u0440\u0438\u044f: ${streaks.current} \u0434\u043d.`
                     : `Longest streak: ${streaks.longest} days. Current streak: ${streaks.current} days.`;
             } else {
                 const curPart =
                     view.year < yNow
                         ? ""
                         : streaks.current > 0
-                            ? (lang === "ru" ? ` Текущая серия: ${streaks.current} дн.` : ` Current streak: ${streaks.current} days.`)
-                            : (lang === "ru" ? " Текущая серия: —" : " Current streak: —");
+                            ? (lang === "ru" ? ` \u0422\u0435\u043a\u0443\u0449\u0430\u044f \u0441\u0435\u0440\u0438\u044f: ${streaks.current} \u0434\u043d.` : ` Current streak: ${streaks.current} days.`)
+                            : (lang === "ru" ? " \u0422\u0435\u043a\u0443\u0449\u0430\u044f \u0441\u0435\u0440\u0438\u044f: \u2014" : " Current streak: \u2014");
                 streakEl.textContent = lang === "ru"
-                    ? `Серия: ${streaks.longest} дн.${curPart}`
+                    ? `\u0421\u0435\u0440\u0438\u044f: ${streaks.longest} \u0434\u043d.${curPart}`
                     : `Longest streak: ${streaks.longest} days.${curPart}`;
             }
 
@@ -1350,6 +1501,8 @@
             renderHeatmap(data);
         }
 
+        /* ── Header ── */
+
         function renderHeader(data) {
             const user = data.user;
             profileAuthor = {
@@ -1359,32 +1512,60 @@
             };
             const nameEl = document.getElementById("name-line");
             nameEl.classList.remove("skeleton");
-            nameEl.textContent = `${user.fullName}${user.countryFlag ? ` ${user.countryFlag}` : ""}`;
+            nameEl.textContent = user.fullName || user.username;
             if (user.isVerifiedUser) {
                 const badge = document.createElement("span");
                 badge.className = "verified-check";
-                badge.innerHTML = "&#10003;";
                 badge.title = "Verified";
+                badge.innerHTML = '<svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#1a1a2e"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
                 nameEl.appendChild(badge);
             }
 
             document.getElementById("profile-avatar").src = user.profilePicture || "/img/profile_images/Default_placeholder.svg";
             document.getElementById("username-line").textContent = `@${user.username}`;
 
+            // Institution + Country on one line
             const institution = document.getElementById("institution-line");
-            if (user.institution) {
+            const parts = [];
+            if (user.institution) parts.push(user.institution);
+            if (user.countryLocation) {
+                const countryText = user.countryLocation + (user.countryFlag ? ` ${user.countryFlag}` : "");
+                parts.push(countryText);
+            }
+            if (parts.length > 0) {
                 institution.style.display = "block";
-                institution.textContent = user.institution;
+                institution.textContent = parts.join(" \u00b7 ");
             }
 
+            // Bio with truncation
             const bioLine = document.getElementById("bio-line");
+            const bioText = document.getElementById("bio-text");
+            const bioToggle = document.getElementById("bio-toggle");
             if (user.bio) {
                 bioLine.style.display = "block";
-                bioLine.textContent = user.bio;
+                bioText.textContent = user.bio;
+                // Check if text is actually truncated (after render)
+                requestAnimationFrame(() => {
+                    if (bioText.scrollHeight > bioText.clientHeight) {
+                        bioToggle.style.display = "inline";
+                        bioToggle.addEventListener("click", () => {
+                            const expanded = bioText.classList.toggle("bio-expanded");
+                            bioToggle.textContent = expanded
+                                ? (lang === "ru" ? "показать меньше" : "show less")
+                                : (lang === "ru" ? "показать больше" : "show more");
+                        });
+                    }
+                });
             }
 
+            // Edit Profile or Follow button
             if (data.isOwnProfile) {
                 document.getElementById("edit-profile-link").style.display = "inline";
+            } else if (sessionUsername) {
+                const followBtn = document.getElementById("follow-btn");
+                followBtn.style.display = "inline-block";
+                setFollowState(followBtn, data.isFollowing);
+                followBtn.addEventListener("click", () => toggleFollow(followBtn, user.id));
             }
 
             const socialRow = document.getElementById("social-row");
@@ -1409,8 +1590,12 @@
             document.getElementById("stat-translations").textContent = Number(data.stats.translations || 0).toLocaleString();
             document.getElementById("stat-likes").textContent = Number(data.stats.likesReceived || 0).toLocaleString();
 
-            document.getElementById("member-since").textContent = `Member since ${fmtMonthYear(data.footer.memberSince)}`;
-            document.getElementById("last-active").textContent = `Last active ${relTime(data.footer.lastActiveAt)}`;
+            document.getElementById("member-since").textContent = lang === "ru"
+                ? `Участник с ${fmtMonthYear(data.footer.memberSince)}`
+                : `Member since ${fmtMonthYear(data.footer.memberSince)}`;
+            document.getElementById("last-active").textContent = lang === "ru"
+                ? `Последняя активность ${relTime(data.footer.lastActiveAt)}`
+                : `Last active ${relTime(data.footer.lastActiveAt)}`;
 
             const collabRow = document.getElementById("collab-row");
             collabRow.innerHTML = "";
@@ -1434,7 +1619,14 @@
                 const card = document.getElementById("platform-overview-card");
                 const grid = document.getElementById("platform-overview-grid");
                 card.style.display = "block";
-                const items = [
+                const items = lang === "ru" ? [
+                    ["Всего решений на платформе", data.platformOverview.total_platform_solutions],
+                    ["Зарегистрированных пользователей", data.platformOverview.total_registered_users],
+                    ["Просмотров страниц", data.platformOverview.total_page_views],
+                    ["Уникальных посетителей", data.platformOverview.unique_visitors],
+                    ["Лично написанных решений", data.platformOverview.solutions_personally_authored],
+                    ["Переведённых решений", data.platformOverview.solutions_translated],
+                ] : [
                     ["Total platform solutions", data.platformOverview.total_platform_solutions],
                     ["Total registered users", data.platformOverview.total_registered_users],
                     ["Total page views", data.platformOverview.total_page_views],
@@ -1447,7 +1639,7 @@
                     const cell = document.createElement("article");
                     cell.className = "stat-tile";
                     cell.innerHTML = `
-                        <div class="stat-value" style="font-size:24px;color:#1a1a2e;">${Number(value || 0).toLocaleString()}</div>
+                        <div class="stat-value" style="font-size:24px;">${Number(value || 0).toLocaleString()}</div>
                         <div class="stat-label">${label}</div>
                     `;
                     grid.appendChild(cell);
@@ -1458,7 +1650,45 @@
                 document.getElementById("sankey-card").style.display = "block";
                 loadSankey();
             }
+
+            // Hide empty sections for zero-contribution profiles
+            const totalContribs = Number(data.stats.edits || 0);
+            if (totalContribs === 0) {
+                document.querySelector(".heatmap-card").style.display = "none";
+                document.querySelector(".timeline-radar-card").style.display = "none";
+                document.querySelector(".chapters-card").style.display = "none";
+                document.querySelector(".collabs-card").style.display = "none";
+            }
         }
+
+        /* ── Follow ── */
+
+        function setFollowState(btn, isFollowing) {
+            if (isFollowing) {
+                btn.textContent = lang === "ru" ? "Подписка" : "Following";
+                btn.className = "follow-btn follow-btn--following";
+            } else {
+                btn.textContent = lang === "ru" ? "Подписаться" : "Follow";
+                btn.className = "follow-btn follow-btn--follow";
+            }
+            btn.dataset.following = isFollowing ? "1" : "0";
+        }
+
+        async function toggleFollow(btn, userId) {
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/api/follow/${userId}`, { method: "POST" });
+                if (!res.ok) throw new Error("Follow failed");
+                const data = await res.json();
+                setFollowState(btn, data.following);
+            } catch (e) {
+                console.error("Follow error:", e);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        /* ── Timeline ── */
 
         async function renderTimeline() {
             const data = await fetchJSON(`/api/user/${username}/timeline`);
@@ -1478,6 +1708,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     animation: false,
                     plugins: { legend: { display: false } },
                     scales: {
@@ -1487,13 +1718,16 @@
                 },
             });
             if (data.mostActive) {
-                document.getElementById("timeline-summary").textContent =
-                    `Most active month: ${data.mostActive.label} (${data.mostActive.count} contributions)`;
+                document.getElementById("timeline-summary").textContent = lang === "ru"
+                    ? `Самый активный месяц: ${data.mostActive.label} (${data.mostActive.count} вкладов)`
+                    : `Most active month: ${data.mostActive.label} (${data.mostActive.count} contributions)`;
             }
         }
 
-        function renderBreakdownRows(rows, targetId) {
-            const tbody = document.getElementById(targetId);
+        /* ── Radar + Chapter Breakdown ── */
+
+        function renderBreakdownRows(rows) {
+            const tbody = document.getElementById("chapter-body");
             tbody.innerHTML = "";
             rows.forEach((row) => {
                 const tr = document.createElement("tr");
@@ -1514,51 +1748,71 @@
 
         async function renderRadarAndBreakdown() {
             const data = await fetchJSON(`/api/user/${username}/radar`);
-            const labels = data.radarAxes.map((x) => x.label);
-            const values = data.radarAxes.map((x) => x.value);
-            const ctx = document.getElementById("radar-chart");
-            if (radarChart) radarChart.destroy();
-            const maxVal = Math.max(1, ...values);
-            radarChart = new Chart(ctx, {
-                type: "radar",
-                data: {
-                    labels,
-                    datasets: [{
-                        data: values,
-                        backgroundColor: "rgba(26, 26, 46, 0.20)",
-                        borderColor: "#1a1a2e",
-                        borderWidth: 1.5,
-                        pointRadius: 2,
-                    }],
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    layout: {
-                        padding: 0,
+
+            // Hide radar if fewer than 5 contributions
+            const totalSolved = data.radarAxes.reduce((s, x) => s + x.value, 0);
+            if (totalSolved < 5) {
+                document.getElementById("radar-card").innerHTML = lang === "ru"
+                    ? '<h2 class="section-title">Охват физики</h2><p class="radar-empty">Недостаточно данных</p>'
+                    : '<h2 class="section-title">Physics Coverage</h2><p class="radar-empty">Not enough data yet</p>';
+            } else {
+                const labels = data.radarAxes.map((x) => {
+                    const text = x.label;
+                    if (text.length <= 25) return text;
+                    const parts = text.split('. ');
+                    if (parts.length >= 2) {
+                        const mid = Math.ceil(parts.length / 2);
+                        return [parts.slice(0, mid).join('. '), parts.slice(mid).join('. ')];
+                    }
+                    const words = text.split(' ');
+                    const midW = Math.ceil(words.length / 2);
+                    return [words.slice(0, midW).join(' '), words.slice(midW).join(' ')];
+                });
+                const values = data.radarAxes.map((x) => x.value);
+                const ctx = document.getElementById("radar-chart");
+                if (radarChart) radarChart.destroy();
+                const maxVal = Math.max(1, ...values);
+                radarChart = new Chart(ctx, {
+                    type: "radar",
+                    data: {
+                        labels,
+                        datasets: [{
+                            data: values,
+                            backgroundColor: "rgba(26, 26, 46, 0.15)",
+                            borderColor: "#1a1a2e",
+                            borderWidth: 2,
+                            pointBackgroundColor: "#1a1a2e",
+                            pointRadius: 3,
+                        }],
                     },
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        r: {
-                            min: 0,
-                            max: maxVal,
-                            angleLines: { color: "#dee2e6" },
-                            grid: { color: "#dee2e6" },
-                            pointLabels: {
-                                color: "#6c757d",
-                                font: { size: 10 },
-                                padding: 2,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            r: {
+                                min: 0,
+                                max: maxVal,
+                                beginAtZero: true,
+                                ticks: { display: false },
+                                grid: { color: "#dee2e6" },
+                                angleLines: { color: "#dee2e6" },
+                                pointLabels: {
+                                    font: { size: 10 },
+                                    color: "#6c757d",
+                                    padding: 4,
+                                },
                             },
-                            ticks: { display: false, beginAtZero: true },
                         },
                     },
-                },
-            });
+                });
+            }
 
-            renderBreakdownRows(data.breakdown, "chapter-body");
-            renderBreakdownRows(data.breakdown, "mobile-chapter-body");
+            renderBreakdownRows(data.breakdown);
         }
+
+        /* ── Contributions List ── */
 
         function appendContributionRows(rows) {
             const list = document.getElementById("recent-list");
@@ -1574,7 +1828,7 @@
                 const dateStr = fmtCommitDate(row.edited_at);
                 const isoAttr = escapeHtml(row.edited_at);
                 const ariaContribution = lang === "ru"
-                    ? `Вклад ${id}, задача ${row.problem_name}`
+                    ? `\u0412\u043a\u043b\u0430\u0434 ${id}, \u0437\u0430\u0434\u0430\u0447\u0430 ${row.problem_name}`
                     : `Contribution ${id}, problem ${row.problem_name}`;
                 const wrap = document.createElement("div");
                 wrap.className = "contrib-latest";
@@ -1589,14 +1843,14 @@
                             <a class="contrib-author-link" href="/user/${authorUser}">${authorUser}</a>
                             <span class="contrib-title-wrap">
                                 <a class="contrib-title-link" href="${diffHref}">#${id}</a>
-                                <span class="contrib-sep" aria-hidden="true" style="color:#57606a;">·</span>
+                                <span class="contrib-sep" aria-hidden="true" style="color:#57606a;">\u00b7</span>
                                 <a class="contrib-problem-link" href="${problemHref}">${pn}</a>
                                 <span class="contrib-lang">${lng}</span>
                             </span>
                         </div>
                         <div class="contrib-meta-right">
                             <a class="contrib-hash" href="${diffHref}" title="${ariaContribution}">#${id}</a>
-                            <span aria-hidden="true">·</span>
+                            <span aria-hidden="true">\u00b7</span>
                             <time class="contrib-time" datetime="${isoAttr}" title="${relTime(row.edited_at)}">${dateStr}</time>
                         </div>
                     </div>
@@ -1612,12 +1866,14 @@
             if (data.hasNext) {
                 link.style.display = "inline";
             } else if (contribPage === 1 && (!data.rows || data.rows.length === 0)) {
-                document.getElementById("recent-list").innerHTML = `<div class="contrib-time" style="padding:4px 0;">${lang === "ru" ? "Нет недавних вкладов." : "No recent contributions."}</div>`;
+                document.getElementById("recent-list").innerHTML = `<div class="contrib-time" style="padding:4px 0;">${lang === "ru" ? "\u041d\u0435\u0442 \u043d\u0435\u0434\u0430\u0432\u043d\u0438\u0445 \u0432\u043a\u043b\u0430\u0434\u043e\u0432." : "No recent contributions."}</div>`;
                 link.style.display = "none";
             } else {
                 link.style.display = "none";
             }
         }
+
+        /* ── Sankey ── */
 
         async function renderSankey(chapter = null) {
             const query = chapter ? `?chapter=${chapter}` : "";
@@ -1687,6 +1943,8 @@
                 document.getElementById("sankey-card").style.display = "none";
             }
         }
+
+        /* ── Init ── */
 
         async function init() {
             const [stats, heatmap] = await Promise.all([

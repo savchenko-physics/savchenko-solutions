@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= topic.title %> - <%= __('forumPage.discussion') %> | <%= __('title') %></title>
+    <meta name="description" content="<%= topic.title %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>" />
+
+    <%
+        const catName = __('forumPage.cat_' + category.slug + '_name') !== 'forumPage.cat_' + category.slug + '_name' ? __('forumPage.cat_' + category.slug + '_name') : category.name;
+        const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US';
+    %>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "DiscussionForumPosting",
+        "headline": "<%= topic.title.replace(/"/g, '\\"') %>",
+        "url": "https://savchenkosolutions.com/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>",
+        "datePublished": "<%= new Date(topic.created_at).toISOString() %>",
+        "author": {
+            "@type": "Person",
+            "name": "<%= topic.author_name || 'Anonymous' %>"
+        },
+        "interactionStatistic": {
+            "@type": "InteractionCounter",
+            "interactionType": "https://schema.org/CommentAction",
+            "userInteractionCount": <%= topic.reply_count || 0 %>
+        }
+    }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- MathJax -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+    <!-- CodeMirror for reply editor -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
+    <!-- marked.js for client-side markdown preview -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@14/marked.min.js"></script>
+
+    <style>
+        .forum-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .forum-breadcrumb {
+            font-size: 14px;
+            margin-bottom: 1.5rem;
+            color: #6c757d;
+        }
+        .forum-breadcrumb a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .forum-breadcrumb a:hover {
+            color: #0d3b54;
+        }
+        .topic-heading {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 1.5rem;
+        }
+
+        /* Post cards */
+        .forum-post {
+            display: flex;
+            gap: 1.25rem;
+            padding: 1.25rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .forum-post:last-of-type {
+            border-bottom: none;
+        }
+        .post-author {
+            flex-shrink: 0;
+            width: 120px;
+            text-align: center;
+        }
+        .post-author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 0.5rem;
+        }
+        .post-author-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .post-author-name a {
+            color: #2d2d2d;
+            text-decoration: none;
+        }
+        .post-author-name a:hover {
+            color: #1a5276;
+        }
+        .post-author-badge {
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 0.2rem;
+        }
+        .post-author-joined {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 0.15rem;
+        }
+        .post-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .post-content {
+            font-size: 15px;
+            line-height: 1.7;
+            color: #2d2d2d;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .post-content .problem-ref {
+            color: #1a5276;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .post-content .problem-ref:hover {
+            text-decoration: underline;
+        }
+        .post-content .user-mention {
+            color: #1a5276;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .post-content .user-mention:hover {
+            text-decoration: underline;
+        }
+        .post-footer {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 13px;
+            color: #6c757d;
+        }
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6c757d;
+            transition: all 0.15s;
+            padding: 0;
+        }
+        .vote-btn:hover {
+            background: #f8f9fa;
+        }
+        .vote-btn.active-up {
+            color: #27ae60;
+            border-color: #27ae60;
+            background: #f0fdf4;
+        }
+        .vote-btn.active-down {
+            color: #c0392b;
+            border-color: #c0392b;
+            background: #fef2f2;
+        }
+        .vote-score {
+            font-weight: 600;
+            font-size: 14px;
+            min-width: 24px;
+            text-align: center;
+        }
+        .mark-solution-btn {
+            background: none;
+            border: 1px solid #27ae60;
+            color: #27ae60;
+            border-radius: 6px;
+            padding: 0.25rem 0.6rem;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .mark-solution-btn:hover {
+            background: #27ae60;
+            color: #fff;
+        }
+
+        /* Solution banner */
+        .solution-banner {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 13px;
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        /* Reply form */
+        .reply-section {
+            margin-top: 2rem;
+            border-top: 2px solid #dee2e6;
+            padding-top: 1.5rem;
+        }
+        .reply-section h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .CodeMirror {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            height: 180px;
+            font-size: 14px;
+        }
+        .preview-panel {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            min-height: 60px;
+            background: #f8f9fa;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+        .preview-toggle {
+            font-size: 13px;
+            color: #1a5276;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 0.5rem;
+        }
+        .preview-toggle:hover {
+            text-decoration: underline;
+        }
+        .btn-submit-reply {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.5rem 1.5rem;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 0.75rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-submit-reply:hover {
+            background: #0d0d1a;
+        }
+        .btn-submit-reply:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .locked-notice {
+            text-align: center;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 14px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            margin-top: 2rem;
+        }
+        .login-prompt {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .login-prompt a {
+            color: #1a5276;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .forum-container { padding: 1rem 0.75rem; }
+            .topic-heading { font-size: 20px; }
+            .post-author { width: 60px; }
+            .post-author-avatar { width: 36px; height: 36px; }
+            .post-author-name { font-size: 12px; }
+            .post-author-badge, .post-author-joined { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <div class="forum-container">
+        <div class="forum-breadcrumb">
+            <a href="/discuss"><%= __('forumPage.discussion') %></a>
+            <span> / </span>
+            <a href="/discuss/<%= category.slug %>"><%= catName %></a>
+            <span> / </span>
+            <span><%= topic.title %></span>
+        </div>
+
+        <h1 class="topic-heading"><%= topic.title %></h1>
+
+        <% posts.forEach((post, index) => { %>
+        <div class="forum-post" id="post-<%= post.id %>">
+            <div class="post-author">
+                <img
+                    src="<%= post.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                    alt=""
+                    class="post-author-avatar"
+                />
+                <p class="post-author-name">
+                    <a href="/user/<%= post.username %>"><%= post.username %></a>
+                </p>
+                <% if (reputations[post.user_id]) { %>
+                <div class="post-author-badge" style="color: <%= reputations[post.user_id].color %>;">
+                    <%= reputations[post.user_id].label %>
+                    <span style="font-weight: 400; color: #6c757d;">(<%= reputations[post.user_id].score %>)</span>
+                </div>
+                <% } %>
+                <div class="post-author-joined">
+                    <%= __('forumPage.joined') %> <%= post.user_joined ? new Date(post.user_joined).toLocaleDateString(dateLocale, { month: 'short', year: 'numeric' }) : '—' %>
+                </div>
+            </div>
+            <div class="post-body">
+                <% if (post.is_solution) { %>
+                <div class="solution-banner">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <%= __('forumPage.acceptedSolution') %>
+                </div>
+                <% } %>
+                <div class="post-content"><%- autoLinkContent(post.content, lang) %></div>
+                <div class="post-footer">
+                    <span style="color: #6c757d; font-size: 12px;"><%= timeAgo(post.created_at) %><% if (post.is_edited) { %> (<%= __('forumPage.edited') %>)<% } %></span>
+                    <% if (index > 0) { %>
+                    <div style="display: flex; align-items: center; gap: 0.35rem;">
+                        <button class="vote-btn<%= userVotes[post.id] === 1 ? ' active-up' : '' %>" data-post-id="<%= post.id %>" data-vote="1" title="Upvote">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg>
+                        </button>
+                        <span class="vote-score" id="score-<%= post.id %>"><%= post.upvotes - post.downvotes %></span>
+                        <button class="vote-btn<%= userVotes[post.id] === -1 ? ' active-down' : '' %>" data-post-id="<%= post.id %>" data-vote="-1" title="Downvote">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+                        </button>
+                    </div>
+                    <% if (userId === topic.user_id && post.user_id !== topic.user_id && !post.is_solution) { %>
+                        <button class="mark-solution-btn" data-topic-id="<%= topic.id %>" data-post-id="<%= post.id %>"><%= __('forumPage.markAsSolution') %></button>
+                    <% } %>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        <% }); %>
+
+        <% if (topic.is_locked) { %>
+        <div class="locked-notice">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <%= __('forumPage.topicLocked') %>
+        </div>
+        <% } else if (userId) { %>
+        <div class="reply-section">
+            <h3><%= __('forumPage.reply') %></h3>
+            <p style="font-size: 13px; color: #6c757d; margin-bottom: 0.5rem;">
+                <%= __('forumPage.latexHint') %>
+            </p>
+            <textarea id="replyContent" rows="6"></textarea>
+            <button class="preview-toggle" id="togglePreview"><%= __('forumPage.showPreview') %></button>
+            <div class="preview-panel" id="previewPanel"></div>
+            <div>
+                <button class="btn-submit-reply" id="submitReply">
+                    <%= __('forumPage.postReply') %>
+                </button>
+            </div>
+        </div>
+        <% } else { %>
+        <div class="login-prompt">
+            <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Войдите' : 'Log in' %></a> <%= __('forumPage.loginToReply') %>
+        </div>
+        <% } %>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+    <%- include('../default/main_site_search_script') %>
+
+    <script>
+    (function() {
+        const LANG = '<%= lang %>';
+        const t = {
+            showPreview: "<%= __('forumPage.showPreview') %>",
+            hidePreview: "<%= __('forumPage.hidePreview') %>",
+            postReply: "<%= __('forumPage.postReply') %>",
+            posting: "<%= __('forumPage.posting') %>",
+            failedToPost: "<%= __('forumPage.failedToPost') %>",
+            networkError: "<%= __('forumPage.networkError') %>",
+            markAsSolutionConfirm: "<%= __('forumPage.markAsSolutionConfirm') %>",
+        };
+
+        const textarea = document.getElementById('replyContent');
+        let editor = null;
+        if (textarea && typeof CodeMirror !== 'undefined') {
+            editor = CodeMirror.fromTextArea(textarea, {
+                mode: 'stex',
+                lineWrapping: true,
+            });
+        }
+
+        const previewBtn = document.getElementById('togglePreview');
+        const previewPanel = document.getElementById('previewPanel');
+        let previewVisible = false;
+        let previewTimer = null;
+
+        function renderPreview() {
+            if (!previewPanel || !previewVisible) return;
+            const content = editor ? editor.getValue() : textarea.value;
+            let html = (typeof marked !== 'undefined' && marked.parse)
+                ? marked.parse(content, { breaks: true, gfm: true })
+                : content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+            html = html
+                .replace(/#(\d+\.\d+\.\d+)/g, '<a href="/' + LANG + '/$1" class="problem-ref">#$1</a>')
+                .replace(/@([a-zA-Z0-9_]+)/g, '<a href="/user/$1" class="user-mention">@$1</a>');
+            previewPanel.innerHTML = html;
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([previewPanel]);
+            }
+        }
+
+        function schedulePreviewUpdate() {
+            if (!previewVisible) return;
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(renderPreview, 200);
+        }
+
+        if (previewBtn && previewPanel) {
+            previewBtn.addEventListener('click', function() {
+                if (previewVisible) {
+                    previewPanel.style.display = 'none';
+                    previewBtn.textContent = t.showPreview;
+                    previewVisible = false;
+                } else {
+                    previewVisible = true;
+                    previewPanel.style.display = 'block';
+                    previewBtn.textContent = t.hidePreview;
+                    renderPreview();
+                }
+            });
+        }
+
+        if (editor) {
+            editor.on('change', schedulePreviewUpdate);
+        } else if (textarea) {
+            textarea.addEventListener('input', schedulePreviewUpdate);
+        }
+
+        const submitBtn = document.getElementById('submitReply');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', async function() {
+                const content = editor ? editor.getValue() : (textarea ? textarea.value : '');
+                if (!content.trim()) return;
+                submitBtn.disabled = true;
+                submitBtn.textContent = t.posting;
+                try {
+                    const res = await fetch('/discuss/<%= topic.id %>/reply', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: content.trim() })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.error || t.failedToPost);
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = t.postReply;
+                    }
+                } catch (err) {
+                    alert(t.networkError);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = t.postReply;
+                }
+            });
+        }
+
+        document.querySelectorAll('.vote-btn').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const postId = this.dataset.postId;
+                const vote = parseInt(this.dataset.vote, 10);
+                try {
+                    const res = await fetch('/discuss/posts/' + postId + '/vote', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ vote: vote })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const scoreEl = document.getElementById('score-' + postId);
+                        if (scoreEl) scoreEl.textContent = (data.upvotes || 0) - (data.downvotes || 0);
+                        const btns = document.querySelectorAll('.vote-btn[data-post-id="' + postId + '"]');
+                        btns.forEach(function(b) {
+                            b.classList.remove('active-up', 'active-down');
+                            if (data.userVote === 1 && b.dataset.vote === '1') b.classList.add('active-up');
+                            if (data.userVote === -1 && b.dataset.vote === '-1') b.classList.add('active-down');
+                        });
+                    } else {
+                        if (data.error) alert(data.error);
+                    }
+                } catch (err) {
+                    // Silent fail
+                }
+            });
+        });
+
+        document.querySelectorAll('.mark-solution-btn').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                const topicId = this.dataset.topicId;
+                const postId = this.dataset.postId;
+                if (!confirm(t.markAsSolutionConfirm)) return;
+                try {
+                    const res = await fetch('/discuss/' + topicId + '/solution/' + postId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        if (data.error) alert(data.error);
+                    }
+                } catch (err) {
+                    alert(t.networkError);
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

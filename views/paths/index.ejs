@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="<%= __('pathsPage.subtitle') %>" />
+  <title><%= __('pathsPage.title') %> — <%= __('title') %></title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .paths-container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .page-title { font-size: 28px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.25rem; }
+    .page-subtitle { font-size: 15px; color: #6c757d; margin-bottom: 2rem; }
+    .paths-grid { display: grid; gap: 1.25rem; }
+
+    .path-card { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; transition: box-shadow 0.15s; }
+    .path-card:hover { box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .path-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
+    .path-card-title { font-size: 17px; font-weight: 600; color: #2d2d2d; margin: 0; }
+    .path-card-title a { color: #1a5276; text-decoration: none; }
+    .path-card-title a:hover { color: #0d3b54; }
+    .path-card-desc { font-size: 14px; color: #6c757d; line-height: 1.5; margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .path-card-meta { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 13px; color: #6c757d; align-items: center; }
+    .path-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+    .difficulty-range { font-weight: 600; color: #1a1a2e; }
+    .path-progress { margin-top: 0.75rem; }
+    .path-progress-bar { height: 6px; background: #ebedf0; border-radius: 3px; overflow: hidden; margin-bottom: 4px; }
+    .path-progress-fill { height: 100%; background: #27ae60; border-radius: 3px; transition: width 0.3s; }
+    .path-progress-text { font-size: 12px; color: #6c757d; }
+    .path-card-action { margin-top: 1rem; }
+    .btn-path { display: inline-block; padding: 0.4rem 1.1rem; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; }
+    .btn-path,
+    .btn-path:visited,
+    .btn-path:hover,
+    .btn-path:focus,
+    .btn-path:active { color: #fff !important; text-decoration: none; }
+    .btn-path-primary { background: #1a1a2e; color: #fff; }
+    .btn-path-primary:hover { background: #0d0d1a; }
+    .btn-path-continue { background: #27ae60; color: #fff; }
+    .btn-path-continue:hover { background: #1e8449; }
+    .empty-state { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="paths-container">
+    <h1 class="page-title"><%= __('pathsPage.title') %></h1>
+    <p class="page-subtitle"><%= __('pathsPage.subtitle') %></p>
+
+    <% if (paths.length > 0) { %>
+    <div class="paths-grid">
+      <% paths.forEach(function(p) {
+        const progress = userProgress[p.id];
+        const solvedCount = progress ? parseInt(progress.solved) : 0;
+        const totalCount = p.problem_count || 0;
+        const pct = totalCount > 0 ? Math.round((solvedCount / totalCount) * 100) : 0;
+        const hasStarted = progress && (parseInt(progress.solved) > 0 || parseInt(progress.attempted) > 0);
+      %>
+      <div class="path-card">
+        <div class="path-card-header">
+          <h2 class="path-card-title"><a href="/paths/<%= p.slug %>"><%= p.title %></a></h2>
+        </div>
+        <p class="path-card-desc"><%= p.description %></p>
+        <div class="path-card-meta">
+          <% if (p.difficulty_start && p.difficulty_end) { %>
+          <span class="path-meta-item">
+            <span class="difficulty-range"><%= __('pathsPage.difficulty') %> <%= p.difficulty_start %> &rarr; <%= p.difficulty_end %></span>
+          </span>
+          <% } %>
+          <span class="path-meta-item"><%= totalCount %> <%= __('pathsPage.problems') %></span>
+          <% if (p.estimated_hours) { %>
+          <span class="path-meta-item">~<%= p.estimated_hours %> <%= __('pathsPage.hours') %></span>
+          <% } %>
+          <% if (p.author_name) { %>
+          <span class="path-meta-item"><%= __('pathsPage.by') %> <a href="/user/<%= p.author_name %>" style="color: #1a5276;"><%= p.author_name %></a></span>
+          <% } %>
+        </div>
+        <% if (typeof username !== 'undefined' && username && totalCount > 0) { %>
+        <div class="path-progress">
+          <div class="path-progress-bar">
+            <div class="path-progress-fill" style="width: <%= pct %>%;"></div>
+          </div>
+          <span class="path-progress-text"><%= solvedCount %> / <%= totalCount %> <%= __('pathsPage.completed') %> (<%= pct %>%)</span>
+        </div>
+        <% } %>
+        <div class="path-card-action">
+          <a href="/paths/<%= p.slug %>" class="btn-path <%= hasStarted ? 'btn-path-continue' : 'btn-path-primary' %>">
+            <%= hasStarted ? __('pathsPage.continue') : __('pathsPage.start') %>
+          </a>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <% } else { %>
+    <div class="empty-state">
+      <p style="font-size: 16px; font-weight: 500;"><%= __('pathsPage.noPathsYet') %></p>
+      <p><%= __('pathsPage.checkBackSoon') %></p>
+    </div>
+    <% } %>
+  </div>
+
+  <%- include('../default/modern_footer') %>
+  <%- include('../default/main_site_search_script') %>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

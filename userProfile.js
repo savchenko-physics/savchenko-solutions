@@ -46,11 +46,61 @@ async function getUserProfile(req, res) {
             }
         }
 
+        const isOwner = req.session.userId === user.id;
+
+        // If viewing own profile, fetch activity data
+        let starredSolutions = [];
+        let recentForumActivity = [];
+        let challengeHistory = [];
+        if (isOwner) {
+            const [starredResult, forumResult, challengeResult] = await Promise.all([
+                pool.query(
+                    `SELECT problem_name, language, created_at FROM starred_solutions
+                     WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20`,
+                    [user.id]
+                ),
+                pool.query(
+                    `(SELECT 'topic' AS type, ft.title, ft.id AS topic_id, ft.slug,
+                             fc.slug AS category_slug, ft.created_at
+                      FROM forum_topics ft
+                      JOIN forum_categories fc ON ft.category_id = fc.id
+                      WHERE ft.user_id = $1
+                      ORDER BY ft.created_at DESC LIMIT 10)
+                     UNION ALL
+                     (SELECT 'reply' AS type, ft.title, ft.id AS topic_id, ft.slug,
+                             fc.slug AS category_slug, fp.created_at
+                      FROM forum_posts fp
+                      JOIN forum_topics ft ON fp.topic_id = ft.id
+                      JOIN forum_categories fc ON ft.category_id = fc.id
+                      WHERE fp.user_id = $1
+                      ORDER BY fp.created_at DESC LIMIT 10)
+                     ORDER BY created_at DESC LIMIT 10`,
+                    [user.id]
+                ),
+                pool.query(
+                    `SELECT cs.id, cs.challenge_id, cs.status, cs.score, cs.submitted_at,
+                            wc.title AS challenge_title
+                     FROM challenge_submissions cs
+                     JOIN weekly_challenges wc ON cs.challenge_id = wc.id
+                     WHERE cs.user_id = $1
+                     ORDER BY cs.submitted_at DESC LIMIT 10`,
+                    [user.id]
+                ).catch(() => ({ rows: [] })),
+            ]);
+            starredSolutions = starredResult.rows;
+            recentForumActivity = forumResult.rows;
+            challengeHistory = challengeResult.rows;
+        }
+
         return res.render("user_profile", {
             __: i18n.__,
             lang,
             username: user.username,
             profileUserId: user.id,
+            isOwner,
+            starredSolutions,
+            recentForumActivity,
+            challengeHistory,
             usernameCurrent: currentUserProfile?.username || null,
             profilePictureCurrent: currentUserProfile
                 ? (currentUserProfile.profile_picture || "/img/profile_images/Default_placeholder.svg")

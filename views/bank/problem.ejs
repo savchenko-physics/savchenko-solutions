@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <%
+        const pTitle = problem.title || (problem.source_name + ' ' + (problem.year || '') + ' Problem ' + (problem.problem_number || problem.id));
+        const topicStr = (problem.topics || []).join(', ');
+        const metaDesc = (lang === 'ru' ? 'Решение: ' : 'Solution to ') + pTitle + '.' +
+            (problem.difficulty ? ' ' + (lang === 'ru' ? 'Сложность' : 'Difficulty') + ': ' + problem.difficulty + '/10.' : '') +
+            (topicStr ? ' ' + (lang === 'ru' ? 'Темы' : 'Topics') + ': ' + topicStr + '.' : '');
+    %>
+    <title><%= pTitle %> — Physics Problem Bank | Savchenko Solutions</title>
+    <meta name="description" content="<%= metaDesc %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/bank/problem/<%= problem.id %>" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CreativeWork",
+        "name": "<%= pTitle.replace(/"/g, '\\"') %>",
+        "description": "<%= metaDesc.replace(/"/g, '\\"') %>",
+        "educationalLevel": "University",
+        "learningResourceType": "Problem",
+        "url": "https://savchenkosolutions.com/bank/problem/<%= problem.id %>"
+    }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #2d2d2d;
+        }
+        .bp-layout {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 280px;
+            gap: 1.5rem;
+        }
+
+        /* Breadcrumb */
+        .bp-breadcrumb {
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .bp-breadcrumb a { color: #1a5276; text-decoration: none; }
+        .bp-breadcrumb a:hover { text-decoration: underline; }
+
+        /* Main content card */
+        .bp-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .bp-card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .bp-card-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+        .bp-card-meta { font-size: 13px; color: #6c757d; }
+        .bp-card-meta a { color: #1a5276; text-decoration: none; }
+        .bp-card-meta a:hover { text-decoration: underline; }
+
+        /* Statement */
+        .bp-statement {
+            padding: 1.25rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "Times New Roman", serif;
+        }
+
+        /* Solution toggle */
+        .bp-solution-toggle {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .bp-solution-btn {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .bp-solution-btn:hover { opacity: 0.85; }
+
+        .bp-solution-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .bp-solution-content.open { max-height: 5000px; }
+
+        .bp-solution-body {
+            padding: 1.25rem;
+            border-top: 1px solid #dee2e6;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "Times New Roman", serif;
+        }
+        .bp-no-solution {
+            padding: 1.25rem;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        /* Progress buttons */
+        .bp-progress { padding: 0.75rem 1.25rem; border-top: 1px solid #dee2e6; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .bp-progress-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 0.4rem 0.85rem;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #2d2d2d;
+        }
+        .bp-progress-btn:hover { background: #e9ecef; }
+        .bp-progress-btn.active {
+            background: #1a1a2e;
+            color: #fff;
+            border-color: #1a1a2e;
+        }
+
+        /* Sidebar */
+        .bp-sidebar { position: sticky; top: 80px; align-self: start; display: flex; flex-direction: column; gap: 1rem; }
+        .bp-sidebar-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        .bp-sidebar-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #6c757d;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Difficulty bar */
+        .diff-bar {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 0.35rem;
+        }
+        .diff-bar-seg {
+            flex: 1;
+            height: 8px;
+            border-radius: 2px;
+            background: #e9ecef;
+        }
+        .diff-bar-seg.filled-green { background: #27ae60; }
+        .diff-bar-seg.filled-yellow { background: #f39c12; }
+        .diff-bar-seg.filled-red { background: #c0392b; }
+        .diff-value { font-size: 14px; font-weight: 600; color: #2d2d2d; }
+        .diff-votes { font-size: 12px; color: #6c757d; }
+
+        /* Difficulty vote slider */
+        .diff-vote-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+        .diff-vote-slider { flex: 1; }
+        .diff-vote-val { font-size: 14px; font-weight: 600; min-width: 24px; text-align: center; }
+        .diff-vote-submit {
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 0.3rem 0.75rem;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* Topic pills in sidebar */
+        .bp-topic-pill {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+            margin: 0 0.25rem 0.25rem 0;
+        }
+        .bp-topic-pill:hover { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+
+        /* Related */
+        .bp-related-item { padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; }
+        .bp-related-item:last-child { border-bottom: none; }
+        .bp-related-item a { color: #1a5276; text-decoration: none; font-size: 14px; font-weight: 500; }
+        .bp-related-item a:hover { text-decoration: underline; }
+        .bp-related-meta { font-size: 12px; color: #6c757d; }
+
+        /* Comments */
+        .bp-comments { border-top: 1px solid #dee2e6; margin-top: 1rem; }
+        .bp-comments-header { padding: 1rem 1.25rem; border-bottom: 1px solid #dee2e6; }
+        .bp-comments-header h3 { font-size: 18px; font-weight: 600; margin: 0; }
+        .bp-comment { padding: 0.75rem 1.25rem; border-bottom: 1px solid #f8f9fa; }
+        .bp-comment:last-child { border-bottom: none; }
+        .bp-comment-author { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+        .bp-comment-avatar { width: 28px; height: 28px; border-radius: 50%; }
+        .bp-comment-name { font-size: 13px; font-weight: 500; color: #1a5276; text-decoration: none; }
+        .bp-comment-name:hover { text-decoration: underline; }
+        .bp-comment-time { font-size: 12px; color: #6c757d; }
+        .bp-comment-text { font-size: 14px; line-height: 1.5; }
+        .bp-comment-form { padding: 1rem 1.25rem; border-top: 1px solid #dee2e6; }
+        .bp-comment-textarea {
+            width: 100%;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 0.75rem;
+            font-size: 14px;
+            min-height: 60px;
+            resize: vertical;
+        }
+        .bp-comment-textarea:focus { outline: none; border-color: #1a1a2e; }
+        .bp-comment-submit {
+            margin-top: 0.5rem;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        @media (max-width: 991px) {
+            .bp-layout { grid-template-columns: 1fr; }
+            .bp-sidebar { position: static; }
+        }
+    </style>
+    <script src="/js/analytics.js"></script>
+</head>
+
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <main class="bp-layout">
+        <div>
+            <!-- Breadcrumb -->
+            <div class="bp-breadcrumb">
+                <a href="/bank"><%= lang === 'ru' ? 'Банк задач' : 'Problem Bank' %></a>
+                <span> / </span>
+                <a href="/bank/source/<%= problem.source_slug %>"><%= problem.source_name %></a>
+                <span> / </span>
+                <span><%= problem.problem_number || ('#' + problem.id) %></span>
+            </div>
+
+            <!-- Problem card -->
+            <div class="bp-card">
+                <div class="bp-card-header">
+                    <h1><%= pTitle %></h1>
+                    <div class="bp-card-meta">
+                        <a href="/bank/source/<%= problem.source_slug %>"><%= problem.source_name %></a>
+                        <% if (problem.year) { %> · <%= problem.year %><% } %>
+                        <% if (problem.problem_number) { %> · #<%= problem.problem_number %><% } %>
+                        <% if (problem.submitter_username) { %> · <%= lang === 'ru' ? 'Добавил' : 'Submitted by' %> <a href="/user/<%= problem.submitter_username %>"><%= problem.submitter_username %></a><% } %>
+                        · <%= problem.view_count %> <%= lang === 'ru' ? 'просмотров' : 'views' %>
+                    </div>
+                </div>
+
+                <!-- Statement -->
+                <div class="bp-statement tex2jax">
+                    <%- (lang === 'ru' && problem.statement_ru) ? problem.statement_ru : (problem.statement_en || problem.statement_ru || '') %>
+                </div>
+
+                <!-- Solution toggle -->
+                <% const hasSolution = (lang === 'ru' && problem.solution_ru) ? problem.solution_ru : (problem.solution_en || problem.solution_ru); %>
+                <div class="bp-solution-toggle">
+                    <button class="bp-solution-btn" id="solutionToggle">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px;">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <%= lang === 'ru' ? 'Показать решение' : 'Show Solution' %>
+                    </button>
+                </div>
+
+                <div class="bp-solution-content" id="solutionContent">
+                    <% if (hasSolution) { %>
+                        <div class="bp-solution-body tex2jax">
+                            <%- hasSolution %>
+                        </div>
+                    <% } else { %>
+                        <div class="bp-no-solution">
+                            <%= lang === 'ru' ? 'Решение пока не добавлено.' : 'No solution has been added yet.' %>
+                        </div>
+                    <% } %>
+                </div>
+
+                <!-- Progress buttons (logged in) -->
+                <% if (userId) { %>
+                <div class="bp-progress">
+                    <button class="bp-progress-btn <%= userAttempt === 'attempted' ? 'active' : '' %>" data-status="attempted">
+                        <%= lang === 'ru' ? 'Пробовал' : 'I attempted this' %>
+                    </button>
+                    <button class="bp-progress-btn <%= userAttempt === 'solved' ? 'active' : '' %>" data-status="solved">
+                        <%= lang === 'ru' ? 'Решил' : 'I solved this' %>
+                    </button>
+                    <button class="bp-progress-btn <%= userAttempt === 'gave_up' ? 'active' : '' %>" data-status="gave_up">
+                        <%= lang === 'ru' ? 'Сдался' : 'Gave up' %>
+                    </button>
+                </div>
+                <% } %>
+
+                <!-- Comments -->
+                <div class="bp-comments">
+                    <div class="bp-comments-header">
+                        <h3><%= lang === 'ru' ? 'Комментарии' : 'Comments' %> <span style="color:#6c757d; font-weight:400;">(<%= comments.length %>)</span></h3>
+                    </div>
+
+                    <% comments.forEach(function(c) { %>
+                    <div class="bp-comment">
+                        <div class="bp-comment-author">
+                            <img src="<%= c.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="bp-comment-avatar" />
+                            <a href="/user/<%= c.username %>" class="bp-comment-name"><%= c.username %></a>
+                            <span class="bp-comment-time"><%= new Date(c.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                        </div>
+                        <div class="bp-comment-text"><%= c.content %></div>
+                    </div>
+                    <% }); %>
+
+                    <% if (comments.length === 0) { %>
+                    <div style="padding: 1rem 1.25rem; color: #6c757d; font-size: 14px;">
+                        <%= lang === 'ru' ? 'Комментариев пока нет.' : 'No comments yet.' %>
+                    </div>
+                    <% } %>
+
+                    <% if (userId) { %>
+                    <div class="bp-comment-form">
+                        <textarea id="commentInput" class="bp-comment-textarea" placeholder="<%= lang === 'ru' ? 'Ваш комментарий...' : 'Write a comment...' %>"></textarea>
+                        <button id="commentSubmit" class="bp-comment-submit"><%= lang === 'ru' ? 'Отправить' : 'Post Comment' %></button>
+                    </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="bp-sidebar">
+            <!-- Source + Year -->
+            <div class="bp-sidebar-card">
+                <div class="bp-sidebar-title"><%= lang === 'ru' ? 'Источник' : 'Source' %></div>
+                <div style="font-size: 15px; font-weight: 500;">
+                    <a href="/bank/source/<%= problem.source_slug %>" style="color: #1a5276; text-decoration: none;"><%= problem.source_name %></a>
+                </div>
+                <% if (problem.year) { %>
+                <div style="font-size: 14px; color: #6c757d; margin-top: 0.25rem;"><%= problem.year %></div>
+                <% } %>
+                <% if (problem.source_country) { %>
+                <div style="font-size: 13px; color: #6c757d;"><%= problem.source_country %></div>
+                <% } %>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="bp-sidebar-card">
+                <div class="bp-sidebar-title"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></div>
+                <%
+                    const displayDiff = avgDifficulty ? parseFloat(avgDifficulty) : (problem.difficulty || 0);
+                    const filledCount = Math.round(displayDiff);
+                %>
+                <div class="diff-bar">
+                    <% for (let i = 1; i <= 10; i++) { %>
+                        <% if (i <= filledCount) { %>
+                            <div class="diff-bar-seg <%= i <= 3 ? 'filled-green' : i <= 6 ? 'filled-yellow' : 'filled-red' %>"></div>
+                        <% } else { %>
+                            <div class="diff-bar-seg"></div>
+                        <% } %>
+                    <% } %>
+                </div>
+                <div>
+                    <span class="diff-value" id="diffDisplay"><%= displayDiff %>/10</span>
+                    <span class="diff-votes">(<span id="voteCountDisplay"><%= voteCount %></span> <%= lang === 'ru' ? 'голосов' : 'votes' %>)</span>
+                </div>
+
+                <% if (userId) { %>
+                <div class="diff-vote-row">
+                    <input type="range" min="1" max="10" value="<%= userVote || 5 %>" class="diff-vote-slider" id="diffSlider" />
+                    <span class="diff-vote-val" id="diffSliderVal"><%= userVote || 5 %></span>
+                    <button class="diff-vote-submit" id="diffVoteBtn"><%= lang === 'ru' ? 'Оценить' : 'Rate' %></button>
+                </div>
+                <% } %>
+            </div>
+
+            <!-- Topics -->
+            <% if (problem.topics && problem.topics.length > 0) { %>
+            <div class="bp-sidebar-card">
+                <div class="bp-sidebar-title"><%= lang === 'ru' ? 'Темы' : 'Topics' %></div>
+                <div>
+                    <% problem.topics.forEach(function(t) { %>
+                        <a href="/bank/topic/<%= t %>" class="bp-topic-pill"><%= t.charAt(0).toUpperCase() + t.slice(1).replace(/-/g, ' ') %></a>
+                    <% }); %>
+                </div>
+            </div>
+            <% } %>
+
+            <!-- Related problems -->
+            <% if (relatedProblems.length > 0) { %>
+            <div class="bp-sidebar-card">
+                <div class="bp-sidebar-title"><%= lang === 'ru' ? 'Похожие задачи' : 'Related Problems' %></div>
+                <% relatedProblems.forEach(function(r) { %>
+                <div class="bp-related-item">
+                    <a href="/bank/problem/<%= r.id %>"><%= r.title || (r.source_name + ' #' + r.id) %></a>
+                    <div class="bp-related-meta">
+                        <%= r.source_name %>
+                        <% if (r.difficulty) { %> · <%= r.difficulty %>/10<% } %>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+            <% } %>
+
+            <!-- Related Savchenko Problems -->
+            <% if (typeof relatedSavchenko !== 'undefined' && relatedSavchenko.length > 0) { %>
+            <div class="bp-sidebar-card">
+                <div class="bp-sidebar-title"><%= lang === 'ru' ? 'Задачи Савченко' : 'Related Savchenko Problems' %></div>
+                <% relatedSavchenko.forEach(function(s) { %>
+                <div class="bp-related-item">
+                    <a href="<%= s.url %>">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="#6c757d" style="vertical-align: -2px; margin-right: 4px;"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811V2.828zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687z"/></svg>
+                        <%= lang === 'ru' ? 'Задача' : 'Problem' %> <%= s.name %>
+                    </a>
+                </div>
+                <% }); %>
+            </div>
+            <% } %>
+        </aside>
+    </main>
+
+    <%- include('../default/modern_footer') %>
+
+    <script>
+        const problemId = <%= problem.id %>;
+        const isLoggedIn = <%= userId ? 'true' : 'false' %>;
+
+        // Solution toggle
+        document.getElementById('solutionToggle').addEventListener('click', function() {
+            const content = document.getElementById('solutionContent');
+            const isOpen = content.classList.toggle('open');
+            this.innerHTML = isOpen
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/></svg> <%= lang === "ru" ? "Скрыть решение" : "Hide Solution" %>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <%= lang === "ru" ? "Показать решение" : "Show Solution" %>';
+            if (isOpen && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([content]);
+            }
+        });
+
+        // Attempt buttons
+        document.querySelectorAll('.bp-progress-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const status = this.dataset.status;
+                fetch('/bank/problem/' + problemId + '/attempt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: status })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.ok) {
+                        document.querySelectorAll('.bp-progress-btn').forEach(function(b) { b.classList.remove('active'); });
+                        btn.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Difficulty slider
+        if (document.getElementById('diffSlider')) {
+            const slider = document.getElementById('diffSlider');
+            const val = document.getElementById('diffSliderVal');
+            slider.addEventListener('input', function() { val.textContent = this.value; });
+
+            document.getElementById('diffVoteBtn').addEventListener('click', function() {
+                fetch('/bank/problem/' + problemId + '/difficulty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty: parseInt(slider.value, 10) })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.ok) {
+                        document.getElementById('diffDisplay').textContent = data.avgDifficulty + '/10';
+                        document.getElementById('voteCountDisplay').textContent = data.voteCount;
+                    }
+                });
+            });
+        }
+
+        // Comments
+        if (document.getElementById('commentSubmit')) {
+            document.getElementById('commentSubmit').addEventListener('click', function() {
+                const input = document.getElementById('commentInput');
+                const content = input.value.trim();
+                if (!content) return;
+
+                fetch('/bank/problem/' + problemId + '/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.ok) {
+                        input.value = '';
+                        const c = data.comment;
+                        const dateStr = new Date(c.created_at).toLocaleDateString(
+                            '<%= lang %>' === 'ru' ? 'ru-RU' : 'en-US',
+                            { year: 'numeric', month: 'short', day: 'numeric' }
+                        );
+                        const avatar = c.profile_picture || '/img/profile_images/Default_placeholder.svg';
+                        const html = '<div class="bp-comment">' +
+                            '<div class="bp-comment-author">' +
+                            '<img src="' + avatar + '" alt="" class="bp-comment-avatar" />' +
+                            '<a href="/user/' + c.username + '" class="bp-comment-name">' + c.username + '</a>' +
+                            '<span class="bp-comment-time">' + dateStr + '</span>' +
+                            '</div>' +
+                            '<div class="bp-comment-text">' + c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+                            '</div>';
+                        const form = document.querySelector('.bp-comment-form');
+                        form.insertAdjacentHTML('beforebegin', html);
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>

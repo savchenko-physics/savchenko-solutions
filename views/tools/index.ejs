@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Инструменты для физики — Бесплатные утилиты для студентов' : 'Physics Tools — Free Utilities for Students' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Бесплатные инструменты для физики: интерактивный справочник формул, конвертер единиц, таблица физических констант и редактор формул LaTeX.' : 'Free physics tools: interactive formula sheet, unit converter, physical constants table, and LaTeX equation editor. Built for olympiad preparation and physics students.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "<%= lang === 'ru' ? 'Инструменты для физики' : 'Physics Tools' %>",
+        "description": "<%= lang === 'ru' ? 'Бесплатные утилиты для физики: справочник формул, конвертер единиц, таблица констант и редактор LaTeX.' : 'Free physics utilities: formula sheet, unit converter, constants table, and LaTeX editor.' %>",
+        "url": "https://savchenkosolutions.com/<%= lang %>/tools",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "isPartOf": {
+            "@type": "WebSite",
+            "name": "Savchenko Solutions",
+            "url": "https://savchenkosolutions.com"
+        }
+    }
+    </script>
+    <script src="/js/analytics.js"></script>
+    <style>
+        .tools-container { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+        .tools-header { margin-bottom: 2.5rem; }
+        .tools-header h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0 0 0.5rem;
+        }
+        .tools-header p {
+            color: #6c757d;
+            font-size: 15px;
+            margin: 0;
+        }
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+        @media (max-width: 767px) {
+            .tools-grid { grid-template-columns: 1fr; }
+        }
+        .tool-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .tool-card:hover {
+            border-color: #1a1a2e;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            text-decoration: none;
+            color: inherit;
+        }
+        .tool-card-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a2e;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+        .tool-card-icon svg { width: 20px; height: 20px; fill: #fff; }
+        .tool-card h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d2d2d;
+            margin: 0;
+        }
+        .tool-card p {
+            font-size: 13.5px;
+            color: #6c757d;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <%- include('../default/main_site_header') %>
+
+    <div class="tools-container">
+        <div class="tools-header">
+            <h1><%= lang === 'ru' ? 'Инструменты для физики' : 'Physics Tools' %></h1>
+            <p><%= lang === 'ru' ? 'Бесплатные утилиты для студентов и подготовки к олимпиадам' : 'Free utilities for physics students and olympiad preparation' %></p>
+        </div>
+
+        <div class="tools-grid">
+            <!-- Formula Sheet -->
+            <a href="/<%= lang %>/tools/formulas" class="tool-card">
+                <div class="tool-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3h6v1.5H8V16zm0-6h3v1.5H8V10z"/></svg>
+                </div>
+                <h2><%= lang === 'ru' ? 'Справочник формул' : 'Formula Sheet' %></h2>
+                <p><%= lang === 'ru' ? 'Справочник 200+ формул по физике с поиском, организованный по главам Савченко, с рендером LaTeX и выводами.' : 'Searchable reference of 200+ physics formulas organized by Savchenko chapter, with LaTeX rendering and derivations.' %></p>
+            </a>
+
+            <!-- Unit Converter -->
+            <a href="/<%= lang %>/tools/units" class="tool-card">
+                <div class="tool-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M7.5 21H2V9h5.5v12zm7.25-18h-5.5v18h5.5V3zM22 11h-5.5v10H22V11z"/></svg>
+                </div>
+                <h2><%= lang === 'ru' ? 'Конвертер единиц' : 'Unit Converter' %></h2>
+                <p><%= lang === 'ru' ? 'Конвертация между СИ, СГС и другими системами единиц. Длина, масса, энергия, давление, температура и другие.' : 'Convert between SI, CGS, and other unit systems. Covers length, mass, energy, pressure, temperature, and more.' %></p>
+            </a>
+
+            <!-- Physical Constants -->
+            <a href="/<%= lang %>/tools/constants" class="tool-card">
+                <div class="tool-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                </div>
+                <h2><%= lang === 'ru' ? 'Физические константы' : 'Physical Constants' %></h2>
+                <p><%= lang === 'ru' ? 'Значения CODATA для 40+ фундаментальных констант. Нажмите для копирования. Переключение между СИ и СГС.' : 'CODATA values for 40+ fundamental constants. Click to copy. Toggle between SI and CGS units.' %></p>
+            </a>
+
+            <!-- LaTeX Editor -->
+            <a href="/<%= lang %>/tools/latex" class="tool-card">
+                <div class="tool-card-icon">
+                    <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                </div>
+                <h2><%= lang === 'ru' ? 'Редактор формул LaTeX' : 'LaTeX Equation Editor' %></h2>
+                <p><%= lang === 'ru' ? 'Написание физических формул с предпросмотром MathJax. Шаблоны для стандартных выражений и законов физики.' : 'Write physics equations with live MathJax preview. Includes templates for common expressions and physics laws.' %></p>
+            </a>
+        </div>
+    </div>
+
+    <%- include('../default/modern_footer') %>
+</body>
+</html>

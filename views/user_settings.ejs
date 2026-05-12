@@ -548,6 +548,83 @@
                                 <span class="toggle-thumb"></span>
                             </label>
                         </div>
+
+                        <h2 class="section-heading" style="margin-top:32px;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></h2>
+
+                        <% const ns = typeof notificationSettings !== 'undefined' ? notificationSettings : {}; %>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Комментарии к решениям' : 'Comments on my solutions' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда кто-то комментирует задачу, в которую вы внесли вклад' : 'When someone comments on a problem you contributed to' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_comment_on_solution" value="1" <%= ns.comment_on_solution !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Ответы на комментарии' : 'Replies to my comments' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда кто-то отвечает на ваш комментарий' : 'When someone replies to your comment' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_reply_to_comment" value="1" <%= ns.reply_to_comment !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Лайки' : 'Likes on my solutions' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда кто-то ставит лайк вашему решению' : 'When someone likes your solution' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_solution_liked" value="1" <%= ns.solution_liked !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Подписчики' : 'New followers' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда кто-то подписывается на вас' : 'When someone follows you' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_new_follower" value="1" <%= ns.new_follower !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Ответы на форуме' : 'Forum replies' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда кто-то отвечает на вашу тему' : 'When someone replies to your forum topic' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_forum_reply" value="1" <%= ns.forum_reply !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Результаты заданий' : 'Challenge results' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда ваша работа проверена' : 'When your challenge submission is reviewed' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_challenge_result" value="1" <%= ns.challenge_result !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
                         <button type="submit" class="btn-primary"><%= __('settings.privacy.save') %></button>
                     </form>
                 </div>
@@ -710,7 +787,7 @@
                         unameStatus.className = 'username-status bad';
                     }
                 }).catch(function () {});
-        }, 350);
+        }, 500);
     }
     unameInput.addEventListener('input', function () { checkU(); markProfileDirty(); });
 

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= __('pathsPage.createTitle') %> — <%= __('title') %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .form-container { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .back-link { font-size: 13px; color: #1a5276; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 1.5rem; }
+    .back-link:hover { color: #0d3b54; }
+    .page-title { font-size: 24px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 0.35rem; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; height: 40px; padding: 0 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 14px;
+    }
+    .form-group textarea { height: auto; min-height: 100px; padding: 0.75rem; resize: vertical; }
+    .form-group .hint { font-size: 12px; color: #6c757d; margin-top: 4px; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+    .problems-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #dee2e6; }
+    .problems-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 0.75rem; }
+    .problem-entry { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .problem-entry input { flex: 1; }
+    .problem-entry select { width: 130px; }
+    .problem-entry .remove-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 18px; padding: 0 4px; }
+    .add-problem-btn { display: inline-block; padding: 0.4rem 1rem; border: 1px dashed #dee2e6; border-radius: 6px; font-size: 13px; color: #6c757d; cursor: pointer; background: none; margin-top: 0.5rem; }
+    .add-problem-btn:hover { border-color: #1a1a2e; color: #1a1a2e; }
+
+    .submit-btn { display: inline-block; padding: 0.5rem 1.5rem; background: #1a1a2e; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 1.5rem; }
+    .submit-btn:hover { background: #0d0d1a; }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-msg { font-size: 13px; margin-top: 0.5rem; }
+    .form-msg.error { color: #c0392b; }
+    .form-msg.success { color: #27ae60; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="form-container">
+    <a href="/paths" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <%= __('pathsPage.allPaths') %>
+    </a>
+
+    <h1 class="page-title"><%= __('pathsPage.createTitle') %></h1>
+
+    <div class="form-group">
+      <label for="pathTitle"><%= __('pathsPage.titleLabel') %></label>
+      <input type="text" id="pathTitle" placeholder="<%= __('pathsPage.titlePlaceholder') %>" maxlength="255" />
+    </div>
+
+    <div class="form-group">
+      <label for="pathDesc"><%= __('pathsPage.descriptionLabel') %></label>
+      <textarea id="pathDesc" placeholder="<%= __('pathsPage.descriptionPlaceholder') %>" maxlength="2000"></textarea>
+    </div>
+
+    <div class="row-3">
+      <div class="form-group">
+        <label for="diffStart"><%= __('pathsPage.difficultyStart') %></label>
+        <select id="diffStart">
+          <option value="">--</option>
+          <% for (let i = 1; i <= 10; i++) { %><option value="<%= i %>"><%= i %></option><% } %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="diffEnd"><%= __('pathsPage.difficultyEnd') %></label>
+        <select id="diffEnd">
+          <option value="">--</option>
+          <% for (let i = 1; i <= 10; i++) { %><option value="<%= i %>"><%= i %></option><% } %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="estHours"><%= __('pathsPage.estHours') %></label>
+        <input type="number" id="estHours" min="1" max="200" placeholder="e.g. 20" />
+      </div>
+    </div>
+
+    <div class="problems-section">
+      <h3><%= __('pathsPage.problemsSection') %></h3>
+      <p style="font-size: 13px; color: #6c757d; margin-bottom: 1rem;"><%= __('pathsPage.addInOrder') %></p>
+      <div id="problemList"></div>
+      <button class="add-problem-btn" onclick="addProblem()"><%= __('pathsPage.addProblem') %></button>
+    </div>
+
+    <button class="submit-btn" id="createBtn" onclick="createPath()"><%= __('pathsPage.createPath') %></button>
+    <div id="formMsg" class="form-msg"></div>
+  </div>
+
+  <%- include('../default/modern_footer') %>
+
+  <script>
+  const t = {
+    noteOptional: "<%= __('pathsPage.noteOptional') %>",
+    titleRequired: "<%= __('pathsPage.titleRequired') %>",
+    creating: "<%= __('pathsPage.creating') %>",
+    createPath: "<%= __('pathsPage.createPath') %>",
+    networkError: "<%= __('pathsPage.networkError') %>",
+    failedToCreate: "<%= __('pathsPage.failedToCreate') %>",
+  };
+
+  let problemCount = 0;
+
+  function addProblem() {
+    const list = document.getElementById('problemList');
+    const idx = problemCount++;
+    const div = document.createElement('div');
+    div.className = 'problem-entry';
+    div.id = 'prob-' + idx;
+    div.innerHTML =
+      '<select data-field="type">' +
+        '<option value="savchenko">Savchenko</option>' +
+        '<option value="bank">Bank</option>' +
+        '<option value="challenge">Challenge</option>' +
+      '</select>' +
+      '<input type="text" data-field="ref" placeholder="e.g. 1.1.1" />' +
+      '<input type="text" data-field="notes" placeholder="' + t.noteOptional + '" style="flex: 2;" />' +
+      '<button class="remove-btn" onclick="this.parentElement.remove()">&times;</button>';
+    list.appendChild(div);
+  }
+
+  addProblem(); addProblem(); addProblem();
+
+  async function createPath() {
+    const btn = document.getElementById('createBtn');
+    const msg = document.getElementById('formMsg');
+    const title = document.getElementById('pathTitle').value.trim();
+    if (!title) {
+      msg.className = 'form-msg error';
+      msg.textContent = t.titleRequired;
+      return;
+    }
+
+    const entries = document.querySelectorAll('.problem-entry');
+    const problems = [];
+    entries.forEach(function(el) {
+      const ref = el.querySelector('[data-field="ref"]').value.trim();
+      if (ref) {
+        problems.push({
+          type: el.querySelector('[data-field="type"]').value,
+          ref: ref,
+          notes: el.querySelector('[data-field="notes"]').value.trim() || null,
+        });
+      }
+    });
+
+    btn.disabled = true;
+    btn.textContent = t.creating;
+    msg.textContent = '';
+
+    try {
+      const resp = await fetch('/paths', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title,
+          description: document.getElementById('pathDesc').value.trim(),
+          difficulty_start: document.getElementById('diffStart').value || null,
+          difficulty_end: document.getElementById('diffEnd').value || null,
+          estimated_hours: document.getElementById('estHours').value || null,
+          problems: problems,
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        window.location.href = '/paths/' + data.slug;
+      } else {
+        msg.className = 'form-msg error';
+        msg.textContent = data.error || t.failedToCreate;
+      }
+    } catch (err) {
+      msg.className = 'form-msg error';
+      msg.textContent = t.networkError;
+    }
+    btn.disabled = false;
+    btn.textContent = t.createPath;
+  }
+  </script>
+  <%- include('../default/main_site_search_script') %>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

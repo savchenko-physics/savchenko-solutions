@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= studyPath.title %> — <%= __('pathsPage.title') %> — <%= __('title') %></title>
+
+  <script type="application/ld+json">
+  {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      "name": "<%= studyPath.title.replace(/"/g, '\\"') %>",
+      "description": "<%= (studyPath.description || '').replace(/"/g, '\\"') %>",
+      "url": "https://savchenkosolutions.com/paths/<%= studyPath.slug %>",
+      "provider": {
+          "@type": "Organization",
+          "name": "Savchenko Solutions",
+          "url": "https://savchenkosolutions.com"
+      },
+      "educationalLevel": "University",
+      "hasCourseInstance": {
+          "@type": "CourseInstance",
+          "courseMode": "Online"
+      }
+  }
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .path-container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
+    .back-link { font-size: 13px; color: #1a5276; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 1.5rem; }
+    .back-link:hover { color: #0d3b54; }
+    .path-title { font-size: 26px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.5rem; }
+    .path-desc { font-size: 15px; color: #6c757d; line-height: 1.6; margin-bottom: 1rem; }
+    .path-meta { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: 14px; color: #6c757d; margin-bottom: 1.5rem; }
+    .path-meta-item { display: inline-flex; align-items: center; gap: 4px; }
+    .difficulty-range { font-weight: 600; color: #1a1a2e; }
+
+    /* Progress bar */
+    .path-progress-section { margin-bottom: 2rem; }
+    .progress-bar-outer { height: 10px; background: #ebedf0; border-radius: 5px; overflow: hidden; margin-bottom: 6px; }
+    .progress-bar-fill { height: 100%; background: #27ae60; border-radius: 5px; transition: width 0.4s; }
+    .progress-text { font-size: 13px; color: #6c757d; }
+
+    /* Problem list */
+    .problem-list { list-style: none; padding: 0; margin: 0; }
+    .problem-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid #f0f0f0; }
+    .problem-item:last-child { border-bottom: none; }
+    .problem-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .problem-num--not_started { background: #ebedf0; color: #6c757d; }
+    .problem-num--attempted { background: #fff3cd; color: #856404; }
+    .problem-num--solved { background: #d4edda; color: #155724; }
+    .problem-body { flex: 1; min-width: 0; }
+    .problem-ref { font-size: 15px; font-weight: 500; }
+    .problem-ref a { color: #1a5276; text-decoration: none; }
+    .problem-ref a:hover { color: #0d3b54; }
+    .problem-source { font-size: 12px; color: #6c757d; margin-left: 0.5rem; }
+    .problem-notes { font-size: 13px; color: #6c757d; margin-top: 2px; font-style: italic; }
+    .problem-status { flex-shrink: 0; }
+
+    /* Status toggle button */
+    .status-btn { background: none; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: #6c757d; }
+    .status-btn:hover { background: #f8f9fa; }
+    .status-btn--solved { border-color: #27ae60; color: #27ae60; }
+    .status-btn--attempted { border-color: #ffc107; color: #856404; }
+
+    .login-prompt { text-align: center; font-size: 14px; color: #6c757d; padding: 1rem; background: #f8f9fa; border-radius: 6px; margin-bottom: 1.5rem; }
+    .login-prompt a { color: #1a5276; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="path-container">
+    <a href="/paths" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <%= __('pathsPage.allPaths') %>
+    </a>
+
+    <h1 class="path-title"><%= studyPath.title %></h1>
+    <% if (studyPath.description) { %>
+    <p class="path-desc"><%= studyPath.description %></p>
+    <% } %>
+
+    <div class="path-meta">
+      <% if (studyPath.difficulty_start && studyPath.difficulty_end) { %>
+      <span class="path-meta-item">
+        <span class="difficulty-range"><%= __('pathsPage.difficulty') %> <%= studyPath.difficulty_start %> &rarr; <%= studyPath.difficulty_end %></span>
+      </span>
+      <% } %>
+      <span class="path-meta-item"><%= problems.length %> <%= __('pathsPage.problems') %></span>
+      <% if (studyPath.estimated_hours) { %>
+      <span class="path-meta-item">~<%= studyPath.estimated_hours %> <%= __('pathsPage.hours') %></span>
+      <% } %>
+      <% if (studyPath.author_name) { %>
+      <span class="path-meta-item"><%= __('pathsPage.by') %> <a href="/user/<%= studyPath.author_name %>" style="color: #1a5276;"><%= studyPath.author_name %></a></span>
+      <% } %>
+    </div>
+
+    <%
+      const solvedCount = Object.values(progressMap).filter(function(p) { return p.status === 'solved'; }).length;
+      const totalCount = problems.length;
+      const pctDone = totalCount > 0 ? Math.round((solvedCount / totalCount) * 100) : 0;
+    %>
+
+    <% if (typeof username !== 'undefined' && username) { %>
+    <div class="path-progress-section">
+      <div class="progress-bar-outer">
+        <div class="progress-bar-fill" id="progressFill" style="width: <%= pctDone %>%;"></div>
+      </div>
+      <span class="progress-text" id="progressText"><%= solvedCount %> / <%= totalCount %> <%= __('pathsPage.completed') %> (<%= pctDone %>%)</span>
+    </div>
+    <% } else { %>
+    <div class="login-prompt">
+      <a href="/<%= lang %>/login"><%= __('pathsPage.loginToTrack') %></a>
+    </div>
+    <% } %>
+
+    <ul class="problem-list">
+      <% problems.forEach(function(prob, idx) {
+        const progress = progressMap[prob.problem_ref];
+        const status = progress ? progress.status : 'not_started';
+        const isLoggedIn = typeof username !== 'undefined' && username;
+        const problemUrl = prob.problem_type === 'savchenko'
+          ? '/' + lang + '/' + prob.problem_ref
+          : prob.problem_type === 'bank'
+            ? '/bank/problem/' + prob.problem_ref
+            : '#';
+        const sourceLabel = prob.problem_type === 'savchenko'
+          ? 'Savchenko'
+          : prob.problem_type === 'bank'
+            ? (lang === 'ru' ? 'Банк задач' : 'Problem Bank')
+            : (lang === 'ru' ? 'Задача' : 'Challenge');
+      %>
+      <li class="problem-item" data-ref="<%= prob.problem_ref %>">
+        <span class="problem-num problem-num--<%= status %>"><%= idx + 1 %></span>
+        <div class="problem-body">
+          <div>
+            <span class="problem-ref"><a href="<%= problemUrl %>"><%= prob.problem_ref %></a></span>
+            <span class="problem-source"><%= sourceLabel %></span>
+          </div>
+          <% if (prob.notes) { %>
+          <div class="problem-notes"><%= prob.notes %></div>
+          <% } %>
+        </div>
+        <% if (isLoggedIn) { %>
+        <div class="problem-status">
+          <button class="status-btn status-btn--<%= status %>"
+                  data-ref="<%= prob.problem_ref %>"
+                  data-status="<%= status %>"
+                  onclick="cycleStatus(this)"
+                  title="<%= __('pathsPage.' + status.replace('not_started', 'notStarted')) %>">
+            <%= status === 'solved' ? __('pathsPage.solved') : status === 'attempted' ? __('pathsPage.attempted') : __('pathsPage.notStarted') %>
+          </button>
+        </div>
+        <% } %>
+      </li>
+      <% }); %>
+    </ul>
+  </div>
+
+  <%- include('../default/modern_footer') %>
+
+  <script>
+  const statusCycle = ['not_started', 'attempted', 'solved'];
+  const statusLabels = {
+    not_started: "<%= __('pathsPage.notStarted') %>",
+    attempted: "<%= __('pathsPage.attempted') %>",
+    solved: "<%= __('pathsPage.solved') %>"
+  };
+  const completedLabel = "<%= __('pathsPage.completed') %>";
+  const slug = '<%= studyPath.slug %>';
+  let currentSolved = <%= solvedCount %>;
+  const totalProblems = <%= totalCount %>;
+
+  async function cycleStatus(btn) {
+    const ref = btn.dataset.ref;
+    const current = btn.dataset.status;
+    const currentIdx = statusCycle.indexOf(current);
+    const next = statusCycle[(currentIdx + 1) % statusCycle.length];
+
+    btn.disabled = true;
+    try {
+      const resp = await fetch('/paths/' + slug + '/progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ problem_ref: ref, status: next }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        btn.dataset.status = next;
+        btn.textContent = statusLabels[next];
+        btn.className = 'status-btn status-btn--' + next;
+
+        const li = btn.closest('.problem-item');
+        const num = li.querySelector('.problem-num');
+        num.className = 'problem-num problem-num--' + next;
+
+        if (current === 'solved' && next !== 'solved') currentSolved--;
+        if (current !== 'solved' && next === 'solved') currentSolved++;
+        const pct = totalProblems > 0 ? Math.round((currentSolved / totalProblems) * 100) : 0;
+        const fill = document.getElementById('progressFill');
+        const text = document.getElementById('progressText');
+        if (fill) fill.style.width = pct + '%';
+        if (text) text.textContent = currentSolved + ' / ' + totalProblems + ' ' + completedLabel + ' (' + pct + '%)';
+      }
+    } catch (err) {
+      console.error('Failed to update status:', err);
+    }
+    btn.disabled = false;
+  }
+  </script>
+  <%- include('../default/main_site_search_script') %>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

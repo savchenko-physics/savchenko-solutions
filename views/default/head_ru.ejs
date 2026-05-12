@@ -15,19 +15,17 @@
 <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
 <link rel="icon" type="image/png" href="/img/logo.png" />
 <link rel="apple-touch-icon" href="/img/logo.png" />
-<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        extensions: ['tex2jax.js'],
-        jax: ['input/TeX', 'output/HTML-CSS'],
-        tex2jax: {
-            inlineMath: [['$', '$'], ['$', '$']],
-            processEscapes: true,
-            processClass: 'tex2jax',
-            ignoreClass: 'html'
-        },
-        showProcessingMessages: false,
-        messageStyle: 'none'
-    });
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  options: {
+    skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+};
 </script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 <script src="../../js/analytics.js"></script>
