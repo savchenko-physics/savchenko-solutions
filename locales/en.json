@@ -630,6 +630,18 @@
 		"hAgo": "h ago",
 		"dAgo": "d ago"
 	},
+	"badges": {
+		"legendaryGrandmaster": "Legendary Grandmaster",
+		"internationalGrandmaster": "International Grandmaster",
+		"grandmaster": "Grandmaster",
+		"internationalMaster": "International Master",
+		"master": "Master",
+		"candidateMaster": "Candidate Master",
+		"expert": "Expert",
+		"specialist": "Specialist",
+		"pupil": "Pupil",
+		"newbie": "Newbie"
+	},
 	"forumPage": {
 		"discussion": "Discussion",
 		"newTopic": "New Topic",
@@ -667,6 +679,9 @@
 		"loginToReply": "to reply to this discussion.",
 		"failedToPost": "Failed to post reply",
 		"failedToCreate": "Failed to create topic.",
+		"topicPrefix_discussion": "Discussion: Problem",
+		"topicPrefix_question": "Question about problem",
+		"topicPrefix_error": "Error in solution",
 		"cat_solutions_name": "Solution Discussion",
 		"cat_solutions_desc": "Discuss specific solutions — corrections, alternative approaches, missing steps",
 		"cat_physics_name": "Physics & Olympiads",

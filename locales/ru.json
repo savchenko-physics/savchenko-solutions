@@ -626,6 +626,18 @@
         "hAgo": "ч. назад",
         "dAgo": "дн. назад"
     },
+    "badges": {
+        "legendaryGrandmaster": "Легендарный гроссмейстер",
+        "internationalGrandmaster": "Международный гроссмейстер",
+        "grandmaster": "Гроссмейстер",
+        "internationalMaster": "Международный мастер",
+        "master": "Мастер",
+        "candidateMaster": "Кандидат в мастера",
+        "expert": "Эксперт",
+        "specialist": "Специалист",
+        "pupil": "Ученик",
+        "newbie": "Новичок"
+    },
     "forumPage": {
         "discussion": "Обсуждение",
         "newTopic": "Новая тема",
@@ -663,6 +675,9 @@
         "loginToReply": "чтобы ответить в обсуждении.",
         "failedToPost": "Не удалось отправить ответ",
         "failedToCreate": "Не удалось создать тему.",
+        "topicPrefix_discussion": "Обсуждение: Задача",
+        "topicPrefix_question": "Вопрос о задаче",
+        "topicPrefix_error": "Ошибка в решении",
         "cat_solutions_name": "Обсуждение решений",
         "cat_solutions_desc": "Обсуждение решений — исправления, альтернативные подходы, пропущенные шаги",
         "cat_physics_name": "Физика и олимпиады",

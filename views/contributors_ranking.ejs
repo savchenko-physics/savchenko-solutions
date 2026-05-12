@@ -193,6 +193,12 @@
             font-size: 12px;
         }
 
+        .contributor-badge {
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
         .pagination-row {
             margin-top: 12px;
             display: flex;
@@ -549,6 +555,16 @@
             contributionsLastYear: "<%= __('contributorsPage.contributionsLastYear') %>",
             contributionsIn: "<%= __('contributorsPage.contributionsIn') %>",
             pageOf: "<%= __('contributorsPage.pageOf') %>",
+            legendaryGrandmaster: "<%= __('badges.legendaryGrandmaster') %>",
+            internationalGrandmaster: "<%= __('badges.internationalGrandmaster') %>",
+            grandmaster: "<%= __('badges.grandmaster') %>",
+            internationalMaster: "<%= __('badges.internationalMaster') %>",
+            master: "<%= __('badges.master') %>",
+            candidateMaster: "<%= __('badges.candidateMaster') %>",
+            expert: "<%= __('badges.expert') %>",
+            specialist: "<%= __('badges.specialist') %>",
+            pupil: "<%= __('badges.pupil') %>",
+            newbie: "<%= __('badges.newbie') %>",
         };
         const state = {
             page: 1,
@@ -799,7 +815,11 @@
                 months.appendChild(div);
             });
 
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
             days.forEach((day) => {
+                if (day.date > today) return;
                 const cell = document.createElement("div");
                 cell.className = "heat-cell";
                 cell.style.gridColumn = String(day.week + 1);
@@ -849,6 +869,19 @@
             }
         }
 
+        function getReputationBadge(score) {
+            if (score >= 200) return { label: t.legendaryGrandmaster, color: '#FF0000' };
+            if (score >= 160) return { label: t.internationalGrandmaster, color: '#FF0000' };
+            if (score >= 130) return { label: t.grandmaster, color: '#CC0000' };
+            if (score >= 110) return { label: t.internationalMaster, color: '#FF8C00' };
+            if (score >= 90)  return { label: t.master, color: '#FF8C00' };
+            if (score >= 70)  return { label: t.candidateMaster, color: '#AA00AA' };
+            if (score >= 50)  return { label: t.expert, color: '#0000FF' };
+            if (score >= 30)  return { label: t.specialist, color: '#03A89E' };
+            if (score >= 10)  return { label: t.pupil, color: '#008000' };
+            return { label: t.newbie, color: '#808080' };
+        }
+
         function renderRows(rows) {
             const tbody = document.getElementById("leaderboard-body");
             tbody.innerHTML = "";
@@ -861,6 +894,7 @@
 
                 const rankClass = row.rank <= 3 ? "top-rank" : "";
                 const countryPrefix = row.countryFlag ? `${row.countryFlag} ` : "";
+                const badge = getReputationBadge(Number(row.score || 0));
                 tr.innerHTML = `
                     <td class="${rankClass}">${row.rank}</td>
                     <td>
@@ -869,6 +903,7 @@
                             <div class="contributor-main">
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
                                 <div class="contributor-username">@${row.username}</div>
+                                <div class="contributor-badge" style="color: ${badge.color};">${badge.label}</div>
                             </div>
                         </div>
                     </td>

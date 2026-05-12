@@ -247,7 +247,7 @@
                         </span>
                         <% } %>
                         <p class="topic-title">
-                            <a href="/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>"><%= topic.title %></a>
+                            <a href="/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>"><%= translateTopicTitle(topic.title, lang) %></a>
                         </p>
                         <% if (topic.has_solution) { %>
                         <span class="solution-badge" title="<%= __('forumPage.solved') %>">

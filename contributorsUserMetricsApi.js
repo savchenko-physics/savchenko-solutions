@@ -728,7 +728,11 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 result.isFollowing = followCheck.rows.length > 0;
             }
 
-            res.set("Cache-Control", "public, max-age=3600");
+            if (req.session.userId) {
+                res.set("Cache-Control", "private, no-cache");
+            } else {
+                res.set("Cache-Control", "public, max-age=3600");
+            }
             res.json(result);
         } catch (error) {
             console.error("Failed to load user stats:", error);

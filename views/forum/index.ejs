@@ -218,7 +218,7 @@
                 <div class="category-latest">
                     <% if (cat.latest_topic) { %>
                         <div class="latest-title">
-                            <a href="/discuss/<%= cat.slug %>/<%= cat.latest_topic.id %>-<%= cat.latest_topic.slug %>"><%= cat.latest_topic.title %></a>
+                            <a href="/discuss/<%= cat.slug %>/<%= cat.latest_topic.id %>-<%= cat.latest_topic.slug %>"><%= translateTopicTitle(cat.latest_topic.title, lang) %></a>
                         </div>
                         <div class="latest-meta">
                             <%= cat.latest_topic.author_username %> &middot; <%= timeAgo(cat.latest_topic.last_reply_at || cat.latest_topic.created_at) %>

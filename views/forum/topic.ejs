@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= topic.title %> - <%= __('forumPage.discussion') %> | <%= __('title') %></title>
-    <meta name="description" content="<%= topic.title %>" />
+    <title><%= translateTopicTitle(topic.title, lang) %> - <%= __('forumPage.discussion') %> | <%= __('title') %></title>
+    <meta name="description" content="<%= translateTopicTitle(topic.title, lang) %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>" />
 
     <%
@@ -16,7 +16,7 @@
     {
         "@context": "https://schema.org",
         "@type": "DiscussionForumPosting",
-        "headline": "<%= topic.title.replace(/"/g, '\\"') %>",
+        "headline": "<%= translateTopicTitle(topic.title, lang).replace(/"/g, '\\"') %>",
         "url": "https://savchenkosolutions.com/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>",
         "datePublished": "<%= new Date(topic.created_at).toISOString() %>",
         "author": {
@@ -133,6 +133,7 @@
             font-size: 11px;
             color: #6c757d;
             margin-top: 0.15rem;
+            white-space: nowrap;
         }
         .post-body {
             flex: 1;
@@ -334,10 +335,10 @@
             <span> / </span>
             <a href="/discuss/<%= category.slug %>"><%= catName %></a>
             <span> / </span>
-            <span><%= topic.title %></span>
+            <span><%= translateTopicTitle(topic.title, lang) %></span>
         </div>
 
-        <h1 class="topic-heading"><%= topic.title %></h1>
+        <h1 class="topic-heading"><%= translateTopicTitle(topic.title, lang) %></h1>
 
         <% posts.forEach((post, index) => { %>
         <div class="forum-post" id="post-<%= post.id %>">

@@ -1438,7 +1438,11 @@
 
             bindHeatmapTooltipDismissOnce();
 
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+
             days.forEach((day) => {
+                if (day.date > today) return;
                 const cell = document.createElement("div");
                 cell.className = "heat-cell";
                 cell.style.gridColumn = String(day.week + 1);

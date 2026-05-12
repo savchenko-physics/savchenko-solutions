@@ -61,17 +61,18 @@ async function getUserReputation(userId) {
 }
 
 // Codeforces-style rating tiers adapted to contribution scores
-function getReputationBadge(score) {
-    if (score >= 200) return { label: 'Legendary Grandmaster', color: '#FF0000' };
-    if (score >= 160) return { label: 'International Grandmaster', color: '#FF0000' };
-    if (score >= 130) return { label: 'Grandmaster', color: '#CC0000' };
-    if (score >= 110) return { label: 'International Master', color: '#FF8C00' };
-    if (score >= 90)  return { label: 'Master', color: '#FF8C00' };
-    if (score >= 70)  return { label: 'Candidate Master', color: '#AA00AA' };
-    if (score >= 50)  return { label: 'Expert', color: '#0000FF' };
-    if (score >= 30)  return { label: 'Specialist', color: '#03A89E' };
-    if (score >= 10)  return { label: 'Pupil', color: '#008000' };
-    return { label: 'Newbie', color: '#808080' };
+function getReputationBadge(score, lang) {
+    const __ = (key) => i18n.__({ phrase: key, locale: lang || 'en' });
+    if (score >= 200) return { label: __('badges.legendaryGrandmaster'), color: '#FF0000' };
+    if (score >= 160) return { label: __('badges.internationalGrandmaster'), color: '#FF0000' };
+    if (score >= 130) return { label: __('badges.grandmaster'), color: '#CC0000' };
+    if (score >= 110) return { label: __('badges.internationalMaster'), color: '#FF8C00' };
+    if (score >= 90)  return { label: __('badges.master'), color: '#FF8C00' };
+    if (score >= 70)  return { label: __('badges.candidateMaster'), color: '#AA00AA' };
+    if (score >= 50)  return { label: __('badges.expert'), color: '#0000FF' };
+    if (score >= 30)  return { label: __('badges.specialist'), color: '#03A89E' };
+    if (score >= 10)  return { label: __('badges.pupil'), color: '#008000' };
+    return { label: __('badges.newbie'), color: '#808080' };
 }
 
 // Helper: relative time string
@@ -121,6 +122,22 @@ function autoLinkContent(text, lang = 'en') {
     return html;
 }
 
+// Translate well-known English topic title prefixes to the current locale
+function translateTopicTitle(title, lang) {
+    const __ = (key) => i18n.__({ phrase: key, locale: lang || 'en' });
+    const prefixes = [
+        { en: 'Discussion: Problem', key: 'forumPage.topicPrefix_discussion' },
+        { en: 'Question about problem', key: 'forumPage.topicPrefix_question' },
+        { en: 'Error in solution', key: 'forumPage.topicPrefix_error' },
+    ];
+    for (const p of prefixes) {
+        if (title.startsWith(p.en)) {
+            return __(p.key) + title.slice(p.en.length);
+        }
+    }
+    return title;
+}
+
 // Auth middleware for forum routes
 function requireAuth(req, res, next) {
     if (req.session.userId) return next();
@@ -163,6 +180,7 @@ router.get('/', async (req, res) => {
             lang,
             categories,
             timeAgo,
+            translateTopicTitle,
             username: req.session.username || null,
             userId: req.session.userId || null,
         });
@@ -302,6 +320,7 @@ router.get('/:categorySlug', async (req, res) => {
             page,
             totalPages,
             timeAgo,
+            translateTopicTitle,
             username: req.session.username || null,
             userId: req.session.userId || null,
         });
@@ -631,7 +650,7 @@ router.get('/:categorySlug/:topicParam', async (req, res) => {
         const reputations = {};
         for (const uid of userIds) {
             const rep = await getUserReputation(uid);
-            reputations[uid] = { score: rep, ...getReputationBadge(rep) };
+            reputations[uid] = { score: rep, ...getReputationBadge(rep, lang) };
         }
 
         // Get current user's votes on these posts
@@ -659,6 +678,7 @@ router.get('/:categorySlug/:topicParam', async (req, res) => {
             userVotes,
             timeAgo,
             autoLinkContent,
+            translateTopicTitle,
             username: req.session.username || null,
             userId: req.session.userId || null,
         });
