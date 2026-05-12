@@ -374,6 +374,26 @@
       text-decoration: none;
     }
     .mobile-nav-link:hover { color: #1a5276; }
+
+    /* Mobile menu: overlay content instead of pushing it down */
+    @media (max-width: 991.98px) {
+      .hero-section .navbar {
+        position: relative;
+      }
+      .hero-section .navbar-collapse {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border-bottom: 1px solid #dee2e6;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        z-index: 1030;
+      }
+      .hero-section .navbar-collapse .navbar-nav {
+        padding: 0.5rem 1.5rem 1rem;
+      }
+    }
   </style>
 
   <% if (navUser) { %>

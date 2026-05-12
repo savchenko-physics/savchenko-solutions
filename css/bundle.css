@@ -34,15 +34,15 @@ h3 {
 }
 
 /* Global links (navbar / buttons override below) */
-a:link {
+a:link:not(.btn) {
   color: var(--ss-link);
 }
 
-a:visited {
+a:visited:not(.btn) {
   color: var(--ss-link-visited);
 }
 
-a:hover {
+a:hover:not(.btn) {
   color: var(--ss-link-hover);
 }
 
