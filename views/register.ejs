@@ -53,6 +53,11 @@
                     </button>
                 </div>
             </div>
+            <p style="font-size: 12px; color: #6c757d; margin: 12px 0 16px;">
+                <%= lang === 'ru' ? 'Регистрируясь, вы соглашаетесь с' : 'By registering, you agree to the' %>
+                <a href="/<%= lang %>/community-guidelines" style="color: #6c757d; text-decoration: underline;">
+                    <%= lang === 'ru' ? 'правилами сообщества' : 'Community Guidelines' %></a>.
+            </p>
             <button type="submit" class="submit-button"><%= __('auth.register.submit') %></button>
         </form>
         <p><%= __('auth.register.haveAccount') %> <a href="/<%= lang %>/login"><%= __('auth.register.loginHere') %></a></p>

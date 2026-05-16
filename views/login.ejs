@@ -41,6 +41,11 @@
             <button type="submit" class="submit-button"><%= __('auth.login.submit') %></button>
         </form>
         <p><%= __('auth.login.noAccount') %> <a href="/<%= lang %>/register"><%= __('auth.login.registerHere') %></a></p>
+        <p style="font-size: 12px; color: #6c757d; margin-top: 12px;">
+            <a href="/<%= lang %>/community-guidelines" style="color: #6c757d; text-decoration: underline;">
+                <%= lang === 'ru' ? 'Правила сообщества' : 'Community Guidelines' %>
+            </a>
+        </p>
     </div>
     <%- include(`default/footer_${lang}.ejs`) %>
     <script>

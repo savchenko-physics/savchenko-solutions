@@ -1945,6 +1945,17 @@ app.get(["/study-guide", "/:lang/study-guide"], (req, res) => {
     });
 });
 
+app.get(["/community-guidelines", "/:lang/community-guidelines"], (req, res) => {
+    const lang = req.params.lang || 'en';
+    i18n.setLocale(res, lang);
+
+    const template = lang === 'ru' ? 'community_guidelines_ru' : 'community_guidelines_en';
+    res.render(template, {
+        __: i18n.__,
+        lang
+    });
+});
+
 // Contributors leaderboard — MUST be registered before `/:lang/:name` or "contributors" is treated as a problem slug (404).
 async function handleContributorsRanking(req, res) {
     const lang = req.params.lang || "en";
