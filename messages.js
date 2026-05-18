@@ -12,6 +12,74 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
 });
 
+const GROUP_PALETTES = [
+    ['#e74c3c', '#c0392b', '#f39c12', '#e67e22'],
+    ['#3498db', '#2980b9', '#1abc9c', '#16a085'],
+    ['#9b59b6', '#8e44ad', '#e74c3c', '#c0392b'],
+    ['#2ecc71', '#27ae60', '#3498db', '#2980b9'],
+    ['#e67e22', '#d35400', '#f1c40f', '#f39c12'],
+    ['#1abc9c', '#16a085', '#9b59b6', '#8e44ad'],
+    ['#34495e', '#2c3e50', '#3498db', '#2980b9'],
+];
+
+function groupAvatarSVG(convId, name, size) {
+    const s = size || 44;
+    const seed = convId % 7;
+    const pal = GROUP_PALETTES[seed];
+    const pattern = convId % 4;
+    const letter = (name || 'G').charAt(0).toUpperCase();
+    let bg = '';
+
+    if (pattern === 0) {
+        bg = `<defs><linearGradient id="gg${convId}" x1="0%" y1="0%" x2="100%" y2="100%">` +
+             `<stop offset="0%" stop-color="${pal[0]}"/>` +
+             `<stop offset="100%" stop-color="${pal[1]}"/>` +
+             `</linearGradient></defs>` +
+             `<rect width="${s}" height="${s}" fill="url(#gg${convId})"/>` +
+             `<circle cx="${s*0.7}" cy="${s*0.3}" r="${s*0.35}" fill="${pal[2]}" opacity="0.15"/>` +
+             `<circle cx="${s*0.25}" cy="${s*0.75}" r="${s*0.25}" fill="${pal[3]}" opacity="0.12"/>` +
+             `<line x1="${s*0.1}" y1="${s*0.6}" x2="${s*0.5}" y2="${s*0.2}" stroke="#fff" stroke-width="1" opacity="0.2"/>` +
+             `<line x1="${s*0.5}" y1="${s*0.2}" x2="${s*0.9}" y2="${s*0.5}" stroke="#fff" stroke-width="1" opacity="0.2"/>`;
+    } else if (pattern === 1) {
+        bg = `<defs><linearGradient id="gg${convId}" x1="0%" y1="100%" x2="100%" y2="0%">` +
+             `<stop offset="0%" stop-color="${pal[2]}"/>` +
+             `<stop offset="100%" stop-color="${pal[3]}"/>` +
+             `</linearGradient></defs>` +
+             `<rect width="${s}" height="${s}" fill="url(#gg${convId})"/>` +
+             `<ellipse cx="${s*0.5}" cy="${s*0.5}" rx="${s*0.38}" ry="${s*0.18}" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.25" transform="rotate(-30 ${s*0.5} ${s*0.5})"/>` +
+             `<ellipse cx="${s*0.5}" cy="${s*0.5}" rx="${s*0.38}" ry="${s*0.18}" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.25" transform="rotate(30 ${s*0.5} ${s*0.5})"/>` +
+             `<circle cx="${s*0.5}" cy="${s*0.5}" r="${s*0.06}" fill="#fff" opacity="0.35"/>`;
+    } else if (pattern === 2) {
+        bg = `<defs><linearGradient id="gg${convId}" x1="0%" y1="0%" x2="100%" y2="100%">` +
+             `<stop offset="0%" stop-color="${pal[1]}"/>` +
+             `<stop offset="50%" stop-color="${pal[0]}"/>` +
+             `<stop offset="100%" stop-color="${pal[3]}"/>` +
+             `</linearGradient></defs>` +
+             `<rect width="${s}" height="${s}" fill="url(#gg${convId})"/>` +
+             `<path d="M${s*0.1} ${s*0.7} Q${s*0.3} ${s*0.2} ${s*0.5} ${s*0.5} T${s*0.9} ${s*0.3}" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.2"/>` +
+             `<path d="M${s*0.05} ${s*0.85} Q${s*0.3} ${s*0.35} ${s*0.5} ${s*0.65} T${s*0.95} ${s*0.15}" fill="none" stroke="#fff" stroke-width="1" opacity="0.15"/>` +
+             `<circle cx="${s*0.2}" cy="${s*0.3}" r="${s*0.04}" fill="#fff" opacity="0.3"/>` +
+             `<circle cx="${s*0.75}" cy="${s*0.65}" r="${s*0.03}" fill="#fff" opacity="0.3"/>`;
+    } else {
+        bg = `<defs><linearGradient id="gg${convId}" x1="100%" y1="0%" x2="0%" y2="100%">` +
+             `<stop offset="0%" stop-color="${pal[0]}"/>` +
+             `<stop offset="100%" stop-color="${pal[2]}"/>` +
+             `</linearGradient></defs>` +
+             `<rect width="${s}" height="${s}" fill="url(#gg${convId})"/>`;
+        for (let i = 0; i < 3; i++) {
+            const y = s * (0.25 + i * 0.25);
+            bg += `<line x1="0" y1="${y}" x2="${s}" y2="${y - s*0.15}" stroke="#fff" stroke-width="0.8" opacity="0.15"/>`;
+        }
+        bg += `<polygon points="${s*0.5},${s*0.18} ${s*0.62},${s*0.42} ${s*0.38},${s*0.42}" fill="none" stroke="#fff" stroke-width="1.2" opacity="0.25"/>`;
+    }
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">` +
+           bg +
+           `<text x="50%" y="52%" text-anchor="middle" dominant-baseline="central" ` +
+           `fill="#fff" font-family="Inter,-apple-system,sans-serif" font-weight="600" ` +
+           `font-size="${Math.round(s*0.38)}" opacity="0.9">${letter}</text></svg>`;
+}
+
 async function getReactionsForMessages(messageIds, userId) {
     if (!messageIds.length) return {};
     const result = await pool.query(
@@ -160,6 +228,7 @@ router.get('/', async (req, res) => {
             username: req.session.username,
             isAdmin: false,
             membersList: [],
+            groupAvatarSVG,
         });
     } catch (err) {
         console.error('Messages inbox error:', err);
@@ -368,6 +437,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             username: req.session.username,
             isAdmin,
             membersList,
+            groupAvatarSVG,
         });
     } catch (err) {
         console.error('Messages conversation error:', err);

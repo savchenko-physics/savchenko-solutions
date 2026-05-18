@@ -171,14 +171,15 @@
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background: var(--msg-primary);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      font-weight: 600;
+      overflow: hidden;
       flex-shrink: 0;
+      position: relative;
+    }
+
+    .msg-conv-avatar-group svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .msg-conv-info {
@@ -240,6 +241,12 @@
       min-width: 0;
     }
 
+    .msg-chat-header-wrap {
+      position: relative;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
     .msg-chat-header {
       height: 56px;
       border-bottom: 1px solid var(--msg-border);
@@ -247,7 +254,6 @@
       align-items: center;
       padding: 0 16px;
       gap: 10px;
-      flex-shrink: 0;
     }
 
     .msg-chat-header-avatar {
@@ -282,11 +288,18 @@
 
     .msg-members-panel {
       display: none;
-      border-bottom: 1px solid var(--msg-border);
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 50;
       padding: 8px 16px;
-      max-height: 240px;
+      max-height: 260px;
       overflow-y: auto;
-      background: var(--msg-bg-alt);
+      background: var(--msg-bg);
+      border: 1px solid var(--msg-border);
+      border-top: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
 
     .msg-members-panel.show {
@@ -951,7 +964,7 @@
                class="msg-conv-item<%= activeConversation && activeConversation.id === c.id ? ' active' : '' %>"
                data-name="<%= c.displayName.toLowerCase() %>">
               <% if (c.is_group) { %>
-                <div class="msg-conv-avatar-group"><%= (c.displayName || 'G').charAt(0).toUpperCase() %></div>
+                <div class="msg-conv-avatar-group"><%- groupAvatarSVG(c.id, c.displayName, 44) %></div>
               <% } else { %>
                 <img class="msg-conv-avatar"
                      src="<%= c.displayPicture || '/img/profile_images/Default_placeholder.svg' %>"
@@ -982,51 +995,54 @@
     <div class="msg-chat">
       <% if (activeConversation) { %>
         <!-- Chat header -->
-        <div class="msg-chat-header">
-          <button class="msg-back-btn" onclick="window.location.href='/messages'">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <% if (activeConversation.displayPicture) { %>
-            <img class="msg-chat-header-avatar"
-                 src="<%= activeConversation.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
-          <% } %>
-          <div>
-            <div class="msg-chat-header-name">
-              <% if (!activeConversation.is_group && activeConversation.otherUser) { %>
-                <a href="/user/<%= activeConversation.otherUser.username %>"><%= activeConversation.displayName %></a>
-              <% } else { %>
-                <%= activeConversation.displayName %>
+        <div class="msg-chat-header-wrap">
+          <div class="msg-chat-header">
+            <button class="msg-back-btn" onclick="window.location.href='/messages'">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+            <% if (activeConversation.is_group) { %>
+              <div class="msg-conv-avatar-group" style="width:36px;height:36px;"><%- groupAvatarSVG(activeConversation.id, activeConversation.displayName, 36) %></div>
+            <% } else if (activeConversation.displayPicture) { %>
+              <img class="msg-chat-header-avatar"
+                   src="<%= activeConversation.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+            <% } %>
+            <div>
+              <div class="msg-chat-header-name">
+                <% if (!activeConversation.is_group && activeConversation.otherUser) { %>
+                  <a href="/user/<%= activeConversation.otherUser.username %>"><%= activeConversation.displayName %></a>
+                <% } else { %>
+                  <%= activeConversation.displayName %>
+                <% } %>
+              </div>
+              <% if (activeConversation.is_group && activeConversation.memberCount > 0) { %>
+                <div class="msg-chat-header-members" id="toggleMembers">
+                  <%= activeConversation.memberCount %> <%= lang === 'ru' ? 'участников' : 'members' %>
+                </div>
               <% } %>
             </div>
-            <% if (activeConversation.is_group && activeConversation.memberCount > 0) { %>
-              <div class="msg-chat-header-members" id="toggleMembers">
-                <%= activeConversation.memberCount %> <%= lang === 'ru' ? 'участников' : 'members' %>
+          </div>
+          <% if (activeConversation.is_group && typeof membersList !== 'undefined' && membersList.length > 0) { %>
+          <div class="msg-members-panel" id="membersPanel">
+            <% const initialShow = 20; %>
+            <% membersList.forEach(function(mem, idx) { %>
+              <div class="msg-member-item" <% if (idx >= initialShow) { %>style="display:none" data-extra-member<% } %>>
+                <img class="msg-member-avatar" src="<%= mem.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                <span class="msg-member-name">
+                  <a href="/user/<%= mem.username %>"><%= mem.full_name || mem.username %></a>
+                  <% if (mem.role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'модератор' : 'mod' %></span><% } %>
+                </span>
               </div>
+            <% }); %>
+            <% if (membersList.length > initialShow) { %>
+              <button class="msg-members-show-more" id="showMoreMembers">
+                <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %> (<%= membersList.length - initialShow %>)
+              </button>
             <% } %>
           </div>
-        </div>
-
-        <% if (activeConversation.is_group && typeof membersList !== 'undefined' && membersList.length > 0) { %>
-        <div class="msg-members-panel" id="membersPanel">
-          <% const initialShow = 20; %>
-          <% membersList.forEach(function(mem, idx) { %>
-            <div class="msg-member-item" <% if (idx >= initialShow) { %>style="display:none" data-extra-member<% } %>>
-              <img class="msg-member-avatar" src="<%= mem.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
-              <span class="msg-member-name">
-                <a href="/user/<%= mem.username %>"><%= mem.full_name || mem.username %></a>
-                <% if (mem.role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'модератор' : 'mod' %></span><% } %>
-              </span>
-            </div>
-          <% }); %>
-          <% if (membersList.length > initialShow) { %>
-            <button class="msg-members-show-more" id="showMoreMembers">
-              <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %> (<%= membersList.length - initialShow %>)
-            </button>
           <% } %>
         </div>
-        <% } %>
 
         <!-- Messages -->
         <div class="msg-chat-messages" id="chatMessages">
