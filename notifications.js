@@ -18,6 +18,7 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
     report_resolved: true,
     forum_reply: true,
     forum_solution: true,
+    new_message: true,
 };
 
 /**

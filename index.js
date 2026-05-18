@@ -42,6 +42,7 @@ const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
+const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
 
 const app = express();
 const PORT = 3000;
@@ -166,13 +167,16 @@ app.use((req, res, next) => {
     if (!req.session.userId) {
         return next();
     }
+    res.locals.unreadMessageCount = 0;
     Promise.all([
         pool.query("SELECT profile_picture FROM users WHERE id = $1", [req.session.userId]),
         notifications.getUnreadCount(req.session.userId),
+        getUnreadMessageCount(req.session.userId),
     ])
-        .then(([profileResult, unreadCount]) => {
+        .then(([profileResult, unreadCount, unreadMessages]) => {
             res.locals.profilePicture = profileResult.rows[0]?.profile_picture || null;
             res.locals.unreadNotificationCount = unreadCount;
+            res.locals.unreadMessageCount = unreadMessages;
             next();
         })
         .catch((err) => {
@@ -986,8 +990,8 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
 
     try {
         const result = await pool.query(
-            `SELECT 
-                c.id, c.content, c.parent_id, c.created_at, c.updated_at,
+            `SELECT
+                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at,
                 u.username, u.full_name, u.profile_picture
             FROM solution_comments c
             JOIN users u ON c.user_id = u.id
@@ -996,19 +1000,30 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
             [problemName, language]
         );
 
-        // Organize comments into threads
-        const comments = result.rows.map(row => ({
-            id: row.id,
-            content: row.content,
-            parentId: row.parent_id,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-            author: {
-                username: row.username,
-                fullName: row.full_name,
-                profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR
-            }
-        }));
+        const currentUserId = req.session.userId || null;
+        const now = new Date();
+
+        const comments = result.rows.map(row => {
+            const isOwnComment = currentUserId && row.user_id === currentUserId;
+            const createdAt = new Date(row.created_at);
+            const hoursSinceCreation = (now - createdAt) / (1000 * 60 * 60);
+            const isEditable = isOwnComment && hoursSinceCreation <= 24;
+
+            return {
+                id: row.id,
+                content: row.content,
+                parentId: row.parent_id,
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+                isOwnComment,
+                isEditable,
+                author: {
+                    username: row.username,
+                    fullName: row.full_name,
+                    profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR
+                }
+            };
+        });
 
         res.json({ comments });
     } catch (error) {
@@ -1101,6 +1116,118 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to add comment" });
+    }
+});
+
+// Edit a comment (within 24 hours)
+app.put("/api/solutions/:problemName/:language/comments/:commentId", checkAuthenticated, async (req, res) => {
+    const { commentId } = req.params;
+    const { content } = req.body;
+    const userId = req.session.userId;
+
+    if (!content || content.trim().length === 0) {
+        return res.status(400).json({ error: "Comment content is required" });
+    }
+
+    try {
+        const result = await pool.query(
+            "SELECT id, user_id, created_at FROM solution_comments WHERE id = $1 AND is_deleted = false",
+            [commentId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Comment not found" });
+        }
+
+        const comment = result.rows[0];
+        if (comment.user_id !== userId) {
+            return res.status(403).json({ error: "You can only edit your own comments" });
+        }
+
+        const hoursSinceCreation = (new Date() - new Date(comment.created_at)) / (1000 * 60 * 60);
+        if (hoursSinceCreation > 24) {
+            return res.status(403).json({ error: "Comments can only be edited within 24 hours of posting" });
+        }
+
+        await pool.query(
+            "UPDATE solution_comments SET content = $1, updated_at = NOW() WHERE id = $2",
+            [content.trim(), commentId]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to edit comment" });
+    }
+});
+
+// Search users for @mention autocomplete
+app.get("/api/users/search", async (req, res) => {
+    const q = (req.query.q || "").trim();
+    if (q.length < 2) {
+        return res.json({ users: [] });
+    }
+
+    try {
+        const result = await pool.query(
+            `SELECT username, full_name, profile_picture
+            FROM users
+            WHERE username ILIKE $1 OR full_name ILIKE $1
+            ORDER BY username ASC
+            LIMIT 8`,
+            [`%${q}%`]
+        );
+
+        res.json({
+            users: result.rows.map(row => ({
+                username: row.username,
+                fullName: row.full_name,
+                profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR
+            }))
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to search users" });
+    }
+});
+
+// Search problems for #problem autocomplete
+app.get("/api/problems/search", (req, res) => {
+    const q = (req.query.q || "").trim();
+    const lang = req.query.lang || "en";
+
+    if (q.length < 2) {
+        return res.json({ problems: [] });
+    }
+
+    try {
+        const { readCSV } = require("./parents");
+        const sectionsCSV = lang === "ru" ? "src/ru/database/sections.csv" : "src/database/sections.csv";
+        const sectionNumbers = readCSV(sectionsCSV, 0);
+        const sectionTitles = readCSV(sectionsCSV, 1);
+        const sectionMaximums = readCSV(sectionsCSV, 2);
+
+        const results = [];
+        for (let i = 0; i < sectionNumbers.length; i++) {
+            const secNum = sectionNumbers[i];
+            const max = parseInt(sectionMaximums[i], 10);
+            for (let p = 1; p <= max; p++) {
+                const problemName = `${secNum}.${p}`;
+                if (problemName.startsWith(q)) {
+                    results.push({
+                        name: problemName,
+                        sectionTitle: sectionTitles[i]
+                    });
+                    if (results.length >= 10) break;
+                }
+            }
+            if (results.length >= 10) break;
+        }
+
+        res.json({ problems: results });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to search problems" });
     }
 });
 
@@ -1406,18 +1533,31 @@ app.post("/forgot-password", async (req, res) => {
 
     try {
         const result = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+
+        let token = null;
+        let userId = null;
 
         if (result.rows.length > 0) {
-            const token = crypto.randomBytes(32).toString('hex');
-            const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            userId = result.rows[0].id;
+            token = crypto.randomBytes(32).toString('hex');
+            const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
             await pool.query(
                 "UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3",
-                [token, expires, result.rows[0].id]
+                [token, expires, userId]
             );
+        }
 
-            const resetUrl = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
-            console.log('Password reset link:', resetUrl);
+        // Log the request for admin review
+        try {
+            await pool.query(
+                `INSERT INTO password_reset_requests (email, user_id, reset_token, ip_address)
+                 VALUES ($1, $2, $3, $4)`,
+                [email, userId, token, ip]
+            );
+        } catch (logErr) {
+            console.error('Error logging password reset request:', logErr);
         }
 
         // Always show the same message (don't reveal if email exists)
@@ -1570,10 +1710,25 @@ app.post("/register", registerLimiter, async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert into the database
-        await pool.query(
-            "INSERT INTO users (username, email, full_name, password) VALUES ($1, $2, $3, $4)",
+        const newUser = await pool.query(
+            "INSERT INTO users (username, email, full_name, password) VALUES ($1, $2, $3, $4) RETURNING id",
             [username, email, fullname, hashedPassword]
         );
+
+        // Auto-add to global group chat
+        try {
+            const globalChat = await pool.query(
+                `SELECT id FROM conversations WHERE title = 'Savchenko Solutions' AND is_group = TRUE ORDER BY created_at ASC LIMIT 1`
+            );
+            if (globalChat.rows.length > 0) {
+                await pool.query(
+                    `INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+                    [globalChat.rows[0].id, newUser.rows[0].id]
+                );
+            }
+        } catch (e) {
+            console.error('Failed to add user to global chat:', e);
+        }
 
         res.redirect(`/${lang}/login?success=${i18n.__('Registration successful')}`);
         // res.redirect("/profile");
@@ -1836,6 +1991,9 @@ app.use('/bank', bankRouter);
 
 // Discussion Forum
 app.use('/discuss', forumRouter);
+
+// Messages
+app.use('/messages', messagesRouter);
 
 // Weekly Challenges
 app.use('/compete', challengesRouter);

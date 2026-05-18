@@ -540,26 +540,75 @@
             border-top: 1px solid #dee2e6;
         }
 
-        .comment-form-row {
-            display: flex;
-            gap: 0.75rem;
-            align-items: flex-start;
+        .comment-trigger-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            font-size: 14px;
+            color: #6c757d;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .comment-trigger-btn:hover {
+            border-color: #1a5276;
+            color: #2d2d2d;
+        }
+
+        .comment-editor {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+            display: none;
+        }
+        .comment-editor.active {
+            display: block;
+        }
+        .comment-editor:focus-within {
+            border-color: #1a5276;
         }
 
         .comment-input {
-            flex: 1;
-            min-height: 42px;
-            max-height: 160px;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+            width: 100%;
+            min-height: 120px;
+            padding: 0.65rem 0.75rem;
+            border: none;
             font-family: inherit;
             font-size: 14px;
+            line-height: 1.6;
             resize: vertical;
-        }
-        .comment-input:focus {
-            border-color: #1a5276;
             outline: none;
+        }
+
+        .comment-live-preview {
+            padding: 0.65rem 0.75rem;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #2d2d2d;
+            border-top: 1px solid #dee2e6;
+            background: #fafbfc;
+            display: none;
+            min-height: 40px;
+        }
+        .comment-live-preview:empty {
+            display: none;
+        }
+        .comment-live-preview-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.35rem;
+        }
+
+        .comment-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.5rem 0;
+            margin-top: 0.5rem;
         }
 
         .comment-submit-btn {
@@ -567,7 +616,7 @@
             color: #ffffff;
             border: none;
             border-radius: 6px;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.25rem;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -577,10 +626,19 @@
             background: #2c2c4a;
         }
 
-        .comment-latex-note {
-            font-size: 12px;
+        .comment-cancel-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            font-size: 14px;
             color: #6c757d;
-            margin-top: 0.35rem;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        .comment-cancel-btn:hover {
+            border-color: #adb5bd;
+            color: #2d2d2d;
         }
 
         .comment-login-prompt {
@@ -593,27 +651,92 @@
             color: #1a5276;
         }
 
+        /* Edit button on own comments */
+        .comment-edit-link {
+            color: #6c757d;
+            font-size: 12px;
+            text-decoration: none;
+            margin-left: 0.75rem;
+            cursor: pointer;
+        }
+        .comment-edit-link:hover {
+            color: #1a5276;
+        }
+        .comment-edited-badge {
+            font-size: 11px;
+            color: #adb5bd;
+            margin-left: 0.5rem;
+        }
+
+        /* Autocomplete dropdown */
+        .comment-autocomplete {
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            min-width: 200px;
+        }
+        .comment-autocomplete.visible {
+            display: block;
+        }
+        .autocomplete-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            gap: 8px;
+        }
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background: #f0f4f8;
+        }
+        .autocomplete-item img {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+        }
+        .autocomplete-item .ac-username {
+            font-weight: 500;
+            color: #2d2d2d;
+        }
+        .autocomplete-item .ac-fullname {
+            color: #6c757d;
+            margin-left: 4px;
+        }
+        .autocomplete-item .ac-problem {
+            font-weight: 500;
+            color: #1a5276;
+        }
+        .autocomplete-item .ac-section {
+            color: #6c757d;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
         /* Inline reply form */
         .reply-form {
             margin-top: 0.5rem;
             margin-bottom: 0.5rem;
             display: flex;
-            gap: 0.5rem;
-            align-items: flex-start;
+            flex-direction: column;
+            gap: 0;
         }
         .reply-input {
             flex: 1;
-            min-height: 36px;
+            min-height: 60px;
             padding: 0.35rem 0.65rem;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border: none;
             font-family: inherit;
             font-size: 13px;
-            resize: none;
-        }
-        .reply-input:focus {
-            border-color: #1a5276;
+            resize: vertical;
             outline: none;
+            width: 100%;
         }
         .reply-submit-btn {
             background: #1a1a2e;
@@ -626,6 +749,141 @@
         }
         .reply-submit-btn:hover {
             background: #2c2c4a;
+        }
+
+        /* Comment toolbar */
+        .comment-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 8px;
+            border-bottom: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+        .comment-toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            background: transparent;
+            color: #495057;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.12s;
+            padding: 0;
+        }
+        .comment-toolbar-btn:hover {
+            background: #e9ecef;
+            color: #2d2d2d;
+        }
+        .comment-toolbar-btn:active {
+            background: #dee2e6;
+        }
+        .comment-toolbar-btn .toolbar-btn-text {
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+        }
+        .comment-toolbar-sep {
+            width: 1px;
+            height: 20px;
+            background: #dee2e6;
+            margin: 0 4px;
+        }
+
+        .comment-content code {
+            background: #f0f0f0;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+        }
+        .comment-content a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .comment-content a:hover {
+            text-decoration: underline;
+        }
+        .comment-content blockquote {
+            border-left: 3px solid #dee2e6;
+            padding-left: 0.75em;
+            margin: 0.25em 0;
+            color: #6c757d;
+        }
+        .comment-content ul,
+        .comment-content ol {
+            margin: 0.25em 0;
+            padding-left: 1.5em;
+        }
+        .comment-content h2,
+        .comment-content h3,
+        .comment-content h4 {
+            font-weight: 600;
+            margin: 0.5em 0 0.25em;
+        }
+        .comment-content h2 { font-size: 16px; }
+        .comment-content h3 { font-size: 15px; }
+        .comment-content h4 { font-size: 14px; }
+
+        .comment-live-preview code {
+            background: #f0f0f0;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+        }
+        .comment-live-preview a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .comment-live-preview blockquote {
+            border-left: 3px solid #dee2e6;
+            padding-left: 0.75em;
+            margin: 0.25em 0;
+            color: #6c757d;
+        }
+        .comment-live-preview ul,
+        .comment-live-preview ol {
+            margin: 0.25em 0;
+            padding-left: 1.5em;
+        }
+        .comment-live-preview h2,
+        .comment-live-preview h3,
+        .comment-live-preview h4 {
+            font-weight: 600;
+            margin: 0.5em 0 0.25em;
+        }
+        .comment-live-preview h2 { font-size: 16px; }
+        .comment-live-preview h3 { font-size: 15px; }
+        .comment-live-preview h4 { font-size: 14px; }
+
+        .reply-editor {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .reply-editor:focus-within {
+            border-color: #1a5276;
+        }
+        .reply-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1px;
+            padding: 3px 6px;
+            border-bottom: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+        .reply-form-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.4rem;
         }
 
         /* Views Button (header) */
@@ -1064,16 +1322,43 @@
                 </div>
 
                 <% if (username) { %>
-                <div class="comment-add-area">
-                    <div class="comment-form-row">
-                        <textarea class="comment-input" id="commentText" rows="2" placeholder="<%= lang === 'ru' ? 'Напишите комментарий...' : 'Write a comment...' %>"></textarea>
+                <div class="comment-add-area" style="position: relative;">
+                    <button type="button" class="comment-trigger-btn" id="commentTrigger">
+                        <%= lang === 'ru' ? 'Оставить комментарий...' : 'Leave a comment...' %>
+                    </button>
+                    <div class="comment-editor" id="commentEditor">
+                        <div class="comment-toolbar" id="commentToolbar">
+                            <button type="button" class="comment-toolbar-btn" data-action="bold" title="<%= lang === 'ru' ? 'Жирный' : 'Bold' %>"><i class="fas fa-bold"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="italic" title="<%= lang === 'ru' ? 'Курсив' : 'Italic' %>"><i class="fas fa-italic"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="strikethrough" title="<%= lang === 'ru' ? 'Зачёркнутый' : 'Strikethrough' %>"><i class="fas fa-strikethrough"></i></button>
+                            <div class="comment-toolbar-sep"></div>
+                            <button type="button" class="comment-toolbar-btn" data-action="h2" title="<%= lang === 'ru' ? 'Заголовок' : 'Heading' %>"><span class="toolbar-btn-text">H</span></button>
+                            <div class="comment-toolbar-sep"></div>
+                            <button type="button" class="comment-toolbar-btn" data-action="link" title="<%= lang === 'ru' ? 'Ссылка' : 'Link' %>"><i class="fas fa-link"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="quote" title="<%= lang === 'ru' ? 'Цитата' : 'Quote' %>"><i class="fas fa-quote-left"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="code" title="<%= lang === 'ru' ? 'Код' : 'Inline code' %>"><i class="fas fa-code"></i></button>
+                            <div class="comment-toolbar-sep"></div>
+                            <button type="button" class="comment-toolbar-btn" data-action="ul" title="<%= lang === 'ru' ? 'Список' : 'Bullet list' %>"><i class="fas fa-list-ul"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="ol" title="<%= lang === 'ru' ? 'Нумерованный список' : 'Numbered list' %>"><i class="fas fa-list-ol"></i></button>
+                            <div class="comment-toolbar-sep"></div>
+                            <button type="button" class="comment-toolbar-btn" data-action="math" title="<%= lang === 'ru' ? 'Формула' : 'Math' %>"><i class="fas fa-square-root-variable"></i></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="mathblock" title="<%= lang === 'ru' ? 'Блок формул' : 'Display math' %>"><span class="toolbar-btn-text">$$</span></button>
+                            <div class="comment-toolbar-sep"></div>
+                            <button type="button" class="comment-toolbar-btn" data-action="mention" title="<%= lang === 'ru' ? 'Упомянуть' : 'Mention user' %>"><span class="toolbar-btn-text">@</span></button>
+                            <button type="button" class="comment-toolbar-btn" data-action="problem" title="<%= lang === 'ru' ? 'Задача' : 'Problem link' %>"><span class="toolbar-btn-text">#</span></button>
+                        </div>
+                        <textarea class="comment-input" id="commentText" rows="5" placeholder="<%= lang === 'ru' ? 'Напишите комментарий... Используйте @ для упоминания и # для ссылки на задачу' : 'Write a comment... Use @ to mention a user and # to link a problem' %>"></textarea>
+                        <div class="comment-live-preview" id="commentLivePreview"></div>
+                    </div>
+                    <div class="comment-footer" id="commentFooter" style="display: none;">
+                        <button type="button" class="comment-cancel-btn" id="cancelComment">
+                            <%= lang === 'ru' ? 'Отмена' : 'Cancel' %>
+                        </button>
                         <button type="button" class="comment-submit-btn" id="submitComment">
                             <%= lang === 'ru' ? 'Отправить' : 'Post' %>
                         </button>
                     </div>
-                    <div class="comment-latex-note">
-                        <%= lang === 'ru' ? 'LaTeX поддерживается: используйте $...$ для формул' : 'LaTeX supported: use $...$ for inline math' %>
-                    </div>
+                    <div class="comment-autocomplete" id="commentAutocomplete"></div>
                 </div>
                 <% } else { %>
                 <div class="comment-add-area">
@@ -1224,22 +1509,145 @@
             return roots;
         }
 
+        /* Escape HTML to prevent XSS */
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        /* Format comment content: escape HTML, apply markdown, preserve line breaks */
+        function formatCommentContent(raw) {
+            let text = escapeHtml(raw);
+
+            // Protect display math blocks: $$...$$
+            const mathBlocks = [];
+            text = text.replace(/\$\$([\s\S]*?)\$\$/g, function(match) {
+                mathBlocks.push(match);
+                return '\x00MATHBLOCK' + (mathBlocks.length - 1) + '\x00';
+            });
+
+            // Protect inline math: $...$
+            const mathInlines = [];
+            text = text.replace(/\$([^\$\n]+?)\$/g, function(match) {
+                mathInlines.push(match);
+                return '\x00MATHINLINE' + (mathInlines.length - 1) + '\x00';
+            });
+
+            // Protect inline code: `...`
+            const codeSpans = [];
+            text = text.replace(/`([^`]+?)`/g, function(_, code) {
+                codeSpans.push('<code>' + code + '</code>');
+                return '\x00CODE' + (codeSpans.length - 1) + '\x00';
+            });
+
+            // Bold: **text**
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // Italic: *text*
+            text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            // Strikethrough: ~~text~~
+            text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+            // Links: [text](url) — only allow http/https
+            text = text.replace(/\[([^\]]+?)\]\((https?:\/\/[^\)]+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+            // @mentions: @username -> link to user profile
+            text = text.replace(/@(\w+)/g, '<a href="/user/$1">@$1</a>');
+            // #problem links: #1.2.3 -> link to problem
+            text = text.replace(/#(\d+\.\d+\.\d+)/g, '<a href="/' + language + '/$1">#$1</a>');
+
+            // Restore code spans
+            text = text.replace(/\x00CODE(\d+)\x00/g, function(_, i) { return codeSpans[parseInt(i)]; });
+            // Restore inline math
+            text = text.replace(/\x00MATHINLINE(\d+)\x00/g, function(_, i) { return mathInlines[parseInt(i)]; });
+            // Restore math blocks
+            text = text.replace(/\x00MATHBLOCK(\d+)\x00/g, function(_, i) { return mathBlocks[parseInt(i)]; });
+
+            // Process line-by-line for block elements, then join
+            const lines = text.split('\n');
+            const output = [];
+            let inList = false;
+            let listType = '';
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+
+                // Heading: ## text
+                const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
+                if (headingMatch) {
+                    if (inList) { output.push('</' + listType + '>'); inList = false; }
+                    const level = headingMatch[1].length + 1;
+                    output.push('<h' + level + ' style="font-size:' + (level === 2 ? '16' : level === 3 ? '15' : '14') + 'px;font-weight:600;margin:0.5em 0 0.25em;">' + headingMatch[2] + '</h' + level + '>');
+                    continue;
+                }
+
+                // Blockquote: > text
+                const quoteMatch = line.match(/^&gt;\s?(.*)$/);
+                if (quoteMatch) {
+                    if (inList) { output.push('</' + listType + '>'); inList = false; }
+                    output.push('<blockquote style="border-left:3px solid #dee2e6;padding-left:0.75em;margin:0.25em 0;color:#6c757d;">' + (quoteMatch[1] || '') + '</blockquote>');
+                    continue;
+                }
+
+                // Unordered list: - text
+                const ulMatch = line.match(/^-\s+(.+)$/);
+                if (ulMatch) {
+                    if (!inList || listType !== 'ul') {
+                        if (inList) output.push('</' + listType + '>');
+                        output.push('<ul style="margin:0.25em 0;padding-left:1.5em;">');
+                        inList = true; listType = 'ul';
+                    }
+                    output.push('<li>' + ulMatch[1] + '</li>');
+                    continue;
+                }
+
+                // Ordered list: 1. text
+                const olMatch = line.match(/^\d+\.\s+(.+)$/);
+                if (olMatch) {
+                    if (!inList || listType !== 'ol') {
+                        if (inList) output.push('</' + listType + '>');
+                        output.push('<ol style="margin:0.25em 0;padding-left:1.5em;">');
+                        inList = true; listType = 'ol';
+                    }
+                    output.push('<li>' + olMatch[1] + '</li>');
+                    continue;
+                }
+
+                // Regular line — close any open list
+                if (inList) { output.push('</' + listType + '>'); inList = false; }
+                output.push(line === '' ? '<br>' : line + '<br>');
+            }
+            if (inList) output.push('</' + listType + '>');
+
+            // Clean up trailing <br> from last line
+            let result = output.join('');
+            result = result.replace(/(<br>)+$/, '');
+            return result;
+        }
+
         /* Render a single comment and its nested replies */
         function renderComment(comment, depth) {
             const replyBtn = isLoggedIn
                 ? '<a href="#" class="comment-reply-link" data-comment-id="' + comment.id + '">' + (language === 'ru' ? 'Ответить' : 'Reply') + '</a>'
                 : '';
 
-            let html = '<div class="comment-item">' +
+            const editBtn = comment.isEditable
+                ? '<a href="#" class="comment-edit-link" data-comment-id="' + comment.id + '" data-content="' + escapeHtml(comment.content).replace(/"/g, '&quot;').replace(/\n/g, '&#10;') + '">' + (language === 'ru' ? 'Изменить' : 'Edit') + '</a>'
+                : '';
+
+            const editedBadge = (comment.updatedAt && comment.updatedAt !== comment.createdAt)
+                ? '<span class="comment-edited-badge">(' + (language === 'ru' ? 'изменено' : 'edited') + ')</span>'
+                : '';
+
+            let html = '<div class="comment-item" data-comment-id="' + comment.id + '">' +
                 '<div class="comment-author">' +
-                    '<img src="' + (comment.author.profilePicture || defaultProfileAvatar) + '" alt="" class="comment-avatar">' +
+                    '<img src="' + escapeHtml(comment.author.profilePicture || defaultProfileAvatar) + '" alt="" class="comment-avatar">' +
                     '<div>' +
-                        '<a href="/user/' + comment.author.username + '" class="comment-username">' + (comment.author.fullName || comment.author.username) + '</a>' +
-                        '<span class="comment-time">' + relativeTime(comment.createdAt) + '</span>' +
+                        '<a href="/user/' + escapeHtml(comment.author.username) + '" class="comment-username">' + escapeHtml(comment.author.fullName || comment.author.username) + '</a>' +
+                        '<span class="comment-time">' + relativeTime(comment.createdAt) + editedBadge + '</span>' +
                     '</div>' +
                 '</div>' +
-                '<div class="comment-content">' + comment.content + '</div>' +
-                replyBtn +
+                '<div class="comment-content">' + formatCommentContent(comment.content) + '</div>' +
+                replyBtn + editBtn +
             '</div>';
 
             if (comment.replies && comment.replies.length > 0) {
@@ -1336,6 +1744,26 @@
                             showReplyForm(link);
                         });
                     });
+
+                    /* Attach edit handlers */
+                    commentsList.querySelectorAll('.comment-edit-link').forEach(function(link) {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            const commentId = link.dataset.commentId;
+                            const content = link.dataset.content;
+                            const commentEl = link.closest('.comment-item');
+                            startEditComment(commentId, content, commentEl);
+                        });
+                    });
+
+                    /* Re-typeset MathJax for any LaTeX in comments */
+                    if (window.MathJax) {
+                        if (MathJax.typesetPromise) {
+                            MathJax.typesetPromise([commentsList]);
+                        } else if (MathJax.Hub) {
+                            MathJax.Hub.Queue(['Typeset', MathJax.Hub, commentsList]);
+                        }
+                    }
                 } else {
                     countEl.textContent = '(0)';
                     commentsList.innerHTML = '<div class="comment-item" style="text-align: center; color: #6c757d;">' + i18nText.noComments + '</div>';
@@ -1351,10 +1779,60 @@
             const parentId = link.dataset.commentId;
             const form = document.createElement('div');
             form.className = 'reply-form';
+            form.style.position = 'relative';
             form.innerHTML =
-                '<textarea class="reply-input" rows="1" placeholder="' + (language === 'ru' ? 'Ваш ответ...' : 'Your reply...') + '"></textarea>' +
-                '<button class="reply-submit-btn" data-parent-id="' + parentId + '">' + (language === 'ru' ? 'Ответить' : 'Reply') + '</button>';
+                '<div class="reply-editor">' +
+                    '<div class="reply-toolbar">' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="bold" title="Bold"><i class="fas fa-bold"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="italic" title="Italic"><i class="fas fa-italic"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="strikethrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>' +
+                        '<div class="comment-toolbar-sep"></div>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="link" title="Link"><i class="fas fa-link"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="code" title="Code"><i class="fas fa-code"></i></button>' +
+                        '<div class="comment-toolbar-sep"></div>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="math" title="Math"><i class="fas fa-square-root-variable"></i></button>' +
+                        '<div class="comment-toolbar-sep"></div>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="mention" title="@"><span class="toolbar-btn-text">@</span></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="problem" title="#"><span class="toolbar-btn-text">#</span></button>' +
+                    '</div>' +
+                    '<textarea class="reply-input" rows="3" placeholder="' + (language === 'ru' ? 'Ваш ответ... @ для упоминания, # для задачи' : 'Your reply... @ to mention, # for problem') + '"></textarea>' +
+                '</div>' +
+                '<div class="reply-form-footer">' +
+                    '<button class="reply-submit-btn" data-parent-id="' + parentId + '">' + (language === 'ru' ? 'Ответить' : 'Reply') + '</button>' +
+                '</div>' +
+                '<div class="comment-autocomplete" id="replyAutocomplete"></div>';
             link.parentNode.insertBefore(form, link.nextSibling);
+
+            const replyToolbar = form.querySelector('.reply-toolbar');
+            const replyTextarea = form.querySelector('.reply-input');
+            const replyAC = form.querySelector('.comment-autocomplete');
+
+            replyToolbar.addEventListener('click', function(e) {
+                const btn = e.target.closest('.comment-toolbar-btn');
+                if (btn) {
+                    e.preventDefault();
+                    const action = btn.dataset.action;
+                    if (action === 'mention') {
+                        insertAtCursor(replyTextarea, '@');
+                        triggerAutocomplete(replyTextarea, replyAC);
+                    } else if (action === 'problem') {
+                        insertAtCursor(replyTextarea, '#');
+                        triggerAutocomplete(replyTextarea, replyAC);
+                    } else {
+                        commentToolbarAction(action, replyTextarea);
+                    }
+                }
+            });
+
+            replyTextarea.addEventListener('input', function() {
+                handleAutocompleteInput(replyTextarea, replyAC);
+            });
+            replyTextarea.addEventListener('keydown', function(e) {
+                handleAutocompleteKeydown(e, replyTextarea, replyAC);
+            });
+            replyTextarea.addEventListener('blur', function() {
+                setTimeout(function() { hideAutocomplete(replyAC); }, 200);
+            });
 
             form.querySelector('.reply-submit-btn').addEventListener('click', async function() {
                 const content = form.querySelector('.reply-input').value.trim();
@@ -1371,7 +1849,7 @@
                 }
             });
 
-            form.querySelector('.reply-input').focus();
+            replyTextarea.focus();
         }
 
         /* Submit top-level comment */
@@ -1387,12 +1865,373 @@
                     });
                     if (response.ok) {
                         document.getElementById('commentText').value = '';
+                        document.getElementById('commentEditor').classList.remove('active');
+                        document.getElementById('commentFooter').style.display = 'none';
+                        document.getElementById('commentTrigger').style.display = '';
+                        document.getElementById('commentLivePreview').style.display = 'none';
+                        document.getElementById('commentLivePreview').innerHTML = '';
                         await loadComments();
                     }
                 } catch (error) {
                     console.error('Error submitting comment:', error);
                 }
             });
+        }
+
+        /* Toolbar action for comment/reply textareas */
+        function commentToolbarAction(action, textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const sel = textarea.value.substring(start, end);
+            const before = textarea.value.substring(0, start);
+            const after = textarea.value.substring(end);
+
+            let insert = '';
+            let selectFrom = 0;
+            let selectTo = 0;
+
+            // Helper: prefix each line (for quote, lists, headings)
+            function prefixLines(prefix) {
+                if (sel) {
+                    insert = sel.split('\n').map(function(l) { return prefix + l; }).join('\n');
+                } else {
+                    insert = prefix;
+                }
+            }
+
+            switch (action) {
+                case 'bold':
+                    if (sel) { insert = '**' + sel + '**'; }
+                    else { insert = '**text**'; selectFrom = start + 2; selectTo = start + 6; }
+                    break;
+                case 'italic':
+                    if (sel) { insert = '*' + sel + '*'; }
+                    else { insert = '*text*'; selectFrom = start + 1; selectTo = start + 5; }
+                    break;
+                case 'strikethrough':
+                    if (sel) { insert = '~~' + sel + '~~'; }
+                    else { insert = '~~text~~'; selectFrom = start + 2; selectTo = start + 6; }
+                    break;
+                case 'h2':
+                    prefixLines('## ');
+                    break;
+                case 'link':
+                    if (sel && /^https?:\/\//.test(sel)) {
+                        insert = '[' + (language === 'ru' ? 'текст' : 'link') + '](' + sel + ')';
+                    } else if (sel) {
+                        insert = '[' + sel + '](url)';
+                    } else {
+                        insert = '[' + (language === 'ru' ? 'текст' : 'link') + '](url)';
+                        selectFrom = start + 1;
+                        selectTo = start + 1 + (language === 'ru' ? 5 : 4);
+                    }
+                    break;
+                case 'quote':
+                    prefixLines('> ');
+                    break;
+                case 'code':
+                    if (sel) { insert = '`' + sel + '`'; }
+                    else { insert = '`code`'; selectFrom = start + 1; selectTo = start + 5; }
+                    break;
+                case 'ul':
+                    if (sel) {
+                        insert = sel.split('\n').map(function(l) { return '- ' + l; }).join('\n');
+                    } else {
+                        insert = '- ';
+                    }
+                    break;
+                case 'ol':
+                    if (sel) {
+                        insert = sel.split('\n').map(function(l, i) { return (i + 1) + '. ' + l; }).join('\n');
+                    } else {
+                        insert = '1. ';
+                    }
+                    break;
+                case 'math':
+                    if (sel) { insert = '$' + sel + '$'; }
+                    else { insert = '$E = mc^2$'; selectFrom = start + 1; selectTo = start + 9; }
+                    break;
+                case 'mathblock':
+                    if (sel) { insert = '\n$$\n' + sel + '\n$$\n'; }
+                    else { insert = '\n$$\nF = ma\n$$\n'; selectFrom = start + 4; selectTo = start + 10; }
+                    break;
+            }
+
+            textarea.value = before + insert + after;
+            textarea.focus();
+            if (selectFrom || selectTo) {
+                textarea.setSelectionRange(selectFrom, selectTo);
+            } else {
+                textarea.setSelectionRange(start + insert.length, start + insert.length);
+            }
+        }
+
+        /* Collapsed editor + live preview + autocomplete */
+        if (isLoggedIn) {
+            const commentTrigger = document.getElementById('commentTrigger');
+            const commentEditor = document.getElementById('commentEditor');
+            const commentText = document.getElementById('commentText');
+            const commentFooter = document.getElementById('commentFooter');
+            const commentLivePreview = document.getElementById('commentLivePreview');
+            const commentToolbar = document.getElementById('commentToolbar');
+            const cancelComment = document.getElementById('cancelComment');
+            const autocompleteEl = document.getElementById('commentAutocomplete');
+
+            commentTrigger.addEventListener('click', function() {
+                commentTrigger.style.display = 'none';
+                commentEditor.classList.add('active');
+                commentFooter.style.display = 'flex';
+                commentText.focus();
+            });
+
+            cancelComment.addEventListener('click', function() {
+                commentEditor.classList.remove('active');
+                commentFooter.style.display = 'none';
+                commentTrigger.style.display = '';
+                commentText.value = '';
+                commentLivePreview.style.display = 'none';
+                commentLivePreview.innerHTML = '';
+            });
+
+            commentToolbar.addEventListener('click', function(e) {
+                const btn = e.target.closest('.comment-toolbar-btn');
+                if (btn) {
+                    e.preventDefault();
+                    const action = btn.dataset.action;
+                    if (action === 'mention') {
+                        insertAtCursor(commentText, '@');
+                        triggerAutocomplete(commentText, autocompleteEl);
+                    } else if (action === 'problem') {
+                        insertAtCursor(commentText, '#');
+                        triggerAutocomplete(commentText, autocompleteEl);
+                    } else {
+                        commentToolbarAction(action, commentText);
+                    }
+                    updateLivePreview();
+                }
+            });
+
+            let previewTimer = null;
+            commentText.addEventListener('input', function() {
+                clearTimeout(previewTimer);
+                previewTimer = setTimeout(updateLivePreview, 300);
+                handleAutocompleteInput(commentText, autocompleteEl);
+            });
+
+            commentText.addEventListener('keydown', function(e) {
+                handleAutocompleteKeydown(e, commentText, autocompleteEl);
+            });
+
+            commentText.addEventListener('blur', function() {
+                setTimeout(function() { hideAutocomplete(autocompleteEl); }, 200);
+            });
+
+            function updateLivePreview() {
+                const raw = commentText.value.trim();
+                if (raw) {
+                    commentLivePreview.innerHTML = '<div class="comment-live-preview-label">' + (language === 'ru' ? 'Предпросмотр' : 'Preview') + '</div>' + formatCommentContent(raw);
+                    commentLivePreview.style.display = 'block';
+                    if (window.MathJax) {
+                        if (MathJax.typesetPromise) { MathJax.typesetPromise([commentLivePreview]); }
+                        else if (MathJax.Hub) { MathJax.Hub.Queue(['Typeset', MathJax.Hub, commentLivePreview]); }
+                    }
+                } else {
+                    commentLivePreview.style.display = 'none';
+                    commentLivePreview.innerHTML = '';
+                }
+            }
+        }
+
+        /* Autocomplete engine */
+        let acState = { type: null, query: '', startPos: 0, items: [], selectedIndex: 0 };
+
+        function insertAtCursor(textarea, text) {
+            const pos = textarea.selectionStart;
+            textarea.value = textarea.value.substring(0, pos) + text + textarea.value.substring(pos);
+            textarea.selectionStart = textarea.selectionEnd = pos + text.length;
+            textarea.focus();
+        }
+
+        function getAutocompleteContext(textarea) {
+            const pos = textarea.selectionStart;
+            const text = textarea.value.substring(0, pos);
+            const atMatch = text.match(/@(\w*)$/);
+            if (atMatch) {
+                return { type: 'mention', query: atMatch[1], startPos: pos - atMatch[0].length };
+            }
+            const hashMatch = text.match(/#([\d.]*)$/);
+            if (hashMatch) {
+                return { type: 'problem', query: hashMatch[1], startPos: pos - hashMatch[0].length };
+            }
+            return null;
+        }
+
+        function triggerAutocomplete(textarea, dropdown) {
+            setTimeout(function() { handleAutocompleteInput(textarea, dropdown); }, 10);
+        }
+
+        let acFetchTimer = null;
+        function handleAutocompleteInput(textarea, dropdown) {
+            const ctx = getAutocompleteContext(textarea);
+            if (!ctx || ctx.query.length < 1) {
+                hideAutocomplete(dropdown);
+                return;
+            }
+            acState.type = ctx.type;
+            acState.query = ctx.query;
+            acState.startPos = ctx.startPos;
+
+            clearTimeout(acFetchTimer);
+            acFetchTimer = setTimeout(function() { fetchAutocomplete(textarea, dropdown); }, 200);
+        }
+
+        async function fetchAutocomplete(textarea, dropdown) {
+            const ctx = getAutocompleteContext(textarea);
+            if (!ctx || ctx.query.length < 1) { hideAutocomplete(dropdown); return; }
+
+            let items = [];
+            try {
+                if (ctx.type === 'mention') {
+                    const resp = await fetch('/api/users/search?q=' + encodeURIComponent(ctx.query));
+                    const data = await resp.json();
+                    items = data.users.map(function(u) {
+                        return { label: u.username, sublabel: u.fullName, img: u.profilePicture, value: u.username };
+                    });
+                } else if (ctx.type === 'problem') {
+                    const resp = await fetch('/api/problems/search?q=' + encodeURIComponent(ctx.query) + '&lang=' + language);
+                    const data = await resp.json();
+                    items = data.problems.map(function(p) {
+                        return { label: p.name, sublabel: p.sectionTitle, value: p.name };
+                    });
+                }
+            } catch (e) { console.error(e); }
+
+            acState.items = items;
+            acState.selectedIndex = 0;
+            renderAutocomplete(dropdown, items, ctx.type);
+        }
+
+        function renderAutocomplete(dropdown, items, type) {
+            if (items.length === 0) { hideAutocomplete(dropdown); return; }
+            let html = '';
+            items.forEach(function(item, i) {
+                const cls = i === acState.selectedIndex ? 'autocomplete-item selected' : 'autocomplete-item';
+                if (type === 'mention') {
+                    html += '<div class="' + cls + '" data-index="' + i + '">' +
+                        '<img src="' + escapeHtml(item.img) + '" alt="">' +
+                        '<span class="ac-username">@' + escapeHtml(item.label) + '</span>' +
+                        (item.sublabel ? '<span class="ac-fullname">' + escapeHtml(item.sublabel) + '</span>' : '') +
+                        '</div>';
+                } else {
+                    html += '<div class="' + cls + '" data-index="' + i + '">' +
+                        '<span class="ac-problem">#' + escapeHtml(item.label) + '</span>' +
+                        '<span class="ac-section">' + escapeHtml(item.sublabel) + '</span>' +
+                        '</div>';
+                }
+            });
+            dropdown.innerHTML = html;
+            dropdown.classList.add('visible');
+
+            dropdown.querySelectorAll('.autocomplete-item').forEach(function(el) {
+                el.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    selectAutocompleteItem(parseInt(el.dataset.index), document.getElementById('commentText'), dropdown);
+                });
+            });
+        }
+
+        function hideAutocomplete(dropdown) {
+            dropdown.classList.remove('visible');
+            acState.items = [];
+        }
+
+        function selectAutocompleteItem(index, textarea, dropdown) {
+            const item = acState.items[index];
+            if (!item) return;
+            const prefix = acState.type === 'mention' ? '@' : '#';
+            const replacement = prefix + item.value + ' ';
+            textarea.value = textarea.value.substring(0, acState.startPos) + replacement + textarea.value.substring(textarea.selectionStart);
+            textarea.selectionStart = textarea.selectionEnd = acState.startPos + replacement.length;
+            textarea.focus();
+            hideAutocomplete(dropdown);
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        }
+
+        function handleAutocompleteKeydown(e, textarea, dropdown) {
+            if (!dropdown.classList.contains('visible')) return;
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                acState.selectedIndex = Math.min(acState.selectedIndex + 1, acState.items.length - 1);
+                renderAutocomplete(dropdown, acState.items, acState.type);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                acState.selectedIndex = Math.max(acState.selectedIndex - 1, 0);
+                renderAutocomplete(dropdown, acState.items, acState.type);
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                if (acState.items.length > 0) {
+                    e.preventDefault();
+                    selectAutocompleteItem(acState.selectedIndex, textarea, dropdown);
+                }
+            } else if (e.key === 'Escape') {
+                hideAutocomplete(dropdown);
+            }
+        }
+
+        /* Edit comment functionality */
+        function startEditComment(commentId, currentContent, commentEl) {
+            const contentEl = commentEl.querySelector('.comment-content');
+            const originalHtml = contentEl.innerHTML;
+
+            contentEl.innerHTML =
+                '<div class="reply-editor" style="margin-bottom: 0.5rem;">' +
+                    '<div class="reply-toolbar">' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="bold" title="Bold"><i class="fas fa-bold"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="italic" title="Italic"><i class="fas fa-italic"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="strikethrough" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>' +
+                        '<div class="comment-toolbar-sep"></div>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="link" title="Link"><i class="fas fa-link"></i></button>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="code" title="Code"><i class="fas fa-code"></i></button>' +
+                        '<div class="comment-toolbar-sep"></div>' +
+                        '<button type="button" class="comment-toolbar-btn" data-action="math" title="Math"><i class="fas fa-square-root-variable"></i></button>' +
+                    '</div>' +
+                    '<textarea class="reply-input" rows="4">' + escapeHtml(currentContent) + '</textarea>' +
+                '</div>' +
+                '<div class="reply-form-footer">' +
+                    '<button class="comment-cancel-btn edit-cancel-btn">' + (language === 'ru' ? 'Отмена' : 'Cancel') + '</button>' +
+                    '<button class="reply-submit-btn edit-save-btn">' + (language === 'ru' ? 'Сохранить' : 'Save') + '</button>' +
+                '</div>';
+
+            const editToolbar = contentEl.querySelector('.reply-toolbar');
+            const editTextarea = contentEl.querySelector('.reply-input');
+
+            editToolbar.addEventListener('click', function(e) {
+                const btn = e.target.closest('.comment-toolbar-btn');
+                if (btn) { e.preventDefault(); commentToolbarAction(btn.dataset.action, editTextarea); }
+            });
+
+            contentEl.querySelector('.edit-cancel-btn').addEventListener('click', function() {
+                contentEl.innerHTML = originalHtml;
+            });
+
+            contentEl.querySelector('.edit-save-btn').addEventListener('click', async function() {
+                const newContent = editTextarea.value.trim();
+                if (!newContent) return;
+                try {
+                    const resp = await fetch('/api/solutions/' + problemName + '/' + language + '/comments/' + commentId, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: newContent })
+                    });
+                    if (resp.ok) {
+                        await loadComments();
+                    } else {
+                        const err = await resp.json();
+                        alert(err.error || 'Failed to save');
+                    }
+                } catch (e) { console.error(e); }
+            });
+
+            editTextarea.focus();
         }
 
         /* Clipboard */

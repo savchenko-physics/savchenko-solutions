@@ -212,6 +212,23 @@
             </li>
             <% } %>
 
+            <!-- Messages icon (logged-in, desktop) -->
+            <% if (navUser) { %>
+            <li class="nav-item px-1 d-none d-lg-block">
+              <a href="/messages" class="btn p-1 position-relative" style="background:none;border:none;line-height:1;" aria-label="Messages">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <% const msgCount = typeof unreadMessageCount !== 'undefined' ? unreadMessageCount : 0; %>
+                <% if (msgCount > 0) { %>
+                <span class="position-absolute translate-middle badge rounded-pill" style="top:2px;right:-4px;font-size:10px;min-width:18px;padding:2px 5px;background:#c0392b;color:#fff;line-height:1.2;">
+                  <%= msgCount > 99 ? '99+' : msgCount %>
+                </span>
+                <% } %>
+              </a>
+            </li>
+            <% } %>
+
             <!-- Notification bell (logged-in, desktop) -->
             <% if (navUser) { %>
             <li class="nav-item px-1 d-none d-lg-block" style="position:relative;">
@@ -300,6 +317,14 @@
                   </button>
                   <div class="collapse" id="mobileCommunity">
                     <a href="/discuss" class="mobile-nav-link"><%= navLang === 'ru' ? 'Обсуждение' : 'Discussion' %></a>
+                    <% if (navUser) { %>
+                    <a href="/messages" class="mobile-nav-link">
+                      <%= navLang === 'ru' ? 'Сообщения' : 'Messages' %>
+                      <% if (typeof unreadMessageCount !== 'undefined' && unreadMessageCount > 0) { %>
+                      <span class="badge rounded-pill" style="background:#c0392b;color:#fff;font-size:10px;margin-left:4px;"><%= unreadMessageCount > 99 ? '99+' : unreadMessageCount %></span>
+                      <% } %>
+                    </a>
+                    <% } %>
                     <a href="/blog" class="mobile-nav-link"><%= navLang === 'ru' ? 'Блог' : 'Blog' %></a>
                     <a href="/<%= navLang %>/contributors" class="mobile-nav-link"><%= navLang === 'ru' ? 'Авторы' : 'Contributors' %></a>
                     <a href="/compete" class="mobile-nav-link"><%= navLang === 'ru' ? 'Задачи недели' : 'Challenges' %></a>

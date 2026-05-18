@@ -868,6 +868,10 @@
                 <div class="profile-actions">
                     <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;"><%= lang === 'ru' ? 'Редактировать профиль' : 'Edit Profile' %></a>
                     <button id="follow-btn" class="follow-btn" style="display:none;" data-user-id="<%= profileUserId %>"></button>
+                    <form id="message-form" action="/messages/new" method="POST" style="display:none;margin:0;">
+                        <input type="hidden" name="recipientId" value="<%= profileUserId %>">
+                        <button type="submit" class="follow-btn" style="background:#1a1a2e;color:#fff;border:1px solid #1a1a2e;"><%= lang === 'ru' ? 'Написать' : 'Message' %></button>
+                    </form>
                 </div>
             </div>
         </section>
@@ -1562,7 +1566,7 @@
                 });
             }
 
-            // Edit Profile or Follow button
+            // Edit Profile or Follow/Message buttons
             if (data.isOwnProfile) {
                 document.getElementById("edit-profile-link").style.display = "inline";
             } else if (sessionUsername) {
@@ -1570,6 +1574,7 @@
                 followBtn.style.display = "inline-block";
                 setFollowState(followBtn, data.isFollowing);
                 followBtn.addEventListener("click", () => toggleFollow(followBtn, user.id));
+                document.getElementById("message-form").style.display = "inline-block";
             }
 
             const socialRow = document.getElementById("social-row");

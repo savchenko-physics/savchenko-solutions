@@ -385,6 +385,14 @@
         <span class="badge-count"><%= stats.flaggedEdits %></span>
       <% } %>
     </a>
+    <a href="/admin/password-resets" class="<%= tab === 'password-resets' ? 'active' : '' %>">
+      Password Resets
+      <% if (typeof pendingCount !== 'undefined' && pendingCount > 0) { %>
+        <span class="badge-count"><%= pendingCount %></span>
+      <% } else if (typeof stats !== 'undefined' && stats.pendingResets > 0) { %>
+        <span class="badge-count"><%= stats.pendingResets %></span>
+      <% } %>
+    </a>
     <a href="/admin/users" class="<%= tab === 'users' ? 'active' : '' %>">Users</a>
     <a href="/admin/blocked-ips" class="<%= tab === 'blocked-ips' ? 'active' : '' %>">IP Blocklist</a>
     <a href="/admin/stats" class="<%= tab === 'stats' ? 'active' : '' %>">Platform Stats</a>
@@ -425,6 +433,12 @@
         <div class="stat-value"><%= stats.activeUsersWeek %></div>
         <div class="stat-label">Active Users (7d)</div>
       </div>
+      <% if (typeof stats !== 'undefined' && stats.pendingResets > 0) { %>
+      <div class="stat-card">
+        <div class="stat-value" style="color: var(--admin-danger);"><%= stats.pendingResets %></div>
+        <div class="stat-label"><a href="/admin/password-resets" style="color:var(--admin-muted); text-decoration:none;">Pending Resets</a></div>
+      </div>
+      <% } %>
     </div>
 
     <h2 style="font-size:16px; font-weight:600; margin-bottom:12px;">Recent Admin Activity</h2>
@@ -449,6 +463,8 @@
                 <% if (a.details && a.details.ip) { %> <%= a.details.ip %><% } %>
               <% } else if (a.action_type === 'unblock_ip') { %> unblocked IP
                 <% if (a.details && a.details.ip) { %> <%= a.details.ip %><% } %>
+              <% } else if (a.action_type === 'chat_delete_message') { %> deleted message by <strong><%= a.details && a.details.deleted_sender || 'unknown' %></strong> in chat "<%= a.details && a.details.conversation_title || '?' %>"
+                <% if (a.details && a.details.content_preview) { %><br><small style="color:var(--admin-muted);">"<%= a.details.content_preview %>"</small><% } %>
               <% } else { %> <%= a.action_type %>
               <% } %>
             </span>
@@ -694,6 +710,84 @@
       </tbody>
     </table>
     <% } %>
+
+<% } else if (tab === 'password-resets') { %>
+    <!-- ═══ PASSWORD RESETS ═══ -->
+    <h1>Password Reset Requests</h1>
+    <p style="font-size: 13px; color: var(--admin-muted); margin-bottom: 16px;">
+      Users who requested a password reset. Copy the reset link and share it with them manually (email not configured yet).
+    </p>
+    <div style="margin-bottom: 16px;">
+      <% if (showAll) { %>
+        <a href="/admin/password-resets" class="btn-admin-outline" style="text-decoration:none;">Show pending only</a>
+      <% } else { %>
+        <a href="/admin/password-resets?all=1" class="btn-admin-outline" style="text-decoration:none;">Show all</a>
+      <% } %>
+    </div>
+    <% if (resetRequests.length === 0) { %>
+      <p style="color: var(--admin-muted);">No password reset requests.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Username</th>
+          <th>Date</th>
+          <th>IP</th>
+          <th>Status</th>
+          <th>Reset Link</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% resetRequests.forEach(function(r) { %>
+        <tr>
+          <td><%= r.email %></td>
+          <td><% if (r.username) { %><%= r.username %><% } else { %><span style="color:var(--admin-muted);">No account</span><% } %></td>
+          <td style="white-space:nowrap;"><%= new Date(r.created_at).toLocaleString() %></td>
+          <td><code style="font-size:12px;"><%= r.ip_address || '—' %></code></td>
+          <td>
+            <span class="status-badge status-<%= r.status === 'handled' ? 'resolved' : r.status === 'dismissed' ? 'dismissed' : 'pending' %>"><%= r.status %></span>
+          </td>
+          <td>
+            <% if (r.reset_token) { %>
+              <input type="text" readonly value="/reset-password?token=<%= r.reset_token %>"
+                     style="width:180px; font-size:11px; padding:4px 6px; border:1px solid var(--admin-border); border-radius:4px; background:#f8f9fa;"
+                     id="token-<%= r.id %>" />
+              <button class="btn-admin-outline" style="font-size:11px; padding:4px 8px; margin-left:4px;" onclick="copyToken(<%= r.id %>)">Copy</button>
+            <% } else { %>
+              <span style="color:var(--admin-muted); font-size:12px;">No account found</span>
+            <% } %>
+          </td>
+          <td style="white-space:nowrap;">
+            <% if (r.status === 'pending') { %>
+              <form method="POST" action="/admin/password-resets/<%= r.id %>/handled" style="display:inline;">
+                <button type="submit" class="btn-admin-success">Handled</button>
+              </form>
+              <form method="POST" action="/admin/password-resets/<%= r.id %>/dismiss" style="display:inline; margin-left:4px;">
+                <button type="submit" class="btn-admin-danger">Dismiss</button>
+              </form>
+            <% } else { %>
+              <span style="font-size:12px; color:var(--admin-muted);"><%= r.handled_at ? new Date(r.handled_at).toLocaleDateString() : '' %></span>
+            <% } %>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+    <script>
+    function copyToken(id) {
+      const input = document.getElementById('token-' + id);
+      const fullUrl = window.location.origin + input.value;
+      navigator.clipboard.writeText(fullUrl).then(function() {
+        const btn = input.nextElementSibling;
+        btn.textContent = 'Copied';
+        setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+      });
+    }
+    </script>
 
 <% } else if (tab === 'stats') { %>
     <!-- ═══ PLATFORM STATS ═══ -->

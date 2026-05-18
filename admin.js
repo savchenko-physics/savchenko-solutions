@@ -84,6 +84,7 @@ async function logAdminAction(adminUserId, actionType, targetType, targetId, det
 router.get('/', async (req, res) => {
     try {
         const canReadActions = await hasAdminActionsTable();
+        const canReadResets = await hasResetRequestsTable();
         const [
             usersCount,
             pendingReports,
@@ -92,6 +93,7 @@ router.get('/', async (req, res) => {
             activeUsersWeek,
             recentActions,
             solutionsCount,
+            pendingResets,
         ] = await Promise.all([
             pool.query('SELECT COUNT(*) FROM users'),
             pool.query("SELECT COUNT(*) FROM solution_reports WHERE status = 'pending'"),
@@ -107,6 +109,9 @@ router.get('/', async (req, res) => {
             )
                 : Promise.resolve({ rows: [] }),
             pool.query("SELECT COUNT(DISTINCT problem_name) FROM contributions"),
+            canReadResets
+                ? pool.query("SELECT COUNT(*) FROM password_reset_requests WHERE status = 'pending'")
+                : Promise.resolve({ rows: [{ count: '0' }] }),
         ]);
 
         res.render('admin/dashboard', {
@@ -120,6 +125,7 @@ router.get('/', async (req, res) => {
                 flaggedEdits: parseInt(flaggedEdits.rows[0].count),
                 contributionsToday: parseInt(contributionsToday.rows[0].count),
                 activeUsersWeek: parseInt(activeUsersWeek.rows[0].count),
+                pendingResets: parseInt(pendingResets.rows[0].count),
             },
             recentActions: recentActions.rows,
         });
@@ -551,6 +557,101 @@ router.get('/stats/data', async (req, res) => {
     } catch (err) {
         console.error('Stats data error:', err);
         res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// ─── Password Reset Requests ────────────────────────────────────────────
+let hasResetRequestsTableCache = null;
+async function hasResetRequestsTable() {
+    if (hasResetRequestsTableCache !== null) return hasResetRequestsTableCache;
+    try {
+        const result = await pool.query(
+            `SELECT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'password_reset_requests'
+            ) AS exists`
+        );
+        hasResetRequestsTableCache = !!result.rows[0]?.exists;
+    } catch (_err) {
+        hasResetRequestsTableCache = false;
+    }
+    return hasResetRequestsTableCache;
+}
+
+router.get('/password-resets', async (req, res) => {
+    try {
+        if (!(await hasResetRequestsTable())) {
+            return res.render('admin/dashboard', {
+                __: req.__,
+                lang: 'en',
+                tab: 'password-resets',
+                resetRequests: [],
+                showAll: false,
+                pendingCount: 0,
+            });
+        }
+
+        const showAll = req.query.all === '1';
+        const whereClause = showAll ? '' : "WHERE prr.status = 'pending'";
+
+        const requests = await pool.query(
+            `SELECT prr.*, u.username, u.email AS user_email
+             FROM password_reset_requests prr
+             LEFT JOIN users u ON prr.user_id = u.id
+             ${whereClause}
+             ORDER BY prr.created_at DESC
+             LIMIT 200`
+        );
+
+        const pendingResult = await pool.query(
+            "SELECT COUNT(*) FROM password_reset_requests WHERE status = 'pending'"
+        );
+
+        res.render('admin/dashboard', {
+            __: req.__,
+            lang: 'en',
+            tab: 'password-resets',
+            resetRequests: requests.rows,
+            showAll,
+            pendingCount: parseInt(pendingResult.rows[0].count),
+        });
+    } catch (err) {
+        console.error('Admin password resets error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/password-resets/:id/handled', async (req, res) => {
+    try {
+        if (!(await hasResetRequestsTable())) {
+            return res.redirect('/admin/password-resets');
+        }
+        await pool.query(
+            `UPDATE password_reset_requests SET status = 'handled', handled_at = NOW(), handled_by = $1 WHERE id = $2`,
+            [req.session.userId, req.params.id]
+        );
+        await logAdminAction(req.session.userId, 'handle_reset_request', 'password_reset_request', parseInt(req.params.id), null);
+        res.redirect('/admin/password-resets');
+    } catch (err) {
+        console.error('Error marking reset request as handled:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/password-resets/:id/dismiss', async (req, res) => {
+    try {
+        if (!(await hasResetRequestsTable())) {
+            return res.redirect('/admin/password-resets');
+        }
+        await pool.query(
+            `UPDATE password_reset_requests SET status = 'dismissed', handled_at = NOW(), handled_by = $1 WHERE id = $2`,
+            [req.session.userId, req.params.id]
+        );
+        await logAdminAction(req.session.userId, 'dismiss_reset_request', 'password_reset_request', parseInt(req.params.id), null);
+        res.redirect('/admin/password-resets');
+    } catch (err) {
+        console.error('Error dismissing reset request:', err);
+        res.status(500).send('Internal server error');
     }
 });
 

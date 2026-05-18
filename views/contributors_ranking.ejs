@@ -90,6 +90,41 @@
             color: var(--sv-secondary) !important;
         }
 
+        .stat-tile-clickable:hover {
+            border-color: var(--sv-link, #1a5276);
+        }
+
+        .contrib-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0;
+        }
+
+        .contrib-list-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .contrib-list-item a {
+            color: var(--sv-primary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .contrib-list-item a:hover {
+            text-decoration: underline;
+        }
+
+        .contrib-list-meta {
+            font-size: 12px;
+            color: var(--sv-secondary);
+            margin-left: auto;
+        }
+
         .card {
             border: 1px solid var(--sv-border);
             background: var(--sv-bg);
@@ -450,7 +485,7 @@
         <p id="contributors-subtitle" class="page-subtitle skeleton"><%= __('contributorsPage.loadingSummary') %></p>
 
         <section class="stats-row">
-            <article class="stat-tile">
+            <article class="stat-tile stat-tile-clickable" id="contributorsTile" style="cursor:pointer; position:relative;">
                 <div id="stat-contributors" class="stat-value skeleton">0000</div>
                 <div class="stat-label"><%= __('contributorsPage.statContributors') %></div>
             </article>
@@ -466,6 +501,14 @@
                 <div id="stat-languages" class="stat-value" style="font-size: 20px;"><%= __('contributorsPage.languagesValue') %></div>
                 <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
             </article>
+        </section>
+
+        <section class="card" id="contributorsListPanel" style="display:none;">
+            <h2 class="section-title"><%= __('contributorsPage.statContributors') %></h2>
+            <div id="contributorsListBody" style="display:flex; flex-direction:column; gap:6px;"></div>
+            <button id="contributorsShowMore" style="display:none; width:100%; padding:8px; margin-top:8px; background:none; border:1px solid var(--sv-border); border-radius:6px; color:var(--sv-link, #1a5276); font-size:13px; cursor:pointer;">
+                <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %>
+            </button>
         </section>
 
         <section class="card">
@@ -1076,6 +1119,56 @@
             state.page += 1;
             await loadLeaderboard();
         });
+
+        // Contributors list expand
+        let contribPage = 1;
+        const contribLimit = 20;
+        let contribTotal = 0;
+        const contribPanel = document.getElementById('contributorsListPanel');
+        const contribBody = document.getElementById('contributorsListBody');
+        const contribMore = document.getElementById('contributorsShowMore');
+        const contribTile = document.getElementById('contributorsTile');
+
+        async function loadContributorsList() {
+            const data = await fetchJSON(`/api/contributors/leaderboard?page=${contribPage}&limit=${contribLimit}&sortBy=solutions&sortOrder=desc`);
+            contribTotal = data.total;
+            data.rows.forEach(function(row) {
+                const item = document.createElement('div');
+                item.className = 'contrib-list-item';
+                const countryPrefix = row.countryFlag ? row.countryFlag + ' ' : '';
+                item.innerHTML = '<img src="' + (row.profilePicture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />'
+                    + '<a href="/user/' + row.username + '">' + countryPrefix + (row.fullName || row.username) + '</a>'
+                    + '<span class="contrib-list-meta">' + Number(row.solutions || 0).toLocaleString() + ' sol.</span>';
+                contribBody.appendChild(item);
+            });
+            if (contribPage * contribLimit < contribTotal) {
+                contribMore.style.display = 'block';
+                contribMore.textContent = (lang === 'ru' ? 'Показать ещё' : 'Show more') + ' (' + Math.min(contribLimit, contribTotal - contribPage * contribLimit) + ')';
+            } else {
+                contribMore.style.display = 'none';
+            }
+        }
+
+        if (contribTile) {
+            contribTile.addEventListener('click', function() {
+                if (contribPanel.style.display === 'none') {
+                    contribPanel.style.display = '';
+                    if (!contribBody.hasChildNodes()) {
+                        loadContributorsList();
+                    }
+                    contribPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } else {
+                    contribPanel.style.display = 'none';
+                }
+            });
+        }
+
+        if (contribMore) {
+            contribMore.addEventListener('click', function() {
+                contribPage++;
+                loadContributorsList();
+            });
+        }
 
         Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap()]).catch((err) => {
             console.error("Contributors page failed to load:", err);
