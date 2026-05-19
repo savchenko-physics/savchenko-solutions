@@ -721,6 +721,104 @@
       cursor: default;
     }
 
+    .msg-attach-btn {
+      height: 38px;
+      width: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--msg-border);
+      background: var(--msg-bg);
+      color: var(--msg-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .msg-attach-btn:hover {
+      background: var(--msg-bg-alt);
+      color: var(--msg-primary);
+    }
+
+    .msg-image-preview {
+      display: none;
+      padding: 8px 16px 0;
+      background: var(--msg-bg);
+      border-top: 1px solid var(--msg-border);
+    }
+
+    .msg-image-preview.show {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .msg-image-preview img {
+      max-height: 80px;
+      max-width: 160px;
+      border-radius: 6px;
+      border: 1px solid var(--msg-border);
+      object-fit: cover;
+    }
+
+    .msg-image-preview-remove {
+      background: none;
+      border: none;
+      color: var(--msg-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .msg-image-preview-remove:hover {
+      color: #c0392b;
+    }
+
+    .msg-image-preview-name {
+      font-size: 12px;
+      color: var(--msg-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 120px;
+    }
+
+    .msg-bubble-image {
+      max-width: 280px;
+      max-height: 300px;
+      border-radius: 6px;
+      margin-top: 4px;
+      cursor: pointer;
+      display: block;
+    }
+
+    .msg-bubble-image:hover {
+      opacity: 0.9;
+    }
+
+    .msg-image-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+    }
+
+    .msg-image-overlay.show {
+      display: flex;
+    }
+
+    .msg-image-overlay img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 6px;
+    }
+
     /* Empty state */
     .msg-empty {
       flex: 1;
@@ -973,9 +1071,13 @@
               <div class="msg-conv-info">
                 <div class="msg-conv-name"><%= c.displayName %></div>
                 <div class="msg-conv-preview">
-                  <% if (c.last_message_content) { %>
+                  <% if (c.last_message_content || c.last_message_image) { %>
                     <% if (c.last_message_sender_id === userId) { %><%= lang === 'ru' ? 'Вы: ' : 'You: ' %><% } %>
-                    <%= c.last_message_content.substring(0, 60) %><% if (c.last_message_content.length > 60) { %>...<% } %>
+                    <% if (c.last_message_content) { %>
+                      <%= c.last_message_content.substring(0, 60) %><% if (c.last_message_content.length > 60) { %>...<% } %>
+                    <% } else { %>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><%= lang === 'ru' ? 'Фото' : 'Photo' %>
+                    <% } %>
                   <% } %>
                 </div>
               </div>
@@ -1069,7 +1171,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><%= m.sender_username %><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><%= m.content %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><%= m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -1086,8 +1188,21 @@
           <button class="msg-edit-cancel" id="editCancel">&times;</button>
         </div>
 
+        <!-- Image preview bar -->
+        <div class="msg-image-preview" id="imagePreview">
+          <img id="imagePreviewImg" src="" alt="" />
+          <span class="msg-image-preview-name" id="imagePreviewName"></span>
+          <button class="msg-image-preview-remove" id="imagePreviewRemove" title="Remove">&times;</button>
+        </div>
+
         <!-- Input bar -->
         <div class="msg-input-bar">
+          <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" />
+          <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru' ? 'Прикрепить изображение' : 'Attach image' %>">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </button>
           <textarea class="msg-input" id="msgInput" rows="1"
                     placeholder="<%= lang === 'ru' ? 'Написать сообщение...' : 'Type a message...' %>"
                     maxlength="5000"></textarea>
@@ -1169,6 +1284,8 @@
   }
 %>
 
+<div class="msg-image-overlay" id="imageOverlay"><img id="imageOverlayImg" src="" alt="" /></div>
+
 <div class="msg-context-menu" id="msgContextMenu">
   <button class="msg-context-item" id="ctxEdit">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1229,17 +1346,32 @@
   const editBarText = document.getElementById('editBarText');
   const editCancel = document.getElementById('editCancel');
 
+  // Image attachment elements
+  const attachBtn = document.getElementById('attachBtn');
+  const fileInput = document.getElementById('imageFileInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const imagePreviewImg = document.getElementById('imagePreviewImg');
+  const imagePreviewName = document.getElementById('imagePreviewName');
+  const imagePreviewRemove = document.getElementById('imagePreviewRemove');
+  const imageOverlay = document.getElementById('imageOverlay');
+  const imageOverlayImg = document.getElementById('imageOverlayImg');
+  let pendingImage = null;
+
+  function updateSendEnabled() {
+    sendBtn.disabled = !msgInput.value.trim() && !pendingImage;
+  }
+
   if (msgInput) {
     msgInput.addEventListener('input', function() {
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-      sendBtn.disabled = !this.value.trim();
+      updateSendEnabled();
     });
 
     msgInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        if (this.value.trim()) {
+        if (msgInput.value.trim() || pendingImage) {
           if (editingMsgId) {
             submitEdit();
           } else {
@@ -1257,7 +1389,7 @@
 
   if (sendBtn) {
     sendBtn.addEventListener('click', function() {
-      if (msgInput.value.trim()) {
+      if (msgInput.value.trim() || pendingImage) {
         if (editingMsgId) {
           submitEdit();
         } else {
@@ -1271,13 +1403,93 @@
     editCancel.addEventListener('click', cancelEdit);
   }
 
+  // Attach button opens file picker
+  if (attachBtn && fileInput) {
+    attachBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        alert(LANG === 'ru' ? 'Максимальный размер 5 МБ' : 'Maximum file size is 5 MB');
+        this.value = '';
+        return;
+      }
+      pendingImage = file;
+      imagePreviewName.textContent = file.name;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreviewImg.src = e.target.result;
+        imagePreview.classList.add('show');
+      };
+      reader.readAsDataURL(file);
+      updateSendEnabled();
+    });
+  }
+
+  if (imagePreviewRemove) {
+    imagePreviewRemove.addEventListener('click', function() {
+      pendingImage = null;
+      fileInput.value = '';
+      imagePreview.classList.remove('show');
+      imagePreviewImg.src = '';
+      updateSendEnabled();
+    });
+  }
+
+  // Paste image from clipboard
+  if (msgInput) {
+    msgInput.addEventListener('paste', function(e) {
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image/') === 0) {
+          const file = items[i].getAsFile();
+          if (!file || file.size > 5 * 1024 * 1024) continue;
+          pendingImage = file;
+          imagePreviewName.textContent = LANG === 'ru' ? 'Вставленное изображение' : 'Pasted image';
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            imagePreviewImg.src = ev.target.result;
+            imagePreview.classList.add('show');
+          };
+          reader.readAsDataURL(file);
+          updateSendEnabled();
+          e.preventDefault();
+          break;
+        }
+      }
+    });
+  }
+
+  // Image overlay (lightbox)
+  if (chatEl) {
+    chatEl.addEventListener('click', function(e) {
+      const img = e.target.closest('.msg-bubble-image');
+      if (img && imageOverlay) {
+        imageOverlayImg.src = img.dataset.full || img.src;
+        imageOverlay.classList.add('show');
+      }
+    });
+  }
+  if (imageOverlay) {
+    imageOverlay.addEventListener('click', function() {
+      this.classList.remove('show');
+      imageOverlayImg.src = '';
+    });
+  }
+
   function sendMessage() {
     const content = msgInput.value.trim();
-    if (!content || !CONV_ID) return;
+    if ((!content && !pendingImage) || !CONV_ID) return;
 
     sendBtn.disabled = true;
     msgInput.value = '';
     msgInput.style.height = 'auto';
+
+    const localImageUrl = pendingImage && imagePreviewImg.src ? imagePreviewImg.src : null;
 
     appendMessage({
       id: 0,
@@ -1285,13 +1497,30 @@
       sender_id: USER_ID,
       sender_username: '<%= username %>',
       created_at: new Date().toISOString(),
+      image_url: localImageUrl,
     });
 
-    fetch('/messages/' + CONV_ID + '/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ content: content }),
-    })
+    let fetchOpts;
+    if (pendingImage) {
+      const fd = new FormData();
+      fd.append('content', content);
+      fd.append('image', pendingImage);
+      fetchOpts = { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd };
+    } else {
+      fetchOpts = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ content: content }),
+      };
+    }
+
+    // Clear image state
+    pendingImage = null;
+    if (fileInput) fileInput.value = '';
+    if (imagePreview) imagePreview.classList.remove('show');
+    if (imagePreviewImg) imagePreviewImg.src = '';
+
+    fetch('/messages/' + CONV_ID + '/send', fetchOpts)
     .then(function(r) { return r.json(); })
     .then(function() { pollMessages(); })
     .catch(function(err) { console.error('Send error:', err); });
@@ -1305,7 +1534,7 @@
     if (!bubble) return;
 
     const clone = bubble.cloneNode(true);
-    var remove = clone.querySelectorAll('.msg-bubble-edited, .msg-reaction-add');
+    var remove = clone.querySelectorAll('.msg-bubble-edited, .msg-reaction-add, .msg-bubble-image');
     for (var i = 0; i < remove.length; i++) remove[i].remove();
     const text = clone.textContent.trim();
 
@@ -1323,8 +1552,8 @@
     editingMsgId = null;
     msgInput.value = '';
     msgInput.style.height = 'auto';
-    sendBtn.disabled = true;
     editBar.style.display = 'none';
+    updateSendEnabled();
   }
 
   function submitEdit() {
@@ -1347,7 +1576,9 @@
           const bubble = row.querySelector('.msg-bubble');
           if (bubble) {
             const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-            bubble.innerHTML = esc(content) + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>';
+            const existingImg = bubble.querySelector('.msg-bubble-image');
+            const imgHtml = existingImg ? existingImg.outerHTML : '';
+            bubble.innerHTML = esc(content) + imgHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
           }
         }
       } else if (data.error) {
@@ -1484,7 +1715,11 @@
       html += '<div class="msg-bubble-sender">' + esc(m.sender_username) + modBadge + '</div>';
     }
     const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + esc(m.content) + (isEdited ? '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' : '');
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + esc(m.content);
+    if (m.image_url) {
+      html += '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" alt="" data-full="' + esc(m.image_url) + '" />';
+    }
+    html += (isEdited ? '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' : '');
     html += renderReactionAddHTML(m.id);
     html += '</div>';
     html += renderReactionsHTML(m.id, m.reactions || []);
@@ -1580,7 +1815,9 @@
               row.style.display = 'none';
             } else if (u.edited_at) {
               const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-              bubble.innerHTML = esc(u.content) + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>';
+              const existingImg = bubble.querySelector('.msg-bubble-image');
+              const imgHtml = existingImg ? existingImg.outerHTML : '';
+              bubble.innerHTML = esc(u.content) + imgHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
             }
           });
         }

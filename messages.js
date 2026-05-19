@@ -1,7 +1,34 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { Pool } = require('pg');
 const notifications = require('./notifications');
+
+const msgImageDir = path.join(__dirname, 'img', 'messages');
+fs.mkdirSync(msgImageDir, { recursive: true });
+
+const msgImageStorage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, msgImageDir),
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase() || '.png';
+        cb(null, Date.now() + '-' + Math.random().toString(36).slice(2, 8) + ext);
+    },
+});
+
+const msgImageUpload = multer({
+    storage: msgImageStorage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowed = /\.(jpg|jpeg|png|gif|webp)$/i;
+        if (allowed.test(path.extname(file.originalname))) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    },
+});
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -153,6 +180,7 @@ router.get('/', async (req, res) => {
         const conversations = await pool.query(
             `SELECT c.id, c.title, c.is_group, c.last_message_at,
                     m.content AS last_message_content,
+                    m.image_url AS last_message_image,
                     m.sender_id AS last_message_sender_id,
                     sender.username AS last_message_sender,
                     cm.last_read_at,
@@ -162,7 +190,7 @@ router.get('/', async (req, res) => {
              FROM conversations c
              JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
              LEFT JOIN LATERAL (
-                 SELECT content, sender_id FROM messages
+                 SELECT content, sender_id, image_url FROM messages
                  WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
              ) m ON TRUE
              LEFT JOIN users sender ON sender.id = m.sender_id
@@ -263,6 +291,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         const conversations = await pool.query(
             `SELECT c.id, c.title, c.is_group, c.last_message_at,
                     m.content AS last_message_content,
+                    m.image_url AS last_message_image,
                     m.sender_id AS last_message_sender_id,
                     sender.username AS last_message_sender,
                     cm.last_read_at,
@@ -272,7 +301,7 @@ router.get('/:id(\\d+)', async (req, res) => {
              FROM conversations c
              JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
              LEFT JOIN LATERAL (
-                 SELECT content, sender_id FROM messages
+                 SELECT content, sender_id, image_url FROM messages
                  WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
              ) m ON TRUE
              LEFT JOIN users sender ON sender.id = m.sender_id
@@ -387,7 +416,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         } : null;
 
         const messagesResult = await pool.query(
-            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at,
+            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
                     u.username AS sender_username, u.profile_picture AS sender_picture,
                     cm.role AS sender_role
              FROM messages m
@@ -501,18 +530,17 @@ router.post('/new', async (req, res) => {
     }
 });
 
-// POST /messages/:id/send — send a message
-router.post('/:id(\\d+)/send', async (req, res) => {
+// POST /messages/:id/send — send a message (with optional image)
+router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) => {
     try {
         const userId = req.session.userId;
         const convId = parseInt(req.params.id);
-        const { content } = req.body;
+        const content = (req.body.content || '').trim().substring(0, 5000);
+        const imageUrl = req.file ? '/img/messages/' + req.file.filename : null;
 
-        if (!content || !content.trim()) {
+        if (!content && !imageUrl) {
             return res.redirect(`/messages/${convId}`);
         }
-
-        const trimmed = content.trim().substring(0, 5000);
 
         // Check membership
         const membership = await pool.query(
@@ -524,9 +552,10 @@ router.post('/:id(\\d+)/send', async (req, res) => {
         }
 
         // Insert message and update conversation timestamp
-        await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content) VALUES ($1, $2, $3)`,
-            [convId, userId, trimmed]
+        const inserted = await pool.query(
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url)
+             VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
+            [convId, userId, content, imageUrl]
         );
         await pool.query(
             `UPDATE conversations SET last_message_at = NOW() WHERE id = $1`,
@@ -545,7 +574,7 @@ router.post('/:id(\\d+)/send', async (req, res) => {
             `SELECT user_id FROM conversation_members WHERE conversation_id = $1 AND user_id != $2`,
             [convId, userId]
         );
-        const preview = trimmed.length > 80 ? trimmed.substring(0, 80) + '...' : trimmed;
+        const preview = imageUrl && !content ? '[Image]' : (content.length > 80 ? content.substring(0, 80) + '...' : content);
         for (const member of otherMembers.rows) {
             try {
                 await notifications.createNotification(
@@ -563,7 +592,8 @@ router.post('/:id(\\d+)/send', async (req, res) => {
 
         // If AJAX request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {
-            return res.json({ ok: true });
+            const msg = inserted.rows[0];
+            return res.json({ ok: true, image_url: imageUrl, id: msg.id, created_at: msg.created_at });
         }
         res.redirect(`/messages/${convId}`);
     } catch (err) {
@@ -772,7 +802,7 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
         }
 
         const result = await pool.query(
-            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at,
+            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
                     u.username AS sender_username, u.profile_picture AS sender_picture,
                     cm.role AS sender_role
              FROM messages m
