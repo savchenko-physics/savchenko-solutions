@@ -525,6 +525,29 @@ function autoLinkUserMentions(html) {
     );
 }
 
+function autoLinkUrls(html) {
+    return html.replace(
+        /(?<![="'>])(?:https?:\/\/)[^\s<>"']+/g,
+        (url) => {
+            const clean = url.replace(/[.,;:!?)]+$/, '');
+            const trailing = url.slice(clean.length);
+            return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="color:#1a5276;text-decoration:underline;">${clean}</a>${trailing}`;
+        }
+    );
+}
+
+function linkifyMessageContent(text, lang = 'en') {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    let result = autoLinkUrls(escaped);
+    result = autoLinkUserMentions(result);
+    result = autoLinkProblemRefs(result, lang);
+    return result;
+}
+
 module.exports = {
     parseMarkdown,
     getMarkdownFiles,
@@ -537,4 +560,6 @@ module.exports = {
     sanitizeParsedMarkdownHtml,
     autoLinkProblemRefs,
     autoLinkUserMentions,
+    autoLinkUrls,
+    linkifyMessageContent,
 };

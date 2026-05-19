@@ -1171,7 +1171,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><%= m.sender_username %><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><%= m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -1689,6 +1689,20 @@
     return d.innerHTML;
   }
 
+  function linkify(text) {
+    var html = esc(text);
+    html = html.replace(/(?:https?:\/\/)[^\s<>"']+/g, function(url) {
+      var clean = url.replace(/[.,;:!?)]+$/, '');
+      var trailing = url.slice(clean.length);
+      return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer" style="color:#1a5276;text-decoration:underline;">' + clean + '</a>' + trailing;
+    });
+    html = html.replace(/(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
+      '<a href="/user/$1" class="user-mention" style="color:#1a5276;font-weight:500;text-decoration:none;">@$1</a>');
+    html = html.replace(/(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
+      '<a href="/' + LANG + '/$1" class="problem-ref" style="color:#1a5276;font-weight:500;text-decoration:none;">#$1</a>');
+    return html;
+  }
+
   function fmtTime(dateStr) {
     return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
@@ -1715,7 +1729,7 @@
       html += '<div class="msg-bubble-sender">' + esc(m.sender_username) + modBadge + '</div>';
     }
     const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + esc(m.content);
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + linkify(m.content);
     if (m.image_url) {
       html += '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" alt="" data-full="' + esc(m.image_url) + '" />';
     }

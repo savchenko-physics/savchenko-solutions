@@ -5,6 +5,7 @@ const fs = require('fs');
 const multer = require('multer');
 const { Pool } = require('pg');
 const notifications = require('./notifications');
+const { linkifyMessageContent } = require('./utils');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -431,6 +432,9 @@ router.get('/:id(\\d+)', async (req, res) => {
         const reactionsMap = await getReactionsForMessages(msgIds, userId);
         for (const m of messagesResult.rows) {
             m.reactions = reactionsMap[m.id] || [];
+            if (m.content) {
+                m.contentHtml = linkifyMessageContent(m.content, lang);
+            }
         }
 
         // Force unread_count to 0 for active conversation in the list

@@ -5,7 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= post.title %> — Savchenko Solutions Blog</title>
     <meta name="description" content="<%= post.excerpt %>" />
-    <link rel="canonical" href="https://savchenkosolutions.com/blog/<%= post.slug %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/blog/<%= post.slug %>" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="<%= post.title %>" />
+    <meta property="og:description" content="<%= (post.excerpt || '').substring(0, 200) %>" />
+    <meta property="og:url" content="https://savchenkosolutions.com/<%= lang %>/blog/<%= post.slug %>" />
+    <meta property="og:site_name" content="Savchenko Solutions" />
+    <meta property="og:locale" content="<%= lang === 'ru' ? 'ru_RU' : 'en_US' %>" />
+    <meta property="article:published_time" content="<%= post.published_at ? new Date(post.published_at).toISOString() : '' %>" />
+    <meta property="article:modified_time" content="<%= new Date(post.updated_at).toISOString() %>" />
+    <meta property="article:author" content="<%= post.author_username %>" />
+    <% if (post.tags) { post.tags.forEach(tag => { %>
+    <meta property="article:tag" content="<%= tag %>" />
+    <% }); } %>
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<%= post.title %>" />
+    <meta name="twitter:description" content="<%= (post.excerpt || '').substring(0, 200) %>" />
 
     <!-- JSON-LD BlogPosting schema -->
     <script type="application/ld+json">
@@ -22,7 +41,7 @@
       "dateModified": "<%= new Date(post.updated_at).toISOString() %>",
       "mainEntityOfPage": {
         "@type": "WebPage",
-        "@id": "https://savchenkosolutions.com/blog/<%= post.slug %>"
+        "@id": "https://savchenkosolutions.com/<%= lang %>/blog/<%= post.slug %>"
       },
       "publisher": {
         "@type": "Organization",
@@ -166,6 +185,36 @@
         }
         .blog-content em {
             font-style: italic;
+        }
+
+        /* Images (SVG figures) */
+        .blog-content img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 1.5rem auto;
+        }
+
+        /* Markdown tables */
+        .blog-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 14px;
+        }
+        .blog-content thead th {
+            background: #f8f9fa;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.6rem 0.75rem;
+            border-bottom: 2px solid #dee2e6;
+        }
+        .blog-content tbody td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .blog-content tbody tr:hover {
+            background: #fafbfc;
         }
 
         /* Tags */
@@ -418,6 +467,9 @@
         'thermodynamics': 'термодинамика',
         'electrodynamics': 'электродинамика',
         'optics': 'оптика',
+        'data-analysis': 'анализ данных',
+        'statistics': 'статистика',
+        'hawkes-process': 'процесс Хокса',
     };
     function tagLabel(tag) {
         if (lang === 'ru' && tagTranslations[tag]) return tagTranslations[tag];
