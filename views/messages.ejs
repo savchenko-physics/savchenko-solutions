@@ -1092,7 +1092,7 @@
                 </div>
               </div>
               <div class="msg-conv-meta">
-                <span class="msg-conv-time"><%= formatTime(c.last_message_at) %></span>
+                <span class="msg-conv-time" data-iso="<%= c.last_message_at ? new Date(c.last_message_at).toISOString() : '' %>"><%= formatTime(c.last_message_at) %></span>
                 <% if (c.unread_count > 0) { %>
                   <span class="msg-conv-badge"><%= c.unread_count > 99 ? '99+' : c.unread_count %></span>
                 <% } %>
@@ -1185,7 +1185,7 @@
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
-                <div class="msg-bubble-time"><%= formatMessageTime(m.created_at) %></div>
+                <div class="msg-bubble-time" data-iso="<%= new Date(m.created_at).toISOString() %>"><%= formatMessageTime(m.created_at) %></div>
               </div>
             </div>
           <% }); %>
@@ -1715,6 +1715,40 @@
 
   function fmtTime(dateStr) {
     return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Server renders timestamps in its own (UTC) timezone. Rewrite the
+  // SSR'd bubble + conversation times to the viewer's local timezone.
+  function localizeSsrTimes() {
+    document.querySelectorAll('.msg-bubble-time[data-iso]').forEach(el => {
+      const iso = el.getAttribute('data-iso');
+      if (!iso) return;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return;
+      el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    });
+    document.querySelectorAll('.msg-conv-time[data-iso]').forEach(el => {
+      const iso = el.getAttribute('data-iso');
+      if (!iso) return;
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return;
+      const now = new Date();
+      const diff = now - d;
+      let out;
+      if (diff < 86400000 && d.getDate() === now.getDate()) {
+        out = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else if (diff < 604800000) {
+        out = d.toLocaleDateString([], { weekday: 'short' });
+      } else {
+        out = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      }
+      el.textContent = out;
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', localizeSsrTimes);
+  } else {
+    localizeSsrTimes();
   }
 
   function appendMessage(m) {

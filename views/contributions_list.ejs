@@ -512,7 +512,7 @@
                             <% } else { %>
                                 <span class="cl-commit-anon"><%= lang === 'ru' ? 'Аноним' : 'Anonymous' %></span>
                             <% } %>
-                            <span><%= lang === 'ru' ? 'в' : 'at' %> <%= formatTime(contribution.edited_at) %></span>
+                            <span><%= lang === 'ru' ? 'в' : 'at' %> <time class="cl-local-time" datetime="<%= new Date(contribution.edited_at).toISOString() %>"><%= formatTime(contribution.edited_at) %></time></span>
                         </div>
                     </div>
                     <div class="cl-commit-right">
@@ -569,6 +569,21 @@
 
     <%- include('default/modern_footer') %>
     <%- include('default/main_site_search_script') %>
+
+    <script>
+      // Server emits the time portion in its own timezone (UTC). Reformat to
+      // the viewer's local timezone using the ISO value carried on datetime=.
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.cl-local-time[datetime]').forEach(el => {
+          const d = new Date(el.getAttribute('datetime'));
+          if (isNaN(d.getTime())) return;
+          el.textContent = d.toLocaleTimeString(undefined, {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        });
+      });
+    </script>
 </body>
 
 </html>

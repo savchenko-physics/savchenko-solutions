@@ -368,7 +368,7 @@
 
         <p class="mb-2">
           <%= __('contributions.editedAt') %>:
-          <strong><%= formatDate(contribution.edited_at) %></strong>
+          <strong><time class="contrib-detail-local-date" datetime="<%= new Date(contribution.edited_at).toISOString() %>"><%= formatDate(contribution.edited_at) %></time></strong>
         </p>
 
         <% if (contribution.commit) { %>
@@ -452,5 +452,32 @@
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
   ></script>
   <%- include('default/main_site_search_script') %>
+
+  <script>
+    // Server emits edited_at in its own (UTC) timezone. Reformat with the
+    // viewer's local timezone, using the ISO value carried on datetime=.
+    (function () {
+      const lang = <%- JSON.stringify(lang || 'en') %>;
+      const locale = lang === 'ru' ? 'ru-RU' : 'en-US';
+      function localize() {
+        document.querySelectorAll('.contrib-detail-local-date[datetime]').forEach(el => {
+          const d = new Date(el.getAttribute('datetime'));
+          if (isNaN(d.getTime())) return;
+          el.textContent = d.toLocaleString(locale, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', localize);
+      } else {
+        localize();
+      }
+    })();
+  </script>
 </body>
 </html>

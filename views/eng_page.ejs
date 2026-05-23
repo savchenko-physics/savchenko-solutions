@@ -1674,6 +1674,22 @@
         });
         span.textContent = localDate;
       });
+
+      // Recent Changes sidebar — server renders timestamps in UTC; replace
+      // with viewer's local time using the ISO value carried on datetime=.
+      document.querySelectorAll('.commit-time[datetime]').forEach(timeEl => {
+        const iso = timeEl.getAttribute('datetime');
+        if (!iso) return;
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return;
+        timeEl.textContent = d.toLocaleString(undefined, {
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        });
+      });
     });
 
     // Fade-in animations for action links

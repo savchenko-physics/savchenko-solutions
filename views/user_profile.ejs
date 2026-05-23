@@ -317,6 +317,42 @@
             .heatmap-year-nav button {
                 width: auto;
             }
+
+            /* Use fixed-size cells and let the heatmap scroll horizontally
+               inside its own container — cells stay legible and the rest of
+               the page stays put. */
+            .heatmap-wrap {
+                min-width: 0;
+            }
+
+            .heatmap-grid {
+                grid-template-columns: repeat(53, 10px);
+                grid-template-rows: repeat(7, 10px);
+                width: auto;
+                gap: 2px;
+                aspect-ratio: auto;
+            }
+
+            .heatmap-months {
+                grid-template-columns: repeat(53, 10px);
+                width: auto;
+                gap: 2px;
+            }
+
+            .heatmap-shell {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .heatmap-main {
+                flex: 0 0 auto;
+                min-width: 0;
+            }
+
+            .heatmap-y {
+                width: 22px;
+                font-size: 10px;
+            }
         }
 
         .heatmap-year-nav button {
@@ -829,10 +865,20 @@
         @media (max-width: 768px) {
             .profile-page {
                 padding: 16px 12px 24px;
+                /* Safety net: clip any stray child width that would
+                   otherwise force a horizontal page scroll. */
+                overflow-x: hidden;
             }
 
             .name-line {
                 font-size: 20px;
+            }
+
+            /* Hash already shown in the title row — drop the duplicate
+               from the meta-right block when it wraps onto a new line. */
+            .contrib-meta-right .contrib-hash,
+            .contrib-meta-right > span[aria-hidden="true"] {
+                display: none;
             }
         }
 
@@ -997,7 +1043,7 @@
             <h2 class="section-title"><%= lang === 'ru' ? 'Глава / Раздел / Статус' : 'Chapter / Section / Status' %></h2>
             <label for="sankey-chapter" style="font-size:13px;color:#6c757d;"><%= lang === 'ru' ? 'Глава' : 'Chapter' %></label>
             <select id="sankey-chapter" style="margin-left:8px;"></select>
-            <svg id="sankey-svg" viewBox="0 0 900 360" style="width:100%;height:360px;display:block;"></svg>
+            <svg id="sankey-svg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:360px;display:block;"></svg>
         </section>
 
         <!-- Platform Overview -->
