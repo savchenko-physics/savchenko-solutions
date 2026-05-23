@@ -30,6 +30,7 @@
       color: var(--msg-text);
       background: var(--msg-bg);
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
@@ -37,6 +38,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      height: 100dvh;
     }
 
     /* Top bar */
@@ -1020,6 +1022,14 @@
       .msg-back-btn { display: flex; }
 
       .msg-bubble-row { max-width: 85%; }
+
+      /* iOS Safari auto-zooms inputs with font-size < 16px on focus,
+         which forces a horizontal scroll. Keep all inputs at 16px on mobile. */
+      .msg-input,
+      .msg-search,
+      .msg-modal-search {
+        font-size: 16px;
+      }
     }
   </style>
 </head>

@@ -24,9 +24,9 @@
         <!-- Logo + Title -->
         <a class="navbar-brand d-flex align-items-center" href="/<%= navLang %>/">
           <img src="/img/logo.svg" alt="<%= __('title') %> Logo" class="logo-img me-2" />
-          <div class="d-none d-sm-block">
+          <div class="brand-text-block">
             <h1 class="site-title mb-0"><%= __('title') %></h1>
-            <p class="site-motto mb-0"><%= __('motto') %></p>
+            <p class="site-motto mb-0 d-none d-sm-block"><%= __('motto') %></p>
           </div>
         </a>
 
@@ -76,7 +76,7 @@
             <% } %>
 
             <!-- Problems dropdown -->
-            <li class="nav-item dropdown px-1">
+            <li class="nav-item dropdown px-1 d-none d-lg-block">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:14px;font-weight:500;color:#2d2d2d;">
                 <%= navLang === 'ru' ? 'Задачи' : 'Problems' %>
               </a>
@@ -104,7 +104,7 @@
             </li>
 
             <!-- Learn dropdown -->
-            <li class="nav-item dropdown px-1">
+            <li class="nav-item dropdown px-1 d-none d-lg-block">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:14px;font-weight:500;color:#2d2d2d;">
                 <%= navLang === 'ru' ? 'Обучение' : 'Learn' %>
               </a>
@@ -140,7 +140,7 @@
             </li>
 
             <!-- Community dropdown -->
-            <li class="nav-item dropdown px-1">
+            <li class="nav-item dropdown px-1 d-none d-lg-block">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:14px;font-weight:500;color:#2d2d2d;">
                 <%= navLang === 'ru' ? 'Сообщество' : 'Community' %>
               </a>
@@ -349,8 +349,6 @@
         </div>
       </div>
     </nav>
-
-    <div class="container hero-content"></div>
   </header>
 
   <!-- Dropdown hover CSS + mobile nav styles -->
