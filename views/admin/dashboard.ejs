@@ -49,24 +49,27 @@
       margin-bottom: 20px;
       color: rgba(255,255,255,0.7);
     }
-    .admin-sidebar a {
+    .admin-sidebar a,
+    .admin-sidebar a:link,
+    .admin-sidebar a:visited {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 10px 16px;
-      color: rgba(255,255,255,0.8);
+      color: #ffffff;
       text-decoration: none;
       font-size: 14px;
       border-left: 3px solid transparent;
     }
-    .admin-sidebar a:hover {
+    .admin-sidebar a:hover,
+    .admin-sidebar a:focus {
       background: rgba(255,255,255,0.08);
-      color: #fff;
+      color: #ffffff;
     }
     .admin-sidebar a.active {
       background: rgba(255,255,255,0.12);
-      color: #fff;
-      border-left-color: #fff;
+      color: #ffffff;
+      border-left-color: #ffffff;
     }
     .admin-sidebar .back-link {
       margin-top: auto;
@@ -885,7 +888,16 @@
               <% } %>
             </div>
           </div>
+          <% if (sub.image_path) { %>
+          <div style="margin-bottom: 0.5rem;">
+            <a href="<%= sub.image_path %>" target="_blank" rel="noopener">
+              <img src="<%= sub.image_path %>" alt="Handwritten solution" style="max-width: 100%; max-height: 500px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff;" />
+            </a>
+          </div>
+          <% } %>
+          <% if (sub.content && sub.content.trim()) { %>
           <div style="font-size: 14px; line-height: 1.6; padding: 0.5rem; background: #f8f9fa; border-radius: 4px;"><%- sub.content %></div>
+          <% } %>
         </div>
         <% }); %>
       <% } else { %>
