@@ -50,7 +50,10 @@
             background: #f8f9fa;
             transition: all 0.15s;
         }
-        .tag-pill:hover {
+        /* Need `a.tag-pill` (not bare `.tag-pill`) to outrank the global
+           `a:hover:not(.btn)` rule in design-system.css. */
+        a.tag-pill:hover,
+        a.tag-pill:focus {
             background: #1a1a2e;
             color: #fff;
             border-color: #1a1a2e;
