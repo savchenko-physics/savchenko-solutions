@@ -548,6 +548,92 @@ function linkifyMessageContent(text, lang = 'en') {
     return result;
 }
 
+/**
+ * Run `fn` over the given HTML with all $...$ and $$...$$ math content
+ * temporarily masked out so transformations don't touch math expressions.
+ * Caller-supplied `fn` operates on the masked HTML string and returns a
+ * transformed string; this helper restores the math tokens before returning.
+ */
+function withMathPreserved(html, fn) {
+    const tokens = [];
+    // Order matters: match $$...$$ first to avoid the single-$ rule eating one half.
+    const masked = html
+        .replace(/\$\$[\s\S]+?\$\$/g, (m) => {
+            const i = tokens.push(m) - 1;
+            return ` MATHD${i} `;
+        })
+        .replace(/\$[^\$\n<>]+\$/g, (m) => {
+            const i = tokens.push(m) - 1;
+            return ` MATHI${i} `;
+        });
+    const out = fn(masked);
+    return out.replace(/ MATH[DI](\d+) /g, (_, n) => tokens[+n]);
+}
+
+/**
+ * Auto-link bare problem references (e.g. "14.2.1") in rendered HTML to
+ * /<lang>/<ref>. Used by the blog renderer so authors don't need to mark
+ * them up. Skips refs already inside <a> tags, attribute values, and math.
+ */
+function autoLinkBareProblemRefs(html, lang = 'en') {
+    return withMathPreserved(html, (h) =>
+        h.replace(
+            /(?<![\d.\w])(\d{1,2}\.\d{1,2}\.\d{1,3})(?![\d.\w])(?![^<]*<\/a>)/g,
+            (_, ref) =>
+                `<a href="/${lang}/${ref}" class="problem-ref" style="color:#1a5276;text-decoration:none;">${ref}</a>`
+        )
+    );
+}
+
+/** Whitelisted usernames that should be auto-linked in blog post bodies. */
+const BLOG_AUTO_LINK_USERNAMES = ['emixter', 'igor', 'astrosander'];
+
+/**
+ * Russian-name → username mappings for blog auto-linking.
+ * Each entry maps a Cyrillic name (with optional case suffixes) to a username.
+ */
+const BLOG_RUSSIAN_NAME_TO_USERNAME = [
+    // Игорь / Игоря / Игорю / Игорем / Игоре / Игоревич ... → igor
+    { pattern: /(?<![А-Яа-яёЁ])(Игор[а-яё]*)(?![А-Яа-яёЁ])(?![^<]*<\/a>)/g, username: 'igor' },
+];
+
+/**
+ * Auto-link known usernames and Russian-name mentions in rendered HTML.
+ * Whitelist-based so common words aren't accidentally linked.
+ * Skips matches already inside <a> tags or math.
+ */
+function autoLinkBlogUsernames(html) {
+    return withMathPreserved(html, (h) => {
+        // Latin usernames (case-insensitive, but preserve original text)
+        const userRe = new RegExp(
+            `(?<![\\w])(${BLOG_AUTO_LINK_USERNAMES.join('|')})(?![\\w])(?![^<]*<\\/a>)`,
+            'gi'
+        );
+        let result = h.replace(userRe, (match) => {
+            const lower = match.toLowerCase();
+            return `<a href="/user/${lower}" class="user-mention" style="color:#1a5276;text-decoration:none;">${match}</a>`;
+        });
+        // Russian name aliases
+        for (const { pattern, username } of BLOG_RUSSIAN_NAME_TO_USERNAME) {
+            result = result.replace(pattern, (match) =>
+                `<a href="/user/${username}" class="user-mention" style="color:#1a5276;text-decoration:none;">${match}</a>`
+            );
+        }
+        return result;
+    });
+}
+
+/**
+ * Apply blog-specific link transformations to already-rendered markdown HTML.
+ * Order: existing #-prefixed refs → bare refs → usernames.
+ */
+function linkifyBlogHtml(html, lang = 'en') {
+    let out = autoLinkProblemRefs(html, lang);     // existing #X.X.X refs
+    out = autoLinkBareProblemRefs(out, lang);       // bare X.X.X refs
+    out = autoLinkBlogUsernames(out);
+    return out;
+}
+
 module.exports = {
     parseMarkdown,
     getMarkdownFiles,
@@ -559,7 +645,10 @@ module.exports = {
     isValidSolutionProblemName,
     sanitizeParsedMarkdownHtml,
     autoLinkProblemRefs,
+    autoLinkBareProblemRefs,
     autoLinkUserMentions,
+    autoLinkBlogUsernames,
     autoLinkUrls,
     linkifyMessageContent,
+    linkifyBlogHtml,
 };

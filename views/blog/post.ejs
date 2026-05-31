@@ -78,23 +78,107 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
-        .blog-post-container {
-            max-width: 760px;
+        /* Two-column layout: sticky TOC sidebar + article body.
+           On screens < 1100px the sidebar is hidden and the body recenters. */
+        .blog-page-grid {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 780px);
+            gap: 2.25rem;
+            max-width: 1040px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: 0 1rem;
+            align-items: start;
+        }
+        .blog-toc-sidebar {
+            position: sticky;
+            top: 84px;
+            max-height: calc(100vh - 110px);
+            overflow-y: auto;
+            padding: 1.25rem 0 1rem;
+            font-size: 13.5px;
+            line-height: 1.45;
+            color: #54595d;
+            border-right: 1px solid #ececec;
+            padding-right: 1rem;
+        }
+        .blog-toc-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a2e;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin: 0 0 0.6rem 0.5rem;
+        }
+        .blog-toc-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .blog-toc-list li { margin: 0; }
+        .blog-toc-list a {
+            display: block;
+            padding: 0.3rem 0.5rem 0.3rem 0.65rem;
+            color: #1a5276;
+            text-decoration: none;
+            border-left: 2px solid transparent;
+            border-radius: 0 4px 4px 0;
+            transition: background 0.1s, color 0.1s, border-color 0.1s;
+        }
+        .blog-toc-list a:hover {
+            background: #f6f7f9;
+            color: #0d3b54;
+        }
+        .blog-toc-list a.active {
+            background: #f0f2f5;
+            border-left-color: #1a1a2e;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+        /* Anchor scroll target offset (so sticky page header doesn't cover headings) */
+        .blog-content h2 { scroll-margin-top: 80px; }
+        .blog-content h3 { scroll-margin-top: 80px; }
+
+        @media (max-width: 1099px) {
+            .blog-page-grid {
+                display: block;
+                max-width: 800px;
+                padding: 0;
+            }
+            .blog-toc-sidebar { display: none; }
+        }
+
+        .blog-post-container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 1.25rem 1rem 2rem;
+        }
+        /* Inside the grid the container is one of two cells, no extra centering needed */
+        .blog-page-grid > .blog-post-container {
+            max-width: none;
+            margin: 0;
+            padding: 1.25rem 0 2rem;
+        }
+        @media (max-width: 1099px) {
+            .blog-page-grid > .blog-post-container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 1.25rem 1rem 2rem;
+            }
         }
 
         /* Post header */
         .blog-post-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
         .blog-post-header h1 {
             font-family: 'Inter', sans-serif;
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 700;
             color: #2d2d2d;
-            line-height: 1.3;
-            margin: 0 0 1rem 0;
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            margin: 0 0 0.75rem 0;
         }
         .blog-author-info {
             display: flex;
@@ -128,71 +212,147 @@
 
         /* Post content — markdown rendering */
         .blog-content {
-            font-size: 16px;
-            line-height: 1.8;
+            font-size: 17px;
+            line-height: 1.7;
             color: #2d2d2d;
-            margin-bottom: 2rem;
+            margin-bottom: 1.75rem;
         }
         .blog-content h2 {
             font-family: 'Inter', sans-serif;
             font-size: 22px;
             font-weight: 600;
             color: #2d2d2d;
-            margin: 2rem 0 1rem;
+            margin: 1.75rem 0 0.6rem;
+            line-height: 1.3;
+            clear: both;
         }
         .blog-content h3 {
             font-family: 'Inter', sans-serif;
             font-size: 18px;
             font-weight: 600;
             color: #2d2d2d;
-            margin: 1.5rem 0 0.75rem;
+            margin: 1.25rem 0 0.5rem;
+            clear: both;
         }
         .blog-content p {
-            margin-bottom: 1rem;
+            margin: 0 0 0.85rem;
+        }
+        /* Interview question paragraphs (bold-only) get a subtle accent */
+        .blog-content p > strong:only-child {
+            display: inline-block;
+            color: #1a1a2e;
+            font-weight: 600;
         }
         .blog-content ul, .blog-content ol {
-            margin-bottom: 1rem;
-            padding-left: 1.5rem;
+            margin: 0 0 0.85rem;
+            padding-left: 1.4rem;
         }
         .blog-content li {
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.3rem;
         }
         .blog-content strong {
             font-weight: 600;
+            color: #1a1a2e;
         }
         .blog-content blockquote {
-            border-left: 3px solid #dee2e6;
-            padding-left: 1rem;
-            color: #6c757d;
+            border-left: 3px solid #1a1a2e;
+            background: #f8f9fa;
+            padding: 0.6rem 0.9rem 0.6rem 1rem;
+            color: #2d2d2d;
             margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 16px;
         }
+        .blog-content blockquote p { margin: 0 0 0.4rem; }
+        .blog-content blockquote p:last-child { margin-bottom: 0; }
         .blog-content code {
             background: #f8f9fa;
-            padding: 0.15rem 0.35rem;
+            padding: 0.1rem 0.35rem;
             border-radius: 3px;
             font-size: 14px;
+            font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
         }
         .blog-content hr {
             border: none;
-            border-top: 1px solid #dee2e6;
-            margin: 2rem 0;
+            border-top: 1px solid #e6e6e6;
+            margin: 1.5rem 0;
         }
-        .blog-content a {
-            color: #1a5276;
-        }
-        .blog-content a:hover {
-            color: #0d3b54;
-        }
-        .blog-content em {
-            font-style: italic;
-        }
+        .blog-content a { color: #1a5276; }
+        .blog-content a:hover { color: #0d3b54; }
+        .blog-content em { font-style: italic; }
 
-        /* Images (SVG figures) */
+        /* Default centered image (landscape figures, charts) */
         .blog-content img {
             display: block;
             max-width: 100%;
             height: auto;
-            margin: 1.5rem auto;
+            margin: 1.25rem auto;
+            border-radius: 4px;
+        }
+
+        /* Wikipedia-style floated thumbnail for portrait images
+           (auto-wrapped at runtime by the script at the bottom of the page). */
+        .blog-content figure.blog-thumb {
+            float: right;
+            clear: right;
+            width: 240px;
+            max-width: 45%;
+            margin: 0.3rem 0 0.6rem 1.25rem;
+            padding: 4px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .blog-content figure.blog-thumb.float-left {
+            float: left;
+            clear: left;
+            margin: 0.3rem 1.25rem 0.6rem 0;
+        }
+        .blog-content figure.blog-thumb img,
+        .blog-content figure.blog-figure-center img {
+            display: block;
+            width: 100%;
+            height: auto;
+            margin: 0;
+            border-radius: 2px;
+        }
+        .blog-content figure.blog-thumb figcaption,
+        .blog-content figure.blog-figure-center figcaption {
+            font-size: 12.5px;
+            line-height: 1.4;
+            color: #54595d;
+            padding: 6px 4px 2px;
+            font-style: normal;
+            text-align: left;
+        }
+        /* Centered framed figure — used for images at the end of short sections
+           and for ultra-tall portraits that would dominate as a float. */
+        .blog-content figure.blog-figure-center {
+            display: block;
+            margin: 1.25rem auto;
+            max-width: 360px;
+            padding: 4px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            clear: both;
+        }
+        .blog-content figure.blog-figure-center.very-tall {
+            max-width: 240px;
+        }
+        @media (max-width: 720px) {
+            .blog-content figure.blog-thumb,
+            .blog-content figure.blog-thumb.float-left {
+                float: none;
+                width: auto;
+                max-width: 100%;
+                margin: 1.25rem auto;
+            }
+            .blog-content figure.blog-figure-center {
+                max-width: 100%;
+            }
         }
 
         /* Markdown tables */
@@ -220,9 +380,10 @@
         /* Tags */
         .blog-post-tags {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
+            clear: both;
         }
         .tag-pill {
             display: inline-block;
@@ -247,10 +408,11 @@
             display: flex;
             justify-content: space-between;
             gap: 1rem;
-            padding: 1.5rem 0;
-            border-top: 1px solid #dee2e6;
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 2rem;
+            padding: 1rem 0;
+            border-top: 1px solid #e6e6e6;
+            border-bottom: 1px solid #e6e6e6;
+            margin-bottom: 1.5rem;
+            clear: both;
         }
         .blog-post-nav a {
             display: flex;
@@ -438,8 +600,12 @@
         }
 
         @media (max-width: 768px) {
-            .blog-post-container { padding: 1rem 0.75rem; }
+            .blog-post-container { padding: 0.75rem 0.75rem 1.5rem; }
             .blog-post-header h1 { font-size: 24px; }
+            .blog-content { font-size: 16px; line-height: 1.65; }
+            .blog-content h2 { font-size: 20px; margin-top: 1.4rem; }
+            .blog-content h3 { font-size: 17px; }
+            .blog-content hr { margin: 1.2rem 0; }
             .blog-post-nav { flex-direction: column; }
             .blog-post-nav a { max-width: 100%; }
             .blog-post-nav-next { text-align: left; }
@@ -477,6 +643,36 @@
     }
     %>
     <%- include('../default/main_site_header', { showViewsButton: false }) %>
+
+    <%
+    // Build TOC from the post markdown's H2 headings.
+    const tocItems = [];
+    {
+        const lines = post.content.split(/\r?\n/);
+        let inFence = false;
+        for (const line of lines) {
+            if (/^```/.test(line)) { inFence = !inFence; continue; }
+            if (inFence) continue;
+            const m = /^##\s+(.+?)\s*$/.exec(line);
+            if (m) {
+                let title = m[1].trim();
+                // Strip trailing markdown punctuation we don't want in the TOC
+                title = title.replace(/[#*]+$/, '').trim();
+                tocItems.push({ title, id: 'sec-' + (tocItems.length + 1) });
+            }
+        }
+    }
+    %>
+
+    <div class="blog-page-grid">
+        <aside class="blog-toc-sidebar" aria-label="<%= lang === 'ru' ? 'Содержание' : 'Contents' %>">
+            <div class="blog-toc-title"><%= lang === 'ru' ? 'Содержание' : 'Contents' %></div>
+            <ol class="blog-toc-list" id="blogTocList">
+                <% tocItems.forEach(it => { %>
+                <li><a href="#<%= it.id %>" data-target="<%= it.id %>"><%= it.title %></a></li>
+                <% }); %>
+            </ol>
+        </aside>
 
     <div class="blog-post-container">
         <a href="/blog" class="blog-back-link">&larr; <%= lang === 'ru' ? 'Все записи' : 'All posts' %></a>
@@ -592,6 +788,7 @@
             <% } %>
         </div>
     </div>
+    </div><!-- /blog-page-grid -->
 
     <%- include('../default/modern_footer') %>
 
@@ -705,6 +902,131 @@
         div.textContent = text;
         return div.innerHTML;
     }
+
+    // Sticky TOC: assign matching IDs to H2 headings and update active state on scroll.
+    (function setupTocScrollSpy() {
+        const content = document.getElementById('blogContent');
+        const tocList = document.getElementById('blogTocList');
+        if (!content || !tocList) return;
+        const headings = Array.from(content.querySelectorAll('h2'));
+        const tocAnchors = Array.from(tocList.querySelectorAll('a[data-target]'));
+        // Assign IDs in the same order as the server-rendered TOC.
+        headings.forEach((h, i) => {
+            const id = 'sec-' + (i + 1);
+            if (!h.id) h.id = id;
+        });
+        if (headings.length === 0 || tocAnchors.length === 0) return;
+        // Smooth-scroll on click; the CSS scroll-margin-top handles the offset.
+        tocAnchors.forEach(a => {
+            a.addEventListener('click', (e) => {
+                const target = document.getElementById(a.dataset.target);
+                if (!target) return;
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', '#' + a.dataset.target);
+            });
+        });
+        // Active state: the heading whose top is just above a 120 px threshold.
+        let ticking = false;
+        function updateActive() {
+            ticking = false;
+            const offset = 120;
+            let activeIdx = 0;
+            for (let i = 0; i < headings.length; i++) {
+                if (headings[i].getBoundingClientRect().top - offset <= 0) {
+                    activeIdx = i;
+                } else {
+                    break;
+                }
+            }
+            tocAnchors.forEach((a, i) => a.classList.toggle('active', i === activeIdx));
+        }
+        function onScroll() {
+            if (!ticking) {
+                window.requestAnimationFrame(updateActive);
+                ticking = true;
+            }
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll, { passive: true });
+        updateActive();
+    })();
+
+    // Auto-wrap portrait images into Wikipedia-style figures.
+    //   • Wide enough text after image AND ratio ≥ 0.5  → float right/left (alternating).
+    //   • Otherwise                                      → centered framed figure.
+    // Looks for <p><img></p> optionally followed by <p><em>caption</em></p>.
+    (function wrapPortraitImages() {
+        const content = document.getElementById('blogContent');
+        if (!content) return;
+        let floatIdx = 0;
+
+        // Sum the visible text length from `el` up to the next heading or <hr>.
+        // This estimates how much body copy is available to flow around a float.
+        function followingTextLength(el) {
+            let len = 0;
+            let node = el.nextElementSibling;
+            while (node && !/^H[1-6]$/.test(node.tagName) && node.tagName !== 'HR') {
+                len += (node.textContent || '').trim().length;
+                if (len > 1200) return len; // early-out: definitely enough
+                node = node.nextElementSibling;
+            }
+            return len;
+        }
+
+        function wrap(img) {
+            if (img.dataset.thumbProcessed) return;
+            const w = img.naturalWidth, h = img.naturalHeight;
+            if (!w || !h) return;
+            const ratio = w / h;
+            if (ratio >= 0.95) return; // landscape / square — keep markdown default
+
+            const wrapperP = img.closest('p');
+            if (!wrapperP || !wrapperP.parentNode) return;
+            const onlyChild = wrapperP.children.length === 1 && wrapperP.firstElementChild === img;
+            if (!onlyChild) return;
+
+            // Optional caption (next <p><em>...</em></p>)
+            let captionEl = null;
+            const nextP = wrapperP.nextElementSibling;
+            if (nextP && nextP.tagName === 'P' && nextP.children.length === 1 && nextP.firstElementChild.tagName === 'EM') {
+                captionEl = nextP;
+            }
+
+            // Decide layout. Float only if there's enough body text to wrap around
+            // the image AND the image isn't extremely tall.
+            const veryTall = ratio < 0.5;
+            const checkFrom = captionEl || wrapperP;
+            const followingText = followingTextLength(checkFrom);
+            const canFloat = !veryTall && followingText >= 400;
+
+            const fig = document.createElement('figure');
+            if (canFloat) {
+                fig.className = 'blog-thumb' + (floatIdx % 2 === 1 ? ' float-left' : '');
+                floatIdx++;
+            } else {
+                fig.className = 'blog-figure-center' + (veryTall ? ' very-tall' : '');
+            }
+
+            img.dataset.thumbProcessed = '1';
+            fig.appendChild(img);
+            if (captionEl) {
+                const fc = document.createElement('figcaption');
+                fc.innerHTML = captionEl.firstElementChild.innerHTML;
+                fig.appendChild(fc);
+                captionEl.remove();
+            }
+            wrapperP.replaceWith(fig);
+        }
+
+        content.querySelectorAll('img').forEach(img => {
+            if (img.complete && img.naturalWidth) {
+                wrap(img);
+            } else {
+                img.addEventListener('load', () => wrap(img), { once: true });
+            }
+        });
+    })();
     </script>
 </body>
 </html>

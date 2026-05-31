@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 const fileUpload = require('express-fileupload');
-const { parseMarkdown, autoLinkProblemRefs } = require('./utils');
+const { parseMarkdown, autoLinkProblemRefs, linkifyBlogHtml } = require('./utils');
 
 router.use(fileUpload());
 
@@ -558,7 +558,7 @@ router.get('/:slug', async (req, res) => {
             readingTime,
             username: req.session.username || null,
             userId: req.session.userId || null,
-            renderMarkdown: (content) => autoLinkProblemRefs(parseMarkdown(content), lang),
+            renderMarkdown: (content) => linkifyBlogHtml(parseMarkdown(content), lang),
         });
     } catch (err) {
         console.error('Blog post error:', err);
