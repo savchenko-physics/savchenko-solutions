@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <%
+    const isRu = lang === 'ru';
+    const pageTitle = isRu ? 'Июньский конкурс' : 'June Contest';
+    const pageDesc = isRu
+      ? 'Конкурс авторов решений задачника Савченко. Публикуй новые решения в LaTeX в июне 2026 и выигрывай эксклюзивный мерч. Живая таблица результатов.'
+      : 'A contest for Savchenko solution authors. Publish new LaTeX solutions in June 2026 and win exclusive merch. Live leaderboard.';
+    function fmtDate(d) {
+      const dt = new Date(d);
+      const months = isRu
+        ? ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря']
+        : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return dt.getUTCDate() + ' ' + months[dt.getUTCMonth()] + (isRu ? '' : ' ' + dt.getUTCFullYear());
+    }
+    const tierLabels = {
+      grand:  isRu ? 'Гран-при' : 'Grand',
+      silver: isRu ? 'Серебро' : 'Silver',
+      bronze: isRu ? 'Бронза' : 'Bronze',
+    };
+  %>
+  <meta name="description" content="<%= pageDesc %>" />
+  <title><%= pageTitle %> — <%= __('title') %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .contest-container { max-width: 1080px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+    .contest-eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #1a5276; }
+    .contest-title { font-size: 30px; font-weight: 700; font-family: Inter, sans-serif; color: #1a1a2e; margin: 0.25rem 0 0.4rem; }
+    .contest-sub { font-size: 15px; color: #6c757d; max-width: 680px; line-height: 1.6; }
+    .contest-dates { font-size: 13px; color: #6c757d; margin-top: 0.6rem; }
+    .contest-dates strong { color: #2d2d2d; }
+
+    /* Live counter */
+    .counter-card { background: #1a1a2e; color: #fff; border-radius: 8px; padding: 1.5rem 1.5rem 1.25rem; margin: 1.5rem 0; }
+    .counter-top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+    .counter-number { font-size: 44px; font-weight: 800; font-family: Inter, sans-serif; line-height: 1; }
+    .counter-label { font-size: 14px; color: #c9c9d4; }
+    .counter-goal { font-size: 13px; color: #c9c9d4; }
+    .progress-track { height: 8px; background: rgba(255,255,255,0.16); border-radius: 6px; margin-top: 1rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: #27ae60; border-radius: 6px; width: 0; transition: width 0.6s ease; }
+    .counter-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; font-size: 13px; color: #c9c9d4; }
+    .counter-foot .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #27ae60; margin-right: 6px; vertical-align: middle; }
+
+    .section { margin-top: 2rem; }
+    .section-title { font-size: 19px; font-weight: 600; font-family: Inter, sans-serif; color: #1a1a2e; margin-bottom: 0.85rem; }
+
+    .contest-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.75rem; align-items: start; }
+    @media (max-width: 860px) { .contest-layout { grid-template-columns: 1fr; } }
+
+    /* Prizes */
+    .prizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
+    @media (max-width: 620px) { .prizes { grid-template-columns: 1fr; } }
+    .prize { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; background: #f8f9fa; }
+    .prize-badge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 9px; border-radius: 12px; margin-bottom: 0.55rem; }
+    .badge-grand { background: #1a1a2e; color: #fff; }
+    .badge-silver { background: #6c757d; color: #fff; }
+    .badge-bronze { background: #fff; color: #2d2d2d; border: 1px solid #dee2e6; }
+    .prize-h { font-size: 15px; font-weight: 600; color: #2d2d2d; margin-bottom: 0.2rem; }
+    .prize-p { font-size: 13px; color: #6c757d; line-height: 1.5; margin: 0; }
+
+    /* Merch */
+    .merch-note { font-size: 13px; color: #6c757d; margin-bottom: 0.75rem; }
+    .merch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+    @media (max-width: 620px) { .merch-grid { grid-template-columns: 1fr 1fr; } }
+    .merch-grid img { width: 100%; height: 220px; object-fit: cover; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa; }
+    .exclusive-tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #c0392b; border: 1px solid #c0392b; border-radius: 12px; padding: 2px 9px; margin-left: 0.5rem; vertical-align: middle; }
+
+    /* Rules + multipliers */
+    .rules-list { font-size: 14px; line-height: 1.7; color: #2d2d2d; padding-left: 1.1rem; margin: 0; }
+    .mult-table { width: 100%; border-collapse: collapse; margin-top: 0.85rem; font-size: 14px; }
+    .mult-table th, .mult-table td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #f0f0f0; }
+    .mult-table th { font-weight: 600; color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .mult-table td:last-child, .mult-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Leaderboard */
+    .lb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .lb-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; color: #6c757d; font-weight: 600; text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #dee2e6; }
+    .lb-table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    .lb-rank { width: 30px; text-align: center; font-weight: 700; color: #6c757d; }
+    .lb-user { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+    .lb-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e9ecef; flex-shrink: 0; }
+    .lb-user a { color: #1a5276; text-decoration: none; font-weight: 500; }
+    .lb-user a:hover { color: #0d3b54; }
+    .lb-country { font-size: 12px; color: #6c757d; }
+    .lb-num { text-align: right; font-variant-numeric: tabular-nums; }
+    .lb-points { font-weight: 600; }
+    .tier-pill { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; padding: 1px 7px; border-radius: 10px; }
+    .lb-empty { text-align: center; color: #6c757d; padding: 1.5rem 0; font-size: 14px; }
+
+    /* Feed sidebar */
+    .side-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; background: #f8f9fa; margin-bottom: 1.25rem; }
+    .side-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 0.6rem; }
+    .feed-list { list-style: none; padding: 0; margin: 0; }
+    .feed-item { padding: 0.45rem 0; border-bottom: 1px solid #ececec; font-size: 13px; }
+    .feed-item:last-child { border-bottom: none; }
+    .feed-item a { color: #1a5276; text-decoration: none; font-weight: 500; }
+    .feed-meta { color: #6c757d; font-size: 12px; margin-top: 1px; }
+    .feed-lang { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #6c757d; border: 1px solid #dee2e6; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+
+    .cta-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.1rem; background: #fff; }
+    .btn-primary-navy, .btn-primary-navy:link, .btn-primary-navy:visited { display: inline-block; background: #1a1a2e; color: #fff !important; border: none; border-radius: 6px; padding: 0.55rem 1.2rem; font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; }
+    .btn-primary-navy:hover, .btn-primary-navy:focus { background: #0d0d1a; color: #fff !important; }
+    .btn-outline-navy, .btn-outline-navy:link, .btn-outline-navy:visited { display: inline-block; background: transparent; color: #2d2d2d !important; border: 1px solid #dee2e6; border-radius: 6px; padding: 0.55rem 1.2rem; font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; }
+    .btn-outline-navy:hover, .btn-outline-navy:focus { background: #f8f9fa; color: #2d2d2d !important; }
+
+    .countdown-line { font-size: 13px; color: #6c757d; margin-top: 0.4rem; }
+    .countdown-line strong { color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="contest-container">
+
+    <!-- Header -->
+    <div>
+      <div class="contest-eyebrow"><%= isRu ? 'Конкурс сообщества' : 'Community contest' %></div>
+      <h1 class="contest-title"><%= isRu ? 'Июньский конкурс. Новые решения, эксклюзивный мерч' : 'June Contest. New solutions, exclusive merch' %></h1>
+      <p class="contest-sub">
+        <%= isRu
+          ? 'Публикуй новые решения задач Савченко в LaTeX в течение июня. Каждый, кто публикует решение, автоматически участвует. Два полных набора мерча и кепки уезжают лучшим авторам месяца.'
+          : 'Publish new LaTeX solutions to Savchenko problems through June. Everyone who publishes a solution automatically takes part. Two full merch sets and caps go to the month\'s best authors.' %>
+      </p>
+      <div class="contest-dates">
+        <strong><%= fmtDate(contest.startDate) %></strong> — <strong><%= fmtDate(contest.endDate) %> 2026</strong>
+        <span id="countdownLine" class="countdown-line" data-end="<%= contest.endDate %>"></span>
+      </div>
+    </div>
+
+    <!-- Live counter -->
+    <div class="counter-card">
+      <div class="counter-top">
+        <div>
+          <div class="counter-number" id="counterNumber"><%= contest.totalSolutions %></div>
+          <div class="counter-label"><%= isRu ? 'новых решений за июнь' : 'new solutions in June' %></div>
+        </div>
+        <div class="counter-goal">
+          <%= isRu ? 'Цель сообщества' : 'Community goal' %>
+          <strong style="color:#fff;"><%= contest.goalSolutions %></strong>
+        </div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="counter-foot">
+        <span><span class="live-dot"></span><span id="participantsCount"><%= contest.participants %></span> <%= isRu ? 'участников' : 'participants' %></span>
+        <span id="remainingGoal"></span>
+      </div>
+    </div>
+
+    <div class="contest-layout">
+      <!-- Main column -->
+      <div>
+        <!-- Prizes -->
+        <div class="section">
+          <div class="section-title">
+            <%= isRu ? 'Призы' : 'Prizes' %>
+            <span class="exclusive-tag"><%= isRu ? 'Эксклюзив' : 'Exclusive' %></span>
+          </div>
+          <div class="prizes">
+            <div class="prize">
+              <span class="prize-badge badge-grand"><%= isRu ? 'Гран-при' : 'Grand' %></span>
+              <div class="prize-h"><%= isRu ? 'Полный набор' : 'Full set' %></div>
+              <p class="prize-p"><%= isRu ? 'Кепка, худи и шопер. Автору с наибольшим числом баллов за месяц.' : 'Cap, hoodie and shopper. To the author with the most points this month.' %></p>
+            </div>
+            <div class="prize">
+              <span class="prize-badge badge-silver"><%= isRu ? 'Серебро' : 'Silver' %></span>
+              <div class="prize-h"><%= isRu ? 'Полный набор' : 'Full set' %></div>
+              <p class="prize-p"><%= isRu ? 'Кепка, худи и шопер. За второе место по баллам.' : 'Cap, hoodie and shopper. For second place by points.' %></p>
+            </div>
+            <div class="prize">
+              <span class="prize-badge badge-bronze"><%= isRu ? 'Бронза' : 'Bronze' %></span>
+              <div class="prize-h"><%= isRu ? 'Кепка' : 'Cap' %></div>
+              <p class="prize-p"><%= isRu ? 'Фирменная кепка каждому, кто набрал не меньше ' + contest.bronzeThreshold + ' баллов.' : 'A branded cap for everyone who reaches ' + contest.bronzeThreshold + ' points.' %></p>
+            </div>
+          </div>
+
+          <!-- Merch photos -->
+          <div style="margin-top:1rem;">
+            <p class="merch-note">
+              <%= isRu
+                ? 'Мерч выпущен ограниченным тиражом производителем Creative Depo. Этот тираж эксклюзивный, повторного выпуска не будет.'
+                : 'Merch produced in a limited run by Creative Depo. This run is exclusive and will not be reprinted.' %>
+            </p>
+            <div class="merch-grid">
+              <img src="/img/blog/emixter_merch-front.jpeg" alt="<%= isRu ? 'Худи, кепка и шопер платформы' : 'Platform hoodie, cap and shopper' %>" onerror="this.style.display='none'" />
+              <img src="/img/blog/contest_merch_side.jpeg" alt="<%= isRu ? 'Шопер платформы' : 'Platform shopper' %>" onerror="this.style.display='none'" />
+              <img src="/img/blog/emixter_merch-box.jpeg" alt="<%= isRu ? 'Партия мерча в упаковке' : 'Merch batch in packaging' %>" onerror="this.style.display='none'" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Rules -->
+        <div class="section">
+          <div class="section-title"><%= isRu ? 'Правила' : 'Rules' %></div>
+          <ul class="rules-list">
+            <li><%= isRu ? 'Засчитывается каждое новое решение, опубликованное с 1 по 30 июня 2026 года включительно.' : 'Every new solution published from June 1 to June 30, 2026 inclusive counts.' %></li>
+            <li><%= isRu ? 'Решение должно быть набрано в LaTeX, а не загружено как фото.' : 'A solution must be typeset in LaTeX, not uploaded as a photo.' %></li>
+            <li><%= isRu ? 'Решение должно быть оригинальным, а не переводом уже существующего.' : 'A solution must be original, not a translation of an existing one.' %></li>
+            <li><%= isRu ? 'Решение должно содержать разбор, а не только финальный ответ.' : 'A solution must contain reasoning, not just a final answer.' %></li>
+          </ul>
+
+          <div class="section-title" style="font-size:15px;margin-top:1.25rem;"><%= isRu ? 'Множители баллов' : 'Point multipliers' %></div>
+          <p style="font-size:13px;color:#6c757d;margin:0 0 0.25rem;">
+            <%= isRu ? 'Множители стакаются. Платформа поощряет работу там, где её больше всего не хватает.' : 'Multipliers stack. The platform rewards work where it is needed most.' %>
+          </p>
+          <table class="mult-table">
+            <thead>
+              <tr><th><%= isRu ? 'Категория' : 'Category' %></th><th><%= isRu ? 'Множитель' : 'Multiplier' %></th></tr>
+            </thead>
+            <tbody>
+              <tr><td><%= isRu ? 'Базовое решение по правилам выше' : 'Base solution per the rules above' %></td><td>1.0</td></tr>
+              <tr><td><%= isRu ? 'Ранее нерешённая задача' : 'Previously unsolved problem' %></td><td>1.5</td></tr>
+              <tr><td><%= isRu ? 'Главы 9, 10, 12, 14 (покрытие меньше 50%)' : 'Chapters 9, 10, 12, 14 (under 50% coverage)' %></td><td>1.5</td></tr>
+              <tr><td><%= isRu ? 'Решение на английском языке' : 'Solution in English' %></td><td>1.5</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="section">
+          <div class="section-title"><%= isRu ? 'Таблица результатов' : 'Leaderboard' %></div>
+          <table class="lb-table">
+            <thead>
+              <tr>
+                <th class="lb-rank">#</th>
+                <th><%= isRu ? 'Автор' : 'Author' %></th>
+                <th class="lb-num"><%= isRu ? 'Решений' : 'Solutions' %></th>
+                <th class="lb-num"><%= isRu ? 'Баллы' : 'Points' %></th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <% if (!contest.leaderboard.length) { %>
+                <tr><td colspan="4" class="lb-empty"><%= isRu ? 'Пока никто не опубликовал новое решение. Стань первым.' : 'No new solutions yet. Be the first.' %></td></tr>
+              <% } else { contest.leaderboard.forEach(function(row) { %>
+                <tr>
+                  <td class="lb-rank"><%= row.rank %></td>
+                  <td>
+                    <div class="lb-user">
+                      <% if (row.avatar) { %><img class="lb-avatar" src="<%= row.avatar %>" alt="" onerror="this.style.visibility='hidden'" /><% } else { %><span class="lb-avatar"></span><% } %>
+                      <div style="min-width:0;">
+                        <a href="/user/<%= row.username %>"><%= row.fullName || row.username %></a>
+                        <% if (row.tier) { %>
+                          <span class="tier-pill <%= row.tier === 'grand' ? 'badge-grand' : (row.tier === 'silver' ? 'badge-silver' : 'badge-bronze') %>"><%= tierLabels[row.tier] %></span>
+                        <% } %>
+                        <% if (row.country) { %><div class="lb-country"><%= row.country %></div><% } %>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="lb-num"><%= row.solutions %></td>
+                  <td class="lb-num lb-points"><%= row.points %></td>
+                </tr>
+              <% }); } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div>
+        <div class="cta-card">
+          <div class="side-title"><%= isRu ? 'Как участвовать' : 'How to take part' %></div>
+          <p style="font-size:13px;color:#6c757d;line-height:1.6;margin-bottom:0.85rem;">
+            <%= isRu
+              ? 'Дополнительных кнопок нет. Опубликуй новое решение в LaTeX, и ты в таблице. Не знаешь, с чего начать? Открой список нерешённых задач.'
+              : 'No extra buttons. Publish a new LaTeX solution and you are on the board. Not sure where to start? Open the list of unsolved problems.' %>
+          </p>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+            <a class="btn-primary-navy" href="/<%= lang %>/upload"><%= isRu ? 'Опубликовать решение' : 'Publish a solution' %></a>
+            <a class="btn-outline-navy" href="/<%= lang %>/unsolved"><%= isRu ? 'Нерешённые задачи' : 'Unsolved problems' %></a>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-title"><%= isRu ? 'Последние решения' : 'Latest solutions' %></div>
+          <ul class="feed-list" id="feedList">
+            <% if (!contest.feed.length) { %>
+              <li class="feed-item" style="color:#6c757d;"><%= isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.' %></li>
+            <% } else { contest.feed.forEach(function(f) { %>
+              <li class="feed-item">
+                <a href="/<%= f.language %>/<%= f.problem %>"><%= f.problem %></a>
+                <span class="feed-lang"><%= f.language %></span>
+                <div class="feed-meta"><%= f.fullName || f.username %></div>
+              </li>
+            <% }); } %>
+          </ul>
+        </div>
+
+        <div class="side-card">
+          <div class="side-title"><%= isRu ? 'Откуда идея' : 'Where the idea came from' %></div>
+          <p style="font-size:13px;color:#6c757d;line-height:1.6;margin:0;">
+            <%= isRu
+              ? 'Конкурс предложил emixter в общем чате платформы. Мы доработали формат так, чтобы шанс на приз был у каждого активного автора.'
+              : 'The contest was proposed by emixter in the platform chat. We shaped the format so every active author has a real shot at a prize.' %>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    const SLUG = <%- JSON.stringify(contest.slug) %>;
+    const GOAL = <%= contest.goalSolutions %>;
+    const isRu = <%= isRu ? 'true' : 'false' %>;
+    const tierClass = { grand: 'badge-grand', silver: 'badge-silver', bronze: 'badge-bronze' };
+    const tierLabel = { grand: isRu ? 'Гран-при' : 'Grand', silver: isRu ? 'Серебро' : 'Silver', bronze: isRu ? 'Бронза' : 'Bronze' };
+
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function setProgress(total) {
+      const pct = GOAL > 0 ? Math.min(100, Math.round((total / GOAL) * 100)) : 0;
+      const fill = document.getElementById('progressFill');
+      if (fill) fill.style.width = pct + '%';
+      const rem = document.getElementById('remainingGoal');
+      if (rem) {
+        const left = Math.max(0, GOAL - total);
+        rem.textContent = isRu ? ('До цели осталось ' + left) : (left + ' to go');
+      }
+    }
+
+    function renderLeaderboard(rows) {
+      const body = document.getElementById('leaderboardBody');
+      if (!body) return;
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="4" class="lb-empty">' +
+          (isRu ? 'Пока никто не опубликовал новое решение. Стань первым.' : 'No new solutions yet. Be the first.') + '</td></tr>';
+        return;
+      }
+      body.innerHTML = rows.map(function(r) {
+        const avatar = r.avatar
+          ? '<img class="lb-avatar" src="' + esc(r.avatar) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
+          : '<span class="lb-avatar"></span>';
+        const tier = r.tier
+          ? ' <span class="tier-pill ' + (tierClass[r.tier] || '') + '">' + esc(tierLabel[r.tier] || '') + '</span>'
+          : '';
+        const country = r.country ? '<div class="lb-country">' + esc(r.country) + '</div>' : '';
+        return '<tr>' +
+          '<td class="lb-rank">' + r.rank + '</td>' +
+          '<td><div class="lb-user">' + avatar +
+            '<div style="min-width:0;"><a href="/user/' + esc(r.username) + '">' + esc(r.fullName || r.username) + '</a>' + tier + country + '</div>' +
+          '</div></td>' +
+          '<td class="lb-num">' + r.solutions + '</td>' +
+          '<td class="lb-num lb-points">' + r.points + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function renderFeed(feed) {
+      const list = document.getElementById('feedList');
+      if (!list) return;
+      if (!feed.length) {
+        list.innerHTML = '<li class="feed-item" style="color:#6c757d;">' + (isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.') + '</li>';
+        return;
+      }
+      list.innerHTML = feed.map(function(f) {
+        return '<li class="feed-item">' +
+          '<a href="/' + esc(f.language) + '/' + esc(f.problem) + '">' + esc(f.problem) + '</a>' +
+          '<span class="feed-lang">' + esc(f.language) + '</span>' +
+          '<div class="feed-meta">' + esc(f.fullName || f.username) + '</div>' +
+        '</li>';
+      }).join('');
+    }
+
+    function refresh() {
+      fetch('/challenge/' + SLUG + '/data', { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d || d.error) return;
+          const n = document.getElementById('counterNumber');
+          if (n) n.textContent = d.totalSolutions;
+          const p = document.getElementById('participantsCount');
+          if (p) p.textContent = d.participants;
+          setProgress(d.totalSolutions);
+          renderLeaderboard(d.leaderboard || []);
+          renderFeed(d.feed || []);
+        })
+        .catch(function() {});
+    }
+
+    // Countdown
+    (function() {
+      const el = document.getElementById('countdownLine');
+      if (!el) return;
+      const end = new Date(el.dataset.end + 'T23:59:59Z');
+      function tick() {
+        const diff = end - new Date();
+        if (diff <= 0) { el.innerHTML = isRu ? ' · <strong>Конкурс завершён</strong>' : ' · <strong>Contest ended</strong>'; return; }
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        el.innerHTML = isRu
+          ? (' · осталось <strong>' + days + ' дн ' + hours + ' ч</strong>')
+          : (' · <strong>' + days + 'd ' + hours + 'h</strong> left');
+      }
+      tick();
+      setInterval(tick, 60000);
+    })();
+
+    setProgress(<%= contest.totalSolutions %>);
+    setInterval(refresh, 30000);
+  })();
+  </script>
+
+  <%- include('../default/main_site_search_script') %>
+  <script src="/js/analytics.js"></script>
+</body>
+</html>

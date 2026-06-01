@@ -40,6 +40,7 @@ const toolsRouter = require('./tools');
 const bankRouter = require('./bank');
 const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
+const { router: contestRouter, getActiveContestBanner } = require('./contest');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
@@ -156,6 +157,16 @@ app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
     if (langMatch) {
         req.session.lang = langMatch[1];
+    }
+    next();
+});
+
+// Expose the active contest banner to every rendered page (cheap, no DB hit).
+app.use((req, res, next) => {
+    try {
+        res.locals.activeContest = getActiveContestBanner(req.session.lang || 'en');
+    } catch (_err) {
+        res.locals.activeContest = null;
     }
     next();
 });
@@ -1997,6 +2008,10 @@ app.use('/messages', messagesRouter);
 
 // Weekly Challenges
 app.use('/compete', challengesRouter);
+
+// Monthly Contest (live dashboard)
+app.use('/:lang(en|ru)/challenge', contestRouter);
+app.use('/challenge', contestRouter);
 
 // Study Paths
 app.use('/paths', pathsRouter);
