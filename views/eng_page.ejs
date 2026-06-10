@@ -271,21 +271,25 @@
                 const probName = section.number + '.' + p;
                 const isEn = enSolvedSet.has(probName);
                 const isRu = ruSolvedSet.has(probName);
-                let dotClass, href;
+                let dotClass, href, dotLabel;
                 if (isEn && isRu) {
                   dotClass = 'solved-both';
                   href = '/' + lang + '/' + probName;
+                  dotLabel = lang === 'ru' ? 'Оба языка' : 'Both languages';
                 } else if (isEn) {
                   dotClass = 'solved-en';
                   href = '/en/' + probName;
+                  dotLabel = lang === 'ru' ? 'Только английский' : 'English only';
                 } else if (isRu) {
                   dotClass = 'solved-ru';
                   href = '/ru/' + probName;
+                  dotLabel = lang === 'ru' ? 'Только русский' : 'Russian only';
                 } else {
                   dotClass = 'unsolved';
                   href = '/' + lang + '/upload';
+                  dotLabel = lang === 'ru' ? 'Не решено' : 'Unsolved';
                 }
-                sectionProblems.push({ name: probName, dotClass, href });
+                sectionProblems.push({ name: probName, dotClass, href, dotLabel });
               }
               chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, problems: sectionProblems });
             });
@@ -326,7 +330,7 @@
                   <% sec.problems.forEach(prob => { %>
                   <a href="<%= prob.href %>"
                      class="problem-dot <%= prob.dotClass %>"
-                     title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.name %>"><%= prob.name.split('.')[2] %></a>
+                     title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.name + ' · ' + prob.dotLabel %>"><%= prob.name.split('.')[2] %></a>
                   <% }); %>
                 </div>
               </div>
@@ -1323,7 +1327,7 @@
       background: #7d3c98;
       color: #fff;
     }
-    a.problem-dot.solved-both:hover { opacity: 0.85; }
+    a.problem-dot.solved-both:hover { opacity: 0.8; }
     a.problem-dot.solved-en,
     a.problem-dot.solved-en:link,
     a.problem-dot.solved-en:visited,

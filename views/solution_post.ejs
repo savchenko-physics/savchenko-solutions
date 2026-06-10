@@ -386,11 +386,15 @@
             flex-shrink: 0;
         }
 
-        .section-nav-arrow:hover {
+        .section-nav-arrow:hover,
+        .section-nav-arrow:active,
+        .section-nav-arrow:focus {
             background: #1a1a2e;
             color: #ffffff;
+            -webkit-text-fill-color: #ffffff;
             border-color: #1a1a2e;
             text-decoration: none;
+            outline: none;
         }
 
         .section-nav-title {
@@ -432,7 +436,7 @@
             background: #7d3c98;
             color: #ffffff;
         }
-        a.problem-grid-item--solved-both:hover { opacity: 0.85; }
+        a.problem-grid-item--solved-both:hover { opacity: 0.8; }
         a.problem-grid-item--solved-en,
         a.problem-grid-item--solved-en:link,
         a.problem-grid-item--solved-en:visited,
@@ -1408,17 +1412,25 @@
                 </div>
                 <div class="problem-grid">
                     <% sectionGrid.problems.forEach(function(p) { %>
+                        <%
+                        let pTip;
+                        if (p.current) pTip = p.name;
+                        else if (p.solved && p.solvedOther) pTip = p.name + ' · ' + (lang === 'ru' ? 'Оба языка' : 'Both languages');
+                        else if (p.solved) pTip = p.name + ' · ' + (lang === 'en' ? 'English only' : 'Только русский');
+                        else if (p.solvedOther) pTip = p.name + ' · ' + (lang === 'en' ? 'Russian only' : 'Только английский');
+                        else pTip = p.name + ' · ' + (lang === 'ru' ? 'Не решено' : 'Unsolved');
+                        %>
                         <% if (p.current) { %>
-                            <span class="problem-grid-item problem-grid-item--current"><%= p.name.split('.')[2] %></span>
+                            <span class="problem-grid-item problem-grid-item--current" title="<%= pTip %>"><%= p.name.split('.')[2] %></span>
                         <% } else if (p.solved && p.solvedOther) { %>
-                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved-both"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved-both" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else if (p.solved) { %>
-                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-en' : 'solved-ru' %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-en' : 'solved-ru' %>" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else if (p.solvedOther) { %>
                             <% const otherLangCode = lang === 'en' ? 'ru' : 'en'; %>
-                            <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %>" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else { %>
-                            <a href="/upload#<%= p.name %>" class="problem-grid-item problem-grid-item--unsolved"><%= p.name.split('.')[2] %></a>
+                            <a href="/upload#<%= p.name %>" class="problem-grid-item problem-grid-item--unsolved" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } %>
                     <% }); %>
                 </div>
