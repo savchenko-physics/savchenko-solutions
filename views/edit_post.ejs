@@ -2068,7 +2068,7 @@
                 }
                 rowArr.push(cells.join(' & '));
             }
-            const body = rowArr.join(' \\\\\n');
+            const body = rowArr.join(' \\\\\\\\\n');
             return `$$\\begin{${type}}\n${body}\n\\end{${type}}$$`;
         }
 
@@ -2100,10 +2100,10 @@
         });
 
         const EQ_TEMPLATES = {
-            cases:   '$$\\begin{cases}\n\\cdot & = \\cdot \\\\\n\\cdot & = \\cdot\n\\end{cases}$$',
-            aligned: '$$\\begin{aligned}\nx &= \\cdot \\\\\ny &= \\cdot\n\\end{aligned}$$',
-            gather:  '$$\\begin{gather}\n\\cdot \\\\\n\\cdot\n\\end{gather}$$',
-            split:   '$$\\begin{split}\n\\cdot &= \\cdot \\\\\n&= \\cdot\n\\end{split}$$'
+            cases:   '$$\\begin{cases}\n\\cdot & = \\cdot \\\\\\\\\n\\cdot & = \\cdot\n\\end{cases}$$',
+            aligned: '$$\\begin{aligned}\nx &= \\cdot \\\\\\\\\ny &= \\cdot\n\\end{aligned}$$',
+            gather:  '$$\\begin{gather}\n\\cdot \\\\\\\\\n\\cdot\n\\end{gather}$$',
+            split:   '$$\\begin{split}\n\\cdot &= \\cdot \\\\\\\\\n&= \\cdot\n\\end{split}$$'
         };
 
         document.querySelectorAll('.eq-insert-btn').forEach(btn => {
