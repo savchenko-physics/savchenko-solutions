@@ -377,15 +377,19 @@ function getSectionProblemsGrid(name, lang) {
 
     const max = parseInt(sectionMaximums[idx], 10);
     const postsDir = path.join(__dirname, "posts", lang);
+    const otherLang = lang === 'en' ? 'ru' : 'en';
+    const otherSolvedSet = getSolvedSet(otherLang);
 
     const problems = [];
     for (let i = 1; i <= max; i++) {
         const problemName = `${sectionRef}.${i}`;
         const filePath = path.join(postsDir, `${problemName}.md`);
         const solved = fs.existsSync(filePath);
+        const solvedOther = otherSolvedSet.has(problemName);
         problems.push({
             name: problemName,
             solved,
+            solvedOther,
             current: problemName === name,
         });
     }
@@ -485,6 +489,18 @@ function getRelatedProblems(name, lang, count = 5) {
     return candidates.slice(0, count);
 }
 
+function getSolvedSet(lang) {
+    const postsDir = path.join(__dirname, 'posts', lang);
+    if (!fs.existsSync(postsDir)) return new Set();
+    const result = new Set();
+    try {
+        for (const file of fs.readdirSync(postsDir)) {
+            if (file.endsWith('.md')) result.add(file.slice(0, -3));
+        }
+    } catch (e) {}
+    return result;
+}
+
 module.exports = {
     getLanguageData,
     getBothLanguages,
@@ -494,4 +510,5 @@ module.exports = {
     getSectionProblemsGrid,
     getRelatedProblems,
     readCSV,
+    getSolvedSet,
 };

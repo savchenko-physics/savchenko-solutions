@@ -232,8 +232,29 @@
           </p>
         </div>
 
+        <!-- Color legend -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: #6c757d;">
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #7d3c98;"></span>
+            <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #2471a3;"></span>
+            <%= lang === 'ru' ? 'Только английский' : 'English only' %>
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #27ae60;"></span>
+            <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
+          </span>
+          <span style="display: flex; align-items: center; gap: 5px;">
+            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #ebedf0; border: 1px solid #dee2e6;"></span>
+            <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
+          </span>
+        </div>
+
         <!-- Chapter Grid -->
         <div class="chapter-grid">
+          <% const otherLang = lang === 'ru' ? 'en' : 'ru'; %>
           <% chapters.forEach((chapter, chapterIndex) => {
             const chNum = chapterIndex + 1;
             let chSolved = 0;
@@ -248,8 +269,23 @@
               const sectionProblems = [];
               for (let p = 1; p <= sMax; p++) {
                 const probName = section.number + '.' + p;
-                const isSolved = allProbs.includes(probName);
-                sectionProblems.push({ name: probName, solved: isSolved });
+                const isEn = enSolvedSet.has(probName);
+                const isRu = ruSolvedSet.has(probName);
+                let dotClass, href;
+                if (isEn && isRu) {
+                  dotClass = 'solved-both';
+                  href = '/' + lang + '/' + probName;
+                } else if (isEn) {
+                  dotClass = 'solved-en';
+                  href = '/en/' + probName;
+                } else if (isRu) {
+                  dotClass = 'solved-ru';
+                  href = '/ru/' + probName;
+                } else {
+                  dotClass = 'unsolved';
+                  href = '/' + lang + '/upload';
+                }
+                sectionProblems.push({ name: probName, dotClass, href });
               }
               chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, problems: sectionProblems });
             });
@@ -288,8 +324,8 @@
                 </div>
                 <div class="problem-dots">
                   <% sec.problems.forEach(prob => { %>
-                  <a href="<%= prob.solved ? '/' + lang + '/' + prob.name : '/' + lang + '/upload' %>"
-                     class="problem-dot <%= prob.solved ? 'solved' : 'unsolved' %>"
+                  <a href="<%= prob.href %>"
+                     class="problem-dot <%= prob.dotClass %>"
                      title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.name %>"><%= prob.name.split('.')[2] %></a>
                   <% }); %>
                 </div>
@@ -1280,17 +1316,30 @@
       line-height: 1;
       transition: opacity 0.15s ease;
     }
-    a.problem-dot.solved,
-    a.problem-dot.solved:link,
-    a.problem-dot.solved:visited,
-    a.problem-dot.solved:hover,
-    a.problem-dot.solved:active {
+    a.problem-dot.solved-both,
+    a.problem-dot.solved-both:link,
+    a.problem-dot.solved-both:visited,
+    a.problem-dot.solved-both:active {
+      background: #7d3c98;
+      color: #fff;
+    }
+    a.problem-dot.solved-both:hover { opacity: 0.85; }
+    a.problem-dot.solved-en,
+    a.problem-dot.solved-en:link,
+    a.problem-dot.solved-en:visited,
+    a.problem-dot.solved-en:active {
+      background: #2471a3;
+      color: #fff;
+    }
+    a.problem-dot.solved-en:hover { opacity: 0.85; }
+    a.problem-dot.solved-ru,
+    a.problem-dot.solved-ru:link,
+    a.problem-dot.solved-ru:visited,
+    a.problem-dot.solved-ru:active {
       background: #27ae60;
       color: #fff;
     }
-    a.problem-dot.solved:hover {
-      opacity: 0.85;
-    }
+    a.problem-dot.solved-ru:hover { opacity: 0.85; }
     a.problem-dot.unsolved,
     a.problem-dot.unsolved:link,
     a.problem-dot.unsolved:visited,

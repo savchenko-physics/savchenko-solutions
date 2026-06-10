@@ -425,14 +425,30 @@
             text-decoration: none;
         }
 
-        a.problem-grid-item--solved,
-        a.problem-grid-item--solved:link,
-        a.problem-grid-item--solved:visited,
-        a.problem-grid-item--solved:hover,
-        a.problem-grid-item--solved:active {
-            background: #1a1a2e;
+        a.problem-grid-item--solved-both,
+        a.problem-grid-item--solved-both:link,
+        a.problem-grid-item--solved-both:visited,
+        a.problem-grid-item--solved-both:active {
+            background: #7d3c98;
             color: #ffffff;
         }
+        a.problem-grid-item--solved-both:hover { opacity: 0.85; }
+        a.problem-grid-item--solved-en,
+        a.problem-grid-item--solved-en:link,
+        a.problem-grid-item--solved-en:visited,
+        a.problem-grid-item--solved-en:active {
+            background: #2471a3;
+            color: #ffffff;
+        }
+        a.problem-grid-item--solved-en:hover { opacity: 0.85; }
+        a.problem-grid-item--solved-ru,
+        a.problem-grid-item--solved-ru:link,
+        a.problem-grid-item--solved-ru:visited,
+        a.problem-grid-item--solved-ru:active {
+            background: #27ae60;
+            color: #ffffff;
+        }
+        a.problem-grid-item--solved-ru:hover { opacity: 0.85; }
         a.problem-grid-item--unsolved,
         a.problem-grid-item--unsolved:link,
         a.problem-grid-item--unsolved:visited,
@@ -1394,12 +1410,22 @@
                     <% sectionGrid.problems.forEach(function(p) { %>
                         <% if (p.current) { %>
                             <span class="problem-grid-item problem-grid-item--current"><%= p.name.split('.')[2] %></span>
+                        <% } else if (p.solved && p.solvedOther) { %>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved-both"><%= p.name.split('.')[2] %></a>
                         <% } else if (p.solved) { %>
-                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-en' : 'solved-ru' %>"><%= p.name.split('.')[2] %></a>
+                        <% } else if (p.solvedOther) { %>
+                            <% const otherLangCode = lang === 'en' ? 'ru' : 'en'; %>
+                            <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %>"><%= p.name.split('.')[2] %></a>
                         <% } else { %>
                             <a href="/upload#<%= p.name %>" class="problem-grid-item problem-grid-item--unsolved"><%= p.name.split('.')[2] %></a>
                         <% } %>
                     <% }); %>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #6c757d;">
+                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #7d3c98;"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
+                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #2471a3;"></span>EN</span>
+                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #27ae60;"></span>RU</span>
                 </div>
             </div>
             <% if (typeof relatedProblems !== 'undefined' && relatedProblems && relatedProblems.length > 0) { %>

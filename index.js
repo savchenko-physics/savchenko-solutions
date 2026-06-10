@@ -12,7 +12,7 @@ const {
     isValidSolutionLang,
     isValidSolutionProblemName,
 } = require("./utils"); // Importing functions from utils.js
-const { getLanguageData } = require("./parents"); // generating content for the main english page
+const { getLanguageData, getSolvedSet } = require("./parents"); // generating content for the main english page
 
 const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
@@ -1892,6 +1892,8 @@ app.get("/", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        enSolvedSet: getSolvedSet('en'),
+        ruSolvedSet: getSolvedSet('ru'),
     });
 });
 
@@ -1983,6 +1985,8 @@ app.get("/ru", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        enSolvedSet: getSolvedSet('en'),
+        ruSolvedSet: getSolvedSet('ru'),
     });
 });
 
@@ -2049,6 +2053,8 @@ app.get("/en", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        enSolvedSet: getSolvedSet('en'),
+        ruSolvedSet: getSolvedSet('ru'),
     });
 });
 
