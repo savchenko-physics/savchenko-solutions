@@ -844,6 +844,64 @@
         .save-msg-modal__btn:hover {
             background: #3a7bc8;
         }
+
+        /* Matrix modal */
+        .matrix-type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .matrix-type-option {
+            cursor: pointer;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 10px 6px 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: #fafafa;
+            transition: border-color 0.15s, background 0.15s;
+            user-select: none;
+        }
+        .matrix-type-option:hover { border-color: #1a5276; background: #f0f4f8; }
+        .matrix-type-option.selected { border-color: #1a5276; background: #e8f0fb; }
+        .matrix-type-option input[type="radio"] { accent-color: #1a5276; }
+        .matrix-preview-math { font-size: 13px; line-height: 1.2; min-height: 48px; display: flex; align-items: center; justify-content: center; }
+        .matrix-dimensions { display: flex; gap: 20px; margin-bottom: 20px; }
+        .matrix-dim-group { flex: 1; }
+        .matrix-dim-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        .matrix-dim-group input { width: 100%; padding: 8px 12px; border: 1px solid #dee2e6; border-radius: 6px; font-size: 16px; outline: none; box-sizing: border-box; }
+        .matrix-dim-group input:focus { border-color: #1a5276; }
+        .modal-footer-btns { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-action-btn { padding: 8px 22px; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; font-weight: 500; }
+        .modal-action-btn:hover { opacity: 0.85; }
+        .modal-action-btn-secondary { background: #6c757d; color: #fff; }
+        .modal-action-btn-primary { background: #1a1a2e; color: #fff; }
+
+        /* Equations popover */
+        .equations-popover {
+            position: fixed;
+            background-color: #2f3a4c;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            z-index: 1002;
+            display: none;
+            min-width: 230px;
+        }
+        .equations-popover.show { display: block; }
+
+        /* Toolbar text buttons */
+        .toolbar-text-btn {
+            width: auto !important;
+            padding: 0 10px !important;
+            font-size: 12px !important;
+            color: rgba(255,255,255,0.85) !important;
+            letter-spacing: 0.2px;
+            border-left: 1px solid rgba(125,125,125,0.3) !important;
+        }
     </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -922,6 +980,8 @@
         <button type="button" class="ol-cm-toolbar-button btn" aria-label="Insert Figure">
             <i class="fa" aria-hidden="true"></i>
         </button>
+        <button type="button" id="matrix-btn" class="ol-cm-toolbar-button toolbar-text-btn btn" aria-label="Insert Matrix">Matrices</button>
+        <button type="button" id="equations-btn" class="ol-cm-toolbar-button toolbar-text-btn btn" aria-label="Insert Equations">Equations</button>
     </div>
 
     <div class="ol-cm-toolbar-button-menu-popover"
@@ -947,11 +1007,30 @@
         </div>
     </div>
 
-    <div style="display: flex; padding-top: 22px; height: calc(100vh - 32px - 40px);">
-        <div id="editor" style="width: 50%; height: 100%;"></div>
-        <div id="resizer" style="width: 5px; height: 100%; background-color: #2f3a4c; cursor: ew-resize;"></div>
+    <div class="equations-popover" id="equations-popover">
+        <div class="popover-content">
+            <div role="menu" class="list-group">
+                <button type="button" class="list-group-item eq-insert-btn" data-eq="cases">
+                    <%= lang === 'ru' ? 'Система уравнений' : 'System of equations' %> (cases)
+                </button>
+                <button type="button" class="list-group-item eq-insert-btn" data-eq="aligned">
+                    <%= lang === 'ru' ? 'Выровненные уравнения' : 'Aligned equations' %> (aligned)
+                </button>
+                <button type="button" class="list-group-item eq-insert-btn" data-eq="gather">
+                    <%= lang === 'ru' ? 'Совокупность уравнений' : 'Gathered equations' %> (gather)
+                </button>
+                <button type="button" class="list-group-item eq-insert-btn" data-eq="split">
+                    <%= lang === 'ru' ? 'Разбитое уравнение' : 'Split equation' %> (split)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: flex; padding-top: 22px; height: calc(100vh - 32px - 40px); overflow: hidden;">
+        <div id="editor" style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%;"></div>
+        <div id="resizer" style="flex: 0 0 5px; height: 100%; background-color: #2f3a4c; cursor: ew-resize;"></div>
         <div id="preview"
-            style="width: 50%; height: 100%; overflow-y: auto; background: #f9f9f9; word-break: break-word; padding: 1rem 3rem;">
+            style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%; overflow-y: auto; background: #f9f9f9; word-break: break-word; padding: 1rem 3rem;">
         </div>
     </div>
 
@@ -972,6 +1051,18 @@
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Relations"
                 aria-controls="symbol-palette-panel-Relations" aria-selected="false" tabindex="-1">
                 <%= __('post.symbolPaletteRelations') %>
+            </button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Delimiters"
+                aria-controls="symbol-palette-panel-Delimiters" aria-selected="false" tabindex="-1">
+                <%= lang === 'ru' ? 'Скобки' : 'Delimiters' %>
+            </button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Logic"
+                aria-controls="symbol-palette-panel-Logic" aria-selected="false" tabindex="-1">
+                <%= lang === 'ru' ? 'Логика' : 'Logic' %>
+            </button>
+            <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Accents"
+                aria-controls="symbol-palette-panel-Accents" aria-selected="false" tabindex="-1">
+                <%= lang === 'ru' ? 'Акценты' : 'Accents' %>
             </button>
             <button role="tab" type="button" class="symbol-palette-tab" id="symbol-palette-tab-Misc"
                 aria-controls="symbol-palette-panel-Misc" aria-selected="false" tabindex="-1">
@@ -1186,6 +1277,56 @@
             <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Perpendicular"
                 aria-selected="false" data-command="\perp">⟂</button>
         </div>
+        <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Delimiters"
+            aria-labelledby="symbol-palette-tab-Delimiters" tabindex="0" style="display: none;">
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left angle bracket" data-command="\langle">⟨</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Right angle bracket" data-command="\rangle">⟩</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left ceiling" data-command="\lceil">⌈</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Right ceiling" data-command="\rceil">⌉</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left floor" data-command="\lfloor">⌊</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Right floor" data-command="\rfloor">⌋</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left curly brace" data-command="\{">{</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Right curly brace" data-command="\}">}</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Vertical bar" data-command="\vert">|</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Double vertical bar" data-command="\Vert">‖</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Backslash" data-command="\backslash">\</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left (auto-sized)" data-command="\left(">( )</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left bracket (auto)" data-command="\left[">[ ]</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Left brace (auto)" data-command="\left\{">{}</button>
+        </div>
+        <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Logic"
+            aria-labelledby="symbol-palette-tab-Logic" tabindex="0" style="display: none;">
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="For all" data-command="\forall">∀</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="There exists" data-command="\exists">∃</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Does not exist" data-command="\nexists">∄</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Negation" data-command="\neg">¬</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="And" data-command="\land">∧</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Or" data-command="\lor">∨</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Top" data-command="\top">⊤</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Bottom" data-command="\bot">⊥</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Therefore" data-command="\therefore">∴</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Because" data-command="\because">∵</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Turnstile" data-command="\vdash">⊢</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Models" data-command="\models">⊨</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Empty set" data-command="\varnothing">∅</button>
+        </div>
+        <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Accents"
+            aria-labelledby="symbol-palette-tab-Accents" tabindex="0" style="display: none;">
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Hat" data-command="\hat{}">x̂</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Bar" data-command="\bar{}">x̄</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Tilde" data-command="\tilde{}">x̃</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Vector" data-command="\vec{}">x⃗</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Dot" data-command="\dot{}">ẋ</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Double dot" data-command="\ddot{}">ẍ</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Acute" data-command="\acute{}">x́</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Grave" data-command="\grave{}">x̀</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Check" data-command="\check{}">x̌</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Wide hat" data-command="\widehat{}">x̂y</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Overline" data-command="\overline{}">x̅</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Underline" data-command="\underline{}">x̲</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Overbrace" data-command="\overbrace{}">⏞</button>
+            <button class="symbol-palette-item" tabindex="-1" role="option" aria-label="Underbrace" data-command="\underbrace{}">⏟</button>
+        </div>
         <div role="tabpanel" class="symbol-palette-panel" id="symbol-palette-panel-Misc"
             aria-labelledby="symbol-palette-tab-Misc" tabindex="0" style="display: none;">
             <button class="symbol-palette-item" tabindex="0" role="option" aria-label="Infinity" aria-selected="true"
@@ -1260,6 +1401,55 @@
             <button id="insertUrlButton" class="submit-button" style="width: 100%;">
                 <%= __('post.insertUrlButton') %>
             </button>
+        </div>
+    </div>
+
+    <div id="matrixModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 600px; max-height: 90vh; overflow-y: auto; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Matrices</h2>
+                <span class="close-matrix-modal close" style="cursor: pointer; font-size: 24px; line-height: 1; color: #888;">&times;</span>
+            </div>
+            <div class="matrix-type-grid" id="matrixTypeGrid">
+                <label class="matrix-type-option selected">
+                    <input type="radio" name="matrixType" value="matrix" checked>
+                    <div class="matrix-preview-math">\(\begin{matrix}1&2&3\\4&5&6\\7&8&9\end{matrix}\)</div>
+                </label>
+                <label class="matrix-type-option">
+                    <input type="radio" name="matrixType" value="pmatrix">
+                    <div class="matrix-preview-math">\(\begin{pmatrix}1&2&3\\4&5&6\\7&8&9\end{pmatrix}\)</div>
+                </label>
+                <label class="matrix-type-option">
+                    <input type="radio" name="matrixType" value="bmatrix">
+                    <div class="matrix-preview-math">\(\begin{bmatrix}1&2&3\\4&5&6\\7&8&9\end{bmatrix}\)</div>
+                </label>
+                <label class="matrix-type-option">
+                    <input type="radio" name="matrixType" value="vmatrix">
+                    <div class="matrix-preview-math">\(\begin{vmatrix}1&2&3\\4&5&6\\7&8&9\end{vmatrix}\)</div>
+                </label>
+                <label class="matrix-type-option">
+                    <input type="radio" name="matrixType" value="Vmatrix">
+                    <div class="matrix-preview-math">\(\begin{Vmatrix}1&2&3\\4&5&6\\7&8&9\end{Vmatrix}\)</div>
+                </label>
+                <label class="matrix-type-option">
+                    <input type="radio" name="matrixType" value="Bmatrix">
+                    <div class="matrix-preview-math">\(\begin{Bmatrix}1&2&3\\4&5&6\\7&8&9\end{Bmatrix}\)</div>
+                </label>
+            </div>
+            <div class="matrix-dimensions">
+                <div class="matrix-dim-group">
+                    <label for="matrixRows"><%= lang === 'ru' ? 'Строки:' : 'Rows:' %></label>
+                    <input type="number" id="matrixRows" value="3" min="1" max="15">
+                </div>
+                <div class="matrix-dim-group">
+                    <label for="matrixCols"><%= lang === 'ru' ? 'Столбцы:' : 'Columns:' %></label>
+                    <input type="number" id="matrixCols" value="3" min="1" max="15">
+                </div>
+            </div>
+            <div class="modal-footer-btns">
+                <button class="modal-action-btn modal-action-btn-secondary close-matrix-modal"><%= lang === 'ru' ? 'Закрыть' : 'Close' %></button>
+                <button class="modal-action-btn modal-action-btn-primary" id="applyMatrixBtn"><%= lang === 'ru' ? 'Применить' : 'Apply' %></button>
+            </div>
         </div>
     </div>
 
@@ -1459,8 +1649,8 @@
 
             if (editorWidth > 100 && editorWidth < totalWidth - 100) {
                 const previewWidth = totalWidth - editorWidth - 5; // 5px resizer width
-                document.getElementById('editor').style.width = `${editorWidth}px`;
-                document.getElementById('preview').style.width = `${previewWidth}px`;
+                document.getElementById('editor').style.flexBasis = `${editorWidth}px`;
+                document.getElementById('preview').style.flexBasis = `${previewWidth}px`;
 
                 // Update symbol palette width to match editor width
                 document.querySelector('.symbol-palette-items').style.width = `${editorWidth}px`;
@@ -1838,6 +2028,93 @@
 
         // Initialize by showing the first tab and panel
         document.querySelector('.symbol-palette-tab[aria-selected="true"]').click();
+
+        // ── Matrices modal ────────────────────────────────────────────────
+        const matrixModal = document.getElementById('matrixModal');
+        const matrixBtn = document.getElementById('matrix-btn');
+        let matrixMathJaxDone = false;
+
+        function openMatrixModal() {
+            matrixModal.style.display = 'flex';
+            if (!matrixMathJaxDone && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetPromise([matrixModal]).then(() => { matrixMathJaxDone = true; });
+            }
+        }
+
+        matrixBtn.addEventListener('click', openMatrixModal);
+
+        matrixModal.querySelectorAll('.close-matrix-modal').forEach(el => {
+            el.addEventListener('click', () => { matrixModal.style.display = 'none'; });
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === matrixModal) matrixModal.style.display = 'none';
+        });
+
+        // Highlight selected matrix type option
+        document.querySelectorAll('.matrix-type-option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                document.querySelectorAll('.matrix-type-option').forEach(o => o.classList.remove('selected'));
+                opt.classList.add('selected');
+            });
+        });
+
+        function generateMatrixLatex(type, rows, cols) {
+            const rowArr = [];
+            for (let r = 0; r < rows; r++) {
+                const cells = [];
+                for (let c = 0; c < cols; c++) {
+                    cells.push('\\cdot');
+                }
+                rowArr.push(cells.join(' & '));
+            }
+            const body = rowArr.join(' \\\\\n');
+            return `$$\\begin{${type}}\n${body}\n\\end{${type}}$$`;
+        }
+
+        document.getElementById('applyMatrixBtn').addEventListener('click', () => {
+            const type = document.querySelector('input[name="matrixType"]:checked').value;
+            const rows = Math.max(1, Math.min(15, parseInt(document.getElementById('matrixRows').value) || 3));
+            const cols = Math.max(1, Math.min(15, parseInt(document.getElementById('matrixCols').value) || 3));
+            const latex = generateMatrixLatex(type, rows, cols);
+            editor.replaceSelection(latex);
+            matrixModal.style.display = 'none';
+        });
+
+        // ── Equations popover ─────────────────────────────────────────────
+        const equationsBtn = document.getElementById('equations-btn');
+        const equationsPopover = document.getElementById('equations-popover');
+
+        equationsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rect = equationsBtn.getBoundingClientRect();
+            equationsPopover.style.top = (rect.bottom + 2) + 'px';
+            equationsPopover.style.left = rect.left + 'px';
+            equationsPopover.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!equationsPopover.contains(e.target) && e.target !== equationsBtn) {
+                equationsPopover.classList.remove('show');
+            }
+        });
+
+        const EQ_TEMPLATES = {
+            cases:   '$$\\begin{cases}\n\\cdot & = \\cdot \\\\\n\\cdot & = \\cdot\n\\end{cases}$$',
+            aligned: '$$\\begin{aligned}\nx &= \\cdot \\\\\ny &= \\cdot\n\\end{aligned}$$',
+            gather:  '$$\\begin{gather}\n\\cdot \\\\\n\\cdot\n\\end{gather}$$',
+            split:   '$$\\begin{split}\n\\cdot &= \\cdot \\\\\n&= \\cdot\n\\end{split}$$'
+        };
+
+        document.querySelectorAll('.eq-insert-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-eq');
+                if (EQ_TEMPLATES[key]) {
+                    editor.replaceSelection(EQ_TEMPLATES[key]);
+                }
+                equationsPopover.classList.remove('show');
+            });
+        });
     </script>
 
     <% if (typeof saveError !== 'undefined' && saveError) { %>
