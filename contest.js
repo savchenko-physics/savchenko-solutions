@@ -44,6 +44,26 @@ const CONTEST = {
 const CACHE_TTL_MS = 30 * 1000;
 let standingsCache = { at: 0, data: null };
 
+// One-time check whether the admin has already created the overrides table.
+// Null = unchecked, true/false = result. Reset to null to force a recheck.
+let overridesTableAvailable = null;
+
+async function checkOverridesTable() {
+    if (overridesTableAvailable !== null) return overridesTableAvailable;
+    try {
+        await pool.query('SELECT 1 FROM contest_score_overrides LIMIT 0');
+        overridesTableAvailable = true;
+    } catch (_) {
+        overridesTableAvailable = false;
+    }
+    return overridesTableAvailable;
+}
+
+function invalidateStandingsCache() {
+    standingsCache = { at: 0, data: null };
+    overridesTableAvailable = null; // re-check table existence too
+}
+
 function getLang(req) {
     return req.session && req.session.lang ? req.session.lang : 'en';
 }
@@ -159,6 +179,103 @@ GROUP BY s.user_id, u.username, u.full_name, u.country_location, u.profile_pictu
 ORDER BY points DESC, solutions DESC, last_at ASC;
 `;
 
+// Override-aware version of STANDINGS_SQL.
+// Used when contest_score_overrides table exists (created by /admin/contest-review).
+// Changes vs. STANDINGS_SQL:
+//   - 'exclude'          decision → row dropped (NULL points filtered out)
+//   - 'self_translation' decision → the chronologically LATER of the two language
+//                                    versions gets 0.5 flat; the earlier keeps full multipliers
+//   - 'independent' or no override → original multiplier logic unchanged
+const STANDINGS_SQL_WITH_OVERRIDES = `
+WITH params AS (
+    SELECT $1::date AS start_d, $2::date AS end_d
+),
+all_edits AS (
+    SELECT problem_name, language, edited_at
+    FROM contributions
+    WHERE problem_name IS NOT NULL
+    UNION ALL
+    SELECT problem_name, language, edited_at
+    FROM github_contributions
+    WHERE problem_name IS NOT NULL
+),
+first_pl AS (
+    SELECT problem_name, language, MIN(edited_at) AS first_at
+    FROM all_edits
+    GROUP BY problem_name, language
+),
+first_p AS (
+    SELECT problem_name, MIN(edited_at) AS first_at_any
+    FROM all_edits
+    GROUP BY problem_name
+),
+new_pl AS (
+    SELECT fpl.problem_name, fpl.language
+    FROM first_pl fpl, params p
+    WHERE fpl.first_at::date BETWEEN p.start_d AND p.end_d
+      AND NOT EXISTS (
+          SELECT 1 FROM github_contributions g
+          WHERE g.problem_name = fpl.problem_name AND g.language = fpl.language
+      )
+),
+cand AS (
+    SELECT c.problem_name, c.language, c.user_id, MIN(c.edited_at) AS user_first_at
+    FROM contributions c, params p
+    WHERE c.user_id IS NOT NULL
+      AND c.content_changed = true
+      AND COALESCE(c.invisible, false) = false
+      AND c.problem_name IS NOT NULL
+      AND c.edited_at::date BETWEEN p.start_d AND p.end_d
+    GROUP BY c.problem_name, c.language, c.user_id
+),
+credited AS (
+    SELECT DISTINCT ON (cand.problem_name, cand.language)
+           cand.problem_name, cand.language, cand.user_id, cand.user_first_at
+    FROM cand
+    JOIN new_pl USING (problem_name, language)
+    ORDER BY cand.problem_name, cand.language, cand.user_first_at ASC
+),
+overrides AS (
+    SELECT problem_name, user_id, decision FROM contest_score_overrides
+),
+scored AS (
+    SELECT cr.user_id, cr.problem_name, cr.language, cr.user_first_at,
+           CASE
+             WHEN (SELECT o.decision FROM overrides o
+                   WHERE o.problem_name = cr.problem_name AND o.user_id = cr.user_id) = 'exclude'
+               THEN NULL
+             WHEN (SELECT o.decision FROM overrides o
+                   WHERE o.problem_name = cr.problem_name AND o.user_id = cr.user_id) = 'self_translation'
+               AND cr.user_first_at > (
+                   SELECT cr2.user_first_at FROM credited cr2
+                   WHERE cr2.problem_name = cr.problem_name
+                     AND cr2.user_id     = cr.user_id
+                     AND cr2.language   != cr.language
+               )
+               THEN 0.5
+             ELSE
+               (1.0
+                * CASE WHEN cr.language = 'en' THEN 1.5 ELSE 1 END
+                * CASE WHEN split_part(cr.problem_name, '.', 1) = ANY($3) THEN 1.5 ELSE 1 END
+                * CASE WHEN (SELECT fp.first_at_any FROM first_p fp
+                             WHERE fp.problem_name = cr.problem_name)::date
+                            BETWEEN (SELECT start_d FROM params) AND (SELECT end_d FROM params)
+                       THEN 1.5 ELSE 1 END
+               )
+           END AS points
+    FROM credited cr
+)
+SELECT s.user_id, u.username, u.full_name, u.country_location, u.profile_picture,
+       COUNT(*)::int AS solutions,
+       ROUND(SUM(s.points)::numeric, 3) AS points,
+       MAX(s.user_first_at) AS last_at
+FROM scored s
+JOIN users u ON u.id = s.user_id
+WHERE s.points IS NOT NULL
+GROUP BY s.user_id, u.username, u.full_name, u.country_location, u.profile_picture
+ORDER BY points DESC, solutions DESC, last_at ASC;
+`;
+
 // Recent credited solutions, newest first, for the live activity feed.
 const FEED_SQL = `
 WITH params AS (
@@ -212,8 +329,10 @@ async function computeStandings() {
     }
 
     const args = [CONTEST.startDate, CONTEST.endDate, CONTEST.lowCoverageChapters];
+    const hasOverrides = await checkOverridesTable();
+    const standingsSql = hasOverrides ? STANDINGS_SQL_WITH_OVERRIDES : STANDINGS_SQL;
     const [standingsRes, feedRes] = await Promise.all([
-        pool.query(STANDINGS_SQL, args),
+        pool.query(standingsSql, args),
         pool.query(FEED_SQL, [CONTEST.startDate, CONTEST.endDate]),
     ]);
 
@@ -303,4 +422,4 @@ router.get('/:slug', async (req, res) => {
     }
 });
 
-module.exports = { router, getActiveContestBanner, CONTEST };
+module.exports = { router, getActiveContestBanner, CONTEST, invalidateStandingsCache };

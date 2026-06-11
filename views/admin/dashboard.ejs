@@ -400,6 +400,7 @@
     <a href="/admin/blocked-ips" class="<%= tab === 'blocked-ips' ? 'active' : '' %>">IP Blocklist</a>
     <a href="/admin/stats" class="<%= tab === 'stats' ? 'active' : '' %>">Platform Stats</a>
     <a href="/admin/challenges" class="<%= tab === 'challenges' ? 'active' : '' %>">Challenges</a>
+    <a href="/admin/contest-review" class="<%= tab === 'contest-review' ? 'active' : '' %>">Contest Review</a>
     <div class="back-link">
       <a href="/en">Back to site</a>
     </div>
@@ -1172,6 +1173,122 @@
     });
 })();
 </script>
+<% } else if (tab === 'contest-review') { %>
+    <!-- ═══ CONTEST REVIEW ═══ -->
+    <h1>Contest Review — June 2026</h1>
+    <p style="color: var(--admin-muted); font-size: 14px; margin-bottom: 20px; max-width: 700px;">
+      These problems were solved by the same user in both EN and RU during the contest window (June 2026).
+      Decide whether the second language version is a self-translation (+0.5 flat, Rule 4)
+      or an independent solution (full multipliers), or exclude both from scoring.
+      Decisions take effect within 30 seconds.
+    </p>
+
+    <% if (typeof contestReviewCases !== 'undefined' && contestReviewCases.length === 0) { %>
+      <p style="color: var(--admin-muted);">No ambiguous cases found — all credited pairs have distinct authors.</p>
+    <% } else if (typeof contestReviewCases !== 'undefined') { %>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>User</th>
+          <th>EN submitted</th>
+          <th>RU submitted</th>
+          <th>Decision</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% contestReviewCases.forEach(function(c) { %>
+        <tr>
+          <td>
+            <strong><%= c.problem_name %></strong>
+            &nbsp;
+            <a href="/en/<%= c.problem_name %>" target="_blank" style="font-size:12px;">EN</a>
+            /
+            <a href="/ru/<%= c.problem_name %>" target="_blank" style="font-size:12px;">RU</a>
+          </td>
+          <td>
+            <a href="/en/profile/<%= c.username %>" target="_blank"><%= c.username %></a>
+            <% if (c.full_name) { %><br><span style="font-size:12px; color:var(--admin-muted);"><%= c.full_name %></span><% } %>
+          </td>
+          <td style="white-space:nowrap; font-size:12px;"><%= new Date(c.en_at).toLocaleDateString('en-GB') %></td>
+          <td style="white-space:nowrap; font-size:12px;"><%= new Date(c.ru_at).toLocaleDateString('en-GB') %></td>
+          <td>
+            <span class="status-badge <%=
+              c.current_decision === 'pending'          ? 'status-pending'   :
+              c.current_decision === 'exclude'          ? 'status-dismissed' :
+              c.current_decision === 'self_translation' ? 'status-pending'   :
+              'status-resolved'
+            %>"><%= c.current_decision %></span>
+          </td>
+          <td style="white-space:nowrap;">
+            <form method="POST" action="/admin/contest-review/decide" style="display:inline;">
+              <input type="hidden" name="problem_name" value="<%= c.problem_name %>">
+              <input type="hidden" name="user_id"      value="<%= c.user_id %>">
+              <button type="submit" name="decision" value="independent"
+                      class="btn-admin-success"
+                      style="font-size:12px; padding:4px 10px;"
+                      title="Both languages count as independent solutions with full multipliers">
+                Independent
+              </button>
+            </form>
+            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:4px;">
+              <input type="hidden" name="problem_name" value="<%= c.problem_name %>">
+              <input type="hidden" name="user_id"      value="<%= c.user_id %>">
+              <button type="submit" name="decision" value="self_translation"
+                      class="btn-admin-outline"
+                      style="font-size:12px; padding:4px 10px;"
+                      title="First language: full multipliers. Second language: +0.5 flat (Rule 4)">
+                Self-translation (+0.5)
+              </button>
+            </form>
+            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:4px;">
+              <input type="hidden" name="problem_name" value="<%= c.problem_name %>">
+              <input type="hidden" name="user_id"      value="<%= c.user_id %>">
+              <button type="submit" name="decision" value="exclude"
+                      class="btn-admin-danger"
+                      style="font-size:12px; padding:4px 10px;"
+                      title="Exclude both versions from contest scoring">
+                Exclude
+              </button>
+            </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+    <% if (typeof contestReviewOverrides !== 'undefined' && contestReviewOverrides.length > 0) { %>
+    <h2 style="font-size:16px; font-weight:600; margin:30px 0 12px;">Overrides Applied (<%= contestReviewOverrides.length %>)</h2>
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>User</th>
+          <th>Decision</th>
+          <th>Decided at</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% contestReviewOverrides.forEach(function(o) { %>
+        <tr>
+          <td><%= o.problem_name %></td>
+          <td><%= o.username || ('user #' + o.user_id) %></td>
+          <td>
+            <span class="status-badge <%=
+              o.decision === 'exclude'          ? 'status-dismissed' :
+              o.decision === 'self_translation' ? 'status-pending'   :
+              'status-resolved'
+            %>"><%= o.decision %></span>
+          </td>
+          <td style="font-size:12px; white-space:nowrap;"><%= new Date(o.decided_at).toLocaleString('en-GB') %></td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
 <% } %>
 
 </body>

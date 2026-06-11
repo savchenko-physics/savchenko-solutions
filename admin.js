@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const notifications = require('./notifications');
 const { isValidSolutionLang, isValidSolutionProblemName } = require('./utils');
+const { invalidateStandingsCache } = require('./contest');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -784,6 +785,146 @@ router.post('/challenges/:challengeId/review/:submissionId', async (req, res) =>
         res.redirect('/admin/challenges/' + challengeId);
     } catch (err) {
         console.error('Admin challenge review POST error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// ─── Contest Review ─────────────────────────────────────────────────────────
+// Surfaces (problem, user) pairs where the same author was credited for both
+// EN and RU during the contest window — the admin decides if it's an
+// independent solution (full multipliers) or a self-translation (+0.5 flat)
+// or should be excluded entirely.
+
+const CONTEST_REVIEW_START = '2026-06-01';
+const CONTEST_REVIEW_END   = '2026-06-30';
+
+async function ensureContestOverridesTable() {
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS contest_score_overrides (
+            id            SERIAL PRIMARY KEY,
+            problem_name  TEXT        NOT NULL,
+            user_id       INTEGER     NOT NULL,
+            decision      TEXT        NOT NULL
+                CHECK (decision IN ('independent', 'self_translation', 'exclude')),
+            decided_by    INTEGER,
+            decided_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            notes         TEXT,
+            UNIQUE (problem_name, user_id)
+        )
+    `);
+}
+
+// Find problems where the same user is the first credited contributor
+// for BOTH 'en' and 'ru' during the contest window.
+const CONTEST_REVIEW_SQL = `
+WITH params AS (
+    SELECT $1::date AS start_d, $2::date AS end_d
+),
+all_edits AS (
+    SELECT problem_name, language, edited_at FROM contributions WHERE problem_name IS NOT NULL
+    UNION ALL
+    SELECT problem_name, language, edited_at FROM github_contributions WHERE problem_name IS NOT NULL
+),
+first_pl AS (
+    SELECT problem_name, language, MIN(edited_at) AS first_at FROM all_edits GROUP BY problem_name, language
+),
+new_pl AS (
+    SELECT fpl.problem_name, fpl.language
+    FROM first_pl fpl, params p
+    WHERE fpl.first_at::date BETWEEN p.start_d AND p.end_d
+      AND NOT EXISTS (
+          SELECT 1 FROM github_contributions g
+          WHERE g.problem_name = fpl.problem_name AND g.language = fpl.language
+      )
+),
+cand AS (
+    SELECT c.problem_name, c.language, c.user_id, MIN(c.edited_at) AS user_first_at
+    FROM contributions c, params p
+    WHERE c.user_id IS NOT NULL AND c.content_changed = true
+      AND COALESCE(c.invisible, false) = false
+      AND c.problem_name IS NOT NULL
+      AND c.edited_at::date BETWEEN p.start_d AND p.end_d
+    GROUP BY c.problem_name, c.language, c.user_id
+),
+credited AS (
+    SELECT DISTINCT ON (cand.problem_name, cand.language)
+           cand.problem_name, cand.language, cand.user_id, cand.user_first_at
+    FROM cand JOIN new_pl USING (problem_name, language)
+    ORDER BY cand.problem_name, cand.language, cand.user_first_at ASC
+)
+SELECT
+    cr_en.problem_name,
+    cr_en.user_id,
+    u.username,
+    u.full_name,
+    cr_en.user_first_at AS en_at,
+    cr_ru.user_first_at AS ru_at,
+    COALESCE(o.decision, 'pending') AS current_decision,
+    o.notes
+FROM credited cr_en
+JOIN credited cr_ru
+  ON cr_en.problem_name = cr_ru.problem_name
+ AND cr_en.user_id      = cr_ru.user_id
+ AND cr_en.language     = 'en'
+ AND cr_ru.language     = 'ru'
+JOIN users u ON u.id = cr_en.user_id
+LEFT JOIN contest_score_overrides o
+  ON o.problem_name = cr_en.problem_name AND o.user_id = cr_en.user_id
+ORDER BY cr_en.problem_name;
+`;
+
+router.get('/contest-review', async (req, res) => {
+    try {
+        await ensureContestOverridesTable();
+        const [casesResult, overridesResult] = await Promise.all([
+            pool.query(CONTEST_REVIEW_SQL, [CONTEST_REVIEW_START, CONTEST_REVIEW_END]),
+            pool.query(
+                `SELECT o.*, u.username
+                 FROM contest_score_overrides o
+                 LEFT JOIN users u ON u.id = o.user_id
+                 ORDER BY o.decided_at DESC`
+            ),
+        ]);
+        res.render('admin/dashboard', {
+            __: req.__,
+            lang: 'en',
+            tab: 'contest-review',
+            contestReviewCases:     casesResult.rows,
+            contestReviewOverrides: overridesResult.rows,
+        });
+    } catch (err) {
+        console.error('Admin contest-review error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/contest-review/decide', async (req, res) => {
+    try {
+        const { problem_name, user_id, decision } = req.body;
+        const valid = ['independent', 'self_translation', 'exclude'];
+        if (!problem_name || !user_id || !valid.includes(decision)) {
+            return res.status(400).send('Invalid input');
+        }
+        await ensureContestOverridesTable();
+        await pool.query(
+            `INSERT INTO contest_score_overrides
+                 (problem_name, user_id, decision, decided_by, decided_at)
+             VALUES ($1, $2, $3, $4, NOW())
+             ON CONFLICT (problem_name, user_id)
+             DO UPDATE SET decision = $3, decided_by = $4, decided_at = NOW()`,
+            [problem_name, parseInt(user_id, 10), decision, req.session.userId]
+        );
+        await logAdminAction(
+            req.session.userId,
+            'contest_review_decide',
+            'contest_score_override',
+            null,
+            { problem: problem_name, user_id: parseInt(user_id, 10), decision }
+        );
+        invalidateStandingsCache();
+        res.redirect('/admin/contest-review');
+    } catch (err) {
+        console.error('Admin contest-review decide error:', err);
         res.status(500).send('Internal server error');
     }
 });
