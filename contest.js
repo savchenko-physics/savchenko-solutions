@@ -226,7 +226,7 @@ async function computeStandings() {
             username: r.username,
             fullName: r.full_name,
             country: r.country_location || null,
-            avatar: r.profile_picture ? r.profile_picture.replace(/\\/g, '/') : null,
+            avatar: r.profile_picture ? r.profile_picture.replace(/\\/g, '/') : '/img/profile_images/Default_placeholder.svg',
             solutions: r.solutions,
             points,
             tier: tierFor(rank, points),

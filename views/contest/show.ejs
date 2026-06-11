@@ -239,29 +239,101 @@
 
         <!-- Rules -->
         <div class="section">
-          <div class="section-title"><%= isRu ? 'Правила' : 'Rules' %></div>
-          <ul class="rules-list">
-            <li><%= isRu ? 'Засчитывается каждое новое решение, опубликованное с 1 по 30 июня 2026 года включительно.' : 'Every new solution published from June 1 to June 30, 2026 inclusive counts.' %></li>
-            <li><%= isRu ? 'Решение должно быть набрано в LaTeX, а не загружено как фото.' : 'A solution must be typeset in LaTeX, not uploaded as a photo.' %></li>
-            <li><%= isRu ? 'Решение должно быть оригинальным, а не переводом уже существующего.' : 'A solution must be original, not a translation of an existing one.' %></li>
-            <li><%= isRu ? 'Решение должно содержать разбор, а не только финальный ответ.' : 'A solution must contain reasoning, not just a final answer.' %></li>
-          </ul>
+          <div class="section-title"><%= isRu ? 'Правила начисления баллов' : 'Scoring rules' %></div>
+          <p style="font-size:13px;color:#6c757d;margin:0 0 0.9rem;line-height:1.6;">
+            <%= isRu
+              ? 'Полная версия от 8 июня. Балл начисляется за решённую задачу, а не за правку и не за языковую версию. Одна задача Савченко — одна единица, сколько бы раз вы её ни редактировали и на скольких бы языках ни оформляли.'
+              : 'Full version, June 8. A point is awarded for a solved problem — not for an edit, not for a language version. One Savchenko problem is one unit, regardless of how many times you edit it or in how many languages.' %>
+          </p>
 
-          <div class="section-title" style="font-size:15px;margin-top:1.25rem;"><%= isRu ? 'Множители баллов' : 'Point multipliers' %></div>
+          <ol style="font-size:14px;line-height:1.75;color:#2d2d2d;padding-left:1.4rem;margin:0 0 0.25rem;">
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Единица зачёта' : 'Credit unit' %></strong><br>
+              <%= isRu
+                ? 'Зачётная единица — пара (номер задачи, автор). Первая публикация полного решения задачи приносит баллы один раз. Все последующие правки той же задачи тем же автором баллов не добавляют.'
+                : 'The credit unit is the (problem, author) pair. The first publication of a complete solution earns points once. All subsequent edits to the same problem by the same author add no further points.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Базовый балл' : 'Base point' %></strong><br>
+              <%= isRu
+                ? 'Первое полное решение задачи, содержащее вывод и рассуждение в LaTeX, даёт 1.0 балл.'
+                : 'The first complete solution to a problem — derivation and reasoning in LaTeX — earns 1.0 point.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Множители' : 'Multipliers' %></strong><br>
+              <%= isRu
+                ? 'Стакаются мультипликативно (см. таблицу ниже). Пример: английское первое решение ранее нерешённой задачи из главы 12 даёт 1.0 × 1.5 × 1.5 × 1.5 = 3.375 балла. Начисляется один раз, при первой публикации этой задачи этим автором.'
+                : 'Stack multiplicatively (see table below). Example: an English-language first solution for a previously unsolved problem in chapter 12 gives 1.0 × 1.5 × 1.5 × 1.5 = 3.375 points. Awarded once, at first publication by this author.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Перевод своего решения' : 'Translating your own solution' %></strong><br>
+              <%= isRu
+                ? 'Если вы уже опубликовали решение задачи на одном языке и получили за него баллы, перевод на другой язык даёт +0.5 балла. Множители не применяются. Один перевод своего решения — 0.5 балла, один раз за задачу.'
+                : 'If you already published a solution for a problem and earned points, translating it to another language earns +0.5 points. No multipliers apply. One self-translation per problem — 0.5 points, once.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Почему перевод 0.5, а не 1.5' : 'Why translation is 0.5, not 1.5' %></strong><br>
+              <%= isRu
+                ? 'Решая задачу на английском с нуля, вы создаёте новый контент и получаете ×1.5. Переводя своё же готовое решение, вы добавляете языковую версию, но не новый вывод. Это реальная работа — поэтому 0.5, но не равная оригинальному выводу — поэтому не 1.5.'
+                : 'Solving a problem in English from scratch creates new content — that earns ×1.5. Translating your own existing solution adds a language version, not a new derivation. It is real work — hence 0.5 — but not equal to the original derivation — hence not 1.5.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Перевод чужого решения' : "Translating someone else's solution" %></strong><br>
+              <%= isRu
+                ? 'Не засчитывается. Ноль баллов.'
+                : 'Not credited. Zero points.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Задача с уже существующим чужим решением' : 'Problem already solved by another author' %></strong><br>
+              <%= isRu
+                ? 'Ваше альтернативное решение засчитывается с базовым баллом 1.0, без множителя за нерешённую задачу — задача уже была покрыта. Альтернативные решения приветствуются.'
+                : 'Your alternative solution earns the base 1.0 points, without the unsolved-problem multiplier — the problem was already covered. Alternative solutions are welcome.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Решения, опубликованные до конкурса' : 'Solutions published before the contest' %></strong><br>
+              <%= isRu
+                ? 'Задачи, решённые до 1 июня, не входят в зачёт. Но если вы переводите своё дореконкурсное решение на другой язык в ходе конкурса — перевод даёт 0.5 балла по правилу 4.'
+                : 'Problems solved before June 1 are not counted. However, if you translate your own pre-contest solution to another language during the contest, that earns 0.5 points under rule 4.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Неполные решения' : 'Incomplete solutions' %></strong><br>
+              <%= isRu
+                ? 'Решение без вывода, без рассуждения или состоящее только из ответа не засчитывается. Опубликуйте заготовку, допишите вывод — и при следующей проверке решение зачтётся.'
+                : 'A solution without derivation or reasoning, or consisting only of a final answer, is not credited. Publish a draft and complete the derivation — it will be credited on the next review.' %>
+            </li>
+            <li style="margin-bottom:0.6rem;">
+              <strong><%= isRu ? 'Проверка' : 'Review' %></strong><br>
+              <%= isRu
+                ? 'Решения выборочно проверяются на соответствие правилам — особенно переводы (правило 4) и наличие реального вывода (правило 9). Если решение не проходит проверку, баллы снимаются.'
+                : 'Solutions are spot-checked for compliance — especially translations (rule 4) and derivation quality (rule 9). Non-compliant solutions are removed from the score.' %>
+            </li>
+          </ol>
+
+          <div class="section-title" style="font-size:15px;margin-top:1.5rem;"><%= isRu ? 'Множители (таблица)' : 'Multiplier table' %></div>
           <p style="font-size:13px;color:#6c757d;margin:0 0 0.25rem;">
-            <%= isRu ? 'Множители стакаются. Платформа поощряет работу там, где её больше всего не хватает.' : 'Multipliers stack. The platform rewards work where it is needed most.' %>
+            <%= isRu
+              ? 'Применяются к базовому баллу, стакаются мультипликативно. Учитываются только при первой публикации задачи этим автором.'
+              : 'Applied to the base point, stack multiplicatively. Only apply at the first publication of a problem by this author.' %>
           </p>
           <table class="mult-table">
             <thead>
               <tr><th><%= isRu ? 'Категория' : 'Category' %></th><th><%= isRu ? 'Множитель' : 'Multiplier' %></th></tr>
             </thead>
             <tbody>
-              <tr><td><%= isRu ? 'Базовое решение по правилам выше' : 'Base solution per the rules above' %></td><td>1.0</td></tr>
-              <tr><td><%= isRu ? 'Ранее нерешённая задача' : 'Previously unsolved problem' %></td><td>1.5</td></tr>
-              <tr><td><%= isRu ? 'Главы 9, 10, 12, 14 (покрытие меньше 50%)' : 'Chapters 9, 10, 12, 14 (under 50% coverage)' %></td><td>1.5</td></tr>
-              <tr><td><%= isRu ? 'Решение на английском языке' : 'Solution in English' %></td><td>1.5</td></tr>
+              <tr><td><%= isRu ? 'Базовое решение' : 'Base solution' %></td><td>1.0</td></tr>
+              <tr><td><%= isRu ? 'Ранее нерешённая задача' : 'Previously unsolved problem' %></td><td>×1.5</td></tr>
+              <tr><td><%= isRu ? 'Главы 9, 10, 12, 14 (покрытие < 50%)' : 'Chapters 9, 10, 12, 14 (under 50% coverage)' %></td><td>×1.5</td></tr>
+              <tr><td><%= isRu ? 'Решение на английском языке' : 'Solution in English' %></td><td>×1.5</td></tr>
+              <tr style="border-top:2px solid #dee2e6;"><td><%= isRu ? 'Перевод своего уже засчитанного решения' : 'Self-translation of an already-credited solution' %></td><td>+0.5</td></tr>
             </tbody>
           </table>
+
+          <div style="margin-top:1.25rem;padding:0.85rem 1rem;background:#f8f9fa;border-radius:6px;border:1px solid #dee2e6;font-size:13px;color:#6c757d;line-height:1.6;">
+            <strong style="color:#2d2d2d;"><%= isRu ? 'О предстоящем перерасчёте' : 'Upcoming recalculation' %></strong><br>
+            <%= isRu
+              ? 'Текущая система начисляет баллы за каждую правку и за каждую языковую версию отдельно. Это ошибка подсчёта. После исправления таблица результатов будет пересчитана по правилам выше. Если у кого-то баллы изменятся — это приведение к честному значению, а не наказание.'
+              : 'The current system awards points for every edit and every language version separately. This is a scoring bug. After the fix, the leaderboard will be recalculated per the rules above. If anyone\'s score changes, it is a correction to the fair value, not a penalty.' %>
+          </div>
         </div>
 
       </div>
