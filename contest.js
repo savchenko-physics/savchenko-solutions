@@ -34,8 +34,10 @@ const CONTEST = {
     slug: 'iyun-2026',
     startDate: '2026-06-01',
     endDate: '2026-06-30',
-    goalSolutions: 250,      // community-wide target shown on the progress bar
-    bronzeThreshold: 15,     // points needed for the bronze (cap) tier
+    goalSolutions: 400,           // raised stretch goal — progress bar target
+    firstMilestone: 250,          // original goal, shown as checkpoint tick on the bar
+    stretchRaffleThreshold: 10,   // min points to enter the stretch raffle
+    bronzeThreshold: 15,          // points needed for the bronze (cap) tier
     lowCoverageChapters: ['9', '10', '12', '14'],
     title: { ru: 'Июньский конкурс', en: 'June Contest' },
 };
@@ -366,6 +368,9 @@ async function computeStandings() {
         startDate: CONTEST.startDate,
         endDate: CONTEST.endDate,
         goalSolutions: CONTEST.goalSolutions,
+        firstMilestone: CONTEST.firstMilestone,
+        stretchRaffleThreshold: CONTEST.stretchRaffleThreshold,
+        stretchUnlocked: totalSolutions >= CONTEST.goalSolutions,
         bronzeThreshold: CONTEST.bronzeThreshold,
         live: isLive(),
         daysLeft: daysLeft(),

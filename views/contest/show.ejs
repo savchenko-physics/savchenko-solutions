@@ -60,14 +60,20 @@
 
     /* Prizes */
     .prizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
-    @media (max-width: 620px) { .prizes { grid-template-columns: 1fr; } }
+    .prizes-community { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; margin-top: 0.85rem; }
+    @media (max-width: 620px) { .prizes { grid-template-columns: 1fr; } .prizes-community { grid-template-columns: 1fr; } }
     .prize { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; background: #f8f9fa; }
+    .prize-locked { opacity: 0.6; }
     .prize-badge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 9px; border-radius: 12px; margin-bottom: 0.55rem; }
     .badge-grand { background: #1a1a2e; color: #fff; }
     .badge-silver { background: #6c757d; color: #fff; }
     .badge-bronze { background: #fff; color: #2d2d2d; border: 1px solid #dee2e6; }
+    .badge-raffle { background: #1a5276; color: #fff; }
+    .badge-spotlight { background: #7d6608; color: #fff; }
     .prize-h { font-size: 15px; font-weight: 600; color: #2d2d2d; margin-bottom: 0.2rem; }
     .prize-p { font-size: 13px; color: #6c757d; line-height: 1.5; margin: 0; }
+    .prize-lock-note { font-size: 12px; color: #c0392b; margin-top: 0.5rem; font-weight: 500; }
+    .prizes-section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; margin: 1.25rem 0 0.5rem; }
 
     /* Merch */
     .merch-note { font-size: 13px; color: #6c757d; margin-bottom: 0.75rem; }
@@ -145,15 +151,35 @@
           <div class="counter-number" id="counterNumber"><%= contest.totalSolutions %></div>
           <div class="counter-label"><%= isRu ? 'новых решений за июнь' : 'new solutions in June' %></div>
         </div>
-        <div class="counter-goal">
-          <%= isRu ? 'Цель сообщества' : 'Community goal' %>
-          <strong style="color:#fff;"><%= contest.goalSolutions %></strong>
+        <div style="text-align:right;">
+          <div class="counter-goal">
+            <%= isRu ? 'Цель сообщества' : 'Community goal' %>
+            <strong style="color:#fff;"><%= contest.goalSolutions %></strong>
+          </div>
+          <% if (contest.stretchUnlocked) { %>
+            <div style="font-size:12px;color:#27ae60;margin-top:3px;font-weight:600;"><%= isRu ? 'Цель достигнута — жеребьёвка открыта' : 'Goal reached — raffle unlocked' %></div>
+          <% } %>
         </div>
       </div>
-      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="counter-foot">
+      <div style="position:relative;margin-top:1rem;">
+        <div class="progress-track" style="margin-top:0;"><div class="progress-fill" id="progressFill"></div></div>
+        <div id="milestoneTick" style="position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,0.35);border-radius:1px;pointer-events:none;"></div>
+      </div>
+      <div class="counter-foot" style="margin-top:0.5rem;">
         <span><span class="live-dot"></span><span id="participantsCount"><%= contest.participants %></span> <%= isRu ? 'участников' : 'participants' %></span>
         <span id="remainingGoal"></span>
+      </div>
+      <div style="margin-top:0.85rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.12);font-size:13px;color:#c9c9d4;line-height:1.6;" id="communityMsg">
+        <% const toStretch = Math.max(0, contest.goalSolutions - contest.totalSolutions); %>
+        <% if (!contest.stretchUnlocked) { %>
+          <%= isRu
+            ? `До цели осталось ${toStretch} решений. Если каждый участник добавит ещё десяток — мы перешагнём ${contest.goalSolutions} вместе. Когда сообщество достигнет этой отметки, призовой фонд расширится: два дополнительных комплекта мерча уйдут в жеребьёвку среди всех, кто набрал не менее ${contest.stretchRaffleThreshold} баллов.`
+            : `${toStretch} solutions to go. When the community hits ${contest.goalSolutions}, the prize pool expands: two extra merch sets enter a raffle open to everyone with at least ${contest.stretchRaffleThreshold} points. The top does not take them — they are drawn randomly.` %>
+        <% } else { %>
+          <%= isRu
+            ? `Сообщество достигло ${contest.goalSolutions} решений. Два дополнительных комплекта мерча разыгрываются среди всех участников с не менее ${contest.stretchRaffleThreshold} баллами.`
+            : `The community reached ${contest.goalSolutions} solutions. Two extra merch sets will be raffled among all participants with at least ${contest.stretchRaffleThreshold} points.` %>
+        <% } %>
       </div>
     </div>
 
@@ -204,6 +230,7 @@
             <%= isRu ? 'Призы' : 'Prizes' %>
             <span class="exclusive-tag"><%= isRu ? 'Эксклюзив' : 'Exclusive' %></span>
           </div>
+          <div class="prizes-section-label"><%= isRu ? 'Индивидуальные призы' : 'Individual prizes' %></div>
           <div class="prizes">
             <div class="prize">
               <span class="prize-badge badge-grand"><%= isRu ? 'Гран-при' : 'Grand' %></span>
@@ -219,6 +246,35 @@
               <span class="prize-badge badge-bronze"><%= isRu ? 'Бронза' : 'Bronze' %></span>
               <div class="prize-h"><%= isRu ? 'Кепка' : 'Cap' %></div>
               <p class="prize-p"><%= isRu ? 'Фирменная кепка каждому, кто набрал не меньше ' + contest.bronzeThreshold + ' баллов.' : 'A branded cap for everyone who reaches ' + contest.bronzeThreshold + ' points.' %></p>
+            </div>
+          </div>
+
+          <div class="prizes-section-label"><%= isRu ? 'Коллективные призы' : 'Community prizes' %></div>
+          <div class="prizes-community">
+            <div class="prize<%= contest.stretchUnlocked ? '' : ' prize-locked' %>">
+              <span class="prize-badge badge-raffle"><%= isRu ? 'Жеребьёвка ×2' : 'Raffle ×2' %></span>
+              <div class="prize-h"><%= isRu ? 'Два полных набора' : 'Two full sets' %></div>
+              <p class="prize-p">
+                <%= isRu
+                  ? `Кепка, худи и шопер — два комплекта. Разыгрываются случайно среди всех участников, набравших не менее ${contest.stretchRaffleThreshold} баллов. Место в таблице не важно: шанс есть у каждого активного автора.`
+                  : `Cap, hoodie and shopper — two sets. Drawn randomly among all participants with at least ${contest.stretchRaffleThreshold} points. Leaderboard position does not matter: any active author can win.` %>
+              </p>
+              <% if (!contest.stretchUnlocked) { %>
+                <div class="prize-lock-note">
+                  <%= isRu
+                    ? `Разблокируется при достижении ${contest.goalSolutions} решений сообществом`
+                    : `Unlocks when the community reaches ${contest.goalSolutions} solutions` %>
+                </div>
+              <% } %>
+            </div>
+            <div class="prize">
+              <span class="prize-badge badge-spotlight"><%= isRu ? 'Редакторский выбор' : 'Editor\'s Pick' %></span>
+              <div class="prize-h"><%= isRu ? 'Лучшее решение месяца' : 'Best solution of the month' %></div>
+              <p class="prize-p">
+                <%= isRu
+                  ? 'Кепка, худи и шопер. Выбирается редакционно: одно решение, которое выделяется чёткостью изложения, глубиной вывода или сложностью задачи. Определяется вне таблицы результатов — количество решений на победу не влияет.'
+                  : 'Cap, hoodie and shopper. Selected by editorial decision: one solution that stands out for clarity, depth of derivation, or difficulty of the problem. Awarded independently of the leaderboard — volume does not determine the winner.' %>
+              </p>
             </div>
           </div>
 
@@ -384,6 +440,8 @@
   (function() {
     const SLUG = <%- JSON.stringify(contest.slug) %>;
     const GOAL = <%= contest.goalSolutions %>;
+    const FIRST_MILESTONE = <%= contest.firstMilestone %>;
+    const STRETCH_RAFFLE_THRESHOLD = <%= contest.stretchRaffleThreshold %>;
     const isRu = <%= isRu ? 'true' : 'false' %>;
     const tierClass = { grand: 'badge-grand', silver: 'badge-silver', bronze: 'badge-bronze' };
     const tierLabel = { grand: isRu ? 'Гран-при' : 'Grand', silver: isRu ? 'Серебро' : 'Silver', bronze: isRu ? 'Бронза' : 'Bronze' };
@@ -399,7 +457,13 @@
       const rem = document.getElementById('remainingGoal');
       if (rem) {
         const left = Math.max(0, GOAL - total);
-        rem.textContent = isRu ? ('До цели осталось ' + left) : (left + ' to go');
+        rem.textContent = left > 0
+          ? (isRu ? ('До цели осталось ' + left) : (left + ' to go'))
+          : (isRu ? 'Цель достигнута' : 'Goal reached');
+      }
+      const tick = document.getElementById('milestoneTick');
+      if (tick && GOAL > 0) {
+        tick.style.left = Math.min(100, Math.round((FIRST_MILESTONE / GOAL) * 100)) + '%';
       }
     }
 
@@ -446,6 +510,21 @@
       }).join('');
     }
 
+    function updateCommunityMsg(total, stretchUnlocked) {
+      const el = document.getElementById('communityMsg');
+      if (!el) return;
+      const toGo = Math.max(0, GOAL - total);
+      if (!stretchUnlocked) {
+        el.textContent = isRu
+          ? ('До цели осталось ' + toGo + ' решений. Когда сообщество достигнет ' + GOAL + ', призовой фонд расширится: два дополнительных комплекта мерча уйдут в жеребьёвку среди всех, кто набрал не менее ' + STRETCH_RAFFLE_THRESHOLD + ' баллов. Место в таблице не важно — шанс у каждого.')
+          : (toGo + ' solutions to go. When the community hits ' + GOAL + ', the prize pool expands: two extra merch sets enter a raffle open to everyone with at least ' + STRETCH_RAFFLE_THRESHOLD + ' points. The top does not take them — they are drawn randomly.');
+      } else {
+        el.textContent = isRu
+          ? ('Сообщество достигло ' + GOAL + ' решений. Два дополнительных комплекта мерча разыгрываются среди всех с не менее ' + STRETCH_RAFFLE_THRESHOLD + ' баллами.')
+          : ('The community reached ' + GOAL + ' solutions. Two extra merch sets will be raffled among all participants with at least ' + STRETCH_RAFFLE_THRESHOLD + ' points.');
+      }
+    }
+
     function refresh() {
       fetch('/challenge/' + SLUG + '/data', { headers: { 'Accept': 'application/json' } })
         .then(function(r) { return r.json(); })
@@ -456,6 +535,7 @@
           const p = document.getElementById('participantsCount');
           if (p) p.textContent = d.participants;
           setProgress(d.totalSolutions);
+          updateCommunityMsg(d.totalSolutions, d.stretchUnlocked);
           renderLeaderboard(d.leaderboard || []);
           renderFeed(d.feed || []);
         })
