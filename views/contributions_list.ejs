@@ -497,7 +497,7 @@
                     </div>
                     <div class="cl-commit-main">
                         <div class="cl-commit-title">
-                            <a href="/<%= lang %>/<%= contribution.problem_name %>" class="cl-commit-problem"><%= contribution.problem_name %></a>
+                            <a href="/<%= contribution.language %>/<%= contribution.problem_name %>" class="cl-commit-problem"><%= contribution.problem_name %></a>
                             <% if (contribution.isNew) { %>
                                 <span class="cl-commit-label cl-label-new"><%= lang === 'ru' ? 'новое' : 'new solution' %></span>
                             <% } else { %>
@@ -516,7 +516,7 @@
                         </div>
                     </div>
                     <div class="cl-commit-right">
-                        <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Посмотреть изменения' : 'View changes' %>">#<%= contribution.id %></a>
+                        <a href="/<%= contribution.language %>/contributions/<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Посмотреть изменения' : 'View changes' %>">#<%= contribution.id %></a>
                     </div>
                 </div>
                 <% }); %>

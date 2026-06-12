@@ -439,7 +439,7 @@
                 </div>
                 <div class="commit-entry-body">
                   <div class="commit-entry-main">
-                    <a href="/<%= lang %>/<%= contribution.version %>" class="commit-problem"><%= contribution.version %></a>
+                    <a href="/<%= contribution.lang %>/<%= contribution.version %>" class="commit-problem"><%= contribution.version %></a>
                     <span class="commit-action"><%= contribution.isNew ? (lang === 'ru' ? 'добавлена' : 'new') : (lang === 'ru' ? 'изменена' : 'edited') %></span>
                     <span class="commit-by"><%= lang === 'ru' ? '' : 'by' %></span>
                     <% if (contribution.hasUser) { %>
@@ -450,7 +450,7 @@
                   </div>
                   <div class="commit-entry-footer">
                     <time class="commit-time" datetime="<%= contribution.relativeTime %>"><%= contribution.timestamp %></time>
-                    <a href="/<%= lang %>/contributions/<%= contribution.id %>" class="commit-id">#<%= contribution.id %></a>
+                    <a href="/<%= contribution.lang %>/contributions/<%= contribution.id %>" class="commit-id">#<%= contribution.id %></a>
                   </div>
                 </div>
               </div>

@@ -1900,7 +1900,7 @@ app.get("/", async (req, res) => {
 async function getRecentContributions(limit) {
     try {
         const result = await pool.query(
-            `SELECT c.id, c.problem_name, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
+            `SELECT c.id, c.problem_name, c.language, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
                     u.username,
                     (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE AND c2.edited_at <= c.edited_at) AS edit_number
              FROM contributions c
@@ -1913,6 +1913,7 @@ async function getRecentContributions(limit) {
         const contributions = result.rows.map(row => {
             return {
                 version: row.problem_name,
+                lang: row.language || 'en',
                 editor: row.username || 'Anonymous',
                 hasUser: !!row.username,
                 isNew: parseInt(row.edit_number) === 1,
