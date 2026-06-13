@@ -154,6 +154,32 @@ app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
 app.use(express.static(path.join(__dirname, "public")));
 
+// ── Static-asset cache busting ───────────────────────────────────────────────
+// CSS/JS are served with a long max-age (good for performance), which means a
+// returning visitor keeps the OLD file until it expires — they would have to
+// clear their cache to see updated styles. Appending a content hash to the URL
+// (`/css/design-system.css?v=<hash>`) gives every changed file a brand-new URL
+// that all browsers (even old ones) fetch fresh, with no manual cache clear.
+// The hash only changes when the file content changes, so caching still works.
+// (crypto is already required at the top of this file.)
+const assetVersionCache = new Map(); // cleanPath -> { mtimeMs, versioned }
+function assetUrl(p) {
+    try {
+        const clean = String(p).split("?")[0];
+        const full = path.join(__dirname, clean.replace(/^\/+/, ""));
+        const stat = fs.statSync(full); // cheap; OS caches the inode
+        const cached = assetVersionCache.get(clean);
+        if (cached && cached.mtimeMs === stat.mtimeMs) return cached.versioned;
+        const hash = crypto.createHash("md5").update(fs.readFileSync(full)).digest("hex").slice(0, 10);
+        const versioned = `${clean}?v=${hash}`;
+        assetVersionCache.set(clean, { mtimeMs: stat.mtimeMs, versioned });
+        return versioned;
+    } catch (_err) {
+        return p; // never break a page over a missing/locked file
+    }
+}
+app.locals.asset = assetUrl;   // available in every res.render (incl. partials)
+
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
     if (langMatch) {

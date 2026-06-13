@@ -1,9 +1,13 @@
-/* Brainstorm Room — full per-problem chat page.
+/* Brainstorm Room — full per-problem conversation.
  *
- * Reuses the platform's existing real-time approach (AJAX polling, like the
- * messages chat) — no sockets. Renders messages, posts new ones, toggles emoji
- * reactions, pins (curators), edits/deletes own messages, and supports wiki-style
- * problem links (descriptive `[text](#x.y.z)` and bare `#x.y.z`). Vanilla JS.
+ * Embedded inline on the problem page (and reused on the standalone /brainstorm
+ * page). Reuses the platform's existing real-time approach (AJAX polling, like the
+ * messages chat) — no sockets. The conversation is LAZY-LOADED on first visibility
+ * so the hot problem page costs nothing unless the reader actually opens it.
+ *
+ * Renders messages, posts new ones, toggles emoji reactions, pins (curators),
+ * edits/deletes own messages, loads older pages, and supports wiki-style problem
+ * links (descriptive `[text](#x.y.z)` and bare `#x.y.z`). Vanilla JS.
  */
 (function () {
     'use strict';
@@ -19,12 +23,32 @@
     var inputEl = document.getElementById('bsrInput');
     var sendEl = document.getElementById('bsrSend');
     var olderBtn = document.getElementById('bsrLoadOlder');
+    if (!listEl) return;
+    var roomEl = listEl.closest('.bsr-room') || listEl;
 
-    var newestId = BSR.newestId;
-    var oldestId = BSR.oldestId;
-    var hasMore = BSR.hasMore;
+    var newestId = null;
+    var oldestId = null;
+    var hasMore = false;
     var sinceTs = '1970-01-01T00:00:00.000Z';
     var pollTimer = null;
+    var loaded = false;
+    var visible = false;
+
+    // Quiet-mode state (rail live chat): 'rotate' = live, 'static' = paused,
+    // 'hidden' = collapsed. Persisted in user_preferences (logged in) or
+    // localStorage (guest) — the same mechanism the rotating block used.
+    var sectionEl = listEl.closest('[data-bsr-room]') || roomEl;
+    var QUIET = ['rotate', 'static', 'hidden'];
+    var STORAGE_KEY = 'bsDisplayMode';
+    var mode = sectionEl.getAttribute('data-mode') || 'rotate';
+    if (QUIET.indexOf(mode) === -1) mode = 'rotate';
+    if (!BSR.loggedIn) {
+        try {
+            var stored = window.localStorage.getItem(STORAGE_KEY);
+            if (stored && QUIET.indexOf(stored) !== -1) mode = stored;
+        } catch (e) { /* storage blocked */ }
+    }
+    var lastVisibleMode = mode === 'static' ? 'static' : 'rotate';
 
     // ── helpers ──────────────────────────────────────────────────────────────
     function esc(s) {
@@ -33,9 +57,7 @@
             .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function bumpSince(ts) {
-        if (ts && ts > sinceTs) sinceTs = ts;
-    }
+    function bumpSince(ts) { if (ts && ts > sinceTs) sinceTs = ts; }
 
     function relTime(iso) {
         var s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -71,12 +93,9 @@
 
     function typeset(nodes) {
         if (!window.MathJax) return;
-        var run = function () {
-            if (window.MathJax.typesetPromise) window.MathJax.typesetPromise(nodes).catch(function () {});
-        };
-        if (window.MathJax.startup && window.MathJax.startup.promise) {
-            window.MathJax.startup.promise.then(run);
-        } else { run(); }
+        var run = function () { if (window.MathJax.typesetPromise) window.MathJax.typesetPromise(nodes).catch(function () {}); };
+        if (window.MathJax.startup && window.MathJax.startup.promise) window.MathJax.startup.promise.then(run);
+        else run();
     }
 
     function reactionsHtml(msg) {
@@ -126,9 +145,9 @@
             '</div>';
     }
 
-    function nearBottom() {
-        return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 160);
-    }
+    // The messages list is itself the scroll container (an inline chat box).
+    function scrollToBottom() { listEl.scrollTop = listEl.scrollHeight; }
+    function nearBottom() { return (listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight) < 120; }
 
     function appendMessage(msg, scroll) {
         if (listEl.querySelector('[data-id="' + msg.id + '"]')) return; // dedupe
@@ -138,7 +157,7 @@
         listEl.appendChild(node);
         bumpSince(msg.updatedAt || msg.createdAt);
         typeset([node]);
-        if (scroll) node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (scroll) scrollToBottom();
     }
 
     function prependMessage(msg) {
@@ -151,32 +170,30 @@
         typeset([node]);
     }
 
-    function renderInitial() {
+    function renderList(msgs) {
         listEl.innerHTML = '';
-        if (!BSR.messages.length) {
+        if (!msgs.length) {
             listEl.innerHTML = '<div class="bsr-empty">' + esc(BSR.t.empty) + '</div>';
             return;
         }
-        BSR.messages.forEach(function (m) { appendMessage(m, false); });
-        // jump to newest on first paint
-        window.scrollTo(0, document.body.scrollHeight);
+        msgs.forEach(function (m) { appendMessage(m, false); });
+        scrollToBottom();
     }
 
     // ── reactions / updates applied to an existing node ──────────────────────
     function applyReactions(id, reactions) {
         var node = listEl.querySelector('[data-id="' + id + '"]');
         if (!node) return;
-        var box = node.querySelector('.bsr-msg-reactions');
-        var msg = { id: id, reactions: reactions };
-        box.innerHTML = reactionsHtml(msg);
+        node.querySelector('.bsr-msg-reactions').innerHTML = reactionsHtml({ id: id, reactions: reactions });
     }
 
     function applyUpdate(u) {
         var node = listEl.querySelector('[data-id="' + u.id + '"]');
         if (!node) return;
         if (u.isDeleted) { node.remove(); return; }
-        node.querySelector('.bsr-msg-body').innerHTML = format(u.content);
-        typeset([node.querySelector('.bsr-msg-body')]);
+        var body = node.querySelector('.bsr-msg-body');
+        body.innerHTML = format(u.content);
+        typeset([body]);
         node.classList.toggle('is-pinned', !!u.isPinned);
         bumpSince(u.updatedAt);
     }
@@ -205,8 +222,7 @@
 
     function toggleReaction(id, emoji) {
         fetch('/api/brainstorm/messages/' + id + '/react', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ emoji: emoji })
         }).then(function (r) { return r.json(); }).then(function (data) {
             if (data && data.reactions) applyReactions(id, data.reactions);
@@ -247,15 +263,12 @@
         var ta = box.querySelector('.bsr-edit-input');
         ta.value = current;
         ta.focus();
-        box.querySelector('.bsr-edit-cancel').addEventListener('click', function () {
-            box.remove(); body.style.display = '';
-        });
+        box.querySelector('.bsr-edit-cancel').addEventListener('click', function () { box.remove(); body.style.display = ''; });
         box.querySelector('.bsr-edit-save').addEventListener('click', function () {
             var val = (ta.value || '').trim();
             if (!val) return;
             fetch('/api/brainstorm/messages/' + id, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: val })
             }).then(function (r) { return r.json(); }).then(function (data) {
                 if (data && data.ok) {
@@ -279,8 +292,9 @@
             .then(function (r) { return r.json(); }).then(function (data) {
                 olderBtn.disabled = false;
                 if (!data || !data.messages) return;
-                // server returns newest-first; prepend so order stays chronological
-                data.messages.forEach(function (m) { prependMessage(m); });
+                var prevHeight = listEl.scrollHeight;
+                data.messages.forEach(function (m) { prependMessage(m); }); // server is newest-first
+                listEl.scrollTop += (listEl.scrollHeight - prevHeight); // keep viewport stable
                 oldestId = data.oldestId;
                 hasMore = data.hasMore;
                 if (!hasMore) olderBtn.style.display = 'none';
@@ -289,6 +303,7 @@
 
     // ── polling ──────────────────────────────────────────────────────────────
     function poll() {
+        if (!loaded) return;
         var url = '/api/brainstorm/' + encodeURIComponent(BSR.problem) + '/poll?after=' +
             (newestId || 0) + '&since=' + encodeURIComponent(sinceTs);
         fetch(url).then(function (r) { return r.json(); }).then(function (data) {
@@ -300,16 +315,81 @@
             });
             (data.updates || []).forEach(applyUpdate);
             (data.reactionUpdates || []).forEach(function (u) { applyReactions(u.messageId, u.reactions); });
-            if (stick && (data.messages || []).length) window.scrollTo(0, document.body.scrollHeight);
+            if (stick && (data.messages || []).length) scrollToBottom();
         }).catch(function () {});
     }
 
-    function startPolling() {
-        stopPolling();
-        pollTimer = setInterval(poll, POLL_MS);
+    function startPolling() { stopPolling(); pollTimer = setInterval(poll, POLL_MS); }
+    function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+    // Poll only while the chat is live (not paused/collapsed), visible, loaded.
+    function maybeStartPolling() {
+        if (loaded && mode === 'rotate' && visible && !document.hidden) startPolling();
+        else stopPolling();
     }
-    function stopPolling() {
-        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+
+    // ── lazy first load ───────────────────────────────────────────────────────
+    function fetchFirstPage() {
+        fetch('/api/brainstorm/' + encodeURIComponent(BSR.problem) + '/messages?limit=40')
+            .then(function (r) { return r.json(); }).then(function (data) {
+                var msgs = ((data && data.messages) || []).slice().reverse(); // newest-first → chronological
+                oldestId = data ? data.oldestId : null;
+                newestId = data ? data.newestId : null;
+                hasMore = data ? data.hasMore : false;
+                msgs.forEach(function (m) { bumpSince(m.updatedAt || m.createdAt); });
+                renderList(msgs);
+                if (hasMore && olderBtn) olderBtn.style.display = '';
+                maybeStartPolling();
+            }).catch(function () {
+                listEl.innerHTML = '<div class="bsr-empty">' + esc(BSR.t.failed) + '</div>';
+            });
+    }
+
+    function ensureLoaded() {
+        if (loaded || mode === 'hidden') return;
+        loaded = true;
+        fetchFirstPage();
+    }
+
+    // ── quiet mode (pause / collapse) ─────────────────────────────────────────
+    function applyMode(next) {
+        mode = next;
+        if (next !== 'hidden') lastVisibleMode = next;
+        QUIET.forEach(function (m) { sectionEl.classList.remove('bsr-room--' + m); });
+        sectionEl.classList.add('bsr-room--' + next);
+        sectionEl.setAttribute('data-mode', next);
+        var pauseBtn = sectionEl.querySelector('[data-bsr-room-act="pause"]');
+        if (pauseBtn) pauseBtn.setAttribute('aria-pressed', next === 'static' ? 'true' : 'false');
+        if (next === 'hidden') { stopPolling(); return; }
+        if (visible) { ensureLoaded(); maybeStartPolling(); }
+    }
+
+    function persistMode(next) {
+        if (BSR.loggedIn) {
+            fetch('/api/brainstorm/quiet-mode', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode: next })
+            }).catch(function () {});
+        } else {
+            try { window.localStorage.setItem(STORAGE_KEY, next); } catch (e) { /* ignore */ }
+        }
+    }
+
+    function setMode(next) {
+        if (QUIET.indexOf(next) === -1) return;
+        applyMode(next);
+        persistMode(next);
+    }
+
+    if (sectionEl) {
+        sectionEl.addEventListener('click', function (ev) {
+            var b = ev.target.closest('[data-bsr-room-act]');
+            if (!b || !sectionEl.contains(b)) return;
+            var act = b.getAttribute('data-bsr-room-act');
+            if (act === 'pause') setMode(mode === 'rotate' ? 'static' : 'rotate');
+            else if (act === 'collapse') setMode('hidden');
+            else if (act === 'expand') setMode(lastVisibleMode || 'rotate');
+        });
     }
 
     // ── wiring ───────────────────────────────────────────────────────────────
@@ -343,12 +423,14 @@
     });
 
     if (sendEl) sendEl.addEventListener('click', postMessage);
-    if (inputEl) inputEl.addEventListener('keydown', function (e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); postMessage(); }
-    });
+    if (inputEl) {
+        inputEl.addEventListener('focus', function () { visible = true; ensureLoaded(); });
+        inputEl.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); postMessage(); }
+        });
+    }
     if (olderBtn) olderBtn.addEventListener('click', loadOlder);
 
-    // Composer tools (insert wiki link / mention / math at caret).
     var toolbar = document.querySelector('.bsr-composer-toolbar');
     if (toolbar && inputEl) {
         toolbar.addEventListener('click', function (ev) {
@@ -363,11 +445,8 @@
                 if (!new RegExp('^' + PROBLEM_ID + '$').test(num)) return;
                 var label = (window.prompt(BSR.t.problemPromptText) || '').trim();
                 insert = label ? ('[' + label + '](#' + num + ')') : ('#' + num);
-            } else if (kind === 'mention') {
-                insert = '@';
-            } else if (kind === 'math') {
-                insert = '$$';
-            }
+            } else if (kind === 'mention') { insert = '@'; }
+            else if (kind === 'math') { insert = '$$'; }
             var start = inputEl.selectionStart || inputEl.value.length;
             inputEl.value = inputEl.value.slice(0, start) + insert + inputEl.value.slice(inputEl.selectionEnd || start);
             inputEl.focus();
@@ -377,11 +456,23 @@
 
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) stopPolling();
-        else { poll(); startPolling(); }
+        else if (loaded && mode === 'rotate' && visible) { poll(); startPolling(); }
     });
 
-    // ── boot ─────────────────────────────────────────────────────────────────
-    BSR.messages.forEach(function (m) { bumpSince(m.updatedAt || m.createdAt); });
-    renderInitial();
-    if (!document.hidden) startPolling();
+    // ── boot: reflect the saved quiet mode, then load the conversation when it
+    // scrolls into view (lazy). Collapsed stays collapsed until the reader
+    // expands it; paused loads once but does not stream. ─────────────────────
+    function activate() {
+        visible = true;
+        if (mode !== 'hidden') { ensureLoaded(); maybeStartPolling(); }
+    }
+    applyMode(mode);
+    if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) { if (e.isIntersecting) { activate(); io.disconnect(); } });
+        }, { rootMargin: '250px' });
+        io.observe(roomEl);
+    } else {
+        activate();
+    }
 })();

@@ -842,20 +842,9 @@ async function renderRoom(req, res) {
         return res.status(404).render('404', { __: i18n.__, pageUrl: req.originalUrl, lang });
     }
 
-    const userId = req.session.userId || null;
-    let page = { messages: [], hasMore: false, oldestId: null, newestId: null };
-    let isCurator = false;
-    try {
-        [page, isCurator] = await Promise.all([
-            fetchRoomMessages(name, { limit: 40, userId }),
-            canCurate(req),
-        ]);
-    } catch (err) {
-        console.error('Brainstorm room load error:', err);
-    }
-
-    // Server sends messages newest-first; the room displays oldest→newest.
-    const initialMessages = page.messages.slice().reverse();
+    // Messages are loaded client-side (lazily) via the same panel used inline on
+    // the problem page, so here we only need the page-level capability + chrome.
+    const isCurator = await canCurate(req);
 
     res.render('brainstorm_room', {
         __: i18n.__,
@@ -865,10 +854,6 @@ async function renderRoom(req, res) {
         username: req.session.username || null,
         isCurator,
         reactions: ALLOWED_REACTIONS,
-        initialMessages,
-        hasMore: page.hasMore,
-        oldestId: page.oldestId,
-        newestId: page.newestId,
         title: (lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room') + ' · ' + name,
     });
 }
@@ -876,6 +861,7 @@ async function renderRoom(req, res) {
 module.exports = {
     router,
     renderRoom,
+    canCurate,
     getTopBrainstormMessages,
     getRelatedBrainstormLinks,
     getUserDisplayMode,

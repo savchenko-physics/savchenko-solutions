@@ -451,13 +451,42 @@ pre {
 }
 .bsr-older-btn:hover { color: var(--ss-navy); }
 
-.bsr-messages { display: flex; flex-direction: column; gap: 0.15rem; }
+/* The messages list is its own scroll container (an inline chat box). */
+.bsr-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  max-height: 56vh;
+  min-height: 220px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.bsr-room--inline .bsr-messages { max-height: 440px; }
 .bsr-loading, .bsr-empty {
   text-align: center;
   color: var(--ss-text-secondary);
   font-size: 14px;
   padding: 2rem 1rem;
 }
+
+/* Inline embedding on the problem page */
+.bsr-inline {
+  border-top: 1px solid var(--ss-border-card);
+  padding: 1rem 1.25rem 0.5rem;
+}
+.bsr-inline-head { margin-bottom: 0.5rem; }
+.bsr-inline-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ss-heading);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.bsr-inline-icon { color: var(--bs-accent); font-size: 16px; }
+.bsr-inline-sub { font-size: 13px; color: var(--ss-text-secondary); margin: 0.2rem 0 0; line-height: 1.5; }
+.bsr-inline .bsr-room { margin: 0; }
 
 .bsr-msg {
   display: flex;
@@ -590,4 +619,97 @@ pre {
 @media (max-width: 575.98px) {
   .bsr-head { flex-direction: column; gap: 0.5rem; }
   .bsr-back { align-self: flex-start; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Brainstorm Room — rail variant (YouTube-style live chat next to the solution)
+   --------------------------------------------------------------------------- */
+.bsr-room--rail {
+  background: var(--ss-white);
+  border: 1px solid var(--ss-border-card);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bsr-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--ss-border-card);
+  background: var(--ss-card-bg);
+}
+.bsr-rail-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ss-heading);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.bsr-rail-title .fa-comments { color: var(--bs-accent); font-size: 12px; }
+.bsr-rail-ctrls { display: flex; gap: 0.1rem; flex-shrink: 0; }
+.bsr-rail-ctrl {
+  width: 24px; height: 24px; border: none; background: none; cursor: pointer;
+  color: var(--ss-text-secondary); border-radius: 5px; font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.bsr-rail-ctrl:hover { background: #e9ecef; color: var(--ss-navy); }
+.bsr-ic-play { display: none; }
+.bsr-room--static .bsr-ic-pause { display: none; }
+.bsr-room--static .bsr-ic-play { display: inline; }
+
+.bsr-rail-body { display: flex; flex-direction: column; min-height: 0; }
+.bsr-room--rail .bsr-older { padding: 0.35rem; margin: 0; }
+.bsr-room--rail .bsr-messages {
+  max-height: 46vh;
+  min-height: 150px;
+  padding: 0 0.5rem;
+}
+.bsr-room--rail .bsr-msg { gap: 0.5rem; padding: 0.45rem 0.3rem; }
+.bsr-room--rail .bsr-msg-avatar { width: 28px; height: 28px; }
+.bsr-room--rail .bsr-msg-top { font-size: 12px; gap: 0.3rem; }
+.bsr-room--rail .bsr-msg-body { font-size: 13px; }
+.bsr-room--rail .bsr-msg-tools { opacity: 1; }          /* always visible in the narrow rail */
+.bsr-room--rail .bsr-composer { margin: 0.5rem; }
+.bsr-room--rail .bsr-input { min-height: 48px; font-size: 13px; }
+.bsr-room--rail .bsr-login-prompt { margin: 0.6rem; padding: 0.7rem; font-size: 13px; }
+.bsr-room--rail .bs-related { margin: 0 0.7rem 0.7rem; padding-top: 0.5rem; }
+
+/* Paused: a thin hint that the live feed is on hold. */
+.bsr-room--rail.bsr-room--static .bsr-rail-head { background: #f1ecf6; }
+
+/* Collapsed (quiet) — only a restore strip remains. */
+.bsr-rail-restore {
+  display: none;
+  width: 100%;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--ss-card-bg);
+  border: none;
+  color: var(--ss-text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 0.55rem 0.7rem;
+  cursor: pointer;
+  text-align: left;
+}
+.bsr-rail-restore .fa-comments { color: var(--bs-accent); }
+.bsr-rail-restore:hover { color: var(--ss-navy); }
+.bsr-room--rail.bsr-room--hidden { box-shadow: none; }
+.bsr-room--rail.bsr-room--hidden .bsr-rail-head,
+.bsr-room--rail.bsr-room--hidden .bsr-rail-body { display: none; }
+.bsr-room--rail.bsr-room--hidden .bsr-rail-restore { display: flex; }
+
+/* Subtle "live" entrance for messages; disabled under reduced-motion. */
+@keyframes bsrFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.bsr-msg { animation: bsrFadeIn 0.25s ease; }
+@media (prefers-reduced-motion: reduce) {
+  .bsr-msg { animation: none; }
+  .bsr-messages { scroll-behavior: auto; }
 }

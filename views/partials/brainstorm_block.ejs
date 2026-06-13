@@ -16,6 +16,9 @@
     ? (lang === 'ru' ? 'Открыть обсуждение' : 'Open the discussion')
     : (lang === 'ru' ? 'Войти в комнату' : 'Enter the room');
   var bsIcon = bsVariant === 'insights' ? 'fa-comments' : 'fa-lightbulb';
+  // CTA target: defaults to the standalone room page, but the problem page passes
+  // '#brainstormRoom' so the button just scrolls to the inline conversation.
+  var bsCtaHref = (typeof brainstormCtaHref !== 'undefined' && brainstormCtaHref) ? brainstormCtaHref : ('/' + lang + '/' + name + '/brainstorm');
   // A hidden block must not flash its content on first paint, so honour the
   // server-known mode in the initial class for logged-in users.
   var bsInitialMode = (bsMode === 'static' || bsMode === 'hidden') ? bsMode : 'rotate';
@@ -65,7 +68,7 @@
                         : 'Quiet so far. Start the brainstorm — suggest where to even begin.' %>
                 <% } %>
             </p>
-            <a class="bs-cta" href="/<%= lang %>/<%= name %>/brainstorm">
+            <a class="bs-cta" href="<%= bsCtaHref %>">
                 <%= bsCta %>
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
@@ -96,7 +99,7 @@
                 <% }); %>
             </div>
             <% } else { %><span></span><% } %>
-            <a class="bs-cta" href="/<%= lang %>/<%= name %>/brainstorm">
+            <a class="bs-cta" href="<%= bsCtaHref %>">
                 <%= bsCta %>
                 <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>

@@ -1,7 +1,8 @@
 # Brainstorm Room — Design Notes
 
 > Status: **Phases 1–4 implemented** (data/backend + block + room + solved-case
-> variant). Phase 5 is hooks-only (already in the schema). See §16 for Phase 4.
+> variant); the full conversation is now **embedded inline on the problem page**
+> (§17). Phase 5 is hooks-only (already in the schema).
 > Q1 resolved: the room is **unified per `problem_name`** (all languages together).
 > See §13 for the locked decisions, the unified-scope no-break verification, and
 > exactly what Phase 1 shipped + how to test it.
@@ -770,4 +771,153 @@ variant there, which is the approved solved-case treatment. The brainstorm
 branding still lives on the full room page (`/:lang/:name/brainstorm`). If you'd
 rather keep the "Brainstorm Room" framing on problem pages and treat Insights as an
 addition, that's a one-line flip of `brainstormVariant` in `post.js` — tell me and
-I'll change it.
+I'll change it. (Update: with §17 the full "Brainstorm Room" conversation is now
+embedded inline on the problem page anyway, so its branding is back on the page —
+the rail block is the "Discussion & Insights" teaser that scrolls down to it.)
+
+---
+
+## 17. Inline conversation on the problem page (no separate-page click)
+
+Feedback: clicking through to `/:lang/:name/brainstorm` to converse added friction.
+The full Brainstorm Room is now **embedded directly on the problem page**, so
+reading and posting happen in place — fewer clicks, more effortless.
+
+### 17.1 What changed
+
+- **Reusable panel.** Extracted `views/partials/brainstorm_room_panel.ejs` (message
+  list + composer + reactions + the `window.BSR` config + the room script). The
+  problem page and the standalone `/brainstorm` page both include this one partial
+  — a single source of truth for the conversation UI.
+- **Embedded inline.** `solution_post.ejs` renders the panel in a labelled
+  "Brainstorm Room" section (`#brainstormRoom`) just above the solution comments.
+- **The rail block became a teaser.** The rotating "Discussion & Insights" block's
+  CTA now points at `#brainstormRoom` — it just **scrolls down** to the live
+  conversation instead of navigating away.
+- **Standalone page kept.** `/:lang/:name/brainstorm` still works (shareable direct
+  link, and ready for future unsolved-problem pages); it reuses the same panel.
+
+### 17.2 Performance — lazy, so the hottest page pays nothing
+
+The problem page is the most-visited page, so the conversation is NOT fetched on
+every view:
+
+- Messages **lazy-load on first visibility** (IntersectionObserver on the room) —
+  or when the reader focuses the composer, or follows a `#brainstormRoom` link.
+  Readers who never scroll to it trigger zero message queries and no polling.
+- **Anonymous page views add no brainstorm queries at all** (top-N block is cached;
+  `canCurate` returns false without a DB hit when there is no session user).
+  Logged-in views add one cheap indexed `is_verified_user` lookup.
+- Polling only starts after the conversation is opened, and pauses when the tab is
+  hidden (Page Visibility API).
+
+### 17.3 Client changes (`js/brainstorm-room.js`)
+
+- Lazy first-load via IntersectionObserver; `BSR.messages` is `null` and fetched
+  client-side (the server no longer embeds the first page).
+- The messages list is now its **own bounded scroll container** (an inline chat
+  box, `max-height` + `overflow`), so the conversation never makes the problem page
+  huge; "load earlier" preserves scroll position.
+- Same posting / reactions / pin / edit / delete / polling / wiki-link behaviour.
+
+### 17.4 How to test
+
+```powershell
+npm run migrate:brainstorm   # if needed
+npm run seed:brainstorm
+node index.js
+```
+
+Open `http://localhost:3000/ru/8.1.4` and scroll down (or click the rail block's
+"Открыть обсуждение", which scrolls): the full conversation is right there on the
+page — post, react, pin, edit, link a problem, all without leaving. Messages only
+fetch once you reach the section (nothing brainstorm-message-related fires on
+initial load until the room scrolls into view). The direct URL `…/8.1.4/brainstorm`
+still opens the same conversation as a page.
+
+> All four templates compile; the standalone room, the inline panel, the block CTA,
+> and a full `solution_post.ejs` render (exactly one `window.BSR`, both scripts
+> loaded once) were verified; unit suite green (11/11). Not booted against live RDS.
+
+---
+
+## 18. Live chat in the right rail (the YouTube layout, finally literal)
+
+Feedback: replace the rotating "Discussion & Insights" teaser ("Открыть
+обсуждение") with **the live conversation itself, on the right of the solution** —
+like a YouTube live stream's chat next to the video. Solution = the video (main
+column); the live Brainstorm Room = the chat (right rail).
+
+### 18.1 What changed
+
+- **The right rail IS the live chat now.** `solution_post.ejs` renders the room
+  panel (`roomRail: true`) directly in `.right-rail`, above the section grid. No
+  rotation, no teaser, no click-through — the actual streaming conversation.
+- **One panel per page.** Removed the rotating block (`brainstorm_block.ejs` +
+  `js/brainstorm-block.js` are now unused) **and** the below-content embed, so the
+  page has exactly one `window.BSR` / one room instance.
+- **Quiet mode kept (important for focus).** The rail header has two controls:
+  *pause* (тихий режим — freezes the live feed: stops polling, no new messages pop
+  in) and *collapse* (свернa thin restore strip). Three states `rotate` (live) /
+  `static` (paused) / `hidden` (collapsed), **persisted** in
+  `user_preferences.brainstorm_display_mode` (logged-in) or `localStorage`
+  (guest) — the same mechanism the old block used; `prefers-reduced-motion`
+  disables the message fade.
+- **Responsive.** On desktop the chat is the sticky right column (stays beside the
+  solution as you scroll); below 992px `.right-rail` flows under the solution, so
+  the chat sits below the statement on phones — the section grid stays hidden.
+- **Standalone `/brainstorm` page** still works (panel with `roomRail: false`,
+  full-width, no rail chrome).
+
+### 18.2 Behaviour & performance
+
+- Messages **lazy-load on first visibility** (IntersectionObserver), gated by mode:
+  collapsed never loads until expanded; paused loads once but does not stream; live
+  loads + polls. Polling pauses on tab-hidden and whenever the reader pauses/​
+  collapses. Newest at the bottom; "load earlier" preserves scroll position.
+- **Anonymous problem-page views add no per-user brainstorm queries** (no top-N,
+  no `canCurate`/`getUserDisplayMode` for guests); the only always-on query is the
+  cached related-problems strip. The conversation itself isn't fetched until the
+  reader's viewport reaches the rail.
+- A subtle fade-in on new messages gives the "live" feel; disabled under
+  reduced-motion.
+
+### 18.3 Files
+
+- `views/partials/brainstorm_room_panel.ejs` — gained `roomRail` mode (header +
+  pause/collapse controls + restore bar + related strip) and `displayMode` config.
+- `js/brainstorm-room.js` — quiet-mode state machine (pause/collapse/expand +
+  persistence) and mode-gated lazy-load/polling.
+- `views/solution_post.ejs` — rail renders the live chat panel; rotating block +
+  below-content embed + `brainstorm-block.js` removed.
+- `post.js` — drops the top-N/teaser data; passes `brainstormMode` (initial quiet
+  state), `brainstormIsCurator`, `brainstormReactions`, `brainstormRelated`.
+- `css/design-system.css` — `.bsr-room--rail` styles (compact messages, header,
+  pause/collapse/restore, live fade).
+
+### 18.4 How to test
+
+```powershell
+npm run migrate:brainstorm   # if needed
+npm run seed:brainstorm
+node index.js
+```
+
+Open `http://localhost:3000/ru/6.4.8`: the live Brainstorm Room is the right-hand
+column next to the solution (YouTube live-chat layout). Post a message — it streams
+in; open a second window and watch it arrive within ~5s. Hit **pause** (тихий
+режим) to freeze the feed, or **collapse** to tuck it into a one-line strip;
+reload and the choice persists. Narrow the window past 992px and the chat moves
+below the solution. The direct `…/6.4.8/brainstorm` URL still opens the same room.
+
+### 18.5 Deprecated (left in place, not deleted)
+
+`views/partials/brainstorm_block.ejs`, `js/brainstorm-block.js`, and the rotating
+`.bs-block*/.bs-ticker/.bs-dot` styles are no longer referenced (superseded by the
+rail live chat). Kept in the tree in case the rotating teaser is wanted for a
+future *unsolved* problem-statement page; say the word and I'll delete them.
+
+> Syntax/compile/render verified: rail + standalone panels, a full `solution_post`
+> render (one `window.BSR`, `brainstorm-room.js` once, no rotating block / no
+> `brainstorm-block.js` / no stray inline embed), and the chat sits inside
+> `.right-rail`. Unit suite green (11/11). Not booted against live RDS.

@@ -1,0 +1,123 @@
+<%
+  // Reusable Brainstorm Room conversation panel.
+  //   roomRail = true  → compact YouTube-style live chat for the problem page's
+  //                      right rail, with a header + quiet-mode controls.
+  //   roomRail = false → plain conversation (used on the standalone /brainstorm page).
+  // Messages load client-side on first visibility (see js/brainstorm-room.js), so
+  // the hot problem page pays nothing unless the reader actually opens the chat.
+  var pRail = (typeof roomRail !== 'undefined' && roomRail) ? true : false;
+  var pUser = (typeof username !== 'undefined' && username) ? username : null;
+  var pCurator = (typeof isCurator !== 'undefined' && isCurator) ? true : false;
+  var pReactions = (typeof reactions !== 'undefined' && reactions) ? reactions : [];
+  var pRelated = (typeof related !== 'undefined' && related) ? related : [];
+  var pMode = (typeof displayMode !== 'undefined' && (displayMode === 'static' || displayMode === 'hidden')) ? displayMode : 'rotate';
+  var pTitle = lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room';
+%>
+<section class="bsr-room<%= pRail ? ' bsr-room--rail bsr-room--' + pMode : '' %>" data-bsr-room
+         data-mode="<%= pMode %>" data-logged-in="<%= pUser ? '1' : '0' %>"
+         aria-label="<%= pTitle %>">
+
+    <% if (pRail) { %>
+    <header class="bsr-rail-head">
+        <h3 class="bsr-rail-title"><i class="fas fa-comments" aria-hidden="true"></i> <%= pTitle %></h3>
+        <div class="bsr-rail-ctrls">
+            <button type="button" class="bsr-rail-ctrl" data-bsr-room-act="pause"
+                    title="<%= lang === 'ru' ? 'Тихий режим (остановить ленту)' : 'Quiet mode (pause the feed)' %>"
+                    aria-label="<%= lang === 'ru' ? 'Тихий режим' : 'Quiet mode' %>">
+                <i class="fas fa-pause bsr-ic-pause" aria-hidden="true"></i>
+                <i class="fas fa-play bsr-ic-play" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="bsr-rail-ctrl" data-bsr-room-act="collapse"
+                    title="<%= lang === 'ru' ? 'Свернуть' : 'Collapse' %>"
+                    aria-label="<%= lang === 'ru' ? 'Свернуть' : 'Collapse' %>">
+                <i class="fas fa-chevron-up" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <% } %>
+
+    <div class="bsr-rail-body">
+        <div class="bsr-older">
+            <button type="button" class="bsr-older-btn" id="bsrLoadOlder" style="display:none;">
+                <%= lang === 'ru' ? 'Показать более ранние' : 'Load earlier messages' %>
+            </button>
+        </div>
+
+        <div class="bsr-messages" id="bsrMessages" aria-live="polite">
+            <div class="bsr-loading" id="bsrLoading"><%= lang === 'ru' ? 'Загрузка…' : 'Loading…' %></div>
+        </div>
+
+        <% if (pUser) { %>
+        <div class="bsr-composer" id="bsrComposer">
+            <div class="bsr-composer-toolbar">
+                <button type="button" class="bsr-tool" data-bsr-tool="problem" title="<%= lang === 'ru' ? 'Ссылка на задачу' : 'Link a problem' %>">
+                    <span class="bsr-tool-hash">#</span> <%= lang === 'ru' ? 'Задача' : 'Problem' %>
+                </button>
+                <button type="button" class="bsr-tool" data-bsr-tool="mention" title="<%= lang === 'ru' ? 'Упомянуть' : 'Mention' %>">@</button>
+                <button type="button" class="bsr-tool" data-bsr-tool="math" title="<%= lang === 'ru' ? 'Формула' : 'Math' %>"><i class="fas fa-square-root-variable"></i></button>
+            </div>
+            <textarea class="bsr-input" id="bsrInput" rows="<%= pRail ? 2 : 3 %>"
+                      placeholder="<%= lang === 'ru' ? 'Поделитесь идеей… # — задача, @ — упомянуть' : 'Share an idea… # links a problem, @ mentions someone' %>"
+                      maxlength="4000"></textarea>
+            <div class="bsr-composer-foot">
+                <span class="bsr-hint"><%= lang === 'ru' ? 'Ctrl/⌘ + Enter' : 'Ctrl/⌘ + Enter' %></span>
+                <button type="button" class="bsr-send" id="bsrSend"><%= lang === 'ru' ? 'Отправить' : 'Send' %></button>
+            </div>
+        </div>
+        <% } else { %>
+        <div class="bsr-login-prompt">
+            <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Войдите' : 'Log in' %></a>
+            <%= lang === 'ru' ? 'чтобы участвовать' : 'to join in' %>
+        </div>
+        <% } %>
+
+        <% if (pRelated.length > 0) { %>
+        <div class="bs-related">
+            <div class="bs-related__title"><%= lang === 'ru' ? 'Связанные задачи' : 'Related problems' %></div>
+            <ul class="bs-related__list">
+                <% pRelated.forEach(function (rp) { %>
+                <li><a class="bs-link" href="/<%= lang %>/<%= rp.targetProblemName %>"><%= rp.linkText %></a></li>
+                <% }); %>
+            </ul>
+        </div>
+        <% } %>
+    </div>
+
+    <% if (pRail) { %>
+    <button type="button" class="bsr-rail-restore" data-bsr-room-act="expand">
+        <i class="fas fa-comments" aria-hidden="true"></i>
+        <%= pTitle %> · <%= lang === 'ru' ? 'показать' : 'show' %>
+    </button>
+    <% } %>
+</section>
+
+<script>
+    window.BSR = {
+        problem: <%- JSON.stringify(name) %>,
+        lang: <%- JSON.stringify(lang) %>,
+        loggedIn: <%- pUser ? 'true' : 'false' %>,
+        currentUser: <%- JSON.stringify(pUser) %>,
+        isCurator: <%- pCurator ? 'true' : 'false' %>,
+        reactions: <%- JSON.stringify(pReactions) %>,
+        defaultAvatar: '/img/profile_images/Default_placeholder.svg',
+        messages: null,
+        displayMode: <%- JSON.stringify(pMode) %>,
+        t: {
+            edited: <%- JSON.stringify(lang === 'ru' ? '(изменено)' : '(edited)') %>,
+            pin: <%- JSON.stringify(lang === 'ru' ? 'Закрепить' : 'Pin') %>,
+            unpin: <%- JSON.stringify(lang === 'ru' ? 'Открепить' : 'Unpin') %>,
+            pinned: <%- JSON.stringify(lang === 'ru' ? 'Закреплено' : 'Pinned') %>,
+            edit: <%- JSON.stringify(lang === 'ru' ? 'Изменить' : 'Edit') %>,
+            del: <%- JSON.stringify(lang === 'ru' ? 'Удалить' : 'Delete') %>,
+            confirmDelete: <%- JSON.stringify(lang === 'ru' ? 'Удалить это сообщение?' : 'Delete this message?') %>,
+            react: <%- JSON.stringify(lang === 'ru' ? 'Реакция' : 'React') %>,
+            empty: <%- JSON.stringify(lang === 'ru' ? 'Здесь пока тихо. Будьте первым — предложите, с чего начать.' : 'Quiet so far. Be the first — suggest where to begin.') %>,
+            failed: <%- JSON.stringify(lang === 'ru' ? 'Не удалось загрузить.' : 'Failed to load.') %>,
+            problemPromptNum: <%- JSON.stringify(lang === 'ru' ? 'Номер задачи (например 6.4.7):' : 'Problem number (e.g. 6.4.7):') %>,
+            problemPromptText: <%- JSON.stringify(lang === 'ru' ? 'Текст ссылки (необязательно):' : 'Link text (optional):') %>,
+            save: <%- JSON.stringify(lang === 'ru' ? 'Сохранить' : 'Save') %>,
+            cancel: <%- JSON.stringify(lang === 'ru' ? 'Отмена' : 'Cancel') %>
+        }
+    };
+</script>
+<script src="<%= (typeof asset === 'function') ? asset('/js/brainstorm-room.js') : '/js/brainstorm-room.js' %>"></script>

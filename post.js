@@ -6,7 +6,7 @@ const { format: formatDate } = require("date-fns");
 const i18n = require('i18n');
 const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
-const { getTopBrainstormMessages, getRelatedBrainstormLinks, getUserDisplayMode, formatBrainstormHtml } = require("./brainstorm");
+const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -280,23 +280,22 @@ async function renderPost(req, res) {
         // Server-rendered on first paint (cached) so the hot page pays no extra
         // client round-trip. brainstormMode is the logged-in user's quiet-mode
         // preference; anonymous visitors reconcile via localStorage client-side.
-        let brainstorm = [];
+        // The live Brainstorm Room conversation sits in the right rail (YouTube-style
+        // live chat). Messages are lazy-loaded client-side on first visibility, so
+        // the hot page only needs: the reader's quiet-mode preference, the curator
+        // capability, and the descriptive related-problems strip. Anonymous views add
+        // no per-user queries (canCurate / getUserDisplayMode are skipped).
         let brainstormMode = 'rotate';
-        // solution_post.ejs only renders when a solution file exists, so the problem
-        // is solved (in this language). Solved problems get the Phase-4 "insights"
-        // variant (Discussion & Insights + a descriptive related-problems strip);
-        // the "brainstorm" open-question variant stays available for future
-        // unsolved-problem pages.
-        const brainstormVariant = 'insights';
+        let brainstormIsCurator = false;
         let brainstormRelated = [];
         try {
-            brainstorm = await getTopBrainstormMessages(name, 5);
             brainstormRelated = await getRelatedBrainstormLinks(name, lang, 6);
             if (req.session.userId) {
                 brainstormMode = await getUserDisplayMode(req.session.userId);
+                brainstormIsCurator = await canCurate(req);
             }
         } catch (err) {
-            console.error("Error loading brainstorm block:", err);
+            console.error("Error loading brainstorm data:", err);
         }
 
         res.render("solution_post", {
@@ -323,11 +322,10 @@ async function renderPost(req, res) {
             relatedProblems,
             problemPaths,
             editHistory,
-            brainstorm,
             brainstormMode,
-            brainstormVariant,
             brainstormRelated,
-            formatBrainstormHtml,
+            brainstormIsCurator,
+            brainstormReactions: ALLOWED_REACTIONS,
         });
     } else {
         i18n.setLocale(res, lang);
