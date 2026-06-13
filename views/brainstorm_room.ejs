@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> | <%= __('title') %></title>
+    <meta name="robots" content="noindex,follow" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/<%= name %>/brainstorm" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+
+    <script>
+    MathJax = {
+      tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']], processEscapes: true },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ffffff; color: #2d2d2d; }
+    </style>
+</head>
+<body>
+    <%- include('default/main_site_header', {}) %>
+
+    <main class="bsr-page">
+        <nav class="bsr-breadcrumb" aria-label="breadcrumb">
+            <a href="/<%= lang %>/" class="bsr-crumb"><%= lang === 'ru' ? 'Главная' : 'Home' %></a>
+            <span class="bsr-crumb-sep">&rsaquo;</span>
+            <a href="<%= breadcrumb.sectionHref %>" class="bsr-crumb"><%= breadcrumb.sectionTitle %></a>
+            <span class="bsr-crumb-sep">&rsaquo;</span>
+            <a href="/<%= lang %>/<%= name %>" class="bsr-crumb"><%= breadcrumb.problemLabel %></a>
+        </nav>
+
+        <header class="bsr-head">
+            <div>
+                <h1 class="bsr-title">
+                    <i class="fas fa-lightbulb bsr-title-icon" aria-hidden="true"></i>
+                    <%= lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room' %>
+                    <span class="bsr-title-problem"><%= name %></span>
+                </h1>
+                <p class="bsr-subtitle">
+                    <%= lang === 'ru'
+                        ? 'Думаем вслух над этой задачей. Сообщения могут быть на русском или английском — комната одна для всех языков.'
+                        : 'Thinking out loud about this problem. Messages may be in Russian or English — one room for all languages.' %>
+                </p>
+            </div>
+            <a href="/<%= lang %>/<%= name %>" class="bsr-back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+                <%= lang === 'ru' ? 'К задаче' : 'Back to problem' %>
+            </a>
+        </header>
+
+        <section class="bsr-room" aria-label="<%= lang === 'ru' ? 'Сообщения' : 'Messages' %>">
+            <div class="bsr-older">
+                <% if (hasMore) { %>
+                <button type="button" class="bsr-older-btn" id="bsrLoadOlder">
+                    <%= lang === 'ru' ? 'Показать более ранние' : 'Load earlier messages' %>
+                </button>
+                <% } %>
+            </div>
+
+            <div class="bsr-messages" id="bsrMessages" aria-live="polite">
+                <div class="bsr-loading" id="bsrLoading"><%= lang === 'ru' ? 'Загрузка…' : 'Loading…' %></div>
+            </div>
+
+            <% if (username) { %>
+            <div class="bsr-composer" id="bsrComposer">
+                <div class="bsr-composer-toolbar">
+                    <button type="button" class="bsr-tool" data-bsr-tool="problem" title="<%= lang === 'ru' ? 'Ссылка на задачу' : 'Link a problem' %>">
+                        <span class="bsr-tool-hash">#</span> <%= lang === 'ru' ? 'Задача' : 'Problem' %>
+                    </button>
+                    <button type="button" class="bsr-tool" data-bsr-tool="mention" title="<%= lang === 'ru' ? 'Упомянуть' : 'Mention' %>">@</button>
+                    <button type="button" class="bsr-tool" data-bsr-tool="math" title="<%= lang === 'ru' ? 'Формула' : 'Math' %>"><i class="fas fa-square-root-variable"></i></button>
+                </div>
+                <textarea class="bsr-input" id="bsrInput" rows="3"
+                          placeholder="<%= lang === 'ru' ? 'Поделитесь идеей… Используйте # для ссылки на задачу, @ — чтобы упомянуть' : 'Share an idea… Use # to link a problem, @ to mention someone' %>"
+                          maxlength="4000"></textarea>
+                <div class="bsr-composer-foot">
+                    <span class="bsr-hint"><%= lang === 'ru' ? 'Ctrl/⌘ + Enter — отправить' : 'Ctrl/⌘ + Enter to send' %></span>
+                    <button type="button" class="bsr-send" id="bsrSend"><%= lang === 'ru' ? 'Отправить' : 'Send' %></button>
+                </div>
+            </div>
+            <% } else { %>
+            <div class="bsr-login-prompt">
+                <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Войдите' : 'Log in' %></a>
+                <%= lang === 'ru' ? 'чтобы участвовать в мозговом штурме' : 'to join the brainstorm' %>
+            </div>
+            <% } %>
+        </section>
+    </main>
+
+    <script>
+        window.BSR = {
+            problem: <%- JSON.stringify(name) %>,
+            lang: <%- JSON.stringify(lang) %>,
+            loggedIn: <%- username ? 'true' : 'false' %>,
+            currentUser: <%- JSON.stringify(username || null) %>,
+            isCurator: <%- isCurator ? 'true' : 'false' %>,
+            reactions: <%- JSON.stringify(reactions) %>,
+            defaultAvatar: '/img/profile_images/Default_placeholder.svg',
+            messages: <%- JSON.stringify(initialMessages).replace(/</g, '\\u003c') %>,
+            hasMore: <%- hasMore ? 'true' : 'false' %>,
+            oldestId: <%- oldestId === null ? 'null' : oldestId %>,
+            newestId: <%- newestId === null ? 'null' : newestId %>,
+            t: {
+                edited: <%- JSON.stringify(lang === 'ru' ? '(изменено)' : '(edited)') %>,
+                pin: <%- JSON.stringify(lang === 'ru' ? 'Закрепить' : 'Pin') %>,
+                unpin: <%- JSON.stringify(lang === 'ru' ? 'Открепить' : 'Unpin') %>,
+                pinned: <%- JSON.stringify(lang === 'ru' ? 'Закреплено' : 'Pinned') %>,
+                edit: <%- JSON.stringify(lang === 'ru' ? 'Изменить' : 'Edit') %>,
+                del: <%- JSON.stringify(lang === 'ru' ? 'Удалить' : 'Delete') %>,
+                confirmDelete: <%- JSON.stringify(lang === 'ru' ? 'Удалить это сообщение?' : 'Delete this message?') %>,
+                react: <%- JSON.stringify(lang === 'ru' ? 'Реакция' : 'React') %>,
+                empty: <%- JSON.stringify(lang === 'ru' ? 'Здесь пока тихо. Будьте первым — предложите, с чего начать.' : 'Quiet so far. Be the first — suggest where to begin.') %>,
+                problemPromptNum: <%- JSON.stringify(lang === 'ru' ? 'Номер задачи (например 6.4.7):' : 'Problem number (e.g. 6.4.7):') %>,
+                problemPromptText: <%- JSON.stringify(lang === 'ru' ? 'Текст ссылки (необязательно):' : 'Link text (optional):') %>,
+                save: <%- JSON.stringify(lang === 'ru' ? 'Сохранить' : 'Save') %>,
+                cancel: <%- JSON.stringify(lang === 'ru' ? 'Отмена' : 'Cancel') %>
+            }
+        };
+    </script>
+    <%- include('default/main_site_search_script') %>
+    <script src="/js/brainstorm-room.js"></script>
+</body>
+</html>

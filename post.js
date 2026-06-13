@@ -6,6 +6,7 @@ const { format: formatDate } = require("date-fns");
 const i18n = require('i18n');
 const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
+const { getTopBrainstormMessages, getRelatedBrainstormLinks, getUserDisplayMode, formatBrainstormHtml } = require("./brainstorm");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -275,6 +276,29 @@ async function renderPost(req, res) {
         // Study paths containing this problem
         const problemPaths = await getPathsForProblem(name);
 
+        // Brainstorm Room — rotating block (unified per problem, all languages).
+        // Server-rendered on first paint (cached) so the hot page pays no extra
+        // client round-trip. brainstormMode is the logged-in user's quiet-mode
+        // preference; anonymous visitors reconcile via localStorage client-side.
+        let brainstorm = [];
+        let brainstormMode = 'rotate';
+        // solution_post.ejs only renders when a solution file exists, so the problem
+        // is solved (in this language). Solved problems get the Phase-4 "insights"
+        // variant (Discussion & Insights + a descriptive related-problems strip);
+        // the "brainstorm" open-question variant stays available for future
+        // unsolved-problem pages.
+        const brainstormVariant = 'insights';
+        let brainstormRelated = [];
+        try {
+            brainstorm = await getTopBrainstormMessages(name, 5);
+            brainstormRelated = await getRelatedBrainstormLinks(name, lang, 6);
+            if (req.session.userId) {
+                brainstormMode = await getUserDisplayMode(req.session.userId);
+            }
+        } catch (err) {
+            console.error("Error loading brainstorm block:", err);
+        }
+
         res.render("solution_post", {
             __: i18n.__,
             lang,
@@ -299,6 +323,11 @@ async function renderPost(req, res) {
             relatedProblems,
             problemPaths,
             editHistory,
+            brainstorm,
+            brainstormMode,
+            brainstormVariant,
+            brainstormRelated,
+            formatBrainstormHtml,
         });
     } else {
         i18n.setLocale(res, lang);

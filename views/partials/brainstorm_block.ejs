@@ -1,0 +1,126 @@
+<%
+  // Locals (passed explicitly from solution_post.ejs). Guarded so the partial is
+  // safe to include even if a caller forgets one.
+  var bsList = (typeof brainstorm !== 'undefined' && brainstorm) ? brainstorm : [];
+  var bsMode = (typeof brainstormMode !== 'undefined' && brainstormMode) ? brainstormMode : 'rotate';
+  var bsLoggedIn = (typeof username !== 'undefined' && username) ? true : false;
+  var bsFmt = (typeof formatBrainstormHtml === 'function') ? formatBrainstormHtml : function (s) { return s; };
+  var bsRelated = (typeof brainstormRelated !== 'undefined' && brainstormRelated) ? brainstormRelated : [];
+  // Variant: 'insights' (solved problems — Discussion & Insights) vs 'brainstorm'
+  // (open question). Same component + data; the framing and content emphasis differ.
+  var bsVariant = (typeof brainstormVariant !== 'undefined' && brainstormVariant === 'insights') ? 'insights' : 'brainstorm';
+  var bsTitle = bsVariant === 'insights'
+    ? (lang === 'ru' ? 'Обсуждение и идеи' : 'Discussion & Insights')
+    : (lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room');
+  var bsCta = bsVariant === 'insights'
+    ? (lang === 'ru' ? 'Открыть обсуждение' : 'Open the discussion')
+    : (lang === 'ru' ? 'Войти в комнату' : 'Enter the room');
+  var bsIcon = bsVariant === 'insights' ? 'fa-comments' : 'fa-lightbulb';
+  // A hidden block must not flash its content on first paint, so honour the
+  // server-known mode in the initial class for logged-in users.
+  var bsInitialMode = (bsMode === 'static' || bsMode === 'hidden') ? bsMode : 'rotate';
+%>
+<section class="bs-block bs-block--<%= bsInitialMode %> bs-block--<%= bsVariant %>" id="brainstormBlock"
+         data-bs-block
+         data-problem="<%= name %>"
+         data-lang="<%= lang %>"
+         data-logged-in="<%= bsLoggedIn ? '1' : '0' %>"
+         data-mode="<%= bsInitialMode %>"
+         data-count="<%= bsList.length %>"
+         aria-roledescription="<%= lang === 'ru' ? 'карусель' : 'carousel' %>"
+         aria-label="<%= bsTitle %>">
+
+    <header class="bs-block__head">
+        <h2 class="bs-block__title">
+            <i class="fas <%= bsIcon %> bs-block__icon" aria-hidden="true"></i>
+            <%= bsTitle %>
+        </h2>
+        <% if (bsList.length > 0) { %>
+        <div class="bs-block__controls">
+            <button type="button" class="bs-ctrl bs-ctrl--motion" data-bs-action="toggle-motion"
+                    aria-label="<%= lang === 'ru' ? 'Тихий режим (остановить движение)' : 'Quiet mode (stop motion)' %>"
+                    title="<%= lang === 'ru' ? 'Тихий режим' : 'Quiet mode' %>">
+                <i class="fas fa-pause bs-ctrl__pause" aria-hidden="true"></i>
+                <i class="fas fa-play bs-ctrl__play" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="bs-ctrl bs-ctrl--hide" data-bs-action="hide"
+                    aria-label="<%= lang === 'ru' ? 'Скрыть блок' : 'Hide block' %>"
+                    title="<%= lang === 'ru' ? 'Скрыть' : 'Hide' %>">
+                <i class="fas fa-eye-slash" aria-hidden="true"></i>
+            </button>
+        </div>
+        <% } %>
+    </header>
+
+    <% if (bsList.length === 0) { %>
+        <div class="bs-empty">
+            <p class="bs-empty__text">
+                <% if (bsVariant === 'insights') { %>
+                    <%= lang === 'ru'
+                        ? 'Обсуждения пока нет. Поделитесь идеей или элегантным альтернативным подходом.'
+                        : 'No discussion yet. Share an insight or an elegant alternative approach.' %>
+                <% } else { %>
+                    <%= lang === 'ru'
+                        ? 'Здесь пока тихо. Начните штурм — предложите идею, с чего подступиться к задаче.'
+                        : 'Quiet so far. Start the brainstorm — suggest where to even begin.' %>
+                <% } %>
+            </p>
+            <a class="bs-cta" href="/<%= lang %>/<%= name %>/brainstorm">
+                <%= bsCta %>
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    <% } else { %>
+        <div class="bs-ticker" data-bs-ticker>
+            <% bsList.forEach(function (msg, i) { %>
+            <article class="bs-msg<%= i === 0 ? ' is-active' : '' %>" data-bs-msg data-index="<%= i %>"<%= i === 0 ? '' : ' aria-hidden="true"' %>>
+                <div class="bs-msg__meta">
+                    <img class="bs-msg__avatar" src="<%= msg.author.profilePicture %>" alt="" width="22" height="22" loading="lazy">
+                    <a class="bs-msg__author" href="/user/<%= msg.author.username %>"><%= msg.author.fullName || msg.author.username %></a>
+                    <% if (msg.author.country) { %><span class="bs-msg__country" title="<%= msg.author.country %>"><%= msg.author.country %></span><% } %>
+                    <% if (msg.language) { %><span class="bs-msg__lang"><%= msg.language.toUpperCase() %></span><% } %>
+                    <% if (msg.isPinned) { %><span class="bs-msg__pin" title="<%= lang === 'ru' ? 'Закреплено' : 'Pinned' %>"><i class="fas fa-thumbtack" aria-hidden="true"></i></span><% } %>
+                    <span class="bs-msg__react" title="<%= lang === 'ru' ? 'Реакции' : 'Reactions' %>"><i class="far fa-heart" aria-hidden="true"></i> <%= msg.reactionCount %></span>
+                </div>
+                <div class="bs-msg__body"><%- bsFmt(msg.content, lang) %></div>
+            </article>
+            <% }); %>
+        </div>
+
+        <div class="bs-block__foot">
+            <% if (bsList.length > 1) { %>
+            <div class="bs-dots" data-bs-dots role="tablist" aria-label="<%= lang === 'ru' ? 'Выбрать сообщение' : 'Choose a message' %>">
+                <% bsList.forEach(function (msg, i) { %>
+                <button type="button" class="bs-dot<%= i === 0 ? ' is-active' : '' %>" data-bs-dot data-index="<%= i %>"
+                        aria-label="<%= (lang === 'ru' ? 'Сообщение ' : 'Message ') + (i + 1) %>"></button>
+                <% }); %>
+            </div>
+            <% } else { %><span></span><% } %>
+            <a class="bs-cta" href="/<%= lang %>/<%= name %>/brainstorm">
+                <%= bsCta %>
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
+    <% } %>
+
+    <%# Phase 4: solved-problem "Discussion & Insights" related-problems strip.
+        Descriptive wiki-style links from the cross-reference graph (never bare numbers). %>
+    <% if (bsVariant === 'insights' && bsRelated.length > 0) { %>
+    <div class="bs-related">
+        <div class="bs-related__title"><%= lang === 'ru' ? 'Связанные задачи' : 'Related problems' %></div>
+        <ul class="bs-related__list">
+            <% bsRelated.forEach(function (rp) { %>
+            <li>
+                <a class="bs-link" href="/<%= lang %>/<%= rp.targetProblemName %>"><%= rp.linkText %></a>
+            </li>
+            <% }); %>
+        </ul>
+    </div>
+    <% } %>
+
+    <!-- Collapsed state: a single restore affordance shown only when hidden. -->
+    <button type="button" class="bs-restore" data-bs-action="show">
+        <i class="fas fa-lightbulb" aria-hidden="true"></i>
+        <%= bsTitle %> · <%= lang === 'ru' ? 'показать' : 'show' %>
+    </button>
+</section>

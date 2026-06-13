@@ -9,7 +9,9 @@
     "build:css": "node scripts/build-css.js",
     "build": "npm run build:css",
     "migrate": "node scripts/run-migrations.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "migrate:brainstorm": "node scripts/apply-brainstorm-migration.js",
+    "seed:brainstorm": "node scripts/seed-brainstorm.js",
+    "test": "node --test \"tests/**/*.test.js\""
   },
   "author": "",
   "license": "ISC",

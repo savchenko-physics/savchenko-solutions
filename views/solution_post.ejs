@@ -340,10 +340,19 @@
             color: #666;
         }
 
-        /* Sidebar */
-        .sidebar {
+        /* Right rail (Brainstorm block + section grid). The rail is the sticky
+           grid item; the section grid nested inside is a normal block. */
+        .right-rail {
             position: sticky;
             top: 80px;
+            align-self: start;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Sidebar (section problem grid), now nested in .right-rail */
+        .sidebar {
             align-self: start;
         }
 
@@ -1054,8 +1063,13 @@
             .main-container {
                 grid-template-columns: 1fr;
             }
+            /* Section grid stays hidden on mobile (as before); the Brainstorm
+               block stays visible and flows below the statement. */
             .sidebar {
                 display: none;
+            }
+            .right-rail {
+                position: static;
             }
         }
 
@@ -1393,9 +1407,21 @@
             </div>
         </div>
 
-        <!-- Sidebar: Section Problem Grid -->
+        <!-- Right rail: Brainstorm block (YouTube-style "live chat") + section grid -->
+        <aside class="right-rail">
+            <%- include('partials/brainstorm_block', {
+                lang: lang,
+                name: name,
+                brainstorm: typeof brainstorm !== 'undefined' ? brainstorm : [],
+                brainstormMode: typeof brainstormMode !== 'undefined' ? brainstormMode : 'rotate',
+                brainstormVariant: typeof brainstormVariant !== 'undefined' ? brainstormVariant : 'brainstorm',
+                brainstormRelated: typeof brainstormRelated !== 'undefined' ? brainstormRelated : [],
+                username: username,
+                formatBrainstormHtml: typeof formatBrainstormHtml !== 'undefined' ? formatBrainstormHtml : null
+            }) %>
+
         <% if (sectionGrid) { %>
-        <aside class="sidebar">
+        <div class="sidebar">
             <div class="section-grid-card">
                 <div class="section-nav">
                     <% if (sectionGrid.prevSection) { %>
@@ -1463,8 +1489,9 @@
                 <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %> &rarr;</a>
             </div>
             <% } %>
-        </aside>
+        </div>
         <% } %>
+        </aside>
     </div>
 
     <!-- Mobile Bottom Nav -->
@@ -2411,5 +2438,6 @@
         }
     </script>
     <%- include('default/main_site_search_script') %>
+    <script src="/js/brainstorm-block.js"></script>
 </body>
 </html>

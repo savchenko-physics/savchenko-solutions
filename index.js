@@ -44,6 +44,7 @@ const { router: contestRouter, getActiveContestBanner } = require('./contest');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
+const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
 
 const app = express();
 const PORT = 3000;
@@ -2011,6 +2012,11 @@ app.use('/discuss', forumRouter);
 // Messages
 app.use('/messages', messagesRouter);
 
+// Brainstorm Room (per-problem, unified across languages) — API.
+// Reads are public; writes are auth-gated inside the router. The /api/ prefix
+// picks up the global apiLimiter registered above.
+app.use('/api/brainstorm', brainstormRouter);
+
 // Weekly Challenges
 app.use('/compete', challengesRouter);
 
@@ -2160,6 +2166,12 @@ async function handleContributorsRanking(req, res) {
 app.get(["/contributors", "/:lang/contributors"], handleContributorsRanking);
 
 // Russian breadcrumb targets: /ru/1 and /ru/1,1 → main catalog anchors (not problem files)
+// Brainstorm Room — full per-problem chat page (must precede the /:lang/:name
+// catch-all). Unified across languages; works for unsolved problems too.
+app.get("/:lang(en|ru)/:name/brainstorm", (req, res, next) => {
+    return renderBrainstormRoom(req, res).catch(next);
+});
+
 app.get("/:lang/:name", (req, res, next) => {
     const { lang, name } = req.params;
     if (name === "contributors") {
