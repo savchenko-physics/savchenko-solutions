@@ -29,11 +29,13 @@ const pool = new Pool({
 // ─── Contest configuration (single source of truth) ────────────────
 // Config lives in code, not the database, so the page works the moment
 // the code deploys. Live standings come from `contributions`, which
-// always exists. Dates are inclusive and interpreted in UTC.
+// always exists. The window is inclusive by date; the contest closes at
+// 23:59 Moscow time (MSK, UTC+3) on endDate — extended from 30 June to
+// 3 July 2026.
 const CONTEST = {
     slug: 'iyun-2026',
     startDate: '2026-06-01',
-    endDate: '2026-06-30',
+    endDate: '2026-07-03',
     goalSolutions: 400,           // raised stretch goal — progress bar target
     firstMilestone: 250,          // original goal, shown as checkpoint tick on the bar
     stretchRaffleThreshold: 10,   // min points to enter the stretch raffle
@@ -41,6 +43,11 @@ const CONTEST = {
     lowCoverageChapters: ['9', '10', '12', '14'],
     title: { ru: 'Июньский конкурс', en: 'June Contest' },
 };
+
+// Closing instant: 23:59:59 on endDate in Moscow time (UTC+3). Single source
+// of truth for isLive()/daysLeft(); the client countdown in
+// views/contest/show.ejs mirrors this same offset.
+const CONTEST_END_INSTANT = new Date(`${CONTEST.endDate}T23:59:59+03:00`).getTime();
 
 // In-memory cache so polling the live dashboard does not hammer the DB.
 const CACHE_TTL_MS = 30 * 1000;
@@ -72,16 +79,14 @@ function getLang(req) {
 
 // Days remaining (>= 0) until the contest ends, for the banner/countdown.
 function daysLeft() {
-    const end = new Date(`${CONTEST.endDate}T23:59:59Z`).getTime();
-    const diff = end - Date.now();
+    const diff = CONTEST_END_INSTANT - Date.now();
     return diff <= 0 ? 0 : Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
 function isLive() {
     const now = Date.now();
     const start = new Date(`${CONTEST.startDate}T00:00:00Z`).getTime();
-    const end = new Date(`${CONTEST.endDate}T23:59:59Z`).getTime();
-    return now >= start && now <= end;
+    return now >= start && now <= CONTEST_END_INSTANT;
 }
 
 // Lightweight banner descriptor for the global header. No DB hit.

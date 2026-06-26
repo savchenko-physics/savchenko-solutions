@@ -546,7 +546,7 @@
     (function() {
       const el = document.getElementById('countdownLine');
       if (!el) return;
-      const end = new Date(el.dataset.end + 'T23:59:59Z');
+      const end = new Date(el.dataset.end + 'T23:59:59+03:00'); // 23:59 Moscow time (MSK, UTC+3)
       function tick() {
         const diff = end - new Date();
         if (diff <= 0) { el.innerHTML = isRu ? ' · <strong>Конкурс завершён</strong>' : ' · <strong>Contest ended</strong>'; return; }
