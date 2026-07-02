@@ -68,6 +68,7 @@
     .badge-grand { background: #1a1a2e; color: #fff; }
     .badge-silver { background: #6c757d; color: #fff; }
     .badge-bronze { background: #fff; color: #2d2d2d; border: 1px solid #dee2e6; }
+    .badge-org { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
     .badge-raffle { background: #1a5276; color: #fff; }
     .badge-spotlight { background: #7d6608; color: #fff; }
     .prize-h { font-size: 15px; font-weight: 600; color: #2d2d2d; margin-bottom: 0.2rem; }
@@ -200,13 +201,15 @@
             <tr><td colspan="4" class="lb-empty"><%= isRu ? 'Пока никто не опубликовал новое решение. Стань первым.' : 'No new solutions yet. Be the first.' %></td></tr>
           <% } else { contest.leaderboard.forEach(function(row) { %>
             <tr>
-              <td class="lb-rank"><%= row.rank %></td>
+              <td class="lb-rank"><%= row.rank == null ? '—' : row.rank %></td>
               <td>
                 <div class="lb-user">
                   <% if (row.avatar) { %><img class="lb-avatar" src="<%= row.avatar %>" alt="" onerror="this.style.visibility='hidden'" /><% } else { %><span class="lb-avatar"></span><% } %>
                   <div style="min-width:0;">
                     <a href="/user/<%= row.username %>"><%= row.fullName || row.username %></a>
-                    <% if (row.tier) { %>
+                    <% if (row.isOrganizer) { %>
+                      <span class="tier-pill badge-org"><%= isRu ? 'организатор' : 'organizer' %></span>
+                    <% } else if (row.tier) { %>
                       <span class="tier-pill <%= row.tier === 'grand' ? 'badge-grand' : (row.tier === 'silver' ? 'badge-silver' : 'badge-bronze') %>"><%= tierLabels[row.tier] %></span>
                     <% } %>
                     <% if (row.country) { %><div class="lb-country"><%= row.country %></div><% } %>
@@ -479,12 +482,14 @@
         const avatar = r.avatar
           ? '<img class="lb-avatar" src="' + esc(r.avatar) + '" alt="" onerror="this.style.visibility=\'hidden\'" />'
           : '<span class="lb-avatar"></span>';
-        const tier = r.tier
-          ? ' <span class="tier-pill ' + (tierClass[r.tier] || '') + '">' + esc(tierLabel[r.tier] || '') + '</span>'
-          : '';
+        const tier = r.isOrganizer
+          ? ' <span class="tier-pill badge-org">' + (isRu ? 'организатор' : 'organizer') + '</span>'
+          : (r.tier
+            ? ' <span class="tier-pill ' + (tierClass[r.tier] || '') + '">' + esc(tierLabel[r.tier] || '') + '</span>'
+            : '');
         const country = r.country ? '<div class="lb-country">' + esc(r.country) + '</div>' : '';
         return '<tr>' +
-          '<td class="lb-rank">' + r.rank + '</td>' +
+          '<td class="lb-rank">' + (r.rank == null ? '—' : r.rank) + '</td>' +
           '<td><div class="lb-user">' + avatar +
             '<div style="min-width:0;"><a href="/user/' + esc(r.username) + '">' + esc(r.fullName || r.username) + '</a>' + tier + country + '</div>' +
           '</div></td>' +

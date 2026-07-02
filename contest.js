@@ -320,7 +320,7 @@ credited AS (
     FROM cand JOIN new_pl USING (problem_name, language)
     ORDER BY cand.problem_name, cand.language, cand.user_first_at ASC
 )
-SELECT cr.problem_name, cr.language, cr.user_first_at, cr.user_id, u.username, u.full_name
+SELECT cr.problem_name, cr.language, cr.user_first_at, u.username, u.full_name
 FROM credited cr
 JOIN users u ON u.id = cr.user_id
 ORDER BY cr.user_first_at DESC
@@ -348,14 +348,18 @@ async function computeStandings() {
         pool.query(FEED_SQL, [CONTEST.startDate, CONTEST.endDate]),
     ]);
 
+    // Organizers stay on the board and count toward totals, but they do not
+    // occupy a competitive rank — the # column skips over them so real
+    // competitors keep 1, 2, 3… and organizers show without a number or tier.
     const excluded = new Set(CONTEST.excludedUserIds || []);
-    const leaderboard = standingsRes.rows
-        .filter(r => !excluded.has(r.user_id))
-        .map((r, i) => {
-        const rank = i + 1;
+    let competitorRank = 0;
+    const mapped = standingsRes.rows.map((r) => {
+        const isOrganizer = excluded.has(r.user_id);
         const points = parseFloat(r.points);
+        const rank = isOrganizer ? null : ++competitorRank;
         return {
             rank,
+            isOrganizer,
             userId: r.user_id,
             username: r.username,
             fullName: r.full_name,
@@ -363,14 +367,18 @@ async function computeStandings() {
             avatar: r.profile_picture ? r.profile_picture.replace(/\\/g, '/') : '/img/profile_images/Default_placeholder.svg',
             solutions: r.solutions,
             points,
-            tier: tierFor(rank, points),
+            tier: isOrganizer ? null : tierFor(rank, points),
         };
     });
+    // Competitors first (kept in points order with ranks 1, 2, 3…), organizers
+    // pinned to the bottom regardless of their points.
+    const leaderboard = [
+        ...mapped.filter(r => !r.isOrganizer),
+        ...mapped.filter(r => r.isOrganizer),
+    ];
 
     const totalSolutions = leaderboard.reduce((sum, r) => sum + r.solutions, 0);
-    const feed = feedRes.rows
-        .filter(r => !excluded.has(r.user_id))
-        .map(r => ({
+    const feed = feedRes.rows.map(r => ({
         problem: r.problem_name,
         language: r.language,
         at: r.user_first_at,
