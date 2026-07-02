@@ -518,6 +518,113 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
+    // Codeforces-style rating trajectory for one user. The final point and the
+    // `current.score` use the SAME "combined" set + formula as the leaderboard
+    // (/api/contributors/leaderboard), so the end of the line coincides exactly
+    // with the value shown on /:lang/contributors.
+    app.get("/api/user/:username/rating", async (req, res) => {
+        try {
+            const username = String(req.params.username || "").trim();
+            const userRow = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
+            if (userRow.rows.length === 0) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            const userId = userRow.rows[0].id;
+
+            const payload = await withCache(`user:${username}:rating:v1`, async () => {
+                const events = await pool.query(
+                    `
+                    SELECT problem_name, edited_at
+                    FROM (
+                        SELECT problem_name, edited_at
+                        FROM contributions
+                        WHERE user_id = $1
+                          AND content_changed = true
+                          AND invisible = false
+                        UNION ALL
+                        SELECT problem_name, edited_at
+                        FROM github_contributions
+                        WHERE user_id = $1
+                    ) c
+                    WHERE edited_at IS NOT NULL
+                    ORDER BY edited_at ASC
+                    `,
+                    [userId]
+                );
+
+                // Cumulative score is monotonic in the cumulative counts; collapse
+                // to one point per day (keeping that day's final value).
+                const scoreOf = (uniq, tot) => {
+                    if (uniq <= 0 || tot <= 0) return 0;
+                    const s = Math.round(19 * Math.log(uniq * Math.sqrt(tot)));
+                    return s < 0 ? 0 : s;
+                };
+                const seen = new Set();
+                let edits = 0;
+                const byDay = new Map();
+                for (const row of events.rows) {
+                    edits += 1;
+                    if (row.problem_name) seen.add(row.problem_name);
+                    const day = new Date(row.edited_at).toISOString().slice(0, 10);
+                    byDay.set(day, {
+                        date: day,
+                        score: scoreOf(seen.size, edits),
+                        solutions: seen.size,
+                        edits,
+                    });
+                }
+                const points = Array.from(byDay.values());
+
+                // Rank consistent with the leaderboard ordering (score DESC).
+                const rankResult = await pool.query(
+                    `
+                    WITH combined AS (
+                        SELECT user_id, problem_name
+                        FROM contributions
+                        WHERE user_id IS NOT NULL
+                          AND content_changed = true
+                          AND invisible = false
+                        UNION ALL
+                        SELECT user_id, problem_name
+                        FROM github_contributions
+                        WHERE user_id IS NOT NULL
+                    ),
+                    scores AS (
+                        SELECT user_id,
+                               ROUND((19 * LN(COUNT(DISTINCT problem_name) * SQRT(COUNT(*))))::numeric, 0)::int AS score
+                        FROM combined
+                        GROUP BY user_id
+                    )
+                    SELECT
+                        (SELECT score FROM scores WHERE user_id = $1) AS score,
+                        (SELECT COUNT(*)::int FROM scores) AS total,
+                        (SELECT COUNT(*)::int FROM scores WHERE score > (SELECT score FROM scores WHERE user_id = $1)) + 1 AS rank
+                    `,
+                    [userId]
+                );
+                const rankRow = rankResult.rows[0] || {};
+                const last = points.length ? points[points.length - 1] : { score: 0, solutions: 0, edits: 0 };
+
+                return {
+                    points,
+                    current: {
+                        score: rankRow.score != null ? rankRow.score : last.score,
+                        solutions: last.solutions,
+                        edits: last.edits,
+                        rank: rankRow.score != null ? rankRow.rank : null,
+                        total: rankRow.total != null ? rankRow.total : null,
+                    },
+                };
+            });
+
+            res.set("Cache-Control", "public, max-age=3600");
+            res.json(payload);
+        } catch (error) {
+            console.error("Failed to load user rating history:", error);
+            res.status(500).json({ error: "Failed to load user rating history" });
+        }
+    });
+
     app.get("/api/user/:username/stats", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
@@ -1068,9 +1175,22 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
 
                 const solvedSet = new Set(solvedRows.rows.map((r) => r.problem_name));
                 const chapterNumbers = [...new Set(structure.sections.map((s) => s.chapter))].sort((a, b) => a - b);
+
+                // Chapters the user has actually solved at least one problem in.
+                const sectionToChapter = {};
+                for (const s of structure.sections) sectionToChapter[s.number] = s.chapter;
+                const solvedChapterSet = new Set();
+                for (const problemName of solvedSet) {
+                    const section = sectionFromProblemName(problemName);
+                    if (section == null) continue;
+                    const ch = sectionToChapter[section];
+                    if (ch != null) solvedChapterSet.add(ch);
+                }
+                const solvedChapterNumbers = chapterNumbers.filter((n) => solvedChapterSet.has(n));
+
                 const selectedChapter = chapterParam && chapterNumbers.includes(chapterParam)
                     ? chapterParam
-                    : chapterNumbers[0];
+                    : (solvedChapterNumbers[0] || chapterNumbers[0]);
 
                 const sectionNodes = structure.sections.filter((s) => s.chapter === selectedChapter);
                 const chapterName = structure.chapters.find((c) => c.number === selectedChapter)?.name || `Chapter ${selectedChapter}`;
@@ -1105,7 +1225,9 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
 
                 return {
                     selectedChapter,
-                    chapters: structure.chapters.map((c) => ({ number: c.number, name: c.name })),
+                    chapters: structure.chapters
+                        .filter((c) => solvedChapterSet.has(c.number))
+                        .map((c) => ({ number: c.number, name: c.name })),
                     nodes,
                     links,
                 };

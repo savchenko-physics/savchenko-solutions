@@ -66,20 +66,26 @@
         .profile-head {
             display: flex;
             justify-content: space-between;
-            gap: 12px;
+            gap: 16px;
             align-items: flex-start;
+            flex-wrap: wrap;
         }
 
         .profile-main {
             display: flex;
-            gap: 14px;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
             min-width: 0;
+            flex: 1 1 300px;
         }
 
+        /* Large avatar is the focal point of the header. */
         .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            border-radius: 12px;
             object-fit: cover;
             border: 1px solid var(--sv-border);
             background: #fff;
@@ -88,17 +94,82 @@
 
         .profile-names {
             min-width: 0;
+            flex: 1 1 auto;
+            width: 100%;
         }
 
         .name-line {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            font-size: 24px;
+            font-size: 30px;
             font-weight: 600;
             color: var(--sv-primary);
             line-height: 1.15;
             margin: 0;
+        }
+
+        @media (min-width: 768px) {
+            .profile-main {
+                flex-direction: row;
+                align-items: center;
+                text-align: left;
+                gap: 28px;
+            }
+            .profile-avatar {
+                width: 260px;
+                height: 260px;
+            }
+            .name-line {
+                justify-content: flex-start;
+                font-size: 38px;
+            }
+        }
+
+        /* ── Contribution Rating chart ── */
+
+        .rating-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .rating-badges {
+            display: flex;
+            gap: 8px;
+        }
+
+        .rating-badge {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 6px;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        .rating-badge-value {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--sv-primary);
+        }
+
+        .rating-chart-wrap {
+            position: relative;
+            height: 300px;
+        }
+
+        .rating-empty {
+            color: var(--sv-secondary);
+            font-size: 13px;
+            margin: 8px 0 0;
         }
 
         .username-line {
@@ -227,23 +298,25 @@
 
         /* ── Stats Row ── */
 
+        /* Stats now live inside the header, to the right of the photo. */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 10px;
-            margin-bottom: 16px;
+            margin: 16px 0 0;
+            width: 100%;
         }
 
         .stat-tile {
             border: 1px solid var(--sv-border);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px 8px;
             text-align: center;
             background: var(--sv-bg);
         }
 
         .stat-value {
-            font-size: 32px;
+            font-size: 26px;
             line-height: 1.05;
             color: var(--sv-primary);
             font-weight: 700;
@@ -606,12 +679,29 @@
             padding: 2px 12px;
         }
 
-        /* Dashed separator between problem groups. */
+        /* Dashed separator between problem groups, with the time gap labelled. */
         .contrib-group-sep {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             border: none;
-            border-top: 1px dashed #c0c7d0;
             margin: 0;
         }
+
+        .contrib-group-sep::before,
+        .contrib-group-sep::after {
+            content: "";
+            flex: 1 1 auto;
+            border-top: 1px dashed #c0c7d0;
+        }
+
+        .contrib-gap-label {
+            flex: 0 0 auto;
+            font-size: 11px;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
 
         .contrib-latest {
             padding: 7px 0;
@@ -678,7 +768,7 @@
 
         .contrib-title-link {
             color: #1a1a2e;
-            font-weight: 500;
+            font-weight: 700;
             text-decoration: none;
             font-size: 12px;
         }
@@ -688,8 +778,8 @@
         }
 
         .contrib-problem-link {
-            color: #57606a;
-            font-weight: 400;
+            color: #1a1a2e;
+            font-weight: 700;
             text-decoration: none;
             font-size: 12px;
         }
@@ -926,6 +1016,25 @@
                             <button id="bio-toggle" class="bio-toggle" style="display:none;"><%= lang === 'ru' ? 'показать больше' : 'show more' %></button>
                         </div>
                         <div id="social-row" class="social-row"></div>
+                        <!-- Stats Row (beside the photo) -->
+                        <section class="stats-row">
+                            <article class="stat-tile">
+                                <div id="stat-solutions" class="stat-value">&mdash;</div>
+                                <div class="stat-label"><%= lang === 'ru' ? 'Решений' : 'Solutions' %></div>
+                            </article>
+                            <article class="stat-tile">
+                                <div id="stat-edits" class="stat-value">&mdash;</div>
+                                <div class="stat-label"><%= lang === 'ru' ? 'Правок' : 'Edits' %></div>
+                            </article>
+                            <article class="stat-tile">
+                                <div id="stat-translations" class="stat-value">&mdash;</div>
+                                <div class="stat-label"><%= lang === 'ru' ? 'Переводов' : 'Translations' %></div>
+                            </article>
+                            <article class="stat-tile">
+                                <div id="stat-likes" class="stat-value">&mdash;</div>
+                                <div class="stat-label"><%= lang === 'ru' ? 'Лайков' : 'Likes' %></div>
+                            </article>
+                        </section>
                     </div>
                 </div>
                 <div class="profile-actions">
@@ -939,24 +1048,25 @@
             </div>
         </section>
 
-        <!-- Stats Row -->
-        <section class="stats-row">
-            <article class="stat-tile">
-                <div id="stat-solutions" class="stat-value">&mdash;</div>
-                <div class="stat-label"><%= lang === 'ru' ? 'Решений' : 'Solutions' %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-edits" class="stat-value">&mdash;</div>
-                <div class="stat-label"><%= lang === 'ru' ? 'Правок' : 'Edits' %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-translations" class="stat-value">&mdash;</div>
-                <div class="stat-label"><%= lang === 'ru' ? 'Переводов' : 'Translations' %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-likes" class="stat-value">&mdash;</div>
-                <div class="stat-label"><%= lang === 'ru' ? 'Лайков' : 'Likes' %></div>
-            </article>
+        <!-- Contribution Rating -->
+        <section class="card rating-card" id="rating-card">
+            <div class="rating-head">
+                <h2 class="section-title"><%= lang === 'ru' ? 'Рейтинг вклада' : 'Contribution Rating' %></h2>
+                <div class="rating-badges">
+                    <span class="rating-badge">
+                        <span id="rating-current" class="rating-badge-value">&mdash;</span>
+                        <span><%= lang === 'ru' ? 'рейтинг' : 'rating' %></span>
+                    </span>
+                    <span class="rating-badge">
+                        <span id="rating-rank" class="rating-badge-value">&mdash;</span>
+                        <span><%= lang === 'ru' ? 'место' : 'rank' %></span>
+                    </span>
+                </div>
+            </div>
+            <div class="rating-chart-wrap" id="rating-chart-wrap">
+                <canvas id="rating-chart" height="300"></canvas>
+            </div>
+            <p id="rating-empty" class="rating-empty" style="display:none;"><%= lang === 'ru' ? 'Недостаточно данных для графика рейтинга.' : 'Not enough data for a rating chart yet.' %></p>
         </section>
 
         <!-- Heatmap -->
@@ -1163,8 +1273,10 @@
         let contribPage = 1;
         let currentGroupKey = null;
         let currentGroupEl = null;
+        let prevRowTime = null;
         let radarChart = null;
         let timelineChart = null;
+        let ratingChart = null;
 
         function fmtMonthYear(dateInput) {
             if (!dateInput) return "\u2014";
@@ -1190,6 +1302,46 @@
             if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`;
             if (diff < 31536000) return `${Math.floor(diff / 2592000)} months ago`;
             return `${Math.floor(diff / 31536000)} years ago`;
+        }
+
+        // Human-readable duration for the gap between two problems' edits.
+        // Shows the two most significant units (e.g. "2 minutes 34 seconds",
+        // "2 days 5 hours") so short gaps keep meaningful precision.
+        // minUnitSec caps the smallest unit shown (e.g. 60 = stop at minutes).
+        function fmtGap(ms, minUnitSec = 1) {
+            const totalSec = Math.max(0, Math.round(ms / 1000));
+            const pick = (n, en, ru) => {
+                if (lang === "ru") {
+                    const n10 = n % 10, n100 = n % 100;
+                    let form;
+                    if (n10 === 1 && n100 !== 11) form = ru[0];
+                    else if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) form = ru[1];
+                    else form = ru[2];
+                    return `${n} ${form}`;
+                }
+                return `${n} ${n === 1 ? en[0] : en[1]}`;
+            };
+            const units = [
+                { sec: 31536000, en: ["year", "years"], ru: ["год", "года", "лет"] },
+                { sec: 2592000, en: ["month", "months"], ru: ["месяц", "месяца", "месяцев"] },
+                { sec: 86400, en: ["day", "days"], ru: ["день", "дня", "дней"] },
+                { sec: 3600, en: ["hour", "hours"], ru: ["час", "часа", "часов"] },
+                { sec: 60, en: ["minute", "minutes"], ru: ["минута", "минуты", "минут"] },
+                { sec: 1, en: ["second", "seconds"], ru: ["секунда", "секунды", "секунд"] },
+            ].filter((u) => u.sec >= minUnitSec);
+            const smallest = units[units.length - 1];
+            if (totalSec < smallest.sec) {
+                return lang === "ru" ? `менее ${smallest.ru[1]}` : `less than a ${smallest.en[0]}`;
+            }
+            let i = units.findIndex((u) => totalSec >= u.sec);
+            if (i === -1) i = units.length - 1;
+            const primary = Math.floor(totalSec / units[i].sec);
+            const parts = [pick(primary, units[i].en, units[i].ru)];
+            if (i + 1 < units.length) {
+                const secondary = Math.floor((totalSec - primary * units[i].sec) / units[i + 1].sec);
+                if (secondary > 0) parts.push(pick(secondary, units[i + 1].en, units[i + 1].ru));
+            }
+            return parts.join(" ");
         }
 
         function fmtCommitDate(iso) {
@@ -1732,6 +1884,7 @@
             // Hide empty sections for zero-contribution profiles
             const totalContribs = Number(data.stats.edits || 0);
             if (totalContribs === 0) {
+                document.querySelector(".rating-card").style.display = "none";
                 document.querySelector(".heatmap-card").style.display = "none";
                 document.querySelector(".timeline-radar-card").style.display = "none";
                 document.querySelector(".chapters-card").style.display = "none";
@@ -1764,6 +1917,124 @@
             } finally {
                 btn.disabled = false;
             }
+        }
+
+        /* ── Contribution Rating (Codeforces-style) ── */
+
+        async function renderRating() {
+            let data;
+            try {
+                data = await fetchJSON(`/api/user/${username}/rating`);
+            } catch (e) {
+                return;
+            }
+            const points = data.points || [];
+            const cur = data.current || {};
+
+            const curEl = document.getElementById("rating-current");
+            const rankEl = document.getElementById("rating-rank");
+            if (curEl) curEl.textContent = cur.score != null ? cur.score.toLocaleString(lang === "ru" ? "ru-RU" : "en-US") : "—";
+            if (rankEl) {
+                rankEl.textContent = cur.rank != null
+                    ? "#" + cur.rank + (cur.total != null ? "/" + cur.total : "")
+                    : "—";
+            }
+
+            const wrap = document.getElementById("rating-chart-wrap");
+            const empty = document.getElementById("rating-empty");
+            if (points.length < 2) {
+                if (wrap) wrap.style.display = "none";
+                if (empty) empty.style.display = "block";
+                return;
+            }
+
+            const labels = points.map((p) => p.date);
+
+            // Linear axis from 0 up to the user's current rating.
+            const scored = points.map((p) => p.score).filter((v) => v > 0);
+            const rawMax = scored.length ? Math.max(...scored) : 1;
+            const current = Math.round(cur.score != null ? cur.score : rawMax);
+            const yMin = 0;
+            const yMax = Math.max(1, current);
+            const values = points.map((p) => p.score);
+            const ctx = document.getElementById("rating-chart");
+            if (ratingChart) ratingChart.destroy();
+            ratingChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: "#1a1a2e",
+                        backgroundColor: "rgba(26, 26, 46, 0.08)",
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                        pointHoverBackgroundColor: "#1a1a2e",
+                        tension: 0.15,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => {
+                                    const iso = items[0].label;
+                                    const d = new Date(iso + "T00:00:00");
+                                    return d.toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", {
+                                        day: "numeric", month: "short", year: "numeric",
+                                    });
+                                },
+                                label: (item) => {
+                                    const p = points[item.dataIndex] || {};
+                                    const ratingWord = lang === "ru" ? "Рейтинг" : "Rating";
+                                    const solWord = lang === "ru" ? "решений" : "solutions";
+                                    const score = (p.score != null ? p.score : 0).toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                                    return `${ratingWord}: ${score} (${p.solutions} ${solWord})`;
+                                },
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: "#6c757d",
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 8,
+                                callback: function (val, index) {
+                                    const iso = labels[index];
+                                    if (!iso) return "";
+                                    const d = new Date(iso + "T00:00:00");
+                                    return d.toLocaleDateString(lang === "ru" ? "ru-RU" : "en-US", {
+                                        month: "short", year: "numeric",
+                                    });
+                                },
+                            },
+                        },
+                        y: {
+                            type: "linear",
+                            min: yMin,
+                            max: yMax,
+                            grid: { color: "#eef0f2" },
+                            ticks: {
+                                color: "#6c757d",
+                                precision: 0,
+                                callback: function (val) {
+                                    return Number(val).toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+                                },
+                            },
+                        },
+                    },
+                },
+            });
         }
 
         /* ── Timeline ── */
@@ -1808,6 +2079,8 @@
             const tbody = document.getElementById("chapter-body");
             tbody.innerHTML = "";
             rows.forEach((row) => {
+                // Only show chapters the user has actually contributed to.
+                if (!row.solved || row.solved <= 0) return;
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td>${row.chapterName}</td>
@@ -1912,8 +2185,24 @@
                 // Group consecutive contributions on the same problem into one window.
                 if (row.problem_name !== currentGroupKey || !currentGroupEl) {
                     if (currentGroupEl) {
-                        const sep = document.createElement("hr");
+                        // Rows arrive newest-first, so prevRowTime is the earliest edit of
+                        // the group above (when a viewer started the newer problem) and
+                        // row.edited_at is the latest edit of the group below (when they
+                        // finished the previous problem). The gap is the pause between them.
+                        const sep = document.createElement("div");
                         sep.className = "contrib-group-sep";
+                        sep.setAttribute("role", "separator");
+                        if (prevRowTime != null) {
+                            const gapMs = prevRowTime - new Date(row.edited_at).getTime();
+                            const human = fmtGap(gapMs, 60);
+                            const label = lang === "ru"
+                                ? `${human} между задачами`
+                                : `${human} between problems`;
+                            const title = lang === "ru"
+                                ? `${human} между окончанием редактирования предыдущей задачи и началом новой`
+                                : `${human} between finishing the previous problem and starting the new one`;
+                            sep.innerHTML = `<span class="contrib-gap-label" title="${escapeHtml(title)}">${escapeHtml(label)}</span>`;
+                        }
                         list.appendChild(sep);
                     }
                     currentGroupEl = document.createElement("div");
@@ -1948,6 +2237,8 @@
                     </div>
                 `;
                 currentGroupEl.appendChild(wrap);
+
+                prevRowTime = new Date(row.edited_at).getTime();
             });
         }
 
@@ -2045,7 +2336,7 @@
             ]);
             renderHeader(stats);
             renderHeatmap(heatmap);
-            await Promise.all([renderTimeline(), renderRadarAndBreakdown(), loadContributions()]);
+            await Promise.all([renderRating(), renderTimeline(), renderRadarAndBreakdown(), loadContributions()]);
             document.getElementById("show-all-link").addEventListener("click", async (e) => {
                 e.preventDefault();
                 contribPage += 1;
