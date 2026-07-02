@@ -550,14 +550,15 @@
       function tick() {
         const diff = end - new Date();
         if (diff <= 0) { el.innerHTML = isRu ? ' · <strong>Конкурс завершён</strong>' : ' · <strong>Contest ended</strong>'; return; }
-        const days = Math.floor(diff / 86400000);
-        const hours = Math.floor((diff % 86400000) / 3600000);
+        const hours = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
         el.innerHTML = isRu
-          ? (' · осталось <strong>' + days + ' дн ' + hours + ' ч</strong>')
-          : (' · <strong>' + days + 'd ' + hours + 'h</strong> left');
+          ? (' · осталось <strong>' + hours + ' ч ' + mins + ' мин ' + secs + ' с</strong>')
+          : (' · <strong>' + hours + 'h ' + mins + 'm ' + secs + 's</strong> left');
       }
       tick();
-      setInterval(tick, 60000);
+      setInterval(tick, 1000);
     })();
 
     setProgress(<%= contest.totalSolutions %>);

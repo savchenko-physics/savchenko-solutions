@@ -370,8 +370,28 @@
   <a href="<%= navContest.url %>" class="contest-banner" aria-label="<%= navContest.title %>">
     <span class="contest-banner-dot"></span>
     <span class="contest-banner-text"><%= navContest.text %></span>
-    <span class="contest-banner-cta"><%= navContest.cta %><% if (navContest.daysLeft > 0) { %> · <%= navContest.daysLeft %><%= navLang === 'ru' ? ' дн.' : 'd' %><% } %> &rsaquo;</span>
+    <span class="contest-banner-cta"><%= navContest.cta %><% if (navContest.endsAt) { %> · <span id="contestBannerCountdown" data-ends-at="<%= navContest.endsAt %>"></span><% } %> &rsaquo;</span>
   </a>
+  <script>
+    (function() {
+      var el = document.getElementById('contestBannerCountdown');
+      if (!el || !el.dataset.endsAt) return;
+      var end = new Date(el.dataset.endsAt).getTime();
+      var isRu = <%- navLang === 'ru' ? 'true' : 'false' %>;
+      function tick() {
+        var diff = end - Date.now();
+        if (diff <= 0) { el.textContent = isRu ? 'завершён' : 'ended'; return; }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        el.textContent = isRu
+          ? (h + ' ч ' + m + ' мин ' + s + ' с')
+          : (h + 'h ' + m + 'm ' + s + 's');
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
   <style>
     .contest-banner { display:flex; align-items:center; gap:0.6rem; justify-content:center; flex-wrap:wrap;
       background:#1a1a2e; color:#fff; text-decoration:none; padding:0.5rem 1rem; font-size:13.5px; line-height:1.3; border-bottom:1px solid #11111d; }

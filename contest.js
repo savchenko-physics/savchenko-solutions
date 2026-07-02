@@ -41,6 +41,8 @@ const CONTEST = {
     stretchRaffleThreshold: 10,   // min points to enter the stretch raffle
     bronzeThreshold: 15,          // points needed for the bronze (cap) tier
     lowCoverageChapters: ['9', '10', '12', '14'],
+    // Organizer accounts excluded from the standings and activity feed.
+    excludedUserIds: [28, 232], // emixter, astrosander
     title: { ru: 'Июньский конкурс', en: 'June Contest' },
 };
 
@@ -97,6 +99,9 @@ function getActiveContestBanner(lang) {
         slug: CONTEST.slug,
         url: `/challenge/${CONTEST.slug}`,
         daysLeft: daysLeft(),
+        // Exact closing instant (ISO, UTC) so the header banner can run a live
+        // per-second countdown in the viewer's clock.
+        endsAt: new Date(CONTEST_END_INSTANT).toISOString(),
         title: CONTEST.title[l],
         text: l === 'ru'
             ? 'Этот месяц мы соревнуемся. Публикуй новые решения и участвуй в розыгрыше мерча.'
@@ -315,7 +320,7 @@ credited AS (
     FROM cand JOIN new_pl USING (problem_name, language)
     ORDER BY cand.problem_name, cand.language, cand.user_first_at ASC
 )
-SELECT cr.problem_name, cr.language, cr.user_first_at, u.username, u.full_name
+SELECT cr.problem_name, cr.language, cr.user_first_at, cr.user_id, u.username, u.full_name
 FROM credited cr
 JOIN users u ON u.id = cr.user_id
 ORDER BY cr.user_first_at DESC
@@ -343,7 +348,10 @@ async function computeStandings() {
         pool.query(FEED_SQL, [CONTEST.startDate, CONTEST.endDate]),
     ]);
 
-    const leaderboard = standingsRes.rows.map((r, i) => {
+    const excluded = new Set(CONTEST.excludedUserIds || []);
+    const leaderboard = standingsRes.rows
+        .filter(r => !excluded.has(r.user_id))
+        .map((r, i) => {
         const rank = i + 1;
         const points = parseFloat(r.points);
         return {
@@ -360,7 +368,9 @@ async function computeStandings() {
     });
 
     const totalSolutions = leaderboard.reduce((sum, r) => sum + r.solutions, 0);
-    const feed = feedRes.rows.map(r => ({
+    const feed = feedRes.rows
+        .filter(r => !excluded.has(r.user_id))
+        .map(r => ({
         problem: r.problem_name,
         language: r.language,
         at: r.user_first_at,
