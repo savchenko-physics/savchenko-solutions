@@ -1,0 +1,295 @@
+{
+    "title": "Savchenko Solutions",
+    "subtitle": "First solutions\u00A0of\u00A0Savchenko Problems\u00A0in\u00A0Physics",
+    "motto": "The Collaborative Problem Solving",
+    "russianVersion": "Решения на русском",
+    "oppositeLang": "ru",
+    "statementsLink": "en/savchenko_en.pdf",
+    "langLink": "",
+    "problemStatements": "Problem statements",
+    "description": {
+        "team": "different authors",
+        "contribute": "If you would like to join the work, read ",
+        "guide": "how-to-contribute guide",
+        "coreTeam": "Core Team",
+        "acknowledgments": "Acknowledgments and Gratitude",
+        "deepestThanks": "We extend our deepest thanks to the exceptional individuals whose dedication, expertise, and creative energy have propelled this initiative to new heights. Their collective contributions have shaped Savchenko Solutions into an innovative platform poised to transform advanced physics education worldwide.",
+        "topAuthors": "Top Authors",
+        "profile": "User",
+        "contributions": "Contrib.",
+        "contributions2": "Recent changes",
+        "editedBy": "was edited by",
+        "viewChanges": "View changes",
+        "heroTagline": "A global student-led platform to collaborate, share, and review through collective problem-solving.",
+        "introFirst": "For over 30 years, the Savchenko physics problem collection has challenged students across post-Soviet countries—yet no comprehensive solution manual existed, until now. <strong>Savchenko Solutions</strong> is the first global, student-led effort to compile and refine detailed explanations for all 2,023 problems. Surpassing 800 published solutions in multiple languages, our thriving platform welcomes learners worldwide to collaborate, share insights, and publish in rigorous peer review.",
+        "introSecond": "What began as a modest \"archive\" for personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught — embracing a spirit of open collaboration and proving that knowledge shared is knowledge multiplied."
+    },
+    "contents": "Contents",
+    "chapter": "Chapter",
+    "upload": {
+        "upload": "Upload",
+        "title": "Upload Solution",
+        "problemNumber": "Problem Number",
+        "problemNumberHelp": "Enter the problem number in format: chapter.section.problem",
+        "solution": "Solution",
+        "solutionHelp": "Enter your solution here. You can use LaTeX for mathematical formulas.",
+        "attachments": "File Attachments",
+        "attachmentsHelp": "Upload any relevant files (images, code, etc.)",
+        "preview": "Preview",
+        "submit": "Submit Solution",
+        "guidelines": "Upload Guidelines",
+        "guideline1": "Use clear and concise explanations",
+        "guideline2": "Include step-by-step solutions",
+        "guideline3": "Add relevant diagrams or illustrations",
+        "error": "An error occurred while uploading",
+        "method": {
+            "scans": "Upload Scans/Photos of My Notebook",
+            "latex": "Type My Solution in LaTeX"
+        },
+        "steps": {
+            "problem": "Select a Problem",
+            "method": "How would you like to provide your solution?",
+            "userInfo": "Your Information",
+            "preview": "LaTeX Preview",
+            "illustrations": "Add Illustrations (Optional)",
+            "language": "Select Language"
+        },
+        "dragDrop": {
+            "text": "Drag and drop your files here",
+            "selectFiles": "Select files",
+            "formats": "PNG, JPG, PDF, DOC",
+            "maxSize": "Max 50 MB"
+        },
+        "latex": {
+            "placeholder": "Type your LaTeX here...",
+            "syntax": "Use LaTeX syntax (e.g., $E = mc^2$). We'll render it below."
+        },
+        "anonymous": {
+            "fullName": "Your Full Name",
+            "info": "Please provide your full name or login to continue"
+        },
+        "problemExists": "Problem already exists",
+        "problemExistsOtherLang": "Problem exists in",
+        "willBeLinked": "Your solution will be linked",
+        "newProblem": "New problem - ready to submit",
+        "language": {
+            "english": "English",
+            "russian": "Russian"
+        }
+    },
+    "popup": {
+        "title": "Enter the name of the problem",
+        "placeholder": "e.g., 13.1.19",
+        "submit": "Submit",
+        "cancel": "Cancel"
+    },
+    "footer": {
+        "copyright": "© Savchenko Solutions, 2023-2025",
+        "rights": "All rights belong to the authors.",
+        "commercial": "Commercial use of materials - with the written permission of the authors."
+    },
+    "meta": {
+        "keywords": "Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda",
+        "description": "The largest dataset of solutions of Savchenko Problems in Physics - widely used to prepare for olympiads and it is a useful tool to master and sharpen your skills and techniques in comptetitive problem solving. Some of these problems were a source of inspiration for Jaan Kalda's handouts and to some NBPhO problems. You may find problems from old IPhO papers.",
+        "author": "Aliaksandr Melnichenka",
+        "date": "2023-10",
+        "ogDescription": "A website with solutions to physics problems from Savchenko Textbook"
+    },
+    "chapters": {
+        "about": "About",
+        "1": "Kinematics",
+        "2": "Dynamics",
+        "3": "Oscillations and Waves",
+        "4": "Fluid Mechanics",
+        "5": "Molecular Physics",
+        "6": "Electrostatics",
+        "7": "Particles in an electric field",
+        "8": "Electric current",
+        "9": "Constant magnetic field",
+        "10": "Particles in complex fields",
+        "11": "Electromagnetic induction",
+        "12": "Electromagnetic waves",
+        "13": "Optics. Quantum physics",
+        "14": "Special theory of relativity"
+    },
+    "post": {
+        "backLink": "Back",
+        "backLinkTag": "",
+        "edit": "Edit",
+        "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
+        "saveChanges": "Save",
+        "editing": "Editing",
+        "forProblem": "For problem",
+        "upload": "Upload from computer",
+        "fromSolutionFiles": "From solution files",
+        "fromAnotherSolution": "From another solution",
+        "fromURL": "From URL",
+        "symbolPaletteGreek": "Greek",
+        "symbolPaletteArrows": "Arrows",
+        "symbolPaletteOperators": "Operators",
+        "symbolPaletteRelations": "Relations",
+        "symbolPaletteMisc": "Misc",
+        "uploadedImages": "Uploaded images of ",
+        "enterUrlTitle": "Enter URL",
+        "enterUrlPlaceholder": "Enter URL here",
+        "insertUrlButton": "Insert URL",
+        "pixels": "pixels",
+        "loadingSize": "Loading size...",
+        "changesFor": "Changes for"
+    },
+    "menu": {
+        "main": "Main menu",
+        "moveToSidebar": "move to sidebar",
+        "hide": "hide",
+        "navigation": "Navigation",
+        "home": "Home",
+        "profile": "Profile",
+        "logout": "Log out",
+        "createAccount": "Create account",
+        "login": "Log in",
+        "contribute": "Contribute",
+        "learnToEdit": "Learn to edit",
+        "ourTeam": "Our Team",
+        "personalTools": "Personal tools",
+        "search": "Search Savchenko Solutions",
+        "searchButton": "Search",
+        "resultsNotFound": "No results found.",
+        "errorLoadingResults": "Error loading results.",
+        "searchPlaceholder": "Search Savchenko Solutions",
+        "upload":"Upload Solution",
+        "advancedSearch": "Advanced Search"
+    },
+    "auth": {
+        "login": {
+            "title": "Sign in to account",
+            "username": "Username:",
+            "password": "Password:",
+            "submit": "Login",
+            "noAccount": "Don't have an account?",
+            "registerHere": "Register here",
+            "forgotPassword": "Forgot password?"
+        },
+        "register": {
+            "title": "Create a new account",
+            "username": "Username:",
+            "fullName": "Full Name:",
+            "email": "Email:",
+            "password": "Password:",
+            "repeatPassword": "Repeat password:",
+            "submit": "Register",
+            "haveAccount": "Already have an account?",
+            "loginHere": "Login here",
+            "passwordsNoMatch": "Passwords do not match. Please try again."
+        },
+        "forgotPassword": {
+            "title": "Reset Password",
+            "email": "Email address:",
+            "submit": "Send Reset Link",
+            "backToLogin": "Back to login",
+            "success": "Password reset instructions sent",
+            "error": {
+                "emailNotFound": "Email not found",
+                "invalidToken": "Invalid or expired reset link",
+                "generic": "Something went wrong"
+            }
+        },
+        "resetPassword": {
+            "title": "Set New Password",
+            "newPassword": "New password:",
+            "confirmPassword": "Confirm new password:",
+            "submit": "Reset Password",
+            "success": "Password updated successfully",
+            "error": {
+                "passwordsNoMatch": "Passwords do not match",
+                "invalidToken": "Invalid or expired reset link",
+                "generic": "Something went wrong"
+            }
+        }
+    },
+    "profile": {
+        "title": " profile",
+        "welcome": "Hi",
+        "yourContributions": "Your Contributions",
+        "noContributions": "You haven't made any contributions yet.",
+        "editedProblems": "Problems edited:",
+        "lastEdited": "Last edited:",
+        "viewProblem": "View problem",
+        "statistics": "Statistics",
+        "totalEdits": "Total edits:",
+        "joinedDate": "Joined:",
+        "settings": "Settings",
+        "fullName": "Full Name:",
+        "email": "Email:",
+        "username": "Username:",
+        "save": "Save Changes",
+        "changePassword": "Change Password",
+        "currentPassword": "Current Password:",
+        "newPassword": "New Password:",
+        "confirmPassword": "Confirm New Password:",
+        "updatePassword": "Update Password",
+        "viewChanges": "View Changes"
+    },
+    "search": {
+        "title": "Search results",
+        "placeholder": "Enter search term...",
+        "searchButton": "Search",
+        "noResults": "No results found for \"{{searchTerm}}\".",
+        "loading": "Loading...",
+        "error": "An error occurred while fetching results. Please try again.",
+        "lineNumber": "Line",
+        "language": {
+            "en": "English",
+            "ru": "Russian"
+        }
+    },
+    "studyGuide": {
+        "title": "Participate in Savchenko Solutions",
+        "backToMain": "Main page",
+        "eligibility": {
+            "title": "Eligibility Criteria",
+            "content": "Our community welcomes all contributors—no special awards, degrees, or qualifications needed. If you're eager to deepen your understanding of physics or to guide others in their learning journey, you have a place here!"
+        },
+        "howToContribute": {
+            "title": "How to Contribute",
+            "intro": "You can contribute in two simple ways:",
+            "methods": {
+                "edit": {
+                    "title": "Direct Edits on Each Page",
+                    "beforeButton": "Every problem page features an ",
+                    "editButton": "Edit",
+                    "beforeUpload": " button. Use it to clarify explanations, correct errors, or expand on existing solutions. You can also utilize the ",
+                    "uploadButton": "Upload",
+                    "afterButton": " feature to contribute your own work."
+                },
+                "email": {
+                    "title": "Email Your Contributions",
+                    "content": "Prefer a personal touch? Feel free to email your solutions, ideas, or suggestions to aliaksandr@melnichenka.com"
+                }
+            },
+            "valueStatement": "All forms of input—big or small—are invaluable to our collective growth."
+        },
+        "registration": {
+            "title": "Is Registration Required?",
+            "content": "Not at all! You can freely edit and share resources without registering. However, creating an account unlocks extra capabilities:",
+            "benefits": [
+                "Your name will appear among the list of contributors on any solution pages you improve.",
+                "You gain access to more advanced collaboration tools, enabling greater impact on the project."
+            ],
+            "conclusion": "Whether you sign up or not, your insights and ideas are essential to making physics education more accessible for everyone."
+        }
+    },
+    "contributions": {
+        "viewChanges": "View Changes",
+        "backToProfile": "Back to Profile",
+        "changesFor": "Contribution",
+        "problem": "Problem",
+        "editedBy": "Editor",
+        "editedAt": "Time",
+        "added": "Added",
+        "removed": "Removed", 
+        "modified": "Modified",
+        "line": "Line",
+        "linesChanged": "lines changed",
+        "anonymousUser": "Anonymous User"
+    }
+}

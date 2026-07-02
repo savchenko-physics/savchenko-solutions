@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+
+<head>
+   <style>
+      /* Add font-family to body */
+      body {
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, sans-serif;
+         line-height: 1.6;
+      }
+
+      /* Update headings font */
+      h2 {
+         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, sans-serif;
+         font-weight: 600;
+      }
+
+      .container1 {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 2rem;
+      }
+
+      .profile-grid {
+         display: grid;
+         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+         gap: 2rem;
+         margin-top: 2rem;
+      }
+
+      .profile-section {
+         background: #fff;
+         border-radius: 8px;
+         padding: 1.5rem;
+         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+         display: flex;
+         flex-direction: column;
+      }
+
+      .profile-section h2 {
+         color: #2c3e50;
+         margin-top: 1rem;
+         padding-bottom: 0.5rem;
+         border-bottom: 2px solid #eee;
+         font-weight: 600;
+      }
+
+      .contributions-list {
+         list-style: none;
+         padding: 0;
+         padding-right: 10px;
+         max-height: 500px;
+         overflow-y: auto;
+         scrollbar-width: thin;
+         scrollbar-color: #c0c4c9 #eef0f2;
+      }
+
+      .contributions-list::-webkit-scrollbar {
+         width: 8px;
+         margin-left: 10px;
+      }
+
+      .contributions-list::-webkit-scrollbar-track {
+         background: #eef0f2;
+         border-radius: 4px;
+      }
+
+      .contributions-list::-webkit-scrollbar-thumb {
+         background: #c0c4c9;
+         border-radius: 4px;
+      }
+
+      .contributions-list::-webkit-scrollbar-thumb:hover {
+         background: #a8adb3;
+      }
+
+      .contribution-item {
+         background: #f8f9fa;
+         border-radius: 6px;
+         padding: 1rem;
+         margin-bottom: 0.8rem;
+         transition: transform 0.2s;
+         display: flex;
+         flex-direction: column;
+         gap: 0.5rem;
+      }
+
+      .contribution-item:hover {
+         transform: translateY(-2px);
+      }
+
+      .view-button {
+         display: inline-block;
+         padding: 0.5rem 1rem;
+         background: #3366cc;
+         color: white;
+         border-radius: 4px;
+         text-decoration: none;
+         margin-top: 0.5rem;
+         transition: background 0.2s;
+         font-family: inherit;
+         font-weight: 500;
+      }
+
+      .view-button:hover {
+         background: #0056b3;
+      }
+
+      .form-group {
+         margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+         display: block;
+         margin-bottom: 0.5rem;
+         color: #2c3e50;
+         font-weight: 500;
+      }
+
+      .form-group input {
+         width: 100%;
+         padding: 0.8rem 0rem 0.8rem 0.8rem;
+         border: 1px solid #ddd;
+         border-radius: 4px;
+         transition: border-color 0.2s;
+         font-family: inherit;
+         font-size: 1rem;
+      }
+
+      .form-group input:focus {
+         border-color: #3498db;
+         outline: none;
+      }
+
+      .submit-button {
+         background: #3366cc;
+         color: white;
+         padding: 0.8rem 1.5rem;
+         border: none;
+         border-radius: 4px;
+         cursor: pointer;
+         transition: background 0.2s;
+         font-family: inherit;
+         font-weight: 500;
+         margin-top: auto;
+      }
+
+      .submit-button:hover {
+         background: #0056b3;
+      }
+
+      .error,
+      .success {
+         padding: 1rem;
+         border-radius: 4px;
+         margin: 1rem 0;
+         text-align: center;
+      }
+
+      .error {
+         background: #fee2e2;
+         color: #dc2626;
+      }
+
+      .success {
+         background: #dcfce7;
+         color: #16a34a;
+      }
+
+      .vector-header-container {
+         padding: 0px 0px 0px 0px;
+         margin: 0;
+         width: 100%;
+         position: relative;
+         box-sizing: border-box;
+      }
+
+      /* Update footer styles */
+      .footer {
+         background-color: #f8f9fa;
+         padding: 1rem 0;
+         margin-top: 3rem;
+         border-top: 1px solid #dee2e6;
+      }
+
+      .footer .container {
+         max-width: 1200px;
+         margin: 0 auto;
+         padding: 0 2rem;
+         text-align: center;
+      }
+
+      .footer p {
+         margin: 0.5rem 0;
+         color: #6c757d;
+      }
+
+      .footer small {
+         font-size: 0.9rem;
+         line-height: 1.4;
+      }
+
+      .footer strong {
+         color: #2c3e50;
+      }
+
+      .contribution-header {
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+      }
+
+      .contribution-meta {
+         color: #666;
+         font-size: 0.9em;
+      }
+
+      .settings-form, .password-form {
+         display: flex;
+         flex-direction: column;
+         flex: 1;
+      }
+
+      .password-input-wrapper {
+         position: relative;
+         display: flex;
+         align-items: center;
+      }
+
+      .password-toggle {
+         position: absolute;
+         right: 10px;
+         background: none;
+         border: none;
+         cursor: pointer;
+         padding: 0;
+         color: #666;
+      }
+
+      .password-toggle:hover {
+         color: #333;
+      }
+
+      .eye-icon {
+         width: 20px;
+         height: 20px;
+      }
+   </style>
+   <title>
+      <%= __('profile.title') %>
+   </title>
+</head>
+
+<body>
+   <div style="max-width: calc(100vw - 60px);">
+      <%- include('default/header.ejs') %>
+   </div>
+
+   <div class="container1">
+      <h2 style="text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 2rem;">
+         <%= __('profile.welcome') %>, <%= username %>!
+      </h2>
+
+      <% if (error) { %>
+         <p class="error">
+            <%= error %>
+         </p>
+         <% } %>
+            <% if (success) { %>
+               <p class="success">
+                  <%= success %>
+               </p>
+               <% } %>
+
+                  <div class="profile-grid">
+                     <div class="profile-section">
+                        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                           <%= __('profile.yourContributions') %>
+                           <span style="display: flex; align-items: center; font-size: 0.9em; color: #666;">
+                              <img src="/img/contributions.svg" width="18" height="18" style="margin-right: 4px;" alt="Edit icon">
+                              <%= contributions ? contributions.length : 0 %>
+                           </span>
+                        </h2>
+                        <% if (contributions && contributions.length > 0) { %>
+                           <ul class="contributions-list">
+                              <% contributions.forEach(contribution => { %>
+                                 <li>
+                                    <div class="contribution-item">
+                                       <div class="contribution-header">
+                                          <div>
+                                             <strong><%= __('profile.editedProblems') %></strong>
+                                             <a href="/<%= contribution.language %>/<%= contribution.problem_name %>">
+                                                <%= contribution.problem_name %>
+                                             </a>
+                                          </div>
+                                          <span class="language-tag">
+                                             <%= contribution.language.toUpperCase() %>
+                                          </span>
+                                       </div>
+                                       <div class="contribution-meta">
+                                          <%= __('profile.lastEdited') %> 
+                                          <%= new Date(contribution.edited_at).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
+                                             year: 'numeric',
+                                             month: 'long',
+                                             day: 'numeric',
+                                             hour: '2-digit',
+                                             minute: '2-digit'
+                                          }) %>
+                                       </div>
+                                    </div>
+                                 </li>
+                                 <% }); %>
+                           </ul>
+                           <% } else { %>
+                              <p><%= __('profile.noContributions') %></p>
+                              <% } %>
+                     </div>
+
+                     <div class="profile-section">
+                        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                           <%= __('profile.settings') %>
+                           <img src="/img/settings.svg" width="18" height="18" style="margin-left: 4px;" alt="Settings icon">
+                        </h2>
+                        <form action="/profile/update" method="POST" class="settings-form">
+                           <input type="hidden" name="lang" value="<%= lang %>">
+
+                           <div class="form-group">
+                              <label for="fullname">
+                                 <%= __('profile.fullName') %>
+                              </label>
+                              <input type="text" id="fullname" name="fullname" value="<%= fullName %>" required>
+                           </div>
+
+                           <div class="form-group">
+                              <label for="email">
+                                 <%= __('profile.email') %>
+                              </label>
+                              <input type="email" id="email" name="email" value="<%= email %>" required>
+                           </div>
+
+                           <div class="form-group">
+                              <label for="username">
+                                 <%= __('profile.username') %>
+                              </label>
+                              <input type="text" id="username" name="username" value="<%= username %>" readonly>
+                           </div>
+
+                           <button type="submit" class="submit-button">
+                              <%= __('profile.save') %>
+                           </button>
+                        </form>
+                     </div>
+
+                     <div class="profile-section">
+                        <h2 style="display: flex; justify-content: space-between; align-items: center;">
+                           <%= __('profile.changePassword') %>
+                           <img src="/img/lock.svg" width="18" height="18" style="margin-left: 4px;" alt="Password icon">
+                        </h2>
+                        <form action="/profile/password" method="POST" class="password-form">
+                           <input type="hidden" name="lang" value="<%= lang %>">
+
+                           <div class="form-group">
+                              <label for="currentPassword">
+                                 <%= __('profile.currentPassword') %>
+                              </label>
+                              <div class="password-input-wrapper">
+                                 <input type="password" id="currentPassword" name="currentPassword" required oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle" onclick="togglePassword('currentPassword')" style="display: none;">
+                                    <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                 </button>
+                              </div>
+                           </div>
+
+                           <div class="form-group">
+                              <label for="newPassword">
+                                 <%= __('profile.newPassword') %>
+                              </label>
+                              <div class="password-input-wrapper">
+                                 <input type="password" id="newPassword" name="newPassword" required oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle" onclick="togglePassword('newPassword')" style="display: none;">
+                                    <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                 </button>
+                              </div>
+                           </div>
+
+                           <div class="form-group">
+                              <label for="confirmPassword">
+                                 <%= __('profile.confirmPassword') %>
+                              </label>
+                              <div class="password-input-wrapper">
+                                 <input type="password" id="confirmPassword" name="confirmPassword" required oninput="toggleEyeIcon(this)">
+                                 <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')" style="display: none;">
+                                    <img src="/img/eye-open.svg" class="eye-icon eye-open" alt="Show password">
+                                    <img src="/img/eye-closed.svg" class="eye-icon eye-closed" style="display: none;" alt="Hide password">
+                                 </button>
+                              </div>
+                           </div>
+
+                           <button type="submit" class="submit-button">
+                              <%= __('profile.updatePassword') %>
+                           </button>
+                        </form>
+                     </div>
+                  </div>
+   </div>
+
+   <script>
+      document.querySelector('.password-form').addEventListener('submit', function (e) {
+         const newPassword = document.getElementById('newPassword').value;
+         const confirmPassword = document.getElementById('confirmPassword').value;
+
+         if (newPassword !== confirmPassword) {
+            e.preventDefault();
+            alert('<%= __("auth.register.passwordsNoMatch") %>');
+         }
+      });
+
+      function togglePassword(inputId) {
+         const input = document.getElementById(inputId);
+         const button = input.nextElementSibling;
+         const openEye = button.querySelector('.eye-open');
+         const closedEye = button.querySelector('.eye-closed');
+         
+         if (input.type === 'password') {
+            input.type = 'text';
+            openEye.style.display = 'none';
+            closedEye.style.display = 'block';
+         } else {
+            input.type = 'password';
+            openEye.style.display = 'block';
+            closedEye.style.display = 'none';
+         }
+      }
+
+      function toggleEyeIcon(input) {
+         const button = input.nextElementSibling;
+         button.style.display = input.value ? 'block' : 'none';
+         // Always show open eye when toggle button first appears
+         const openEye = button.querySelector('.eye-open');
+         const closedEye = button.querySelector('.eye-closed');
+         openEye.style.display = 'block';
+         closedEye.style.display = 'none';
+      }
+   </script>
+
+   <footer class="footer">
+      <div class="row container">
+         <br />
+         <p>
+            <small>© <strong>Savchenko Solutions</strong>, 2023-2024<br /></small>
+         </p>
+         <p>
+            <small>
+
+               All rights belong to the authors. <br />
+               Commercial use of materials - with the written permission of the authors. <br />
+               aliaksandr@melnichenka.com <br />
+            </small>
+         </p>
+         <br />
+      </div>
+   </footer>
+</body>
+
+</html>

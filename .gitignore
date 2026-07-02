@@ -1,7 +1,6 @@
 posts/
 posts-old/
 node_modules/
-
 .env
 package.json
 package-lock.json
@@ -18,3 +17,4 @@ public/sitemap_recent.xml
 /node_modules
 /posts-old
 /posts
+/src/__pycache__

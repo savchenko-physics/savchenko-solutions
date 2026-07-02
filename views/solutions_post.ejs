@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> | <%= __('title') %></title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="/js/jquery-1.10.1.min.js"></script>
+    
+    <!-- Icon -->
+    <link rel="icon" href="/img/logo.png" type="image/png" />
+    
+    <!-- MathJax -->
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            extensions: ['tex2jax.js'],
+            jax: ['input/TeX', 'output/HTML-CSS'],
+            tex2jax: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                processEscapes: true,
+                processClass: 'tex2jax',
+                ignoreClass: 'html'
+            },
+            'HTML-CSS': {
+                scale: 120
+            },
+            showProcessingMessages: false,
+            messageStyle: 'none'
+        });
+    </script>
+
+    <style>
+        :root {
+            --primary-color: #0969da;
+            --secondary-color: #656d76;
+            --accent-color: #36c;
+            --bg-primary: #ffffff;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f3f6;
+            --border-color: #d1d9e0;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8c959f;
+            --success-color: #1a7f37;
+            --warning-color: #d1242f;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --border-radius: 12px;
+            --border-radius-sm: 8px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Hero header (matches main page style) */
+        .hero-section {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .logo-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+        }
+
+        .site-title {
+            font-size: 1.1rem;
+            line-height: 1.1;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .site-motto {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .hero-section .nav-link {
+            color: var(--text-primary) !important;
+        }
+
+        .searchbar-input {
+            border-radius: 999px;
+            border: 1px solid #ced4da;
+            padding: 0.35rem 2rem 0.35rem 2.4rem;
+            font-size: 0.95rem;
+        }
+
+        .searchbar-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+        }
+
+        .header-upload-btn {
+            background: #ffffff;
+            border: 1px solid #212529;
+            color: #212529;
+            padding: 0.35rem 0.8rem;
+            transition: background 0.2s ease;
+        }
+
+        .header-upload-btn:hover {
+            background: #212529;
+            color: #ffffff;
+        }
+
+        .upload-icon {
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Main Content */
+        .main-container {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+            padding: 0.0rem 0.0rem 1.25rem 0.75rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 0.75rem;
+        }
+
+        .content-section {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .content-header {
+            background: #ffffff;
+            color: var(--text-primary);
+            padding: 0.65rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: nowrap;
+        }
+
+        .content-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+            font-family: 'Computer Modern', serif;
+            flex: 1 1 auto;
+            min-width: 0;
+            line-height: 1.2;
+        }
+
+        .content-nav {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.45rem;
+            margin: 0;
+            flex: 0 0 auto;
+            flex-wrap: nowrap;
+        }
+
+        .nav-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.35rem 0.65rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .content-body {
+            padding: 1rem 1.25rem;
+            font-size: 1.25rem;
+            line-height: 1.55;
+            max-width: 1100px;
+            margin: 0 auto;
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+            text-align: justify;
+            text-justify: inter-word;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            overflow-wrap: break-word;
+        }
+
+        .content-body p {
+            margin-bottom: 0.55rem;
+            text-indent: 0.9em;
+        }
+
+        .content-body p:first-of-type,
+        .content-body h1 + p,
+        .content-body h2 + p,
+        .content-body h3 + p,
+        .content-body h4 + p {
+            text-indent: 0;
+        }
+
+        .content-body h1,
+        .content-body h2,
+        .content-body h3,
+        .content-body h4 {
+            font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+            
+            line-height: 1.25;
+            margin-top: 1rem;
+            margin-bottom: 0.45rem;
+        }
+
+        .content-body img {
+            margin: 0.25rem 0;
+            padding: 0;
+            max-width: 100%;
+            height: auto;
+            vertical-align: middle;
+        }
+
+        .content-body figure {
+            margin: 0.35rem 0;
+            padding: 0;
+        }
+
+        .content-body figcaption {
+            margin-top: 0.2rem;
+            margin-bottom: 0;
+        }
+
+        /* Views Button */
+        .views-button {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .views-button:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Views Chart Modal */
+        .views-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .views-modal-content {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .views-chart {
+            width: 100%;
+            height: 300px;
+            margin-top: 1rem;
+        }
+
+        /* Mobile Burger Menu */
+        .burger-menu {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .burger-line {
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-primary);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            transition: left 0.3s ease;
+            padding: 1rem;
+        }
+
+        .mobile-nav.active {
+            left: 0;
+        }
+
+        .mobile-nav-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+        }
+
+        /* Report Button */
+        .report-btn {
+            background: var(--warning-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-btn:hover {
+            background: #b91c26;
+        }
+
+        /* Social Actions */
+        .social-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .action-group {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+        }
+
+        .action-btn.active {
+            color: var(--primary-color);
+            background: rgba(9, 105, 218, 0.1);
+        }
+
+        .action-btn.like-active {
+            color: var(--success-color);
+        }
+
+        .action-btn.dislike-active {
+            color: var(--warning-color);
+        }
+
+        .action-btn.star-active {
+            color: #f39c12;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-right: 0;
+            padding-right: 0;
+        }
+
+        .sidebar-card {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 1.0rem;
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+            color: var(--text-primary);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* Comments Section */
+        .comments-section {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            margin-top: 0.0rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            max-height: 520px;
+        }
+
+        #commentsList {
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        .comments-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+        }
+
+        .comment-form {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comment-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .comment-input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .comment-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .comment-meta {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .comment-content {
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .comments-section .comment-item.text-muted.text-center {
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .header-container {
+                padding: 0 1rem;
+            }
+
+            .search-section {
+                display: none;
+            }
+
+            .burger-menu {
+                display: flex;
+            }
+
+            .user-section {
+                gap: 0.5rem;
+            }
+
+            .content-header {
+                padding: 0.5rem 0.65rem;
+                flex-wrap: nowrap;
+                gap: 0.5rem;
+            }
+
+            .content-title {
+                font-size: 1rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .content-nav {
+                gap: 0.3rem;
+            }
+
+            .nav-btn {
+                padding: 0.28rem 0.45rem;
+                font-size: 0.72rem;
+            }
+
+            .nav-btn .me-2 {
+                margin-right: 0.2rem !important;
+            }
+
+            .content-body {
+                padding: 1.5rem 1rem;
+                font-size: 1rem;
+            }
+
+            .social-actions {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .action-group {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Search results dropdown */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            box-shadow: var(--shadow-lg);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--bg-secondary);
+            cursor: pointer;
+            transition: background 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .search-result-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .search-result-snippet {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="hero-section">
+        <nav class="navbar navbar-expand-lg navbar-light">
+            <div class="container-fluid px-3 px-md-4 align-items-center">
+                <a class="navbar-brand d-flex align-items-center" href="/<%= lang %>/">
+                    <img src="/img/book.png" alt="Savchenko Solutions Logo" class="logo-img me-2">
+                    <div>
+                        <h1 class="site-title mb-0">Savchenko Solutions</h1>
+                        <p class="site-motto mb-0">The Collaborative Problem Solving</p>
+                    </div>
+                </a>
+
+                <div class="flex-grow-1 d-none d-md-flex justify-content-center px-3">
+                    <div class="searchbar-wrapper position-relative w-100" style="max-width: 420px;">
+                        <svg class="search-icon position-absolute" viewBox="0 0 24 24" width="20" height="20" style="left: 15px; top: 50%; transform: translateY(-50%); z-index: 1;">
+                            <path fill="#6c757d" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                        </svg>
+                        <input type="text" id="headerSearch" class="form-control searchbar-input" placeholder="<%= __('menu.search') %>">
+                        <div id="searchResults" class="search-results position-absolute bg-white border rounded shadow-sm" style="display: none; z-index: 1000; width: 100%;"></div>
+                    </div>
+                </div>
+
+                <button class="navbar-toggler d-flex align-items-center gap-2 border-0 pe-0 d-lg-none ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
+                    <% if (username) { %>
+                        <a href="/user/<%= username %>" class="nav-link text-white fw-bold">
+                            <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="36" height="36">
+                        </a>
+                    <% } %>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item px-2 d-none d-md-block">
+                            <button class="views-button" id="viewsButton">
+                                <i class="fas fa-eye"></i>
+                                <span id="viewCount">-</span>
+                            </button>
+                        </li>
+                        <li class="nav-item px-2 d-none d-md-block">
+                            <a href="/<%= lang %>/upload" class="header-upload-btn text-decoration-none d-inline-flex align-items-center btn btn-sm rounded-pill">
+                                <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path>
+                                </svg>
+                                <span class="ms-2">Upload</span>
+                            </a>
+                        </li>
+                        <li class="nav-item px-2">
+                            <a href="<%= lang === 'en' ? '/ru' : '/en' %>" class="nav-link text-white fw-bold"><%= lang.toUpperCase() %></a>
+                        </li>
+                        <li class="nav-item px-2">
+                            <% if (username) { %>
+                                <a href="/user/<%= username %>" class="d-flex align-items-center">
+                                    <img src="<%= profilePicture || '/img/profile_images/Default_placeholder.svg' %>" alt="Profile Picture" class="rounded-circle" width="40" height="40">
+                                </a>
+                            <% } else { %>
+                                <a href="/<%= lang %>/login" class="nav-link text-white fw-bold">Login</a>
+                            <% } %>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <div class="container hero-content"></div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
+    <nav class="mobile-nav" id="mobileNav">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Menu</h5>
+            <button class="btn-close" id="closeMobileNav"></button>
+        </div>
+        <div class="mb-3">
+            <input type="text" class="form-control" placeholder="<%= __('menu.search') %>" id="mobileSearch">
+        </div>
+        <ul class="list-unstyled">
+            <li><a href="/<%= lang %>/" class="d-block py-2"><i class="fas fa-home me-2"></i>Home</a></li>
+            <li><a href="/<%= lang %>/<%= name %>" class="d-block py-2"><i class="fas fa-eye me-2"></i>View</a></li>
+            <li><a href="/<%= lang %>/edit/<%= name %>" class="d-block py-2"><i class="fas fa-edit me-2"></i>Edit</a></li>
+            <li><a href="/<%= lang %>/contributions/<%= name %>" class="d-block py-2"><i class="fas fa-history me-2"></i>History</a></li>
+            <% if (username) { %>
+                <li><a href="/user/<%= username %>" class="d-block py-2"><i class="fas fa-user me-2"></i>Profile</a></li>
+                <li><a href="/<%= lang %>/settings" class="d-block py-2"><i class="fas fa-cog me-2"></i>Settings</a></li>
+            <% } else { %>
+                <li><a href="/<%= lang %>/login" class="d-block py-2"><i class="fas fa-sign-in-alt me-2"></i>Login</a></li>
+            <% } %>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Content Section -->
+        <div class="content-section">
+            <!-- Content Header -->
+            <div class="content-header">
+                <h1 class="content-title">$<%= name %>.$</h1>
+                <div class="content-nav">
+                    <a href="/<%= lang %>/<%= name %>" class="nav-btn">
+                        <i class="fas fa-eye me-2"></i>View
+                    </a>
+                    <a href="/<%= lang %>/edit/<%= name %>" class="nav-btn">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                    <a href="/<%= lang %>/contributions/<%= name %>" class="nav-btn">
+                        <i class="fas fa-history me-2"></i>History
+                    </a>
+                </div>
+            </div>
+
+            <!-- Content Body -->
+            <div class="content-body">
+                <%- content %>
+            </div>
+
+            <!-- Social Actions -->
+            <div class="social-actions">
+                <div class="action-group">
+                    <button class="action-btn" id="likeBtn" data-problem="<%= name %>" data-lang="<%= lang %>">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span id="likeCount">0</span>
+                    </button>
+                    <button class="action-btn" id="dislikeBtn" data-problem="<%= name %>" data-lang="<%= lang %>">
+                        <i class="fas fa-thumbs-down"></i>
+                        <span id="dislikeCount">0</span>
+                    </button>
+                    <button class="action-btn" id="starBtn" data-problem="<%= name %>" data-lang="<%= lang %>">
+                        <i class="fas fa-star"></i>
+                        <span id="starCount">0</span>
+                    </button>
+                    <button class="action-btn" id="commentToggle">
+                        <i class="fas fa-comment"></i>
+                        <span id="commentCount">0</span>
+                    </button>
+                </div>
+                <div class="action-group">
+                    <button class="action-btn" onclick="navigator.share ? navigator.share({title: '<%= title %>', url: window.location.href}) : copyToClipboard(window.location.href)">
+                        <i class="fas fa-share"></i>
+                        Share
+                    </button>
+                    <button class="report-btn" id="reportBtn">
+                        <i class="fas fa-flag"></i>
+                        Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Solution Stats -->
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">Solution Stats</h3>
+                <div class="stat-item">
+                    <span class="stat-label">Views</span>
+                    <span class="stat-value" id="sidebarViews">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Likes</span>
+                    <span class="stat-value" id="sidebarLikes">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Comments</span>
+                    <span class="stat-value" id="sidebarComments">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Stars</span>
+                    <span class="stat-value" id="sidebarStars">0</span>
+                </div>
+            </div>
+
+            <!-- Contributors -->
+            <div class="sidebar-card" id="contributorsCard">
+                <h3 class="sidebar-title">Contributors</h3>
+                <div id="contributorsList">
+                    <div class="text-muted">Loading...</div>
+                </div>
+            </div>
+
+            <!-- Related Problems -->
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">Related Problems</h3>
+                <div id="relatedProblems">
+                    <div class="text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section" id="commentsSection" style="display: block;">
+        <div class="comments-header">
+            <h3><i class="fas fa-comments me-2"></i>Discussion</h3>
+        </div>
+        
+        <% if (username) { %>
+        <div class="comment-form">
+            <textarea class="comment-input" id="commentText" placeholder="Share your thoughts about this solution..."></textarea>
+            <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-primary" id="submitComment">
+                    <i class="fas fa-paper-plane me-2"></i>Post Comment
+                </button>
+            </div>
+        </div>
+        <% } else { %>
+        <div class="comment-form text-center">
+            <p class="text-muted">
+                <a href="/<%= lang %>/login">Login</a> to join the discussion
+            </p>
+        </div>
+        <% } %>
+        
+        <div id="commentsList">
+            <!-- Comments will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Views Chart Modal -->
+    <div class="views-modal" id="viewsModal">
+        <div class="views-modal-content">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Views Over Last 14 Days</h4>
+                <button class="btn-close" id="closeViewsModal"></button>
+            </div>
+            <canvas id="viewsChart" class="views-chart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const problemName = '<%- name %>';
+        const language = '<%- lang %>';
+        const isLoggedIn = Boolean(<%- username ? 1 : 0 %>);
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSolutionStats();
+            await loadContributors();
+            await loadComments();
+            await loadRelatedProblems();
+            initializeSearch();
+            initializeMobileMenu();
+            initializeViewsChart();
+            initializeReportButton();
+        });
+
+        // Load solution statistics
+        async function loadSolutionStats() {
+            try {
+                const response = await fetch(`/api/solutions/${problemName}/${language}/stats`);
+                const stats = await response.json();
+                
+                document.getElementById('likeCount').textContent = stats.likes;
+                document.getElementById('dislikeCount').textContent = stats.dislikes;
+                document.getElementById('starCount').textContent = stats.stars;
+                document.getElementById('commentCount').textContent = stats.comments;
+                
+                document.getElementById('sidebarLikes').textContent = stats.likes;
+                document.getElementById('sidebarComments').textContent = stats.comments;
+                document.getElementById('sidebarStars').textContent = stats.stars;
+
+                // Load total views
+                const viewsResponse = await fetch(`/api/page-views/${problemName}`);
+                const viewsData = await viewsResponse.json();
+                const totalViews = viewsData.reduce((sum, day) => sum + parseInt(day.views), 0);
+                
+                document.getElementById('viewCount').textContent = totalViews;
+                document.getElementById('sidebarViews').textContent = totalViews;
+
+                if (stats.userInteraction) {
+                    if (stats.userInteraction.liked === true) {
+                        document.getElementById('likeBtn').classList.add('active', 'like-active');
+                    } else if (stats.userInteraction.liked === false) {
+                        document.getElementById('dislikeBtn').classList.add('active', 'dislike-active');
+                    }
+                    
+                    if (stats.userInteraction.starred) {
+                        document.getElementById('starBtn').classList.add('active', 'star-active');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load contributors
+        async function loadContributors() {
+            try {
+                const response = await fetch(`/api/contributors/${problemName}?lang=${language}`);
+                const contributors = await response.json();
+                
+                const contributorsList = document.getElementById('contributorsList');
+                if (contributors.length > 0) {
+                    contributorsList.innerHTML = contributors.map(contributor => `
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="${contributor.profile_picture}" alt="${contributor.username}" 
+                                 class="comment-avatar me-2">
+                            <div>
+                                <a href="/user/${contributor.username}" class="text-decoration-none">
+                                    ${contributor.name}
+                                </a>
+                                <div class="text-muted small">${contributor.contributions} contributions</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    contributorsList.innerHTML = '<div class="text-muted">No contributors yet</div>';
+                }
+            } catch (error) {
+                console.error('Error loading contributors:', error);
+            }
+        }
+
+        // Social actions
+        document.getElementById('likeBtn').addEventListener('click', () => handleLike(true));
+        document.getElementById('dislikeBtn').addEventListener('click', () => handleLike(false));
+        document.getElementById('starBtn').addEventListener('click', handleStar);
+        document.getElementById('commentToggle').addEventListener('click', toggleComments);
+
+        async function handleLike(isLike) {
+            if (!isLoggedIn) {
+                window.location.href = `/${language}/login`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/solutions/${problemName}/${language}/like`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isLike })
+                });
+                
+                if (response.ok) {
+                    await loadSolutionStats();
+                }
+            } catch (error) {
+                console.error('Error handling like:', error);
+            }
+        }
+
+        async function handleStar() {
+            if (!isLoggedIn) {
+                window.location.href = `/${language}/login`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/solutions/${problemName}/${language}/star`, {
+                    method: 'POST'
+                });
+                
+                if (response.ok) {
+                    await loadSolutionStats();
+                }
+            } catch (error) {
+                console.error('Error handling star:', error);
+            }
+        }
+
+        function toggleComments() {
+            const commentsSection = document.getElementById('commentsSection');
+            commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Comments functionality
+        async function loadComments() {
+            try {
+                const response = await fetch(`/api/solutions/${problemName}/${language}/comments`);
+                const data = await response.json();
+                
+                const commentsList = document.getElementById('commentsList');
+                if (data.comments.length > 0) {
+                    commentsList.innerHTML = data.comments.map(comment => `
+                        <div class="comment-item">
+                            <div class="comment-author">
+                                <img src="${comment.author.profilePicture}" alt="${comment.author.username}" 
+                                     class="comment-avatar">
+                                <div>
+                                    <strong>${comment.author.fullName || comment.author.username}</strong>
+                                    <div class="comment-meta">
+                                        ${new Date(comment.createdAt).toLocaleDateString()}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-content">${comment.content}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    commentsList.innerHTML = '<div class="comment-item text-muted text-center">No comments yet. Be the first to share your thoughts!</div>';
+                }
+            } catch (error) {
+                console.error('Error loading comments:', error);
+            }
+        }
+
+        // Submit comment
+        if (isLoggedIn) {
+            document.getElementById('submitComment').addEventListener('click', async () => {
+                const content = document.getElementById('commentText').value.trim();
+                if (!content) return;
+
+                try {
+                    const response = await fetch(`/api/solutions/${problemName}/${language}/comments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content })
+                    });
+                    
+                    if (response.ok) {
+                        document.getElementById('commentText').value = '';
+                        await loadComments();
+                        await loadSolutionStats();
+                    }
+                } catch (error) {
+                    console.error('Error submitting comment:', error);
+                }
+            });
+        }
+
+        // Search functionality
+        function initializeSearch() {
+            const searchInput = document.getElementById('headerSearch');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+                
+                if (query.length === 0) {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.results.length > 0) {
+                        searchResults.innerHTML = data.results.slice(0, 5).map(result => `
+                            <div class="search-result-item" onclick="location.href='${result.relativePath}'">
+                                <div class="search-result-title">${result.name}</div>
+                                <div class="search-result-snippet">${result.snippet}</div>
+                            </div>
+                        `).join('');
+                        searchResults.style.display = 'block';
+                    } else {
+                        searchResults.innerHTML = '<div class="search-result-item">No results found</div>';
+                        searchResults.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                }
+            });
+
+            // Hide search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.style.display = 'none';
+                }
+            });
+        }
+
+        // Copy to clipboard fallback
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
+        // Mobile menu functionality
+        function initializeMobileMenu() {
+            const burgerMenu = document.getElementById('burgerMenu');
+            const mobileNav = document.getElementById('mobileNav');
+            const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+            const closeMobileNav = document.getElementById('closeMobileNav');
+            if (!burgerMenu || !mobileNav || !mobileNavOverlay || !closeMobileNav) {
+                return;
+            }
+
+            burgerMenu.addEventListener('click', () => {
+                mobileNav.classList.add('active');
+                mobileNavOverlay.style.display = 'block';
+            });
+
+            function closeMobileNavigation() {
+                mobileNav.classList.remove('active');
+                mobileNavOverlay.style.display = 'none';
+            }
+
+            closeMobileNav.addEventListener('click', closeMobileNavigation);
+            mobileNavOverlay.addEventListener('click', closeMobileNavigation);
+        }
+
+        // Views chart functionality
+        function initializeViewsChart() {
+            const viewsButton = document.getElementById('viewsButton');
+            const viewsModal = document.getElementById('viewsModal');
+            const closeViewsModal = document.getElementById('closeViewsModal');
+
+            viewsButton.addEventListener('click', async () => {
+                viewsModal.style.display = 'flex';
+                await loadViewsChart();
+            });
+
+            closeViewsModal.addEventListener('click', () => {
+                viewsModal.style.display = 'none';
+            });
+
+            viewsModal.addEventListener('click', (e) => {
+                if (e.target === viewsModal) {
+                    viewsModal.style.display = 'none';
+                }
+            });
+        }
+
+        async function loadViewsChart() {
+            try {
+                const response = await fetch(`/api/page-views/${problemName}`);
+                const data = await response.json();
+                
+                const ctx = document.getElementById('viewsChart').getContext('2d');
+                
+                // Get last 14 days of data
+                const last14Days = [];
+                const today = new Date();
+                for (let i = 13; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(date.getDate() - i);
+                    last14Days.push(date.toISOString().split('T')[0]);
+                }
+
+                const chartData = last14Days.map(date => {
+                    const dayData = data.find(d => d.date === date);
+                    return dayData ? parseInt(dayData.views) : 0;
+                });
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: last14Days.map(date => new Date(date).toLocaleDateString()),
+                        datasets: [{
+                            label: 'Views',
+                            data: chartData,
+                            borderColor: 'rgb(9, 105, 218)',
+                            backgroundColor: 'rgba(9, 105, 218, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading views chart:', error);
+            }
+        }
+
+        // Load related problems
+        async function loadRelatedProblems() {
+            try {
+                const response = await fetch(`/api/related-problems/${problemName}?lang=${language}`);
+                const relatedProblems = await response.json();
+                
+                const relatedContainer = document.getElementById('relatedProblems');
+                if (relatedProblems.length > 0) {
+                    relatedContainer.innerHTML = relatedProblems.map(problem => `
+                        <div class="mb-2">
+                            <a href="/${language}/${problem.name}" class="text-decoration-none">
+                                <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                    <span>${problem.name}</span>
+                                    <small class="text-muted">${problem.similarity}%</small>
+                                </div>
+                            </a>
+                        </div>
+                    `).join('');
+                } else {
+                    relatedContainer.innerHTML = '<div class="text-muted">No related problems found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading related problems:', error);
+                document.getElementById('relatedProblems').innerHTML = '<div class="text-muted">Failed to load</div>';
+            }
+        }
+
+        // Report functionality
+        function initializeReportButton() {
+            const reportBtn = document.getElementById('reportBtn');
+            
+            reportBtn.addEventListener('click', async () => {
+                const reason = prompt('Please provide a reason for reporting this solution:');
+                if (reason && reason.trim()) {
+                    try {
+                        const response = await fetch(`/api/report-solution`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                problemName,
+                                language,
+                                reason: reason.trim()
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            alert('Report submitted successfully. Thank you for helping us improve the platform.');
+                        } else {
+                            alert('Failed to submit report. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error submitting report:', error);
+                        alert('Failed to submit report. Please try again.');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,447 @@
+<link rel="stylesheet" href="/css/css-latex/header.css" />
+
+<style>
+    input,
+    button,
+    textarea,
+    select {
+        font: initial;
+    }
+
+    nav li:before {
+        content: none;
+        /* Disable content */
+        counter-increment: none;
+        /* Reset counter */
+        padding-right: 0;
+        /* Reset padding */
+    }
+
+    .vector-header-container {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        padding-left: 10vw;
+        padding-right: 10vw;
+    }
+
+    @media (max-width: 1927px) {
+        .vector-header-container {
+            padding-left: calc(50vw - 600px);
+            padding-right: calc(50vw - 600px);
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .vector-header-container {
+            padding-left: 20px;
+        }
+    }
+
+
+    #vector-user-links-dropdown {
+        display: none;
+    }
+
+    .mw-logo-wordmark {
+        width: 12em;
+        height: 1.225em;
+    }
+
+    @media all and (max-width: 640px) {
+
+        .mw-logo-icon,
+        .mw-logo-tagline {
+            display: none;
+        }
+
+        .mw-logo-wordmark {
+            height: 1.25em;
+        }
+    }
+
+    .mw-logo-container {
+        max-width: none;
+    }
+
+    .mw-logo-container img {
+        width: auto;
+    }
+</style>
+<a class="mw-jump-link" href="#bodyContent">Jump to content</a>
+<div class="vector-header-container">
+    <header class="vector-header mw-header">
+        <div class="vector-header-start">
+            <nav class="vector-main-menu-landmark" aria-label="Site">
+                <div id="vector-main-menu-dropdown"
+                    class="vector-dropdown vector-main-menu-dropdown vector-button-flush-left vector-button-flush-right">
+                    <input type="checkbox" id="vector-main-menu-dropdown-checkbox" role="button" aria-haspopup="true"
+                        data-event-name="ui.dropdown-vector-main-menu-dropdown" class="vector-dropdown-checkbox"
+                        aria-label="<%= __('menu.main') %>" />
+                    <label id="vector-main-menu-dropdown-label" for="vector-main-menu-dropdown-checkbox"
+                        class="vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only"
+                        aria-hidden="true">
+                        <span class="vector-icon mw-ui-icon-menu mw-ui-icon-wikimedia-menu"></span>
+
+                        <span class="vector-dropdown-label-text"><%= __('menu.main') %></span>
+                    </label>
+                    <div class="vector-dropdown-content">
+                        <div id="vector-main-menu-unpinned-container" class="vector-unpinned-container">
+                            <div id="vector-main-menu" class="vector-main-menu vector-pinnable-element">
+                                <!-- Main Menu Header -->
+                                <div class="vector-pinnable-header" data-feature-name="main-menu-pinned">
+                                    <div class="vector-pinnable-header-label"><%= __('menu.main') %></div>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="pin"><%= __('menu.moveToSidebar') %></button>
+                                    <button class="vector-pinnable-header-toggle-button" data-event-name="unpin"><%= __('menu.hide') %></button>
+                                </div>
+
+                                <!-- Navigation Section -->
+                                <div id="p-navigation" class="vector-menu mw-portlet">
+                                    <div class="vector-menu-heading"><%= __('menu.navigation') %></div>
+                                    <ul class="vector-menu-content-list">
+                                        <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
+                                            <a href="<%= __('langLink') %>/">
+                                                <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-Home"></span>
+                                                <span><%= __('menu.home') %></span>
+                                            </a>
+                                        </li>
+
+                                        <% if (username) { %>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/profile">
+                                                    <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                    <span><%= __('menu.profile') %></span>
+                                                </a>
+                                            </li>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="/logout">
+                                                    <span class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                    <span><%= __('menu.logout') %></span>
+                                                </a>
+                                            </li>
+                                        <% } else { %>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/register">
+                                                    <span class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                                    <span><%= __('menu.createAccount') %></span>
+                                                </a>
+                                            </li>
+                                            <li class="user-links-collapsible-item mw-list-item">
+                                                <a href="<%= __('langLink') %>/login">
+                                                    <span class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                                    <span><%= __('menu.login') %></span>
+                                                </a>
+                                            </li>
+                                        <% } %>
+                                    </ul>
+                                </div>
+
+                                <!-- Contribute Section -->
+                                <div id="p-interaction" class="vector-menu mw-portlet">
+                                    <div class="vector-menu-heading"><%= __('menu.contribute') %></div>
+                                    <ul class="vector-menu-content-list">
+                                        <li><a href="<%= __('langLink') %>/study-guide"><%= __('menu.learnToEdit') %></a></li>
+                                        <li><a href="<%= __('langLink') %>/about#team"><%= __('menu.ourTeam') %></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <a href="<%= __('langLink') %>/" class="mw-logo">
+                <img class="mw-logo-icon" src="https://savchenkosolutions.com/img/book.png" alt="" aria-hidden="true"
+                    height="50" width="50" />
+                <span class="mw-logo-container skin-invert">
+                    <img class="mw-logo-wordmark" alt="<%= __('title') %>" src="/img/savchenko-wordmark-<%= lang %>.svg" />
+                    <img class="mw-logo-tagline" alt="<%= __('subtitle') %>" src="/img/savchenko-tagline-<%= lang %>.svg" width="230" height="17"
+                        style="width: 11em; height: 0.8125em; margin-top: 5px;" />
+                </span>
+            </a>
+        </div>
+        <div class="vector-header-end">
+            <div id="p-search" role="search"
+                class="vector-search-box-vue vector-search-box-collapses vector-search-box-show-thumbnail vector-search-box-auto-expand-width vector-search-box">
+                <a href="/global-search"
+                    class="cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only search-toggle"
+                    title="<%= __('menu.search') %>" accesskey="f">
+                    <span class="vector-icon mw-ui-icon-search mw-ui-icon-wikimedia-search"></span>
+
+                    <span><%= __('menu.search') %></span>
+                </a>
+                <div class="vector-typeahead-search-container">
+                    <div
+                        class="cdx-typeahead-search cdx-typeahead-search--show-thumbnail cdx-typeahead-search--auto-expand-width">
+                        <form action="/global-search" id="searchform"
+                            class="cdx-search-input cdx-search-input--has-end-button" data-gtm-form-interact-id="0">
+                            <div id="simpleSearch" class="cdx-search-input__input-wrapper"
+                                data-search-loc="header-moved">
+                                <div class="cdx-text-input cdx-text-input--has-start-icon">
+                                    <input class="cdx-text-input__input" type="search" name="search"
+                                        placeholder="<%= __('menu.search') %>" aria-label="<%= __('menu.search') %>"
+                                        autocapitalize="sentences" title="<%= __('menu.search') %> [alt-shift-f]"
+                                        accesskey="f" id="searchInput" autocomplete="off"
+                                        data-gtm-form-interact-field-id="0">
+                                    <span class="cdx-text-input__icon cdx-text-input__start-icon"></span>
+                                </div>
+                                <input type="hidden" name="title" value="Special:Search">
+                            </div>
+                            <button class="cdx-button cdx-search-input__end-button"><%= __('menu.searchButton') %></button>
+                        </form>
+                    </div>
+                </div>
+                <div class="cdx-menu cdx-menu--has-footer cdx-typeahead-search__menu" id="searchResults"
+                    style="display: none;">
+                    <ul class="cdx-menu__listbox" role="listbox" id="cdx-typeahead-search-menu-0"
+                        aria-label="Search results"></ul>
+                </div>
+
+                <style>
+                    /* Dropdown results container */
+                    .cdx-menu {
+                        position: absolute;
+                        /* top: 100%; */
+                        /* left: calc(50vw - 300px); */
+                        width: calc(min(100vw, 435.98px));
+                        /* Matches the container's width */
+                        max-width: none;
+                        /* Removes any max-width limitations */
+                        background: #fff;
+                        border: 1px solid #ccc;
+                        /* border-radius: 5px; */
+                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                        z-index: 1000;
+                    }
+
+                    .cdx-menu__listbox {
+                        list-style: none;
+                        padding: 0;
+                        margin: 0;
+                    }
+
+                    .cdx-menu-item {
+                        display: flex;
+                        align-items: center;
+                        padding: 10px;
+                        cursor: pointer;
+                    }
+
+                    .cdx-menu-item:hover {
+                        background-color: #f0f0f0;
+                    }
+
+                    .cdx-menu-item__content {
+                        display: flex;
+                        align-items: center;
+                        text-decoration: none;
+                        color: inherit;
+                    }
+
+                    .cdx-menu-item__text {
+                        margin-left: 10px;
+                    }
+
+                    .cdx-search-result-title bdi {
+                        font-weight: bold;
+                    }
+
+                    .cdx-menu-item__text__description bdi {
+                        font-size: 0.9em;
+                        color: #555;
+                    }
+
+                    .cdx-thumbnail {
+                        width: 60px;
+                        height: 60px;
+                        background-size: cover;
+                        background-position: center;
+                    }
+
+                    .cdx-menu-item--no-thumbnail .cdx-thumbnail {
+                        display: none;
+                    }
+                </style>
+
+
+                <script>
+                    const searchInput = document.getElementById("searchInput");
+                    const searchResults = document.getElementById("searchResults");
+                    const searchResultsList = document.querySelector("#searchResults ul");
+
+                    searchInput.addEventListener("input", async () => {
+                        const query = searchInput.value.trim();
+
+                        if (query.length === 0) {
+                            searchResults.style.display = "none";
+                            searchResultsList.innerHTML = "";
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+                            const data = await response.json();
+
+                            if (data.results.length > 0) {
+                                searchResultsList.innerHTML = data.results.map((result, index) => `
+                    <li id="cdx-menu-item-${index}" role="option" class="cdx-menu-item cdx-menu-item--enabled">
+                        <a href="${result.relativePath}" class="cdx-menu-item__content">
+                            <span class="cdx-menu-item__text">
+                                <span class="cdx-search-result-title"><bdi>${result.name}</bdi></span>
+                                <span class="cdx-menu-item__text__description"><bdi>${result.snippet}</bdi></span>
+                            </span>
+                        </a>
+                    </li>
+                `).join("");
+                                searchResults.style.display = "block";
+                            } else {
+                                searchResultsList.innerHTML = `
+                    <li class="cdx-menu-item cdx-menu-item--enabled">
+                        <span class="cdx-menu-item__content">
+                            <span class="cdx-menu-item__text"><%= __('menu.resultsNotFound') %></span>
+                        </span>
+                    </li>
+                `;
+                                searchResults.style.display = "block";
+                            }
+                        } catch (err) {
+                            console.error("Error fetching search results:", err);
+                            searchResultsList.innerHTML = `
+                <li class="cdx-menu-item cdx-menu-item--enabled">
+                    <span class="cdx-menu-item__content">
+                        <span class="cdx-menu-item__text"><%= __('menu.errorLoadingResults') %></span>
+                    </span>
+                </li>
+            `;
+                            searchResults.style.display = "block";
+                        }
+                    });
+
+                    document.addEventListener("click", (event) => {
+                        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                            searchResults.style.display = "none";
+                        }
+                    });
+                </script>
+
+
+
+
+
+            </div>
+
+            <nav class="vector-user-links vector-user-links-wide" aria-label="Personal tools">
+                <div class="vector-user-links-main">
+                    <div id="p-vector-user-menu-preferences" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <div id="p-vector-user-menu-userpage" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <div id="p-vector-user-menu-notifications" class="vector-menu mw-portlet emptyPortlet">
+                        <div class="vector-menu-content">
+                            <ul class="vector-menu-content-list"></ul>
+                        </div>
+                    </div>
+
+                    <% if (username) { %>
+                        <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
+                            <div class="vector-menu-content">
+                                <ul class="vector-menu-content-list" style="list-style: none;">
+                                    <li id="pt-createaccount-2"
+                                        class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                        <a data-mw="interface" href="<%= __('langLink') %>/profile"
+                                            title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                            class="">
+                                            <span>
+                                                <%= username %>
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li id="pt-login-2"
+                                        class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                        <a data-mw="interface" href="/logout"
+                                            title="You're encouraged to log in; however, it's not mandatory."
+                                            accesskey="o" class="">
+                                            <span><%= __('menu.logout') %></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <% } else { %>
+                            <div id="p-vector-user-menu-overflow" class="vector-menu mw-portlet">
+                                <div class="vector-menu-content">
+                                    <ul class="vector-menu-content-list" style="list-style: none;">
+                                        <li id="pt-createaccount-2"
+                                            class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                            <a data-mw="interface" href="<%= __('langLink') %>/register"
+                                                title="You are encouraged to create an account and log in; however, it is not mandatory"
+                                                class="">
+                                                <span><%= __('menu.createAccount') %></span>
+                                            </a>
+                                        </li>
+                                        <li id="pt-login-2"
+                                            class="user-links-collapsible-item mw-list-item user-links-collapsible-item">
+                                            <a data-mw="interface" href="<%= __('langLink') %>/login"
+                                                title="You're encouraged to log in; however, it's not mandatory."
+                                                accesskey="o" class="">
+                                                <span><%= __('menu.login') %></span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <% } %>
+                </div>
+
+                <div id="vector-user-links-dropdown"
+                    class="vector-dropdown vector-user-menu vector-button-flush-right vector-user-menu-logged-out"
+                    title="Log in and more options">
+                    <input type="checkbox" id="vector-user-links-dropdown-checkbox" role="button" aria-haspopup="true"
+                        data-event-name="ui.dropdown-vector-user-links-dropdown" class="vector-dropdown-checkbox"
+                        aria-label="Personal tools" />
+                    <label id="vector-user-links-dropdown-label" for="vector-user-links-dropdown-checkbox"
+                        class="vector-dropdown-label cdx-button cdx-button--fake-button cdx-button--fake-button--enabled cdx-button--weight-quiet cdx-button--icon-only"
+                        aria-hidden="true">
+                        <span class="vector-icon mw-ui-icon-ellipsis mw-ui-icon-wikimedia-ellipsis"></span>
+
+                        <span class="vector-dropdown-label-text"><%= __('menu.personalTools') %></span>
+                    </label>
+                    <div class="vector-dropdown-content">
+                        <div id="p-personal"
+                            class="vector-menu mw-portlet mw-portlet-personal user-links-collapsible-item"
+                            title="User menu">
+                            <div class="vector-menu-content">
+                                <ul class="vector-menu-content-list">
+                                    <li id="pt-createaccount" class="user-links-collapsible-item mw-list-item">
+                                        <a href="<%= __('langLink') %>/register"
+                                            title="You are encouraged to create an account and log in; however, it is not mandatory">
+                                            <span
+                                                class="vector-icon mw-ui-icon-userAdd mw-ui-icon-wikimedia-userAdd"></span>
+                                            <span><%= __('menu.createAccount') %></span>
+                                        </a>
+                                    </li>
+                                    <li id="pt-login" class="user-links-collapsible-item mw-list-item">
+                                        <a href="<%= __('langLink') %>/login"
+                                            title="You're encouraged to log in; however, it's not mandatory."
+                                            accesskey="o">
+                                            <span
+                                                class="vector-icon mw-ui-icon-logIn mw-ui-icon-wikimedia-logIn"></span>
+                                            <span><%= __('menu.login') %></span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+</div>
