@@ -128,9 +128,13 @@
         var country = a.country ? '<span class="bsr-country">' + esc(a.country) + '</span>' : '';
         var pin = msg.isPinned ? '<span class="bsr-pinned" title="' + esc(BSR.t.pinned) + '"><i class="fas fa-thumbtack"></i> ' + esc(BSR.t.pinned) + '</span>' : '';
         var edited = msg.edited ? '<span class="bsr-edited">' + esc(BSR.t.edited) + '</span>' : '';
+        var onlineDot = a.isOnline ? '<span class="online-dot" title="' + esc(BSR.t.online || 'Online') + '"></span>' : '';
         return '' +
             '<div class="bsr-msg' + (msg.isPinned ? ' is-pinned' : '') + '" data-id="' + msg.id + '">' +
-                '<img class="bsr-msg-avatar" src="' + esc(a.profilePicture || BSR.defaultAvatar) + '" alt="" width="36" height="36" loading="lazy">' +
+                '<span class="avatar-presence">' +
+                    '<img class="bsr-msg-avatar" src="' + esc(a.profilePicture || BSR.defaultAvatar) + '" alt="" width="36" height="36" loading="lazy">' +
+                    onlineDot +
+                '</span>' +
                 '<div class="bsr-msg-col">' +
                     '<div class="bsr-msg-top">' +
                         '<a class="bsr-msg-author" href="/user/' + esc(a.username) + '">' + esc(a.fullName || a.username) + '</a>' +

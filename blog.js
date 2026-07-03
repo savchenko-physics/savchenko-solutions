@@ -7,6 +7,7 @@ const fs = require('fs');
 const sharp = require('sharp');
 const fileUpload = require('express-fileupload');
 const { parseMarkdown, autoLinkProblemRefs, linkifyBlogHtml } = require('./utils');
+const { getOnlineUsernames } = require('./lib/presence');
 
 router.use(fileUpload());
 
@@ -534,6 +535,16 @@ router.get('/:slug', async (req, res) => {
         // Reading time
         const wordCount = post.content.split(/\s+/).length;
         const readingTime = Math.max(1, Math.round(wordCount / 200));
+
+        // Online-presence dots for other users' avatars (fresh, privacy-respecting).
+        // Skip the current logged-in user's own avatar.
+        const currentUsername = req.session.username || null;
+        const presenceUsernames = [post.author_username, ...comments.map(c => c.username)];
+        const onlineUsers = await getOnlineUsernames(pool, presenceUsernames);
+        post.author_is_online = onlineUsers.has(post.author_username) && post.author_username !== currentUsername;
+        for (const c of comments) {
+            c.is_online = onlineUsers.has(c.username) && c.username !== currentUsername;
+        }
 
         // Build threaded comments
         const topLevel = [];

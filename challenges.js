@@ -3,6 +3,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const i18n = require('i18n');
 const { parseMarkdown } = require('./utils');
+const { getOnlineUsernames } = require('./lib/presence');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -140,6 +141,10 @@ router.get('/', async (req, res) => {
              LIMIT 20`
         );
 
+        // Attach online-presence flag to leaderboard participants
+        const lbOnline = await getOnlineUsernames(pool, leaderboardResult.rows.map((r) => r.username));
+        leaderboardResult.rows.forEach((r) => { r.isOnline = lbOnline.has(r.username); });
+
         res.render('challenges/index', {
             __: i18n.__,
             lang,
@@ -172,6 +177,10 @@ router.get('/leaderboard', async (req, res) => {
              JOIN users u ON cl.user_id = u.id
              ORDER BY cl.total_score DESC, cl.total_solved DESC`
         );
+
+        // Attach online-presence flag to leaderboard participants
+        const online = await getOnlineUsernames(pool, result.rows.map((r) => r.username));
+        result.rows.forEach((r) => { r.isOnline = online.has(r.username); });
 
         res.render('challenges/leaderboard', {
             __: i18n.__, lang, leaderboard: result.rows,
@@ -236,6 +245,10 @@ router.get('/:id(\\d+)', async (req, res) => {
                 [challenge.id]
             );
             correctSubmissions = csResult.rows;
+
+            // Attach online-presence flag to submission authors
+            const online = await getOnlineUsernames(pool, correctSubmissions.map((s) => s.username));
+            correctSubmissions.forEach((s) => { s.isOnline = online.has(s.username); });
         }
 
         res.render('challenges/show', {

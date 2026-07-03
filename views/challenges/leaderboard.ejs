@@ -68,7 +68,10 @@
           </td>
           <td>
             <div class="user-cell">
-              <img src="<%= entry.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+              <span class="avatar-presence">
+                <img src="<%= entry.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                <% if (entry.isOnline && entry.username !== (typeof username !== 'undefined' ? username : null)) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+              </span>
               <a href="/user/<%= entry.username %>"><%= entry.username %></a>
             </div>
           </td>

@@ -207,7 +207,10 @@
         <% correctSubmissions.forEach(function(sub) { %>
         <div class="correct-sub">
           <div class="correct-sub-header">
-            <img src="<%= sub.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" style="width: 18px; height: 18px; border-radius: 50%; vertical-align: middle;" />
+            <span class="avatar-presence" style="vertical-align: middle;">
+              <img src="<%= sub.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" style="width: 18px; height: 18px; border-radius: 50%;" />
+              <% if (sub.isOnline && sub.username !== (typeof username !== 'undefined' ? username : null)) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+            </span>
             <a href="/user/<%= sub.username %>" style="color: #1a5276; font-weight: 500;"><%= sub.username %></a>
             &middot; <%= new Date(sub.submitted_at).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }) %>
           </div>

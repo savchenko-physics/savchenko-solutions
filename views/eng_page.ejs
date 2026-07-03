@@ -413,9 +413,14 @@
                   <% } %>
                 </span>
                 <span class="ta-user-col">
-                  <img src="<%= author.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
-                       alt="<%= author.username %>"
-                       class="ta-avatar" width="24" height="24" />
+                  <span class="ta-avatar-wrap">
+                    <img src="<%= author.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                         alt="<%= author.username %>"
+                         class="ta-avatar" width="24" height="24" />
+                    <% if (author.is_online) { %>
+                      <span class="ta-online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>" aria-label="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span>
+                    <% } %>
+                  </span>
                   <a href="/user/<%= author.username %>" class="ta-username"><%= author.username %></a>
                 </span>
                 <span class="ta-score-col ta-score-value"><%= author.rank %></span>
@@ -1455,11 +1460,28 @@
       flex-shrink: 0;
       text-align: right;
     }
+    .ta-avatar-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-shrink: 0;
+    }
     .ta-avatar {
       width: 24px;
       height: 24px;
       border-radius: 50%;
       flex-shrink: 0;
+      display: block;
+    }
+    .ta-online-dot {
+      position: absolute;
+      bottom: -1px;
+      right: -1px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #27ae60;
+      border: 2px solid #ffffff;
+      box-sizing: content-box;
     }
     .ta-username {
       color: #1a5276;

@@ -15,6 +15,7 @@ const rateLimit = require('express-rate-limit');
 const i18n = require('i18n');
 const notifications = require('./notifications');
 const { getProblemBreadcrumbParts } = require('./parents');
+const { getOnlineUsernames } = require('./lib/presence');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -260,11 +261,28 @@ async function getReactionsForMessages(ids, userId) {
  * something (falls back to recent messages when nothing has reactions yet).
  * Cached for TOP_CACHE_TTL_MS per problem. Exported for the Phase-2 server render.
  */
-async function getTopBrainstormMessages(problemName, limit = 5) {
+// Decorate serialized messages with FRESH online-presence for each author.
+// Used by both the rotating top-N block and the live room. Presence is computed
+// outside any cache so the green dot never lags reality and never leaks a stale
+// or wrong-viewer value. Returns shallow copies so cached objects stay untouched.
+// The current viewer's own avatar is skipped (currentUsername).
+async function attachPresence(messages, currentUsername) {
+    if (!messages || messages.length === 0) return messages || [];
+    const online = await getOnlineUsernames(pool, messages.map((m) => m.author.username));
+    return messages.map((m) => ({
+        ...m,
+        author: {
+            ...m.author,
+            isOnline: online.has(m.author.username) && m.author.username !== currentUsername,
+        },
+    }));
+}
+
+async function getTopBrainstormMessages(problemName, limit = 5, currentUsername = null) {
     const lim = Math.min(Math.max(parseInt(limit) || 5, 1), 20);
     const cacheKey = `${problemName}|${lim}`;
     const cached = topCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) return cached.data;
+    if (cached && cached.expires > Date.now()) return attachPresence(cached.data, currentUsername);
 
     const r = await pool.query(
         // Phase-5 hook: a future detective/narrative treatment can prepend
@@ -296,7 +314,7 @@ async function getTopBrainstormMessages(problemName, limit = 5) {
     }));
 
     topCache.set(cacheKey, { expires: Date.now() + TOP_CACHE_TTL_MS, data });
-    return data;
+    return attachPresence(data, currentUsername);
 }
 
 // Read a logged-in user's quiet-mode preference (block display mode).
@@ -387,6 +405,7 @@ async function fetchRoomMessages(problem, opts) {
     const limit = Math.min(Math.max(parseInt(opts.limit) || 30, 1), 100);
     const before = opts.before || null;
     const userId = opts.userId || null;
+    const currentUsername = opts.currentUsername || null;
 
     const params = [problem];
     let beforeClause = '';
@@ -415,7 +434,10 @@ async function fetchRoomMessages(problem, opts) {
     ]);
 
     return {
-        messages: r.rows.map((row) => serializeMessage(row, reactions, links, userId)),
+        messages: await attachPresence(
+            r.rows.map((row) => serializeMessage(row, reactions, links, userId)),
+            currentUsername
+        ),
         hasMore: r.rows.length === limit,
         oldestId: ids.length ? ids[ids.length - 1] : null,
         newestId: ids.length ? ids[0] : null,
@@ -448,7 +470,7 @@ router.post('/quiet-mode', requireUser, async (req, res) => {
 // GET /api/brainstorm/:problem/top?limit=5 — rotating block source (public).
 router.get('/:problem/top', async (req, res) => {
     try {
-        const data = await getTopBrainstormMessages(req.params.problem, req.query.limit);
+        const data = await getTopBrainstormMessages(req.params.problem, req.query.limit, req.session.username || null);
         res.json({ messages: data });
     } catch (err) {
         console.error('Brainstorm top error:', err);
@@ -464,6 +486,7 @@ router.get('/:problem/messages', async (req, res) => {
             before: parseInt(req.query.before) || null,
             limit: Math.min(Math.max(parseInt(req.query.limit) || 30, 1), 100),
             userId: req.session.userId || null,
+            currentUsername: req.session.username || null,
         });
         res.json(result);
     } catch (err) {
@@ -498,7 +521,10 @@ router.get('/:problem/poll', async (req, res) => {
             getReactionsForMessages(ids, userId),
             getLinksForMessages(ids),
         ]);
-        const messages = fresh.rows.map((row) => serializeMessage(row, reactions, links, userId));
+        const messages = await attachPresence(
+            fresh.rows.map((row) => serializeMessage(row, reactions, links, userId)),
+            req.session.username || null
+        );
 
         // Edits / deletes / pin changes the client already has (id <= afterId).
         let updates = [];

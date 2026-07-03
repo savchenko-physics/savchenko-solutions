@@ -32,12 +32,22 @@ h3 {
   color: var(--ss-heading);
 }
 
-/* Global links (navbar / buttons override below) */
-a:link:not(.btn) {
+/* Global links (navbar / buttons override below).
+   Visited links look identical to normal links — the distinct "visited"
+   (purple) color is kept ONLY for problem-page links (see below). */
+a:link:not(.btn),
+a:visited:not(.btn) {
   color: var(--ss-link);
 }
 
-a:visited:not(.btn) {
+/* Problem-page links (e.g. 3.5.32) keep a distinct visited color so you can
+   tell which problems you already opened. Other links never turn purple. */
+a.problem-ref:visited:not(.btn),
+a.problem-link:visited:not(.btn),
+a.problem-nav-link:visited:not(.btn),
+a.commit-problem:visited:not(.btn),
+a.cl-commit-problem:visited:not(.btn),
+a.contrib-problem-link:visited:not(.btn) {
   color: var(--ss-link-visited);
 }
 
@@ -713,3 +723,25 @@ pre {
   .bsr-msg { animation: none; }
   .bsr-messages { scroll-behavior: auto; }
 }
+
+/* ── Online-presence dot ────────────────────────────────────────────
+   Reusable green dot overlaid on a user avatar. Wrap the <img> avatar in
+   an element with .avatar-presence (position:relative) and drop a
+   <span class="online-dot"></span> as a sibling of the image. Rendered only
+   when the user is online (respecting their show_online_status preference).
+   Scale the dot on larger avatars with the .online-dot--lg / --xl modifiers. */
+.avatar-presence { position: relative; display: inline-flex; flex-shrink: 0; }
+.online-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #27ae60;
+  border: 2px solid #ffffff;
+  box-sizing: content-box;
+  pointer-events: none;
+}
+.online-dot--lg { width: 12px; height: 12px; border-width: 2px; }
+.online-dot--xl { width: 18px; height: 18px; border-width: 3px; }

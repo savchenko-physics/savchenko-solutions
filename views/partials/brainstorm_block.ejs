@@ -78,7 +78,7 @@
             <% bsList.forEach(function (msg, i) { %>
             <article class="bs-msg<%= i === 0 ? ' is-active' : '' %>" data-bs-msg data-index="<%= i %>"<%= i === 0 ? '' : ' aria-hidden="true"' %>>
                 <div class="bs-msg__meta">
-                    <img class="bs-msg__avatar" src="<%= msg.author.profilePicture %>" alt="" width="22" height="22" loading="lazy">
+                    <span class="avatar-presence"><img class="bs-msg__avatar" src="<%= msg.author.profilePicture %>" alt="" width="22" height="22" loading="lazy"><% if (msg.author.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                     <a class="bs-msg__author" href="/user/<%= msg.author.username %>"><%= msg.author.fullName || msg.author.username %></a>
                     <% if (msg.author.country) { %><span class="bs-msg__country" title="<%= msg.author.country %>"><%= msg.author.country %></span><% } %>
                     <% if (msg.language) { %><span class="bs-msg__lang"><%= msg.language.toUpperCase() %></span><% } %>

@@ -175,8 +175,11 @@
             <% leaderboard.slice(0, 20).forEach(function(entry, idx) { %>
             <li class="leaderboard-row">
               <span class="lb-rank"><%= idx + 1 %></span>
-              <img src="<%= entry.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
-                   alt="" class="lb-avatar" />
+              <span class="avatar-presence">
+                <img src="<%= entry.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                     alt="" class="lb-avatar" />
+                <% if (entry.isOnline && entry.username !== (typeof username !== 'undefined' ? username : null)) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+              </span>
               <span class="lb-name"><a href="/user/<%= entry.username %>"><%= entry.username %></a></span>
               <span class="lb-score"><%= entry.total_score %></span>
               <span class="lb-streak" title="<%= __('challengesPage.streak') %>"><%= entry.current_streak %>w</span>

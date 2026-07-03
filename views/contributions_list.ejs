@@ -140,6 +140,76 @@
             color: #2d2d2d;
         }
 
+        /* Problem group (consecutive edits to one problem) */
+        .cl-group {
+            margin-top: 0;
+        }
+        .cl-group + .cl-group {
+            margin-top: 0;
+        }
+
+        /* Per-problem header: how long the problem took to solve. */
+        .cl-group-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            font-size: 12px;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .cl-group-header a {
+            color: #1a5276;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .cl-group-header a:hover {
+            color: #0d3b54;
+            text-decoration: underline;
+        }
+
+        /* Dashed separator between problem groups, with the time gap labelled. */
+        .cl-group-sep {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0;
+        }
+        .cl-group-sep::before,
+        .cl-group-sep::after {
+            content: "";
+            flex: 1 1 auto;
+            border-top: 1px dashed #c0c7d0;
+        }
+        .cl-group-sep-label {
+            flex: 0 0 auto;
+            font-size: 11px;
+            color: #6c757d;
+            white-space: nowrap;
+        }
+
+        /* Bold divider between contributions on different (local) dates. */
+        .cl-date-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 22px 0;
+        }
+        .cl-date-divider::before,
+        .cl-date-divider::after {
+            content: "";
+            flex: 1 1 auto;
+            border-top: 3px solid #1a1a2e;
+        }
+        .cl-date-divider-label {
+            flex: 0 0 auto;
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a1a2e;
+            white-space: nowrap;
+        }
+
         /* Commit list (GitHub style) */
         .cl-commit-list {
             border: 1px solid #dee2e6;
@@ -478,19 +548,23 @@
             </div>
         </div>
 
-        <!-- Grouped commit list -->
-        <% Object.entries(grouped).forEach(([dateLabel, entries]) => { %>
-        <div class="cl-date-group">
-            <div class="cl-date-header">
-                <div class="cl-date-icon">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
-                </div>
-                <span class="cl-date-label">
-                    <%= lang === 'ru' ? 'Изменения за' : 'Contributions on' %> <%= dateLabel %>
-                </span>
-            </div>
+        <!-- Grouped by problem: consecutive edits to the same problem form one window -->
+        <% groups.forEach((group, gi) => { %>
+        <% if (gi > 0) { %>
+        <div class="cl-group-sep" role="separator">
+            <span class="cl-group-sep-label"><%= group.sepLabel %></span>
+        </div>
+        <% } %>
+        <div class="cl-group">
             <div class="cl-commit-list">
-                <% entries.forEach(contribution => { %>
+                <div class="cl-group-header">
+                    <span><%= group.solvedPrefix %></span>
+                    <a href="/<%= group.language %>/<%= group.problemName %>"><%= group.problemName %></a>
+                    <% if (group.spanDur) { %>
+                        <span><%= group.solvedInWord %> <%= group.spanDur %></span>
+                    <% } %>
+                </div>
+                <% group.rows.forEach(contribution => { %>
                 <div class="cl-commit-row<%= contribution.isNew ? ' is-new' : '' %>">
                     <div class="cl-commit-badge">
                         <div class="cl-commit-dot"></div>
@@ -506,13 +580,16 @@
                         </div>
                         <div class="cl-commit-meta">
                             <% if (contribution.username) { %>
-                                <img src="<%= contribution.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
-                                     alt="" class="cl-commit-avatar" width="20" height="20" loading="lazy" />
+                                <span class="avatar-presence">
+                                    <img src="<%= contribution.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
+                                         alt="" class="cl-commit-avatar" width="20" height="20" loading="lazy" />
+                                    <% if (contribution.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+                                </span>
                                 <a href="/user/<%= contribution.username %>" class="cl-commit-user"><%= contribution.username %></a>
                             <% } else { %>
                                 <span class="cl-commit-anon"><%= lang === 'ru' ? 'Аноним' : 'Anonymous' %></span>
                             <% } %>
-                            <span><%= lang === 'ru' ? 'в' : 'at' %> <time class="cl-local-time" datetime="<%= new Date(contribution.edited_at).toISOString() %>"><%= formatTime(contribution.edited_at) %></time></span>
+                            <span><time class="cl-local-time" datetime="<%= new Date(contribution.edited_at).toISOString() %>"><%= formatDate(contribution.edited_at) %></time></span>
                         </div>
                     </div>
                     <div class="cl-commit-right">
@@ -571,16 +648,50 @@
     <%- include('default/main_site_search_script') %>
 
     <script>
-      // Server emits the time portion in its own timezone (UTC). Reformat to
-      // the viewer's local timezone using the ISO value carried on datetime=.
+      // Server emits the timestamp in its own timezone (UTC). Reformat to the
+      // viewer's local timezone using the ISO value carried on datetime=.
       document.addEventListener('DOMContentLoaded', () => {
+        const isRu = document.documentElement.lang === 'ru';
         document.querySelectorAll('.cl-local-time[datetime]').forEach(el => {
           const d = new Date(el.getAttribute('datetime'));
           if (isNaN(d.getTime())) return;
-          el.textContent = d.toLocaleTimeString(undefined, {
+          el.textContent = d.toLocaleString(isRu ? 'ru-RU' : 'en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
             hour: '2-digit',
             minute: '2-digit'
           });
+        });
+
+        // Separate groups from different (local) dates with a bold divider.
+        // Uses each group's representative (newest) timestamp, in the viewer's
+        // local timezone, so the boundary matches the dates shown above.
+        let prevDateKey = null;
+        document.querySelectorAll('.cl-group').forEach(group => {
+          const timeEl = group.querySelector('.cl-local-time[datetime]');
+          if (!timeEl) return;
+          const d = new Date(timeEl.getAttribute('datetime'));
+          if (isNaN(d.getTime())) return;
+          const dateKey = d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+          if (prevDateKey !== null && dateKey !== prevDateKey) {
+            const divider = document.createElement('div');
+            divider.className = 'cl-date-divider';
+            divider.setAttribute('role', 'separator');
+            const label = d.toLocaleDateString(isRu ? 'ru-RU' : 'en-US', {
+              day: 'numeric', month: 'long', year: 'numeric'
+            });
+            divider.innerHTML = '<span class="cl-date-divider-label">' + label + '</span>';
+            // Replace the small time-gap separator at this boundary, if present.
+            const preceding = group.previousElementSibling;
+            if (preceding && preceding.classList.contains('cl-group-sep')) {
+              preceding.style.display = 'none';
+              preceding.parentNode.insertBefore(divider, preceding);
+            } else {
+              group.parentNode.insertBefore(divider, group);
+            }
+          }
+          prevDateKey = dateKey;
         });
       });
     </script>

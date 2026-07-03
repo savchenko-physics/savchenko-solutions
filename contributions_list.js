@@ -1,5 +1,6 @@
 const { Pool } = require("pg");
 const i18n = require('i18n');
+const { getOnlineUsernames } = require('./lib/presence');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -9,6 +10,84 @@ const pool = new Pool({
     port: process.env.PG_PORT,
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
+
+// Human-readable duration between two edits. Mirrors the client-side fmtGap on
+// the user profile: shows the two most significant units (e.g. "2 days 5 hours"),
+// with minUnitSec capping the smallest unit (60 = stop at minutes).
+function fmtGap(ms, lang, minUnitSec = 1) {
+    const isRu = lang === 'ru';
+    const totalSec = Math.max(0, Math.round(ms / 1000));
+    const pick = (n, en, ru) => {
+        if (isRu) {
+            const n10 = n % 10, n100 = n % 100;
+            let form;
+            if (n10 === 1 && n100 !== 11) form = ru[0];
+            else if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) form = ru[1];
+            else form = ru[2];
+            return `${n} ${form}`;
+        }
+        return `${n} ${n === 1 ? en[0] : en[1]}`;
+    };
+    const units = [
+        { sec: 31536000, en: ['year', 'years'], ru: ['год', 'года', 'лет'] },
+        { sec: 2592000, en: ['month', 'months'], ru: ['месяц', 'месяца', 'месяцев'] },
+        { sec: 86400, en: ['day', 'days'], ru: ['день', 'дня', 'дней'] },
+        { sec: 3600, en: ['hour', 'hours'], ru: ['час', 'часа', 'часов'] },
+        { sec: 60, en: ['minute', 'minutes'], ru: ['минута', 'минуты', 'минут'] },
+        { sec: 1, en: ['second', 'seconds'], ru: ['секунда', 'секунды', 'секунд'] },
+    ].filter((u) => u.sec >= minUnitSec);
+    const smallest = units[units.length - 1];
+    if (totalSec < smallest.sec) {
+        return isRu ? `менее ${smallest.ru[1]}` : `less than a ${smallest.en[0]}`;
+    }
+    let i = units.findIndex((u) => totalSec >= u.sec);
+    if (i === -1) i = units.length - 1;
+    const primary = Math.floor(totalSec / units[i].sec);
+    const parts = [pick(primary, units[i].en, units[i].ru)];
+    if (i + 1 < units.length) {
+        const secondary = Math.floor((totalSec - primary * units[i].sec) / units[i + 1].sec);
+        if (secondary > 0) parts.push(pick(secondary, units[i + 1].en, units[i + 1].ru));
+    }
+    return parts.join(' ');
+}
+
+// Group a newest-first list of contributions into windows of consecutive edits
+// to the same problem, mirroring the user-profile "Recent Contributions" view.
+// Each group carries the time it took (first→last edit) and the gap to the
+// group above it (end of the older problem → start of the newer one).
+function buildProblemGroups(contributions, lang) {
+    const isRu = lang === 'ru';
+    const groups = [];
+    let cur = null;
+    for (const c of contributions) {
+        const t = new Date(c.edited_at).getTime();
+        if (!cur || cur.problemName !== c.problem_name) {
+            cur = {
+                problemName: c.problem_name,
+                language: c.language,
+                rows: [],
+                earliestMs: t,
+                latestMs: t,
+            };
+            groups.push(cur);
+        }
+        cur.rows.push(c);
+        cur.earliestMs = Math.min(cur.earliestMs, t);
+        cur.latestMs = Math.max(cur.latestMs, t);
+    }
+    groups.forEach((g, i) => {
+        const spanMs = g.latestMs - g.earliestMs;
+        g.solvedPrefix = isRu ? 'решено·' : 'solved·';
+        g.solvedInWord = isRu ? 'за' : 'in';
+        g.spanDur = spanMs > 0 ? fmtGap(spanMs, lang) : null;
+        if (i > 0) {
+            const gapMs = groups[i - 1].earliestMs - g.latestMs;
+            const human = fmtGap(gapMs, lang, 60);
+            g.sepLabel = isRu ? `${human} между задачами` : `${human} between problems`;
+        }
+    });
+    return groups;
+}
 
 async function getContributionsList(req, res) {
     const { lang, problemName } = req.params;
@@ -123,29 +202,24 @@ async function getContributionsList(req, res) {
             totalRows = Number(stats.total || 0);
         }
 
+        // Mark which contributors are currently online (fresh, privacy-aware).
+        const onlineUsernames = await getOnlineUsernames(pool, result.rows.map(r => r.username));
         const contributions = result.rows.map(row => ({
             ...row,
-            isNew: Number(row.is_new) === 1
+            isNew: Number(row.is_new) === 1,
+            isOnline: onlineUsernames.has(row.username),
         }));
 
-        // Group by date
-        const grouped = {};
-        contributions.forEach(c => {
-            const dateKey = new Date(c.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-            if (!grouped[dateKey]) grouped[dateKey] = [];
-            grouped[dateKey].push(c);
-        });
+        // Group consecutive edits to the same problem into windows, matching the
+        // "Recent Contributions" separation on the user profile.
+        const groups = buildProblemGroups(contributions, lang);
 
         res.render("contributions_list", {
             __: i18n.__,
             lang,
             problemName,
             contributions,
-            grouped,
+            groups,
             stats,
             pagination: {
                 limit,

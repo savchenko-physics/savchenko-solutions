@@ -6,6 +6,7 @@ const multer = require('multer');
 const { Pool } = require('pg');
 const notifications = require('./notifications');
 const { linkifyMessageContent } = require('./utils');
+const { getOnlineUsernames } = require('./lib/presence');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -172,80 +173,100 @@ async function findOrCreateDM(userId1, userId2) {
     }
 }
 
+// Build the sidebar conversation list (ordered by most recent activity) for a
+// user. Shared by the inbox, a single-conversation view, and the AJAX
+// auto-update endpoint so all three stay in sync.
+async function buildConversationList(userId) {
+    const conversations = await pool.query(
+        `SELECT c.id, c.title, c.is_group, c.last_message_at,
+                m.content AS last_message_content,
+                m.image_url AS last_message_image,
+                m.sender_id AS last_message_sender_id,
+                sender.username AS last_message_sender,
+                cm.last_read_at,
+                (SELECT COUNT(*) FROM messages mx
+                 WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
+                )::int AS unread_count
+         FROM conversations c
+         JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
+         LEFT JOIN LATERAL (
+             SELECT content, sender_id, image_url FROM messages
+             WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
+         ) m ON TRUE
+         LEFT JOIN users sender ON sender.id = m.sender_id
+         WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id)
+         ORDER BY c.last_message_at DESC`,
+        [userId]
+    );
+
+    // For each 1:1 conversation, get the other user's info
+    const convIds = conversations.rows.filter(c => !c.is_group).map(c => c.id);
+    let memberMap = {};
+    if (convIds.length > 0) {
+        const members = await pool.query(
+            `SELECT cm.conversation_id, u.id, u.username, u.full_name, u.profile_picture
+             FROM conversation_members cm
+             JOIN users u ON u.id = cm.user_id
+             WHERE cm.conversation_id = ANY($1) AND cm.user_id != $2`,
+            [convIds, userId]
+        );
+        for (const m of members.rows) {
+            memberMap[m.conversation_id] = m;
+        }
+    }
+
+    // For group conversations, get member counts
+    const groupIds = conversations.rows.filter(c => c.is_group).map(c => c.id);
+    let groupMemberCountMap = {};
+    if (groupIds.length > 0) {
+        const counts = await pool.query(
+            `SELECT conversation_id, COUNT(*)::int AS member_count
+             FROM conversation_members
+             WHERE conversation_id = ANY($1)
+             GROUP BY conversation_id`,
+            [groupIds]
+        );
+        for (const r of counts.rows) {
+            groupMemberCountMap[r.conversation_id] = r.member_count;
+        }
+    }
+
+    const convList = conversations.rows.map(c => {
+        const other = memberMap[c.id] || null;
+        return {
+            ...c,
+            otherUser: other,
+            memberCount: groupMemberCountMap[c.id] || 0,
+            displayName: c.is_group
+                ? (c.title || 'Group')
+                : (other ? (other.full_name || other.username) : 'Deleted User'),
+            displayPicture: c.is_group
+                ? null
+                : (other ? other.profile_picture : null),
+        };
+    });
+
+    return { rows: conversations.rows, memberMap, groupMemberCountMap, convList };
+}
+
 // GET /messages — inbox (conversation list) or a specific conversation
 router.get('/', async (req, res) => {
     try {
         const userId = req.session.userId;
         const lang = req.session.lang || 'en';
 
-        const conversations = await pool.query(
-            `SELECT c.id, c.title, c.is_group, c.last_message_at,
-                    m.content AS last_message_content,
-                    m.image_url AS last_message_image,
-                    m.sender_id AS last_message_sender_id,
-                    sender.username AS last_message_sender,
-                    cm.last_read_at,
-                    (SELECT COUNT(*) FROM messages mx
-                     WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
-                    )::int AS unread_count
-             FROM conversations c
-             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
-             LEFT JOIN LATERAL (
-                 SELECT content, sender_id, image_url FROM messages
-                 WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
-             ) m ON TRUE
-             LEFT JOIN users sender ON sender.id = m.sender_id
-             WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id)
-             ORDER BY c.last_message_at DESC`,
-            [userId]
-        );
+        const { convList } = await buildConversationList(userId);
 
-        // For each 1:1 conversation, get the other user's info
-        const convIds = conversations.rows.filter(c => !c.is_group).map(c => c.id);
-        let memberMap = {};
-        if (convIds.length > 0) {
-            const members = await pool.query(
-                `SELECT cm.conversation_id, u.id, u.username, u.full_name, u.profile_picture
-                 FROM conversation_members cm
-                 JOIN users u ON u.id = cm.user_id
-                 WHERE cm.conversation_id = ANY($1) AND cm.user_id != $2`,
-                [convIds, userId]
-            );
-            for (const m of members.rows) {
-                memberMap[m.conversation_id] = m;
+        // Attach online presence for the other user in each 1:1 conversation
+        const presenceNames = convList
+            .filter(c => !c.is_group && c.otherUser && c.otherUser.username)
+            .map(c => c.otherUser.username);
+        const online = await getOnlineUsernames(pool, presenceNames);
+        for (const c of convList) {
+            if (!c.is_group && c.otherUser && c.otherUser.username) {
+                c.isOnline = online.has(c.otherUser.username);
             }
         }
-
-        // For group conversations, get member counts
-        const groupIds = conversations.rows.filter(c => c.is_group).map(c => c.id);
-        let groupMemberCountMap = {};
-        if (groupIds.length > 0) {
-            const counts = await pool.query(
-                `SELECT conversation_id, COUNT(*)::int AS member_count
-                 FROM conversation_members
-                 WHERE conversation_id = ANY($1)
-                 GROUP BY conversation_id`,
-                [groupIds]
-            );
-            for (const r of counts.rows) {
-                groupMemberCountMap[r.conversation_id] = r.member_count;
-            }
-        }
-
-        const convList = conversations.rows.map(c => {
-            const other = memberMap[c.id] || null;
-            return {
-                ...c,
-                otherUser: other,
-                memberCount: groupMemberCountMap[c.id] || 0,
-                displayName: c.is_group
-                    ? (c.title || 'Group')
-                    : (other ? (other.full_name || other.username) : 'Deleted User'),
-                displayPicture: c.is_group
-                    ? null
-                    : (other ? other.profile_picture : null),
-            };
-        });
 
         res.render('messages', {
             __: req.__,
@@ -289,75 +310,10 @@ router.get('/:id(\\d+)', async (req, res) => {
         );
 
         // Get conversation list (same as inbox)
-        const conversations = await pool.query(
-            `SELECT c.id, c.title, c.is_group, c.last_message_at,
-                    m.content AS last_message_content,
-                    m.image_url AS last_message_image,
-                    m.sender_id AS last_message_sender_id,
-                    sender.username AS last_message_sender,
-                    cm.last_read_at,
-                    (SELECT COUNT(*) FROM messages mx
-                     WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
-                    )::int AS unread_count
-             FROM conversations c
-             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
-             LEFT JOIN LATERAL (
-                 SELECT content, sender_id, image_url FROM messages
-                 WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
-             ) m ON TRUE
-             LEFT JOIN users sender ON sender.id = m.sender_id
-             WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id)
-             ORDER BY c.last_message_at DESC`,
-            [userId]
-        );
-
-        const convIds = conversations.rows.filter(c => !c.is_group).map(c => c.id);
-        let memberMap = {};
-        if (convIds.length > 0) {
-            const members = await pool.query(
-                `SELECT cm.conversation_id, u.id, u.username, u.full_name, u.profile_picture
-                 FROM conversation_members cm
-                 JOIN users u ON u.id = cm.user_id
-                 WHERE cm.conversation_id = ANY($1) AND cm.user_id != $2`,
-                [convIds, userId]
-            );
-            for (const m of members.rows) {
-                memberMap[m.conversation_id] = m;
-            }
-        }
-
-        const groupIds = conversations.rows.filter(c => c.is_group).map(c => c.id);
-        let groupMemberCountMap = {};
-        if (groupIds.length > 0) {
-            const counts = await pool.query(
-                `SELECT conversation_id, COUNT(*)::int AS member_count
-                 FROM conversation_members
-                 WHERE conversation_id = ANY($1)
-                 GROUP BY conversation_id`,
-                [groupIds]
-            );
-            for (const r of counts.rows) {
-                groupMemberCountMap[r.conversation_id] = r.member_count;
-            }
-        }
-
-        const convList = conversations.rows.map(c => {
-            const other = memberMap[c.id] || null;
-            return {
-                ...c,
-                otherUser: other,
-                memberCount: groupMemberCountMap[c.id] || 0,
-                displayName: c.is_group
-                    ? (c.title || 'Group')
-                    : (other ? (other.full_name || other.username) : 'Deleted User'),
-                displayPicture: c.is_group
-                    ? null
-                    : (other ? other.profile_picture : null),
-            };
-        });
+        const { rows: convRows, memberMap, convList } = await buildConversationList(userId);
 
         // Active conversation: get info and messages
-        let activeConvRow = conversations.rows.find(c => c.id === convId);
+        let activeConvRow = convRows.find(c => c.id === convId);
         let activeOther = memberMap[convId] || null;
 
         // If the active conversation is new (no messages), it won't be in the sidebar list — fetch it separately
@@ -458,6 +414,37 @@ router.get('/:id(\\d+)', async (req, res) => {
                 displayName: activeConversation.displayName,
                 displayPicture: activeConversation.displayPicture,
             });
+        }
+
+        // Collect all OTHER usernames shown in the UI and resolve online status
+        // in a single fresh presence lookup (privacy-aware, safe pre-migration).
+        const presenceNames = new Set();
+        for (const c of updatedConvList) {
+            if (!c.is_group && c.otherUser && c.otherUser.username) presenceNames.add(c.otherUser.username);
+        }
+        if (activeConversation && activeConversation.otherUser && activeConversation.otherUser.username) {
+            presenceNames.add(activeConversation.otherUser.username);
+        }
+        for (const mem of membersList) {
+            if (mem.id !== userId && mem.username) presenceNames.add(mem.username);
+        }
+        for (const m of messagesResult.rows) {
+            if (m.sender_id !== userId && m.sender_username) presenceNames.add(m.sender_username);
+        }
+        const online = await getOnlineUsernames(pool, [...presenceNames]);
+        for (const c of updatedConvList) {
+            if (!c.is_group && c.otherUser && c.otherUser.username) {
+                c.isOnline = online.has(c.otherUser.username);
+            }
+        }
+        if (activeConversation && activeConversation.otherUser && activeConversation.otherUser.username) {
+            activeConversation.isOnline = online.has(activeConversation.otherUser.username);
+        }
+        for (const mem of membersList) {
+            mem.isOnline = mem.id !== userId && online.has(mem.username);
+        }
+        for (const m of messagesResult.rows) {
+            m.senderOnline = m.sender_id !== userId && !!m.sender_username && online.has(m.sender_username);
         }
 
         res.render('messages', {
@@ -785,6 +772,38 @@ router.post('/:id(\\d+)/read', async (req, res) => {
         res.json({ ok: true });
     } catch (err) {
         console.error('Mark read error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /messages/list-data — conversation list JSON for the sidebar auto-update
+// (reorders by most recent activity when a message is sent or received).
+router.get('/list-data', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { convList } = await buildConversationList(userId);
+        const presenceNames = convList
+            .filter(c => !c.is_group && c.otherUser && c.otherUser.username)
+            .map(c => c.otherUser.username);
+        const online = await getOnlineUsernames(pool, presenceNames);
+        const conversations = convList.map(c => ({
+            id: c.id,
+            is_group: c.is_group,
+            displayName: c.displayName,
+            displayPicture: c.displayPicture,
+            isOnline: !c.is_group && c.otherUser && c.otherUser.username
+                ? online.has(c.otherUser.username)
+                : false,
+            groupAvatarSvg: c.is_group ? groupAvatarSVG(c.id, c.displayName, 44) : null,
+            last_message_content: c.last_message_content,
+            last_message_image: !!c.last_message_image,
+            last_message_sender_id: c.last_message_sender_id,
+            last_message_at: c.last_message_at ? new Date(c.last_message_at).toISOString() : null,
+            unread_count: c.unread_count,
+        }));
+        res.json({ conversations });
+    } catch (err) {
+        console.error('Conversation list data error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

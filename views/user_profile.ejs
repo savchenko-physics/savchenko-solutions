@@ -82,6 +82,11 @@
         }
 
         /* Large avatar is the focal point of the header. */
+        .profile-avatar-wrap {
+            position: relative;
+            display: inline-flex;
+            flex-shrink: 0;
+        }
         .profile-avatar {
             width: 200px;
             height: 200px;
@@ -90,6 +95,19 @@
             border: 1px solid var(--sv-border);
             background: #fff;
             flex-shrink: 0;
+        }
+        /* Corner online dot on the large avatar; scales with the avatar size. */
+        .profile-online-dot {
+            position: absolute;
+            bottom: 7%;
+            right: 7%;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #27ae60;
+            border: 3px solid #fff;
+            box-sizing: content-box;
+            pointer-events: none;
         }
 
         .profile-names {
@@ -177,6 +195,31 @@
             font-size: 14px;
             color: var(--sv-secondary);
         }
+
+        .presence-line {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin: 6px 0 0;
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        @media (min-width: 768px) {
+            .presence-line { justify-content: flex-start; }
+        }
+
+        .presence-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #adb5bd;
+            flex-shrink: 0;
+        }
+
+        .presence-line.is-online { color: #27ae60; }
+        .presence-line.is-online .presence-dot { background: #27ae60; }
 
         .institution-line {
             margin: 4px 0 0;
@@ -899,12 +942,28 @@
             text-align: center;
         }
 
+        .collab-avatar-wrap {
+            position: relative;
+            display: inline-flex;
+        }
         .collab-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--sv-border);
+        }
+        .collab-online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #27ae60;
+            border: 2px solid #fff;
+            box-sizing: content-box;
+            pointer-events: none;
         }
 
         .collab-name {
@@ -1006,10 +1065,17 @@
         <section class="card profile-header-card">
             <div class="profile-head">
                 <div class="profile-main">
-                    <img id="profile-avatar" class="profile-avatar" src="/img/profile_images/Default_placeholder.svg" alt="Profile avatar">
+                    <span class="profile-avatar-wrap">
+                        <img id="profile-avatar" class="profile-avatar" src="/img/profile_images/Default_placeholder.svg" alt="Profile avatar">
+                        <span id="profile-online-dot" class="profile-online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>" style="display:none;"></span>
+                    </span>
                     <div class="profile-names">
                         <h1 id="name-line" class="name-line skeleton"><%= lang === 'ru' ? 'Имя участника' : 'Contributor Name' %></h1>
                         <p id="username-line" class="username-line">@<%= username %></p>
+                        <p id="presence-line" class="presence-line" style="display:none;">
+                            <span id="presence-dot" class="presence-dot"></span>
+                            <span id="presence-text"></span>
+                        </p>
                         <p id="institution-line" class="institution-line" style="display:none;"></p>
                         <div id="bio-line" class="bio" style="display:none;">
                             <span id="bio-text" class="bio-text"></span>
@@ -1753,6 +1819,28 @@
             document.getElementById("profile-avatar").src = user.profilePicture || "/img/profile_images/Default_placeholder.svg";
             document.getElementById("username-line").textContent = `@${user.username}`;
 
+            // Online presence (respects the user's show_online_status preference)
+            const presence = data.presence;
+            const presenceLine = document.getElementById("presence-line");
+            if (presence && !presence.hidden && (presence.isOnline || presence.lastSeenAt)) {
+                const presenceText = document.getElementById("presence-text");
+                if (presence.isOnline) {
+                    presenceLine.classList.add("is-online");
+                    presenceText.textContent = lang === "ru" ? "В сети" : "Online";
+                } else {
+                    presenceLine.classList.remove("is-online");
+                    presenceText.textContent = lang === "ru"
+                        ? `Был(а) в сети ${relTime(presence.lastSeenAt)}`
+                        : `Last seen ${relTime(presence.lastSeenAt)}`;
+                }
+                presenceLine.style.display = "flex";
+            }
+            // Mirror online state as a corner dot on the avatar itself.
+            const onlineDot = document.getElementById("profile-online-dot");
+            if (onlineDot) {
+                onlineDot.style.display = (presence && !presence.hidden && presence.isOnline) ? "block" : "none";
+            }
+
             // Institution + Country on one line
             const institution = document.getElementById("institution-line");
             const parts = [];
@@ -1837,8 +1925,11 @@
                 const uname = escapeHtml(c.username);
                 const pic = escapeHtml(c.profilePicture || "/img/profile_images/Default_placeholder.svg");
                 const count = Number(c.sharedProblems || 0).toLocaleString();
+                const dot = c.isOnline
+                    ? `<span class="collab-online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>`
+                    : "";
                 a.innerHTML = `
-                    <img class="collab-avatar" src="${pic}" alt="@${uname}">
+                    <span class="collab-avatar-wrap"><img class="collab-avatar" src="${pic}" alt="@${uname}">${dot}</span>
                     <div class="collab-name">${uname}</div>
                     <div class="collab-count">${count}</div>
                 `;

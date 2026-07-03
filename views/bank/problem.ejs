@@ -353,7 +353,7 @@
                     <% comments.forEach(function(c) { %>
                     <div class="bp-comment">
                         <div class="bp-comment-author">
-                            <img src="<%= c.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="bp-comment-avatar" />
+                            <span class="avatar-presence"><img src="<%= c.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="bp-comment-avatar" /><% if (c.is_online) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                             <a href="/user/<%= c.username %>" class="bp-comment-name"><%= c.username %></a>
                             <span class="bp-comment-time"><%= new Date(c.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
                         </div>

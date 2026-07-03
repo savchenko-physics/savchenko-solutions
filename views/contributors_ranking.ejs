@@ -155,11 +155,25 @@
             font-weight: 600;
         }
 
+        .online-now-count { font-size: 13px; font-weight: 600; color: #27ae60; }
+        .online-now-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .online-now-item { position: relative; display: inline-block; width: 40px; height: 40px; }
+        .online-now-item img {
+            width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+            border: 1px solid #dee2e6; background: #fff;
+        }
+        .online-now-item .online-dot {
+            position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px;
+            border-radius: 50%; background: #27ae60; border: 2px solid #fff;
+        }
+        .online-now-empty { font-size: 13px; color: #6c757d; margin: 0; }
+
         #world-map {
             width: 100%;
             height: 300px;
             display: block;
         }
+
 
         .map-tooltip {
             position: fixed;
@@ -228,6 +242,21 @@
             border: 1px solid var(--sv-border);
             background: #fff;
         }
+
+        .avatar-presence { position: relative; display: inline-flex; flex-shrink: 0; }
+        .online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #27ae60;
+            border: 2px solid #fff;
+            box-sizing: content-box;
+            pointer-events: none;
+        }
+        .online-dot.online-dot--sm { width: 8px; height: 8px; }
 
         .contributor-main {
             line-height: 1.2;
@@ -516,6 +545,11 @@
                 <div id="stat-languages" class="stat-value" style="font-size: 20px;"><%= __('contributorsPage.languagesValue') %></div>
                 <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
             </article>
+        </section>
+
+        <section class="card" id="onlineNowCard" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Сейчас в сети' : 'Online now' %> <span id="onlineNowCount" class="online-now-count"></span></h2>
+            <div id="onlineNowList" class="online-now-list"></div>
         </section>
 
         <section class="card" id="contributorsListPanel" style="display:none;">
@@ -950,14 +984,23 @@
                     window.location.href = `/user/${row.username}`;
                 });
 
-                const rankClass = row.rank <= 3 ? "top-rank" : "";
+                // row.rank is null for the site owner (no place number assigned).
+                const hasRank = row.rank != null;
+                const rankClass = hasRank && row.rank <= 3 ? "top-rank" : "";
                 const countryPrefix = row.countryFlag ? `${row.countryFlag} ` : "";
-                const badge = getReputationBadge(Number(row.score || 0));
+                // Site owner shows a fixed black "Headquarters" title instead of a
+                // score-based rank badge.
+                const badge = row.username === "astrosander"
+                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", color: "#2d2d2d" }
+                    : getReputationBadge(Number(row.score || 0));
                 tr.innerHTML = `
-                    <td class="${rankClass}">${row.rank}</td>
+                    <td class="${rankClass}">${hasRank ? row.rank : ""}</td>
                     <td>
                         <div class="contributor-cell">
-                            <img class="avatar" src="${row.profilePicture}" alt="${row.fullName}">
+                            <span class="avatar-presence">
+                                <img class="avatar" src="${row.profilePicture}" alt="${row.fullName}">
+                                ${row.isOnline ? `<span class="online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>` : ""}
+                            </span>
                             <div class="contributor-main">
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
                                 <div class="contributor-username">@${row.username}</div>
@@ -1038,7 +1081,6 @@
             const positiveContributionValues = mapData
                 .map((x) => Number(x.total_contributions ?? x.contributions ?? 0))
                 .filter((v) => v > 0);
-            const maxContributions = Math.max(0, ...positiveContributionValues, 0);
             const minPositiveContributions = positiveContributionValues.length > 0
                 ? Math.min(...positiveContributionValues)
                 : 1;
@@ -1048,21 +1090,45 @@
                 const idx = Math.max(0, Math.min(arr.length - 1, Math.floor((arr.length - 1) * p)));
                 return arr[idx];
             };
-            const capContributions = Math.max(
-                minPositiveContributions,
-                percentile(sortedContrib, 0.9)
-            );
+            // Cap the ramp at the 90th percentile so one huge outlier (US) doesn't
+            // flatten everyone else to the lightest shade.
+            const capContributions = Math.max(minPositiveContributions, percentile(sortedContrib, 0.9));
+
+            // Google-Analytics-style single-hue blue ramp: light blue = low activity,
+            // dark navy blue = high; countries with no data stay light gray.
+            const NO_DATA_FILL = "#eef1f4";
+            const activityScale = d3.scaleLog()
+                .domain([Math.max(1, minPositiveContributions), Math.max(2, capContributions)])
+                .range([0, 1])
+                .clamp(true);
+            const blueRamp = d3.interpolateRgb("#d2e3fc", "#1a3f8f");
+            function fillForCount(count) {
+                if (count <= 0) return NO_DATA_FILL;
+                return blueRamp(activityScale(Math.max(1, count)));
+            }
+
+            function escapeMapText(s) {
+                return String(s == null ? "" : s)
+                    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            }
+            function tooltipHtml(displayName, count, people) {
+                const contribLabel = lang === "ru"
+                    ? `${people} уч., ${count} вкл.`
+                    : `${people} contributor${people !== 1 ? "s" : ""}, ${count} contribution${count !== 1 ? "s" : ""}`;
+                return `<strong>${escapeMapText(displayName)}</strong><br>${contribLabel}`;
+            }
+
             const svg = d3.select("#world-map");
             svg.selectAll("*").remove();
 
             const width = 960;
             const height = 300;
-            const projection = d3.geoNaturalEarth1().fitSize([width, height], geojson);
+            // Recenter (~12°E) so Europe/Russia and the Americas balance in-frame
+            // instead of splitting to the edges with an empty middle.
+            const projection = d3.geoNaturalEarth1()
+                .rotate([-12, 0])
+                .fitSize([width, height], geojson);
             const path = d3.geoPath().projection(projection);
-            const scale = d3.scaleLog()
-                .domain([Math.max(1, minPositiveContributions), Math.max(1, capContributions)])
-                .range([0.18, 1])
-                .clamp(true);
 
             const tooltip = document.getElementById("map-tooltip");
 
@@ -1072,13 +1138,10 @@
                 .append("path")
                 .attr("d", path)
                 .attr("stroke", "#fff")
-                .attr("stroke-width", 0.5)
+                .attr("stroke-width", 0.6)
                 .attr("fill", (d) => {
                     const name = normalizeCountryKey(d.properties.name);
-                    const count = contributionCounts.get(name) || 0;
-                    if (count <= 0) return "#ebedf0";
-                    const t = scale(Math.max(1, count));
-                    return d3.interpolateRgb("#b3c6d9", "#1a1a2e")(t);
+                    return fillForCount(contributionCounts.get(name) || 0);
                 })
                 .on("mouseenter", function (event, d) {
                     const name = normalizeCountryKey(d.properties.name);
@@ -1087,10 +1150,7 @@
                     if (count > 0) {
                         d3.select(this).attr("stroke", "#1a1a2e").attr("stroke-width", 1.5);
                         tooltip.style.opacity = "1";
-                        const contribLabel = lang === "ru"
-                            ? `${people} уч., ${count} вкл.`
-                            : `${people} contributor${people !== 1 ? "s" : ""}, ${count} contribution${count !== 1 ? "s" : ""}`;
-                        tooltip.innerHTML = `<strong>${d.properties.name}</strong><br>${contribLabel}`;
+                        tooltip.innerHTML = tooltipHtml(d.properties.name, count, people);
                     }
                 })
                 .on("mousemove", (event) => {
@@ -1098,7 +1158,7 @@
                     tooltip.style.top = `${event.clientY - 28}px`;
                 })
                 .on("mouseleave", function () {
-                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.5);
+                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.6);
                     tooltip.style.opacity = "0";
                 });
         }
@@ -1151,7 +1211,8 @@
                 const item = document.createElement('div');
                 item.className = 'contrib-list-item';
                 const countryPrefix = row.countryFlag ? row.countryFlag + ' ' : '';
-                item.innerHTML = '<img src="' + (row.profilePicture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />'
+                item.innerHTML = '<span class="avatar-presence"><img src="' + (row.profilePicture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />'
+                    + (row.isOnline ? '<span class="online-dot" title="' + (lang === 'ru' ? 'В сети' : 'Online') + '"></span>' : '') + '</span>'
                     + '<a href="/user/' + row.username + '">' + countryPrefix + (row.fullName || row.username) + '</a>'
                     + '<span class="contrib-list-meta">' + Number(row.solutions || 0).toLocaleString() + ' sol.</span>';
                 contribBody.appendChild(item);
@@ -1185,9 +1246,52 @@
             });
         }
 
-        Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap()]).catch((err) => {
+        function escapeAttr(s) {
+            return String(s == null ? "" : s)
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+
+        async function loadOnlineNow() {
+            let data;
+            try {
+                data = await fetchJSON("/api/online-users?limit=24");
+            } catch (e) {
+                return;
+            }
+            const card = document.getElementById("onlineNowCard");
+            const list = document.getElementById("onlineNowList");
+            const countEl = document.getElementById("onlineNowCount");
+            const users = data.users || [];
+            if (!data.total) {
+                card.style.display = "none";
+                return;
+            }
+            card.style.display = "block";
+            countEl.textContent = "(" + data.total.toLocaleString(dateLocale) + ")";
+            list.innerHTML = users.map((u) => {
+                const href = "/user/" + encodeURIComponent(u.username);
+                const full = escapeAttr(u.fullName);
+                const pic = escapeAttr(u.profilePicture);
+                return `<a class="online-now-item" href="${href}" title="${full}" aria-label="${full}">`
+                    + `<img src="${pic}" width="40" height="40" alt="${full}" loading="lazy">`
+                    + `<span class="online-dot" aria-hidden="true"></span></a>`;
+            }).join("");
+            if (data.total > users.length) {
+                const more = document.createElement("span");
+                more.className = "online-now-empty";
+                more.style.alignSelf = "center";
+                more.textContent = lang === "ru"
+                    ? `и ещё ${(data.total - users.length).toLocaleString(dateLocale)}`
+                    : `and ${(data.total - users.length).toLocaleString(dateLocale)} more`;
+                list.appendChild(more);
+            }
+        }
+
+        Promise.all([loadStats(), loadLeaderboard(), loadHeatmap(), loadMap(), loadOnlineNow()]).catch((err) => {
             console.error("Contributors page failed to load:", err);
         });
+        // Refresh the "Online now" strip periodically.
+        setInterval(loadOnlineNow, 45000);
     </script>
 </body>
 </html>

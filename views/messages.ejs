@@ -1074,9 +1074,12 @@
               <% if (c.is_group) { %>
                 <div class="msg-conv-avatar-group"><%- groupAvatarSVG(c.id, c.displayName, 44) %></div>
               <% } else { %>
-                <img class="msg-conv-avatar"
-                     src="<%= c.displayPicture || '/img/profile_images/Default_placeholder.svg' %>"
-                     alt="" />
+                <span class="avatar-presence">
+                  <img class="msg-conv-avatar"
+                       src="<%= c.displayPicture || '/img/profile_images/Default_placeholder.svg' %>"
+                       alt="" />
+                  <% if (c.isOnline) { %><span class="online-dot online-dot--lg" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+                </span>
               <% } %>
               <div class="msg-conv-info">
                 <div class="msg-conv-name"><%= c.displayName %></div>
@@ -1117,8 +1120,11 @@
             <% if (activeConversation.is_group) { %>
               <div class="msg-conv-avatar-group" style="width:36px;height:36px;"><%- groupAvatarSVG(activeConversation.id, activeConversation.displayName, 36) %></div>
             <% } else if (activeConversation.displayPicture) { %>
-              <img class="msg-chat-header-avatar"
-                   src="<%= activeConversation.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+              <span class="avatar-presence">
+                <img class="msg-chat-header-avatar"
+                     src="<%= activeConversation.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                <% if (activeConversation.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+              </span>
             <% } %>
             <div>
               <div class="msg-chat-header-name">
@@ -1140,7 +1146,7 @@
             <% const initialShow = 20; %>
             <% membersList.forEach(function(mem, idx) { %>
               <div class="msg-member-item" <% if (idx >= initialShow) { %>style="display:none" data-extra-member<% } %>>
-                <img class="msg-member-avatar" src="<%= mem.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                <span class="avatar-presence"><img class="msg-member-avatar" src="<%= mem.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" /><% if (mem.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                 <span class="msg-member-name">
                   <a href="/user/<%= mem.username %>"><%= mem.full_name || mem.username %></a>
                   <% if (mem.role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'модератор' : 'mod' %></span><% } %>
@@ -1174,8 +1180,11 @@
           %>
             <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>">
               <% if (showAvatar) { %>
-                <img class="msg-bubble-avatar"
-                     src="<%= m.sender_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                <span class="avatar-presence">
+                  <img class="msg-bubble-avatar"
+                       src="<%= m.sender_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                  <% if (m.senderOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+                </span>
               <% } %>
               <div>
                 <% if (showName) { %>
@@ -1532,7 +1541,7 @@
 
     fetch('/messages/' + CONV_ID + '/send', fetchOpts)
     .then(function(r) { return r.json(); })
-    .then(function() { pollMessages(); })
+    .then(function() { pollMessages(); refreshConvList(); })
     .catch(function(err) { console.error('Send error:', err); });
   }
 
@@ -1859,6 +1868,8 @@
             appendMessage(m);
             lastMsgId = Math.max(lastMsgId, m.id);
           });
+          // New messages arrived — reorder/update the sidebar right away.
+          refreshConvList();
         }
 
         // Apply edits/deletes to existing messages
@@ -1895,6 +1906,100 @@
   if (CONV_ID) {
     pollTimer = setInterval(pollMessages, 3000);
   }
+
+  // ── Live conversation list (sidebar) ────────────────────────────────
+  // Fetch the ordered list and re-render the sidebar so that sending or
+  // receiving a message floats that conversation to the top automatically.
+  const convListEl = document.getElementById('convList');
+  let lastConvSig = '';
+
+  // esc() leaves double-quotes intact, so use this for attribute values.
+  function escAttr(s) { return esc(s).replace(/"/g, '&quot;'); }
+
+  function buildConvItemHTML(c) {
+    const isActive = !!(CONV_ID && c.id === CONV_ID);
+    const unread = isActive ? 0 : (c.unread_count || 0);
+    let avatar;
+    if (c.is_group) {
+      avatar = '<div class="msg-conv-avatar-group">' + (c.groupAvatarSvg || '') + '</div>';
+    } else {
+      const dot = c.isOnline
+        ? '<span class="online-dot online-dot--lg" title="' + escAttr(LANG === 'ru' ? 'В сети' : 'Online') + '"></span>'
+        : '';
+      avatar = '<span class="avatar-presence"><img class="msg-conv-avatar" src="' +
+        escAttr(c.displayPicture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />' + dot + '</span>';
+    }
+    let preview = '';
+    if (c.last_message_content || c.last_message_image) {
+      if (c.last_message_sender_id === USER_ID) preview += (LANG === 'ru' ? 'Вы: ' : 'You: ');
+      if (c.last_message_content) {
+        const t = c.last_message_content;
+        preview += esc(t.substring(0, 60)) + (t.length > 60 ? '...' : '');
+      } else {
+        preview += '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' +
+          (LANG === 'ru' ? 'Фото' : 'Photo');
+      }
+    }
+    const badge = unread > 0
+      ? '<span class="msg-conv-badge">' + (unread > 99 ? '99+' : unread) + '</span>'
+      : '';
+    return '<a href="/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
+      '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
+      avatar +
+      '<div class="msg-conv-info"><div class="msg-conv-name">' + esc(c.displayName || '') + '</div>' +
+      '<div class="msg-conv-preview">' + preview + '</div></div>' +
+      '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '"></span>' +
+      badge + '</div>' +
+      '</a>';
+  }
+
+  function refreshConvList() {
+    if (!convListEl) return;
+    fetch('/messages/list-data')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data || !Array.isArray(data.conversations)) return;
+        // Skip DOM churn unless order/preview/unread/time actually changed.
+        const sig = data.conversations.map(function(c) {
+          const unread = (CONV_ID && c.id === CONV_ID) ? 0 : (c.unread_count || 0);
+          return c.id + ':' + (c.last_message_at || '') + ':' + unread + ':' +
+            (c.last_message_content || '') + ':' + (c.last_message_image ? 1 : 0) + ':' +
+            (c.isOnline ? 1 : 0);
+        }).join('|');
+        if (sig === lastConvSig) return;
+        lastConvSig = sig;
+
+        // A brand-new conversation with no messages yet isn't returned by the
+        // endpoint; keep its (currently active) sidebar entry so it doesn't vanish.
+        let activeHTML = '';
+        if (CONV_ID && !data.conversations.some(function(c) { return c.id === CONV_ID; })) {
+          const activeEl = convListEl.querySelector('.msg-conv-item.active');
+          if (activeEl) activeHTML = activeEl.outerHTML;
+        }
+
+        const scrollTop = convListEl.scrollTop;
+        let html = data.conversations.map(buildConvItemHTML).join('');
+        if (activeHTML) html = activeHTML + html;
+        if (!html) {
+          html = '<div style="padding: 32px 16px; text-align: center; color: var(--msg-muted); font-size: 14px;">' +
+            (LANG === 'ru' ? 'Нет сообщений' : 'No conversations yet') + '</div>';
+        }
+        convListEl.innerHTML = html;
+        convListEl.scrollTop = scrollTop;
+        localizeSsrTimes();
+        // Re-apply the active search filter, if any.
+        if (convSearch && convSearch.value) {
+          const q = convSearch.value.toLowerCase();
+          convListEl.querySelectorAll('.msg-conv-item').forEach(function(el) {
+            el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+          });
+        }
+      })
+      .catch(function() {});
+  }
+
+  // Refresh the sidebar frequently so it stays in sync on send and receive.
+  setInterval(refreshConvList, 4000);
 
   // Conversation search/filter
   const convSearch = document.getElementById('convSearch');

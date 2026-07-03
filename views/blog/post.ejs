@@ -704,12 +704,15 @@
                 <% } %>
             </div>
             <div class="blog-author-info">
-                <img
-                    src="<%= post.author_avatar || '/img/profile_images/Default_placeholder.svg' %>"
-                    alt="<%= post.author_username %>"
-                    class="blog-author-avatar"
-                    width="40" height="40"
-                />
+                <span class="avatar-presence">
+                    <img
+                        src="<%= post.author_avatar || '/img/profile_images/Default_placeholder.svg' %>"
+                        alt="<%= post.author_username %>"
+                        class="blog-author-avatar"
+                        width="40" height="40"
+                    />
+                    <% if (post.author_is_online) { %><span class="online-dot online-dot--lg" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
+                </span>
                 <div class="blog-author-details">
                     <a href="/user/<%= post.author_username %>" class="blog-author-name"><%= post.author_username %></a>
                     <span class="blog-author-meta">
@@ -766,7 +769,7 @@
             <% comments.forEach(comment => { %>
             <div class="blog-comment-item" id="comment-<%= comment.id %>">
                 <div class="comment-author-row">
-                    <img src="<%= comment.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" />
+                    <span class="avatar-presence"><img src="<%= comment.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" /><% if (comment.is_online) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                     <a href="/user/<%= comment.username %>" class="comment-username"><%= comment.username %></a>
                     <span class="comment-time"><%= new Date(comment.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
                 </div>
@@ -780,7 +783,7 @@
                     <% childMap[comment.id].forEach(reply => { %>
                     <div class="blog-comment-item" id="comment-<%= reply.id %>">
                         <div class="comment-author-row">
-                            <img src="<%= reply.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" />
+                            <span class="avatar-presence"><img src="<%= reply.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" /><% if (reply.is_online) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                             <a href="/user/<%= reply.username %>" class="comment-username"><%= reply.username %></a>
                             <span class="comment-time"><%= new Date(reply.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
                         </div>

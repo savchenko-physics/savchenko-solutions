@@ -3,6 +3,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const i18n = require('i18n');
 const sanitizeHtml = require('sanitize-html');
+const { getOnlineUsernames } = require('./lib/presence');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -307,6 +308,15 @@ router.get('/problem/:id', async (req, res) => {
                 [problemId, problem.topics || []]
             ),
         ]);
+
+        // Online-presence dots for other users' commenter avatars (fresh,
+        // privacy-respecting). Skip the current logged-in user's own avatar.
+        const currentUsername = req.session.username || null;
+        const commentUsernames = commentsResult.rows.map(c => c.username).filter(Boolean);
+        const onlineUsers = await getOnlineUsernames(pool, commentUsernames);
+        for (const c of commentsResult.rows) {
+            c.is_online = onlineUsers.has(c.username) && c.username !== currentUsername;
+        }
 
         // Map bank topics to Savchenko chapter ranges for cross-linking
         const topicToChapters = {

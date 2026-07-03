@@ -1,8 +1,11 @@
 const fs = require("fs");
 const path = require("path");
 const { flagEmojiForCountryName } = require("./lib/countries");
+const { getOnlineUsernames } = require("./lib/presence");
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
+// A user counts as "online" while their last_seen_at is within this window.
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
 const cache = new Map();
 const geoCache = new Map();
 
@@ -486,8 +489,21 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             const sorted = sortSafeContributors(payload, sortBy, sortOrder);
             const total = sorted.length;
             const start = (page - 1) * limit;
-            const rows = sorted.slice(start, start + limit).map((row, idx) => ({
-                rank: start + idx + 1,
+
+            // astrosander (user 28, the site owner) keeps their score-sorted position
+            // in the table but is NOT given a place number ("место"). Everyone else is
+            // numbered from 1 in the current sort order, so the top non-owner
+            // contributor (Eugene Dubrovin) shows as #1. Places are assigned over the
+            // full sorted list before pagination so they stay consistent across pages.
+            let place = 0;
+            const placed = sorted.map((row) => {
+                if (Number(row.user_id) === 28) return { row, rank: null };
+                place += 1;
+                return { row, rank: place };
+            });
+
+            const pageRows = placed.slice(start, start + limit).map(({ row, rank }) => ({
+                rank,
                 rankPosition: row.rank_position,
                 username: row.username,
                 fullName: row.full_name || row.username,
@@ -501,7 +517,14 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 isVerifiedUser: row.is_verified_user,
             }));
 
-            res.set("Cache-Control", "public, max-age=3600");
+            // Online presence is time-sensitive, so it is resolved fresh per
+            // request (outside the 1h leaderboard cache) for the current page.
+            const onlineUsernames = await getOnlineUsernames(pool, pageRows.map((r) => r.username));
+            const rows = pageRows.map((r) => ({ ...r, isOnline: onlineUsernames.has(r.username) }));
+
+            // Short max-age: the row data is cached server-side for 1h, but the
+            // isOnline flags must not be frozen in the client cache for long.
+            res.set("Cache-Control", "public, max-age=60");
             res.json({
                 page,
                 limit,
@@ -835,6 +858,40 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 result.isFollowing = followCheck.rows.length > 0;
             }
 
+            // Presence (fresh, not cached) — respects the show_online_status
+            // preference. Owners always see their own presence.
+            result.presence = { lastSeenAt: null, isOnline: false, hidden: false };
+            try {
+                const presenceRow = await pool.query(
+                    `SELECT u.last_seen_at, COALESCE(pr.show_online_status, true) AS show_online
+                     FROM users u
+                     LEFT JOIN user_preferences pr ON pr.user_id = u.id
+                     WHERE u.id = $1`,
+                    [payload.user.id]
+                );
+                const pRow = presenceRow.rows[0];
+                if (pRow) {
+                    const viewingSelf = req.session.userId === payload.user.id;
+                    if (pRow.show_online || viewingSelf) {
+                        result.presence.lastSeenAt = pRow.last_seen_at || null;
+                        result.presence.isOnline = pRow.last_seen_at
+                            ? (Date.now() - new Date(pRow.last_seen_at).getTime() <= ONLINE_WINDOW_MS)
+                            : false;
+                    } else {
+                        result.presence.hidden = true;
+                    }
+                }
+            } catch (_presenceErr) {
+                // last_seen_at column may not exist yet (pre-migration); ignore.
+            }
+
+            // Fresh online flags for collaborator avatars. Remap to new objects so
+            // we never mutate the cached payload's collaborator rows.
+            if (Array.isArray(result.collaborators) && result.collaborators.length) {
+                const collabOnline = await getOnlineUsernames(pool, result.collaborators.map((c) => c.username));
+                result.collaborators = result.collaborators.map((c) => ({ ...c, isOnline: collabOnline.has(c.username) }));
+            }
+
             if (req.session.userId) {
                 res.set("Cache-Control", "private, no-cache");
             } else {
@@ -1096,7 +1153,6 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                         'contribution' AS source
                     FROM contributions
                     WHERE user_id = $1
-                      AND content_changed = true
                       AND invisible = false
                     UNION ALL
                     SELECT

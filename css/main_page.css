@@ -10,6 +10,12 @@ body {
   color: var(--ss-body-text);
 }
 
+/* Visited links look like normal links (no browser-default purple). Component
+   rules below override per-section; problem-page links keep the visited color. */
+a:visited {
+  color: #1a5276;
+}
+
 /* ----------------------------
    HERO SECTION (white bar — brand navy is in text/tokens, not bar fill)
 ---------------------------- */
@@ -645,4 +651,15 @@ footer:not(.site-footer) p {
 .pdf-action {
   font-weight: 600;
   color: var(--ss-link);
+}
+
+/* Problem-page links (e.g. 3.5.32) keep a distinct "visited" color so you can
+   tell which problems you already opened; other links never turn purple. */
+a.problem-ref:visited,
+a.problem-link:visited,
+a.problem-nav-link:visited,
+a.commit-problem:visited,
+a.cl-commit-problem:visited,
+a.contrib-problem-link:visited {
+  color: #4a235a;
 }

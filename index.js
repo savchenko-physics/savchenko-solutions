@@ -31,6 +31,7 @@ const renderUnsolvedList = require('./unsolved');
 const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
+const { getOnlineUsernames } = require("./lib/presence");
 
 const rateLimit = require('express-rate-limit');
 const { router: adminRouter, isIpBlocked } = require('./admin');
@@ -221,6 +222,67 @@ app.use((req, res, next) => {
             console.error("Error loading user context for header:", err);
             next();
         });
+});
+
+// ─── Online presence tracking ───────────────────────────────────────
+// Refresh users.last_seen_at on activity, throttled to at most one write
+// per user per LAST_SEEN_THROTTLE_MS so we never write on every request.
+// Fire-and-forget: never blocks the response. A user counts as "online"
+// while last_seen_at is within ONLINE_WINDOW_MS (see /api/online-users and
+// the profile stats endpoint).
+const LAST_SEEN_THROTTLE_MS = 60 * 1000;
+const lastSeenWrites = new Map(); // userId -> last write epoch ms
+app.use((req, res, next) => {
+    const uid = req.session && req.session.userId;
+    if (uid) {
+        const now = Date.now();
+        if (now - (lastSeenWrites.get(uid) || 0) > LAST_SEEN_THROTTLE_MS) {
+            lastSeenWrites.set(uid, now);
+            pool.query("UPDATE users SET last_seen_at = NOW() WHERE id = $1", [uid])
+                .catch((err) => console.error("last_seen update failed:", err.message));
+        }
+    }
+    next();
+});
+
+// Currently-online users (last_seen within 5 min), respecting the
+// show_online_status privacy preference. Powers the "Online now" avatar strip.
+app.get("/api/online-users", async (req, res) => {
+    try {
+        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 24));
+        const whereOnline = `
+            u.last_seen_at > NOW() - INTERVAL '5 minutes'
+            AND COALESCE(p.show_online_status, true) = true`;
+        const [usersResult, countResult] = await Promise.all([
+            pool.query(
+                `SELECT u.username, u.full_name, u.profile_picture, u.last_seen_at
+                 FROM users u
+                 LEFT JOIN user_preferences p ON p.user_id = u.id
+                 WHERE ${whereOnline}
+                 ORDER BY u.last_seen_at DESC
+                 LIMIT $1`,
+                [limit]
+            ),
+            pool.query(
+                `SELECT COUNT(*)::int AS total
+                 FROM users u
+                 LEFT JOIN user_preferences p ON p.user_id = u.id
+                 WHERE ${whereOnline}`
+            ),
+        ]);
+        res.set("Cache-Control", "no-store");
+        res.json({
+            total: countResult.rows[0].total,
+            users: usersResult.rows.map((r) => ({
+                username: r.username,
+                fullName: r.full_name || r.username,
+                profilePicture: r.profile_picture || "/img/profile_images/Default_placeholder.svg",
+            })),
+        });
+    } catch (error) {
+        console.error("Failed to load online users:", error.message);
+        res.status(500).json({ error: "Failed to load online users" });
+    }
 });
 
 
@@ -542,7 +604,7 @@ app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("pr
 app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
     const { lang } = req.params;
     i18n.setLocale(res, lang);
-    const { publicProfile, emailNotifications, showCountryOnLeaderboard } = req.body;
+    const { publicProfile, emailNotifications, showCountryOnLeaderboard, showOnlineStatus } = req.body;
 
     // Build notification_settings from form checkboxes
     const notifSettings = {
@@ -559,15 +621,16 @@ app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
     try {
         await pool.query(
             `INSERT INTO user_preferences (user_id, public_profile, show_online_status, email_notifications, privacy_level, show_country_on_leaderboard, notification_settings)
-             VALUES ($1, $2, false, $3, 'public', $4, $5)
+             VALUES ($1, $2, $6, $3, 'public', $4, $5)
              ON CONFLICT (user_id)
              DO UPDATE SET
                 public_profile = EXCLUDED.public_profile,
+                show_online_status = EXCLUDED.show_online_status,
                 email_notifications = EXCLUDED.email_notifications,
                 show_country_on_leaderboard = EXCLUDED.show_country_on_leaderboard,
                 notification_settings = EXCLUDED.notification_settings,
                 updated_at = NOW()`,
-            [req.session.userId, !!publicProfile, !!emailNotifications, !!showCountryOnLeaderboard, JSON.stringify(notifSettings)]
+            [req.session.userId, !!publicProfile, !!emailNotifications, !!showCountryOnLeaderboard, JSON.stringify(notifSettings), !!showOnlineStatus]
         );
 
         res.redirect(
@@ -1041,6 +1104,9 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
         const currentUserId = req.session.userId || null;
         const now = new Date();
 
+        // Fresh online presence for comment-author avatars (privacy-aware).
+        const online = await getOnlineUsernames(pool, result.rows.map(r => r.username));
+
         const comments = result.rows.map(row => {
             const isOwnComment = currentUserId && row.user_id === currentUserId;
             const createdAt = new Date(row.created_at);
@@ -1058,7 +1124,8 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
                 author: {
                     username: row.username,
                     fullName: row.full_name,
-                    profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR
+                    profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR,
+                    isOnline: online.has(row.username)
                 }
             };
         });
@@ -2582,21 +2649,25 @@ async function getTopAuthors() {
                   AND user_id IS NOT NULL
             ),
             user_stats AS (
-                SELECT 
+                SELECT
                     u.username,
                     u.profile_picture,
+                    u.last_seen_at,
+                    BOOL_OR(COALESCE(pr.show_online_status, true)) AS show_online,
                     COUNT(DISTINCT ac.problem_name) AS unique_contributions,
                     COUNT(*) AS total_contributions,
                     19 * LN(COUNT(DISTINCT ac.problem_name) * SQRT(COUNT(*))) AS raw_rank
                 FROM all_contributions ac
                 JOIN users u ON ac.user_id = u.id
-                GROUP BY u.username, u.profile_picture
+                LEFT JOIN user_preferences pr ON pr.user_id = u.id
+                GROUP BY u.id, u.username, u.profile_picture, u.last_seen_at
             )
-            SELECT 
+            SELECT
                 username,
                 profile_picture,
                 unique_contributions,
                 total_contributions,
+                (last_seen_at > NOW() - INTERVAL '5 minutes' AND show_online) AS is_online,
                 ROUND(raw_rank::numeric, 0) AS rank
             FROM user_stats
             ORDER BY raw_rank DESC

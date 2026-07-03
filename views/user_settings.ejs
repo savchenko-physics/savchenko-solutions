@@ -549,6 +549,18 @@
                             </label>
                         </div>
 
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Показывать, когда я в сети' : 'Show when I am online' %></strong>
+                                <span><%= lang === 'ru' ? 'Другие увидят зелёный индикатор «В сети» и «Был(а) в сети» в вашем профиле и в списке «Сейчас в сети».' : 'Others can see a green "online" indicator and "last seen" on your profile and in the "Online now" list.' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="showOnlineStatus" value="1" <%= (preferences && preferences.show_online_status !== false) ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
                         <h2 class="section-heading" style="margin-top:32px;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></h2>
 
                         <% const ns = typeof notificationSettings !== 'undefined' ? notificationSettings : {}; %>

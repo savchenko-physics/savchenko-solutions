@@ -3,6 +3,7 @@ const router = express.Router();
 const { Pool } = require('pg');
 const i18n = require('i18n');
 const notifications = require('./notifications');
+const { getOnlineUsernames } = require('./lib/presence');
 const { marked, Marked } = require('marked');
 const sanitizeHtml = require('sanitize-html');
 
@@ -311,6 +312,17 @@ router.get('/:categorySlug', async (req, res) => {
 
         const total = parseInt(countResult.rows[0].count, 10);
         const totalPages = Math.ceil(total / perPage);
+
+        // Online-presence dots for topic authors (never the current user).
+        const currentUsername = req.session.username || null;
+        const online = await getOnlineUsernames(
+            pool,
+            topicsResult.rows.map(t => t.author_username)
+        );
+        topicsResult.rows.forEach(t => {
+            t.author_online = t.author_username !== currentUsername
+                && online.has(t.author_username);
+        });
 
         res.render('forum/category', {
             __: i18n.__,
@@ -644,6 +656,13 @@ router.get('/:categorySlug/:topicParam', async (req, res) => {
             WHERE fp.topic_id = $1
             ORDER BY fp.created_at ASC
         `, [topicId]);
+
+        // Online-presence dots for post authors (never the current user).
+        const currentUsername = req.session.username || null;
+        const online = await getOnlineUsernames(pool, posts.map(p => p.username));
+        posts.forEach(p => {
+            p.isOnline = p.username !== currentUsername && online.has(p.username);
+        });
 
         // Compute reputation for each unique poster
         const userIds = [...new Set(posts.map(p => p.user_id))];
