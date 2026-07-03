@@ -196,6 +196,14 @@
             color: var(--sv-secondary);
         }
 
+        /* Codeforces-style rank title; color is set inline per tier. */
+        .rank-title-line {
+            margin: 4px 0 0;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
         .presence-line {
             display: flex;
             align-items: center;
@@ -1072,6 +1080,7 @@
                     <div class="profile-names">
                         <h1 id="name-line" class="name-line skeleton"><%= lang === 'ru' ? 'Имя участника' : 'Contributor Name' %></h1>
                         <p id="username-line" class="username-line">@<%= username %></p>
+                        <p id="rank-title-line" class="rank-title-line" style="display:none;"></p>
                         <p id="presence-line" class="presence-line" style="display:none;">
                             <span id="presence-dot" class="presence-dot"></span>
                             <span id="presence-text"></span>
@@ -2012,6 +2021,22 @@
 
         /* ── Contribution Rating (Codeforces-style) ── */
 
+        // Score → rank title + color. Mirrors the tiers on /:lang/contributors
+        // (getReputationBadge) and forum.js so the same title shows everywhere.
+        function getReputationBadge(score) {
+            const L = (en, ru) => (lang === "ru" ? ru : en);
+            if (score >= 200) return { label: L("Legendary Grandmaster", "Легендарный гроссмейстер"), color: "#FF0000" };
+            if (score >= 160) return { label: L("International Grandmaster", "Международный гроссмейстер"), color: "#FF0000" };
+            if (score >= 130) return { label: L("Grandmaster", "Гроссмейстер"), color: "#CC0000" };
+            if (score >= 110) return { label: L("International Master", "Международный мастер"), color: "#FF8C00" };
+            if (score >= 90)  return { label: L("Master", "Мастер"), color: "#FF8C00" };
+            if (score >= 70)  return { label: L("Candidate Master", "Кандидат в мастера"), color: "#AA00AA" };
+            if (score >= 50)  return { label: L("Expert", "Эксперт"), color: "#0000FF" };
+            if (score >= 30)  return { label: L("Specialist", "Специалист"), color: "#03A89E" };
+            if (score >= 10)  return { label: L("Pupil", "Ученик"), color: "#008000" };
+            return { label: L("Newbie", "Новичок"), color: "#808080" };
+        }
+
         async function renderRating() {
             let data;
             try {
@@ -2029,6 +2054,20 @@
                 rankEl.textContent = cur.rank != null
                     ? "#" + cur.rank + (cur.total != null ? "/" + cur.total : "")
                     : "—";
+            }
+
+            // Rank title next to the name. The site owner shows a fixed black
+            // "Headquarters" title (matching the leaderboard) instead of a tier.
+            const titleEl = document.getElementById("rank-title-line");
+            if (titleEl) {
+                const badge = username === "astrosander"
+                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", color: "#2d2d2d" }
+                    : (cur.score != null ? getReputationBadge(cur.score) : null);
+                if (badge) {
+                    titleEl.textContent = badge.label;
+                    titleEl.style.color = badge.color;
+                    titleEl.style.display = "block";
+                }
             }
 
             const wrap = document.getElementById("rating-chart-wrap");

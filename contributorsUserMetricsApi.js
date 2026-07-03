@@ -554,7 +554,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             }
             const userId = userRow.rows[0].id;
 
-            const payload = await withCache(`user:${username}:rating:v1`, async () => {
+            const payload = await withCache(`user:${username}:rating:v2`, async () => {
                 const events = await pool.query(
                     `
                     SELECT problem_name, edited_at
@@ -620,8 +620,11 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                     )
                     SELECT
                         (SELECT score FROM scores WHERE user_id = $1) AS score,
-                        (SELECT COUNT(*)::int FROM scores) AS total,
-                        (SELECT COUNT(*)::int FROM scores WHERE score > (SELECT score FROM scores WHERE user_id = $1)) + 1 AS rank
+                        -- astrosander (user 28) is skipped from rank numbering on the
+                        -- leaderboard, so exclude them here too to keep the profile
+                        -- rank/total consistent with /:lang/contributors.
+                        (SELECT COUNT(*)::int FROM scores WHERE user_id <> 28) AS total,
+                        (SELECT COUNT(*)::int FROM scores WHERE score > (SELECT score FROM scores WHERE user_id = $1) AND user_id <> 28) + 1 AS rank
                     `,
                     [userId]
                 );

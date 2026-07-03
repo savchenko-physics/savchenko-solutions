@@ -168,10 +168,58 @@
         }
         .online-now-empty { font-size: 13px; color: #6c757d; margin: 0; }
 
+        /* ── Geographic distribution: interactive 3D globe ── */
+        .geo-globe-wrap {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+            border: 1px solid #eef1f4;
+        }
         #world-map {
             width: 100%;
-            height: 300px;
+            height: auto;
             display: block;
+            cursor: grab;
+            touch-action: pan-y;
+        }
+        #world-map:active { cursor: grabbing; }
+        .geo-land { stroke: #ffffff; stroke-width: 0.5px; }
+        .geo-graticule { fill: none; stroke: rgba(26,63,143,0.07); stroke-width: 0.5px; }
+        .geo-ocean-stroke { fill: none; stroke: rgba(26,63,143,0.16); stroke-width: 1px; }
+        .geo-arc {
+            fill: none;
+            stroke: rgba(232,89,12,0.42);
+            stroke-width: 1.1px;
+            stroke-dasharray: 3 6;
+            animation: geoArcFlow 1.3s linear infinite;
+        }
+        @keyframes geoArcFlow { to { stroke-dashoffset: -18; } }
+        .geo-dot { filter: drop-shadow(0 0 3px rgba(232,89,12,0.55)); }
+        .geo-ping { fill: none; stroke: #e8590c; }
+        .geo-marker { cursor: pointer; }
+        .geo-caption {
+            position: absolute;
+            left: 0; right: 0; bottom: 12px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 13px;
+            letter-spacing: 0.02em;
+            pointer-events: none;
+        }
+        .geo-caption strong { color: #1a1a2e; font-weight: 600; }
+        .geo-legend {
+            position: absolute; top: 12px; left: 14px;
+            display: flex; align-items: center; gap: 7px;
+            color: #6c757d; font-size: 11px;
+            pointer-events: none;
+        }
+        .geo-legend .bar {
+            width: 84px; height: 7px; border-radius: 4px;
+            background: linear-gradient(90deg, #d2e3fc, #1a3f8f);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .geo-arc { animation: none; }
         }
 
 
@@ -562,7 +610,15 @@
 
         <section class="card">
             <h2 class="section-title"><%= __('contributorsPage.geoDistribution') %></h2>
-            <svg id="world-map" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
+            <div class="geo-globe-wrap">
+                <svg id="world-map" viewBox="0 0 960 460" preserveAspectRatio="xMidYMid meet"></svg>
+                <div class="geo-legend">
+                    <span><%= lang === 'ru' ? 'меньше' : 'less' %></span>
+                    <span class="bar"></span>
+                    <span><%= lang === 'ru' ? 'больше' : 'more' %></span>
+                </div>
+                <div class="geo-caption" id="geo-caption"></div>
+            </div>
         </section>
 
         <section class="card">
@@ -1091,11 +1147,11 @@
                 return arr[idx];
             };
             // Cap the ramp at the 90th percentile so one huge outlier (US) doesn't
-            // flatten everyone else to the lightest shade.
+            // flatten everyone else to the dimmest shade.
             const capContributions = Math.max(minPositiveContributions, percentile(sortedContrib, 0.9));
 
-            // Google-Analytics-style single-hue blue ramp: light blue = low activity,
-            // dark navy blue = high; countries with no data stay light gray.
+            // Single-hue blue ramp on a light sphere: pale blue = low activity,
+            // deep navy = high; countries with no data stay light gray.
             const NO_DATA_FILL = "#eef1f4";
             const activityScale = d3.scaleLog()
                 .domain([Math.max(1, minPositiveContributions), Math.max(2, capContributions)])
@@ -1117,50 +1173,221 @@
                     : `${people} contributor${people !== 1 ? "s" : ""}, ${count} contribution${count !== 1 ? "s" : ""}`;
                 return `<strong>${escapeMapText(displayName)}</strong><br>${contribLabel}`;
             }
+            function showTooltip(event, displayName, count, people) {
+                tooltip.style.opacity = "1";
+                tooltip.innerHTML = tooltipHtml(displayName, count, people);
+            }
 
-            const svg = d3.select("#world-map");
-            svg.selectAll("*").remove();
+            // Match a data-country name to a geojson feature (for centroids/markers).
+            const featureByKey = new Map();
+            geojson.features.forEach((f) => featureByKey.set(normalizeCountryKey(f.properties.name), f));
+            function findFeature(countryName) {
+                for (const alias of countryAliases(countryName)) {
+                    if (featureByKey.has(alias)) return featureByKey.get(alias);
+                }
+                return null;
+            }
+            // Hand-picked centroids where the geometric centroid is misleading
+            // (US incl. Alaska/Hawaii, Russia's east–west span, France + territories).
+            const centroidOverride = {
+                "united states of america": [-98, 39], "united states": [-98, 39], "usa": [-98, 39],
+                "russia": [96, 62], "russian federation": [96, 62],
+                "france": [2.5, 46.5], "canada": [-106, 56], "norway": [9, 61],
+            };
 
-            const width = 960;
-            const height = 300;
-            // Recenter (~12°E) so Europe/Russia and the Americas balance in-frame
-            // instead of splitting to the edges with an empty middle.
-            const projection = d3.geoNaturalEarth1()
-                .rotate([-12, 0])
-                .fitSize([width, height], geojson);
-            const path = d3.geoPath().projection(projection);
+            // Build one marker per data country.
+            const markerData = [];
+            mapData.forEach((x) => {
+                const feature = findFeature(x.country);
+                const coord = centroidOverride[normalizeCountryKey(x.country)]
+                    || (feature ? d3.geoCentroid(feature) : null);
+                if (!coord || !isFinite(coord[0]) || !isFinite(coord[1])) return;
+                markerData.push({
+                    displayName: x.country,
+                    coord,
+                    contributions: Number(x.total_contributions ?? x.contributions ?? 0),
+                    contributors: Number(x.contributors || 0),
+                });
+            });
+            const hub = markerData.reduce((best, d) => (!best || d.contributions > best.contributions ? d : best), null);
+            const maxPeople = markerData.reduce((m, d) => Math.max(m, d.contributors || 0), 1);
+            const dotR = d3.scaleSqrt().domain([1, maxPeople]).range([2.5, 8]).clamp(true);
 
             const tooltip = document.getElementById("map-tooltip");
 
-            svg.selectAll("path")
-                .data(geojson.features)
-                .enter()
-                .append("path")
-                .attr("d", path)
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 0.6)
-                .attr("fill", (d) => {
-                    const name = normalizeCountryKey(d.properties.name);
-                    return fillForCount(contributionCounts.get(name) || 0);
-                })
-                .on("mouseenter", function (event, d) {
-                    const name = normalizeCountryKey(d.properties.name);
-                    const count = contributionCounts.get(name) || 0;
-                    const people = peopleCounts.get(name) || 0;
-                    if (count > 0) {
-                        d3.select(this).attr("stroke", "#1a1a2e").attr("stroke-width", 1.5);
-                        tooltip.style.opacity = "1";
-                        tooltip.innerHTML = tooltipHtml(d.properties.name, count, people);
-                    }
-                })
-                .on("mousemove", (event) => {
-                    tooltip.style.left = `${event.clientX + 12}px`;
-                    tooltip.style.top = `${event.clientY - 28}px`;
-                })
-                .on("mouseleave", function () {
-                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", 0.6);
-                    tooltip.style.opacity = "0";
+            const tooltipMove = (event) => {
+                tooltip.style.left = `${event.clientX + 12}px`;
+                tooltip.style.top = `${event.clientY - 28}px`;
+            };
+            function landHover(sel) {
+                sel.on("mouseenter", function (event, d) {
+                        const name = normalizeCountryKey(d.properties.name);
+                        const count = contributionCounts.get(name) || 0;
+                        if (count > 0) showTooltip(event, d.properties.name, count, peopleCounts.get(name) || 0);
+                    })
+                    .on("mousemove", tooltipMove)
+                    .on("mouseleave", () => { tooltip.style.opacity = "0"; });
+            }
+            function markerHover(sel) {
+                sel.on("mouseenter", (event, d) => showTooltip(event, d.displayName, d.contributions, d.contributors))
+                    .on("mousemove", tooltipMove)
+                    .on("mouseleave", () => { tooltip.style.opacity = "0"; });
+            }
+
+            const svg = d3.select("#world-map");
+            const width = 960, height = 460, cx = width / 2, cy = height / 2, R = 196;
+            const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+            // Caption is identical in both render modes.
+            const totalPeople = mapData.reduce((s, x) => s + Number(x.contributors || 0), 0);
+            const caption = document.getElementById("geo-caption");
+            if (caption) {
+                caption.innerHTML = lang === "ru"
+                    ? `<strong>${mapData.length}</strong> стран · <strong>${totalPeople}</strong> участников по всему миру`
+                    : `<strong>${mapData.length}</strong> countries · <strong>${totalPeople}</strong> contributors worldwide`;
+            }
+
+            function addGlobeDefs() {
+                const defs = svg.append("defs");
+                const ocean = defs.append("radialGradient").attr("id", "geoOcean")
+                    .attr("cx", "35%").attr("cy", "30%").attr("r", "75%");
+                ocean.append("stop").attr("offset", "0%").attr("stop-color", "#ffffff");
+                ocean.append("stop").attr("offset", "55%").attr("stop-color", "#eaf2fb");
+                ocean.append("stop").attr("offset", "100%").attr("stop-color", "#d7e4f3");
+                const atmo = defs.append("radialGradient").attr("id", "geoAtmo")
+                    .attr("cx", "50%").attr("cy", "50%").attr("r", "50%");
+                atmo.append("stop").attr("offset", "78%").attr("stop-color", "rgba(26,63,143,0)");
+                atmo.append("stop").attr("offset", "94%").attr("stop-color", "rgba(26,63,143,0.10)");
+                atmo.append("stop").attr("offset", "100%").attr("stop-color", "rgba(26,63,143,0)");
+            }
+
+            // ── 3D animated globe: capable desktops only ──
+            function renderGlobe() {
+                addGlobeDefs();
+                svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R * 1.14).attr("fill", "url(#geoAtmo)");
+                svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R).attr("fill", "url(#geoOcean)");
+
+                const projection = d3.geoOrthographic().scale(R).translate([cx, cy]).clipAngle(90);
+                const path = d3.geoPath(projection);
+                const graticule = d3.geoGraticule().step([20, 20])();
+
+                const gratPath = svg.append("path").attr("class", "geo-graticule");
+                const land = svg.append("g").selectAll("path")
+                    .data(geojson.features).enter().append("path")
+                    .attr("class", "geo-land")
+                    .attr("fill", (d) => fillForCount(contributionCounts.get(normalizeCountryKey(d.properties.name)) || 0));
+                landHover(land);
+                svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", R).attr("class", "geo-ocean-stroke");
+
+                const arcFeatures = (hub ? markerData.filter((d) => d !== hub) : [])
+                    .map((d) => ({ type: "LineString", coordinates: [hub.coord, d.coord] }));
+                const arcSel = svg.append("g").selectAll("path")
+                    .data(arcFeatures).enter().append("path").attr("class", "geo-arc");
+
+                const markerG = svg.append("g");
+                const markers = markerG.selectAll("g").data(markerData).enter().append("g").attr("class", "geo-marker");
+                markers.append("circle").attr("class", "geo-ping").attr("r", 3).attr("stroke-width", 1.4);
+                markers.append("circle").attr("class", "geo-dot").attr("fill", "#e8590c").attr("r", (d) => dotR(d.contributors || 1));
+                markerHover(markers);
+
+                const HALF_PI = Math.PI / 2;
+                let rotate = [-10, -16];
+                let autoRotate = !reduceMotion;
+                let lastElapsed = 0, lastDraw = -1000, resumeTimer = null, onScreen = true;
+
+                function render(elapsed) {
+                    projection.rotate(rotate);
+                    gratPath.attr("d", path(graticule));
+                    land.attr("d", path);
+                    arcSel.attr("d", path);
+                    const center = [-rotate[0], -rotate[1]];
+                    const phase = reduceMotion ? 0 : ((elapsed || 0) % 1600) / 1600;
+                    markers.each(function (d) {
+                        const g = d3.select(this);
+                        if (d3.geoDistance(d.coord, center) > HALF_PI - 0.03) { g.style("display", "none"); return; }
+                        g.style("display", null);
+                        const p = projection(d.coord);
+                        g.attr("transform", `translate(${p[0]},${p[1]})`);
+                        g.select(".geo-ping").attr("r", 3 + phase * 13).attr("opacity", (1 - phase) * 0.65);
+                    });
+                }
+
+                // Pause when the tab is hidden or the globe is scrolled off-screen,
+                // and cap redraws to ~30fps — the two biggest CPU/battery savers.
+                const isPaused = () => document.hidden || !onScreen;
+                const timer = d3.timer((elapsed) => {
+                    if (isPaused()) { lastElapsed = elapsed; return; }
+                    const dt = elapsed - lastElapsed;
+                    lastElapsed = elapsed;
+                    if (autoRotate) rotate[0] += dt * 0.006;
+                    if (elapsed - lastDraw < 32) return;
+                    lastDraw = elapsed;
+                    render(elapsed);
                 });
+
+                svg.call(d3.drag()
+                    .on("start", () => { autoRotate = false; if (resumeTimer) clearTimeout(resumeTimer); })
+                    .on("drag", (event) => {
+                        rotate[0] += event.dx * 0.25;
+                        rotate[1] = Math.max(-85, Math.min(85, rotate[1] - event.dy * 0.25));
+                        render(lastElapsed);
+                    })
+                    .on("end", () => { resumeTimer = setTimeout(() => { autoRotate = true; }, 3500); }));
+
+                let io = null;
+                if (window.IntersectionObserver) {
+                    io = new IntersectionObserver((entries) => { onScreen = entries[0].isIntersecting; }, { threshold: 0.05 });
+                    io.observe(svg.node());
+                }
+                render(0);
+
+                return function teardown() {
+                    timer.stop();
+                    if (io) io.disconnect();
+                    if (resumeTimer) clearTimeout(resumeTimer);
+                    svg.on(".drag", null);
+                };
+            }
+
+            // ── 2D flat map: phones, reduced-motion, or if the globe throws ──
+            function renderFlat() {
+                const projection = d3.geoNaturalEarth1().rotate([-12, 0]).fitSize([width, height - 24], geojson);
+                const path = d3.geoPath(projection);
+                const land = svg.append("g").selectAll("path")
+                    .data(geojson.features).enter().append("path")
+                    .attr("class", "geo-land")
+                    .attr("d", path)
+                    .attr("fill", (d) => fillForCount(contributionCounts.get(normalizeCountryKey(d.properties.name)) || 0));
+                landHover(land);
+                const markerG = svg.append("g");
+                const markers = markerG.selectAll("g").data(markerData).enter().append("g")
+                    .attr("class", "geo-marker")
+                    .attr("transform", (d) => { const p = projection(d.coord); return p ? `translate(${p[0]},${p[1]})` : "translate(-9999,-9999)"; });
+                markers.append("circle").attr("class", "geo-dot").attr("fill", "#e8590c").attr("r", (d) => dotR(d.contributors || 1));
+                markerHover(markers);
+                return function teardown() {};
+            }
+
+            // Choose renderer by capability; re-pick on resize; fall back to the
+            // cheap flat map if the globe ever throws on an old/quirky browser.
+            const pickMode = () => (window.innerWidth < 768 || reduceMotion) ? "2d" : "3d";
+            let currentMode = null, stopCurrent = null;
+            function mount() {
+                const mode = pickMode();
+                if (mode === currentMode) return;
+                if (stopCurrent) { try { stopCurrent(); } catch (_) {} stopCurrent = null; }
+                svg.selectAll("*").remove();
+                try {
+                    stopCurrent = mode === "3d" ? renderGlobe() : renderFlat();
+                    currentMode = mode;
+                } catch (_e) {
+                    svg.selectAll("*").remove();
+                    try { stopCurrent = renderFlat(); currentMode = "2d"; } catch (__e) {}
+                }
+            }
+            mount();
+            let resizeT = null;
+            window.addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(mount, 200); });
         }
 
         async function loadHeatmap(year = null) {

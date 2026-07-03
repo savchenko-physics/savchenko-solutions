@@ -123,12 +123,47 @@
 
     .countdown-line { font-size: 13px; color: #6c757d; margin-top: 0.4rem; }
     .countdown-line strong { color: #1a1a2e; }
+
+    .contest-review-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-left: 3px solid #27ae60;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+    }
+    .contest-review-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #27ae60;
+      flex-shrink: 0;
+      margin-top: 5px;
+    }
+    .contest-review-banner strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; }
+    .contest-review-banner span { font-size: 13px; color: #6c757d; line-height: 1.5; }
   </style>
 </head>
 <body>
   <%- include('../default/main_site_header') %>
 
   <div class="contest-container">
+
+    <% if (contest.reviewPhase) { %>
+    <!-- Review-stage notice -->
+    <div class="contest-review-banner" role="status">
+      <span class="contest-review-dot" aria-hidden="true"></span>
+      <div>
+        <strong><%= isRu ? 'Конкурс завершён — идёт проверка решений' : 'The contest has ended — solutions are under review' %></strong>
+        <span><%= isRu
+          ? 'Приём решений закрыт. Сейчас мы вручную проверяем и подтверждаем каждое решение. Итоги и победители будут объявлены после завершения проверки.'
+          : 'Submissions are closed. We are now manually reviewing and validating every solution. Final results and winners will be announced once the review is complete.' %></span>
+      </div>
+    </div>
+    <% } %>
 
     <!-- Header -->
     <div>
@@ -141,7 +176,11 @@
       </p>
       <div class="contest-dates">
         <strong><%= fmtDate(contest.startDate) %></strong> — <strong><%= fmtDate(contest.endDate) %> 2026</strong>
+        <% if (contest.reviewPhase) { %>
+        <span class="countdown-line"><%= isRu ? '· конкурс завершён' : '· contest ended' %></span>
+        <% } else { %>
         <span id="countdownLine" class="countdown-line" data-end="<%= contest.endDate %>"></span>
+        <% } %>
       </div>
     </div>
 

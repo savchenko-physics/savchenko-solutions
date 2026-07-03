@@ -43,6 +43,9 @@ const CONTEST = {
     lowCoverageChapters: ['9', '10', '12', '14'],
     // Organizer accounts excluded from the standings and activity feed.
     excludedUserIds: [28, 232], // emixter, astrosander
+    // Set true to announce that submissions are closed and every solution is
+    // now being reviewed/validated manually (shows a banner on the contest page).
+    reviewPhase: true,
     title: { ru: 'Июньский конкурс', en: 'June Contest' },
 };
 
@@ -396,6 +399,8 @@ async function computeStandings() {
         stretchUnlocked: totalSolutions >= CONTEST.goalSolutions,
         bronzeThreshold: CONTEST.bronzeThreshold,
         live: isLive(),
+        // Manual review/validation stage — on once forced in config or after the deadline.
+        reviewPhase: CONTEST.reviewPhase === true || Date.now() > CONTEST_END_INSTANT,
         daysLeft: daysLeft(),
         totalSolutions,
         participants: leaderboard.length,
