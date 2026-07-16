@@ -483,6 +483,7 @@
 
     let isOpen = false;
     let loaded = false;
+    let seenSent = false;
 
     function notifIcon(type) {
       const icons = {
@@ -542,20 +543,42 @@
       });
     }
 
+    // Resolves true when the list rendered, false when it could not be loaded.
     function loadNotifs() {
-      fetch('/api/notifications').then(function(r) { return r.json(); }).then(function(data) {
+      return fetch('/api/notifications').then(function(r) { return r.json(); }).then(function(data) {
         renderNotifs(data.notifications || []);
         loaded = true;
+        return true;
       }).catch(function() {
         list.innerHTML = '<div style="padding:16px;text-align:center;color:#6c757d;font-size:13px;">Failed to load</div>';
+        return false;
       });
+    }
+
+    function hideBadge() {
+      badge.textContent = '';
+      badge.style.display = 'none';
+    }
+
+    // Opening the panel counts as having seen the notifications, so the badge clears
+    // in one go instead of only counting down as each item is clicked. The request
+    // marks read for the signed-in user alone, so it never affects anyone else.
+    function markAllSeen() {
+      if (seenSent || badge.style.display === 'none') return;
+      seenSent = true;
+      fetch('/api/notifications/read-all', { method: 'POST' })
+        .then(function() { hideBadge(); })
+        .catch(function() { seenSent = false; });
     }
 
     bell.addEventListener('click', function(e) {
       e.stopPropagation();
       isOpen = !isOpen;
       dropdown.style.display = isOpen ? 'block' : 'none';
-      if (isOpen && !loaded) loadNotifs();
+      if (!isOpen) return;
+      // Render before clearing, so this viewing still highlights what was unread.
+      if (!loaded) loadNotifs().then(function(ok) { if (ok) markAllSeen(); });
+      else markAllSeen();
     });
 
     document.addEventListener('click', function(e) {
@@ -565,13 +588,12 @@
       }
     });
 
+    // Still useful once the badge is already clear: it repaints the list as read.
     if (markAllBtn) {
       markAllBtn.addEventListener('click', function() {
         fetch('/api/notifications/read-all', { method: 'POST' }).then(function() {
-          badge.style.display = 'none';
-          badge.textContent = '0';
-          if (loaded) loadNotifs();
-          else loaded = false;
+          seenSent = true;
+          hideBadge();
           loadNotifs();
         }).catch(function(){});
       });
