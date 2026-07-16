@@ -561,25 +561,14 @@ router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) 
         );
 
         // Notify other members
-        const otherMembers = await pool.query(
-            `SELECT user_id FROM conversation_members WHERE conversation_id = $1 AND user_id != $2`,
-            [convId, userId]
-        );
         const preview = imageUrl && !content ? '[Image]' : (content.length > 80 ? content.substring(0, 80) + '...' : content);
-        for (const member of otherMembers.rows) {
-            try {
-                await notifications.createNotification(
-                    member.user_id,
-                    'new_message',
-                    `New message from ${req.session.username}`,
-                    preview,
-                    `/messages/${convId}`,
-                    userId
-                );
-            } catch (notifErr) {
-                console.error('Message notification error:', notifErr);
-            }
-        }
+        await notifications.createMessageNotifications(
+            convId,
+            userId,
+            `New message from ${req.session.username}`,
+            preview,
+            `/messages/${convId}`
+        );
 
         // If AJAX request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {

@@ -637,6 +637,18 @@
                             </label>
                         </div>
 
+                        <div class="toggle-row">
+                            <div class="toggle-text">
+                                <strong><%= lang === 'ru' ? 'Личные сообщения' : 'Direct messages' %></strong>
+                                <span><%= lang === 'ru' ? 'Когда вам пишут в личные сообщения' : 'When someone sends you a direct message' %></span>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" name="notif_new_message" value="1" <%= ns.new_message !== false ? 'checked' : '' %>>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-thumb"></span>
+                            </label>
+                        </div>
+
                         <button type="submit" class="btn-primary"><%= __('settings.privacy.save') %></button>
                     </form>
                 </div>

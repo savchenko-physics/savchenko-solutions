@@ -21,6 +21,11 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
     new_message: true,
 };
 
+// Above this member count a conversation is treated as an announcement channel
+// rather than a chat: only members who have posted in it are notified. Real DMs
+// and group chats sit far below this; the site-wide channel holds every user.
+const LARGE_CONVERSATION_MEMBERS = 25;
+
 /**
  * Check if a user has a specific notification type enabled.
  * Returns true if no preferences row exists (default = all enabled).
@@ -60,6 +65,46 @@ async function createNotification(userId, type, title, message, link, performerI
         );
     } catch (err) {
         console.error('Error creating notification:', err);
+    }
+}
+
+/**
+ * Fan out `new_message` notifications for a single message in one statement.
+ *
+ * Recipients are the other members of the conversation, minus anyone who turned
+ * `new_message` off. In a conversation larger than LARGE_CONVERSATION_MEMBERS only
+ * members who have themselves posted there are notified: those conversations are
+ * announcement channels every user is a member of, so notifying all of them would
+ * write one row per member per message and bury unrelated users.
+ *
+ * Returns the number of notifications created.
+ */
+async function createMessageNotifications(conversationId, senderId, title, preview, link) {
+    try {
+        const result = await pool.query(
+            `INSERT INTO notifications (user_id, type, title, message, link)
+             SELECT cm.user_id, 'new_message', $3, $4, $5
+             FROM conversation_members cm
+             LEFT JOIN user_preferences up ON up.user_id = cm.user_id
+             WHERE cm.conversation_id = $1
+               AND cm.user_id <> $2
+               AND COALESCE((up.notification_settings ->> 'new_message')::boolean, true)
+               AND (
+                     (SELECT count(*) FROM conversation_members m
+                      WHERE m.conversation_id = $1) <= $6
+                     OR EXISTS (
+                         SELECT 1 FROM messages msg
+                         WHERE msg.conversation_id = $1
+                           AND msg.sender_id = cm.user_id
+                     )
+                   )
+             RETURNING id`,
+            [conversationId, senderId, title, preview, link, LARGE_CONVERSATION_MEMBERS]
+        );
+        return result.rowCount;
+    } catch (err) {
+        console.error('Error creating message notifications:', err);
+        return 0;
     }
 }
 
@@ -143,6 +188,7 @@ async function hasRecentLikeNotification(userId, problemName) {
 
 module.exports = {
     createNotification,
+    createMessageNotifications,
     getUnreadCount,
     getNotifications,
     getNotificationCount,

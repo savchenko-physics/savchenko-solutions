@@ -615,6 +615,7 @@ app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
         new_follower: !!req.body.notif_new_follower,
         forum_reply: !!req.body.notif_forum_reply,
         challenge_result: !!req.body.notif_challenge_result,
+        new_message: !!req.body.notif_new_message,
         report_resolved: true, // always on
         forum_solution: true,  // always on
     };
