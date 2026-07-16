@@ -42,6 +42,7 @@ const bankRouter = require('./bank');
 const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
 const { router: contestRouter, getActiveContestBanner } = require('./contest');
+const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
@@ -2113,7 +2114,11 @@ app.use('/api/brainstorm', brainstormRouter);
 // Weekly Challenges
 app.use('/compete', challengesRouter);
 
-// Monthly Contest (live dashboard)
+// Monthly Contest (live dashboard).
+// The blind dual-judge evaluation router is mounted FIRST so its more specific
+// /:slug/judge* routes win before the contest dashboard's /:slug catch-all.
+app.use('/:lang(en|ru)/challenge', contestJudgeRouter);
+app.use('/challenge', contestJudgeRouter);
 app.use('/:lang(en|ru)/challenge', contestRouter);
 app.use('/challenge', contestRouter);
 

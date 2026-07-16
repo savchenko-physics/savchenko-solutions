@@ -7,6 +7,7 @@ const i18n = require('i18n');
 const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
 const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
+const { getSolutionJudgingWidget, isContestOrganizer } = require("./contestJudge");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -270,6 +271,18 @@ async function renderPost(req, res) {
             console.error("Error fetching edit history:", err);
         }
 
+        // Contest quality-judging widget — only for the two organizers, and
+        // only when this (problem, language) is a credited contest submission.
+        // Fully blind: never carries the other judge's individual scores.
+        let judging = null;
+        try {
+            if (isContestOrganizer(req)) {
+                judging = await getSolutionJudgingWidget(req.session.userId, name, lang);
+            }
+        } catch (err) {
+            console.error("Error loading contest judging widget:", err);
+        }
+
         // Related problems from the same chapter
         const relatedProblems = getRelatedProblems(name, lang);
 
@@ -326,6 +339,7 @@ async function renderPost(req, res) {
             brainstormRelated,
             brainstormIsCurator,
             brainstormReactions: ALLOWED_REACTIONS,
+            judging,
         });
     } else {
         i18n.setLocale(res, lang);

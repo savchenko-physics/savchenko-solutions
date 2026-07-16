@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <%
+    const contestTitle = (table.title && table.title.ru) ? table.title.ru : 'Июньский конкурс';
+    const scale = table.scale || { min: 1, max: 10, step: 0.5 };
+    const criteria = table.criteria || [];
+    const rows = table.rows || [];
+    const gradedByMe = rows.filter(r => r.mine && r.mine.total != null).length;
+    const fullyJudged = rows.filter(r => r.combined != null).length;
+    function langBadge(l) { return l === 'en' ? 'EN' : 'RU'; }
+  %>
+  <title>Оценка качества — <%= contestTitle %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
+    .cjt-container { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; }
+
+    .cjt-eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #1a5276; }
+    .cjt-title { font-size: 28px; font-weight: 700; font-family: Inter, sans-serif; color: #1a1a2e; margin: 0.25rem 0 0.35rem; }
+    .cjt-sub { font-size: 14px; color: #6c757d; max-width: 760px; line-height: 1.6; }
+
+    .cjt-note { display: flex; align-items: flex-start; gap: 0.6rem; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.85rem 1rem; margin: 1.1rem 0 1.4rem; font-size: 13.5px; color: #2d2d2d; line-height: 1.55; }
+    .cjt-note i { color: #1a5276; margin-top: 2px; }
+
+    .cjt-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.85rem; margin-bottom: 1.1rem; }
+    .cjt-stats { display: flex; gap: 1.25rem; margin-right: auto; }
+    .cjt-stat { font-size: 13px; color: #6c757d; }
+    .cjt-stat strong { display: block; font-size: 20px; font-weight: 700; color: #1a1a2e; font-family: Inter, sans-serif; line-height: 1.1; }
+    .cjt-controls { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+    .cjt-seg { display: inline-flex; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
+    .cjt-seg button { border: none; background: #fff; color: #2d2d2d; font-size: 13px; padding: 8px 12px; cursor: pointer; }
+    .cjt-seg button + button { border-left: 1px solid #dee2e6; }
+    .cjt-seg button.active { background: #1a1a2e; color: #fff; }
+    .cjt-select { height: 40px; border: 1px solid #dee2e6; border-radius: 6px; padding: 0 10px; font-size: 13px; color: #2d2d2d; background: #fff; }
+
+    /* Submission rows */
+    .cjt-list { display: flex; flex-direction: column; gap: 0.9rem; }
+    .cjt-row { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem 1.1rem; background: #fff; }
+    .cjt-row.cjt-both { border-color: #27ae60; }
+    .cjt-row-head { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.85rem; }
+    .cjt-index { font-size: 13px; color: #adb5bd; font-variant-numeric: tabular-nums; min-width: 26px; }
+    .cjt-problem { font-size: 16px; font-weight: 600; font-family: Inter, sans-serif; color: #1a5276; text-decoration: none; }
+    .cjt-problem:hover { text-decoration: underline; }
+    .cjt-lang { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 4px; background: #eef1f4; color: #6c757d; }
+    .cjt-author { font-size: 13px; color: #6c757d; }
+    .cjt-author a { color: #1a5276; text-decoration: none; }
+    .cjt-ref { font-size: 12px; color: #6c757d; }
+    .cjt-ref strong { color: #2d2d2d; }
+    .cjt-head-right { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; }
+    .cjt-chip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 12px; border: 1px solid #dee2e6; color: #6c757d; background: #fff; }
+    .cjt-chip.on { background: #eaf6ee; border-color: #27ae60; color: #1e8449; }
+    .cjt-combined { text-align: center; min-width: 74px; border-left: 1px solid #eef1f4; padding-left: 0.75rem; }
+    .cjt-combined .v { font-size: 22px; font-weight: 800; font-family: Inter, sans-serif; color: #adb5bd; line-height: 1; }
+    .cjt-row.cjt-both .cjt-combined .v { color: #1a1a2e; }
+    .cjt-combined .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: #adb5bd; }
+
+    .cjt-body { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; align-items: start; }
+    @media (max-width: 900px) { .cjt-body { grid-template-columns: 1fr; } }
+
+    .cjt-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem 1rem; }
+    @media (max-width: 560px) { .cjt-criteria { grid-template-columns: 1fr; } }
+    .cjt-crit { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+    .cjt-crit label { font-size: 13px; color: #2d2d2d; }
+    .cjt-crit input { width: 74px; height: 38px; border: 1px solid #dee2e6; border-radius: 6px; padding: 0 8px; font-size: 14px; text-align: center; color: #2d2d2d; }
+    .cjt-crit input:focus { outline: none; border-color: #1a5276; }
+
+    .cjt-my-total { grid-column: 1 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; font-size: 13px; color: #6c757d; border-top: 1px dashed #eef1f4; padding-top: 0.5rem; }
+    .cjt-my-total b { font-size: 17px; color: #1a1a2e; font-family: Inter, sans-serif; }
+
+    .cjt-comment-col { display: flex; flex-direction: column; }
+    .cjt-comment-col label { font-size: 12px; color: #6c757d; margin-bottom: 0.35rem; }
+    .cjt-comment { width: 100%; min-height: 96px; resize: vertical; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: #2d2d2d; font-family: inherit; }
+    .cjt-comment:focus { outline: none; border-color: #1a5276; }
+    .cjt-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.85rem; margin-top: 0.6rem; }
+    .cjt-status { font-size: 12.5px; color: #6c757d; margin-right: auto; }
+    .cjt-status.ok { color: #1e8449; }
+    .cjt-save { background: #1a1a2e; color: #fff; border: none; border-radius: 6px; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .cjt-save:hover { background: #2c2c4a; }
+    .cjt-save:disabled { opacity: 0.6; cursor: default; }
+
+    .cjt-empty { text-align: center; color: #6c757d; padding: 3rem 1rem; }
+    .cjt-back { display: inline-block; margin-top: 0.4rem; font-size: 13px; color: #1a5276; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <%- include('../default/main_site_header') %>
+
+  <div class="cjt-container">
+    <div class="cjt-eyebrow">Организаторы конкурса</div>
+    <h1 class="cjt-title">Оценка качества работ · <%= contestTitle %></h1>
+    <p class="cjt-sub">Каждая работа оценивается двумя организаторами независимо. Итоговый балл — среднее геометрическое двух оценок, он появляется только после того, как работу оценят оба судьи.</p>
+    <a class="cjt-back" href="/challenge/<%= table.slug %>">&larr; Вернуться к таблице конкурса</a>
+
+    <div class="cjt-note">
+      <i class="fas fa-user-shield" aria-hidden="true"></i>
+      <div>Слепая оценка: вы не видите баллы и комментарии второго судьи. Отображается только факт, оценил ли он работу, и итоговый балл после двух оценок. Ваши оценки сохраняются под вашим аккаунтом и не могут быть изменены вторым организатором.</div>
+    </div>
+
+    <div class="cjt-toolbar">
+      <div class="cjt-stats">
+        <div class="cjt-stat"><strong><%= rows.length %></strong>работ</div>
+        <div class="cjt-stat"><strong id="cjtStatMine"><%= gradedByMe %></strong>оценено мной</div>
+        <div class="cjt-stat"><strong id="cjtStatBoth"><%= fullyJudged %></strong>оценили оба</div>
+      </div>
+      <div class="cjt-controls">
+        <div class="cjt-seg" id="cjtFilter" role="group" aria-label="Фильтр">
+          <button data-filter="all" class="active">Все</button>
+          <button data-filter="unmine">Мной не оценено</button>
+          <button data-filter="both">Оценили оба</button>
+        </div>
+        <select class="cjt-select" id="cjtSort" aria-label="Сортировка">
+          <option value="problem">По номеру задачи</option>
+          <option value="combined">По итогу (лучшие сверху)</option>
+          <option value="mine">По моей оценке</option>
+        </select>
+      </div>
+    </div>
+
+    <% if (rows.length === 0) { %>
+      <div class="cjt-empty">Пока нет зачётных работ для оценки в окне конкурса.</div>
+    <% } else { %>
+    <div class="cjt-list" id="cjtList">
+      <% rows.forEach(function (r, i) {
+           const myScores = (r.mine && r.mine.scores) ? r.mine.scores : {};
+           const myTotal = (r.mine && r.mine.total != null) ? r.mine.total : '';
+      %>
+      <div class="cjt-row<%= r.combined != null ? ' cjt-both' : '' %>"
+           data-problem="<%= r.problemName %>"
+           data-lang="<%= r.language %>"
+           data-index="<%= i %>"
+           data-mine="<%= myTotal === '' ? '' : myTotal %>"
+           data-other="<%= r.otherEvaluated ? '1' : '0' %>"
+           data-combined="<%= r.combined != null ? r.combined : '' %>"
+           data-base="<%= r.basePoints != null ? r.basePoints : '' %>">
+        <div class="cjt-row-head">
+          <span class="cjt-index"><%= i + 1 %></span>
+          <a class="cjt-problem" href="/<%= r.language %>/<%= r.problemName %>" target="_blank" rel="noopener"><%= r.problemName %></a>
+          <span class="cjt-lang"><%= langBadge(r.language) %></span>
+          <span class="cjt-author">Автор:
+            <% if (r.author && r.author.username) { %><a href="/user/<%= r.author.username %>" target="_blank" rel="noopener">@<%= r.author.username %></a><% } else { %>Аноним<% } %>
+          </span>
+          <% if (r.basePoints != null) { %><span class="cjt-ref">вес: <strong><%= r.basePoints %></strong></span><% } %>
+          <div class="cjt-head-right">
+            <span class="cjt-chip cjt-chip-mine<%= (r.mine && r.mine.total != null) ? ' on' : '' %>">мой балл</span>
+            <span class="cjt-chip cjt-chip-other<%= r.otherEvaluated ? ' on' : '' %>">второй судья</span>
+            <div class="cjt-combined">
+              <div class="v cjt-combined-value"><%= r.combined != null ? r.combined : '—' %></div>
+              <div class="l">итог</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cjt-body">
+          <div class="cjt-criteria">
+            <% criteria.forEach(function (c) { %>
+            <div class="cjt-crit">
+              <label for="cjt_<%= i %>_<%= c.key %>"><%= c.ru %></label>
+              <input type="number" id="cjt_<%= i %>_<%= c.key %>" class="cjt-crit-input"
+                     data-key="<%= c.key %>" min="<%= scale.min %>" max="<%= scale.max %>" step="<%= scale.step %>"
+                     placeholder="—" value="<%= myScores[c.key] != null ? myScores[c.key] : '' %>" />
+            </div>
+            <% }); %>
+            <div class="cjt-my-total">Моя итоговая оценка: <b class="cjt-my-total-value"><%= myTotal === '' ? '—' : myTotal %></b></div>
+          </div>
+
+          <div class="cjt-comment-col">
+            <label for="cjt_comment_<%= i %>">Мой комментарий (виден только мне)</label>
+            <textarea id="cjt_comment_<%= i %>" class="cjt-comment" placeholder="Заметки о качестве работы, замечания, что можно улучшить…"><%= (r.mine && r.mine.comment) ? r.mine.comment : '' %></textarea>
+            <div class="cjt-row-actions">
+              <span class="cjt-status"></span>
+              <button type="button" class="cjt-save">Сохранить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    <% } %>
+  </div>
+
+  <script>
+  (function () {
+    const SLUG = <%- JSON.stringify(table.slug) %>;
+    const SCALE = <%- JSON.stringify(scale) %>;
+    const list = document.getElementById('cjtList');
+    if (!list) return;
+
+    function num(el) { const v = parseFloat(el.value); return Number.isFinite(v) ? v : null; }
+
+    function recompute(row) {
+      const inputs = row.querySelectorAll('.cjt-crit-input');
+      const vals = [];
+      inputs.forEach(function (inp) {
+        const v = num(inp);
+        if (v != null && v >= SCALE.min && v <= SCALE.max) vals.push(v);
+      });
+      const total = vals.length ? Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 100) / 100 : null;
+      row.querySelector('.cjt-my-total-value').textContent = total == null ? '—' : total;
+      return total;
+    }
+
+    list.addEventListener('input', function (e) {
+      if (e.target.classList.contains('cjt-crit-input')) recompute(e.target.closest('.cjt-row'));
+    });
+
+    function collect(row) {
+      const scores = {};
+      row.querySelectorAll('.cjt-crit-input').forEach(function (inp) {
+        const v = num(inp);
+        if (v != null && v >= SCALE.min && v <= SCALE.max) scores[inp.dataset.key] = v;
+      });
+      return scores;
+    }
+
+    function applyResult(row, data) {
+      row.dataset.other = data.otherEvaluated ? '1' : '0';
+      row.dataset.combined = (data.combined != null) ? data.combined : '';
+      const mineTotal = (data.mine && data.mine.total != null) ? data.mine.total : '';
+      row.dataset.mine = mineTotal === '' ? '' : mineTotal;
+      row.querySelector('.cjt-combined-value').textContent = (data.combined != null) ? data.combined : '—';
+      row.classList.toggle('cjt-both', data.combined != null);
+      row.querySelector('.cjt-chip-mine').classList.toggle('on', mineTotal !== '');
+      row.querySelector('.cjt-chip-other').classList.toggle('on', !!data.otherEvaluated);
+      updateStats();
+    }
+
+    list.addEventListener('click', function (e) {
+      const btn = e.target.closest('.cjt-save');
+      if (!btn) return;
+      const row = btn.closest('.cjt-row');
+      const status = row.querySelector('.cjt-status');
+      btn.disabled = true; const original = btn.textContent; btn.textContent = 'Сохранение…';
+      status.classList.remove('ok');
+      fetch('/challenge/' + SLUG + '/judge/save', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          problem_name: row.dataset.problem,
+          language: row.dataset.lang,
+          scores: collect(row),
+          comment: row.querySelector('.cjt-comment').value
+        })
+      }).then(function (r) { return r.json(); }).then(function (data) {
+        if (data && data.ok) {
+          applyResult(row, data);
+          status.classList.add('ok');
+          status.textContent = (data.combined != null) ? 'Сохранено · оценили оба' : 'Сохранено';
+        } else {
+          status.textContent = (data && data.error) ? data.error : 'Ошибка';
+        }
+      }).catch(function () { status.textContent = 'Ошибка сети'; })
+        .finally(function () { btn.disabled = false; btn.textContent = original; });
+    });
+
+    function updateStats() {
+      const rows = Array.prototype.slice.call(list.querySelectorAll('.cjt-row'));
+      document.getElementById('cjtStatMine').textContent = rows.filter(function (r) { return r.dataset.mine !== ''; }).length;
+      document.getElementById('cjtStatBoth').textContent = rows.filter(function (r) { return r.dataset.combined !== ''; }).length;
+    }
+
+    // Filters
+    let filter = 'all';
+    document.getElementById('cjtFilter').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      this.querySelectorAll('button').forEach(function (x) { x.classList.remove('active'); });
+      b.classList.add('active'); filter = b.dataset.filter; applyView();
+    });
+
+    // Sort
+    let sort = 'problem';
+    document.getElementById('cjtSort').addEventListener('change', function () { sort = this.value; applyView(); });
+
+    function cmpProblem(a, b) {
+      const pa = a.dataset.problem.split('.').map(Number), pb = b.dataset.problem.split('.').map(Number);
+      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        const d = (pa[i] || 0) - (pb[i] || 0); if (d) return d;
+      }
+      return a.dataset.lang.localeCompare(b.dataset.lang);
+    }
+
+    function applyView() {
+      const rows = Array.prototype.slice.call(list.querySelectorAll('.cjt-row'));
+      rows.forEach(function (r) {
+        let show = true;
+        if (filter === 'unmine') show = (r.dataset.mine === '');
+        else if (filter === 'both') show = (r.dataset.combined !== '');
+        r.style.display = show ? '' : 'none';
+      });
+      const visible = rows.filter(function (r) { return r.style.display !== 'none'; });
+      visible.sort(function (a, b) {
+        if (sort === 'combined') return (parseFloat(b.dataset.combined) || -1) - (parseFloat(a.dataset.combined) || -1) || cmpProblem(a, b);
+        if (sort === 'mine') return (parseFloat(b.dataset.mine) || -1) - (parseFloat(a.dataset.mine) || -1) || cmpProblem(a, b);
+        return cmpProblem(a, b);
+      });
+      visible.forEach(function (r) { list.appendChild(r); });
+    }
+  })();
+  </script>
+
+  <%- include('../default/main_site_search_script') %>
+</body>
+</html>

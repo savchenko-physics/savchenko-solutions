@@ -43,6 +43,13 @@ const CONTEST = {
     lowCoverageChapters: ['9', '10', '12', '14'],
     // Organizer accounts excluded from the standings and activity feed.
     excludedUserIds: [28, 232], // emixter, astrosander
+    // The two contest organizers who blind-judge submission quality. Single
+    // source of truth for access control across the judging feature
+    // (contestJudge.js, the solution-page widget, and the evaluation table).
+    organizers: [
+        { id: 232, username: 'astrosander' },
+        { id: 28,  username: 'emixter' },
+    ],
     // Set true to announce that submissions are closed and every solution is
     // now being reviewed/validated manually (shows a banner on the contest page).
     reviewPhase: true,
@@ -80,6 +87,14 @@ function invalidateStandingsCache() {
 
 function getLang(req) {
     return req.session && req.session.lang ? req.session.lang : 'en';
+}
+
+// True when the logged-in user is one of the two contest organizers. Gate,
+// by stable user id, on both the judging routes and the solution-page widget.
+function isContestOrganizer(req) {
+    const uid = req && req.session ? req.session.userId : null;
+    if (!uid) return false;
+    return (CONTEST.organizers || []).some(o => o.id === uid);
 }
 
 // Days remaining (>= 0) until the contest ends, for the banner/countdown.
@@ -455,4 +470,4 @@ router.get('/:slug', async (req, res) => {
     }
 });
 
-module.exports = { router, getActiveContestBanner, CONTEST, invalidateStandingsCache };
+module.exports = { router, getActiveContestBanner, CONTEST, invalidateStandingsCache, isContestOrganizer };

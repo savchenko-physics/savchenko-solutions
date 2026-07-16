@@ -1255,6 +1255,152 @@
                 <%- content %>
             </div>
 
+            <!-- Contest quality-judging widget (organizers only, blind evaluation) -->
+            <% if (typeof judging !== 'undefined' && judging && judging.isOrganizer && judging.isSubmission) { %>
+            <section class="cj-widget" id="cjWidget"
+                     data-slug="<%= judging.slug %>"
+                     data-problem="<%= name %>"
+                     data-lang="<%= lang %>">
+                <div class="cj-head">
+                    <div>
+                        <h3 class="cj-title">Оценка качества работы</h3>
+                        <p class="cj-sub">Только для организаторов · независимая слепая оценка</p>
+                    </div>
+                    <div class="cj-combined" id="cjCombined" aria-live="polite">
+                        <span class="cj-combined-value" id="cjCombinedValue">—</span>
+                        <span class="cj-combined-label">итог двух судей</span>
+                    </div>
+                </div>
+
+                <div class="cj-meta">
+                    <span>Автор:
+                        <% if (judging.author && judging.author.username) { %>
+                            <a href="/user/<%= judging.author.username %>">@<%= judging.author.username %></a>
+                        <% } else { %>
+                            <strong>Аноним</strong>
+                        <% } %>
+                    </span>
+                    <% if (judging.basePoints != null) { %>
+                        <span>Текущий вес в таблице: <strong><%= judging.basePoints %></strong></span>
+                    <% } %>
+                    <a href="/challenge/<%= judging.slug %>/judge" class="cj-table-link">Открыть таблицу оценок &rarr;</a>
+                </div>
+
+                <div class="cj-criteria" id="cjCriteria"></div>
+
+                <div class="cj-total-row">
+                    <span class="cj-total-label">Моя итоговая оценка</span>
+                    <span class="cj-total-value" id="cjMyTotal">—</span>
+                </div>
+
+                <label class="cj-comment-label" for="cjComment">Комментарий (виден только вам)</label>
+                <textarea class="cj-comment" id="cjComment" rows="4" placeholder="Заметки о качестве работы…"></textarea>
+
+                <div class="cj-actions">
+                    <div class="cj-status" id="cjStatus"></div>
+                    <button type="button" class="cj-save-btn" id="cjSave">Сохранить оценку</button>
+                </div>
+
+                <script type="application/json" id="cjConfig"><%- JSON.stringify({ criteria: judging.criteria, scale: judging.scale, mine: judging.mine, otherEvaluated: judging.otherEvaluated, combined: judging.combined }).replace(/</g, '\\u003c') %></script>
+            </section>
+            <script>
+            (function () {
+                const root = document.getElementById('cjWidget');
+                if (!root) return;
+                const cfg = JSON.parse(document.getElementById('cjConfig').textContent);
+                const scale = cfg.scale || { min: 1, max: 10, step: 0.5 };
+                const criteria = cfg.criteria || [];
+                const mine = cfg.mine || null;
+                const slug = root.dataset.slug, problem = root.dataset.problem, lang = root.dataset.lang;
+
+                const wrap = document.getElementById('cjCriteria');
+                const inputs = {};
+                criteria.forEach(function (c) {
+                    const row = document.createElement('div');
+                    row.className = 'cj-crit';
+                    const label = document.createElement('label');
+                    label.className = 'cj-crit-label';
+                    label.textContent = c.ru;
+                    label.setAttribute('for', 'cj_' + c.key);
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = 'cj_' + c.key;
+                    input.className = 'cj-crit-input';
+                    input.min = scale.min; input.max = scale.max; input.step = scale.step;
+                    input.placeholder = '—';
+                    if (mine && mine.scores && mine.scores[c.key] != null) input.value = mine.scores[c.key];
+                    input.addEventListener('input', recomputeTotal);
+                    inputs[c.key] = input;
+                    label.setAttribute('for', input.id);
+                    row.appendChild(label); row.appendChild(input);
+                    wrap.appendChild(row);
+                });
+
+                const myTotalEl = document.getElementById('cjMyTotal');
+                function collectScores() {
+                    const s = {};
+                    Object.keys(inputs).forEach(function (k) {
+                        const v = parseFloat(inputs[k].value);
+                        if (Number.isFinite(v) && v >= scale.min && v <= scale.max) s[k] = v;
+                    });
+                    return s;
+                }
+                function recomputeTotal() {
+                    const s = collectScores();
+                    const vals = Object.values(s);
+                    myTotalEl.textContent = vals.length
+                        ? (Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 100) / 100)
+                        : '—';
+                }
+
+                const combinedValue = document.getElementById('cjCombinedValue');
+                const statusEl = document.getElementById('cjStatus');
+                function paintStatus(otherEvaluated, combined) {
+                    combinedValue.textContent = (combined != null) ? combined : '—';
+                    root.classList.toggle('cj-both', combined != null);
+                    if (combined != null) {
+                        statusEl.textContent = 'Оценили оба судьи.';
+                    } else if (otherEvaluated) {
+                        statusEl.textContent = 'Второй судья уже оценил. Сохраните свою оценку, чтобы увидеть итог.';
+                    } else {
+                        statusEl.textContent = 'Второй судья ещё не оценил эту работу.';
+                    }
+                }
+
+                const comment = document.getElementById('cjComment');
+                if (mine && mine.comment) comment.value = mine.comment;
+                recomputeTotal();
+                paintStatus(cfg.otherEvaluated, cfg.combined);
+
+                const saveBtn = document.getElementById('cjSave');
+                saveBtn.addEventListener('click', function () {
+                    saveBtn.disabled = true;
+                    const original = saveBtn.textContent;
+                    saveBtn.textContent = 'Сохранение…';
+                    fetch('/challenge/' + slug + '/judge/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ problem_name: problem, language: lang, scores: collectScores(), comment: comment.value })
+                    }).then(function (r) { return r.json(); }).then(function (data) {
+                        if (data && data.ok) {
+                            paintStatus(data.otherEvaluated, data.combined);
+                            statusEl.classList.add('cj-status-ok');
+                            statusEl.textContent = (data.combined != null ? 'Сохранено. Оценили оба судьи.' : 'Сохранено.');
+                        } else {
+                            statusEl.classList.remove('cj-status-ok');
+                            statusEl.textContent = (data && data.error) ? data.error : 'Ошибка сохранения.';
+                        }
+                    }).catch(function () {
+                        statusEl.textContent = 'Ошибка сети.';
+                    }).finally(function () {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = original;
+                    });
+                });
+            })();
+            </script>
+            <% } %>
+
             <!-- Prev/Next Navigation (Bottom) -->
             <% if (prevProblem || nextProblem) { %>
             <div class="problem-nav problem-nav--bottom">

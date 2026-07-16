@@ -745,3 +745,49 @@ pre {
 }
 .online-dot--lg { width: 12px; height: 12px; border-width: 2px; }
 .online-dot--xl { width: 18px; height: 18px; border-width: 3px; }
+
+/* ── Contest quality-judging widget (solution page, organizers only) ──
+   Blind dual-judge evaluation card. Academic look: flat, thin borders,
+   design tokens only. Shares the .cj-* namespace with the widget markup. */
+.cj-widget {
+  border: 1px solid var(--ss-border-card);
+  border-radius: 8px;
+  background: var(--ss-card-bg);
+  padding: 1.1rem 1.25rem;
+  margin: 1.75rem 0;
+}
+.cj-widget.cj-both { border-color: #27ae60; }
+.cj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.cj-title { font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; color: var(--ss-navy); margin: 0; }
+.cj-sub { font-size: 12.5px; color: var(--ss-text-secondary); margin: 2px 0 0; }
+.cj-combined { text-align: center; min-width: 84px; }
+.cj-combined-value { display: block; font-family: Inter, sans-serif; font-size: 26px; font-weight: 800; line-height: 1; color: #adb5bd; }
+.cj-widget.cj-both .cj-combined-value { color: var(--ss-navy); }
+.cj-combined-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ss-text-secondary); margin-top: 3px; }
+
+.cj-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: center; font-size: 13px; color: var(--ss-text-secondary); margin: 0.75rem 0 0.9rem; }
+.cj-meta a { color: var(--ss-link); text-decoration: none; }
+.cj-meta strong { color: var(--ss-body-text); }
+.cj-table-link { margin-left: auto; font-size: 13px; color: var(--ss-link); text-decoration: none; }
+.cj-table-link:hover { color: var(--ss-link-hover); }
+
+.cj-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 1.25rem; }
+@media (max-width: 560px) { .cj-criteria { grid-template-columns: 1fr; } }
+.cj-crit { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.cj-crit-label { font-size: 13.5px; color: var(--ss-body-text); }
+.cj-crit-input { width: 72px; height: 38px; border: 1px solid var(--ss-border-card); border-radius: 6px; padding: 0 8px; font-size: 14px; text-align: center; color: var(--ss-body-text); background: #fff; }
+.cj-crit-input:focus { outline: none; border-color: var(--ss-link); }
+
+.cj-total-row { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; border-top: 1px dashed var(--ss-border-card); margin-top: 0.85rem; padding-top: 0.6rem; font-size: 13px; color: var(--ss-text-secondary); }
+.cj-total-value { font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; color: var(--ss-navy); }
+
+.cj-comment-label { display: block; font-size: 12px; color: var(--ss-text-secondary); margin: 0.5rem 0 0.35rem; }
+.cj-comment { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--ss-border-card); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: var(--ss-body-text); font-family: inherit; background: #fff; }
+.cj-comment:focus { outline: none; border-color: var(--ss-link); }
+
+.cj-actions { display: flex; align-items: center; gap: 0.85rem; margin-top: 0.7rem; }
+.cj-status { font-size: 12.5px; color: var(--ss-text-secondary); margin-right: auto; }
+.cj-status.cj-status-ok { color: #1e8449; }
+.cj-save-btn { background: var(--ss-primary-btn); color: #fff; border: none; border-radius: 6px; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.cj-save-btn:hover { background: var(--ss-primary-btn-hover); }
+.cj-save-btn:disabled { opacity: 0.6; cursor: default; }
