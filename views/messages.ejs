@@ -10,6 +10,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/css/design-system.css" />
   <link rel="stylesheet" href="/css/main_page.css" />
+  <!-- MathJax: render $…$ / $$…$$ in messages. We typeset manually as bubbles arrive. -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        ignoreHtmlClass: 'tex2jax_ignore',
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      startup: {
+        typeset: false,
+        pageReady: function () {
+          return MathJax.startup.defaultPageReady().then(function () {
+            var chat = document.getElementById('chatMessages');
+            if (chat) return MathJax.typesetPromise([chat]).then(function () {
+              chat.scrollTop = chat.scrollHeight;
+            });
+          });
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   <style>
     :root {
       --msg-primary: #1a1a2e;
@@ -639,6 +665,114 @@
       padding: 0 4px;
     }
 
+    /* Reply quote inside a bubble (Telegram-style) */
+    .msg-reply-quote {
+      display: block;
+      border-left: 3px solid var(--msg-link);
+      border-radius: 4px;
+      padding: 3px 8px;
+      margin-bottom: 5px;
+      max-width: 100%;
+      overflow: hidden;
+      cursor: pointer;
+      transition: filter 0.12s;
+    }
+
+    .msg-bubble.received .msg-reply-quote {
+      border-left-color: #1a5276;
+      background: rgba(26, 82, 118, 0.08);
+    }
+
+    .msg-bubble.sent .msg-reply-quote {
+      border-left-color: #8ab4d8;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .msg-reply-quote:hover { filter: brightness(0.96); }
+
+    .msg-reply-quote-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .msg-bubble.received .msg-reply-quote-name { color: #1a5276; }
+    .msg-bubble.sent .msg-reply-quote-name { color: #cfe0ef; }
+
+    .msg-reply-quote-text {
+      font-size: 12.5px;
+      line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .msg-bubble.received .msg-reply-quote-text { color: var(--msg-muted); }
+    .msg-bubble.sent .msg-reply-quote-text { color: rgba(255, 255, 255, 0.8); }
+
+    /* Brief highlight when jumping to a quoted message */
+    @keyframes msgFlash {
+      0%, 45% { box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.45); }
+      100% { box-shadow: 0 0 0 3px rgba(26, 82, 118, 0); }
+    }
+    .msg-bubble.flash { animation: msgFlash 1.2s ease-out; }
+
+    /* Reply composer bar (above the input) */
+    .msg-reply-bar {
+      border-top: 1px solid var(--msg-border);
+      padding: 8px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      background: var(--msg-bg);
+      flex-shrink: 0;
+    }
+
+    .msg-reply-bar-icon {
+      color: var(--msg-link);
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .msg-reply-bar-quote {
+      flex: 1;
+      min-width: 0;
+      border-left: 3px solid var(--msg-link);
+      padding: 1px 8px;
+    }
+
+    .msg-reply-bar-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--msg-link);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .msg-reply-bar-text {
+      font-size: 12.5px;
+      color: var(--msg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .msg-reply-cancel {
+      background: none;
+      border: none;
+      color: var(--msg-muted);
+      cursor: pointer;
+      font-size: 20px;
+      padding: 0 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .msg-reply-cancel:hover { color: #c0392b; }
+
     /* Input bar */
     .msg-input-bar {
       border-top: 1px solid var(--msg-border);
@@ -762,6 +896,85 @@
     .msg-bubble-image:hover {
       opacity: 0.9;
     }
+
+    /* File attachment card inside a bubble */
+    .msg-bubble-file {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      max-width: 280px;
+    }
+
+    .msg-bubble-file:first-child { margin-top: 0; }
+    .msg-bubble.received .msg-bubble-file { background: rgba(26, 82, 118, 0.06); }
+    .msg-bubble.sent .msg-bubble-file { background: rgba(255, 255, 255, 0.12); }
+    .msg-bubble-file:hover { filter: brightness(0.97); }
+
+    .msg-bubble-file-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .msg-bubble.received .msg-bubble-file-icon { background: #1a5276; color: #fff; }
+    .msg-bubble.sent .msg-bubble-file-icon { background: rgba(255, 255, 255, 0.9); color: #1a1a2e; }
+
+    .msg-bubble-file-meta { min-width: 0; display: flex; flex-direction: column; }
+
+    .msg-bubble-file-name {
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 210px;
+    }
+
+    .msg-bubble.received .msg-bubble-file-name { color: var(--msg-text); }
+    .msg-bubble.sent .msg-bubble-file-name { color: #fff; }
+
+    .msg-bubble-file-size { font-size: 11px; }
+    .msg-bubble.received .msg-bubble-file-size { color: var(--msg-muted); }
+    .msg-bubble.sent .msg-bubble-file-size { color: rgba(255, 255, 255, 0.75); }
+
+    /* Compose-bar file (non-image) preview icon */
+    .msg-image-preview-fileicon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #1a5276;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Saved Messages (self-chat) bookmark avatar */
+    .msg-saved-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #1a1a2e;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .msg-saved-avatar.sm { width: 36px; height: 36px; }
+
+    /* Long-press context menu on touch: suppress the native iOS callout */
+    .msg-bubble { -webkit-touch-callout: none; }
 
     .msg-image-overlay {
       display: none;
@@ -1017,13 +1230,33 @@
         </button>
       </div>
 
-      <div class="msg-conv-list" id="convList">
-        <% if (conversations.length === 0) { %>
+      <!-- Pinned Saved Messages (self-chat) — always available to every user.
+           Kept outside #convList so the live sidebar refresh never removes it. -->
+      <% const savedConv = conversations.find(function(c){ return c.isSaved; }); %>
+      <a href="/messages/saved"
+         class="msg-conv-item msg-saved-item<%= activeConversation && activeConversation.isSaved ? ' active' : '' %>"
+         data-name="<%= lang === 'ru' ? 'избранное saved messages' : 'saved messages избранное' %>">
+        <div class="msg-saved-avatar">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="msg-conv-info">
+          <div class="msg-conv-name"><%= lang === 'ru' ? 'Избранное' : 'Saved Messages' %></div>
+          <% if (savedConv && (savedConv.last_message_content || savedConv.last_message_image || savedConv.last_message_file)) { %>
+            <div class="msg-conv-preview tex2jax_ignore">
+              <% if (savedConv.last_message_content) { %><%= savedConv.last_message_content.substring(0, 60) %><% } else if (savedConv.last_message_file) { %><%= savedConv.last_message_file %><% } else { %><%= lang === 'ru' ? 'Фото' : 'Photo' %><% } %>
+            </div>
+          <% } %>
+        </div>
+      </a>
+
+      <div class="msg-conv-list tex2jax_ignore" id="convList">
+        <% const nonSaved = conversations.filter(function(c){ return !c.isSaved; }); %>
+        <% if (nonSaved.length === 0) { %>
           <div style="padding: 32px 16px; text-align: center; color: var(--msg-muted); font-size: 14px;">
             <%= lang === 'ru' ? 'Нет сообщений' : 'No conversations yet' %>
           </div>
         <% } else { %>
-          <% conversations.forEach(function(c) { %>
+          <% nonSaved.forEach(function(c) { %>
             <a href="/messages/<%= c.id %>"
                class="msg-conv-item<%= activeConversation && activeConversation.id === c.id ? ' active' : '' %>"
                data-name="<%= c.displayName.toLowerCase() %>">
@@ -1040,10 +1273,12 @@
               <div class="msg-conv-info">
                 <div class="msg-conv-name"><%= c.displayName %></div>
                 <div class="msg-conv-preview">
-                  <% if (c.last_message_content || c.last_message_image) { %>
+                  <% if (c.last_message_content || c.last_message_image || c.last_message_file) { %>
                     <% if (c.last_message_sender_id === userId) { %><%= lang === 'ru' ? 'Вы: ' : 'You: ' %><% } %>
                     <% if (c.last_message_content) { %>
                       <%= c.last_message_content.substring(0, 60) %><% if (c.last_message_content.length > 60) { %>...<% } %>
+                    <% } else if (c.last_message_file) { %>
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;opacity:0.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><%= c.last_message_file.substring(0, 40) %>
                     <% } else { %>
                       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><%= lang === 'ru' ? 'Фото' : 'Photo' %>
                     <% } %>
@@ -1075,6 +1310,10 @@
             </button>
             <% if (activeConversation.is_group) { %>
               <div class="msg-conv-avatar-group" style="width:36px;height:36px;"><%- groupAvatarSVG(activeConversation.id, activeConversation.displayName, 36) %></div>
+            <% } else if (activeConversation.isSaved) { %>
+              <div class="msg-saved-avatar sm">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              </div>
             <% } else if (activeConversation.displayPicture) { %>
               <span class="avatar-presence">
                 <img class="msg-chat-header-avatar"
@@ -1133,8 +1372,13 @@
               const showAvatar = !isSent && activeConversation.is_group;
               const showName = !isSent && activeConversation.is_group &&
                 (i === 0 || filtered[i-1].sender_id !== m.sender_id);
+              const senderDisplayName = isSent
+                ? username
+                : (activeConversation.is_group
+                    ? m.sender_username
+                    : (activeConversation.otherUser ? activeConversation.otherUser.username : m.sender_username));
           %>
-            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>">
+            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>">
               <% if (showAvatar) { %>
                 <span class="avatar-presence">
                   <img class="msg-bubble-avatar"
@@ -1146,7 +1390,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><%= m.sender_username %><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -1163,17 +1407,32 @@
           <button class="msg-edit-cancel" id="editCancel">&times;</button>
         </div>
 
-        <!-- Image preview bar -->
+        <!-- Reply bar (shown when replying to a message) -->
+        <div class="msg-reply-bar" id="replyBar" style="display:none;">
+          <span class="msg-reply-bar-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+          </span>
+          <div class="msg-reply-bar-quote">
+            <div class="msg-reply-bar-name" id="replyBarName"></div>
+            <div class="msg-reply-bar-text" id="replyBarText"></div>
+          </div>
+          <button class="msg-reply-cancel" id="replyCancel" title="<%= lang === 'ru' ? 'Отменить' : 'Cancel' %>">&times;</button>
+        </div>
+
+        <!-- Attachment preview bar (image thumbnail or file card) -->
         <div class="msg-image-preview" id="imagePreview">
           <img id="imagePreviewImg" src="" alt="" />
+          <span class="msg-image-preview-fileicon" id="imagePreviewFileIcon" style="display:none">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </span>
           <span class="msg-image-preview-name" id="imagePreviewName"></span>
           <button class="msg-image-preview-remove" id="imagePreviewRemove" title="Remove">&times;</button>
         </div>
 
         <!-- Input bar -->
         <div class="msg-input-bar">
-          <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none" />
-          <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru' ? 'Прикрепить изображение' : 'Attach image' %>">
+          <input type="file" id="imageFileInput" accept="image/*,.pdf,.txt,.md,.tex,.csv,.json,.rtf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.zip,.rar,.7z" style="display:none" />
+          <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru' ? 'Прикрепить файл' : 'Attach file' %>">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
             </svg>
@@ -1257,11 +1516,26 @@
     if (!dateStr) return '';
     return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
+
+  function formatBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
 %>
 
 <div class="msg-image-overlay" id="imageOverlay"><img id="imageOverlayImg" src="" alt="" /></div>
 
 <div class="msg-context-menu" id="msgContextMenu">
+  <button class="msg-context-item" id="ctxReply">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
+    <span><%= lang === 'ru' ? 'Ответить' : 'Reply' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxCopy">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    <span><%= lang === 'ru' ? 'Копировать текст' : 'Copy Text' %></span>
+  </button>
   <button class="msg-context-item" id="ctxEdit">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     <span><%= lang === 'ru' ? 'Редактировать' : 'Edit' %></span>
@@ -1279,9 +1553,12 @@
   const IS_GROUP = <%= activeConversation ? activeConversation.is_group : false %>;
   const IS_ADMIN = <%= typeof isAdmin !== 'undefined' ? isAdmin : false %>;
   const LANG = '<%= typeof lang !== "undefined" ? lang : "en" %>';
+  const USERNAME = <%- JSON.stringify(username || '') %>;
+  const OTHER_NAME = <%- JSON.stringify(activeConversation && activeConversation.otherUser ? activeConversation.otherUser.username : '') %>;
   let lastMsgId = 0;
   let pollTimer = null;
   let editingMsgId = null;
+  let replyingTo = null;
   let lastPollTime = new Date().toISOString();
 
   // Members panel toggle
@@ -1320,6 +1597,10 @@
   const editBar = document.getElementById('editBar');
   const editBarText = document.getElementById('editBarText');
   const editCancel = document.getElementById('editCancel');
+  const replyBar = document.getElementById('replyBar');
+  const replyBarName = document.getElementById('replyBarName');
+  const replyBarText = document.getElementById('replyBarText');
+  const replyCancel = document.getElementById('replyCancel');
 
   // Image attachment elements
   const attachBtn = document.getElementById('attachBtn');
@@ -1330,7 +1611,9 @@
   const imagePreviewRemove = document.getElementById('imagePreviewRemove');
   const imageOverlay = document.getElementById('imageOverlay');
   const imageOverlayImg = document.getElementById('imageOverlayImg');
-  let pendingImage = null;
+  const imagePreviewFileIcon = document.getElementById('imagePreviewFileIcon');
+  let pendingImage = null;      // the pending attachment File (image OR document)
+  let pendingIsImage = false;   // whether that attachment renders inline as an image
 
   function updateSendEnabled() {
     sendBtn.disabled = !msgInput.value.trim() && !pendingImage;
@@ -1354,8 +1637,9 @@
           }
         }
       }
-      if (e.key === 'Escape' && editingMsgId) {
-        cancelEdit();
+      if (e.key === 'Escape') {
+        if (editingMsgId) cancelEdit();
+        else if (replyingTo) cancelReply();
       }
     });
 
@@ -1378,6 +1662,10 @@
     editCancel.addEventListener('click', cancelEdit);
   }
 
+  if (replyCancel) {
+    replyCancel.addEventListener('click', cancelReply);
+  }
+
   // Attach button opens file picker
   if (attachBtn && fileInput) {
     attachBtn.addEventListener('click', function() {
@@ -1387,29 +1675,51 @@
     fileInput.addEventListener('change', function() {
       const file = this.files[0];
       if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        alert(LANG === 'ru' ? 'Максимальный размер 5 МБ' : 'Maximum file size is 5 MB');
-        this.value = '';
-        return;
-      }
-      pendingImage = file;
-      imagePreviewName.textContent = file.name;
+      if (!setPendingAttachment(file)) this.value = '';
+    });
+  }
+
+  const MAX_ATTACH_BYTES = 25 * 1024 * 1024;
+
+  // Stage an attachment (image → inline thumbnail; anything else → file card) in
+  // the compose preview. Returns false if rejected (too large).
+  function setPendingAttachment(file) {
+    if (!file) return false;
+    if (file.size > MAX_ATTACH_BYTES) {
+      alert(LANG === 'ru' ? 'Максимальный размер 25 МБ' : 'Maximum file size is 25 MB');
+      return false;
+    }
+    pendingImage = file;
+    pendingIsImage = /^image\//.test(file.type);
+    imagePreviewName.textContent = pendingIsImage ? file.name : (file.name + '  ·  ' + formatBytes(file.size));
+    if (pendingIsImage) {
+      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
+      imagePreviewImg.style.display = '';
       const reader = new FileReader();
       reader.onload = function(e) {
         imagePreviewImg.src = e.target.result;
         imagePreview.classList.add('show');
       };
       reader.readAsDataURL(file);
-      updateSendEnabled();
-    });
+    } else {
+      imagePreviewImg.style.display = 'none';
+      imagePreviewImg.src = '';
+      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'flex';
+      imagePreview.classList.add('show');
+    }
+    updateSendEnabled();
+    return true;
   }
 
   if (imagePreviewRemove) {
     imagePreviewRemove.addEventListener('click', function() {
       pendingImage = null;
+      pendingIsImage = false;
       fileInput.value = '';
       imagePreview.classList.remove('show');
       imagePreviewImg.src = '';
+      imagePreviewImg.style.display = '';
+      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
       updateSendEnabled();
     });
   }
@@ -1422,26 +1732,37 @@
       for (let i = 0; i < items.length; i++) {
         if (items[i].type.indexOf('image/') === 0) {
           const file = items[i].getAsFile();
-          if (!file || file.size > 5 * 1024 * 1024) continue;
-          pendingImage = file;
-          imagePreviewName.textContent = LANG === 'ru' ? 'Вставленное изображение' : 'Pasted image';
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            imagePreviewImg.src = ev.target.result;
-            imagePreview.classList.add('show');
-          };
-          reader.readAsDataURL(file);
-          updateSendEnabled();
-          e.preventDefault();
+          if (!file) continue;
+          if (setPendingAttachment(file)) e.preventDefault();
           break;
         }
       }
     });
   }
 
-  // Image overlay (lightbox)
+  // Jump to the quoted message when a reply preview is clicked.
+  function jumpToMessage(targetId) {
+    if (!targetId) return;
+    const target = chatEl && chatEl.querySelector('.msg-bubble-row[data-msg-id="' + targetId + '"]');
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const bubble = target.querySelector('.msg-bubble');
+    if (bubble) {
+      bubble.classList.remove('flash');
+      void bubble.offsetWidth; // restart the animation
+      bubble.classList.add('flash');
+      setTimeout(function() { bubble.classList.remove('flash'); }, 1300);
+    }
+  }
+
+  // Image overlay (lightbox) + reply-quote jump
   if (chatEl) {
     chatEl.addEventListener('click', function(e) {
+      const quote = e.target.closest('.msg-reply-quote');
+      if (quote) {
+        jumpToMessage(parseInt(quote.dataset.target));
+        return;
+      }
       const img = e.target.closest('.msg-bubble-image');
       if (img && imageOverlay) {
         imageOverlayImg.src = img.dataset.full || img.src;
@@ -1464,41 +1785,101 @@
     msgInput.value = '';
     msgInput.style.height = 'auto';
 
-    const localImageUrl = pendingImage && imagePreviewImg.src ? imagePreviewImg.src : null;
+    const localImageUrl = (pendingImage && pendingIsImage && imagePreviewImg.src) ? imagePreviewImg.src : null;
+    const localFile = (pendingImage && !pendingIsImage) ? pendingImage : null;
+    const replyData = replyingTo; // capture before it is cleared below
 
     appendMessage({
       id: 0,
       content: content,
       sender_id: USER_ID,
-      sender_username: '<%= username %>',
+      sender_username: USERNAME,
       created_at: new Date().toISOString(),
       image_url: localImageUrl,
+      file_url: localFile ? '#' : null,
+      file_name: localFile ? localFile.name : null,
+      file_size: localFile ? localFile.size : null,
+      reply: replyData,
     });
 
     let fetchOpts;
     if (pendingImage) {
       const fd = new FormData();
       fd.append('content', content);
-      fd.append('image', pendingImage);
+      fd.append('file', pendingImage);
+      if (replyData) fd.append('reply_to_id', replyData.id);
       fetchOpts = { method: 'POST', headers: { 'Accept': 'application/json' }, body: fd };
     } else {
       fetchOpts = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ content: content }),
+        body: JSON.stringify({ content: content, reply_to_id: replyData ? replyData.id : undefined }),
       };
     }
 
-    // Clear image state
+    // Clear attachment + reply state
     pendingImage = null;
+    pendingIsImage = false;
+    cancelReply();
     if (fileInput) fileInput.value = '';
     if (imagePreview) imagePreview.classList.remove('show');
-    if (imagePreviewImg) imagePreviewImg.src = '';
+    if (imagePreviewImg) { imagePreviewImg.src = ''; imagePreviewImg.style.display = ''; }
+    if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
 
     fetch('/messages/' + CONV_ID + '/send', fetchOpts)
     .then(function(r) { return r.json(); })
     .then(function() { pollMessages(); refreshConvList(); })
     .catch(function(err) { console.error('Send error:', err); });
+  }
+
+  // ── Reply flow ──────────────────────────────────────────────────────
+  // Plain-text of a message with the quote / meta / image chrome stripped.
+  function extractMessageText(msgId) {
+    const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+    if (!row) return '';
+    const bubble = row.querySelector('.msg-bubble');
+    if (!bubble) return '';
+    const clone = bubble.cloneNode(true);
+    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-bubble-image, .msg-bubble-file');
+    for (let i = 0; i < strip.length; i++) strip[i].remove();
+    return clone.textContent.trim();
+  }
+
+  function renderReplyQuoteHTML(reply) {
+    if (!reply || !reply.id) return '';
+    const preview = reply.isImage ? (LANG === 'ru' ? 'Фото' : 'Photo') : (reply.preview || '');
+    return '<div class="msg-reply-quote tex2jax_ignore" data-target="' + reply.id + '">' +
+      '<div class="msg-reply-quote-name">' + esc(reply.sender || '') + '</div>' +
+      '<div class="msg-reply-quote-text">' + esc(preview) + '</div></div>';
+  }
+
+  function startReply(msgId) {
+    const row = document.querySelector('[data-msg-id="' + msgId + '"]');
+    if (!row) return;
+    if (editingMsgId) cancelEdit();
+    const senderName = row.dataset.senderName || '';
+    const hasImage = !!row.querySelector('.msg-bubble-image');
+    const fileNameEl = row.querySelector('.msg-bubble-file-name');
+    const fileName = fileNameEl ? fileNameEl.textContent : '';
+    const text = extractMessageText(msgId);
+    replyingTo = {
+      id: msgId,
+      sender: senderName,
+      preview: text || fileName,
+      isImage: !text && !fileName && hasImage,
+      isFile: !text && !!fileName,
+    };
+    if (replyBarName) replyBarName.textContent = senderName;
+    if (replyBarText) {
+      replyBarText.textContent = replyingTo.isImage ? (LANG === 'ru' ? 'Фото' : 'Photo') : (text || fileName);
+    }
+    if (replyBar) replyBar.style.display = 'flex';
+    if (msgInput) msgInput.focus();
+  }
+
+  function cancelReply() {
+    replyingTo = null;
+    if (replyBar) replyBar.style.display = 'none';
   }
 
   // Edit flow
@@ -1507,11 +1888,9 @@
     if (!row) return;
     const bubble = row.querySelector('.msg-bubble');
     if (!bubble) return;
+    cancelReply();
 
-    const clone = bubble.cloneNode(true);
-    var remove = clone.querySelectorAll('.msg-bubble-edited, .msg-reaction-add, .msg-bubble-image');
-    for (var i = 0; i < remove.length; i++) remove[i].remove();
-    const text = clone.textContent.trim();
+    const text = extractMessageText(msgId);
 
     editingMsgId = msgId;
     msgInput.value = text;
@@ -1553,7 +1932,12 @@
             const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
             const existingImg = bubble.querySelector('.msg-bubble-image');
             const imgHtml = existingImg ? existingImg.outerHTML : '';
-            bubble.innerHTML = esc(content) + imgHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
+            const existingFile = bubble.querySelector('.msg-bubble-file');
+            const fileHtml = existingFile ? existingFile.outerHTML : '';
+            const existingReply = bubble.querySelector('.msg-reply-quote');
+            const replyHtml = existingReply ? existingReply.outerHTML : '';
+            bubble.innerHTML = replyHtml + esc(content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
+            typesetMath(bubble);
           }
         }
       } else if (data.error) {
@@ -1613,29 +1997,87 @@
 
   // Right-click context menu for edit/delete
   var ctxMenu = document.getElementById('msgContextMenu');
+  var ctxReply = document.getElementById('ctxReply');
+  var ctxCopy = document.getElementById('ctxCopy');
   var ctxEdit = document.getElementById('ctxEdit');
   var ctxDelete = document.getElementById('ctxDelete');
   var ctxMsgId = null;
 
+  function openContextMenu(row, x, y) {
+    if (!row) return;
+    var msgId = parseInt(row.dataset.msgId);
+    if (!msgId) return; // optimistic / not-yet-saved bubble — nothing to act on
+    var isSent = row.classList.contains('sent');
+    var ageH = (Date.now() - new Date(row.dataset.created).getTime()) / 3600000;
+    var canEdit = isSent && ageH < 24;
+    var senderIsAdmin = row.dataset.senderRole === 'admin';
+    var canDelete = (IS_ADMIN || (isSent && ageH < 24)) && !(senderIsAdmin && !isSent);
+    var hasText = extractMessageText(msgId).length > 0;
+    ctxMsgId = msgId;
+    ctxReply.style.display = '';               // reply is always available
+    ctxCopy.style.display = hasText ? '' : 'none';
+    ctxEdit.style.display = canEdit ? '' : 'none';
+    ctxDelete.style.display = canDelete ? '' : 'none';
+    ctxMenu.classList.add('show');
+    // Keep the menu inside the viewport.
+    var mw = ctxMenu.offsetWidth, mh = ctxMenu.offsetHeight;
+    if (x + mw > window.innerWidth) x = window.innerWidth - mw - 8;
+    if (y + mh > window.innerHeight) y = window.innerHeight - mh - 8;
+    ctxMenu.style.left = Math.max(8, x) + 'px';
+    ctxMenu.style.top = Math.max(8, y) + 'px';
+  }
+
+  var suppressNextClick = false;
+
   if (chatEl) {
+    // Desktop: right-click.
     chatEl.addEventListener('contextmenu', function(e) {
       var row = e.target.closest('.msg-bubble-row');
-      if (!row || !row.dataset.msgId) return;
+      if (!row || !parseInt(row.dataset.msgId)) return;
       e.preventDefault();
-      var msgId = parseInt(row.dataset.msgId);
-      var isSent = row.classList.contains('sent');
-      var ageH = (Date.now() - new Date(row.dataset.created).getTime()) / 3600000;
-      var canEdit = isSent && ageH < 24;
-      var senderIsAdmin = row.dataset.senderRole === 'admin';
-      var canDelete = (IS_ADMIN || (isSent && ageH < 24)) && !(senderIsAdmin && !isSent);
-      if (!canEdit && !canDelete) return;
-      ctxMsgId = msgId;
-      ctxEdit.style.display = canEdit ? '' : 'none';
-      ctxDelete.style.display = canDelete ? '' : 'none';
-      ctxMenu.style.left = e.clientX + 'px';
-      ctxMenu.style.top = e.clientY + 'px';
-      ctxMenu.classList.add('show');
+      openContextMenu(row, e.clientX, e.clientY);
     });
+
+    // Touch: long-press opens the same menu (right-click doesn't exist on phones).
+    var lpTimer = null, lpRow = null, lpX = 0, lpY = 0, lpMoved = false;
+    var LP_MS = 500, LP_MOVE = 10;
+    function clearLongPress() {
+      if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+      lpRow = null; lpMoved = false;
+    }
+    chatEl.addEventListener('touchstart', function(e) {
+      if (e.touches.length !== 1) { clearLongPress(); return; }
+      var row = e.target.closest('.msg-bubble-row');
+      if (!row || !parseInt(row.dataset.msgId)) return;
+      var t = e.touches[0];
+      lpRow = row; lpX = t.clientX; lpY = t.clientY; lpMoved = false;
+      lpTimer = setTimeout(function() {
+        lpTimer = null;
+        if (lpRow && !lpMoved) {
+          openContextMenu(lpRow, lpX, lpY);
+          suppressNextClick = true; // swallow the tap that follows the long-press
+        }
+      }, LP_MS);
+    }, { passive: true });
+    chatEl.addEventListener('touchmove', function(e) {
+      if (!lpRow || !e.touches.length) return;
+      var t = e.touches[0];
+      if (Math.abs(t.clientX - lpX) > LP_MOVE || Math.abs(t.clientY - lpY) > LP_MOVE) {
+        clearLongPress();
+      }
+    }, { passive: true });
+    chatEl.addEventListener('touchend', clearLongPress);
+    chatEl.addEventListener('touchcancel', clearLongPress);
+
+    // Capture phase: eat the synthetic click after a long-press so it doesn't
+    // open the image lightbox / jump a reply / close the menu immediately.
+    chatEl.addEventListener('click', function(e) {
+      if (suppressNextClick) {
+        suppressNextClick = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }, true);
   }
 
   document.addEventListener('click', function() {
@@ -1646,6 +2088,19 @@
     if (!e.target.closest('.msg-bubble-row')) {
       ctxMenu.classList.remove('show');
     }
+  });
+
+  ctxReply.addEventListener('click', function() {
+    if (ctxMsgId) startReply(ctxMsgId);
+    ctxMenu.classList.remove('show');
+  });
+
+  ctxCopy.addEventListener('click', function() {
+    if (ctxMsgId) {
+      var t = extractMessageText(ctxMsgId);
+      if (t && navigator.clipboard) navigator.clipboard.writeText(t).catch(function() {});
+    }
+    ctxMenu.classList.remove('show');
   });
 
   ctxEdit.addEventListener('click', function() {
@@ -1716,6 +2171,33 @@
     localizeSsrTimes();
   }
 
+  // Serialize dynamic typesetting through MathJax's startup promise so bubbles
+  // that arrive before/while MathJax loads still get rendered, in order.
+  function typesetMath(el) {
+    if (!el || !window.MathJax || !MathJax.startup || !MathJax.startup.promise) return;
+    MathJax.startup.promise = MathJax.startup.promise
+      .then(function() { return MathJax.typesetPromise([el]); })
+      .catch(function(err) { console.error('MathJax typeset error:', err); });
+  }
+
+  function formatBytes(n) {
+    n = Number(n) || 0;
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function renderFileCardHTML(m) {
+    if (!m.file_url) return '';
+    const icon = '<span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>';
+    const size = m.file_size ? formatBytes(m.file_size) : '';
+    const href = m.file_url === '#' ? '#' : esc(m.file_url);
+    return '<a class="msg-bubble-file tex2jax_ignore" href="' + href + '" download="' + escAttr(m.file_name || '') + '">' +
+      icon +
+      '<span class="msg-bubble-file-meta"><span class="msg-bubble-file-name">' + esc(m.file_name || 'file') + '</span>' +
+      '<span class="msg-bubble-file-size">' + esc(size) + '</span></span></a>';
+  }
+
   function appendMessage(m) {
     if (!chatEl) return;
     if (m.deleted_at) return;
@@ -1726,6 +2208,7 @@
     row.dataset.msgId = m.id || 0;
     if (m.created_at) row.dataset.created = m.created_at;
     row.dataset.senderRole = m.sender_role || 'member';
+    row.dataset.senderName = isSent ? USERNAME : (IS_GROUP ? (m.sender_username || '') : OTHER_NAME);
 
     let html = '';
     if (!isSent && IS_GROUP) {
@@ -1738,10 +2221,11 @@
       html += '<div class="msg-bubble-sender">' + esc(m.sender_username) + modBadge + '</div>';
     }
     const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + linkify(m.content);
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + renderReplyQuoteHTML(m.reply) + linkify(m.content);
     if (m.image_url) {
       html += '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" alt="" data-full="' + esc(m.image_url) + '" />';
     }
+    html += renderFileCardHTML(m);
     html += (isEdited ? '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' : '');
     html += renderReactionAddHTML(m.id);
     html += '</div>';
@@ -1752,6 +2236,8 @@
     row.innerHTML = html;
     chatEl.appendChild(row);
     chatEl.scrollTop = chatEl.scrollHeight;
+    const bubbleEl = row.querySelector('.msg-bubble');
+    if (bubbleEl) typesetMath(bubbleEl);
   }
 
   var REACTION_EMOJIS = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F622}', '\u{1F914}'];
@@ -1842,7 +2328,12 @@
               const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
               const existingImg = bubble.querySelector('.msg-bubble-image');
               const imgHtml = existingImg ? existingImg.outerHTML : '';
-              bubble.innerHTML = esc(u.content) + imgHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
+              const existingFile = bubble.querySelector('.msg-bubble-file');
+              const fileHtml = existingFile ? existingFile.outerHTML : '';
+              const existingReply = bubble.querySelector('.msg-reply-quote');
+              const replyHtml = existingReply ? existingReply.outerHTML : '';
+              bubble.innerHTML = replyHtml + esc(u.content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
+              typesetMath(bubble);
             }
           });
         }
@@ -1886,11 +2377,14 @@
         escAttr(c.displayPicture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />' + dot + '</span>';
     }
     let preview = '';
-    if (c.last_message_content || c.last_message_image) {
+    if (c.last_message_content || c.last_message_image || c.last_message_file) {
       if (c.last_message_sender_id === USER_ID) preview += (LANG === 'ru' ? 'Вы: ' : 'You: ');
       if (c.last_message_content) {
         const t = c.last_message_content;
         preview += esc(t.substring(0, 60)) + (t.length > 60 ? '...' : '');
+      } else if (c.last_message_file) {
+        preview += '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:2px;opacity:0.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+          esc(c.last_message_file.substring(0, 40));
       } else {
         preview += '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:2px;opacity:0.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>' +
           (LANG === 'ru' ? 'Фото' : 'Photo');
@@ -1934,7 +2428,9 @@
         }
 
         const scrollTop = convListEl.scrollTop;
-        let html = data.conversations.map(buildConvItemHTML).join('');
+        // The Saved Messages self-chat is rendered as a fixed pinned entry above
+        // this list, so exclude it here to avoid a duplicate.
+        let html = data.conversations.filter(function(c) { return !c.isSaved; }).map(buildConvItemHTML).join('');
         if (activeHTML) html = activeHTML + html;
         if (!html) {
           html = '<div style="padding: 32px 16px; text-align: center; color: var(--msg-muted); font-size: 14px;">' +

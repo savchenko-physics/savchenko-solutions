@@ -19,18 +19,41 @@ const msgImageStorage = multer.diskStorage({
     },
 });
 
-const msgImageUpload = multer({
+// Images render inline; everything else on this allow-list renders as a
+// downloadable file card. Deliberately excludes html/htm/svg/js/xml so an
+// uploaded file can never be served as executable markup from our origin.
+const MSG_IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i;
+const MSG_FILE_EXT = /\.(jpe?g|png|gif|webp|pdf|txt|md|tex|csv|json|rtf|doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|zip|rar|7z)$/i;
+const MSG_MAX_BYTES = 25 * 1024 * 1024;
+
+const msgFileUpload = multer({
     storage: msgImageStorage,
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: MSG_MAX_BYTES },
     fileFilter: (req, file, cb) => {
-        const allowed = /\.(jpg|jpeg|png|gif|webp)$/i;
-        if (allowed.test(path.extname(file.originalname))) {
+        if (MSG_FILE_EXT.test(path.extname(file.originalname))) {
             cb(null, true);
         } else {
-            cb(new Error('Only image files are allowed'));
+            cb(new Error('File type not allowed'));
         }
     },
 });
+
+// Wrap the upload so a rejected/oversized file returns a clean 400 instead of
+// bubbling to the generic error handler (which would 500).
+function msgUploadMiddleware(req, res, next) {
+    msgFileUpload.single('file')(req, res, (err) => {
+        if (err) {
+            const msg = err.code === 'LIMIT_FILE_SIZE'
+                ? 'File too large (max 25 MB)'
+                : (err.message || 'Upload failed');
+            if (req.xhr || req.headers.accept?.includes('application/json')) {
+                return res.status(400).json({ error: msg });
+            }
+            return res.status(400).send(msg);
+        }
+        next();
+    });
+}
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -109,6 +132,32 @@ function groupAvatarSVG(convId, name, size) {
            `font-size="${Math.round(s*0.38)}" opacity="0.9">${letter}</text></svg>`;
 }
 
+// Short, plain-text preview of a message being quoted in a reply.
+function buildReplyPreview(content, imageUrl, fileName, deleted, lang) {
+    if (deleted) return lang === 'ru' ? 'Удалённое сообщение' : 'Deleted message';
+    const t = (content || '').trim();
+    if (t) return t.length > 80 ? t.substring(0, 80) + '…' : t;
+    if (fileName) return fileName;
+    if (imageUrl) return lang === 'ru' ? 'Фото' : 'Photo';
+    return '';
+}
+
+// Attach a `reply` object to each message row that quotes another message.
+function attachReplyInfo(rows, userId, lang) {
+    for (const m of rows) {
+        if (m.reply_to_id) {
+            m.reply = {
+                id: m.reply_to_id,
+                sender: m.reply_sender_username || (lang === 'ru' ? 'Пользователь' : 'User'),
+                preview: buildReplyPreview(m.reply_content, m.reply_image, m.reply_file, m.reply_deleted, lang),
+                mine: m.reply_sender_id === userId,
+                isImage: !m.reply_content && !!m.reply_image && !m.reply_deleted,
+                isFile: !m.reply_content && !!m.reply_file && !m.reply_deleted,
+            };
+        }
+    }
+}
+
 async function getReactionsForMessages(messageIds, userId) {
     if (!messageIds.length) return {};
     const result = await pool.query(
@@ -173,14 +222,57 @@ async function findOrCreateDM(userId1, userId2) {
     }
 }
 
+// Find (or lazily create) a user's private "Saved Messages" self-chat. It is a
+// non-group conversation with a single member (the user) marked via
+// saved_for_user_id, so it can never be confused with a DM whose other member
+// was later deleted.
+async function findOrCreateSavedMessages(userId) {
+    const existing = await pool.query(
+        `SELECT id FROM conversations WHERE saved_for_user_id = $1 LIMIT 1`,
+        [userId]
+    );
+    if (existing.rows.length > 0) {
+        return existing.rows[0].id;
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const conv = await client.query(
+            `INSERT INTO conversations (is_group, created_by, saved_for_user_id)
+             VALUES (FALSE, $1, $1) RETURNING id`,
+            [userId]
+        );
+        const convId = conv.rows[0].id;
+        await client.query(
+            `INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2)`,
+            [convId, userId]
+        );
+        await client.query('COMMIT');
+        return convId;
+    } catch (err) {
+        await client.query('ROLLBACK');
+        // A concurrent request may have created it first — fall back to a lookup.
+        const retry = await pool.query(
+            `SELECT id FROM conversations WHERE saved_for_user_id = $1 LIMIT 1`,
+            [userId]
+        );
+        if (retry.rows.length > 0) return retry.rows[0].id;
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
 // Build the sidebar conversation list (ordered by most recent activity) for a
 // user. Shared by the inbox, a single-conversation view, and the AJAX
 // auto-update endpoint so all three stay in sync.
-async function buildConversationList(userId) {
+async function buildConversationList(userId, lang = 'en') {
     const conversations = await pool.query(
-        `SELECT c.id, c.title, c.is_group, c.last_message_at,
+        `SELECT c.id, c.title, c.is_group, c.last_message_at, c.saved_for_user_id,
                 m.content AS last_message_content,
                 m.image_url AS last_message_image,
+                m.file_name AS last_message_file,
                 m.sender_id AS last_message_sender_id,
                 sender.username AS last_message_sender,
                 cm.last_read_at,
@@ -190,7 +282,7 @@ async function buildConversationList(userId) {
          FROM conversations c
          JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
          LEFT JOIN LATERAL (
-             SELECT content, sender_id, image_url FROM messages
+             SELECT content, sender_id, image_url, file_name FROM messages
              WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
          ) m ON TRUE
          LEFT JOIN users sender ON sender.id = m.sender_id
@@ -232,15 +324,19 @@ async function buildConversationList(userId) {
     }
 
     const convList = conversations.rows.map(c => {
+        const isSaved = c.saved_for_user_id === userId;
         const other = memberMap[c.id] || null;
         return {
             ...c,
-            otherUser: other,
+            isSaved,
+            otherUser: isSaved ? null : other,
             memberCount: groupMemberCountMap[c.id] || 0,
-            displayName: c.is_group
-                ? (c.title || 'Group')
-                : (other ? (other.full_name || other.username) : 'Deleted User'),
-            displayPicture: c.is_group
+            displayName: isSaved
+                ? (lang === 'ru' ? 'Избранное' : 'Saved Messages')
+                : (c.is_group
+                    ? (c.title || 'Group')
+                    : (other ? (other.full_name || other.username) : 'Deleted User')),
+            displayPicture: (isSaved || c.is_group)
                 ? null
                 : (other ? other.profile_picture : null),
         };
@@ -255,7 +351,7 @@ router.get('/', async (req, res) => {
         const userId = req.session.userId;
         const lang = req.session.lang || 'en';
 
-        const { convList } = await buildConversationList(userId);
+        const { convList } = await buildConversationList(userId, lang);
 
         // Attach online presence for the other user in each 1:1 conversation
         const presenceNames = convList
@@ -286,6 +382,18 @@ router.get('/', async (req, res) => {
     }
 });
 
+// GET /messages/saved — open (creating on first use) the user's private
+// Saved Messages self-chat, then redirect to the normal conversation view.
+router.get('/saved', async (req, res) => {
+    try {
+        const convId = await findOrCreateSavedMessages(req.session.userId);
+        res.redirect(`/messages/${convId}`);
+    } catch (err) {
+        console.error('Saved messages error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
 // GET /messages/:id — view a specific conversation
 router.get('/:id(\\d+)', async (req, res) => {
     try {
@@ -310,7 +418,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         );
 
         // Get conversation list (same as inbox)
-        const { rows: convRows, memberMap, convList } = await buildConversationList(userId);
+        const { rows: convRows, memberMap, convList } = await buildConversationList(userId, lang);
 
         // Active conversation: get info and messages
         let activeConvRow = convRows.find(c => c.id === convId);
@@ -319,7 +427,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         // If the active conversation is new (no messages), it won't be in the sidebar list — fetch it separately
         if (!activeConvRow) {
             const convResult = await pool.query(
-                `SELECT id, title, is_group, last_message_at FROM conversations WHERE id = $1`,
+                `SELECT id, title, is_group, last_message_at, saved_for_user_id FROM conversations WHERE id = $1`,
                 [convId]
             );
             if (convResult.rows.length > 0) {
@@ -360,25 +468,36 @@ router.get('/:id(\\d+)', async (req, res) => {
             }
         }
 
+        const activeIsSaved = activeConvRow ? activeConvRow.saved_for_user_id === userId : false;
         const activeConversation = activeConvRow ? {
             id: convId,
             is_group: activeConvRow.is_group,
+            isSaved: activeIsSaved,
             title: activeConvRow.title,
-            displayName: activeConvRow.is_group
-                ? (activeConvRow.title || 'Group')
-                : (activeOther ? (activeOther.full_name || activeOther.username) : 'Deleted User'),
-            displayPicture: activeConvRow.is_group ? null : (activeOther ? activeOther.profile_picture : null),
-            otherUser: activeOther,
+            displayName: activeIsSaved
+                ? (lang === 'ru' ? 'Избранное' : 'Saved Messages')
+                : (activeConvRow.is_group
+                    ? (activeConvRow.title || 'Group')
+                    : (activeOther ? (activeOther.full_name || activeOther.username) : 'Deleted User')),
+            displayPicture: (activeIsSaved || activeConvRow.is_group) ? null : (activeOther ? activeOther.profile_picture : null),
+            otherUser: activeIsSaved ? null : activeOther,
             memberCount: activeMemberCount,
         } : null;
 
         const messagesResult = await pool.query(
             `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
+                    m.file_url, m.file_name, m.file_size,
                     u.username AS sender_username, u.profile_picture AS sender_picture,
-                    cm.role AS sender_role
+                    cm.role AS sender_role,
+                    m.reply_to_id,
+                    rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
+                    rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
+                    ru.username AS reply_sender_username
              FROM messages m
              LEFT JOIN users u ON u.id = m.sender_id
              LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
+             LEFT JOIN messages rm ON rm.id = m.reply_to_id
+             LEFT JOIN users ru ON ru.id = rm.sender_id
              WHERE m.conversation_id = $1
              ORDER BY m.created_at ASC`,
             [convId]
@@ -386,6 +505,7 @@ router.get('/:id(\\d+)', async (req, res) => {
 
         const msgIds = messagesResult.rows.map(m => m.id);
         const reactionsMap = await getReactionsForMessages(msgIds, userId);
+        attachReplyInfo(messagesResult.rows, userId, lang);
         for (const m of messagesResult.rows) {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) {
@@ -521,15 +641,28 @@ router.post('/new', async (req, res) => {
     }
 });
 
-// POST /messages/:id/send — send a message (with optional image)
-router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) => {
+// POST /messages/:id/send — send a message (with optional image or file)
+router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
     try {
         const userId = req.session.userId;
+        const lang = req.session.lang || 'en';
         const convId = parseInt(req.params.id);
         const content = (req.body.content || '').trim().substring(0, 5000);
-        const imageUrl = req.file ? '/img/messages/' + req.file.filename : null;
 
-        if (!content && !imageUrl) {
+        // An uploaded attachment is an inline image or a downloadable file card.
+        let imageUrl = null, fileUrl = null, fileName = null, fileSize = null;
+        if (req.file) {
+            const url = '/img/messages/' + req.file.filename;
+            if (MSG_IMAGE_EXT.test(path.extname(req.file.originalname))) {
+                imageUrl = url;
+            } else {
+                fileUrl = url;
+                fileName = (req.file.originalname || 'file').substring(0, 255);
+                fileSize = req.file.size;
+            }
+        }
+
+        if (!content && !imageUrl && !fileUrl) {
             return res.redirect(`/messages/${convId}`);
         }
 
@@ -542,11 +675,36 @@ router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) 
             return res.status(403).send('Not a member');
         }
 
+        // Optional reply target — only honored if it's a message in this conversation.
+        let replyToId = parseInt(req.body.reply_to_id) || null;
+        let replyInfo = null;
+        if (replyToId) {
+            const r = await pool.query(
+                `SELECT m.id, m.content, m.image_url, m.file_name, m.deleted_at, m.sender_id, u.username AS sender_username
+                 FROM messages m LEFT JOIN users u ON u.id = m.sender_id
+                 WHERE m.id = $1 AND m.conversation_id = $2`,
+                [replyToId, convId]
+            );
+            if (r.rows.length === 0) {
+                replyToId = null;
+            } else {
+                const rr = r.rows[0];
+                replyInfo = {
+                    id: rr.id,
+                    sender: rr.sender_username || (lang === 'ru' ? 'Пользователь' : 'User'),
+                    preview: buildReplyPreview(rr.content, rr.image_url, rr.file_name, rr.deleted_at, lang),
+                    mine: rr.sender_id === userId,
+                    isImage: !rr.content && !!rr.image_url && !rr.deleted_at,
+                    isFile: !rr.content && !!rr.file_name && !rr.deleted_at,
+                };
+            }
+        }
+
         // Insert message and update conversation timestamp
         const inserted = await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url)
-             VALUES ($1, $2, $3, $4) RETURNING id, created_at`,
-            [convId, userId, content, imageUrl]
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, reply_to_id, file_url, file_name, file_size)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at`,
+            [convId, userId, content, imageUrl, replyToId, fileUrl, fileName, fileSize]
         );
         await pool.query(
             `UPDATE conversations SET last_message_at = NOW() WHERE id = $1`,
@@ -561,7 +719,10 @@ router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) 
         );
 
         // Notify other members
-        const preview = imageUrl && !content ? '[Image]' : (content.length > 80 ? content.substring(0, 80) + '...' : content);
+        let preview;
+        if (fileUrl) preview = fileName || '[File]';
+        else if (imageUrl && !content) preview = '[Image]';
+        else preview = content.length > 80 ? content.substring(0, 80) + '...' : content;
         await notifications.createMessageNotifications(
             convId,
             userId,
@@ -573,7 +734,10 @@ router.post('/:id(\\d+)/send', msgImageUpload.single('image'), async (req, res) 
         // If AJAX request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {
             const msg = inserted.rows[0];
-            return res.json({ ok: true, image_url: imageUrl, id: msg.id, created_at: msg.created_at });
+            return res.json({
+                ok: true, id: msg.id, created_at: msg.created_at,
+                image_url: imageUrl, file_url: fileUrl, file_name: fileName, file_size: fileSize,
+            });
         }
         res.redirect(`/messages/${convId}`);
     } catch (err) {
@@ -770,7 +934,8 @@ router.post('/:id(\\d+)/read', async (req, res) => {
 router.get('/list-data', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const { convList } = await buildConversationList(userId);
+        const lang = req.session.lang || 'en';
+        const { convList } = await buildConversationList(userId, lang);
         const presenceNames = convList
             .filter(c => !c.is_group && c.otherUser && c.otherUser.username)
             .map(c => c.otherUser.username);
@@ -778,6 +943,7 @@ router.get('/list-data', async (req, res) => {
         const conversations = convList.map(c => ({
             id: c.id,
             is_group: c.is_group,
+            isSaved: !!c.isSaved,
             displayName: c.displayName,
             displayPicture: c.displayPicture,
             isOnline: !c.is_group && c.otherUser && c.otherUser.username
@@ -786,6 +952,7 @@ router.get('/list-data', async (req, res) => {
             groupAvatarSvg: c.is_group ? groupAvatarSVG(c.id, c.displayName, 44) : null,
             last_message_content: c.last_message_content,
             last_message_image: !!c.last_message_image,
+            last_message_file: c.last_message_file || null,
             last_message_sender_id: c.last_message_sender_id,
             last_message_at: c.last_message_at ? new Date(c.last_message_at).toISOString() : null,
             unread_count: c.unread_count,
@@ -801,6 +968,7 @@ router.get('/list-data', async (req, res) => {
 router.get('/:id(\\d+)/poll', async (req, res) => {
     try {
         const userId = req.session.userId;
+        const lang = req.session.lang || 'en';
         const convId = parseInt(req.params.id);
         const afterId = parseInt(req.query.after) || 0;
 
@@ -815,11 +983,18 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
 
         const result = await pool.query(
             `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
+                    m.file_url, m.file_name, m.file_size,
                     u.username AS sender_username, u.profile_picture AS sender_picture,
-                    cm.role AS sender_role
+                    cm.role AS sender_role,
+                    m.reply_to_id,
+                    rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
+                    rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
+                    ru.username AS reply_sender_username
              FROM messages m
              LEFT JOIN users u ON u.id = m.sender_id
              LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
+             LEFT JOIN messages rm ON rm.id = m.reply_to_id
+             LEFT JOIN users ru ON ru.id = rm.sender_id
              WHERE m.conversation_id = $1 AND m.id > $2
              ORDER BY m.created_at ASC`,
             [convId, afterId]
@@ -839,9 +1014,10 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
             updates = updResult.rows;
         }
 
-        // Attach reactions to new messages
+        // Attach reactions + reply info to new messages
         const newMsgIds = result.rows.map(m => m.id);
         const newReactions = await getReactionsForMessages(newMsgIds, userId);
+        attachReplyInfo(result.rows, userId, lang);
         for (const m of result.rows) {
             m.reactions = newReactions[m.id] || [];
         }
