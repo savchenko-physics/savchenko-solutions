@@ -8,6 +8,7 @@ const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
 const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
 const { getSolutionJudgingWidget, isContestOrganizer } = require("./contestJudge");
+const { renderMathInHtml } = require("./mathRender");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -395,6 +396,15 @@ async function renderPost(req, res) {
             brainstormIsCurator,
             brainstormReactions: ALLOWED_REACTIONS,
             judging,
+        }, (renderErr, pageHtml) => {
+            if (renderErr) {
+                console.error("solution_post render error:", renderErr);
+                return res.status(500).render("500", { lang });
+            }
+            // Server-render every LaTeX span on the whole page to inline SVG, so
+            // formulas everywhere (body, breadcrumb, nav, grid) arrive final without
+            // needing the client MathJax download.
+            res.send(renderMathInHtml(pageHtml));
         });
     } else {
         i18n.setLocale(res, lang);

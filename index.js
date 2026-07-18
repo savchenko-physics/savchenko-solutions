@@ -158,6 +158,10 @@ app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
 // PWA assets (manifest.webmanifest, sw.js, offline.html) served at web root
 app.use(express.static(path.join(__dirname, "public")));
+// Stylesheet for server-rendered math SVG (constant; generated from mathRender)
+app.get('/css/mathjax.css', (req, res) => {
+    res.type('css').set('Cache-Control', 'public, max-age=604800').send(require('./mathRender').getMathCss());
+});
 app.use(express.static(path.join(__dirname, "public")));
 
 // ── Static-asset cache busting ───────────────────────────────────────────────

@@ -52,20 +52,27 @@
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
 
-    <!-- MathJax -->
+    <!-- Solution-body math is pre-rendered to SVG on the server (mathRender.js):
+         formulas arrive final, work with JS disabled, and MathJax is NOT downloaded
+         here. MathJax loads lazily only if a user comment contains LaTeX. -->
+    <link rel="stylesheet" href="/css/mathjax.css" />
     <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
-      }
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'] },
+      startup: { typeset: false }
+    };
+    window.ensureMathJax = function (cb) {
+      if (window.MathJax && window.MathJax.typesetPromise) { cb && cb(); return; }
+      if (window.__mjxLoad) { if (cb) window.__mjxLoad.push(cb); return; }
+      window.__mjxLoad = cb ? [cb] : [];
+      var s = document.createElement('script');
+      s.id = 'MathJax-script'; s.async = true;
+      s.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';
+      s.onload = function () { var q = window.__mjxLoad || []; window.__mjxLoad = null; q.forEach(function (f) { f && f(); }); };
+      document.head.appendChild(s);
     };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Chart.js is lazy-loaded on first use (views/analytics modal), not render-blocking. -->
 
@@ -1970,13 +1977,9 @@
                         });
                     });
 
-                    /* Re-typeset MathJax for any LaTeX in comments */
-                    if (window.MathJax) {
-                        if (MathJax.typesetPromise) {
-                            MathJax.typesetPromise([commentsList]);
-                        } else if (MathJax.Hub) {
-                            MathJax.Hub.Queue(['Typeset', MathJax.Hub, commentsList]);
-                        }
+                    /* Comments may contain LaTeX — load MathJax lazily only if so */
+                    if (/[$]|\\\(|\\\[/.test(commentsList.textContent || '')) {
+                        window.ensureMathJax(function () { MathJax.typesetPromise([commentsList]); });
                     }
                 } else {
                     countEl.textContent = '(0)';
@@ -2245,9 +2248,8 @@
                 if (raw) {
                     commentLivePreview.innerHTML = '<div class="comment-live-preview-label">' + (language === 'ru' ? 'Предпросмотр' : 'Preview') + '</div>' + formatCommentContent(raw);
                     commentLivePreview.style.display = 'block';
-                    if (window.MathJax) {
-                        if (MathJax.typesetPromise) { MathJax.typesetPromise([commentLivePreview]); }
-                        else if (MathJax.Hub) { MathJax.Hub.Queue(['Typeset', MathJax.Hub, commentLivePreview]); }
+                    if (/[$]|\\\(|\\\[/.test(commentLivePreview.textContent || '')) {
+                        window.ensureMathJax(function () { MathJax.typesetPromise([commentLivePreview]); });
                     }
                 } else {
                     commentLivePreview.style.display = 'none';
