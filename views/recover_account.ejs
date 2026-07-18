@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <%- include(`default/head_${lang}.ejs`) %>
+    <%- include('default/main_site_header_head') %>
+    <link rel="stylesheet" href="/css/css-latex/login.css" />
+    <title><%= lang === 'ru' ? 'Восстановление аккаунта' : 'Recover Account' %></title>
+    <script src="/js/analytics.js"></script>
+</head>
+<body class="auth-page">
+    <%- include('default/header.ejs') %>
+    <div class="container1">
+        <h2><%= lang === 'ru' ? 'Восстановление аккаунта' : 'Recover Account' %></h2>
+        <% if (error) { %>
+            <p class="error"><%= error %></p>
+        <% } %>
+        <% if (success) { %>
+            <p class="success"><%= success %></p>
+        <% } %>
+        <% if (!success) { %>
+        <p style="font-size: 14px; color: #6c757d; margin-bottom: 16px;">
+            <%= lang === 'ru'
+                ? 'Не можете войти или сбросить пароль? Отправьте запрос — наша команда рассмотрит его вручную в течение 5 рабочих дней.'
+                : "Can't log in or reset your password? Submit an appeal and our team will review it manually within 5 business days." %>
+        </p>
+        <form action="/recover-account" method="POST">
+            <input type="hidden" name="lang" value="<%= lang %>">
+            <div class="form-group">
+                <label for="email"><%= lang === 'ru' ? 'Электронная почта аккаунта' : 'Account email' %></label>
+                <input type="email" id="email" name="email" required />
+            </div>
+            <div class="form-group">
+                <label for="message"><%= lang === 'ru' ? 'Опишите проблему (необязательно)' : 'Describe the problem (optional)' %></label>
+                <textarea id="message" name="message" rows="4" maxlength="2000"
+                          style="width:100%; padding:8px; font-size:16px; margin-top:5px; border:1px solid #ccc; border-radius:4px; font-family:'Arial','Roboto',sans-serif; resize:vertical;"></textarea>
+            </div>
+            <button type="submit" class="submit-button"><%= lang === 'ru' ? 'Отправить запрос' : 'Submit appeal' %></button>
+        </form>
+        <% } %>
+        <p style="margin-top: 16px;">
+            <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Вернуться к входу' : 'Back to login' %></a>
+        </p>
+    </div>
+    <%- include('default/modern_footer') %>
+    <%- include('default/main_site_footer_scripts') %>
+</body>
+</html>

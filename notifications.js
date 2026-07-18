@@ -88,6 +88,7 @@ async function createMessageNotifications(conversationId, senderId, title, previ
              LEFT JOIN user_preferences up ON up.user_id = cm.user_id
              WHERE cm.conversation_id = $1
                AND cm.user_id <> $2
+               AND cm.muted = FALSE
                AND COALESCE((up.notification_settings ->> 'new_message')::boolean, true)
                AND (
                      (SELECT count(*) FROM conversation_members m

@@ -27,8 +27,13 @@
         pageReady: function () {
           return MathJax.startup.defaultPageReady().then(function () {
             var chat = document.getElementById('chatMessages');
-            if (chat) return MathJax.typesetPromise([chat]).then(function () {
-              chat.scrollTop = chat.scrollHeight;
+            if (!chat) return;
+            return MathJax.typesetPromise([chat]).then(function () {
+              var hash = (location.hash.match(/^#msg-(\d+)$/) || [])[1];
+              var el = hash ? chat.querySelector('.msg-bubble-row[data-msg-id="' + hash + '"]')
+                            : document.getElementById('newMessagesDivider');
+              if (el) el.scrollIntoView({ block: 'center' });
+              else chat.scrollTop = chat.scrollHeight;
             });
           });
         }
@@ -266,6 +271,8 @@
     }
 
     .msg-chat-header-name a:hover { text-decoration: underline; }
+
+    .msg-chat-header-avatar-link { display: inline-flex; text-decoration: none; cursor: pointer; }
 
     .msg-chat-header-members {
       font-size: 12px;
@@ -898,13 +905,13 @@
        a blurred placeholder, so the bubble never reflows; the image fades in. */
     .msg-bubble-image-wrap {
       position: relative;
-      display: inline-block;
+      display: block;            /* own line — never inline with the caption text */
+      width: fit-content;        /* shrink-wrap legacy images; inline width wins for has-dims */
       margin-top: 4px;
       max-width: min(280px, 100%);
       border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
-      vertical-align: bottom;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
@@ -1108,6 +1115,135 @@
     @keyframes msgTypingBlink {
       0%, 60%, 100% { opacity: 0.3; }
       30% { opacity: 1; }
+    }
+
+    /* Message text formatting (bold + code) */
+    .msg-code-inline {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88em;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+    .msg-bubble.sent .msg-code-inline { background: rgba(255, 255, 255, 0.18); }
+
+    .msg-code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.84em;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 8px 10px;
+      border-radius: 6px;
+      margin: 5px 0 0;
+      overflow-x: auto;
+      white-space: pre;
+    }
+    .msg-bubble.sent .msg-code { background: rgba(255, 255, 255, 0.14); }
+    .msg-code code { background: none; padding: 0; font: inherit; }
+
+    /* "New messages" divider */
+    .msg-new-divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 6px 0;
+      color: #c0392b;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .msg-new-divider::before, .msg-new-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(192, 57, 43, 0.3);
+    }
+
+    /* In-conversation search */
+    .msg-header-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--msg-muted);
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+    }
+    .msg-header-btn:hover { background: var(--msg-bg-alt); color: var(--msg-primary); }
+    .msg-header-btn.active { color: var(--msg-link); }
+    .msg-header-spacer { flex: 1; }
+
+    .msg-search-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--msg-border);
+      background: var(--msg-bg);
+      flex-shrink: 0;
+    }
+    .msg-search-bar.show { display: flex; }
+    .msg-search-bar input {
+      flex: 1;
+      height: 34px;
+      border: 1px solid var(--msg-border);
+      border-radius: 6px;
+      padding: 0 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    .msg-search-results { font-size: 12px; color: var(--msg-muted); white-space: nowrap; }
+
+    .msg-search-results-list {
+      max-height: 240px;
+      overflow-y: auto;
+      border-bottom: 1px solid var(--msg-border);
+      background: var(--msg-bg);
+      flex-shrink: 0;
+    }
+    .msg-search-result {
+      padding: 8px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 13px;
+      color: var(--msg-text);
+    }
+    .msg-search-result:hover { background: var(--msg-bg-alt); }
+    .msg-search-result-meta { font-size: 11px; color: var(--msg-muted); margin-top: 2px; }
+
+    /* Group management (members panel) */
+    .msg-group-admin-row {
+      display: flex;
+      gap: 6px;
+      padding: 8px 0;
+      border-top: 1px solid var(--msg-border);
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .msg-group-btn {
+      font-size: 12px;
+      padding: 5px 10px;
+      border: 1px solid var(--msg-border);
+      border-radius: 6px;
+      background: var(--msg-bg);
+      color: var(--msg-text);
+      cursor: pointer;
+    }
+    .msg-group-btn:hover { background: var(--msg-bg-alt); }
+    .msg-group-btn.danger { color: #c0392b; }
+    .msg-member-actions { margin-left: auto; display: flex; gap: 4px; }
+    .msg-member-act {
+      background: none; border: none; cursor: pointer; color: var(--msg-muted);
+      font-size: 11px; padding: 2px 6px; border-radius: 4px;
+    }
+    .msg-member-act:hover { background: var(--msg-bg-alt); color: var(--msg-primary); }
+    .msg-member-act.danger:hover { color: #c0392b; }
+
+    /* Flash highlight when jumping to a searched/linked message */
+    @keyframes msgJumpFlash {
+      0%, 40% { box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.45); }
+      100% { box-shadow: 0 0 0 3px rgba(26, 82, 118, 0); }
     }
 
     .msg-image-overlay {
@@ -1449,11 +1585,14 @@
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
               </div>
             <% } else if (activeConversation.displayPicture) { %>
+              <% const _hdrProfileHref = (!activeConversation.is_group && activeConversation.otherUser) ? ('/user/' + activeConversation.otherUser.username) : null; %>
+              <% if (_hdrProfileHref) { %><a href="<%= _hdrProfileHref %>" class="msg-chat-header-avatar-link" title="<%= lang === 'ru' ? 'Открыть профиль' : 'Open profile' %>"><% } %>
               <span class="avatar-presence">
                 <img class="msg-chat-header-avatar"
                      src="<%= activeConversation.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
                 <% if (activeConversation.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
               </span>
+              <% if (_hdrProfileHref) { %></a><% } %>
             <% } %>
             <div>
               <div class="msg-chat-header-name">
@@ -1469,19 +1608,45 @@
                 </div>
               <% } %>
             </div>
+            <div class="msg-header-spacer"></div>
+            <button class="msg-header-btn" id="searchToggle" title="<%= lang === 'ru' ? 'Поиск' : 'Search' %>">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button class="msg-header-btn<%= (typeof muted !== 'undefined' && muted) ? ' active' : '' %>" id="muteToggle" title="<%= lang === 'ru' ? 'Уведомления' : 'Notifications' %>">
+              <svg id="muteIconOn" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="<%= (typeof muted !== 'undefined' && muted) ? 'display:none' : '' %>"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <svg id="muteIconOff" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="<%= (typeof muted !== 'undefined' && muted) ? '' : 'display:none' %>"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
           </div>
           <% if (activeConversation.is_group && typeof membersList !== 'undefined' && membersList.length > 0) { %>
           <div class="msg-members-panel" id="membersPanel">
+            <% if (isAdmin) { %>
+            <div class="msg-group-admin-row">
+              <button class="msg-group-btn" id="groupRenameBtn"><%= lang === 'ru' ? 'Переименовать' : 'Rename' %></button>
+              <button class="msg-group-btn" id="groupAddBtn"><%= lang === 'ru' ? 'Добавить' : 'Add members' %></button>
+              <button class="msg-group-btn danger" id="groupLeaveBtn"><%= lang === 'ru' ? 'Выйти' : 'Leave' %></button>
+            </div>
+            <% } %>
             <% const initialShow = 20; %>
             <% membersList.forEach(function(mem, idx) { %>
-              <div class="msg-member-item" <% if (idx >= initialShow) { %>style="display:none" data-extra-member<% } %>>
+              <div class="msg-member-item" data-user-id="<%= mem.id %>" data-role="<%= mem.role %>" <% if (idx >= initialShow) { %>style="display:none" data-extra-member<% } %>>
                 <span class="avatar-presence"><img class="msg-member-avatar" src="<%= mem.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" /><% if (mem.isOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                 <span class="msg-member-name">
                   <a href="/user/<%= mem.username %>"><%= mem.full_name || mem.username %></a>
                   <% if (mem.role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'модератор' : 'mod' %></span><% } %>
                 </span>
+                <% if (isAdmin && mem.id !== userId) { %>
+                <span class="msg-member-actions">
+                  <button class="msg-member-act" data-act="role" data-user="<%= mem.id %>" data-newrole="<%= mem.role === 'admin' ? 'member' : 'admin' %>"><%= mem.role === 'admin' ? (lang === 'ru' ? 'Снять' : 'Demote') : (lang === 'ru' ? 'Модер' : 'Promote') %></button>
+                  <button class="msg-member-act danger" data-act="remove" data-user="<%= mem.id %>"><%= lang === 'ru' ? 'Удалить' : 'Remove' %></button>
+                </span>
+                <% } %>
               </div>
             <% }); %>
+            <% if (!isAdmin) { %>
+            <div class="msg-group-admin-row">
+              <button class="msg-group-btn danger" id="groupLeaveBtn"><%= lang === 'ru' ? 'Выйти из группы' : 'Leave group' %></button>
+            </div>
+            <% } %>
             <% if (membersList.length > initialShow) { %>
               <button class="msg-members-show-more" id="showMoreMembers">
                 <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %> (<%= membersList.length - initialShow %>)
@@ -1490,6 +1655,16 @@
           </div>
           <% } %>
         </div>
+
+        <!-- In-conversation search bar -->
+        <div class="msg-search-bar" id="msgSearchBar">
+          <input type="text" id="msgSearchInput" placeholder="<%= lang === 'ru' ? 'Поиск в переписке...' : 'Search this conversation...' %>" />
+          <span class="msg-search-results" id="msgSearchCount"></span>
+          <button class="msg-header-btn" id="msgSearchClose">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="msg-search-results-list" id="msgSearchList" style="display:none;"></div>
 
         <!-- Pinned message bar -->
         <% const canPin = activeConversation && (!activeConversation.is_group || isAdmin); %>
@@ -1526,6 +1701,9 @@
                     ? m.sender_username
                     : (activeConversation.otherUser ? activeConversation.otherUser.username : m.sender_username));
           %>
+            <% if (typeof firstUnreadId !== 'undefined' && firstUnreadId && m.id === firstUnreadId) { %>
+            <div class="msg-new-divider" id="newMessagesDivider"><%= lang === 'ru' ? 'Новые сообщения' : 'New messages' %></div>
+            <% } %>
             <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
               <% if (showAvatar) { %>
                 <span class="avatar-presence">
@@ -1538,7 +1716,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:<%= m.image_width %>px;aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -1746,13 +1924,25 @@
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
     <span><%= lang === 'ru' ? 'Переслать' : 'Forward' %></span>
   </button>
+  <button class="msg-context-item" id="ctxCopyLink">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    <span><%= lang === 'ru' ? 'Копировать ссылку' : 'Copy Link' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxReport">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+    <span><%= lang === 'ru' ? 'Пожаловаться' : 'Report' %></span>
+  </button>
   <button class="msg-context-item" id="ctxEdit">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
     <span><%= lang === 'ru' ? 'Редактировать' : 'Edit' %></span>
   </button>
+  <button class="msg-context-item danger" id="ctxHide">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+    <span><%= lang === 'ru' ? 'Удалить у себя' : 'Delete for me' %></span>
+  </button>
   <button class="msg-context-item danger" id="ctxDelete">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-    <span><%= lang === 'ru' ? 'Удалить' : 'Delete' %></span>
+    <span id="ctxDeleteLabel"><%= lang === 'ru' ? 'Удалить у всех' : 'Delete for everyone' %></span>
   </button>
 </div>
 
@@ -1805,9 +1995,16 @@
     oldestMsgId = parseInt(rowEls[0].dataset.msgId) || 0;
   }
 
-  // Scroll to bottom
+  // Initial scroll: to a #msg-<id> permalink, else the "new messages" divider,
+  // else the bottom. (MathJax pageReady re-applies this after typesetting.)
   if (chatEl) {
-    chatEl.scrollTop = chatEl.scrollHeight;
+    var _hash = (location.hash.match(/^#msg-(\d+)$/) || [])[1];
+    var _target = _hash ? chatEl.querySelector('.msg-bubble-row[data-msg-id="' + _hash + '"]') : null;
+    var _divider = document.getElementById('newMessagesDivider');
+    if (_target) { _target.scrollIntoView({ block: 'center' }); }
+    else if (_hash) { setTimeout(function() { jumpToMessageDeep(_hash); }, 150); }
+    else if (_divider) { _divider.scrollIntoView({ block: 'center' }); }
+    else { chatEl.scrollTop = chatEl.scrollHeight; }
   }
 
   // Auto-resize textarea
@@ -1845,6 +2042,7 @@
       this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       updateSendEnabled();
       maybeSendTyping();
+      if (!editingMsgId) saveDraft();
     });
 
     msgInput.addEventListener('keydown', function(e) {
@@ -1864,7 +2062,30 @@
       }
     });
 
+    restoreDraft();
     msgInput.focus();
+  }
+
+  // Per-conversation compose drafts (localStorage).
+  function draftKey() { return CONV_ID ? 'msgDraft:' + CONV_ID : null; }
+  function saveDraft() {
+    var k = draftKey(); if (!k) return;
+    try { if (msgInput.value) localStorage.setItem(k, msgInput.value); else localStorage.removeItem(k); } catch (e) {}
+  }
+  function clearDraft() {
+    var k = draftKey(); if (!k) return;
+    try { localStorage.removeItem(k); } catch (e) {}
+  }
+  function restoreDraft() {
+    var k = draftKey(); if (!k || !msgInput) return;
+    var v;
+    try { v = localStorage.getItem(k); } catch (e) { v = null; }
+    if (v) {
+      msgInput.value = v;
+      msgInput.style.height = 'auto';
+      msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+      updateSendEnabled();
+    }
   }
 
   if (sendBtn) {
@@ -2027,6 +2248,7 @@
     sendBtn.disabled = true;
     msgInput.value = '';
     msgInput.style.height = 'auto';
+    clearDraft();
 
     const localImageUrl = (pendingImage && pendingIsImage && imagePreviewImg.src) ? imagePreviewImg.src : null;
     const localFile = (pendingImage && !pendingIsImage) ? pendingImage : null;
@@ -2252,7 +2474,10 @@
   var ctxPin = document.getElementById('ctxPin');
   var ctxPinLabel = document.getElementById('ctxPinLabel');
   var ctxForward = document.getElementById('ctxForward');
+  var ctxCopyLink = document.getElementById('ctxCopyLink');
+  var ctxReport = document.getElementById('ctxReport');
   var ctxEdit = document.getElementById('ctxEdit');
+  var ctxHide = document.getElementById('ctxHide');
   var ctxDelete = document.getElementById('ctxDelete');
   var ctxMsgId = null;
 
@@ -2277,7 +2502,10 @@
         : (LANG === 'ru' ? 'Закрепить' : 'Pin');
     }
     if (ctxForward) ctxForward.style.display = '';   // forward is always available
+    if (ctxCopyLink) ctxCopyLink.style.display = '';
+    if (ctxReport) ctxReport.style.display = isSent ? 'none' : ''; // can't report your own
     ctxEdit.style.display = canEdit ? '' : 'none';
+    if (ctxHide) ctxHide.style.display = '';         // "delete for me" is always available
     ctxDelete.style.display = canDelete ? '' : 'none';
     ctxMenu.classList.add('show');
     // Keep the menu inside the viewport.
@@ -2378,6 +2606,53 @@
     });
   }
 
+  if (ctxCopyLink) {
+    ctxCopyLink.addEventListener('click', function() {
+      if (ctxMsgId && CONV_ID) {
+        var url = location.origin + '/messages/' + CONV_ID + '#msg-' + ctxMsgId;
+        if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function() {});
+      }
+      ctxMenu.classList.remove('show');
+    });
+  }
+
+  if (ctxReport) {
+    ctxReport.addEventListener('click', function() {
+      var id = ctxMsgId;
+      ctxMenu.classList.remove('show');
+      if (!id) return;
+      var reason = prompt(LANG === 'ru' ? 'Причина жалобы (необязательно):' : 'Reason for report (optional):');
+      if (reason === null) return; // cancelled
+      fetch('/messages/' + id + '/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ reason: reason }),
+      })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          alert(d.error ? d.error : (LANG === 'ru' ? 'Жалоба отправлена.' : 'Report submitted.'));
+        })
+        .catch(function() {});
+    });
+  }
+
+  if (ctxHide) {
+    ctxHide.addEventListener('click', function() {
+      var id = ctxMsgId;
+      ctxMenu.classList.remove('show');
+      if (!id) return;
+      if (!confirm(LANG === 'ru' ? 'Удалить это сообщение только у себя?' : 'Delete this message for yourself only?')) return;
+      fetch('/messages/' + id + '/hide', { method: 'POST', headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.error) { alert(d.error); return; }
+          var row = document.querySelector('.msg-bubble-row[data-msg-id="' + id + '"]');
+          if (row) row.remove();
+        })
+        .catch(function() {});
+    });
+  }
+
   // ── Forward ─────────────────────────────────────────────────────────
   const forwardModal = document.getElementById('forwardModal');
   const forwardClose = document.getElementById('forwardClose');
@@ -2474,6 +2749,17 @@
 
   function linkify(text) {
     var html = esc(text);
+    // Protect code so its content isn't linkified/formatted (mirrors the server).
+    var codes = [];
+    var ph = function(i) { return 'zXcodeXz' + i + 'zXcodeXz'; };
+    html = html.replace(/```\n?([\s\S]*?)```/g, function(m, c) {
+      codes.push('<pre class="msg-code"><code>' + c.replace(/\n$/, '') + '</code></pre>');
+      return ph(codes.length - 1);
+    });
+    html = html.replace(/`([^`\n]+?)`/g, function(m, c) {
+      codes.push('<code class="msg-code-inline">' + c + '</code>');
+      return ph(codes.length - 1);
+    });
     html = html.replace(/(?:https?:\/\/)[^\s<>"']+/g, function(url) {
       var clean = url.replace(/[.,;:!?)]+$/, '');
       var trailing = url.slice(clean.length);
@@ -2483,6 +2769,8 @@
       '<a href="/user/$1" class="user-mention" style="color:#1a5276;font-weight:500;text-decoration:none;">@$1</a>');
     html = html.replace(/(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
       '<a href="/' + LANG + '/$1" class="problem-ref" style="color:#1a5276;font-weight:500;text-decoration:none;">#$1</a>');
+    html = html.replace(/\*\*([^\n*][^*]*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/zXcodeXz(\d+)zXcodeXz/g, function(m, i) { return codes[parseInt(i, 10)]; });
     return html;
   }
 
@@ -2550,7 +2838,7 @@
     if (!m.image_url) return '';
     const hasDims = m.image_width && m.image_height;
     let style = '';
-    if (hasDims) style += 'width:' + m.image_width + 'px;aspect-ratio:' + m.image_width + '/' + m.image_height + ';';
+    if (hasDims) style += 'width:min(' + m.image_width + 'px,280px);aspect-ratio:' + m.image_width + '/' + m.image_height + ';';
     if (m.image_placeholder) style += 'background-image:url(' + m.image_placeholder + ');';
     return '<span class="msg-bubble-image-wrap' + (hasDims ? ' has-dims' : '') + '" style="' + style + '">' +
       '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" data-full="' + esc(m.image_url) + '" alt="" loading="lazy" />' +
@@ -2915,10 +3203,10 @@
   }
 
   function loadOlder() {
-    if (loadingHistory || !hasMoreHistory || !CONV_ID || !oldestMsgId) return;
+    if (loadingHistory || !hasMoreHistory || !CONV_ID || !oldestMsgId) return Promise.resolve();
     loadingHistory = true;
     if (historyLoader) historyLoader.classList.add('show');
-    fetch('/messages/' + CONV_ID + '/history?before=' + oldestMsgId)
+    return fetch('/messages/' + CONV_ID + '/history?before=' + oldestMsgId)
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (historyLoader) historyLoader.classList.remove('show');
@@ -2936,6 +3224,165 @@
   if (chatEl) {
     chatEl.addEventListener('scroll', function() {
       if (chatEl.scrollTop < 80 && hasMoreHistory && !loadingHistory) loadOlder();
+    });
+  }
+
+  // Jump to a message, loading older pages until it's in the DOM (search/permalink).
+  function jumpToMessageDeep(targetId, attempt) {
+    targetId = parseInt(targetId);
+    if (!targetId || !chatEl) return;
+    attempt = attempt || 0;
+    var el = chatEl.querySelector('.msg-bubble-row[data-msg-id="' + targetId + '"]');
+    if (el) { jumpToMessage(targetId); return; }
+    if (!hasMoreHistory || attempt > 40) return; // give up
+    loadOlder().then(function() { jumpToMessageDeep(targetId, attempt + 1); });
+  }
+
+  // ── Mute toggle ─────────────────────────────────────────────────────
+  var muteToggle = document.getElementById('muteToggle');
+  if (muteToggle) {
+    muteToggle.addEventListener('click', function() {
+      fetch('/messages/' + CONV_ID + '/mute', { method: 'POST', headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.error) { alert(d.error); return; }
+          var on = document.getElementById('muteIconOn');
+          var off = document.getElementById('muteIconOff');
+          if (on) on.style.display = d.muted ? 'none' : '';
+          if (off) off.style.display = d.muted ? '' : 'none';
+          muteToggle.classList.toggle('active', d.muted);
+        })
+        .catch(function() {});
+    });
+  }
+
+  // ── In-conversation search ──────────────────────────────────────────
+  var searchToggle = document.getElementById('searchToggle');
+  var msgSearchBar = document.getElementById('msgSearchBar');
+  var msgSearchInput = document.getElementById('msgSearchInput');
+  var msgSearchClose = document.getElementById('msgSearchClose');
+  var msgSearchList = document.getElementById('msgSearchList');
+  var msgSearchCount = document.getElementById('msgSearchCount');
+  var searchTimer2 = null;
+
+  function closeSearch() {
+    if (msgSearchBar) msgSearchBar.classList.remove('show');
+    if (msgSearchList) { msgSearchList.style.display = 'none'; msgSearchList.innerHTML = ''; }
+    if (msgSearchCount) msgSearchCount.textContent = '';
+    if (searchToggle) searchToggle.classList.remove('active');
+  }
+  if (searchToggle) {
+    searchToggle.addEventListener('click', function() {
+      if (!msgSearchBar) return;
+      var show = !msgSearchBar.classList.contains('show');
+      msgSearchBar.classList.toggle('show', show);
+      searchToggle.classList.toggle('active', show);
+      if (show && msgSearchInput) msgSearchInput.focus();
+      else closeSearch();
+    });
+  }
+  if (msgSearchClose) msgSearchClose.addEventListener('click', closeSearch);
+  if (msgSearchInput) {
+    msgSearchInput.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeSearch(); });
+    msgSearchInput.addEventListener('input', function() {
+      clearTimeout(searchTimer2);
+      var q = this.value.trim();
+      if (q.length < 2) { if (msgSearchList) msgSearchList.style.display = 'none'; if (msgSearchCount) msgSearchCount.textContent = ''; return; }
+      searchTimer2 = setTimeout(function() {
+        fetch('/messages/' + CONV_ID + '/search?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            var results = (data && data.results) || [];
+            if (msgSearchCount) msgSearchCount.textContent = results.length + (LANG === 'ru' ? ' найдено' : ' found');
+            if (!msgSearchList) return;
+            msgSearchList.innerHTML = '';
+            results.forEach(function(m) {
+              var el = document.createElement('div');
+              el.className = 'msg-search-result';
+              el.innerHTML = '<div>' + esc((m.content || '').substring(0, 120)) + '</div>' +
+                '<div class="msg-search-result-meta">' + esc(m.sender_username || '') + ' · ' + fmtTime(m.created_at) + '</div>';
+              el.addEventListener('click', function() {
+                closeSearch();
+                jumpToMessageDeep(m.id);
+              });
+              msgSearchList.appendChild(el);
+            });
+            msgSearchList.style.display = results.length ? 'block' : 'none';
+          })
+          .catch(function() {});
+      }, 300);
+    });
+  }
+
+  // ── Group management ────────────────────────────────────────────────
+  function groupAction(path, body) {
+    return fetch('/messages/' + CONV_ID + '/group/' + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body || {}),
+    }).then(function(r) { return r.json(); });
+  }
+  var groupRenameBtn = document.getElementById('groupRenameBtn');
+  var groupAddBtn = document.getElementById('groupAddBtn');
+  var groupLeaveBtn = document.getElementById('groupLeaveBtn');
+  var membersPanelEl = document.getElementById('membersPanel');
+
+  if (groupRenameBtn) {
+    groupRenameBtn.addEventListener('click', function() {
+      var title = prompt(LANG === 'ru' ? 'Новое название группы:' : 'New group name:');
+      if (!title || !title.trim()) return;
+      groupAction('rename', { title: title.trim() }).then(function(d) {
+        if (d.error) { alert(d.error); return; }
+        window.location.reload();
+      });
+    });
+  }
+  if (groupAddBtn) {
+    groupAddBtn.addEventListener('click', function() {
+      // Reuse the forward user-search modal pattern via a simple prompt-driven search.
+      var q = prompt(LANG === 'ru' ? 'Имя пользователя для добавления:' : 'Username to add:');
+      if (!q || !q.trim()) return;
+      fetch('/messages/search-users?q=' + encodeURIComponent(q.trim()))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var users = (data && data.users) || [];
+          if (!users.length) { alert(LANG === 'ru' ? 'Пользователь не найден' : 'No user found'); return; }
+          var u = users[0];
+          if (!confirm((LANG === 'ru' ? 'Добавить ' : 'Add ') + u.username + '?')) return;
+          groupAction('add', { userIds: [u.id] }).then(function(d) {
+            if (d.error) { alert(d.error); return; }
+            window.location.reload();
+          });
+        });
+    });
+  }
+  if (groupLeaveBtn) {
+    groupLeaveBtn.addEventListener('click', function() {
+      if (!confirm(LANG === 'ru' ? 'Выйти из группы?' : 'Leave this group?')) return;
+      groupAction('leave', {}).then(function(d) {
+        if (d.error) { alert(d.error); return; }
+        window.location.href = '/messages';
+      });
+    });
+  }
+  if (membersPanelEl) {
+    membersPanelEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('.msg-member-act');
+      if (!btn) return;
+      var act = btn.dataset.act;
+      var uid = parseInt(btn.dataset.user);
+      if (act === 'remove') {
+        if (!confirm(LANG === 'ru' ? 'Удалить участника?' : 'Remove this member?')) return;
+        groupAction('remove', { userId: uid }).then(function(d) {
+          if (d.error) { alert(d.error); return; }
+          window.location.reload();
+        });
+      } else if (act === 'role') {
+        groupAction('role', { userId: uid, role: btn.dataset.newrole }).then(function(d) {
+          if (d.error) { alert(d.error); return; }
+          window.location.reload();
+        });
+      }
     });
   }
 

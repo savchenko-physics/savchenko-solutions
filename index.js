@@ -1817,6 +1817,101 @@ app.post("/reset-password", async (req, res) => {
     }
 });
 
+// Email verification (soft): mark the account verified when the emailed link is opened
+app.get("/verify-email", async (req, res) => {
+    const lang = req.query.lang || 'en';
+    const token = req.query.token;
+    if (!token) return res.redirect(`/${lang}/login`);
+    try {
+        const r = await pool.query(
+            `SELECT id FROM users
+             WHERE email_verification_token = $1
+               AND (email_verification_expires IS NULL OR email_verification_expires > NOW())`,
+            [token]
+        );
+        if (r.rows.length === 0) {
+            return res.redirect(`/${lang}/login?error=${encodeURIComponent(
+                lang === 'ru' ? 'Ссылка подтверждения недействительна или истекла.' : 'This verification link is invalid or has expired.'
+            )}`);
+        }
+        await pool.query(
+            "UPDATE users SET email_verified = TRUE, email_verification_token = NULL, email_verification_expires = NULL WHERE id = $1",
+            [r.rows[0].id]
+        );
+        const dest = req.session.userId ? `/${lang}/profile` : `/${lang}/login`;
+        return res.redirect(`${dest}?success=${encodeURIComponent(
+            lang === 'ru' ? 'Email подтверждён.' : 'Your email has been verified.'
+        )}`);
+    } catch (error) {
+        console.error('verify-email error:', error);
+        return res.redirect(`/${lang}/login`);
+    }
+});
+
+// Account recovery appeal (middle-ground: never reveals whether an email exists;
+// files an appeal into the /admin/password-resets "needs review" queue)
+app.get("/recover-account", (req, res) => {
+    const lang = req.query.lang || 'en';
+    i18n.setLocale(res, lang);
+    res.render("recover_account", {
+        __: i18n.__,
+        lang,
+        error: req.query.error || "",
+        success: req.query.success || "",
+    });
+});
+
+app.post("/recover-account", async (req, res) => {
+    const lang = req.body.lang || 'en';
+    const email = String(req.body.email || "").trim();
+    const message = String(req.body.message || "").trim().slice(0, 2000);
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+
+    if (!email) {
+        return res.redirect(`/recover-account?lang=${lang}&error=${encodeURIComponent(
+            lang === 'ru' ? 'Укажите адрес электронной почты.' : 'Please enter your email address.'
+        )}`);
+    }
+
+    try {
+        // Link to a user if the email matches — never revealed to the requester.
+        const u = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
+        const userId = u.rows.length ? u.rows[0].id : null;
+
+        await pool.query(
+            `INSERT INTO password_reset_requests (email, user_id, ip_address, status, request_type, note)
+             VALUES ($1, $2, $3, 'pending', 'recovery_appeal', $4)`,
+            [email, userId, ip, message || null]
+        );
+
+        // Best-effort acknowledgement email to the requester
+        try {
+            await sendEmail({
+                to: email,
+                subject: lang === 'ru'
+                    ? 'Мы получили ваш запрос на восстановление — Savchenko Solutions'
+                    : 'We received your account recovery request — Savchenko Solutions',
+                html: `<p>${lang === 'ru'
+                    ? 'Мы получили ваш запрос на восстановление доступа. Наша команда рассмотрит его в течение 5 рабочих дней и свяжется с вами по электронной почте.'
+                    : 'We received your account recovery request. Our team will review it within 5 business days and follow up by email.'}</p>`,
+            });
+        } catch (mailErr) {
+            console.error('Recovery acknowledgement email failed:', mailErr);
+        }
+
+        return res.redirect(`/recover-account?lang=${lang}&success=${encodeURIComponent(
+            lang === 'ru'
+                ? 'Мы получили ваш запрос. Ответ будет предоставлен в течение 5 рабочих дней — проверьте вашу электронную почту.'
+                : 'We received your appeal. You will get a response within 5 business days — please check your email for further details.'
+        )}`);
+    } catch (error) {
+        console.error('recover-account error:', error);
+        return res.redirect(`/recover-account?lang=${lang}&error=${encodeURIComponent(
+            lang === 'ru' ? 'Произошла ошибка. Попробуйте позже.' : 'Something went wrong. Please try again.'
+        )}`);
+    }
+});
+
 app.get("/register", checkNotAuthenticated, (req, res) => {
     i18n.setLocale(res, 'en'); // Default to English for register
     res.render("register", {
@@ -1883,6 +1978,31 @@ app.post("/register", registerLimiter, async (req, res) => {
             }
         } catch (e) {
             console.error('Failed to add user to global chat:', e);
+        }
+
+        // Send a verification email (soft: the account works right away; the user
+        // shows as unverified until they click the link). Failures are swallowed.
+        try {
+            const verifyToken = crypto.randomBytes(32).toString("hex");
+            const verifyExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+            await pool.query(
+                "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3",
+                [verifyToken, verifyExpires, newUser.rows[0].id]
+            );
+            const verifyUrl = `${req.protocol}://${req.get("host")}/verify-email?token=${verifyToken}&lang=${lang}`;
+            await sendEmail({
+                to: email,
+                subject: lang === 'ru'
+                    ? 'Подтвердите ваш email — Savchenko Solutions'
+                    : 'Confirm your email — Savchenko Solutions',
+                html: `<p>${lang === 'ru'
+                    ? 'Добро пожаловать в Savchenko Solutions! Подтвердите свой адрес электронной почты (ссылка действительна 7 дней):'
+                    : 'Welcome to Savchenko Solutions! Please confirm your email address (this link is valid for 7 days):'}</p>
+                       <p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
+                text: verifyUrl,
+            });
+        } catch (mailErr) {
+            console.error('Verification email failed:', mailErr);
         }
 
         // Log the new user straight in instead of bouncing them to the login page
@@ -2305,7 +2425,7 @@ async function handleContributorsRanking(req, res) {
         });
     } catch (error) {
         console.error("Error fetching contributors:", error);
-        res.status(500).render("404", {
+        res.status(500).render("500", {
             __: i18n.__,
             pageUrl: req.originalUrl,
             lang,
@@ -2684,6 +2804,35 @@ require('./sandbox/sandbox-app')(sandboxPool);
 
 // Build search index before starting server
 searchIndex.buildIndex();
+
+// Catch-all 404 for routes nothing else handled (JSON for APIs, styled page otherwise)
+app.use((req, res) => {
+    if (req.path && req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    const lang = (req.path && req.path.startsWith('/ru')) ? 'ru' : 'en';
+    i18n.setLocale(res, lang);
+    res.status(404).render("404", { __: i18n.__, lang, pageUrl: req.originalUrl });
+});
+
+// Global error handler — render a real 500 page instead of leaking a stack trace
+// or (as before) showing the 404 "this problem doesn't exist" page for server errors.
+app.use((err, req, res, next) => {
+    console.error('Unhandled error on', req.method, req.originalUrl, '\n', err);
+    if (res.headersSent) return next(err);
+    if (req.path && req.path.startsWith('/api/')) {
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+    const lang = (req.path && req.path.startsWith('/ru')) ? 'ru' : 'en';
+    res.status(500).render("500", { lang }, (renderErr, html) => {
+        if (renderErr) {
+            console.error('Failed to render 500 page:', renderErr);
+            res.status(500).type('text').send("Something went wrong on our end — we're looking into it.");
+        } else {
+            res.send(html);
+        }
+    });
+});
 
 // Start the main server
 app.listen(PORT, () => {

@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= metaDescription %>" />
+    <meta property="og:site_name" content="Savchenko Solutions" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:description" content="<%= metaDescription %>" />
+    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
+    <% if (typeof ogUrl !== 'undefined' && ogUrl) { %><meta property="og:url" content="<%= ogUrl %>" />
+    <% } %><meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="<%= title %>" />
+    <meta name="twitter:description" content="<%= metaDescription %>" />
+    <meta name="twitter:image" content="https://savchenkosolutions.com/img/logo.png" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/<%= name %>" />
     <% if (alternateFileExists) { %>
     <link rel="alternate" hreflang="<%= lang === 'en' ? 'ru' : 'en' %>" href="https://savchenkosolutions.com/<%= lang === 'en' ? 'ru' : 'en' %>/<%= name %>" />

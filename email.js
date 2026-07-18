@@ -16,6 +16,9 @@ const FROM =
     process.env.EMAIL_FROM ||
     "Savchenko Solutions <no-reply@savchenkosolutions.com>";
 
+// no-reply@ has no inbox, so route replies to a real address (override via EMAIL_REPLY_TO).
+const REPLY_TO = process.env.EMAIL_REPLY_TO || "togpe22@gmail.com";
+
 let sesClient = null;
 function getClient() {
     if (!sesClient) {
@@ -42,18 +45,19 @@ async function sendEmail({ to, subject, html, text }) {
     const body = { Html: { Data: html, Charset: "UTF-8" } };
     if (text) body.Text = { Data: text, Charset: "UTF-8" };
 
-    const result = await getClient().send(
-        new SendEmailCommand({
-            FromEmailAddress: FROM,
-            Destination: { ToAddresses: [to] },
-            Content: {
-                Simple: {
-                    Subject: { Data: subject, Charset: "UTF-8" },
-                    Body: body,
-                },
+    const input = {
+        FromEmailAddress: FROM,
+        Destination: { ToAddresses: [to] },
+        Content: {
+            Simple: {
+                Subject: { Data: subject, Charset: "UTF-8" },
+                Body: body,
             },
-        })
-    );
+        },
+    };
+    if (REPLY_TO) input.ReplyToAddresses = [REPLY_TO];
+
+    const result = await getClient().send(new SendEmailCommand(input));
     return { messageId: result.MessageId };
 }
 

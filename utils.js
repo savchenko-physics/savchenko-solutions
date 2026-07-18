@@ -542,9 +542,30 @@ function linkifyMessageContent(text, lang = 'en') {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    let result = autoLinkUrls(escaped);
+
+    // Protect code (fenced first, then inline) so its content isn't linkified,
+    // formatted, or math-typeset. Content is already escaped above.
+    const codes = [];
+    const ph = (i) => 'zXcodeXz' + i + 'zXcodeXz';
+    let result = escaped
+        .replace(/```\n?([\s\S]*?)```/g, (m, c) => {
+            codes.push('<pre class="msg-code"><code>' + c.replace(/\n$/, '') + '</code></pre>');
+            return ' ' + (codes.length - 1) + ' ';
+        })
+        .replace(/`([^`\n]+?)`/g, (m, c) => {
+            codes.push('<code class="msg-code-inline">' + c + '</code>');
+            return ' ' + (codes.length - 1) + ' ';
+        });
+
+    result = autoLinkUrls(result);
     result = autoLinkUserMentions(result);
     result = autoLinkProblemRefs(result, lang);
+    // Bold only (**text**). Underscore/single-star italics are intentionally not
+    // supported — they collide with LaTeX ($x_1$, a*b). Code and math are safe.
+    result = result.replace(/\*\*([^\n*][^*]*?)\*\*/g, '<strong>$1</strong>');
+
+    // Restore protected code spans.
+    result = result.replace(/ (\d+) /g, (m, i) => codes[parseInt(i, 10)]);
     return result;
 }
 

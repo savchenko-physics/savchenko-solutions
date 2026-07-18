@@ -358,6 +358,28 @@ function checkAuth(req, res, next) {
 
 router.use(checkAuth);
 
+// ── Rate limiting (in-memory fixed window, per user + bucket) ────────────
+const rateBuckets = new Map();
+function rateLimit(bucket, max, windowMs) {
+    return (req, res, next) => {
+        const key = req.session.userId + ':' + bucket;
+        const now = Date.now();
+        let e = rateBuckets.get(key);
+        if (!e || e.resetAt <= now) { e = { count: 0, resetAt: now + windowMs }; rateBuckets.set(key, e); }
+        e.count++;
+        if (e.count > max) {
+            res.set('Retry-After', String(Math.ceil((e.resetAt - now) / 1000)));
+            return res.status(429).json({ error: 'Too many requests — please slow down.' });
+        }
+        next();
+    };
+}
+// Periodically drop expired buckets so the map can't grow unbounded.
+setInterval(() => {
+    const now = Date.now();
+    for (const [k, e] of rateBuckets) if (e.resetAt <= now) rateBuckets.delete(k);
+}, 60000).unref?.();
+
 // Find or create a 1:1 conversation between two users
 async function findOrCreateDM(userId1, userId2) {
     const existing = await pool.query(
@@ -599,14 +621,16 @@ router.get('/:id(\\d+)', async (req, res) => {
         const lang = req.session.lang || 'en';
         const convId = parseInt(req.params.id);
 
-        // Check membership
+        // Check membership (and capture read/mute state before marking read)
         const membership = await pool.query(
-            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            `SELECT last_read_at, muted FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
         if (membership.rows.length === 0) {
             return res.redirect('/messages');
         }
+        const prevLastRead = membership.rows[0].last_read_at;
+        const activeMuted = !!membership.rows[0].muted;
 
         // Mark as read
         await pool.query(
@@ -691,9 +715,10 @@ router.get('/:id(\\d+)', async (req, res) => {
             `SELECT * FROM (
                  SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
                  WHERE m.conversation_id = $1
+                   AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $2
              ) sub ORDER BY created_at ASC, id ASC`,
-            [convId, PAGE_SIZE + 1]
+            [convId, PAGE_SIZE + 1, userId]
         );
         let hasMoreHistory = false;
         if (messagesResult.rows.length > PAGE_SIZE) {
@@ -708,6 +733,19 @@ router.get('/:id(\\d+)', async (req, res) => {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) {
                 m.contentHtml = linkifyMessageContent(m.content, lang);
+            }
+        }
+
+        // First unread message (from someone else, after our previous read time)
+        // — used to draw the "new messages" divider and scroll there.
+        let firstUnreadId = null;
+        if (prevLastRead) {
+            const prev = new Date(prevLastRead).getTime();
+            for (const mm of messagesResult.rows) {
+                if (mm.sender_id !== userId && !mm.deleted_at && new Date(mm.created_at).getTime() > prev) {
+                    firstUnreadId = mm.id;
+                    break;
+                }
             }
         }
 
@@ -786,6 +824,8 @@ router.get('/:id(\\d+)', async (req, res) => {
             showReceipts,
             readCutoff,
             pinnedMessage,
+            firstUnreadId,
+            muted: activeMuted,
         });
     } catch (err) {
         console.error('Messages conversation error:', err);
@@ -814,9 +854,10 @@ router.get('/:id(\\d+)/history', async (req, res) => {
             `SELECT * FROM (
                  SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
                  WHERE m.conversation_id = $1 AND m.id < $2
+                   AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $4)
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $3
              ) sub ORDER BY created_at ASC, id ASC`,
-            [convId, beforeId, PAGE_SIZE + 1]
+            [convId, beforeId, PAGE_SIZE + 1, userId]
         );
         let hasMore = false;
         if (result.rows.length > PAGE_SIZE) {
@@ -840,7 +881,7 @@ router.get('/:id(\\d+)/history', async (req, res) => {
 });
 
 // POST /messages/new — start a new conversation (or find existing DM)
-router.post('/new', async (req, res) => {
+router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const { recipientId, recipientIds, title } = req.body;
@@ -896,7 +937,7 @@ router.post('/new', async (req, res) => {
 });
 
 // POST /messages/:id/send — send a message (with optional image or file)
-router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
+router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware, async (req, res) => {
     try {
         const userId = req.session.userId;
         const lang = req.session.lang || 'en';
@@ -1022,7 +1063,7 @@ router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
 });
 
 // PUT /messages/:msgId/edit — edit a message (within 24h, sender only)
-router.put('/:msgId(\\d+)/edit', async (req, res) => {
+router.put('/:msgId(\\d+)/edit', rateLimit('edit', 30, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const msgId = parseInt(req.params.msgId);
@@ -1067,7 +1108,7 @@ router.put('/:msgId(\\d+)/edit', async (req, res) => {
 });
 
 // DELETE /messages/:msgId/delete — delete a message (within 24h for sender, anytime for admin)
-router.delete('/:msgId(\\d+)/delete', async (req, res) => {
+router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const msgId = parseInt(req.params.msgId);
@@ -1145,7 +1186,7 @@ router.delete('/:msgId(\\d+)/delete', async (req, res) => {
 });
 
 // POST /messages/:msgId/react — toggle a reaction on a message
-router.post('/:msgId(\\d+)/react', async (req, res) => {
+router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const msgId = parseInt(req.params.msgId);
@@ -1197,7 +1238,7 @@ router.post('/:msgId(\\d+)/react', async (req, res) => {
 });
 
 // POST /messages/:msgId/pin — toggle a message's pinned state
-router.post('/:msgId(\\d+)/pin', async (req, res) => {
+router.post('/:msgId(\\d+)/pin', rateLimit('pin', 30, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const lang = req.session.lang || 'en';
@@ -1241,7 +1282,7 @@ router.post('/:msgId(\\d+)/pin', async (req, res) => {
 });
 
 // POST /messages/forward — forward a message into another conversation
-router.post('/forward', async (req, res) => {
+router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const messageId = parseInt(req.body.messageId);
@@ -1331,7 +1372,7 @@ router.post('/forward', async (req, res) => {
 });
 
 // POST /messages/:id/typing — record that the user is typing (ephemeral)
-router.post('/:id(\\d+)/typing', async (req, res) => {
+router.post('/:id(\\d+)/typing', rateLimit('typing', 25, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const convId = parseInt(req.params.id);
@@ -1360,6 +1401,191 @@ router.post('/:id(\\d+)/typing', async (req, res) => {
         console.error('Typing error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+// ── Group management ────────────────────────────────────────────────────
+async function requireGroupAdmin(convId, userId) {
+    const r = await pool.query(
+        `SELECT c.is_group, cm.role FROM conversations c
+         JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $2
+         WHERE c.id = $1`,
+        [convId, userId]
+    );
+    if (r.rows.length === 0) return { ok: false, code: 403, error: 'Not a member' };
+    if (!r.rows[0].is_group) return { ok: false, code: 400, error: 'Not a group' };
+    if (r.rows[0].role !== 'admin') return { ok: false, code: 403, error: 'Admins only' };
+    return { ok: true };
+}
+
+// POST /:id/group/rename
+router.post('/:id(\\d+)/group/rename', rateLimit('group', 20, 60000), async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const chk = await requireGroupAdmin(convId, req.session.userId);
+        if (!chk.ok) return res.status(chk.code).json({ error: chk.error });
+        const title = (req.body.title || '').trim().substring(0, 100);
+        if (!title) return res.status(400).json({ error: 'Title required' });
+        await pool.query(`UPDATE conversations SET title = $1 WHERE id = $2`, [title, convId]);
+        res.json({ ok: true, title });
+    } catch (e) { console.error('Group rename error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:id/group/add  { userIds: [...] }
+router.post('/:id(\\d+)/group/add', rateLimit('group', 20, 60000), async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const chk = await requireGroupAdmin(convId, req.session.userId);
+        if (!chk.ok) return res.status(chk.code).json({ error: chk.error });
+        const ids = (Array.isArray(req.body.userIds) ? req.body.userIds : []).map(x => parseInt(x)).filter(Boolean);
+        if (!ids.length) return res.status(400).json({ error: 'No users' });
+        for (const uid of ids) {
+            await pool.query(
+                `INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2)
+                 ON CONFLICT (conversation_id, user_id) DO NOTHING`,
+                [convId, uid]
+            );
+        }
+        res.json({ ok: true });
+    } catch (e) { console.error('Group add error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:id/group/remove  { userId }
+router.post('/:id(\\d+)/group/remove', rateLimit('group', 20, 60000), async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const chk = await requireGroupAdmin(convId, req.session.userId);
+        if (!chk.ok) return res.status(chk.code).json({ error: chk.error });
+        const target = parseInt(req.body.userId);
+        if (!target) return res.status(400).json({ error: 'No user' });
+        if (target === req.session.userId) return res.status(400).json({ error: 'Use leave instead' });
+        await pool.query(`DELETE FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`, [convId, target]);
+        res.json({ ok: true });
+    } catch (e) { console.error('Group remove error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:id/group/role  { userId, role }
+router.post('/:id(\\d+)/group/role', rateLimit('group', 20, 60000), async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const chk = await requireGroupAdmin(convId, req.session.userId);
+        if (!chk.ok) return res.status(chk.code).json({ error: chk.error });
+        const target = parseInt(req.body.userId);
+        const role = req.body.role === 'admin' ? 'admin' : 'member';
+        if (!target) return res.status(400).json({ error: 'No user' });
+        await pool.query(`UPDATE conversation_members SET role = $3 WHERE conversation_id = $1 AND user_id = $2`, [convId, target, role]);
+        res.json({ ok: true });
+    } catch (e) { console.error('Group role error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:id/group/leave
+router.post('/:id(\\d+)/group/leave', rateLimit('group', 20, 60000), async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const userId = req.session.userId;
+        const r = await pool.query(
+            `SELECT c.is_group FROM conversations c
+             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $2
+             WHERE c.id = $1`,
+            [convId, userId]
+        );
+        if (r.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
+        if (!r.rows[0].is_group) return res.status(400).json({ error: 'Not a group' });
+        await pool.query(`DELETE FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`, [convId, userId]);
+        // If the group lost its last admin, promote the earliest remaining member.
+        const admins = await pool.query(`SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND role = 'admin' LIMIT 1`, [convId]);
+        if (admins.rows.length === 0) {
+            await pool.query(
+                `UPDATE conversation_members SET role = 'admin'
+                 WHERE conversation_id = $1 AND user_id = (
+                     SELECT user_id FROM conversation_members WHERE conversation_id = $1 ORDER BY joined_at ASC LIMIT 1
+                 )`,
+                [convId]
+            );
+        }
+        res.json({ ok: true });
+    } catch (e) { console.error('Group leave error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:id/mute — toggle mute for the current member
+router.post('/:id(\\d+)/mute', async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        const r = await pool.query(
+            `UPDATE conversation_members SET muted = NOT muted
+             WHERE conversation_id = $1 AND user_id = $2 RETURNING muted`,
+            [convId, req.session.userId]
+        );
+        if (r.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
+        res.json({ ok: true, muted: r.rows[0].muted });
+    } catch (e) { console.error('Mute error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:msgId/hide — "delete for me" (hide a message for the current user only)
+router.post('/:msgId(\\d+)/hide', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const msgId = parseInt(req.params.msgId);
+        const m = await pool.query(
+            `SELECT 1 FROM messages msg
+             JOIN conversation_members cm ON cm.conversation_id = msg.conversation_id AND cm.user_id = $2
+             WHERE msg.id = $1`,
+            [msgId, userId]
+        );
+        if (m.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        await pool.query(
+            `INSERT INTO message_hidden (message_id, user_id) VALUES ($1, $2)
+             ON CONFLICT (message_id, user_id) DO NOTHING`,
+            [msgId, userId]
+        );
+        res.json({ ok: true });
+    } catch (e) { console.error('Hide error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// POST /:msgId/report — report a message to moderators
+router.post('/:msgId(\\d+)/report', rateLimit('report', 10, 60000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const msgId = parseInt(req.params.msgId);
+        const reason = (req.body.reason || '').trim().substring(0, 500);
+        const m = await pool.query(
+            `SELECT msg.sender_id FROM messages msg
+             JOIN conversation_members cm ON cm.conversation_id = msg.conversation_id AND cm.user_id = $2
+             WHERE msg.id = $1 AND msg.deleted_at IS NULL`,
+            [msgId, userId]
+        );
+        if (m.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        if (m.rows[0].sender_id === userId) return res.status(400).json({ error: 'Cannot report your own message' });
+        await pool.query(
+            `INSERT INTO message_reports (message_id, reporter_id, reason) VALUES ($1, $2, $3)
+             ON CONFLICT (message_id, reporter_id) DO NOTHING`,
+            [msgId, userId, reason || null]
+        );
+        res.json({ ok: true });
+    } catch (e) { console.error('Report error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// GET /:id/search?q= — search messages within a conversation
+router.get('/:id(\\d+)/search', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const convId = parseInt(req.params.id);
+        const q = (req.query.q || '').trim();
+        if (q.length < 2) return res.json({ results: [] });
+        const membership = await pool.query(
+            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            [convId, userId]
+        );
+        if (membership.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
+        const r = await pool.query(
+            `SELECT m.id, m.content, m.created_at, u.username AS sender_username
+             FROM messages m LEFT JOIN users u ON u.id = m.sender_id
+             WHERE m.conversation_id = $1 AND m.deleted_at IS NULL AND m.content ILIKE $2
+               AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
+             ORDER BY m.created_at DESC LIMIT 30`,
+            [convId, '%' + q + '%', userId]
+        );
+        res.json({ results: r.rows });
+    } catch (e) { console.error('Message search error:', e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 // POST /messages/:id/read — mark conversation as read (AJAX)
@@ -1437,8 +1663,9 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
         const result = await pool.query(
             `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
              WHERE m.conversation_id = $1 AND m.id > $2
+               AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
              ORDER BY m.created_at ASC, m.id ASC`,
-            [convId, afterId]
+            [convId, afterId, userId]
         );
 
         // Fetch recently edited/deleted messages the client already has
@@ -1537,7 +1764,7 @@ router.get('/unread-count', async (req, res) => {
 });
 
 // POST /messages/new-group — create a group conversation
-router.post('/new-group', async (req, res) => {
+router.post('/new-group', rateLimit('new', 15, 60000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const { memberIds, title } = req.body;

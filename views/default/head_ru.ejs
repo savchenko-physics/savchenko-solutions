@@ -3,12 +3,25 @@
 <meta http-equiv="content-language" content="en" />
 <meta name="keywords"
     content="Savchenko Problems in Physics, Savchenko solutions, physics problems, physics olympiad preparation, IPhO, Jaan Kalda" />
-<meta name="description" content="Contributors of Savchenko Solutions" />
+<%
+  const _ogTitle = (typeof title !== 'undefined' && title)
+    ? title
+    : 'Savchenko Solutions — рецензируемые решения задач по физике';
+  const _ogDesc = (typeof metaDescription !== 'undefined' && metaDescription)
+    ? metaDescription
+    : 'Бесплатные, совместные, рецензируемые решения задач Савченко по физике — одного из сложнейших сборников задач.';
+%>
+<meta name="description" content="<%= _ogDesc %>" />
 <meta name="author" content="Aliaksandr Melnichenka" />
 <meta name="date" content="2023-10" scheme="YYYY-MM" />
-<meta property="og:title" content="Contributors of Savchenko Solutions" />
+<meta property="og:site_name" content="Savchenko Solutions" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="<%= _ogTitle %>" />
 <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
-<meta property="og:description" content="Contributors of Savchenko Solutions" />
+<meta property="og:description" content="<%= _ogDesc %>" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="<%= _ogTitle %>" />
+<meta name="twitter:description" content="<%= _ogDesc %>" />
 <meta name="yandex-verification" content="6cfda41f74038368" />
 <link rel="stylesheet" href="../../css/css-latex/style.css" />
 <link rel="stylesheet" href="/css/design-system.css" />

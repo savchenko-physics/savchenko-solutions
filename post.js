@@ -328,6 +328,7 @@ async function renderPost(req, res) {
             contributorName,
             lastModified,
             metaDescription: plainDesc,
+            ogUrl: `https://savchenkosolutions.com/${lang}/${name}`,
             prevProblem: prevNext.prev,
             nextProblem: prevNext.next,
             sectionGrid,
