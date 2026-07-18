@@ -18,6 +18,11 @@ h2 {
     color: var(--ss-heading, #1a1a2e);
 }
 
+/* style.css sets h1–h4 serif globally; reset the auth form's heading to sans-serif */
+body.auth-page .container1 h2 {
+    font-family: 'Roboto', sans-serif !important;
+}
+
 .container1 a:link,
 .container1 a:visited {
     color: var(--ss-link);
@@ -109,6 +114,8 @@ body.auth-page {
     margin: 0 !important;
     padding: 0 !important;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: var(--ss-page-bg, #ffffff);
     color: var(--ss-body-text, #2d2d2d);
     line-height: 1.5;
@@ -137,6 +144,22 @@ body.auth-page footer.site-footer p {
     hyphens: none;
 }
 
+/* default/modern_footer.ejs has no .site-footer class, so the rules above don't
+   reach it. With body.auth-page now a flex column, margin-top:auto pins the footer
+   to the viewport bottom on short pages; the font-family reset stops css-latex's
+   global serif from leaking into the footer text (it was rendering "Wikipedia-like"). */
+body.auth-page footer {
+    margin-top: auto !important;
+}
+body.auth-page footer,
+body.auth-page footer * {
+    font-family: 'Roboto', sans-serif !important;
+    /* css-latex/style.css centers list items globally, which pulled the footer
+       links out of line with their left-aligned headings. Force left to match
+       how the footer renders on every non-auth page. */
+    text-align: left !important;
+}
+
 /* Header on auth pages: css-latex/style.css applies serif to all h1–h4 and global link colors,
    which breaks the shared main site header. Scope resets to .hero-section only. */
 body.auth-page .hero-section h1,
@@ -152,6 +175,8 @@ body.auth-page .hero-section .site-title {
     line-height: 1.25 !important;
     margin-bottom: 0 !important;
     color: var(--ss-heading) !important;
+    /* style.css h1:first-child{text-align:center} leaks in and centers the title */
+    text-align: left !important;
 }
 
 body.auth-page .hero-section .site-motto {
@@ -186,7 +211,8 @@ body.auth-page .hero-section .language-nav-link {
     justify-content: center;
     box-sizing: border-box;
     min-height: 40px;
-    padding: 0.35rem 0.75rem !important;
+    /* match the tight horizontal spacing of the other nav items (.px-1 = 0.25rem) */
+    padding: 0.35rem 0.25rem !important;
     font-family: 'Roboto', sans-serif !important;
     font-size: 1rem !important;
     font-weight: 600 !important;

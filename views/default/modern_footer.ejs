@@ -2,7 +2,17 @@
   const fLang = typeof lang !== 'undefined' ? lang : 'en';
   const fUser = typeof username !== 'undefined' ? username : null;
 %>
-<footer style="background: #1a1a2e; color: #fff; padding: 2.5rem 0 1.5rem; margin-top: 3rem; font-size: 0.9rem;">
+<style>
+  /* Self-contained so the footer looks identical on every page regardless of the
+     host page's global CSS. Some pages load a LaTeX stylesheet that forces serif
+     fonts on h1–h4 and centers list items; these scoped rules override that. */
+  .ss-site-footer, .ss-site-footer * {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+    text-align: left !important;
+    box-sizing: border-box;
+  }
+</style>
+<footer class="ss-site-footer" style="background: #1a1a2e; color: #fff; padding: 2.5rem 0 1.5rem; margin-top: 3rem; font-size: 0.9rem;">
   <div style="max-width: 1200px; margin: 0 auto; padding: 0 2rem;">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
       <!-- Problems -->

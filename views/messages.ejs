@@ -360,6 +360,7 @@
     .msg-chat-messages {
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden; /* never scroll horizontally (reaction picker is position:fixed) */
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -599,10 +600,7 @@
 
     .msg-reaction-picker {
       display: none;
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
+      position: fixed; /* JS positions it, clamped to the viewport (never off-screen) */
       flex-direction: row;
       align-items: center;
       background: var(--msg-bg);
@@ -611,7 +609,7 @@
       padding: 4px 6px;
       gap: 2px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      z-index: 20;
+      z-index: 1000;
       white-space: nowrap;
     }
 
@@ -896,18 +894,41 @@
       max-width: 120px;
     }
 
-    .msg-bubble-image {
-      max-width: min(280px, 100%);
-      max-height: 300px;
-      border-radius: 6px;
+    /* Image: the wrapper reserves the exact box (width + aspect-ratio) and shows
+       a blurred placeholder, so the bubble never reflows; the image fades in. */
+    .msg-bubble-image-wrap {
+      position: relative;
+      display: inline-block;
       margin-top: 4px;
+      max-width: min(280px, 100%);
+      border-radius: 6px;
+      overflow: hidden;
       cursor: pointer;
-      display: block;
+      vertical-align: bottom;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: rgba(0, 0, 0, 0.04);
     }
 
-    .msg-bubble-image:hover {
-      opacity: 0.9;
+    .msg-bubble-image {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      opacity: 0;
+      transition: opacity 0.25s ease;
     }
+
+    /* When dimensions are known, the wrapper's inline width + aspect-ratio hold
+       the box and the image fills it. */
+    .msg-bubble-image-wrap.has-dims .msg-bubble-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .msg-bubble-image.loaded { opacity: 1; }
+    .msg-bubble-image-wrap:hover .msg-bubble-image.loaded { opacity: 0.92; }
 
     /* File attachment card inside a bubble */
     .msg-bubble-file {
@@ -1517,7 +1538,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:<%= m.image_width %>px;aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -1812,6 +1833,7 @@
   const imagePreviewFileIcon = document.getElementById('imagePreviewFileIcon');
   let pendingImage = null;      // the pending attachment File (image OR document)
   let pendingIsImage = false;   // whether that attachment renders inline as an image
+  let pendingImageW = 0, pendingImageH = 0; // natural dimensions of a pending image
 
   function updateSendEnabled() {
     sendBtn.disabled = !msgInput.value.trim() && !pendingImage;
@@ -1894,6 +1916,11 @@
     if (pendingIsImage) {
       if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
       imagePreviewImg.style.display = '';
+      pendingImageW = 0; pendingImageH = 0;
+      imagePreviewImg.onload = function() {
+        pendingImageW = imagePreviewImg.naturalWidth || 0;
+        pendingImageH = imagePreviewImg.naturalHeight || 0;
+      };
       const reader = new FileReader();
       reader.onload = function(e) {
         imagePreviewImg.src = e.target.result;
@@ -1914,6 +1941,7 @@
     imagePreviewRemove.addEventListener('click', function() {
       pendingImage = null;
       pendingIsImage = false;
+      pendingImageW = 0; pendingImageH = 0;
       fileInput.value = '';
       imagePreview.classList.remove('show');
       imagePreviewImg.src = '';
@@ -1976,6 +2004,22 @@
     });
   }
 
+  // Fade chat images in once they finish loading (and catch already-cached ones).
+  function markImageLoaded(img) {
+    if (img && img.complete && img.naturalWidth > 0) img.classList.add('loaded');
+  }
+  function markLoadedImages(container) {
+    (container || chatEl || document).querySelectorAll('.msg-bubble-image').forEach(markImageLoaded);
+  }
+  if (chatEl) {
+    // 'load' doesn't bubble — listen in the capture phase.
+    chatEl.addEventListener('load', function(e) {
+      const t = e.target;
+      if (t && t.classList && t.classList.contains('msg-bubble-image')) t.classList.add('loaded');
+    }, true);
+    markLoadedImages(chatEl);
+  }
+
   function sendMessage() {
     const content = msgInput.value.trim();
     if ((!content && !pendingImage) || !CONV_ID) return;
@@ -1995,6 +2039,8 @@
       sender_username: USERNAME,
       created_at: new Date().toISOString(),
       image_url: localImageUrl,
+      image_width: localImageUrl ? (pendingImageW || null) : null,
+      image_height: localImageUrl ? (pendingImageH || null) : null,
       file_url: localFile ? '#' : null,
       file_name: localFile ? localFile.name : null,
       file_size: localFile ? localFile.size : null,
@@ -2019,6 +2065,7 @@
     // Clear attachment + reply state
     pendingImage = null;
     pendingIsImage = false;
+    pendingImageW = 0; pendingImageH = 0;
     cancelReply();
     if (fileInput) fileInput.value = '';
     if (imagePreview) imagePreview.classList.remove('show');
@@ -2039,7 +2086,7 @@
     const bubble = row.querySelector('.msg-bubble');
     if (!bubble) return '';
     const clone = bubble.cloneNode(true);
-    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-bubble-image, .msg-bubble-file');
+    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-bubble-image-wrap, .msg-bubble-image, .msg-bubble-file');
     for (let i = 0; i < strip.length; i++) strip[i].remove();
     return clone.textContent.trim();
   }
@@ -2129,14 +2176,18 @@
           const bubble = row.querySelector('.msg-bubble');
           if (bubble) {
             const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-            const existingImg = bubble.querySelector('.msg-bubble-image');
+            const existingImg = bubble.querySelector('.msg-bubble-image-wrap');
             const imgHtml = existingImg ? existingImg.outerHTML : '';
             const existingFile = bubble.querySelector('.msg-bubble-file');
             const fileHtml = existingFile ? existingFile.outerHTML : '';
             const existingReply = bubble.querySelector('.msg-reply-quote');
             const replyHtml = existingReply ? existingReply.outerHTML : '';
-            bubble.innerHTML = replyHtml + esc(content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
+            const existingFwd = bubble.querySelector('.msg-forwarded');
+            const fwdHtml = existingFwd ? existingFwd.outerHTML : '';
+            bubble.innerHTML = fwdHtml + replyHtml + esc(content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
             typesetMath(bubble);
+            const im2 = bubble.querySelector('.msg-bubble-image');
+            if (im2) markImageLoaded(im2);
           }
         }
       } else if (data.error) {
@@ -2495,6 +2546,17 @@
       ' <a href="/user/' + encodeURIComponent(m.forwarded_from_username) + '">' + esc(m.forwarded_from_username) + '</a></div>';
   }
 
+  function renderImageHTML(m) {
+    if (!m.image_url) return '';
+    const hasDims = m.image_width && m.image_height;
+    let style = '';
+    if (hasDims) style += 'width:' + m.image_width + 'px;aspect-ratio:' + m.image_width + '/' + m.image_height + ';';
+    if (m.image_placeholder) style += 'background-image:url(' + m.image_placeholder + ');';
+    return '<span class="msg-bubble-image-wrap' + (hasDims ? ' has-dims' : '') + '" style="' + style + '">' +
+      '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" data-full="' + esc(m.image_url) + '" alt="" loading="lazy" />' +
+      '</span>';
+  }
+
   function renderFileCardHTML(m) {
     if (!m.file_url) return '';
     const icon = '<span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>';
@@ -2572,9 +2634,7 @@
     }
     const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
     html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + renderForwardedHTML(m) + renderReplyQuoteHTML(m.reply) + linkify(m.content);
-    if (m.image_url) {
-      html += '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" alt="" data-full="' + esc(m.image_url) + '" />';
-    }
+    html += renderImageHTML(m);
     html += renderFileCardHTML(m);
     html += (isEdited ? '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' : '');
     html += renderReactionAddHTML(m.id);
@@ -2604,6 +2664,8 @@
     chatEl.scrollTop = chatEl.scrollHeight;
     const bubbleEl = row.querySelector('.msg-bubble');
     if (bubbleEl) typesetMath(bubbleEl);
+    const im = row.querySelector('.msg-bubble-image');
+    if (im) markImageLoaded(im);
   }
 
   var REACTION_EMOJIS = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F622}', '\u{1F914}'];
@@ -2661,6 +2723,46 @@
     .catch(function(err) { console.error('Reaction error:', err); });
   }
 
+  // Apply an edit/delete to an existing bubble (shared by SSE + catch-up poll).
+  function applyMessageUpdate(u) {
+    const row = document.querySelector('[data-msg-id="' + u.id + '"]');
+    if (!row) return;
+    const bubble = row.querySelector('.msg-bubble');
+    if (!bubble) return;
+    if (u.deleted_at) {
+      row.style.display = 'none';
+      return;
+    }
+    if (u.edited_at) {
+      const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
+      const existingImg = bubble.querySelector('.msg-bubble-image-wrap');
+      const imgHtml = existingImg ? existingImg.outerHTML : '';
+      const existingFile = bubble.querySelector('.msg-bubble-file');
+      const fileHtml = existingFile ? existingFile.outerHTML : '';
+      const existingReply = bubble.querySelector('.msg-reply-quote');
+      const replyHtml = existingReply ? existingReply.outerHTML : '';
+      const existingFwd = bubble.querySelector('.msg-forwarded');
+      const fwdHtml = existingFwd ? existingFwd.outerHTML : '';
+      bubble.innerHTML = fwdHtml + replyHtml + esc(u.content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
+      typesetMath(bubble);
+      const im2 = bubble.querySelector('.msg-bubble-image');
+      if (im2) markImageLoaded(im2);
+    }
+  }
+
+  // Mark the (visible) active conversation read, throttled — tells the server so
+  // the other side's receipts advance. Called when a new message arrives.
+  let lastReadSent = 0;
+  function markReadThrottled() {
+    if (!CONV_ID || document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - lastReadSent < 1000) return;
+    lastReadSent = now;
+    fetch('/messages/' + CONV_ID + '/read', { method: 'POST', headers: { 'Accept': 'application/json' } }).catch(function() {});
+  }
+
+  // Catch-up fetch: pulls anything missed while disconnected (on SSE connect /
+  // reconnect / health-watchdog). Not a polling loop.
   function pollMessages() {
     if (!CONV_ID) return;
     const url = '/messages/' + CONV_ID + '/poll?after=' + lastMsgId + '&since=' + encodeURIComponent(lastPollTime);
@@ -2670,68 +2772,110 @@
       .then(function(data) {
         if (data.messages && data.messages.length > 0) {
           chatEl.querySelectorAll('[data-msg-id="0"]').forEach(function(el) { el.remove(); });
-
           data.messages.forEach(function(m) {
             if (document.querySelector('[data-msg-id="' + m.id + '"]')) return;
             appendMessage(m);
             lastMsgId = Math.max(lastMsgId, m.id);
           });
-          // New messages arrived — reorder/update the sidebar right away.
           refreshConvList();
         }
-
-        // Apply edits/deletes to existing messages
-        if (data.updates && data.updates.length > 0) {
-          data.updates.forEach(function(u) {
-            const row = document.querySelector('[data-msg-id="' + u.id + '"]');
-            if (!row) return;
-            const bubble = row.querySelector('.msg-bubble');
-            if (!bubble) return;
-
-            if (u.deleted_at) {
-              row.style.display = 'none';
-            } else if (u.edited_at) {
-              const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-              const existingImg = bubble.querySelector('.msg-bubble-image');
-              const imgHtml = existingImg ? existingImg.outerHTML : '';
-              const existingFile = bubble.querySelector('.msg-bubble-file');
-              const fileHtml = existingFile ? existingFile.outerHTML : '';
-              const existingReply = bubble.querySelector('.msg-reply-quote');
-              const replyHtml = existingReply ? existingReply.outerHTML : '';
-              bubble.innerHTML = replyHtml + esc(u.content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
-              typesetMath(bubble);
-            }
-          });
-        }
-
-        // Apply reaction updates
+        if (data.updates && data.updates.length > 0) data.updates.forEach(applyMessageUpdate);
         if (data.reactionUpdates && data.reactionUpdates.length > 0) {
-          data.reactionUpdates.forEach(function(ru) {
-            updateReactionsUI(ru.message_id, ru.reactions);
-          });
+          data.reactionUpdates.forEach(function(ru) { updateReactionsUI(ru.message_id, ru.reactions); });
         }
-
-        // Read-receipt progress + pinned message update live. Only re-render the
-        // checks when the cutoff actually advanced (avoids per-poll DOM churn).
         if (typeof data.readCutoff !== 'undefined' && data.readCutoff !== readCutoff) {
           readCutoff = data.readCutoff;
           updateAllReceipts();
         }
-        if (data.hasOwnProperty('pinnedMessage')) {
-          applyPinned(data.pinnedMessage);
-        }
-        if (data.hasOwnProperty('typing')) {
-          renderTyping(data.typing);
-        }
+        if (data.hasOwnProperty('pinnedMessage')) applyPinned(data.pinnedMessage);
+        if (data.hasOwnProperty('typing')) renderTyping(data.typing);
       })
       .catch(function() {});
   }
 
+  // ── Live updates via Server-Sent Events (replaces the polling loop) ──
+  let sse = null;
+  let lastSseEventAt = Date.now();
 
-  // Poll every 3 seconds when conversation is open
-  if (CONV_ID) {
-    pollTimer = setInterval(pollMessages, 3000);
+  function handleSseNewMessage(d) {
+    if (d.conversationId === CONV_ID && d.message) {
+      const m = d.message;
+      if (!document.querySelector('[data-msg-id="' + m.id + '"]')) {
+        appendMessage(m);
+        lastMsgId = Math.max(lastMsgId, m.id);
+        markReadThrottled();
+      }
+    }
+    refreshConvList(); // update sidebar order/preview/unread for any conversation
   }
+
+  function connectSSE() {
+    if (typeof EventSource === 'undefined') { startPollFallback(); return; }
+    try { sse = new EventSource('/messages/stream'); }
+    catch (e) { startPollFallback(); return; }
+
+    sse.addEventListener('ready', function() {
+      lastSseEventAt = Date.now();
+      stopPollFallback();
+      if (CONV_ID) pollMessages(); // catch up on anything missed before connect
+      refreshConvList();
+    });
+    sse.addEventListener('ping', function() { lastSseEventAt = Date.now(); });
+
+    sse.addEventListener('msg:new', function(e) { lastSseEventAt = Date.now(); handleSseNewMessage(JSON.parse(e.data)); });
+    sse.addEventListener('msg:edit', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) applyMessageUpdate({ id: d.id, content: d.content, edited_at: d.edited_at });
+    });
+    sse.addEventListener('msg:delete', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) applyMessageUpdate({ id: d.id, deleted_at: true });
+      refreshConvList();
+    });
+    sse.addEventListener('msg:react', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) updateReactionsUI(d.messageId, d.reactions);
+    });
+    sse.addEventListener('typing', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) renderTyping(d.names);
+    });
+    sse.addEventListener('read', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID && d.readCutoff !== readCutoff) {
+        readCutoff = d.readCutoff;
+        updateAllReceipts();
+      }
+    });
+    sse.addEventListener('pin', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) applyPinned(d.pinnedMessage);
+    });
+
+    // EventSource auto-reconnects on error; 'ready' fires again → catch-up runs.
+    sse.addEventListener('error', function() { /* browser retries automatically */ });
+  }
+
+  // Health watchdog: if no SSE event (incl. 20s pings) arrives for a while, the
+  // stream is likely dead/buffered — do a catch-up fetch as a fallback.
+  function startPollFallback() {
+    if (pollTimer) return;
+    pollTimer = setInterval(function() { pollMessages(); refreshConvList(); }, 4000);
+  }
+  function stopPollFallback() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+  setInterval(function() {
+    if (Date.now() - lastSseEventAt > 45000) { pollMessages(); refreshConvList(); }
+  }, 15000);
+
+  connectSSE();
 
   // ── Older-message history (pagination, scroll up) ───────────────────
   const historyLoader = document.getElementById('historyLoader');
@@ -2767,6 +2911,7 @@
     chatEl.insertBefore(frag, anchor);
     chatEl.scrollTop = chatEl.scrollHeight - distFromBottom;
     newBubbles.forEach(function(b) { if (b) typesetMath(b); });
+    markLoadedImages(chatEl);
   }
 
   function loadOlder() {
@@ -2874,12 +3019,17 @@
     const picker = addBtn.querySelector('.msg-reaction-picker');
     if (!picker) return;
     const pw = picker.offsetWidth || 240;
-    const btnRect = addBtn.getBoundingClientRect();
-    let left = btnRect.left + btnRect.width / 2 - pw / 2;
-    const max = window.innerWidth - pw - 8;
-    if (left > max) left = max;
-    if (left < 8) left = 8;
-    picker.style.left = (left - btnRect.left) + 'px';
+    const ph = picker.offsetHeight || 44;
+    const r = addBtn.getBoundingClientRect();
+    // Horizontal: centered on the button, clamped to the viewport.
+    let left = r.left + r.width / 2 - pw / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    // Vertical: above the button, or below if there's no room.
+    let top = r.top - ph - 4;
+    if (top < 8) top = r.bottom + 4;
+    picker.style.left = left + 'px';
+    picker.style.top = top + 'px';
+    picker.style.bottom = 'auto';
     picker.style.transform = 'none';
   }
   if (chatEl) {
@@ -2989,8 +3139,9 @@
       .catch(function() {});
   }
 
-  // Refresh the sidebar frequently so it stays in sync on send and receive.
-  setInterval(refreshConvList, 4000);
+  // The sidebar refreshes on SSE events (new/edit/delete) and on send — no
+  // interval needed. A one-shot refresh keeps it correct right after load.
+  refreshConvList();
 
   // Conversation search/filter
   const convSearch = document.getElementById('convSearch');

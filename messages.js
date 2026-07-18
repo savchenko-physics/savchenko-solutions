@@ -3,6 +3,7 @@ const router = express.Router();
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const sharp = require('sharp');
 const { Pool } = require('pg');
 const notifications = require('./notifications');
 const { linkifyMessageContent } = require('./utils');
@@ -97,6 +98,66 @@ function getTypingOthers(convId, userId) {
     }
     if (conv.size === 0) typingState.delete(convId);
     return out;
+}
+
+// ── Server-Sent Events (live push) ──────────────────────────────────────
+// One long-lived stream per user (multiple tabs → multiple entries). Replaces
+// the client polling loop; the POST endpoints publish events after mutating.
+// In-memory, single-instance (same constraint as typing state).
+const sseClients = new Map(); // userId -> Set<res>
+
+function sseAdd(userId, res) {
+    let set = sseClients.get(userId);
+    if (!set) { set = new Set(); sseClients.set(userId, set); }
+    set.add(res);
+}
+
+function sseRemove(userId, res) {
+    const set = sseClients.get(userId);
+    if (set) { set.delete(res); if (!set.size) sseClients.delete(userId); }
+}
+
+function sseSend(userId, event, data) {
+    const set = sseClients.get(userId);
+    if (!set || !set.size) return;
+    const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    for (const res of set) {
+        try { res.write(payload); if (res.flush) res.flush(); } catch (e) { /* dead connection; cleaned up on close */ }
+    }
+}
+
+// Push an event to every member of a conversation (optionally excluding one).
+async function broadcastToConversation(convId, event, data, exceptUserId) {
+    if (sseClients.size === 0) return; // nobody is connected
+    const members = await pool.query(
+        `SELECT user_id FROM conversation_members WHERE conversation_id = $1`,
+        [convId]
+    );
+    for (const row of members.rows) {
+        if (exceptUserId && row.user_id === exceptUserId) continue;
+        sseSend(row.user_id, event, data);
+    }
+}
+
+// Reactions carry a per-user "me" flag, so each connected member needs its own
+// view — only queried for members that actually have an open stream.
+async function broadcastReactions(convId, msgId, exceptUserId) {
+    if (sseClients.size === 0) return;
+    const members = await pool.query(
+        `SELECT user_id FROM conversation_members WHERE conversation_id = $1`,
+        [convId]
+    );
+    for (const row of members.rows) {
+        if (exceptUserId && row.user_id === exceptUserId) continue;
+        if (!sseClients.has(row.user_id)) continue;
+        const r = await pool.query(
+            `SELECT emoji, COUNT(*)::int AS count, BOOL_OR(user_id = $2) AS me
+             FROM message_reactions WHERE message_id = $1
+             GROUP BY emoji ORDER BY MIN(created_at)`,
+            [msgId, row.user_id]
+        );
+        sseSend(row.user_id, 'msg:react', { conversationId: convId, messageId: msgId, reactions: r.rows });
+    }
 }
 
 const GROUP_PALETTES = [
@@ -198,6 +259,7 @@ const PAGE_SIZE = 30; // messages loaded per page (initial view + each older pag
 // Shared message projection used by the conversation view, poll, and history
 // endpoints so all three return identically-shaped rows.
 const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
+        m.image_width, m.image_height, m.image_placeholder,
         m.file_url, m.file_name, m.file_size, m.pinned_at, m.forwarded_from_user_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
@@ -244,6 +306,28 @@ async function getPinnedSummary(convId, lang) {
         sender: p.sender_username || (lang === 'ru' ? 'Пользователь' : 'User'),
         preview: buildReplyPreview(p.content, p.image_url, p.file_name, p.deleted_at, lang),
     };
+}
+
+// Read an uploaded image's dimensions and build a tiny blurred placeholder
+// (LQIP data-URI) so the client can reserve the exact box and fade the image in.
+async function processImageMeta(filePath) {
+    try {
+        const meta = await sharp(filePath).metadata();
+        const width = meta.width || null;
+        const height = meta.height || null;
+        let placeholder = null;
+        try {
+            const buf = await sharp(filePath)
+                .resize(24, 24, { fit: 'inside' })
+                .blur(1.2)
+                .jpeg({ quality: 40 })
+                .toBuffer();
+            placeholder = 'data:image/jpeg;base64,' + buf.toString('base64');
+        } catch (e) { /* placeholder is optional */ }
+        return { width, height, placeholder };
+    } catch (e) {
+        return { width: null, height: null, placeholder: null };
+    }
 }
 
 async function getReactionsForMessages(messageIds, userId) {
@@ -482,6 +566,32 @@ router.get('/saved', async (req, res) => {
     }
 });
 
+// GET /messages/stream — Server-Sent Events stream of live updates for this user
+router.get('/stream', (req, res) => {
+    const userId = req.session.userId;
+    res.set({
+        'Content-Type': 'text/event-stream; charset=utf-8',
+        'Cache-Control': 'no-cache, no-transform',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no', // tell nginx not to buffer this response
+    });
+    if (res.flushHeaders) res.flushHeaders();
+    res.write('retry: 3000\n\n');       // client reconnect backoff
+    res.write('event: ready\ndata: {}\n\n');
+    if (res.flush) res.flush();          // flush past compression if it's engaged
+    sseAdd(userId, res);
+
+    // Heartbeat under nginx's 60s idle timeout; also lets the client detect health.
+    const hb = setInterval(() => {
+        try { res.write('event: ping\ndata: {}\n\n'); if (res.flush) res.flush(); } catch (e) { /* closed */ }
+    }, 20000);
+
+    req.on('close', () => {
+        clearInterval(hb);
+        sseRemove(userId, res);
+    });
+});
+
 // GET /messages/:id — view a specific conversation
 router.get('/:id(\\d+)', async (req, res) => {
     try {
@@ -504,6 +614,9 @@ router.get('/:id(\\d+)', async (req, res) => {
              WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
+        // Advance other members' read receipts (correct for DMs; groups ignore it).
+        broadcastToConversation(convId, 'read',
+            { conversationId: convId, readCutoff: new Date().toISOString() }, userId).catch(() => {});
 
         // Get conversation list (same as inbox)
         const { rows: convRows, memberMap, convList } = await buildConversationList(userId, lang);
@@ -791,11 +904,14 @@ router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
         const content = (req.body.content || '').trim().substring(0, 5000);
 
         // An uploaded attachment is an inline image or a downloadable file card.
-        let imageUrl = null, fileUrl = null, fileName = null, fileSize = null;
+        let imageUrl = null, imageW = null, imageH = null, imagePlaceholder = null;
+        let fileUrl = null, fileName = null, fileSize = null;
         if (req.file) {
             const url = '/img/messages/' + req.file.filename;
             if (MSG_IMAGE_EXT.test(path.extname(req.file.originalname))) {
                 imageUrl = url;
+                const meta = await processImageMeta(req.file.path);
+                imageW = meta.width; imageH = meta.height; imagePlaceholder = meta.placeholder;
             } else {
                 fileUrl = url;
                 fileName = (req.file.originalname || 'file').substring(0, 255);
@@ -843,9 +959,9 @@ router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
 
         // Insert message and update conversation timestamp
         const inserted = await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url, reply_to_id, file_url, file_name, file_size)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, created_at`,
-            [convId, userId, content, imageUrl, replyToId, fileUrl, fileName, fileSize]
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, reply_to_id, file_url, file_name, file_size, image_width, image_height, image_placeholder)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at`,
+            [convId, userId, content, imageUrl, replyToId, fileUrl, fileName, fileSize, imageW, imageH, imagePlaceholder]
         );
         await pool.query(
             `UPDATE conversations SET last_message_at = NOW() WHERE id = $1`,
@@ -875,6 +991,21 @@ router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
             `/messages/${convId}`
         );
 
+        // Live-push the new message to the other members (the sender's own tab
+        // renders it optimistically, so exclude the sender to avoid a race).
+        try {
+            const full = await pool.query(
+                `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.id = $1`,
+                [inserted.rows[0].id]
+            );
+            if (full.rows.length) {
+                attachReplyInfo(full.rows, userId, lang);
+                full.rows[0].reactions = [];
+                await broadcastToConversation(convId, 'msg:new',
+                    { conversationId: convId, message: full.rows[0] }, userId);
+            }
+        } catch (e) { console.error('SSE broadcast (send) error:', e); }
+
         // If AJAX request, return JSON
         if (req.xhr || req.headers.accept?.includes('application/json')) {
             const msg = inserted.rows[0];
@@ -902,7 +1033,7 @@ router.put('/:msgId(\\d+)/edit', async (req, res) => {
         }
 
         const msg = await pool.query(
-            `SELECT id, sender_id, created_at, deleted_at FROM messages WHERE id = $1`,
+            `SELECT id, sender_id, conversation_id, created_at, deleted_at FROM messages WHERE id = $1`,
             [msgId]
         );
         if (msg.rows.length === 0) {
@@ -925,6 +1056,9 @@ router.put('/:msgId(\\d+)/edit', async (req, res) => {
             `UPDATE messages SET content = $1, edited_at = NOW() WHERE id = $2`,
             [trimmed, msgId]
         );
+        broadcastToConversation(m.conversation_id, 'msg:edit',
+            { conversationId: m.conversation_id, id: msgId, content: trimmed, edited_at: new Date().toISOString() },
+            userId).catch(() => {});
         res.json({ ok: true });
     } catch (err) {
         console.error('Edit message error:', err);
@@ -981,6 +1115,9 @@ router.delete('/:msgId(\\d+)/delete', async (req, res) => {
             `UPDATE messages SET deleted_at = NOW(), content = '' WHERE id = $1`,
             [msgId]
         );
+
+        broadcastToConversation(m.conversation_id, 'msg:delete',
+            { conversationId: m.conversation_id, id: msgId }, userId).catch(() => {});
 
         if (userRole === 'admin' && !isSender) {
             try {
@@ -1051,6 +1188,7 @@ router.post('/:msgId(\\d+)/react', async (req, res) => {
             [msgId, userId]
         );
 
+        broadcastReactions(msg.rows[0].conversation_id, msgId, userId).catch(() => {});
         res.json({ ok: true, reactions: reactions.rows });
     } catch (err) {
         console.error('React error:', err);
@@ -1093,6 +1231,8 @@ router.post('/:msgId(\\d+)/pin', async (req, res) => {
         }
 
         const pinnedMessage = await getPinnedSummary(m.conversation_id, lang);
+        broadcastToConversation(m.conversation_id, 'pin',
+            { conversationId: m.conversation_id, pinnedMessage }, userId).catch(() => {});
         res.json({ ok: true, pinned: nowPinned, pinnedMessage });
     } catch (err) {
         console.error('Pin error:', err);
@@ -1113,7 +1253,8 @@ router.post('/forward', async (req, res) => {
 
         // Source must be readable by the user (member of its conversation).
         const src = await pool.query(
-            `SELECT m.id, m.sender_id, m.content, m.image_url, m.file_url, m.file_name,
+            `SELECT m.id, m.sender_id, m.content, m.image_url, m.image_width, m.image_height,
+                    m.image_placeholder, m.file_url, m.file_name,
                     m.file_size, m.forwarded_from_user_id, m.deleted_at
              FROM messages m
              JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
@@ -1150,10 +1291,10 @@ router.post('/forward', async (req, res) => {
         // Preserve the original author across forward chains.
         const origin = s.forwarded_from_user_id || s.sender_id;
 
-        await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin]
+        const fwd = await pool.query(
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id, image_width, image_height, image_placeholder)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
+            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin, s.image_width, s.image_height, s.image_placeholder]
         );
         await pool.query(`UPDATE conversations SET last_message_at = NOW() WHERE id = $1`, [targetId]);
         await pool.query(
@@ -1166,6 +1307,21 @@ router.post('/forward', async (req, res) => {
         await notifications.createMessageNotifications(
             targetId, userId, `New message from ${req.session.username}`, preview, `/messages/${targetId}`
         );
+
+        // Live-push into the target conversation (the forwarder gets it on nav).
+        try {
+            const lang = req.session.lang || 'en';
+            const full = await pool.query(
+                `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.id = $1`,
+                [fwd.rows[0].id]
+            );
+            if (full.rows.length) {
+                attachReplyInfo(full.rows, userId, lang);
+                full.rows[0].reactions = [];
+                await broadcastToConversation(targetId, 'msg:new',
+                    { conversationId: targetId, message: full.rows[0] }, userId);
+            }
+        } catch (e) { console.error('SSE broadcast (forward) error:', e); }
 
         res.json({ ok: true, conversationId: targetId });
     } catch (err) {
@@ -1185,6 +1341,20 @@ router.post('/:id(\\d+)/typing', async (req, res) => {
         );
         if (membership.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
         setTyping(convId, userId, req.session.username);
+
+        // Push each connected member their own "who's typing" view (excludes self).
+        try {
+            const members = await pool.query(
+                `SELECT user_id FROM conversation_members WHERE conversation_id = $1`,
+                [convId]
+            );
+            for (const row of members.rows) {
+                if (row.user_id === userId || !sseClients.has(row.user_id)) continue;
+                sseSend(row.user_id, 'typing',
+                    { conversationId: convId, names: getTypingOthers(convId, row.user_id) });
+            }
+        } catch (e) { /* non-fatal */ }
+
         res.json({ ok: true });
     } catch (err) {
         console.error('Typing error:', err);
@@ -1195,11 +1365,16 @@ router.post('/:id(\\d+)/typing', async (req, res) => {
 // POST /messages/:id/read — mark conversation as read (AJAX)
 router.post('/:id(\\d+)/read', async (req, res) => {
     try {
+        const convId = parseInt(req.params.id);
+        const userId = req.session.userId;
         await pool.query(
             `UPDATE conversation_members SET last_read_at = NOW()
              WHERE conversation_id = $1 AND user_id = $2`,
-            [parseInt(req.params.id), req.session.userId]
+            [convId, userId]
         );
+        // Let other members' read receipts advance (correct for DMs; groups ignore it).
+        broadcastToConversation(convId, 'read',
+            { conversationId: convId, readCutoff: new Date().toISOString() }, userId).catch(() => {});
         res.json({ ok: true });
     } catch (err) {
         console.error('Mark read error:', err);
