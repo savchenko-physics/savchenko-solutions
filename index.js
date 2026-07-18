@@ -47,6 +47,7 @@ const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
+const { pingIndexNow } = require('./indexnow');
 const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
 
 const app = express();
@@ -155,6 +156,8 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
+// PWA assets (manifest.webmanifest, sw.js, offline.html) served at web root
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ── Static-asset cache busting ───────────────────────────────────────────────
@@ -2130,11 +2133,12 @@ app.get("/logout", (req, res) => {
 app.get("/", async (req, res) => {
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
         getRecentContributions(10),
         getTopAuthors(),
         renderUnsolvedList.getSolutionProgressStats(lang),
         getCurrentChallengeWidget(),
+        getRecentContributors(6),
     ]);
 
     i18n.setLocale(res, lang);
@@ -2159,6 +2163,7 @@ app.get("/", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
     });
@@ -2225,11 +2230,12 @@ registerContributorAndUserMetricsApi({
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
         getRecentContributions(10),
         getTopAuthors(),
         renderUnsolvedList.getSolutionProgressStats('ru'),
         getCurrentChallengeWidget(),
+        getRecentContributors(6),
     ]);
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
@@ -2253,6 +2259,7 @@ app.get("/ru", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
     });
@@ -2302,11 +2309,12 @@ app.use('/', uploadRouter);
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget] = await Promise.all([
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
         getRecentContributions(10),
         getTopAuthors(),
         renderUnsolvedList.getSolutionProgressStats('en'),
         getCurrentChallengeWidget(),
+        getRecentContributors(6),
     ]);
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
@@ -2330,6 +2338,7 @@ app.get("/en", async (req, res) => {
         topAuthors,
         solutionProgress,
         challengeWidget,
+        recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
     });
@@ -2611,6 +2620,9 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
         // Save the new content
         await fs.promises.writeFile(filePath, content, "utf8");
 
+        // Notify IndexNow (Yandex + Bing) that this solution changed — fast re-crawl.
+        pingIndexNow(`https://savchenkosolutions.com/${lang}/${name}`);
+
         // Record the contribution with change details
         await pool.query(
             `INSERT INTO contributions (
@@ -2840,6 +2852,27 @@ app.listen(PORT, () => {
 });
 
 // Add this function near your other database query functions
+async function getRecentContributors(limit = 6) {
+    try {
+        const result = await pool.query(
+            // created_at is unpopulated (NULL) for existing rows, so order by id —
+            // the serial primary key is monotonic with signup order.
+            `SELECT u.username, u.full_name, u.profile_picture
+             FROM users u
+             LEFT JOIN user_preferences p ON p.user_id = u.id
+             WHERE COALESCE(p.public_profile, true) = true
+               AND u.username IS NOT NULL
+             ORDER BY u.id DESC
+             LIMIT $1`,
+            [limit]
+        );
+        return result.rows;
+    } catch (err) {
+        console.error('Error fetching recent contributors:', err);
+        return [];
+    }
+}
+
 async function getTopAuthors() {
     try {
         const query = `

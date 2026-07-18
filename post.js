@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText } = require("./utils"); // Adjust the import based on your utils file
+const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText, buildMetaDescription } = require("./utils"); // Adjust the import based on your utils file
 const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts, getPrevNextProblems, getSectionProblemsGrid, getRelatedProblems } = require("./parents");
 const { format: formatDate } = require("date-fns");
 const i18n = require('i18n');
@@ -138,9 +138,16 @@ async function renderPost(req, res) {
             }
         }
 
-        // Generate plain-text meta description from solution content
+        // Generate a clean, keyword-rich meta description that leads with the
+        // problem statement (matches "problem-text" search queries). Strips all
+        // markdown + LaTeX; falls back to a templated description for image-only.
         const rawText = fs.readFileSync(filePath, "utf8");
-        const plainDesc = convertLatexToPlainText(rawText).replace(/\s+/g, ' ').trim().substring(0, 155);
+        const plainDesc = buildMetaDescription(
+            rawText,
+            name,
+            problemBreadcrumb ? problemBreadcrumb.sectionTitle : '',
+            lang
+        );
 
         // Build improved title using section name
         const seoTitle = problemBreadcrumb
@@ -311,10 +318,57 @@ async function renderPost(req, res) {
             console.error("Error loading brainstorm data:", err);
         }
 
+        // Structured data (JSON-LD). Build as objects and serialize script-safely
+        // (JSON-escaped, not HTML-escaped — EJS <%= %> would corrupt the JSON and
+        // garble entities like O'Brien / A&B). Description reuses the clean plainDesc.
+        const SITE = 'https://savchenkosolutions.com';
+        const ogImage = `${SITE}/img/logo.png`;
+        const canonicalUrl = `${SITE}/${lang}/${name}`;
+        const jsonLdSafe = (o) => JSON.stringify(o)
+            .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+        const articleJsonLd = {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": seoTitle,
+            "description": plainDesc,
+            "image": ogImage,
+            "inLanguage": lang,
+            "educationalLevel": "University",
+            "learningResourceType": "Problem Solution",
+            "dateModified": lastModified,
+            "isPartOf": { "@type": "Book", "name": "Problems in Physics by O.Y. Savchenko" },
+            "publisher": {
+                "@type": "Organization",
+                "name": "Savchenko Solutions",
+                "url": SITE,
+                "logo": { "@type": "ImageObject", "url": ogImage },
+            },
+            "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
+        };
+        if (contributorName) articleJsonLd.author = { "@type": "Person", "name": contributorName };
+        if (creationDate) articleJsonLd.datePublished = creationDate;
+
+        let breadcrumbJsonLdStr = null;
+        if (problemBreadcrumb) {
+            breadcrumbJsonLdStr = jsonLdSafe({
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    { "@type": "ListItem", "position": 1, "name": lang === 'ru' ? 'Главная' : 'Home', "item": `${SITE}/${lang}/` },
+                    { "@type": "ListItem", "position": 2, "name": `${lang === 'ru' ? 'Глава' : 'Chapter'} ${problemBreadcrumb.chapterNum}: ${problemBreadcrumb.chapterTitle}`, "item": `${SITE}/${lang}/#${problemBreadcrumb.chapterNum}` },
+                    { "@type": "ListItem", "position": 3, "name": `${problemBreadcrumb.sectionRef}: ${problemBreadcrumb.sectionTitle}`, "item": `${SITE}/${lang}/#${problemBreadcrumb.sectionRef}` },
+                    { "@type": "ListItem", "position": 4, "name": problemBreadcrumb.problemLabel },
+                ],
+            });
+        }
+        const articleJsonLdStr = jsonLdSafe(articleJsonLd);
+
         res.render("solution_post", {
             __: i18n.__,
             lang,
             pageRef,
+            articleJsonLdStr,
+            breadcrumbJsonLdStr,
             problemRef: name,
             name,
             problemBreadcrumbTitle,

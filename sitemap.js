@@ -22,17 +22,24 @@ const postsDirectories = [
 ];
 
 function buildUrlset(entries) {
+    const hasAlternates = entries.some(e => e.alternates && e.alternates.length);
     const urls = entries.map(e => {
         let xml = `    <url>\n      <loc>${e.loc}</loc>`;
         if (e.lastmod) xml += `\n      <lastmod>${e.lastmod}</lastmod>`;
         if (e.changefreq) xml += `\n      <changefreq>${e.changefreq}</changefreq>`;
         if (e.priority !== undefined) xml += `\n      <priority>${e.priority}</priority>`;
+        if (e.alternates) {
+            for (const a of e.alternates) {
+                xml += `\n      <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}"/>`;
+            }
+        }
         xml += '\n    </url>';
         return xml;
     }).join('\n');
 
+    const ns = hasAlternates ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : '';
     return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${ns}>
 ${urls}
 </urlset>`;
 }
@@ -47,24 +54,34 @@ function writeIfChanged(filePath, content) {
 /*  Sub-sitemap: Solutions                                             */
 /* ------------------------------------------------------------------ */
 function generateSolutionsSitemap() {
-    const entries = [];
-
+    // Which languages each problem exists in (so we can emit hreflang alternates).
+    const byProblem = {}; // name -> { ru: mtime, en: mtime }
     postsDirectories.forEach(postsDirectory => {
         const lang = postsDirectory.includes('ru') ? 'ru' : 'en';
-        const files = fs.readdirSync(postsDirectory);
-        files.forEach(file => {
-            if (file.endsWith('.md')) {
-                const filePath = path.join(postsDirectory, file);
-                const stats = fs.statSync(filePath);
-                entries.push({
-                    loc: `${BASE_URL}/${lang}/${file.replace('.md', '')}`,
-                    lastmod: formatISO(stats.mtime),
-                    changefreq: 'weekly',
-                    priority: 0.8
-                });
-            }
+        fs.readdirSync(postsDirectory).forEach(file => {
+            if (!file.endsWith('.md')) return;
+            const name = file.replace('.md', '');
+            const mtime = fs.statSync(path.join(postsDirectory, file)).mtime;
+            (byProblem[name] = byProblem[name] || {})[lang] = mtime;
         });
     });
+
+    const entries = [];
+    for (const [name, langs] of Object.entries(byProblem)) {
+        const present = Object.keys(langs); // e.g. ['ru'] or ['ru','en']
+        const xDefaultLang = present.includes('en') ? 'en' : present[0];
+        for (const lang of present) {
+            const alternates = present.map(l => ({ hreflang: l, href: `${BASE_URL}/${l}/${name}` }));
+            alternates.push({ hreflang: 'x-default', href: `${BASE_URL}/${xDefaultLang}/${name}` });
+            entries.push({
+                loc: `${BASE_URL}/${lang}/${name}`,
+                lastmod: formatISO(langs[lang]),
+                changefreq: 'weekly',
+                priority: 0.8,
+                alternates,
+            });
+        }
+    }
 
     entries.sort((a, b) => new Date(b.lastmod) - new Date(a.lastmod));
 
@@ -150,7 +167,9 @@ async function generateForumSitemap() {
 /*  Sub-sitemap: Static / misc pages                                   */
 /* ------------------------------------------------------------------ */
 async function generateStaticSitemap() {
-    const now = formatISO(new Date());
+    // Date-only granularity so the file isn't rewritten every 60s with a fresh
+    // timestamp (which falsely signals "homepage changed a minute ago" to crawlers).
+    const now = formatISO(new Date(), { representation: 'date' });
 
     const entries = [
         // Home

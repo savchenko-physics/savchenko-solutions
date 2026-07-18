@@ -9,6 +9,57 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
 });
 
+const { sendEmail } = require('./email');
+
+const SITE_URL = 'https://savchenkosolutions.com';
+
+// Notification types worth an email. Deliberately excludes high-frequency / low-value
+// ones (likes, chat messages) to protect deliverability and avoid inbox fatigue.
+const EMAIL_NOTIFICATION_TYPES = new Set([
+    'reply_to_comment', 'comment_on_solution', 'new_follower',
+    'challenge_result', 'report_resolved', 'forum_reply', 'forum_solution',
+]);
+
+function escHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+/**
+ * Best-effort email mirror of an in-app notification. Only fires for whitelisted
+ * types, and only for users who are email-verified and haven't turned email
+ * notifications off. Never throws — called fire-and-forget from createNotification.
+ */
+async function sendEmailNotification(userId, type, title, message, link) {
+    if (!EMAIL_NOTIFICATION_TYPES.has(type)) return;
+    try {
+        const r = await pool.query(
+            `SELECT u.email, u.email_verified, COALESCE(up.email_notifications, true) AS email_on
+             FROM users u LEFT JOIN user_preferences up ON up.user_id = u.id
+             WHERE u.id = $1`,
+            [userId]
+        );
+        if (r.rows.length === 0) return;
+        const { email, email_verified, email_on } = r.rows[0];
+        if (!email || !email_verified || !email_on) return;
+
+        const url = link
+            ? `${SITE_URL}${String(link).startsWith('/') ? '' : '/'}${link}`
+            : `${SITE_URL}/notifications`;
+        await sendEmail({
+            to: email,
+            subject: title,
+            html: `<p>${escHtml(message)}</p>
+                   <p><a href="${url}">View on Savchenko Solutions</a></p>
+                   <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
+                   <p style="font-size:12px;color:#888;">You received this because email notifications are on.
+                   <a href="${SITE_URL}/en/settings">Manage your preferences</a>.</p>`,
+            text: `${message}\n\n${url}`,
+        });
+    } catch (err) {
+        console.error('Email notification failed:', err);
+    }
+}
+
 const DEFAULT_NOTIFICATION_SETTINGS = {
     comment_on_solution: true,
     reply_to_comment: true,
@@ -63,6 +114,8 @@ async function createNotification(userId, type, title, message, link, performerI
             'INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)',
             [userId, type, title, message, link]
         );
+        // Mirror to email (fire-and-forget; has its own try/catch, never blocks the request)
+        sendEmailNotification(userId, type, title, message, link);
     } catch (err) {
         console.error('Error creating notification:', err);
     }

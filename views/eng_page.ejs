@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<% var pageLang = (typeof lang !== 'undefined' && lang) ? lang : 'en'; %>
+<html lang="<%= pageLang %>">
 <head>
   <!-- Meta -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="content-language" content="en" />
+  <meta http-equiv="content-language" content="<%= pageLang %>" />
+  <link rel="canonical" href="https://savchenkosolutions.com/<%= pageLang %>/" />
+  <link rel="alternate" hreflang="en" href="https://savchenkosolutions.com/en/" />
+  <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/" />
+  <link rel="alternate" hreflang="x-default" href="https://savchenkosolutions.com/en/" />
+  <meta property="og:url" content="https://savchenkosolutions.com/<%= pageLang %>/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Savchenko Solutions" />
   <meta name="keywords" content="<%= __('meta.keywords') %>" />
   <meta name="description" content="<%= __('meta.description') %>" />
   <meta name="author" content="<%= __('meta.author') %>" />
@@ -16,7 +24,12 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <link rel="icon" type="image/png" href="/img/logo.png" />
   <link rel="apple-touch-icon" href="/img/logo.png" />
-  
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Savchenko" />
+  <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 
   <!-- Bootstrap 5 (via CDN) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -40,11 +53,29 @@
     "name": "Savchenko Solutions",
     "url": "https://savchenkosolutions.com",
     "description": "<%= solutionProgress.totalUniqueSolutions.toLocaleString('en-US') %> peer-reviewed solutions to Savchenko's Problems in Physics. Free under Creative Commons.",
+    "inLanguage": "<%= pageLang %>",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Savchenko Solutions",
+      "url": "https://savchenkosolutions.com",
+      "logo": {"@type": "ImageObject", "url": "https://savchenkosolutions.com/img/logo.png"}
+    },
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://savchenkosolutions.com/search?q={search_term_string}",
+      "target": {"@type": "EntryPoint", "urlTemplate": "https://savchenkosolutions.com/global-search?search={search_term_string}"},
       "query-input": "required name=search_term_string"
     }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Savchenko Solutions",
+    "alternateName": ["Решения Савченко", "Решебник Савченко"],
+    "url": "https://savchenkosolutions.com",
+    "logo": "https://savchenkosolutions.com/img/logo.png",
+    "description": "Peer-reviewed solutions to Savchenko's Problems in Physics — free under Creative Commons."
   }
   </script>
 
@@ -428,6 +459,23 @@
               <% }); %>
             </div>
           </div>
+
+          <!-- Recently Joined -->
+          <% if (typeof recentContributors !== 'undefined' && recentContributors && recentContributors.length) { %>
+          <div class="sidebar-section mt-4">
+            <div class="sidebar-section-header">
+              <h3 class="sidebar-title"><%= lang === 'ru' ? 'Новые участники' : 'Recently Joined' %></h3>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; padding-top:4px;">
+              <% recentContributors.forEach(function(rc) { %>
+                <a href="/user/<%= rc.username %>" title="<%= rc.full_name || rc.username %>" style="display:inline-flex; align-items:center; gap:6px; text-decoration:none; color:#2d2d2d; font-size:13px;">
+                  <img src="<%= rc.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" width="24" height="24" style="border-radius:50%; object-fit:cover; flex-shrink:0;" />
+                  <span><%= rc.username %></span>
+                </a>
+              <% }); %>
+            </div>
+          </div>
+          <% } %>
 
           <!-- Recent Changes (GitHub commit thread style) -->
           <div class="sidebar-section mt-4">

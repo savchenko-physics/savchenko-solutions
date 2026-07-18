@@ -1,69 +1,46 @@
-# See http://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
-#
-User-agent: mauibot
+# robots.txt — savchenkosolutions.com
+# Solutions are licensed CC BY-SA 4.0.
+# Docs: https://www.robotstxt.org/robotstxt.html
+
+# --- Model-training scrapers: blocked (content stays out of training corpora) ---
+User-agent: GPTBot
 Disallow: /
 
 User-agent: CCBot
 Disallow: /
 
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
 User-agent: cohere-ai
 Disallow: /
 
-User-agent: semrushbot
+# --- SEO backlink scrapers: blocked (no visitor value, heavy crawl load) ---
+User-agent: SemrushBot
 Disallow: /
 
-
-User-agent: ahrefsbot
+User-agent: AhrefsBot
 Disallow: /
 
-
-User-agent: blexbot
+User-agent: BLEXBot
 Disallow: /
 
-
-User-agent: seo spider
+User-agent: MauiBot
 Disallow: /
 
+User-agent: SEO spider
+Disallow: /
 
+# --- Everyone else: Google, Yandex, Bing, and answer-engine fetchers that drive
+#     real referral traffic (ChatGPT-User, OAI-SearchBot, PerplexityBot,
+#     Perplexity-User, ClaudeBot, Claude-User, Google-Extended, Applebot-Extended).
+#     Full access to public content; only private/admin/API surfaces are blocked. ---
 User-agent: *
-Disallow: /:lang/edit/:name
-Disallow: /admin/
-Disallow: /auth/
-Disallow: /assets/browser-update*.js
-Disallow: /email/
-Disallow: /session
-Disallow: /user-api-key
-Disallow: /*?api_key*
-Disallow: /*?*api_key*
-Disallow: /badges
-Disallow: /u/
-Disallow: /my
-Disallow: /search
-Disallow: /tag/*/l
-Disallow: /g
-Disallow: /t/*/*.rss
-Disallow: /c/*.rss
-
-
-User-agent: Googlebot
 Disallow: /admin/
 Disallow: /auth/
 Disallow: /*/edit/*
-Disallow: /assets/browser-update*.js
 Disallow: /email/
 Disallow: /session
 Disallow: /user-api-key
 Disallow: /*?api_key*
 Disallow: /*?*api_key*
-
+Disallow: /search
 
 Sitemap: https://savchenkosolutions.com/sitemap.xml

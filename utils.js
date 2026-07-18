@@ -655,8 +655,72 @@ function linkifyBlogHtml(html, lang = 'en') {
     return out;
 }
 
+/**
+ * Build a clean, keyword-rich <meta description> from a solution's raw markdown.
+ * Leads with the problem STATEMENT (what "problem-text" searchers paste into
+ * Google), with all markdown + LaTeX stripped. Falls back to a templated,
+ * keyword-rich description for image-only or oddly-structured statements.
+ */
+function buildMetaDescription(rawText, name, sectionTitle, lang) {
+    let t = String(rawText || '').replace(/\r/g, '');
+    // Isolate the statement: everything before the first Solution/Решение heading.
+    const sol = t.search(/^#{2,6}[^\n]*(Решение|Решения|Solution)/im);
+    if (sol > 0) t = t.slice(0, sol);
+    // Drop the statement heading line(s) (Условие / Statement, any decoration).
+    t = t.replace(/^#{1,6}[^\n]*(Условие|Statement)[^\n]*$/gim, ' ');
+    // Markdown -> text.
+    t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')       // images
+         .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')      // links -> text
+         .replace(/^#{1,6}\s*/gm, '')                  // stray headings
+         .replace(/(\*\*|__|~~)/g, '')                 // bold / strike
+         .replace(/`+/g, '')                            // code ticks
+         .replace(/^\s{0,3}>\s?/gm, '')                 // blockquotes
+         .replace(/^\s*[-*+]\s+/gm, '')                 // list bullets
+         .replace(/\\([*~])/g, '$1')                    // source escaping
+         .replace(/\|/g, ' ');                          // table pipes
+    // LaTeX thin-spaces -> space; then protect real commas from convertLatexToPlainText's
+    // buggy "\," handling (its regex matches literal commas), then restore.
+    t = t.replace(/\\[,;:!]/g, ' ');
+    t = t.replace(/,/g, 'zzCOMMAzz');
+    t = convertLatexToPlainText(t);
+    t = t.replace(/zzCOMMAzz/g, ',');
+    // Residual-LaTeX cleanup convertLatexToPlainText misses.
+    t = t.replace(/(?:\\?)(?:text|mathrm|mathbf|mathit|mathsf|operatorname|mathcal|boldsymbol|frac)\s*\{([^{}]*)\}/g, '$1')
+         .replace(/\{\s*\\?circ\s*\}/g, '°').replace(/\\?circ/g, '°')
+         .replace(/[\^_]\s*\{[^{}]*\}/g, '')
+         .replace(/\^\s*\{?\*?\)?\}?/g, '')
+         .replace(/\*\)/g, '')
+         .replace(/[{}]/g, '')
+         .replace(/\\[a-zA-Z]+/g, '')
+         .replace(/[$~]/g, '');
+    // Drop leading problem-number label + junk, normalize whitespace.
+    t = t.replace(/^\s*\d{1,2}\.\d{1,2}\.\d{1,3}\.?\s*/, '')
+         .replace(/^[\s*.)\-:;,]+/, '')
+         .replace(/\s+/g, ' ')
+         .replace(/\s+([,.;:!?])/g, '$1')
+         .replace(/\(\s+/g, '(')
+         .trim();
+    // Fallback for image-only / oddly-structured statements.
+    if (t.length < 40) {
+        const sect = sectionTitle ? (' — ' + sectionTitle) : '';
+        t = (lang === 'ru')
+            ? ('Рецензированное решение задачи ' + name + sect + ' из сборника задач по физике Савченко с подробными пояснениями и формулами.')
+            : ('Peer-reviewed solution to Savchenko problem ' + name + sect + ' from the Problems in Physics collection, with a step-by-step explanation.');
+    }
+    // Truncate at a word boundary.
+    const MAX = 158;
+    if (t.length > MAX) {
+        let cut = t.slice(0, MAX);
+        const sp = cut.lastIndexOf(' ');
+        if (sp > 90) cut = cut.slice(0, sp);
+        t = cut.replace(/[\s,;:.\-–—]+$/, '') + '…';
+    }
+    return t;
+}
+
 module.exports = {
     parseMarkdown,
+    buildMetaDescription,
     getMarkdownFiles,
     getLineStatement,
     transformImageMarkdown,
