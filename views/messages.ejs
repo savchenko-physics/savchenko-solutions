@@ -391,6 +391,13 @@
       position: relative;
     }
 
+    /* The bubble wrapper is the flex item; without min-width:0 a nowrap
+       reply-quote line forces it wider than the row (overflowing on mobile). */
+    .msg-bubble-row > div {
+      min-width: 0;
+      max-width: 100%;
+    }
+
     .msg-bubble-avatar {
       width: 28px;
       height: 28px;
@@ -407,6 +414,7 @@
       line-height: 1.4;
       word-break: break-word;
       white-space: pre-wrap;
+      max-width: 100%;
     }
 
     .msg-bubble.sent {
@@ -427,6 +435,10 @@
       color: var(--msg-link);
       margin-bottom: 2px;
     }
+
+    .msg-bubble-sender a { color: inherit; text-decoration: none; }
+    .msg-bubble-sender a:hover { text-decoration: underline; }
+    .msg-bubble-avatar { cursor: pointer; }
 
     .msg-bubble-time {
       font-size: 10px;
@@ -885,7 +897,7 @@
     }
 
     .msg-bubble-image {
-      max-width: 280px;
+      max-width: min(280px, 100%);
       max-height: 300px;
       border-radius: 6px;
       margin-top: 4px;
@@ -906,7 +918,7 @@
       padding: 8px 10px;
       border-radius: 8px;
       text-decoration: none;
-      max-width: 280px;
+      max-width: min(280px, 100%);
     }
 
     .msg-bubble-file:first-child { margin-top: 0; }
@@ -975,6 +987,107 @@
 
     /* Long-press context menu on touch: suppress the native iOS callout */
     .msg-bubble { -webkit-touch-callout: none; }
+
+    /* Read receipts (sent messages) */
+    .msg-check { display: inline-flex; vertical-align: middle; margin-left: 3px; color: #b0b7c0; }
+    .msg-check.read { color: #1a5276; }
+    .msg-check svg { display: block; }
+
+    /* Pinned message bar (below the chat header) */
+    .msg-pinned-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--msg-border);
+      background: var(--msg-bg);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .msg-pinned-bar.show { display: flex; }
+    .msg-pinned-bar-icon { color: var(--msg-link); flex-shrink: 0; display: flex; }
+
+    .msg-pinned-bar-body {
+      flex: 1;
+      min-width: 0;
+      border-left: 2px solid var(--msg-link);
+      padding-left: 8px;
+    }
+
+    .msg-pinned-bar-title { font-size: 11px; font-weight: 600; color: var(--msg-link); }
+
+    .msg-pinned-bar-text {
+      font-size: 12.5px;
+      color: var(--msg-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .msg-pinned-unpin {
+      background: none;
+      border: none;
+      color: var(--msg-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .msg-pinned-unpin:hover { color: #c0392b; }
+
+    /* Older-history loading indicator (top of the message list) */
+    .msg-history-loader {
+      text-align: center;
+      padding: 10px;
+      color: var(--msg-muted);
+      font-size: 12px;
+      display: none;
+    }
+
+    .msg-history-loader.show { display: block; }
+
+    /* "Forwarded from" label inside a bubble */
+    .msg-forwarded { font-size: 11.5px; margin-bottom: 3px; }
+    .msg-forwarded span, .msg-forwarded a { font-weight: 600; }
+    .msg-forwarded a { color: inherit; text-decoration: none; }
+    .msg-forwarded a:hover { text-decoration: underline; }
+    .msg-bubble.received .msg-forwarded { color: #1a5276; }
+    .msg-bubble.sent .msg-forwarded { color: #cfe0ef; }
+
+    /* Typing indicator (above the input bar) */
+    .msg-typing {
+      padding: 4px 16px 2px;
+      font-size: 12.5px;
+      color: var(--msg-muted);
+      font-style: italic;
+      flex-shrink: 0;
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .msg-typing.show { display: flex; }
+    .msg-typing-dots { display: inline-flex; gap: 3px; }
+
+    .msg-typing-dots i {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--msg-muted);
+      display: inline-block;
+      animation: msgTypingBlink 1.2s infinite;
+    }
+
+    .msg-typing-dots i:nth-child(2) { animation-delay: 0.2s; }
+    .msg-typing-dots i:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes msgTypingBlink {
+      0%, 60%, 100% { opacity: 0.3; }
+      30% { opacity: 1; }
+    }
 
     .msg-image-overlay {
       display: none;
@@ -1357,16 +1470,30 @@
           <% } %>
         </div>
 
+        <!-- Pinned message bar -->
+        <% const canPin = activeConversation && (!activeConversation.is_group || isAdmin); %>
+        <div class="msg-pinned-bar<%= pinnedMessage ? ' show' : '' %>" id="pinnedBar" data-target="<%= pinnedMessage ? pinnedMessage.id : '' %>">
+          <span class="msg-pinned-bar-icon">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.6-3.2V6a2 2 0 0 0-2-2H8.6a2 2 0 0 0-2 2v7.8z"/></svg>
+          </span>
+          <div class="msg-pinned-bar-body">
+            <div class="msg-pinned-bar-title"><%= lang === 'ru' ? 'Закреплённое сообщение' : 'Pinned message' %></div>
+            <div class="msg-pinned-bar-text tex2jax_ignore" id="pinnedBarText"><%= pinnedMessage ? (pinnedMessage.sender + ': ' + pinnedMessage.preview) : '' %></div>
+          </div>
+          <% if (canPin) { %><button class="msg-pinned-unpin" id="pinnedUnpin" title="<%= lang === 'ru' ? 'Открепить' : 'Unpin' %>">&times;</button><% } %>
+        </div>
+
         <!-- Messages -->
         <div class="msg-chat-messages" id="chatMessages">
+          <div class="msg-history-loader" id="historyLoader"><%= lang === 'ru' ? 'Загрузка…' : 'Loading…' %></div>
           <%
             let lastDate = '';
             messages.filter(function(m) { return !m.deleted_at; }).forEach(function(m, i, filtered) {
-              const msgDate = new Date(m.created_at).toLocaleDateString();
-              if (msgDate !== lastDate) {
-                lastDate = msgDate;
+              const dayKey = dayKeyOf(m.created_at);
+              if (dayKey !== lastDate) {
+                lastDate = dayKey;
           %>
-            <div class="msg-date-sep"><%= msgDate %></div>
+            <div class="msg-date-sep" data-date="<%= dayKey %>"><%= daySepText(m.created_at) %></div>
           <%  }
               const isSent = m.sender_id === userId;
               const showAvatar = !isSent && activeConversation.is_group;
@@ -1378,26 +1505,32 @@
                     ? m.sender_username
                     : (activeConversation.otherUser ? activeConversation.otherUser.username : m.sender_username));
           %>
-            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>">
+            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
               <% if (showAvatar) { %>
                 <span class="avatar-presence">
-                  <img class="msg-bubble-avatar"
-                       src="<%= m.sender_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+                  <a href="/user/<%= m.sender_username %>"><img class="msg-bubble-avatar"
+                       src="<%= m.sender_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" /></a>
                   <% if (m.senderOnline) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
                 </span>
               <% } %>
               <div>
                 <% if (showName) { %>
-                  <div class="msg-bubble-sender"><%= m.sender_username %><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
+                  <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" /><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
-                <div class="msg-bubble-time" data-iso="<%= new Date(m.created_at).toISOString() %>"><%= formatMessageTime(m.created_at) %></div>
+                <div class="msg-bubble-time" data-iso="<%= new Date(m.created_at).toISOString() %>"><%= formatMessageTime(m.created_at) %><% if (showReceipts && isSent) { %><%- checkHTML(!!readCutoff && new Date(m.created_at) <= new Date(readCutoff)) %><% } %></div>
               </div>
             </div>
           <% }); %>
+        </div>
+
+        <!-- Typing indicator -->
+        <div class="msg-typing" id="typingBar">
+          <span id="typingText"></span>
+          <span class="msg-typing-dots"><i></i><i></i><i></i></span>
         </div>
 
         <!-- Edit bar (shown when editing) -->
@@ -1497,6 +1630,37 @@
   </div>
 </div>
 
+<!-- Forward modal -->
+<div class="msg-modal-backdrop" id="forwardModal">
+  <div class="msg-modal">
+    <div class="msg-modal-header">
+      <h3><%= lang === 'ru' ? 'Переслать' : 'Forward to…' %></h3>
+      <button class="msg-modal-close" id="forwardClose">&times;</button>
+    </div>
+    <div class="msg-modal-body">
+      <input type="text" class="msg-modal-search" id="forwardSearch"
+             placeholder="<%= lang === 'ru' ? 'Поиск людей...' : 'Search people...' %>" />
+      <div id="forwardResults"></div>
+      <div id="forwardTargets">
+        <a class="msg-user-result" data-saved="1" style="cursor:pointer">
+          <span class="msg-saved-avatar" style="width:36px;height:36px;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span>
+          <div><div class="msg-user-result-name"><%= lang === 'ru' ? 'Избранное' : 'Saved Messages' %></div></div>
+        </a>
+        <% conversations.forEach(function(c) { if (c.isSaved) return; %>
+          <a class="msg-user-result" data-conv-id="<%= c.id %>" style="cursor:pointer">
+            <% if (c.is_group) { %>
+              <span style="width:36px;height:36px;border-radius:50%;overflow:hidden;display:inline-block;flex-shrink:0;"><%- groupAvatarSVG(c.id, c.displayName, 36) %></span>
+            <% } else { %>
+              <img src="<%= c.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
+            <% } %>
+            <div><div class="msg-user-result-name"><%= c.displayName %></div></div>
+          </a>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
+
 <%
   function formatTime(dateStr) {
     if (!dateStr) return '';
@@ -1523,6 +1687,23 @@
     if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
     return (n / (1024 * 1024)).toFixed(1) + ' MB';
   }
+
+  // Date-separator grouping uses a UTC day key so server render and client
+  // (append/history) render agree on day boundaries.
+  function dayKeyOf(dateStr) {
+    const d = new Date(dateStr);
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  }
+  function daySepText(dateStr) {
+    return new Date(dateStr).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function checkHTML(isRead) {
+    if (isRead) {
+      return '<span class="msg-check read"><svg viewBox="0 0 20 12" width="17" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.5l3.2 3.4L10 2.4"/><path d="M8 6.5l3.2 3.4L17 2.4"/></svg></span>';
+    }
+    return '<span class="msg-check"><svg viewBox="0 0 14 12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l3.2 3.4L11.5 2.4"/></svg></span>';
+  }
 %>
 
 <div class="msg-image-overlay" id="imageOverlay"><img id="imageOverlayImg" src="" alt="" /></div>
@@ -1535,6 +1716,14 @@
   <button class="msg-context-item" id="ctxCopy">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
     <span><%= lang === 'ru' ? 'Копировать текст' : 'Copy Text' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxPin">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.6-3.2V6a2 2 0 0 0-2-2H8.6a2 2 0 0 0-2 2v7.8z"/></svg>
+    <span id="ctxPinLabel"><%= lang === 'ru' ? 'Закрепить' : 'Pin' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxForward">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 17 20 12 15 7"/><path d="M4 18v-2a4 4 0 0 1 4-4h12"/></svg>
+    <span><%= lang === 'ru' ? 'Переслать' : 'Forward' %></span>
   </button>
   <button class="msg-context-item" id="ctxEdit">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1555,6 +1744,13 @@
   const LANG = '<%= typeof lang !== "undefined" ? lang : "en" %>';
   const USERNAME = <%- JSON.stringify(username || '') %>;
   const OTHER_NAME = <%- JSON.stringify(activeConversation && activeConversation.otherUser ? activeConversation.otherUser.username : '') %>;
+  const SHOW_RECEIPTS = <%= (typeof showReceipts !== 'undefined' && showReceipts) ? 'true' : 'false' %>;
+  const CAN_PIN = <%= (activeConversation && (!activeConversation.is_group || (typeof isAdmin !== 'undefined' && isAdmin))) ? 'true' : 'false' %>;
+  let readCutoff = <%- JSON.stringify(typeof readCutoff !== 'undefined' ? readCutoff : null) %>;
+  let hasMoreHistory = <%= (typeof hasMoreHistory !== 'undefined' && hasMoreHistory) ? 'true' : 'false' %>;
+  let loadingHistory = false;
+  let bottomDayKey = null;   // UTC day key of the newest rendered message
+  let oldestMsgId = 0;       // smallest real message id currently rendered (for history paging)
   let lastMsgId = 0;
   let pollTimer = null;
   let editingMsgId = null;
@@ -1580,13 +1776,15 @@
   }
 
   // Get last message ID for polling
-  const allBubbles = document.querySelectorAll('[data-msg-id]');
-  if (allBubbles.length > 0) {
-    lastMsgId = parseInt(allBubbles[allBubbles.length - 1].dataset.msgId) || 0;
+  const chatEl = document.getElementById('chatMessages');
+  const rowEls = chatEl ? chatEl.querySelectorAll('.msg-bubble-row[data-msg-id]') : [];
+  if (rowEls.length > 0) {
+    lastMsgId = parseInt(rowEls[rowEls.length - 1].dataset.msgId) || 0;
+    bottomDayKey = clientDayKey(rowEls[rowEls.length - 1].dataset.created);
+    oldestMsgId = parseInt(rowEls[0].dataset.msgId) || 0;
   }
 
   // Scroll to bottom
-  const chatEl = document.getElementById('chatMessages');
   if (chatEl) {
     chatEl.scrollTop = chatEl.scrollHeight;
   }
@@ -1624,6 +1822,7 @@
       this.style.height = 'auto';
       this.style.height = Math.min(this.scrollHeight, 120) + 'px';
       updateSendEnabled();
+      maybeSendTyping();
     });
 
     msgInput.addEventListener('keydown', function(e) {
@@ -1999,6 +2198,9 @@
   var ctxMenu = document.getElementById('msgContextMenu');
   var ctxReply = document.getElementById('ctxReply');
   var ctxCopy = document.getElementById('ctxCopy');
+  var ctxPin = document.getElementById('ctxPin');
+  var ctxPinLabel = document.getElementById('ctxPinLabel');
+  var ctxForward = document.getElementById('ctxForward');
   var ctxEdit = document.getElementById('ctxEdit');
   var ctxDelete = document.getElementById('ctxDelete');
   var ctxMsgId = null;
@@ -2013,9 +2215,17 @@
     var senderIsAdmin = row.dataset.senderRole === 'admin';
     var canDelete = (IS_ADMIN || (isSent && ageH < 24)) && !(senderIsAdmin && !isSent);
     var hasText = extractMessageText(msgId).length > 0;
+    var isPinned = row.dataset.pinned === '1';
     ctxMsgId = msgId;
     ctxReply.style.display = '';               // reply is always available
     ctxCopy.style.display = hasText ? '' : 'none';
+    if (ctxPin) {
+      ctxPin.style.display = CAN_PIN ? '' : 'none';
+      if (ctxPinLabel) ctxPinLabel.textContent = isPinned
+        ? (LANG === 'ru' ? 'Открепить' : 'Unpin')
+        : (LANG === 'ru' ? 'Закрепить' : 'Pin');
+    }
+    if (ctxForward) ctxForward.style.display = '';   // forward is always available
     ctxEdit.style.display = canEdit ? '' : 'none';
     ctxDelete.style.display = canDelete ? '' : 'none';
     ctxMenu.classList.add('show');
@@ -2103,6 +2313,98 @@
     ctxMenu.classList.remove('show');
   });
 
+  if (ctxPin) {
+    ctxPin.addEventListener('click', function() {
+      if (ctxMsgId) togglePin(ctxMsgId);
+      ctxMenu.classList.remove('show');
+    });
+  }
+
+  if (ctxForward) {
+    ctxForward.addEventListener('click', function() {
+      if (ctxMsgId) openForwardModal(ctxMsgId);
+      ctxMenu.classList.remove('show');
+    });
+  }
+
+  // ── Forward ─────────────────────────────────────────────────────────
+  const forwardModal = document.getElementById('forwardModal');
+  const forwardClose = document.getElementById('forwardClose');
+  const forwardSearch = document.getElementById('forwardSearch');
+  const forwardResults = document.getElementById('forwardResults');
+  const forwardTargets = document.getElementById('forwardTargets');
+  let forwardMsgId = null;
+
+  function openForwardModal(msgId) {
+    forwardMsgId = msgId;
+    if (forwardSearch) forwardSearch.value = '';
+    if (forwardResults) forwardResults.innerHTML = '';
+    if (forwardModal) forwardModal.classList.add('show');
+    if (forwardSearch) forwardSearch.focus();
+  }
+  function closeForwardModal() {
+    if (forwardModal) forwardModal.classList.remove('show');
+    forwardMsgId = null;
+  }
+  function doForward(payload) {
+    if (!forwardMsgId) return;
+    payload.messageId = forwardMsgId;
+    fetch('/messages/forward', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { alert(data.error); return; }
+        if (data.conversationId) window.location.href = '/messages/' + data.conversationId;
+      })
+      .catch(function() {});
+  }
+
+  if (forwardClose) forwardClose.addEventListener('click', closeForwardModal);
+  if (forwardModal) {
+    forwardModal.addEventListener('click', function(e) {
+      if (e.target === forwardModal) closeForwardModal();
+    });
+  }
+  if (forwardTargets) {
+    forwardTargets.addEventListener('click', function(e) {
+      const a = e.target.closest('.msg-user-result');
+      if (!a) return;
+      e.preventDefault();
+      if (a.dataset.saved) doForward({ toSaved: true });
+      else if (a.dataset.convId) doForward({ toConversationId: parseInt(a.dataset.convId) });
+    });
+  }
+  let forwardSearchTimer = null;
+  if (forwardSearch) {
+    forwardSearch.addEventListener('input', function() {
+      clearTimeout(forwardSearchTimer);
+      const q = this.value.trim();
+      if (q.length < 2) { forwardResults.innerHTML = ''; return; }
+      forwardSearchTimer = setTimeout(function() {
+        fetch('/messages/search-users?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            forwardResults.innerHTML = '';
+            (data.users || []).forEach(function(u) {
+              const el = document.createElement('div');
+              el.className = 'msg-user-result';
+              el.style.cursor = 'pointer';
+              el.innerHTML =
+                '<img src="' + esc(u.profile_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />' +
+                '<div><div class="msg-user-result-name">' + esc(u.username) + '</div>' +
+                (u.full_name ? '<div class="msg-user-result-full">' + esc(u.full_name) + '</div>' : '') +
+                '</div>';
+              el.addEventListener('click', function() { doForward({ toUserId: u.id }); });
+              forwardResults.appendChild(el);
+            });
+          });
+      }, 300);
+    });
+  }
+
   ctxEdit.addEventListener('click', function() {
     if (ctxMsgId) startEdit(ctxMsgId);
     ctxMenu.classList.remove('show');
@@ -2187,6 +2489,12 @@
     return (n / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
+  function renderForwardedHTML(m) {
+    if (!m.forwarded_from_username) return '';
+    return '<div class="msg-forwarded tex2jax_ignore">' + (LANG === 'ru' ? 'Переслано от' : 'Forwarded from') +
+      ' <a href="/user/' + encodeURIComponent(m.forwarded_from_username) + '">' + esc(m.forwarded_from_username) + '</a></div>';
+  }
+
   function renderFileCardHTML(m) {
     if (!m.file_url) return '';
     const icon = '<span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>';
@@ -2198,9 +2506,49 @@
       '<span class="msg-bubble-file-size">' + esc(size) + '</span></span></a>';
   }
 
-  function appendMessage(m) {
-    if (!chatEl) return;
-    if (m.deleted_at) return;
+  function clientDayKey(iso) {
+    const d = new Date(iso);
+    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+  }
+  function clientDaySepText(iso) {
+    return new Date(iso).toLocaleDateString(LANG === 'ru' ? 'ru-RU' : 'en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function makeDateSep(iso) {
+    const el = document.createElement('div');
+    el.className = 'msg-date-sep';
+    el.dataset.date = clientDayKey(iso);
+    el.textContent = clientDaySepText(iso);
+    return el;
+  }
+  function checkSpanHTML(isRead) {
+    if (isRead) {
+      return '<span class="msg-check read"><svg viewBox="0 0 20 12" width="17" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.5l3.2 3.4L10 2.4"/><path d="M8 6.5l3.2 3.4L17 2.4"/></svg></span>';
+    }
+    return '<span class="msg-check"><svg viewBox="0 0 14 12" width="13" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5l3.2 3.4L11.5 2.4"/></svg></span>';
+  }
+  function isReadAt(iso) {
+    return !!readCutoff && new Date(iso) <= new Date(readCutoff);
+  }
+
+  // Re-evaluate the read/unread check on sent bubbles. Only touches the DOM for
+  // messages whose read-state actually changed — re-writing every check on each
+  // poll caused the icons to flicker/disappear during momentum scroll on iOS.
+  function updateAllReceipts() {
+    if (!SHOW_RECEIPTS || !chatEl) return;
+    chatEl.querySelectorAll('.msg-bubble-row.sent').forEach(function(row) {
+      const timeEl = row.querySelector('.msg-bubble-time');
+      if (!timeEl || !row.dataset.created) return;
+      const wantRead = isReadAt(row.dataset.created);
+      const existing = timeEl.querySelector('.msg-check');
+      if (existing && existing.classList.contains('read') === wantRead) return; // unchanged
+      if (existing) existing.remove();
+      timeEl.insertAdjacentHTML('beforeend', checkSpanHTML(wantRead));
+    });
+  }
+
+  // Build a message row element (no DOM insertion). Shared by appendMessage
+  // (bottom) and prependHistory (top).
+  function buildMessageRow(m) {
     const isSent = m.sender_id === USER_ID;
     const isEdited = !!m.edited_at;
     const row = document.createElement('div');
@@ -2209,19 +2557,21 @@
     if (m.created_at) row.dataset.created = m.created_at;
     row.dataset.senderRole = m.sender_role || 'member';
     row.dataset.senderName = isSent ? USERNAME : (IS_GROUP ? (m.sender_username || '') : OTHER_NAME);
+    if (m.pinned_at) row.dataset.pinned = '1';
 
     let html = '';
+    const senderHref = '/user/' + encodeURIComponent(m.sender_username || '');
     if (!isSent && IS_GROUP) {
-      html += '<img class="msg-bubble-avatar" src="' + esc(m.sender_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />';
+      html += '<a href="' + senderHref + '"><img class="msg-bubble-avatar" src="' + esc(m.sender_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" /></a>';
     }
 
     html += '<div>';
     if (!isSent && IS_GROUP) {
       const modBadge = m.sender_role === 'admin' ? '<span class="msg-admin-badge">' + (LANG === 'ru' ? 'мод' : 'mod') + '</span>' : '';
-      html += '<div class="msg-bubble-sender">' + esc(m.sender_username) + modBadge + '</div>';
+      html += '<div class="msg-bubble-sender"><a href="' + senderHref + '">' + esc(m.sender_username) + '</a>' + modBadge + '</div>';
     }
     const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + renderReplyQuoteHTML(m.reply) + linkify(m.content);
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + renderForwardedHTML(m) + renderReplyQuoteHTML(m.reply) + linkify(m.content);
     if (m.image_url) {
       html += '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" alt="" data-full="' + esc(m.image_url) + '" />';
     }
@@ -2230,10 +2580,26 @@
     html += renderReactionAddHTML(m.id);
     html += '</div>';
     html += renderReactionsHTML(m.id, m.reactions || []);
-    html += '<div class="msg-bubble-time">' + fmtTime(m.created_at) + '</div>';
+    const receiptHtml = (isSent && SHOW_RECEIPTS) ? checkSpanHTML(isReadAt(m.created_at)) : '';
+    html += '<div class="msg-bubble-time">' + fmtTime(m.created_at) + receiptHtml + '</div>';
     html += '</div>';
 
     row.innerHTML = html;
+    return row;
+  }
+
+  function appendMessage(m) {
+    if (!chatEl) return;
+    if (m.deleted_at) return;
+    const row = buildMessageRow(m);
+
+    // Insert a date separator when the day rolls over from the last message.
+    const newKey = clientDayKey(m.created_at);
+    if (bottomDayKey !== newKey) {
+      chatEl.appendChild(makeDateSep(m.created_at));
+      bottomDayKey = newKey;
+    }
+
     chatEl.appendChild(row);
     chatEl.scrollTop = chatEl.scrollHeight;
     const bubbleEl = row.querySelector('.msg-bubble');
@@ -2344,6 +2710,19 @@
             updateReactionsUI(ru.message_id, ru.reactions);
           });
         }
+
+        // Read-receipt progress + pinned message update live. Only re-render the
+        // checks when the cutoff actually advanced (avoids per-poll DOM churn).
+        if (typeof data.readCutoff !== 'undefined' && data.readCutoff !== readCutoff) {
+          readCutoff = data.readCutoff;
+          updateAllReceipts();
+        }
+        if (data.hasOwnProperty('pinnedMessage')) {
+          applyPinned(data.pinnedMessage);
+        }
+        if (data.hasOwnProperty('typing')) {
+          renderTyping(data.typing);
+        }
       })
       .catch(function() {});
   }
@@ -2352,6 +2731,166 @@
   // Poll every 3 seconds when conversation is open
   if (CONV_ID) {
     pollTimer = setInterval(pollMessages, 3000);
+  }
+
+  // ── Older-message history (pagination, scroll up) ───────────────────
+  const historyLoader = document.getElementById('historyLoader');
+
+  function prependHistory(msgs) {
+    if (!chatEl || !msgs.length) return;
+    // Anchor to the bottom so prepended content doesn't move the viewport.
+    const distFromBottom = chatEl.scrollHeight - chatEl.scrollTop;
+
+    const frag = document.createDocumentFragment();
+    const newBubbles = [];
+    let batchLastKey = null;
+    msgs.forEach(function(m) {
+      if (m.deleted_at) return;
+      const key = clientDayKey(m.created_at);
+      if (key !== batchLastKey) {
+        frag.appendChild(makeDateSep(m.created_at));
+        batchLastKey = key;
+      }
+      const row = buildMessageRow(m);
+      frag.appendChild(row);
+      newBubbles.push(row.querySelector('.msg-bubble'));
+    });
+
+    // If the batch's last day equals the first existing separator's day, that
+    // separator is now a duplicate.
+    const firstExistingSep = chatEl.querySelector('.msg-date-sep');
+    if (firstExistingSep && batchLastKey && firstExistingSep.dataset.date === batchLastKey) {
+      firstExistingSep.remove();
+    }
+
+    const anchor = historyLoader ? historyLoader.nextSibling : chatEl.firstChild;
+    chatEl.insertBefore(frag, anchor);
+    chatEl.scrollTop = chatEl.scrollHeight - distFromBottom;
+    newBubbles.forEach(function(b) { if (b) typesetMath(b); });
+  }
+
+  function loadOlder() {
+    if (loadingHistory || !hasMoreHistory || !CONV_ID || !oldestMsgId) return;
+    loadingHistory = true;
+    if (historyLoader) historyLoader.classList.add('show');
+    fetch('/messages/' + CONV_ID + '/history?before=' + oldestMsgId)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (historyLoader) historyLoader.classList.remove('show');
+        const msgs = (data && data.messages) || [];
+        if (msgs.length) {
+          prependHistory(msgs);
+          oldestMsgId = parseInt(msgs[0].id) || oldestMsgId;
+        }
+        hasMoreHistory = !!(data && data.hasMore);
+      })
+      .catch(function() { if (historyLoader) historyLoader.classList.remove('show'); })
+      .then(function() { loadingHistory = false; });
+  }
+
+  if (chatEl) {
+    chatEl.addEventListener('scroll', function() {
+      if (chatEl.scrollTop < 80 && hasMoreHistory && !loadingHistory) loadOlder();
+    });
+  }
+
+  // ── Pinned message bar + pin toggle ─────────────────────────────────
+  const pinnedBar = document.getElementById('pinnedBar');
+  const pinnedBarText = document.getElementById('pinnedBarText');
+  const pinnedUnpin = document.getElementById('pinnedUnpin');
+
+  function applyPinned(pin) {
+    if (!pinnedBar) return;
+    if (pin && pin.id) {
+      pinnedBar.dataset.target = pin.id;
+      if (pinnedBarText) pinnedBarText.textContent = (pin.sender ? pin.sender + ': ' : '') + (pin.preview || '');
+      pinnedBar.classList.add('show');
+    } else {
+      pinnedBar.dataset.target = '';
+      pinnedBar.classList.remove('show');
+    }
+  }
+
+  function togglePin(msgId) {
+    fetch('/messages/' + msgId + '/pin', { method: 'POST', headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) { alert(data.error); return; }
+        const row = document.querySelector('.msg-bubble-row[data-msg-id="' + msgId + '"]');
+        if (row) row.dataset.pinned = data.pinned ? '1' : '';
+        applyPinned(data.pinnedMessage);
+      })
+      .catch(function() {});
+  }
+
+  if (pinnedBar) {
+    pinnedBar.addEventListener('click', function(e) {
+      if (e.target.closest('#pinnedUnpin')) return;
+      const t = parseInt(pinnedBar.dataset.target);
+      if (t) jumpToMessage(t);
+    });
+  }
+  if (pinnedUnpin) {
+    pinnedUnpin.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const t = parseInt(pinnedBar.dataset.target);
+      if (t) togglePin(t);
+    });
+  }
+
+  // ── Typing indicator ────────────────────────────────────────────────
+  const typingBar = document.getElementById('typingBar');
+  const typingText = document.getElementById('typingText');
+  let lastTypingSent = 0;
+
+  function maybeSendTyping() {
+    if (!CONV_ID || editingMsgId) return;
+    if (!msgInput || !msgInput.value.trim()) return;
+    const now = Date.now();
+    if (now - lastTypingSent < 3000) return; // throttle: at most one ping / 3s
+    lastTypingSent = now;
+    fetch('/messages/' + CONV_ID + '/typing', { method: 'POST', headers: { 'Accept': 'application/json' } }).catch(function() {});
+  }
+
+  function renderTyping(names) {
+    if (!typingBar || !typingText) return;
+    if (!names || !names.length) { typingBar.classList.remove('show'); return; }
+    let text;
+    if (names.length === 1) {
+      text = names[0] + (LANG === 'ru' ? ' печатает' : ' is typing');
+    } else if (names.length === 2) {
+      text = names[0] + (LANG === 'ru' ? ' и ' : ' and ') + names[1] + (LANG === 'ru' ? ' печатают' : ' are typing');
+    } else {
+      text = (LANG === 'ru' ? 'Несколько человек печатают' : 'Several people are typing');
+    }
+    typingText.textContent = text;
+    typingBar.classList.add('show');
+  }
+
+  // ── Keep the reaction emoji picker inside the viewport ──────────────
+  // It is centered over the reaction button, so near a screen edge (mobile) it
+  // would overflow. Reposition its left edge to stay within [8, width-8].
+  function positionReactionPicker(addBtn) {
+    const picker = addBtn.querySelector('.msg-reaction-picker');
+    if (!picker) return;
+    const pw = picker.offsetWidth || 240;
+    const btnRect = addBtn.getBoundingClientRect();
+    let left = btnRect.left + btnRect.width / 2 - pw / 2;
+    const max = window.innerWidth - pw - 8;
+    if (left > max) left = max;
+    if (left < 8) left = 8;
+    picker.style.left = (left - btnRect.left) + 'px';
+    picker.style.transform = 'none';
+  }
+  if (chatEl) {
+    chatEl.addEventListener('mouseover', function(e) {
+      const addBtn = e.target.closest('.msg-reaction-add');
+      if (addBtn) positionReactionPicker(addBtn);
+    });
+    chatEl.addEventListener('touchstart', function(e) {
+      const addBtn = e.target.closest('.msg-reaction-add');
+      if (addBtn) positionReactionPicker(addBtn);
+    }, { passive: true });
   }
 
   // ── Live conversation list (sidebar) ────────────────────────────────

@@ -32,6 +32,7 @@ const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 const { getOnlineUsernames } = require("./lib/presence");
+const { sendEmail } = require("./email");
 
 const rateLimit = require('express-rate-limit');
 const { router: adminRouter, isIpBlocked } = require('./admin');
@@ -766,6 +767,26 @@ app.post("/:lang/settings/account/email", checkAuthenticated, async (req, res) =
         const confirmUrl = `${req.protocol}://${req.get("host")}/${lang}/settings/confirm-email?token=${token}`;
         if (process.env.NODE_ENV !== "production") {
             console.log("[email change] confirmation URL:", confirmUrl);
+        }
+
+        // Email the confirmation link to the NEW address. A send failure must not
+        // abort the change request (the pending token is already stored), so it's
+        // logged and swallowed.
+        try {
+            const subject = lang === 'ru'
+                ? 'Подтвердите новый email — Savchenko Solutions'
+                : 'Confirm your new email — Savchenko Solutions';
+            const body = lang === 'ru'
+                ? 'Подтвердите изменение адреса электронной почты. Ссылка действительна 24 часа:'
+                : 'Confirm your email change. This link is valid for 24 hours:';
+            await sendEmail({
+                to: email,
+                subject,
+                html: `<p>${body}</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`,
+                text: `${body}\n\n${confirmUrl}`,
+            });
+        } catch (mailErr) {
+            console.error('Email change confirmation failed:', mailErr);
         }
 
         res.redirect(
@@ -1667,6 +1688,31 @@ app.post("/forgot-password", async (req, res) => {
             console.error('Error logging password reset request:', logErr);
         }
 
+        // Send the reset email — only when the account exists. Send failures are
+        // swallowed so we never reveal whether the address is registered.
+        if (token) {
+            const resetUrl = `${req.protocol}://${req.get("host")}/reset-password?token=${token}&lang=${lang}`;
+            const subject = lang === 'ru'
+                ? 'Сброс пароля — Savchenko Solutions'
+                : 'Reset your Savchenko Solutions password';
+            const intro = lang === 'ru'
+                ? 'Мы получили запрос на сброс пароля для вашего аккаунта. Ссылка действительна 24 часа:'
+                : 'We received a request to reset your password. This link is valid for 24 hours:';
+            const ignore = lang === 'ru'
+                ? 'Если вы не запрашивали сброс, просто проигнорируйте это письмо.'
+                : "If you didn't request this, you can safely ignore this email.";
+            try {
+                await sendEmail({
+                    to: email,
+                    subject,
+                    html: `<p>${intro}</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>${ignore}</p>`,
+                    text: `${intro}\n\n${resetUrl}\n\n${ignore}`,
+                });
+            } catch (mailErr) {
+                console.error('Password reset email failed:', mailErr);
+            }
+        }
+
         // Always show the same message (don't reveal if email exists)
         res.redirect(`/forgot-password?lang=${lang}&success=${encodeURIComponent(
             lang === 'ru'
@@ -1742,7 +1788,7 @@ app.post("/reset-password", async (req, res) => {
 
     try {
         const result = await pool.query(
-            "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
+            "SELECT id, username FROM users WHERE reset_token = $1 AND reset_token_expires > NOW()",
             [token]
         );
 
@@ -1758,9 +1804,11 @@ app.post("/reset-password", async (req, res) => {
             [hashedPassword, result.rows[0].id]
         );
 
-        res.redirect(`/${lang}/login?success=${encodeURIComponent(
-            lang === 'ru' ? 'Пароль обновлён. Войдите в аккаунт.' : 'Password updated. Please log in.'
-        )}`);
+        // Log the user straight in — they proved control of the account via the reset link
+        req.session.userId = result.rows[0].id;
+        req.session.username = result.rows[0].username;
+        req.session.lang = lang;
+        res.redirect(`/${lang}/profile`);
     } catch (error) {
         console.error('Reset password error:', error);
         res.redirect(`/${lang}/login?error=${encodeURIComponent(
@@ -1837,8 +1885,11 @@ app.post("/register", registerLimiter, async (req, res) => {
             console.error('Failed to add user to global chat:', e);
         }
 
-        res.redirect(`/${lang}/login?success=${i18n.__('Registration successful')}`);
-        // res.redirect("/profile");
+        // Log the new user straight in instead of bouncing them to the login page
+        req.session.userId = newUser.rows[0].id;
+        req.session.username = username;
+        req.session.lang = lang;
+        res.redirect(`/${lang}/profile`);
     } catch (error) {
         console.error(error);
 

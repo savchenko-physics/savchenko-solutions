@@ -64,6 +64,41 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
 });
 
+// ── Typing indicators ───────────────────────────────────────────────────
+// Ephemeral in-memory state: conversationId -> Map<userId, {username, expires}>.
+// Fine to lose on restart; assumes a single app instance (this deployment is a
+// single pm2 fork). Would need Redis/DB to work across a cluster.
+const typingState = new Map();
+const TYPING_TTL_MS = 6000;
+
+function setTyping(convId, userId, username) {
+    let conv = typingState.get(convId);
+    if (!conv) { conv = new Map(); typingState.set(convId, conv); }
+    conv.set(userId, { username, expires: Date.now() + TYPING_TTL_MS });
+}
+
+function clearTyping(convId, userId) {
+    const conv = typingState.get(convId);
+    if (conv) {
+        conv.delete(userId);
+        if (conv.size === 0) typingState.delete(convId);
+    }
+}
+
+// Usernames of OTHER members currently typing in a conversation (prunes expired).
+function getTypingOthers(convId, userId) {
+    const conv = typingState.get(convId);
+    if (!conv) return [];
+    const now = Date.now();
+    const out = [];
+    for (const [uid, info] of conv) {
+        if (info.expires <= now) { conv.delete(uid); continue; }
+        if (uid !== userId) out.push(info.username);
+    }
+    if (conv.size === 0) typingState.delete(convId);
+    return out;
+}
+
 const GROUP_PALETTES = [
     ['#e74c3c', '#c0392b', '#f39c12', '#e67e22'],
     ['#3498db', '#2980b9', '#1abc9c', '#16a085'],
@@ -156,6 +191,59 @@ function attachReplyInfo(rows, userId, lang) {
             };
         }
     }
+}
+
+const PAGE_SIZE = 30; // messages loaded per page (initial view + each older page)
+
+// Shared message projection used by the conversation view, poll, and history
+// endpoints so all three return identically-shaped rows.
+const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
+        m.file_url, m.file_name, m.file_size, m.pinned_at, m.forwarded_from_user_id,
+        u.username AS sender_username, u.profile_picture AS sender_picture,
+        cm.role AS sender_role,
+        fu.username AS forwarded_from_username,
+        m.reply_to_id,
+        rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
+        rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
+        ru.username AS reply_sender_username`;
+
+const MESSAGE_JOINS = `FROM messages m
+        LEFT JOIN users u ON u.id = m.sender_id
+        LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
+        LEFT JOIN messages rm ON rm.id = m.reply_to_id
+        LEFT JOIN users ru ON ru.id = rm.sender_id
+        LEFT JOIN users fu ON fu.id = m.forwarded_from_user_id`;
+
+// Read-receipt cutoff: the earliest "last read" timestamp among the OTHER
+// members. A sent message is "read" once its created_at is <= this. Returns
+// null when there are no other members (a Saved Messages self-chat).
+async function getReadCutoff(convId, userId) {
+    const r = await pool.query(
+        `SELECT MIN(last_read_at) AS cutoff FROM conversation_members
+         WHERE conversation_id = $1 AND user_id <> $2`,
+        [convId, userId]
+    );
+    return r.rows[0] ? r.rows[0].cutoff : null;
+}
+
+// The most recently pinned (non-deleted) message in a conversation, as a small
+// summary for the pinned bar. Returns null when nothing is pinned.
+async function getPinnedSummary(convId, lang) {
+    const r = await pool.query(
+        `SELECT m.id, m.content, m.image_url, m.file_name, m.deleted_at,
+                u.username AS sender_username
+         FROM messages m LEFT JOIN users u ON u.id = m.sender_id
+         WHERE m.conversation_id = $1 AND m.pinned_at IS NOT NULL AND m.deleted_at IS NULL
+         ORDER BY m.pinned_at DESC LIMIT 1`,
+        [convId]
+    );
+    if (r.rows.length === 0) return null;
+    const p = r.rows[0];
+    return {
+        id: p.id,
+        sender: p.sender_username || (lang === 'ru' ? 'Пользователь' : 'User'),
+        preview: buildReplyPreview(p.content, p.image_url, p.file_name, p.deleted_at, lang),
+    };
 }
 
 async function getReactionsForMessages(messageIds, userId) {
@@ -484,24 +572,21 @@ router.get('/:id(\\d+)', async (req, res) => {
             memberCount: activeMemberCount,
         } : null;
 
+        // Load only the most recent page; older messages load on scroll-up.
+        // Fetch one extra row to detect whether older history exists.
         const messagesResult = await pool.query(
-            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
-                    m.file_url, m.file_name, m.file_size,
-                    u.username AS sender_username, u.profile_picture AS sender_picture,
-                    cm.role AS sender_role,
-                    m.reply_to_id,
-                    rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
-                    rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
-                    ru.username AS reply_sender_username
-             FROM messages m
-             LEFT JOIN users u ON u.id = m.sender_id
-             LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
-             LEFT JOIN messages rm ON rm.id = m.reply_to_id
-             LEFT JOIN users ru ON ru.id = rm.sender_id
-             WHERE m.conversation_id = $1
-             ORDER BY m.created_at ASC`,
-            [convId]
+            `SELECT * FROM (
+                 SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
+                 WHERE m.conversation_id = $1
+                 ORDER BY m.created_at DESC, m.id DESC LIMIT $2
+             ) sub ORDER BY created_at ASC, id ASC`,
+            [convId, PAGE_SIZE + 1]
         );
+        let hasMoreHistory = false;
+        if (messagesResult.rows.length > PAGE_SIZE) {
+            hasMoreHistory = true;
+            messagesResult.rows.shift(); // drop the probe row (only detects "more")
+        }
 
         const msgIds = messagesResult.rows.map(m => m.id);
         const reactionsMap = await getReactionsForMessages(msgIds, userId);
@@ -512,6 +597,12 @@ router.get('/:id(\\d+)', async (req, res) => {
                 m.contentHtml = linkifyMessageContent(m.content, lang);
             }
         }
+
+        // Read receipts (DMs only — not groups or the Saved self-chat).
+        const showReceipts = !!(activeConversation && !activeConversation.is_group && !activeConversation.isSaved);
+        const readCutoffDate = showReceipts ? await getReadCutoff(convId, userId) : null;
+        const readCutoff = readCutoffDate ? new Date(readCutoffDate).toISOString() : null;
+        const pinnedMessage = activeConversation ? await getPinnedSummary(convId, lang) : null;
 
         // Force unread_count to 0 for active conversation in the list
         let updatedConvList = convList.map(c => {
@@ -578,10 +669,60 @@ router.get('/:id(\\d+)', async (req, res) => {
             isAdmin,
             membersList,
             groupAvatarSVG,
+            hasMoreHistory,
+            showReceipts,
+            readCutoff,
+            pinnedMessage,
         });
     } catch (err) {
         console.error('Messages conversation error:', err);
         res.status(500).send('Internal server error');
+    }
+});
+
+// GET /messages/:id/history — older messages (pagination, scroll-up)
+router.get('/:id(\\d+)/history', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const lang = req.session.lang || 'en';
+        const convId = parseInt(req.params.id);
+        const beforeId = parseInt(req.query.before) || 0;
+        if (!beforeId) return res.json({ messages: [], hasMore: false });
+
+        const membership = await pool.query(
+            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            [convId, userId]
+        );
+        if (membership.rows.length === 0) {
+            return res.status(403).json({ error: 'Not a member' });
+        }
+
+        const result = await pool.query(
+            `SELECT * FROM (
+                 SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
+                 WHERE m.conversation_id = $1 AND m.id < $2
+                 ORDER BY m.created_at DESC, m.id DESC LIMIT $3
+             ) sub ORDER BY created_at ASC, id ASC`,
+            [convId, beforeId, PAGE_SIZE + 1]
+        );
+        let hasMore = false;
+        if (result.rows.length > PAGE_SIZE) {
+            hasMore = true;
+            result.rows.shift();
+        }
+
+        const ids = result.rows.map(m => m.id);
+        const reactionsMap = await getReactionsForMessages(ids, userId);
+        attachReplyInfo(result.rows, userId, lang);
+        for (const m of result.rows) {
+            m.reactions = reactionsMap[m.id] || [];
+            if (m.content) m.contentHtml = linkifyMessageContent(m.content, lang);
+        }
+
+        res.json({ messages: result.rows, hasMore });
+    } catch (err) {
+        console.error('History error:', err);
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -717,6 +858,9 @@ router.post('/:id(\\d+)/send', msgUploadMiddleware, async (req, res) => {
              WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
+
+        // Sending implies they stopped typing.
+        clearTyping(convId, userId);
 
         // Notify other members
         let preview;
@@ -914,6 +1058,140 @@ router.post('/:msgId(\\d+)/react', async (req, res) => {
     }
 });
 
+// POST /messages/:msgId/pin — toggle a message's pinned state
+router.post('/:msgId(\\d+)/pin', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const lang = req.session.lang || 'en';
+        const msgId = parseInt(req.params.msgId);
+
+        const msg = await pool.query(
+            `SELECT m.id, m.conversation_id, m.pinned_at, m.deleted_at, c.is_group
+             FROM messages m JOIN conversations c ON c.id = m.conversation_id
+             WHERE m.id = $1`,
+            [msgId]
+        );
+        if (msg.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        const m = msg.rows[0];
+        if (m.deleted_at) return res.status(400).json({ error: 'Message was deleted' });
+
+        // Must be a member; in groups, only admins may pin/unpin.
+        const mem = await pool.query(
+            `SELECT role FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            [m.conversation_id, userId]
+        );
+        if (mem.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
+        if (m.is_group && mem.rows[0].role !== 'admin') {
+            return res.status(403).json({ error: 'Only moderators can pin messages' });
+        }
+
+        const nowPinned = !m.pinned_at;
+        if (nowPinned) {
+            await pool.query(`UPDATE messages SET pinned_at = NOW(), pinned_by = $2 WHERE id = $1`, [msgId, userId]);
+        } else {
+            await pool.query(`UPDATE messages SET pinned_at = NULL, pinned_by = NULL WHERE id = $1`, [msgId]);
+        }
+
+        const pinnedMessage = await getPinnedSummary(m.conversation_id, lang);
+        res.json({ ok: true, pinned: nowPinned, pinnedMessage });
+    } catch (err) {
+        console.error('Pin error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /messages/forward — forward a message into another conversation
+router.post('/forward', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const messageId = parseInt(req.body.messageId);
+        const toConversationId = req.body.toConversationId ? parseInt(req.body.toConversationId) : null;
+        const toUserId = req.body.toUserId ? parseInt(req.body.toUserId) : null;
+        const toSaved = req.body.toSaved === true || req.body.toSaved === 'true';
+
+        if (!messageId) return res.status(400).json({ error: 'Missing message' });
+
+        // Source must be readable by the user (member of its conversation).
+        const src = await pool.query(
+            `SELECT m.id, m.sender_id, m.content, m.image_url, m.file_url, m.file_name,
+                    m.file_size, m.forwarded_from_user_id, m.deleted_at
+             FROM messages m
+             JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
+             WHERE m.id = $1`,
+            [messageId, userId]
+        );
+        if (src.rows.length === 0) return res.status(404).json({ error: 'Message not found' });
+        const s = src.rows[0];
+        if (s.deleted_at) return res.status(400).json({ error: 'Message was deleted' });
+
+        // Resolve the target conversation.
+        let targetId;
+        if (toSaved) {
+            targetId = await findOrCreateSavedMessages(userId);
+        } else if (toConversationId) {
+            const t = await pool.query(
+                `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+                [toConversationId, userId]
+            );
+            if (t.rows.length === 0) return res.status(403).json({ error: 'Not a member of target' });
+            targetId = toConversationId;
+        } else if (toUserId) {
+            if (toUserId === userId) {
+                targetId = await findOrCreateSavedMessages(userId);
+            } else {
+                const u = await pool.query('SELECT id FROM users WHERE id = $1', [toUserId]);
+                if (u.rows.length === 0) return res.status(404).json({ error: 'User not found' });
+                targetId = await findOrCreateDM(userId, toUserId);
+            }
+        } else {
+            return res.status(400).json({ error: 'No target' });
+        }
+
+        // Preserve the original author across forward chains.
+        const origin = s.forwarded_from_user_id || s.sender_id;
+
+        await pool.query(
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin]
+        );
+        await pool.query(`UPDATE conversations SET last_message_at = NOW() WHERE id = $1`, [targetId]);
+        await pool.query(
+            `UPDATE conversation_members SET last_read_at = NOW() WHERE conversation_id = $1 AND user_id = $2`,
+            [targetId, userId]
+        );
+
+        const preview = s.file_url ? (s.file_name || '[File]')
+            : (s.image_url && !s.content ? '[Image]' : (s.content || '').substring(0, 80));
+        await notifications.createMessageNotifications(
+            targetId, userId, `New message from ${req.session.username}`, preview, `/messages/${targetId}`
+        );
+
+        res.json({ ok: true, conversationId: targetId });
+    } catch (err) {
+        console.error('Forward error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /messages/:id/typing — record that the user is typing (ephemeral)
+router.post('/:id(\\d+)/typing', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const convId = parseInt(req.params.id);
+        const membership = await pool.query(
+            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            [convId, userId]
+        );
+        if (membership.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
+        setTyping(convId, userId, req.session.username);
+        res.json({ ok: true });
+    } catch (err) {
+        console.error('Typing error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // POST /messages/:id/read — mark conversation as read (AJAX)
 router.post('/:id(\\d+)/read', async (req, res) => {
     try {
@@ -982,21 +1260,9 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
         }
 
         const result = await pool.query(
-            `SELECT m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
-                    m.file_url, m.file_name, m.file_size,
-                    u.username AS sender_username, u.profile_picture AS sender_picture,
-                    cm.role AS sender_role,
-                    m.reply_to_id,
-                    rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
-                    rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
-                    ru.username AS reply_sender_username
-             FROM messages m
-             LEFT JOIN users u ON u.id = m.sender_id
-             LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
-             LEFT JOIN messages rm ON rm.id = m.reply_to_id
-             LEFT JOIN users ru ON ru.id = rm.sender_id
+            `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
              WHERE m.conversation_id = $1 AND m.id > $2
-             ORDER BY m.created_at ASC`,
+             ORDER BY m.created_at ASC, m.id ASC`,
             [convId, afterId]
         );
 
@@ -1049,7 +1315,13 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
             );
         }
 
-        res.json({ messages: result.rows, updates, reactionUpdates });
+        // Read-receipt progress + current pinned message, so both update live.
+        const readCutoffDate = await getReadCutoff(convId, userId);
+        const readCutoff = readCutoffDate ? new Date(readCutoffDate).toISOString() : null;
+        const pinnedMessage = await getPinnedSummary(convId, lang);
+        const typing = getTypingOthers(convId, userId);
+
+        res.json({ messages: result.rows, updates, reactionUpdates, readCutoff, pinnedMessage, typing });
     } catch (err) {
         console.error('Poll messages error:', err);
         res.status(500).json({ error: 'Internal server error' });
