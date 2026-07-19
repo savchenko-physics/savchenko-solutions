@@ -1336,6 +1336,12 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3/dist/d3-sankey.min.js"></script>
     <script>
+        // Small contexts (collaborator/contribution grids) use the 96px thumbnail
+        // instead of the 320px main avatar. Passes non-optimized URLs through.
+        function avatarThumb(u) {
+            return (typeof u === 'string' && /^\/img\/profile_images\/\d+\.webp$/.test(u))
+                ? u.replace(/\.webp$/, '_thumb.webp') : u;
+        }
         const username = "<%= username %>";
         const lang = "<%= lang %>";
         const sessionUsername = <%- sessionUsername ? JSON.stringify(sessionUsername) : "null" %>;
@@ -1938,7 +1944,7 @@
                     ? `<span class="collab-online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>`
                     : "";
                 a.innerHTML = `
-                    <span class="collab-avatar-wrap"><img class="collab-avatar" src="${pic}" alt="@${uname}">${dot}</span>
+                    <span class="collab-avatar-wrap"><img class="collab-avatar" src="${avatarThumb(pic)}" alt="@${uname}">${dot}</span>
                     <div class="collab-name">${uname}</div>
                     <div class="collab-count">${count}</div>
                 `;
@@ -2349,7 +2355,7 @@
                     <div class="contrib-latest-inner">
                         <div class="contrib-latest-author">
                             <a href="/user/${authorUser}" class="contrib-avatar-wrap" aria-hidden="true" tabindex="-1">
-                                <img class="contrib-avatar" src="${avatarSrc}" width="20" height="20" alt="">
+                                <img class="contrib-avatar" src="${avatarThumb(avatarSrc)}" width="20" height="20" alt="">
                             </a>
                             <a class="contrib-author-link" href="/user/${authorUser}">${authorUser}</a>
                             <span class="contrib-title-wrap">

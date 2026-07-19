@@ -33,6 +33,7 @@ const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 const { getOnlineUsernames } = require("./lib/presence");
 const { sendEmail } = require("./email");
+const { processAvatar } = require("./avatar");
 
 const rateLimit = require('express-rate-limit');
 const { router: adminRouter, isIpBlocked } = require('./admin');
@@ -540,7 +541,18 @@ app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("pr
 
         let profilePictureValue = undefined;
         if (req.file) {
-            profilePictureValue = `/img/profile_images/${req.file.filename}`;
+            try {
+                // Optimize the raw upload into a 320px WebP + 96px thumbnail.
+                profilePictureValue = await processAvatar(req.file.path, req.session.userId);
+                // Drop the raw upload, unless it was already the .webp we just wrote.
+                const mainPath = path.join(__dirname, "img", "profile_images", `${req.session.userId}.webp`);
+                if (path.resolve(req.file.path) !== path.resolve(mainPath)) {
+                    fs.unlink(req.file.path, () => {});
+                }
+            } catch (e) {
+                console.error("Avatar optimization failed, keeping raw upload:", e);
+                profilePictureValue = `/img/profile_images/${req.file.filename}`;
+            }
         } else if (removeProfilePicture === "1" || removeProfilePicture === "on") {
             profilePictureValue = DEFAULT_PROFILE_AVATAR;
         }
