@@ -89,6 +89,102 @@
        MAIN CONTENT (FULL WIDTH)
   ============================ -->
   <main class="container-fluid mt-1 mb-4 px-3 px-md-4">
+    <!-- ============================================================
+         PRACTICUM 2026 ANNOUNCEMENT BANNER
+         Server-driven via res.locals.practicumBanner (practicum.js).
+         Auto-hides once registration closes (26 Jul 2026) — no manual takedown.
+    ============================================================ -->
+    <% if (typeof practicumBanner !== 'undefined' && practicumBanner) { %>
+    <% const pb = practicumBanner; %>
+    <% const prChips = pb.lang === 'ru'
+         ? [ { l: 'RUS', u: pb.links.ru }, { l: 'UKR', u: pb.links.ukr }, { l: 'ENG', u: pb.links.eng } ]
+         : [ { l: 'ENG', u: pb.links.eng }, { l: 'UKR', u: pb.links.ukr }, { l: 'RUS', u: pb.links.ru } ]; %>
+    <style>
+      .pr-banner{position:relative;background:#1a1a2e;color:#fff;border-radius:8px;padding:22px 24px;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;container-type:inline-size;}
+      .pr-banner::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:#d7a63b;}
+      .pr-inner{display:grid;grid-template-columns:1fr;gap:18px;}
+      @container (min-width:720px){.pr-banner{padding:26px 32px;}.pr-inner{grid-template-columns:minmax(0,1fr) 300px;gap:36px;align-items:center;}}
+      .pr-eyebrow{display:flex;align-items:center;gap:10px;font-size:11.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:#d7a63b;margin-bottom:12px;}
+      .pr-tick{width:6px;height:6px;border-radius:50%;background:#d7a63b;flex-shrink:0;}
+      .pr-banner .pr-h2{margin:0 0 10px;font-size:26px;line-height:1.15;font-weight:700;letter-spacing:-.015em;color:#fff;text-wrap:balance;}
+      @container (min-width:720px){.pr-banner .pr-h2{font-size:30px;}}
+      .pr-sub{margin:0 0 16px;font-size:15px;line-height:1.55;color:rgba(255,255,255,.80);max-width:62ch;}
+      .pr-facts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+      .pr-fact{display:inline-flex;align-items:center;font-size:12.5px;font-weight:500;color:rgba(255,255,255,.9);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:5px 11px;border-radius:6px;font-variant-numeric:tabular-nums;}
+      .pr-note{font-size:13px;line-height:1.5;color:rgba(255,255,255,.66);margin:0;padding-left:12px;border-left:2px solid rgba(255,255,255,.18);}
+      .pr-cta{display:flex;flex-direction:column;gap:12px;}
+      .pr-deadline{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;font-size:12.5px;font-weight:600;color:#1a1a2e;background:#d7a63b;padding:5px 12px;border-radius:999px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+      .pr-pulse{width:7px;height:7px;border-radius:50%;background:#1a1a2e;flex-shrink:0;}
+      .pr-banner a.pr-btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#fff;font-size:15px;font-weight:600;text-decoration:none;padding:12px 18px;border-radius:6px;border:1px solid #fff;transition:background .15s;}
+      .pr-banner a.pr-btn:link,.pr-banner a.pr-btn:visited{color:#1a1a2e;}
+      .pr-banner a.pr-btn:hover{background:#ececef;color:#1a1a2e;}
+      .pr-btn svg{width:16px;height:16px;}
+      .pr-reg{font-size:12px;line-height:1.5;color:rgba(255,255,255,.6);margin:0;}
+      .pr-reg code{background:rgba(255,255,255,.09);padding:1px 5px;border-radius:4px;font-size:11.5px;color:#fff;}
+      .pr-links{display:flex;flex-direction:column;gap:9px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);}
+      .pr-links-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:rgba(255,255,255,.62);}
+      .pr-chip{display:inline-flex;align-items:center;font-weight:600;font-size:12px;border:1px solid rgba(255,255,255,.28);padding:3px 10px;border-radius:6px;text-decoration:none;}
+      .pr-banner a.pr-chip:link,.pr-banner a.pr-chip:visited{color:#fff;}
+      .pr-banner a.pr-chip:hover{color:#fff;background:rgba(255,255,255,.08);}
+      .pr-textlink{border-bottom:1px solid rgba(255,255,255,.25);font-size:12.5px;text-decoration:none;}
+      .pr-banner a.pr-textlink:link,.pr-banner a.pr-textlink:visited{color:rgba(255,255,255,.78);}
+      .pr-banner a.pr-textlink:hover{color:#fff;border-bottom-color:#fff;}
+      .pr-proof{margin:0;grid-column:1/-1;padding-top:14px;border-top:1px solid rgba(255,255,255,.10);font-size:12.5px;font-style:italic;color:rgba(255,255,255,.6);}
+      .pr-proof a{border-bottom:1px solid rgba(215,166,59,.4);font-style:normal;white-space:nowrap;text-decoration:none;}
+      .pr-banner a.pr-proof-link:link,.pr-banner a.pr-proof-link:visited{color:#d7a63b;}
+      .pr-banner a.pr-proof-link:hover{color:#d7a63b;border-bottom-color:#d7a63b;}
+    </style>
+    <section class="pr-banner" aria-label="<%= pb.headline %>">
+      <div class="pr-inner">
+        <div class="pr-main">
+          <div class="pr-eyebrow"><span class="pr-tick"></span><%= pb.eyebrow %></div>
+          <h2 class="pr-h2"><%= pb.headline %></h2>
+          <p class="pr-sub"><%= pb.sub %></p>
+          <div class="pr-facts">
+            <% pb.facts.forEach(function(f){ %><span class="pr-fact"><%= f %></span><% }); %>
+          </div>
+          <p class="pr-note"><%= pb.eligibility %></p>
+        </div>
+        <div class="pr-cta">
+          <span class="pr-deadline"><span class="pr-pulse"></span><span id="prBannerCountdown" data-ends-at="<%= pb.closeInstant %>"><%= pb.deadline %></span></span>
+          <a class="pr-btn" href="<%= pb.mailto %>">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M1.5 3h13A1.5 1.5 0 0 1 16 4.5v7A1.5 1.5 0 0 1 14.5 13h-13A1.5 1.5 0 0 1 0 11.5v-7A1.5 1.5 0 0 1 1.5 3Zm.4 1.7 6.1 3.9 6.1-3.9Z"/></svg>
+            <%= pb.ctaLabel %>
+          </a>
+          <p class="pr-reg"><%= pb.regDetail %></p>
+          <div class="pr-links">
+            <div class="pr-links-row"><%= pb.detailsLabel %>
+              <% prChips.forEach(function(c){ %><a class="pr-chip" href="<%= c.u %>" target="_blank" rel="noopener"><%= c.l %></a><% }); %>
+            </div>
+            <div class="pr-links-row">
+              <a class="pr-textlink" href="<%= pb.rulesUrl %>" target="_blank" rel="noopener"><%= pb.rulesLabel %></a>
+              <a class="pr-textlink" href="<%= pb.links.practice %>" target="_blank" rel="noopener"><%= pb.practiceLabel %></a>
+            </div>
+          </div>
+        </div>
+        <p class="pr-proof"><%= pb.proofText %> <a class="pr-proof-link" href="<%= pb.proofUrl %>" target="_blank" rel="noopener"><%= pb.proofCta %></a></p>
+      </div>
+    </section>
+    <script>
+      (function () {
+        var el = document.getElementById('prBannerCountdown');
+        if (!el || !el.dataset.endsAt) return;
+        var end = new Date(el.dataset.endsAt).getTime();
+        var isRu = <%- pb.lang === 'ru' ? 'true' : 'false' %>;
+        function tick() {
+          var diff = end - Date.now();
+          if (diff <= 0) { el.textContent = isRu ? 'Регистрация закрыта' : 'Registration closed'; return; }
+          var d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000),
+              m = Math.floor(diff % 3600000 / 60000), s = Math.floor(diff % 60000 / 1000);
+          el.textContent = isRu
+            ? ('Осталось ' + d + 'д ' + h + 'ч ' + m + 'м ' + s + 'с')
+            : ('Closes in ' + d + 'd ' + h + 'h ' + m + 'm ' + s + 's');
+        }
+        tick(); setInterval(tick, 1000);
+      })();
+    </script>
+    <% } %>
+
     <!-- Compact Introduction -->
       <div class="compact-intro mb-4">
         <div class="row align-items-start g-3 compact-intro-row">

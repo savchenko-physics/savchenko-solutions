@@ -44,6 +44,9 @@ const bankRouter = require('./bank');
 const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
 const { router: contestRouter, getActiveContestBanner } = require('./contest');
+const { getPracticumBanner } = require('./practicum');
+const { router: unsubscribeRouter } = require('./unsubscribe');
+const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
@@ -205,6 +208,11 @@ app.use((req, res, next) => {
         res.locals.activeContest = getActiveContestBanner(req.session.lang || 'en');
     } catch (_err) {
         res.locals.activeContest = null;
+    }
+    try {
+        res.locals.practicumBanner = getPracticumBanner(req.session.lang || 'en');
+    } catch (_err) {
+        res.locals.practicumBanner = null;
     }
     next();
 });
@@ -2287,6 +2295,12 @@ app.use('/admin', adminRouter);
 // Blog
 app.use('/:lang(en|ru)/blog', blogRouter);
 app.use('/blog', blogRouter);
+
+// Email unsubscribe (one-click, token-based, no login) for announcement emails.
+app.use('/unsubscribe', unsubscribeRouter);
+
+// Self-hosted email open/click tracking (pixel + signed click redirect).
+app.use('/e', trackingRouter);
 
 // Physics tools
 app.use('/:lang/tools', toolsRouter);

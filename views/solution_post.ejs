@@ -1184,7 +1184,7 @@
 </head>
 
 <body>
-    <%- include('default/main_site_header', { showViewsButton: true }) %>
+    <%- include('default/main_site_header', { showViewsButton: true, hidePracticumStrip: true }) %>
 
     <!-- Mobile Navigation -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
@@ -1251,6 +1251,84 @@
                     <span></span>
                 <% } %>
             </div>
+            <% } %>
+
+            <!-- Practicum 2026 callout (prominent card; collapsible to a thin band,
+                 remembered per-browser so applied / non-target users aren't distracted).
+                 Auto-hides after the registration deadline via res.locals.practicumBanner. -->
+            <% if (typeof practicumBanner !== 'undefined' && practicumBanner) { %>
+            <% const pcb = practicumBanner; %>
+            <div class="pr-solcallout" id="prSolCallout" data-state="expanded">
+              <div class="pr-sc-full">
+                <div class="pr-sc-main">
+                  <span class="pr-sc-title"><%= pcb.lang === 'ru' ? 'Международный практикум по теоретической физике 2026' : 'International Theoretical Physics Practicum 2026' %></span>
+                  <span class="pr-sc-text"><%= pcb.lang === 'ru'
+                      ? 'Нравится решать Савченко? Проведите настоящее мини-исследование с физиками из MIT, Caltech, Harvard — бесплатно, онлайн.'
+                      : 'Enjoy solving Savchenko? Do a real mini research project with physicists from MIT, Caltech, Harvard — free, online.' %></span>
+                </div>
+                <div class="pr-sc-actions">
+                  <span class="pr-sc-deadline" id="prScCountdown" data-ends-at="<%= pcb.closeInstant %>"><%= pcb.lang === 'ru' ? 'до 26 июля' : 'closes Jul 26' %></span>
+                  <a class="pr-sc-btn" href="<%= pcb.mailto %>"><%= pcb.lang === 'ru' ? 'Участвовать' : 'Take part' %></a>
+                  <a class="pr-sc-more" href="<%= pcb.lang === 'ru' ? pcb.links.ru : pcb.links.eng %>" target="_blank" rel="noopener"><%= pcb.lang === 'ru' ? 'подробнее' : 'details' %></a>
+                  <button type="button" class="pr-sc-collapse" data-act="collapse" title="<%= pcb.lang === 'ru' ? 'Свернуть' : 'Collapse' %>" aria-label="<%= pcb.lang === 'ru' ? 'Свернуть' : 'Collapse' %>">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 10l4-4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="pr-sc-band" data-act="expand" aria-label="<%= pcb.lang === 'ru' ? 'Развернуть анонс практикума' : 'Expand practicum announcement' %>">
+                <span class="pr-sc-band-dot"></span>
+                <span class="pr-sc-band-text"><%= pcb.lang === 'ru' ? 'Международный практикум по теоретической физике 2026 · до 26 июля' : 'International Theoretical Physics Practicum 2026 · closes Jul 26' %></span>
+                <span class="pr-sc-band-more"><%= pcb.lang === 'ru' ? 'развернуть' : 'expand' %> &rsaquo;</span>
+              </button>
+            </div>
+            <script>
+              (function () {
+                var el = document.getElementById('prSolCallout');
+                if (!el) return;
+                try { if (localStorage.getItem('pr2026_solcallout') === 'collapsed') el.setAttribute('data-state', 'collapsed'); } catch (e) {}
+                el.addEventListener('click', function (ev) {
+                  var t = ev.target.closest('[data-act]'); if (!t) return;
+                  var act = t.getAttribute('data-act');
+                  if (act === 'collapse') { ev.preventDefault(); el.setAttribute('data-state', 'collapsed'); try { localStorage.setItem('pr2026_solcallout', 'collapsed'); } catch (e) {} }
+                  else if (act === 'expand') { ev.preventDefault(); el.setAttribute('data-state', 'expanded'); try { localStorage.setItem('pr2026_solcallout', 'expanded'); } catch (e) {} }
+                });
+                var cd = document.getElementById('prScCountdown');
+                if (cd && cd.dataset.endsAt) {
+                  var end = new Date(cd.dataset.endsAt).getTime();
+                  var isRu = <%- pcb.lang === 'ru' ? 'true' : 'false' %>;
+                  var tickCd = function () {
+                    var diff = end - Date.now();
+                    if (diff <= 0) { cd.textContent = isRu ? 'закрыто' : 'closed'; return; }
+                    var d = Math.floor(diff / 86400000), h = Math.floor(diff % 86400000 / 3600000), m = Math.floor(diff % 3600000 / 60000);
+                    cd.textContent = isRu ? ('ещё ' + d + 'д ' + h + 'ч ' + m + 'м') : (d + 'd ' + h + 'h ' + m + 'm left');
+                  };
+                  tickCd(); setInterval(tickCd, 60000);
+                }
+              })();
+            </script>
+            <style>
+              .pr-solcallout { margin: 0 0 18px; }
+              .pr-solcallout .pr-sc-full { position: relative; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: #1a1a2e; border-radius: 8px; border-left: 3px solid #d7a63b; padding: 12px 44px 12px 16px; color: #fff; }
+              .pr-solcallout[data-state="collapsed"] .pr-sc-full { display: none; }
+              .pr-solcallout[data-state="expanded"] .pr-sc-band { display: none; }
+              .pr-sc-main { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+              .pr-sc-title { font-size: 14px; font-weight: 700; line-height: 1.25; color: #fff; }
+              .pr-sc-text { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.82); }
+              .pr-sc-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+              .pr-sc-deadline { font-size: 12px; color: #f0c260; font-weight: 600; white-space: nowrap; }
+              .pr-solcallout a.pr-sc-btn:link, .pr-solcallout a.pr-sc-btn:visited { background: #fff; color: #1a1a2e; font-weight: 600; font-size: 13px; padding: 7px 14px; border-radius: 6px; text-decoration: none; white-space: nowrap; }
+              .pr-solcallout a.pr-sc-btn:hover { background: #ececef; color: #1a1a2e; }
+              .pr-solcallout a.pr-sc-more:link, .pr-solcallout a.pr-sc-more:visited { color: rgba(255,255,255,.75); font-size: 12.5px; text-decoration: underline; white-space: nowrap; }
+              .pr-solcallout a.pr-sc-more:hover { color: #fff; }
+              .pr-sc-collapse { position: absolute; top: 8px; right: 10px; background: none; border: none; color: rgba(255,255,255,.55); cursor: pointer; padding: 2px; display: inline-flex; }
+              .pr-sc-collapse:hover { color: #fff; }
+              .pr-sc-band { display: flex; align-items: center; gap: 8px; width: 100%; background: #f8f9fa; border: 1px solid #dee2e6; border-left: 3px solid #d7a63b; border-radius: 6px; padding: 6px 12px; cursor: pointer; text-align: left; font: inherit; }
+              .pr-sc-band:hover { background: #f1f3f5; }
+              .pr-sc-band-dot { width: 7px; height: 7px; border-radius: 50%; background: #d7a63b; flex-shrink: 0; }
+              .pr-sc-band-text { font-size: 12.5px; color: #2d2d2d; font-weight: 500; }
+              .pr-sc-band-more { margin-left: auto; font-size: 12px; color: #1a5276; font-weight: 600; white-space: nowrap; }
+              @media (max-width: 640px) { .pr-sc-actions { flex-basis: 100%; } .pr-sc-text { font-size: 13px; } }
+            </style>
             <% } %>
 
             <!-- Content Body -->
