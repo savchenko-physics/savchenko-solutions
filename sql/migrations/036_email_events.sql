@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS email_events (
     url        TEXT,
     ip         VARCHAR(64),
     ua         VARCHAR(300),
+    username   VARCHAR(150),          -- logged-in username for on-site announcement clicks
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE email_events ADD COLUMN IF NOT EXISTS username VARCHAR(150);
 CREATE INDEX IF NOT EXISTS idx_email_events_campaign ON email_events (campaign, event);

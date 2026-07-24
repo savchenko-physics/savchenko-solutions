@@ -1277,7 +1277,7 @@
               </div>
               <button type="button" class="pr-sc-band" data-act="expand" aria-label="<%= pcb.lang === 'ru' ? 'Развернуть анонс практикума' : 'Expand practicum announcement' %>">
                 <span class="pr-sc-band-dot"></span>
-                <span class="pr-sc-band-text"><%= pcb.lang === 'ru' ? 'Международный практикум по теоретической физике 2026 · до 26 июля' : 'International Theoretical Physics Practicum 2026 · closes Jul 26' %></span>
+                <span class="pr-sc-band-text"><%= pcb.lang === 'ru' ? 'Международный практикум по теоретической физике 2026 · до 26 июля, 09:00 UTC' : 'International Theoretical Physics Practicum 2026 · closes 26 Jul, 09:00 UTC' %></span>
                 <span class="pr-sc-band-more"><%= pcb.lang === 'ru' ? 'развернуть' : 'expand' %> &rsaquo;</span>
               </button>
             </div>
@@ -1304,6 +1304,14 @@
                   };
                   tickCd(); setInterval(tickCd, 60000);
                 }
+                // Log clicks on the announcement CTAs (IP + username captured server-side).
+                var ctas = ['pr-sc-btn', 'pr-sc-more'];
+                ctas.forEach(function (cls) {
+                  var a = el.querySelector('.' + cls);
+                  if (a) a.addEventListener('click', function () {
+                    try { fetch('/e/hit?c=practicum2026_onsite&t=' + (cls === 'pr-sc-btn' ? 'register' : 'details'), { method: 'POST', keepalive: true }); } catch (e) {}
+                  });
+                });
               })();
             </script>
             <style>

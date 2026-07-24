@@ -34,8 +34,11 @@ const PIXEL = Buffer.from('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBR
             url        TEXT,
             ip         VARCHAR(64),
             ua         VARCHAR(300),
+            username   VARCHAR(150),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )`);
+        // For pre-existing installs of the table (added for on-site click logging).
+        await pool.query(`ALTER TABLE email_events ADD COLUMN IF NOT EXISTS username VARCHAR(150)`);
         await pool.query(`CREATE INDEX IF NOT EXISTS idx_email_events_campaign ON email_events (campaign, event)`);
     } catch (err) {
         console.error('email_events init error:', err.message);
@@ -47,13 +50,14 @@ function sig(dest) {
     return crypto.createHmac('sha256', SECRET).update('track:' + dest).digest('hex').slice(0, 20);
 }
 
-async function logEvent(campaign, userId, event, url, req) {
+async function logEvent(campaign, userId, event, url, req, username) {
     try {
         const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim().slice(0, 64);
         const ua = String(req.headers['user-agent'] || '').slice(0, 300);
         await pool.query(
-            'INSERT INTO email_events (campaign, user_id, event, url, ip, ua) VALUES ($1,$2,$3,$4,$5,$6)',
-            [String(campaign || '').slice(0, 64), Number.isInteger(userId) ? userId : null, event, url ? String(url).slice(0, 2000) : null, ip, ua]
+            'INSERT INTO email_events (campaign, user_id, event, url, ip, ua, username) VALUES ($1,$2,$3,$4,$5,$6,$7)',
+            [String(campaign || '').slice(0, 64), Number.isInteger(userId) ? userId : null, event,
+             url ? String(url).slice(0, 2000) : null, ip, ua, username ? String(username).slice(0, 150) : null]
         );
     } catch (_) { /* analytics must never break the response */ }
 }
@@ -76,6 +80,19 @@ router.get('/c', async (req, res) => {
     }
     await logEvent(req.query.c, parseInt(req.query.u, 10), 'click', dest, req);
     res.redirect(302, dest);
+});
+
+// On-site announcement click beacon (from the solution-page callout / banner CTAs).
+// Captures the logged-in username + IP server-side (from the session, so it can't be
+// spoofed by the client). No redirect — the page fires this and proceeds to the link.
+router.post('/hit', async (req, res) => {
+    const uid = req.session && req.session.userId ? req.session.userId : null;
+    const uname = req.session && req.session.username ? req.session.username : null;
+    const target = String(req.query.t || '').slice(0, 40);
+    const ref = String(req.get('referer') || '').slice(0, 300);
+    await logEvent(String(req.query.c || 'onsite'), Number.isInteger(uid) ? uid : null,
+        'click', target + (ref ? ' | ' + ref : ''), req, uname);
+    res.status(204).end();
 });
 
 module.exports = { router, sig };
