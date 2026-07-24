@@ -39,6 +39,14 @@ function decodeEntities(s) {
         .replace(/&amp;/g, '&');
 }
 
+// Repair a systematic source-authoring bug: LaTeX is double-escaped and relies on
+// marked halving `\\`→`\`, but brace delimiters were over-escaped, leaving an invalid
+// `\left\\{` (= `\left` + a `\\` line break) that MathJax rejects. `\left\\`/`\right\\`
+// (and the \big… variants) are never valid, so collapse the stray `\\` to a single `\`.
+function normalizeTex(tex) {
+    return tex.replace(/\\(left|right|bigl|bigr|Bigl|Bigr|biggl|biggr|Biggl|Biggr)\\\\/g, '\\$1\\');
+}
+
 const formulaCache = new Map();
 const CACHE_MAX = 20000;
 function tex2svg(tex, display) {
@@ -47,7 +55,7 @@ function tex2svg(tex, display) {
     if (hit !== undefined) return hit;
     let out;
     try {
-        const node = mathDoc.convert(decodeEntities(tex).trim(), { display });
+        const node = mathDoc.convert(normalizeTex(decodeEntities(tex).trim()), { display });
         out = adaptor.outerHTML(node);
     } catch (err) {
         out = null; // signal failure → keep the raw delimiters untouched
@@ -84,6 +92,33 @@ function cleanTex(tex) {
     return tex.replace(PLACEHOLDER_G, ' ');
 }
 
+// Brace-aware inline `$...$` scan: a `$` inside `{...}` (e.g. `\text{см$^2$}` or
+// `\fbox{$x$}`) is NOT a delimiter — same rule MathJax's own finder uses. A plain
+// regex splits on that inner `$` and produces broken half-formulas.
+function renderInlineDollar(s, render) {
+    let out = '', i = 0;
+    const n = s.length;
+    while (i < n) {
+        if (s[i] === '$' && s[i + 1] !== '$') {
+            let j = i + 1, depth = 0, close = -1;
+            while (j < n) {
+                const cj = s[j];
+                if (cj === '\n') break;                 // inline math is single-line
+                else if (cj === '{') depth++;
+                else if (cj === '}') { if (depth > 0) depth--; }
+                else if (cj === '$' && depth === 0) { close = j; break; }
+                j++;
+            }
+            if (close > i + 1) {
+                const svg = render(s.slice(i + 1, close));
+                if (svg) { out += svg; i = close + 1; continue; }
+            }
+        }
+        out += s[i]; i++;
+    }
+    return out;
+}
+
 /** Render every math span on an HTML page to inline SVG. Idempotent. */
 function renderMathInHtml(html) {
     if (!html) return html;
@@ -97,7 +132,7 @@ function renderMathInHtml(html) {
     // Display first (so $$ isn't split by the inline $ pass), then inline.
     s = s.replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => D(tex) || m);
     s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => D(tex) || m);
-    s = s.replace(/\$([^$\n]+?)\$/g, (m, tex) => I(tex) || m);
+    s = renderInlineDollar(s, (tex) => I(tex));
     s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => I(tex) || m);
 
     return restore(s, store);
