@@ -160,6 +160,10 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
+// MathJax 3 served from the installed mathjax-full package instead of a public CDN.
+// cdn.jsdelivr.net is blocked on some networks (notably several post-Soviet ISPs),
+// which left every page without its scripts and stylesheets. See css/vendor, js/vendor.
+app.use("/vendor/mathjax", express.static(path.join(__dirname, "node_modules", "mathjax-full", "es5"), { maxAge: '30d' }));
 // PWA assets (manifest.webmanifest, sw.js, offline.html) served at web root
 app.use(express.static(path.join(__dirname, "public")));
 // Stylesheet for server-rendered math SVG (constant; generated from mathRender)

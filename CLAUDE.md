@@ -157,6 +157,7 @@ All new UI must follow these rules:
 - Do NOT use `res.send()` for HTML pages. Use `res.render()` with EJS templates.
 - Do NOT add social media features (stories, reels, feeds). This is an academic tool.
 - Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be human-written.
+- Do NOT load front-end assets from `cdn.jsdelivr.net`. Corporate/institutional web filters commonly block that hostname (it is widely abused to host malicious payloads), which leaves the entire site unstyled for anyone behind such a filter. Vendor the file into `css/vendor/` or `js/vendor/` and reference it with an absolute local path. MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`.
 
 ## Testing
 - No test framework is currently set up. When adding one, use Jest.
