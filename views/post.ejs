@@ -16,8 +16,8 @@
     <title><%= title %></title>
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
     
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
@@ -25,31 +25,28 @@
     <link rel="apple-touch-icon" href="/img/logo.png" />
     
     <!-- Scripts -->
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script src="/js/vendor/chart.umd.min.js"></script>
     <script src="/js/vendor/chartjs-adapter-date-fns.min.js"></script>
     
     <!-- Bootstrap -->
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
     <link rel="stylesheet" href="/css/design-system.css" />
     <link rel="stylesheet" href="/css/main_page.css" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
     
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
+    <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: { processHtmlClass: 'tex2jax', ignoreHtmlClass: 'html' }
+      };
     </script>
+    <script id="MathJax-script" async src="/vendor/mathjax/tex-mml-chtml.js"></script>
 
     <style>
         :root {

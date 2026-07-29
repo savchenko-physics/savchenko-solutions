@@ -146,21 +146,18 @@ function ru_page(req, res) {
     <link rel="stylesheet" href="../css/css-latex/style.css">
     <link rel="icon" href="../img/logo.png" type="image/png">
     <script src="../js/jquery-1.10.1.min.js"></script>
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['$', '$']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
+    <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: { processHtmlClass: 'tex2jax', ignoreHtmlClass: 'html' }
+      };
     </script>
+    <script id="MathJax-script" async src="/vendor/mathjax/tex-mml-chtml.js"></script>
 </head>
 <body id="top">
     <header class = "margin-main" style="text-align:center;">

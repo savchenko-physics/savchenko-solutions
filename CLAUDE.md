@@ -3,6 +3,19 @@
 ## What This Is
 SavchenkoSolutions.com is a collaborative platform for peer-reviewed solutions to Savchenko's Problems in Physics, one of the hardest physics problem collections in the post-Soviet world. 1,516 solutions, 72 contributors from 18 countries, 150,000+ users from 150+ countries. All content free under Creative Commons CC BY-SA 4.0.
 
+## Front-End Assets
+All render-critical third-party libraries are **self-hosted**, not loaded from a CDN
+(see "What NOT to Do"). No page depends on an external origin to render.
+- `css/vendor/` — Bootstrap 5.3.3, Bootstrap Icons, Font Awesome 6.4.0 + 4.7.0,
+  CodeMirror 5.65.10 CSS, and `fonts/` (Inter, Roboto, STIX Two Math, Noto Serif,
+  JetBrains Mono — all subsets incl. Cyrillic, generated from the Google Fonts API).
+- `js/vendor/` — Bootstrap JS, Popper, Chart.js, D3, marked, html2canvas, jQuery,
+  CodeMirror JS + modes/addons.
+- MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`
+  (mounted in `index.js` and `sandbox/sandbox-app.js`); keep that dependency installed.
+- The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
+  separate Express app on its own subdomain and would otherwise 404 on shared assets.
+
 ## Tech Stack
 - **Runtime:** Node.js
 - **Framework:** Express.js 4.21.1
@@ -157,7 +170,8 @@ All new UI must follow these rules:
 - Do NOT use `res.send()` for HTML pages. Use `res.render()` with EJS templates.
 - Do NOT add social media features (stories, reels, feeds). This is an academic tool.
 - Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be human-written.
-- Do NOT load front-end assets from `cdn.jsdelivr.net`. Corporate/institutional web filters commonly block that hostname (it is widely abused to host malicious payloads), which leaves the entire site unstyled for anyone behind such a filter. Vendor the file into `css/vendor/` or `js/vendor/` and reference it with an absolute local path. MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`.
+- Do NOT load stylesheets, fonts, or scripts from any third-party origin (jsdelivr, cdnjs, unpkg, Google Fonts, code.jquery.com, …). Every such origin is a single point of failure: a corporate or ISP web filter that blocks that one hostname leaves the site unstyled or broken for everyone behind it. This actually happened — `cdn.jsdelivr.net` is blocked by filters that classify it as a malware-distribution host, and Bootstrap was loaded from it on every page. Vendor new libraries into `css/vendor/` or `js/vendor/` and reference them with an absolute local path. `npm test` enforces this (`tests/external-assets.test.js`).
+- Analytics (`googletagmanager`, `mc.yandex.ru`) is the one allowed exception: it is injected asynchronously and the page is fully usable without it.
 
 ## Testing
 - No test framework is currently set up. When adding one, use Jest.

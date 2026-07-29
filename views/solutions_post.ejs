@@ -6,8 +6,8 @@
     <title><%= title %> | <%= __('title') %></title>
     
     <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
     <script src="/js/jquery-1.10.1.min.js"></script>
     
@@ -15,27 +15,21 @@
     <link rel="icon" href="/img/logo.png" type="image/png" />
     
     <!-- MathJax -->
-    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
     <script src="/js/vendor/chart.umd.min.js"></script>
     
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            'HTML-CSS': {
-                scale: 120
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
+    <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: { processHtmlClass: 'tex2jax', ignoreHtmlClass: 'html' }
+      };
     </script>
+    <script id="MathJax-script" async src="/vendor/mathjax/tex-mml-chtml.js"></script>
 
     <style>
         :root {

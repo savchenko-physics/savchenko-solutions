@@ -43,6 +43,16 @@ module.exports = function(mainPool) {
     // Serve static files from /public
     app.use(express.static(path.join(__dirname, 'public')));
 
+    // The sandbox runs as its own app on sandbox.savchenkosolutions.com, so it must
+    // serve the shared front-end assets itself — its templates reference /css, /js and
+    // /img from the main app's directories. Vendored (self-hosted) libraries live there
+    // too; see css/vendor and js/vendor. Without these mounts the sandbox renders unstyled.
+    const mainRoot = path.join(__dirname, '..');
+    app.use('/css', express.static(path.join(mainRoot, 'css'), { maxAge: '7d' }));
+    app.use('/js', express.static(path.join(mainRoot, 'js'), { maxAge: '7d' }));
+    app.use('/img', express.static(path.join(mainRoot, 'img'), { maxAge: '30d' }));
+    app.use('/vendor/mathjax', express.static(path.join(mainRoot, 'node_modules', 'mathjax-full', 'es5'), { maxAge: '30d' }));
+
     // Middleware
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(bodyParser.json());

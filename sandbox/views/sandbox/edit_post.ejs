@@ -18,35 +18,31 @@
         <%= title %>
     </title>
     <link rel="icon" href="../../img/logo.png" type="image/png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.css">
+    <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
     <script src="/js/jquery-1.10.1.min.js"></script>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/markdown/markdown.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/mode/stex/stex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({
-            extensions: ['tex2jax.js'],
-            jax: ['input/TeX', 'output/HTML-CSS'],
-            tex2jax: {
-                inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']],
-                processEscapes: true,
-                processClass: 'tex2jax',
-                ignoreClass: 'html'
-            },
-            showProcessingMessages: false,
-            messageStyle: 'none'
-        });
+    <script src="/js/vendor/codemirror/codemirror.min.js"></script>
+    <script src="/js/vendor/codemirror/mode/markdown/markdown.min.js"></script>
+    <script src="/js/vendor/codemirror/mode/stex/stex.min.js"></script>
+    <script src="/js/vendor/marked-4.3.0.min.js"></script>
+    <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true
+        },
+        options: { processHtmlClass: 'tex2jax', ignoreHtmlClass: 'html' }
+      };
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/mode/multiplex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/selection/active-line.min.js"></script>
+    <script id="MathJax-script" async src="/vendor/mathjax/tex-mml-chtml.js"></script>
+    <script src="/js/vendor/codemirror/addon/mode/multiplex.min.js"></script>
+    <script src="/js/vendor/codemirror/addon/selection/active-line.min.js"></script>
     <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/matchbrackets/matchbrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/matchbrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.10/addon/edit/closebrackets.min.js"></script>
+        src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
+    <script src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
+    <script src="/js/vendor/codemirror/addon/edit/closebrackets.min.js"></script>
 
     <style>
         :root {
@@ -784,9 +780,9 @@
         }
     </style>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Stix+Two+Math&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet">
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet">
 
 </head>
 
@@ -1302,7 +1298,7 @@
             html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
             html = html.replace(/\\\*/g, "*");
             preview.innerHTML = html;
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, preview]);
+            if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([preview]);
         }
 
         // Add the transformImageMarkdown function
