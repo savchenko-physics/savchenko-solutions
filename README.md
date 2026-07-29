@@ -174,7 +174,7 @@ Visit the [study guide](https://savchenkosolutions.com/study-guide) to learn how
 5. Open a pull request with a clear description of the change.
 
 ### Reporting Issues
-Open an issue on GitHub or email [aliaksandr@melnichenka.com](mailto:aliaksandr@melnichenka.com).
+Open an issue on GitHub or email [alex@savchenkosolutions.com](mailto:alex@savchenkosolutions.com).
 
 ## License
 

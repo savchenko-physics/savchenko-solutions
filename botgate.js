@@ -421,13 +421,13 @@ h1{font-family:Inter,sans-serif;font-weight:600;font-size:1.25rem}a{color:#1a527
 <h1>This request looked automated</h1>
 <p>We blocked it to keep the site usable for readers. If you are a person and are seeing
 this, it is our mistake and we would like to fix it — please write to
-<a href="mailto:aliaksandr@melnichenka.com">aliaksandr@melnichenka.com</a> and mention
+<a href="mailto:alex@savchenkosolutions.com">alex@savchenkosolutions.com</a> and mention
 the page you were trying to open.</p>
 <hr>
 <h1>Запрос выглядел автоматическим</h1>
 <p>Мы его заблокировали, чтобы сайт оставался доступным для читателей. Если вы человек и
 видите это сообщение — это наша ошибка, и мы хотим её исправить. Напишите на
-<a href="mailto:aliaksandr@melnichenka.com">aliaksandr@melnichenka.com</a> и укажите,
+<a href="mailto:alex@savchenkosolutions.com">alex@savchenkosolutions.com</a> и укажите,
 какую страницу вы открывали.</p>
 </body></html>`;
 

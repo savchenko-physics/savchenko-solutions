@@ -7,17 +7,19 @@
 // Config (all via .env):
 //   EMAIL_ENABLED=true                       # master switch; when unset/false, sends are no-ops
 //   AWS_REGION=us-east-2                      # SES region (match the EC2/RDS region)
-//   EMAIL_FROM=Savchenko Solutions <no-reply@savchenkosolutions.com>
+//   EMAIL_FROM=Savchenko Solutions <alex@savchenkosolutions.com>
 //
 // The SDK is lazy-loaded so the app runs fine locally without the dependency
 // installed, as long as EMAIL_ENABLED is not "true".
 
 const FROM =
     process.env.EMAIL_FROM ||
-    "Savchenko Solutions <no-reply@savchenkosolutions.com>";
+    "Savchenko Solutions <alex@savchenkosolutions.com>";
 
-// no-reply@ has no inbox, so route replies to a real address (override via EMAIL_REPLY_TO).
-const REPLY_TO = process.env.EMAIL_REPLY_TO || "togpe22@gmail.com";
+// alex@ is a real Zoho inbox (savchenkosolutions.com MX points at Zoho), so it is both
+// the sender and the reply target — a recipient who hits Reply reaches a person. The
+// domain is verified in SES, which is what lets any address on it send.
+const REPLY_TO = process.env.EMAIL_REPLY_TO || "alex@savchenkosolutions.com";
 
 let sesClient = null;
 function getClient() {
