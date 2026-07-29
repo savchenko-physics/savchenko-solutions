@@ -421,6 +421,17 @@
             gap: 3px;
         }
 
+        .sg-legend {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; padding-top: 8px;
+            border-top: 1px solid #f0f0f0; font-size: 11px; color: #6c757d;
+        }
+        .sg-leg { display: flex; align-items: center; gap: 4px; }
+        .sg-sw { display: inline-block; width: 12px; height: 11px; border-radius: 2px; flex: 0 0 auto; }
+        .sg-sw-both { background: #7d3c98; border: 1px solid #7d3c98; }
+        .sg-sw-en   { background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%); border: 1px solid #2471a3; }
+        .sg-sw-ru   { background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%); border: 1px solid #27ae60; }
+        .sg-sw-un   { background: #ffffff; border: 1px dashed #c6ccd2; }
+
         .problem-grid-item {
             width: 28px;
             height: 28px;
@@ -438,38 +449,48 @@
             text-decoration: none;
         }
 
+        /* Shape-coded to match the homepage grid: solid = both languages, left-half =
+           English only, bottom-half = Russian only, hollow dashed = unsolved. Purple,
+           blue and green are the three hues red-green colour deficiency compresses, and
+           this audience is mostly male teenagers — roughly one in twelve could not read
+           the old colour-only version at all. */
         a.problem-grid-item--solved-both,
         a.problem-grid-item--solved-both:link,
         a.problem-grid-item--solved-both:visited,
         a.problem-grid-item--solved-both:active {
             background: #7d3c98;
             color: #ffffff;
+            border: 1px solid #7d3c98;
         }
         a.problem-grid-item--solved-both:hover { opacity: 0.8; }
         a.problem-grid-item--solved-en,
         a.problem-grid-item--solved-en:link,
         a.problem-grid-item--solved-en:visited,
         a.problem-grid-item--solved-en:active {
-            background: #2471a3;
-            color: #ffffff;
+            background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%);
+            color: #17466b;
+            border: 1px solid #2471a3;
+            font-weight: 600;
         }
-        a.problem-grid-item--solved-en:hover { opacity: 0.85; }
+        a.problem-grid-item--solved-en:hover { background: linear-gradient(to right, #b9d3e8 0 50%, #f2f7fb 50% 100%); opacity: 1; }
         a.problem-grid-item--solved-ru,
         a.problem-grid-item--solved-ru:link,
         a.problem-grid-item--solved-ru:visited,
         a.problem-grid-item--solved-ru:active {
-            background: #27ae60;
-            color: #ffffff;
+            background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%);
+            color: #1b6b41;
+            border: 1px solid #27ae60;
+            font-weight: 600;
         }
-        a.problem-grid-item--solved-ru:hover { opacity: 0.85; }
+        a.problem-grid-item--solved-ru:hover { background: linear-gradient(to bottom, #f3faf6 0 50%, #b6e1c8 50% 100%); opacity: 1; }
         a.problem-grid-item--unsolved,
         a.problem-grid-item--unsolved:link,
         a.problem-grid-item--unsolved:visited,
         a.problem-grid-item--unsolved:hover,
         a.problem-grid-item--unsolved:active {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            color: #6c757d;
+            background: #ffffff;
+            color: #8c959f;
+            border: 1px dashed #c6ccd2;
         }
         .problem-grid-item--current {
             background: #1a5276;
@@ -1220,7 +1241,7 @@
     <div class="who-banner" id="whoBanner" hidden>
         <span class="who-banner-text">
             Кто вы и откуда? Мы никогда не спрашивали. Напишите одну строку на
-            <a href="mailto:hello@savchenkosolutions.com?subject=%D0%9A%D1%82%D0%BE%20%D1%8F">hello@savchenkosolutions.com</a>
+            <a href="mailto:aliaksandr@melnichenka.com?subject=%D0%9A%D1%82%D0%BE%20%D1%8F">aliaksandr@melnichenka.com</a>
             — школа, город, как вы пользуетесь сайтом.
         </span>
         <button type="button" class="who-banner-close" id="whoBannerClose" aria-label="Закрыть">&times;</button>
@@ -1797,10 +1818,11 @@
                         <% } %>
                     <% }); %>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid #f0f0f0; font-size: 11px; color: #6c757d;">
-                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #7d3c98;"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
-                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #2471a3;"></span>EN</span>
-                    <span style="display: flex; align-items: center; gap: 3px;"><span style="display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: #27ae60;"></span>RU</span>
+                <div class="sg-legend">
+                    <span class="sg-leg"><span class="sg-sw sg-sw-both"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
+                    <span class="sg-leg"><span class="sg-sw sg-sw-en"></span>EN</span>
+                    <span class="sg-leg"><span class="sg-sw sg-sw-ru"></span>RU</span>
+                    <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет' : 'None' %></span>
                 </div>
             </div>
             <% if (typeof relatedProblems !== 'undefined' && relatedProblems && relatedProblems.length > 0) { %>

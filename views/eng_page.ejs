@@ -191,6 +191,7 @@
          people type are numbers (4.2.22, 2.7.10, 6.2.14). So the search field is the
          primary object on the page, not a field in the header. -->
       <section class="hero-primary mb-4" aria-labelledby="heroHeadline">
+        <div class="hero-main">
         <h1 class="hero-headline" id="heroHeadline"><%= __({ phrase: 'description.heroHeadline', locale: lang }) %></h1>
         <p class="hero-byline">
           <%- __({ phrase: 'description.introFirst', locale: lang }, { uniqueSolutions: solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') }) %>
@@ -217,9 +218,12 @@
           </div>
           <span class="hero-search-hint" id="heroSearchHint"><%= __({ phrase: 'description.heroSearchHint', locale: lang }) %></span>
         </form>
+        </div>
 
         <%# The worklist, second thing on the page after the search. Ranked by unmet
-            demand — people who came looking for this solution and found nothing. %>
+            demand — people who came looking for this solution and found nothing.
+            On a wide screen it sits beside the search rather than under it, which is
+            what fills the right-hand half instead of leaving it blank. %>
         <% if (typeof mostWanted !== 'undefined' && mostWanted && mostWanted.length) { %>
         <div class="most-wanted">
           <div class="most-wanted-head">
@@ -935,10 +939,31 @@
     }
     @media (min-width: 768px) {
       .hero-primary { padding: 2.5rem 1.5rem 2rem; }
-      .hero-headline { font-size: 2rem; }
-      .hero-byline { font-size: 1rem; }
+      .hero-headline { font-size: 2rem; max-width: 22ch; }
+      .hero-byline { font-size: 1.0625rem; }
       .hero-search-input { height: 48px; font-size: 1.0625rem; }
       .hero-search-button { height: 48px; }
+    }
+    /* Wide screens: two columns instead of one narrow column and a blank right half.
+       The search keeps its own column so it stays the obvious primary object, and the
+       worklist moves up beside it rather than being pushed below the fold. */
+    @media (min-width: 992px) {
+      .hero-primary {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        column-gap: 3rem;
+        align-items: start;
+      }
+      .hero-headline { font-size: 2.25rem; max-width: 18ch; }
+      .hero-byline { max-width: 40ch; margin-bottom: 1.5rem; }
+      .hero-search-row { max-width: none; }
+      .most-wanted { margin-top: 0; max-width: none; }
+      /* The list runs down the column rather than wrapping into a ragged block. */
+      .most-wanted-list { flex-direction: column; gap: 0.375rem; }
+      .most-wanted-item { justify-content: space-between; width: 100%; }
+    }
+    @media (min-width: 1400px) {
+      .hero-headline { font-size: 2.5rem; }
     }
 
     /* Compact Introduction */

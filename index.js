@@ -67,12 +67,18 @@ app.set('trust proxy', 1);
 // Gzip compression — first middleware for best coverage
 app.use(compression());
 
+// Tracker first, botgate second — the order matters and is easy to get backwards.
+// botgate ends the request on a block without calling next(), so anything mounted after
+// it never runs for blocked traffic. With the two the other way round the attempt
+// counters recorded zero blocks, which is the exact number you least want to be wrong.
+// The tracker only registers a res.on('finish') handler here; that handler reads req.bot
+// after the response, by which time botgate has set it.
+app.use(tracker.middleware);
+
 // Bot classification runs BEFORE session() on purpose: a machine must never reach the
 // session store, because writing to a session is what creates a row (see the lang
 // middleware below). It never blocks on IP address — see botgate.js for why.
 app.use(botgate);
-// Standing request log, so a wave can be read off a dashboard instead of tcpdump.
-app.use(tracker.middleware);
 
 // Require SESSION_SECRET — refuse to start with the insecure default
 if (!process.env.SESSION_SECRET) {

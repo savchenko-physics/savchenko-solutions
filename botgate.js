@@ -409,8 +409,11 @@ function isTaggable(req) {
     return !req.bot || req.bot.cls === CLASS.HUMAN;
 }
 
-// A misclassified person needs to be able to tell us. Built once at boot so a block
-// costs no render.
+// A misclassified person needs to be able to tell us, so this address has to be one
+// that actually receives mail. savchenkosolutions.com has NO MX records — nothing
+// accepts mail for it — so a support@ address there would be a black hole. The
+// melnichenka.com domain runs Zoho and is already published in the site footer.
+// Built once at boot so a block costs no render.
 const BLOCK_PAGE = `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Automated request blocked</title>
 <style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#2d2d2d;max-width:34rem;margin:4rem auto;padding:0 1.5rem;line-height:1.6}
@@ -418,13 +421,13 @@ h1{font-family:Inter,sans-serif;font-weight:600;font-size:1.25rem}a{color:#1a527
 <h1>This request looked automated</h1>
 <p>We blocked it to keep the site usable for readers. If you are a person and are seeing
 this, it is our mistake and we would like to fix it — please write to
-<a href="mailto:support@savchenkosolutions.com">support@savchenkosolutions.com</a> and mention
+<a href="mailto:aliaksandr@melnichenka.com">aliaksandr@melnichenka.com</a> and mention
 the page you were trying to open.</p>
 <hr>
 <h1>Запрос выглядел автоматическим</h1>
 <p>Мы его заблокировали, чтобы сайт оставался доступным для читателей. Если вы человек и
 видите это сообщение — это наша ошибка, и мы хотим её исправить. Напишите на
-<a href="mailto:support@savchenkosolutions.com">support@savchenkosolutions.com</a> и укажите,
+<a href="mailto:aliaksandr@melnichenka.com">aliaksandr@melnichenka.com</a> и укажите,
 какую страницу вы открывали.</p>
 </body></html>`;
 

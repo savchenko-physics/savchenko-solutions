@@ -77,10 +77,109 @@ async function flush() {
     }
 }
 
+// ── Attempt counters ────────────────────────────────────────────────────────────────
+// Counted for EVERY request, assets included. request_log deliberately skips assets, but
+// a blocked bot's traffic is almost entirely assets — during one capture the farm made
+// ~1,000 requests from two /24s in 90 seconds and every one was a CSS/JS/font fetch
+// returning 403, so the row table saw almost none of it. Counting is cheap enough to do
+// on everything; storing bodies is not.
+//
+// `requests` is written as a delta and therefore stays exact across restarts.
+// `distinct_ips` comes from an in-memory Set that lives for the current hour, so it is
+// exact in normal operation and can undercount if the process restarts mid-hour.
+const attempts = new Map();  // "hour|verdict|rule|reason" -> { requests, assets, ips:Set }
+const networks = new Map();  // "day|net16|verdict"        -> { requests, ips:Set }
+
+function bucketKeys(d) {
+    const hour = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours()));
+    return { hour, day: hour.toISOString().slice(0, 10) };
+}
+
+function countAttempt(req, isAsset) {
+    const now = new Date();
+    const { hour, day } = bucketKeys(now);
+    const bot = req.bot || {};
+    const verdict = bot.cls || 'unclassified';
+    const rule = bot.rule === undefined || bot.rule === null ? '-' : String(bot.rule);
+    // One row per distinct signal, so "how often did rule 5 fire" is a direct query.
+    const reasons = (bot.reasons && bot.reasons.length) ? bot.reasons : ['-'];
+    const ip = String(req.ip || '').slice(0, 64);
+
+    for (const reason of reasons) {
+        const key = `${hour.toISOString()}|${verdict}|${rule}|${String(reason).slice(0, 48)}`;
+        let e = attempts.get(key);
+        if (!e) { e = { hour, verdict, rule, reason: String(reason).slice(0, 48), requests: 0, assets: 0, ips: new Set() }; attempts.set(key, e); }
+        e.requests++;
+        if (isAsset) e.assets++;
+        if (ip && e.ips.size < 50000) e.ips.add(ip);
+    }
+
+    // Networks: only non-human verdicts, which is what keeps this table small and is the
+    // only part anyone would act on.
+    if (verdict !== 'human' && /^\d+\.\d+\./.test(ip)) {
+        const net16 = ip.split('.').slice(0, 2).join('.');
+        const key = `${day}|${net16}|${verdict}`;
+        let e = networks.get(key);
+        if (!e) { e = { day, net16, verdict, requests: 0, ips: new Set() }; networks.set(key, e); }
+        e.requests++;
+        if (e.ips.size < 50000) e.ips.add(ip);
+    }
+}
+
+async function flushCounters() {
+    if (!pool) return;
+    const nowHour = bucketKeys(new Date()).hour.toISOString();
+
+    // Take the deltas and reset the request counts; keep the IP sets for the current
+    // hour so distinct counts stay cumulative, and drop them once the hour has passed.
+    const attemptRows = [];
+    for (const [key, e] of attempts) {
+        if (e.requests > 0) attemptRows.push({ ...e, ips: e.ips.size });
+        e.requests = 0; e.assets = 0;
+        if (e.hour.toISOString() !== nowHour) attempts.delete(key);
+    }
+    const networkRows = [];
+    for (const [key, e] of networks) {
+        if (e.requests > 0) networkRows.push({ ...e, ips: e.ips.size });
+        e.requests = 0;
+        if (e.day !== bucketKeys(new Date()).day) networks.delete(key);
+    }
+
+    try {
+        for (const r of attemptRows) {
+            await pool.query(
+                `INSERT INTO bot_defence_hourly (hour, verdict, rule, reason, requests, distinct_ips, assets)
+                 VALUES ($1,$2,$3,$4,$5,$6,$7)
+                 ON CONFLICT (hour, verdict, rule, reason) DO UPDATE
+                   SET requests     = bot_defence_hourly.requests + EXCLUDED.requests,
+                       assets       = bot_defence_hourly.assets   + EXCLUDED.assets,
+                       distinct_ips = GREATEST(bot_defence_hourly.distinct_ips, EXCLUDED.distinct_ips)`,
+                [r.hour, r.verdict, r.rule, r.reason, r.requests, r.ips, r.assets]
+            );
+        }
+        for (const r of networkRows) {
+            await pool.query(
+                `INSERT INTO bot_network_daily (day, net16, verdict, requests, distinct_ips)
+                 VALUES ($1,$2,$3,$4,$5)
+                 ON CONFLICT (day, net16, verdict) DO UPDATE
+                   SET requests     = bot_network_daily.requests + EXCLUDED.requests,
+                       distinct_ips = GREATEST(bot_network_daily.distinct_ips, EXCLUDED.distinct_ips)`,
+                [r.day, r.net16, r.verdict, r.requests, r.ips]
+            );
+        }
+    } catch (err) {
+        console.error('tracker counter flush failed:', err.message);
+    }
+}
+
 function middleware(req, res, next) {
     if (!TRACKER_ENABLED || !pool) return next();
     try {
-        if (ASSET.test(req.path)) return next();
+        const isAsset = ASSET.test(req.path);
+        // Counted first, and for everything — this is the only place blocked asset
+        // traffic gets recorded at all.
+        res.on('finish', () => { try { countAttempt(req, isAsset); } catch (_e) {} });
+        if (isAsset) return next();
 
         const started = process.hrtime.bigint();
         // Capture headers now: res.on('finish') fires after the response, and some
@@ -147,6 +246,12 @@ function init(sharedPool) {
 
     flushTimer = setInterval(flush, FLUSH_MS);
     if (flushTimer.unref) flushTimer.unref();
+
+    // Counters go out every minute. They are tiny (a few dozen upserts) and this is the
+    // record that outlives the 14-day raw retention, so losing a chunk of it to a restart
+    // matters more than the write cost.
+    const counterTimer = setInterval(flushCounters, 60 * 1000);
+    if (counterTimer.unref) counterTimer.unref();
 
     const pruneTimer = setInterval(prune, 60 * 60 * 1000);
     if (pruneTimer.unref) pruneTimer.unref();
