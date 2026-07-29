@@ -2265,7 +2265,7 @@ app.get("/", async (req, res) => {
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
     const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
 
@@ -2402,7 +2402,7 @@ app.get("/ru", async (req, res) => {
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
     const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
     i18n.setLocale(res, 'ru');
@@ -2498,7 +2498,7 @@ app.get("/en", async (req, res) => {
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
     const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
     i18n.setLocale(res, 'en');

@@ -218,6 +218,16 @@
           </div>
           <span class="hero-search-hint" id="heroSearchHint"><%= __({ phrase: 'description.heroSearchHint', locale: lang }) %></span>
         </form>
+
+        <%# Evidence that other people are here, placed where a first-time visitor looks. %>
+        <% if (typeof proofNumbers !== 'undefined' && proofNumbers) { %>
+        <div class="hero-proof">
+          <span><strong><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'решений' : 'solutions' %></span>
+          <span><strong><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
+          <span><strong><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'правок' : 'edits' %></span>
+          <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %> &rarr;</a>
+        </div>
+        <% } %>
         </div>
 
         <%# The worklist, second thing on the page after the search. Ranked by unmet
@@ -247,6 +257,138 @@
         <% } %>
       </section>
 
+    <!-- Two-column layout -->
+    <%
+      const _totalProblems = solutionProgress.totalProblems;
+      const _totalSolved = solutionProgress.totalUniqueSolutions;
+      const _totalUnsolved = _totalProblems - _totalSolved;
+      const _overallPct = _totalProblems > 0 ? ((_totalSolved / _totalProblems) * 100).toFixed(1) : '0';
+    %>
+    <div class="home-layout">
+      <!-- LEFT COLUMN: Progress + Chapters -->
+      <div class="home-main">
+        <!-- Overall Progress Bar -->
+        <div class="overall-progress mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span style="font-size: 14px; font-weight: 600; color: #2d2d2d;">
+              <%= _totalSolved.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %> / <%= _totalProblems.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
+              <%= lang === 'ru' ? 'задач решено' : 'problems solved' %>
+              (<%= _overallPct %>%)
+            </span>
+            <div class="d-flex align-items-center gap-3">
+              <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>"
+                 class="text-decoration-none" style="font-size: 13px; color: #1a5276;">
+                <%= lang === 'ru' ? 'Скачать учебник' : 'Download Textbook' %>
+              </a>
+            </div>
+          </div>
+          <div style="height: 8px; border-radius: 4px; background: #ebedf0; overflow: hidden;">
+            <div style="height: 100%; width: <%= _overallPct %>%; background: #1a1a2e; border-radius: 4px; transition: width 0.6s ease;"></div>
+          </div>
+          <p style="font-size: 13px; color: #6c757d; margin: 6px 0 0;">
+            <%= _totalUnsolved %> <%= lang === 'ru' ? 'задач ещё не решены.' : 'problems still unsolved.' %>
+            <a href="/<%= lang %>/unsolved" style="color: #1a5276;"><%= lang === 'ru' ? 'Сможете решить одну?' : 'Can you solve one?' %></a>
+          </p>
+        </div>
+
+        <!-- Legend. Swatches mirror the dot shapes exactly, so the key works in
+             greyscale and for colour-deficient readers. Sits directly above the grid,
+             which is where it is needed. -->
+        <div class="grid-legend">
+          <span class="legend-item">
+            <span class="legend-swatch legend-both"></span>
+            <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
+          </span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-en"></span>
+            <%= lang === 'ru' ? 'Только английский' : 'English only' %>
+          </span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-ru"></span>
+            <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
+          </span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-unsolved"></span>
+            <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
+          </span>
+        </div>
+
+        <!-- Chapter Grid -->
+        <div class="chapter-grid">
+          <% const otherLang = lang === 'ru' ? 'en' : 'ru'; %>
+          <% const gridStates = {}; %>
+          <% chapters.forEach((chapter, chapterIndex) => {
+            const chNum = chapterIndex + 1;
+            let chSolved = 0;
+            let chTotal = 0;
+            const chSections = [];
+            chapter.sections.forEach(section => {
+              const sMax = parseInt(section.maximum) || 0;
+              const allProbs = section.problems.flat();
+              const sSolved = allProbs.length;
+              chTotal += sMax;
+              chSolved += sSolved;
+              // One character per problem instead of a full <a> element. Every dot's
+              // href, class and title is derivable from this state plus the problem
+              // number, so shipping 2,023 anchors in the HTML was pure waste: it made the
+              // homepage 522 KB with 2,121 links, all but ~98 of them inside collapsed
+              // chapters nobody had opened. The dots are now built on first expand.
+              //   3 = solved in both languages, 2 = English only, 1 = Russian only, 0 = unsolved
+              let states = '';
+              for (let p = 1; p <= sMax; p++) {
+                const probName = section.number + '.' + p;
+                const isEn = enSolvedSet.has(probName);
+                const isRu = ruSolvedSet.has(probName);
+                states += (isEn && isRu) ? '3' : isEn ? '2' : isRu ? '1' : '0';
+              }
+              gridStates[section.number] = states;
+              chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, count: sMax });
+            });
+            const chPct = chTotal > 0 ? ((chSolved / chTotal) * 100).toFixed(0) : '0';
+          %>
+          <div class="chapter-card" id="ch-<%= chNum %>">
+            <div class="chapter-card-header" data-chapter="<%= chNum %>">
+              <div class="d-flex align-items-start gap-3">
+                <span class="chapter-num"><%= chNum %></span>
+                <div class="flex-grow-1">
+                  <div class="chapter-card-name"><%= chapter.title %></div>
+                  <% if (lang === 'ru') { %>
+                    <%
+                      const enChapterNames = ['Kinematics','Dynamics','Oscillations and Waves','Fluid Mechanics','Molecular Physics','Electrostatics','Motion of charged particles in an electric field','Electric current','Constant magnetic field','Motion of charged particles in complex fields','Electromagnetic induction','Electromagnetic waves','Geometrical optics. Photometry. Quantum nature of light','Special theory of relativity'];
+                    %>
+                    <div class="chapter-card-name-alt"><%= enChapterNames[chapterIndex] || '' %></div>
+                  <% } %>
+                  <div class="chapter-card-progress">
+                    <div class="chapter-mini-bar">
+                      <div class="chapter-mini-bar-fill" style="width: <%= chPct %>%;"></div>
+                    </div>
+                    <span class="chapter-card-count"><%= chSolved %> / <%= chTotal %> <%= lang === 'ru' ? 'решено' : 'solved' %></span>
+                  </div>
+                </div>
+                <svg class="chapter-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 6l4 4 4-4" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="chapter-content">
+              <% chSections.forEach(sec => { %>
+              <div class="section-block">
+                <div class="section-header" id="<%= sec.number %>">
+                  <span class="section-name">&sect; <%= sec.number %> &mdash; <%= sec.title %></span>
+                  <span class="section-count"><%= sec.solved %> / <%= sec.total %></span>
+                </div>
+                <!-- Populated on first expand from the state payload below. -->
+                <div class="problem-dots" data-section="<%= sec.number %>" data-count="<%= sec.count %>"></div>
+              </div>
+              <% }); %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
+
+    <!-- Secondary: team, actions, progress, video. Moved below the grid so the
+         first screen is the problem index rather than decoration. -->
     <!-- Compact Introduction -->
       <div class="compact-intro mb-4">
         <div class="row align-items-start g-3 compact-intro-row">
@@ -387,135 +529,6 @@
         </div>
       </div>
 
-    <!-- Two-column layout -->
-    <%
-      const _totalProblems = solutionProgress.totalProblems;
-      const _totalSolved = solutionProgress.totalUniqueSolutions;
-      const _totalUnsolved = _totalProblems - _totalSolved;
-      const _overallPct = _totalProblems > 0 ? ((_totalSolved / _totalProblems) * 100).toFixed(1) : '0';
-    %>
-    <div class="home-layout">
-      <!-- LEFT COLUMN: Progress + Chapters -->
-      <div class="home-main">
-        <!-- Overall Progress Bar -->
-        <div class="overall-progress mb-4">
-          <div class="d-flex align-items-center justify-content-between mb-2">
-            <span style="font-size: 14px; font-weight: 600; color: #2d2d2d;">
-              <%= _totalSolved.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %> / <%= _totalProblems.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
-              <%= lang === 'ru' ? 'задач решено' : 'problems solved' %>
-              (<%= _overallPct %>%)
-            </span>
-            <div class="d-flex align-items-center gap-3">
-              <a href="<%= lang === 'en' ? '/en/savchenko_en.pdf' : '/savchenko.pdf' %>"
-                 class="text-decoration-none" style="font-size: 13px; color: #1a5276;">
-                <%= lang === 'ru' ? 'Скачать учебник' : 'Download Textbook' %>
-              </a>
-            </div>
-          </div>
-          <div style="height: 8px; border-radius: 4px; background: #ebedf0; overflow: hidden;">
-            <div style="height: 100%; width: <%= _overallPct %>%; background: #1a1a2e; border-radius: 4px; transition: width 0.6s ease;"></div>
-          </div>
-          <p style="font-size: 13px; color: #6c757d; margin: 6px 0 0;">
-            <%= _totalUnsolved %> <%= lang === 'ru' ? 'задач ещё не решены.' : 'problems still unsolved.' %>
-            <a href="/<%= lang %>/unsolved" style="color: #1a5276;"><%= lang === 'ru' ? 'Сможете решить одну?' : 'Can you solve one?' %></a>
-          </p>
-        </div>
-
-        <!-- Legend. Swatches mirror the dot shapes exactly, so the key works in
-             greyscale and for colour-deficient readers. Sits directly above the grid,
-             which is where it is needed. -->
-        <div class="grid-legend">
-          <span class="legend-item">
-            <span class="legend-swatch legend-both"></span>
-            <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
-          </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-en"></span>
-            <%= lang === 'ru' ? 'Только английский' : 'English only' %>
-          </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-ru"></span>
-            <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
-          </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-unsolved"></span>
-            <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
-          </span>
-        </div>
-
-        <!-- Chapter Grid -->
-        <div class="chapter-grid">
-          <% const otherLang = lang === 'ru' ? 'en' : 'ru'; %>
-          <% const gridStates = {}; %>
-          <% chapters.forEach((chapter, chapterIndex) => {
-            const chNum = chapterIndex + 1;
-            let chSolved = 0;
-            let chTotal = 0;
-            const chSections = [];
-            chapter.sections.forEach(section => {
-              const sMax = parseInt(section.maximum) || 0;
-              const allProbs = section.problems.flat();
-              const sSolved = allProbs.length;
-              chTotal += sMax;
-              chSolved += sSolved;
-              // One character per problem instead of a full <a> element. Every dot's
-              // href, class and title is derivable from this state plus the problem
-              // number, so shipping 2,023 anchors in the HTML was pure waste: it made the
-              // homepage 522 KB with 2,121 links, all but ~98 of them inside collapsed
-              // chapters nobody had opened. The dots are now built on first expand.
-              //   3 = solved in both languages, 2 = English only, 1 = Russian only, 0 = unsolved
-              let states = '';
-              for (let p = 1; p <= sMax; p++) {
-                const probName = section.number + '.' + p;
-                const isEn = enSolvedSet.has(probName);
-                const isRu = ruSolvedSet.has(probName);
-                states += (isEn && isRu) ? '3' : isEn ? '2' : isRu ? '1' : '0';
-              }
-              gridStates[section.number] = states;
-              chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, count: sMax });
-            });
-            const chPct = chTotal > 0 ? ((chSolved / chTotal) * 100).toFixed(0) : '0';
-          %>
-          <div class="chapter-card" id="ch-<%= chNum %>">
-            <div class="chapter-card-header" data-chapter="<%= chNum %>">
-              <div class="d-flex align-items-start gap-3">
-                <span class="chapter-num"><%= chNum %></span>
-                <div class="flex-grow-1">
-                  <div class="chapter-card-name"><%= chapter.title %></div>
-                  <% if (lang === 'ru') { %>
-                    <%
-                      const enChapterNames = ['Kinematics','Dynamics','Oscillations and Waves','Fluid Mechanics','Molecular Physics','Electrostatics','Motion of charged particles in an electric field','Electric current','Constant magnetic field','Motion of charged particles in complex fields','Electromagnetic induction','Electromagnetic waves','Geometrical optics. Photometry. Quantum nature of light','Special theory of relativity'];
-                    %>
-                    <div class="chapter-card-name-alt"><%= enChapterNames[chapterIndex] || '' %></div>
-                  <% } %>
-                  <div class="chapter-card-progress">
-                    <div class="chapter-mini-bar">
-                      <div class="chapter-mini-bar-fill" style="width: <%= chPct %>%;"></div>
-                    </div>
-                    <span class="chapter-card-count"><%= chSolved %> / <%= chTotal %> <%= lang === 'ru' ? 'решено' : 'solved' %></span>
-                  </div>
-                </div>
-                <svg class="chapter-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 6l4 4 4-4" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </div>
-            <div class="chapter-content">
-              <% chSections.forEach(sec => { %>
-              <div class="section-block">
-                <div class="section-header" id="<%= sec.number %>">
-                  <span class="section-name">&sect; <%= sec.number %> &mdash; <%= sec.title %></span>
-                  <span class="section-count"><%= sec.solved %> / <%= sec.total %></span>
-                </div>
-                <!-- Populated on first expand from the state payload below. -->
-                <div class="problem-dots" data-section="<%= sec.number %>" data-count="<%= sec.count %>"></div>
-              </div>
-              <% }); %>
-            </div>
-          </div>
-          <% }); %>
-        </div>
-        <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
 
         <!-- Problempedia callout removed for now -->
 
@@ -571,23 +584,6 @@
                 evidence that other humans use this. Logged-in contributors get the
                 leaderboard, because for them it is the competitive mechanic it is
                 supposed to be. %>
-            <% if (!userId && typeof proofNumbers !== 'undefined' && proofNumbers) { %>
-            <div class="proof-numbers">
-              <div class="proof-item">
-                <span class="proof-value"><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
-                <span class="proof-label"><%= lang === 'ru' ? 'решений' : 'solutions' %></span>
-              </div>
-              <div class="proof-item">
-                <span class="proof-value"><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
-                <span class="proof-label"><%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
-              </div>
-              <div class="proof-item">
-                <span class="proof-value"><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
-                <span class="proof-label"><%= lang === 'ru' ? 'правок' : 'edits' %></span>
-              </div>
-              <a class="proof-all" href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %> &rarr;</a>
-            </div>
-            <% } else { %>
             <div class="sidebar-section-header">
               <h3 class="sidebar-title"><%= lang === 'ru' ? 'Лучшие авторы' : 'Top Authors' %></h3>
               <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %> &rarr;</a>
@@ -626,7 +622,6 @@
               </div>
               <% }); %>
             </div>
-            <% } %>
           </div>
 
           <!-- Recently Joined -->
@@ -843,7 +838,7 @@
 
     /* Hero — one headline, one byline, one action. Mobile-first. */
     .hero-primary {
-      padding: 1.75rem 1.25rem 1.5rem;
+      padding: 0.75rem 1.25rem 1rem;
       border-bottom: 1px solid var(--border, #dee2e6);
       background: #ffffff;
     }
@@ -909,6 +904,17 @@
       font-size: 0.8125rem;
       color: var(--text-secondary, #6c757d);
     }
+    .hero-proof {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 1.5rem;
+      margin-top: 1.25rem; font-size: 0.9375rem; color: var(--text-secondary, #6c757d);
+    }
+    .hero-proof strong {
+      font-family: Inter, sans-serif; font-size: 1.25rem; font-weight: 600;
+      color: var(--text, #2d2d2d);
+    }
+    .hero-proof a { color: #1a5276; text-decoration: none; font-size: 0.875rem; }
+    .hero-proof a:hover { text-decoration: underline; }
+
     .most-wanted { margin-top: 1.5rem; max-width: 44rem; }
     .most-wanted-head {
       display: flex; align-items: baseline; justify-content: space-between;
@@ -938,7 +944,7 @@
       box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.10);
     }
     @media (min-width: 768px) {
-      .hero-primary { padding: 2.5rem 1.5rem 2rem; }
+      .hero-primary { padding: 1rem 1.5rem 1.25rem; }
       .hero-headline { font-size: 2rem; max-width: 22ch; }
       .hero-byline { font-size: 1.0625rem; }
       .hero-search-input { height: 48px; font-size: 1.0625rem; }
@@ -954,8 +960,8 @@
         column-gap: 3rem;
         align-items: start;
       }
-      .hero-headline { font-size: 2.25rem; max-width: 18ch; }
-      .hero-byline { max-width: 40ch; margin-bottom: 1.5rem; }
+      .hero-headline { font-size: 2.25rem; max-width: 26ch; }
+      .hero-byline { max-width: 62ch; margin-bottom: 1rem; }
       .hero-search-row { max-width: none; }
       .most-wanted { margin-top: 0; max-width: none; }
       /* The list runs down the column rather than wrapping into a ragged block. */
@@ -1559,19 +1565,32 @@
     .chapter-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1px;
-      background: #dee2e6;
+      gap: 8px;
+      /* No container background: with 14 chapters the trailing cells of the last row
+         would otherwise show as grey voids. Each card carries its own border. */
+    }
+    @media (min-width: 768px) {
+      .chapter-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1200px) {
+      .chapter-grid { grid-template-columns: repeat(3, 1fr); }
+      /* 14 items over 3 columns leaves 2 in the last row; widen the final card. */
+      .chapter-card:last-child { grid-column: span 2; }
+    }
+    @media (min-width: 1600px) {
+      .chapter-grid { grid-template-columns: repeat(4, 1fr); }
+      /* 14 over 4 leaves 2; widen both so the row is full. */
+      .chapter-card:last-child { grid-column: span 2; }
+      .chapter-card:nth-last-child(2) { grid-column: span 2; }
+    }
+    /* An expanded chapter needs the full width for its dots, so it spans every column
+       rather than being squeezed into one narrow one. */
+    .chapter-card.open { grid-column: 1 / -1; }
+    .chapter-card {
+      background: #fff;
       border: 1px solid #dee2e6;
       border-radius: 8px;
       overflow: hidden;
-    }
-    @media (min-width: 768px) {
-      .chapter-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    .chapter-card {
-      background: #fff;
     }
     .chapter-card-header {
       padding: 14px 16px;
