@@ -50,10 +50,18 @@ const ENFORCED_RULES = new Set(
 // were measured at ~14k hits/7d with zero referral value to a Russian-language physics
 // site. Google/Bing/Yandex/Baidu/DuckDuckGo are deliberately NOT here — they drive ~45%
 // of real acquisition.
+// Kept deliberately in step with public/robots.txt — a crawler we tell to go away in one
+// place and block in the other is coherent; blocking one we publicly invite is not.
+//
+// NOT here, on purpose: ChatGPT-User, OAI-SearchBot, PerplexityBot, Perplexity-User,
+// ClaudeBot and Claude-User. Those are answer-engine fetchers, robots.txt welcomes them
+// by name, and being cited by an answer engine is the point — a solution that gets quoted
+// with a link is worth more than one that never gets read. GPTBot, CCBot and cohere-ai
+// are a different thing: bulk training scrapers, already disallowed in robots.txt.
 const FREELOADER_UA = new RegExp([
     'PetalBot', 'MJ12bot', 'DotBot', 'Babbar', 'Barkrowler', 'Bytespider', 'DataForSeoBot',
     'SemrushBot', 'AhrefsBot', 'BLEXBot', 'MauiBot', 'Amazonbot', 'meta-externalagent',
-    'facebookexternalhit', 'GPTBot', 'CCBot', 'ClaudeBot', 'PerplexityBot',
+    'facebookexternalhit', 'GPTBot', 'CCBot',
     'Applebot-Extended', 'SeznamBot', 'serpstatbot', 'ImagesiftBot', 'omgili', 'Timpibot',
     'cohere-ai', 'ZoominfoBot', 'MegaIndex', 'keys-so-bot', 'NetcraftSurveyAgent',
 ].join('|'), 'i');

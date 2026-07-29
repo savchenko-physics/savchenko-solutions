@@ -420,7 +420,9 @@ module.exports = function(mainPool) {
     const PORT = process.env.SANDBOX_PORT || 4000;
     
     const startServer = (port) => {
-        const server = app.listen(port)
+        // Loopback only — Caddy fronts this on sandbox.savchenkosolutions.com and nothing
+        // else should be able to reach it directly. See the note in index.js.
+        const server = app.listen(port, process.env.BIND_HOST || '127.0.0.1')
             .on('listening', () => {
                 console.log(`Sandbox server running on http://localhost:${port}`);
             })

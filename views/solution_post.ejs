@@ -1206,6 +1206,56 @@
         </ul>
     </nav>
 
+    <%
+      // "Who are you?" banner — Russian solution pages only, for a fortnight.
+      // The site has never asked its readers who they are. One IP block in Novosibirsk
+      // produced 10,692 visits at 3.14 pages each and a 9.5% bounce rate — almost
+      // certainly a school or library behind a single gateway, and measurably the most
+      // engaged audience there is. Nobody has ever spoken to them.
+      // Twenty replies will teach more than any dashboard. Ends by itself; see WHO_UNTIL.
+      const WHO_UNTIL = new Date('2026-08-13T00:00:00Z');
+      const showWhoBanner = lang === 'ru' && new Date() < WHO_UNTIL;
+    %>
+    <% if (showWhoBanner) { %>
+    <div class="who-banner" id="whoBanner" hidden>
+        <span class="who-banner-text">
+            Кто вы и откуда? Мы никогда не спрашивали. Напишите одну строку на
+            <a href="mailto:hello@savchenkosolutions.com?subject=%D0%9A%D1%82%D0%BE%20%D1%8F">hello@savchenkosolutions.com</a>
+            — школа, город, как вы пользуетесь сайтом.
+        </span>
+        <button type="button" class="who-banner-close" id="whoBannerClose" aria-label="Закрыть">&times;</button>
+    </div>
+    <style>
+      .who-banner {
+        display: flex; align-items: center; gap: 12px;
+        max-width: 1200px; margin: 12px auto 0; padding: 10px 14px;
+        background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+        font-size: 14px; line-height: 1.5; color: #2d2d2d;
+      }
+      .who-banner-text { flex: 1 1 auto; }
+      .who-banner a { color: #1a5276; }
+      .who-banner-close {
+        flex: 0 0 auto; background: none; border: none; cursor: pointer;
+        font-size: 20px; line-height: 1; color: #6c757d; padding: 0 4px;
+      }
+      @media (max-width: 767px) { .who-banner { margin: 8px 12px 0; font-size: 13px; } }
+    </style>
+    <script>
+      (function () {
+        // Rendered hidden and revealed by script, so a reader who already dismissed it
+        // never sees it flash on the next page load.
+        var el = document.getElementById('whoBanner');
+        if (!el) return;
+        try { if (localStorage.getItem('whoBannerDismissed')) return; } catch (_) {}
+        el.hidden = false;
+        document.getElementById('whoBannerClose').addEventListener('click', function () {
+          el.hidden = true;
+          try { localStorage.setItem('whoBannerDismissed', '1'); } catch (_) {}
+        });
+      })();
+    </script>
+    <% } %>
+
     <!-- Main Content -->
     <div class="main-container">
         <!-- Content Section -->
@@ -1535,6 +1585,61 @@
                 <% } %>
             </div>
             <% } %>
+
+            <%# Citability. The licence was buried in a footer and there was no way to
+                quote this page properly, so nothing that reads it — a student, a teacher,
+                an answer engine — had an obvious way to say where it came from. %>
+            <div class="cite-block">
+                <div class="cite-row">
+                    <span class="cite-label"><%= lang === 'ru' ? 'Цитировать' : 'Cite this' %></span>
+                    <code class="cite-text" id="citeText"><%
+                        const citeAuthor = (attribution && attribution.originalAuthor && attribution.originalAuthor.username)
+                            ? attribution.originalAuthor.username
+                            : 'Savchenko Solutions contributors';
+                        const citeYear = (lastModified || creationDate || '').slice(0, 4) || new Date().getFullYear();
+                    %><%= citeAuthor %> (<%= citeYear %>). <%= lang === 'ru' ? 'Задача' : 'Problem' %> <%= name %>, <%= lang === 'ru' ? 'Савченко О.Я., Задачи по физике' : 'O.Y. Savchenko, Problems in Physics' %>. Savchenko Solutions. https://savchenkosolutions.com/<%= lang %>/<%= name %></code>
+                    <button type="button" class="cite-copy" id="citeCopy" data-copied="<%= lang === 'ru' ? 'Скопировано' : 'Copied' %>"><%= lang === 'ru' ? 'Копировать' : 'Copy' %></button>
+                </div>
+                <div class="cite-licence">
+                    <%= lang === 'ru' ? 'Свободно доступно по лицензии' : 'Free to reuse under' %>
+                    <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noopener" target="_blank">CC BY-SA 4.0</a><%= lang === 'ru' ? ' — при указании авторства.' : ' — with attribution.' %>
+                </div>
+            </div>
+            <style>
+                .cite-block {
+                    margin: 16px 0; padding: 12px 14px;
+                    background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+                    font-size: 13px; color: #6c757d;
+                }
+                .cite-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; }
+                .cite-label { font-weight: 600; color: #2d2d2d; flex: 0 0 auto; }
+                .cite-text {
+                    flex: 1 1 20rem; min-width: 0; font-family: "JetBrains Mono", ui-monospace, monospace;
+                    font-size: 12px; line-height: 1.5; color: #2d2d2d;
+                    background: none; padding: 0; word-break: break-word;
+                }
+                .cite-copy {
+                    flex: 0 0 auto; padding: 4px 10px; font-size: 12px; cursor: pointer;
+                    color: #2d2d2d; background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+                }
+                .cite-copy:hover { border-color: #1a1a2e; }
+                .cite-licence { margin-top: 8px; }
+                .cite-licence a { color: #1a5276; }
+            </style>
+            <script>
+                (function () {
+                    var btn = document.getElementById('citeCopy');
+                    var txt = document.getElementById('citeText');
+                    if (!btn || !txt || !navigator.clipboard) return;
+                    btn.addEventListener('click', function () {
+                        navigator.clipboard.writeText(txt.textContent.trim()).then(function () {
+                            var original = btn.textContent;
+                            btn.textContent = btn.dataset.copied;
+                            setTimeout(function () { btn.textContent = original; }, 1500);
+                        });
+                    });
+                })();
+            </script>
 
             <!-- Edit History (compact) -->
             <% if (editHistory && editHistory.length > 0) { %>

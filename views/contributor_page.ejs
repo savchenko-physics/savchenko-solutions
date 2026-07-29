@@ -1,0 +1,134 @@
+<!--
+  A contributor's public record. Deliberately plain and printable: this is meant to be
+  linked from a CV or a university application, so it must be readable by someone who has
+  never heard of this site and must survive being turned into a PDF.
+-->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><%= displayName %> — contributor record — Savchenko Solutions</title>
+<link rel="canonical" href="<%= canonicalUrl %>" />
+<meta name="description" content="<%= displayName %> has written or reviewed solutions to <%= summary.problems %> problems from Savchenko's Problems in Physics on Savchenko Solutions." />
+<link rel="stylesheet" href="/css/vendor/fonts/fonts.css" />
+<script type="application/ld+json">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ProfilePage",
+  "mainEntity": {
+    "@type": "Person",
+    "name": displayName,
+    "alternateName": user.username,
+    "url": canonicalUrl,
+    "description": `Contributor of solutions to ${summary.problems} problems from Savchenko's Problems in Physics.`
+  }
+}) %>
+</script>
+<style>
+  :root { --text:#2d2d2d; --muted:#6c757d; --border:#dee2e6; --link:#1a5276; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text); line-height: 1.6; margin: 0;
+    background: #fff;
+  }
+  .cp-wrap { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  .cp-back { font-size: .8125rem; color: var(--muted); text-decoration: none; }
+  .cp-back:hover { text-decoration: underline; }
+  .cp-head { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 .25rem; }
+  .cp-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+  h1 { font-family: Inter, sans-serif; font-weight: 600; font-size: 1.75rem; margin: 0; line-height: 1.2; }
+  .cp-handle { color: var(--muted); font-size: .9375rem; }
+  .cp-lede { font-size: 1.0625rem; margin: 1rem 0 2rem; }
+  .cp-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.5rem; margin-bottom: 2rem; }
+  @media (min-width: 640px) { .cp-stats { grid-template-columns: repeat(4, 1fr); } }
+  .cp-stat-value { font-family: Inter, sans-serif; font-size: 1.75rem; font-weight: 600; line-height: 1.1; display: block; }
+  .cp-stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+  h2 { font-family: Inter, sans-serif; font-weight: 600; font-size: 1rem; margin: 2rem 0 .75rem; }
+  .cp-note { font-size: .8125rem; color: var(--muted); margin-top: -.5rem; margin-bottom: .75rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border); }
+  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; }
+  .cp-problems { display: flex; flex-wrap: wrap; gap: 4px; }
+  .cp-problems a {
+    display: inline-block; padding: 2px 6px; font-size: 12px; border-radius: 4px;
+    border: 1px solid var(--border); color: var(--text); text-decoration: none;
+  }
+  .cp-problems a:hover { border-color: #1a1a2e; background: #f8f9fa; }
+  .cp-foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: .8125rem; color: var(--muted); }
+  .cp-foot a { color: var(--link); }
+  @media print {
+    .cp-back { display: none; }
+    body { font-size: 11pt; }
+    .cp-problems a { border: none; padding: 0 4px 0 0; }
+  }
+</style>
+
+<div class="cp-wrap">
+  <a class="cp-back" href="/en/contributors">&larr; All contributors</a>
+
+  <div class="cp-head">
+    <img class="cp-avatar" src="<%= user.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" width="64" height="64" />
+    <div>
+      <h1><%= displayName %></h1>
+      <div class="cp-handle">@<%= user.username %><% if (user.country_location) { %> · <%= user.country_location %><% } %></div>
+    </div>
+  </div>
+
+  <p class="cp-lede">
+    Has written or reviewed solutions to <strong><%= summary.problems.toLocaleString('en-US') %></strong>
+    problems from <em>Problems in Physics</em> by O.&nbsp;Y.&nbsp;Savchenko — a collection of 2,023 problems
+    used for olympiad preparation across the former Soviet Union.
+    <% if (rank.rank && rank.out_of) { %>
+      Ranked <strong>#<%= rank.rank %></strong> of <%= rank.out_of %> contributors by problems covered.
+    <% } %>
+    Every solution is peer-reviewed by other contributors before it stands.
+  </p>
+
+  <div class="cp-stats">
+    <div><span class="cp-stat-value"><%= summary.problems.toLocaleString('en-US') %></span><span class="cp-stat-label">Problems</span></div>
+    <div><span class="cp-stat-value"><%= firstSolutions.toLocaleString('en-US') %></span><span class="cp-stat-label">First solutions</span></div>
+    <div><span class="cp-stat-value"><%= summary.edits.toLocaleString('en-US') %></span><span class="cp-stat-label">Edits</span></div>
+    <div><span class="cp-stat-value"><%= summary.active_months %></span><span class="cp-stat-label">Active months</span></div>
+  </div>
+
+  <h2>First solutions</h2>
+  <p class="cp-note">
+    Problems where this contributor was the first to publish anything — the solution did
+    not exist on the site until they wrote it.
+    <strong><%= firstSolutions.toLocaleString('en-US') %></strong> of their
+    <%= summary.problems.toLocaleString('en-US') %> problems.
+  </p>
+
+  <h2>Reach across the collection</h2>
+  <p class="cp-note">
+    Savchenko's chapters run roughly from kinematics to special relativity, so range across
+    the later chapters is a rough indication of depth. The collection has no formal
+    difficulty rating, so this is reach, not a difficulty score.
+  </p>
+  <table>
+    <thead><tr><th>Chapter</th><th class="num">Problems</th></tr></thead>
+    <tbody>
+      <% chapters.forEach(c => { %>
+      <tr><td><%= c.number %>. <%= c.name %></td><td class="num"><%= c.problems %></td></tr>
+      <% }); %>
+    </tbody>
+  </table>
+
+  <h2>Active</h2>
+  <p class="cp-note">
+    <%= new Date(summary.first_edit).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %>
+    &ndash;
+    <%= new Date(summary.last_edit).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) %>,
+    across <%= summary.active_months %> month<%= summary.active_months === 1 ? '' : 's' %>.
+  </p>
+
+  <h2>Problems (<%= problems.length.toLocaleString('en-US') %>)</h2>
+  <div class="cp-problems">
+    <% problems.forEach(p => { %><a href="/en/<%= p %>"><%= p %></a><% }); %>
+  </div>
+
+  <div class="cp-foot">
+    Verifiable record at <a href="<%= canonicalUrl %>"><%= canonicalUrl %></a> ·
+    Every edit is public at <a href="/en/contributions/all">the change history</a> ·
+    Content licensed <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license">CC BY-SA 4.0</a>
+  </div>
+</div>

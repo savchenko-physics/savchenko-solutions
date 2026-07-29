@@ -28,6 +28,7 @@ const { renderPost, getPageViewsData } = require('./post'); // Import the render
 const getUserProfile = require('./userProfile');
 const uploadRouter = require('./upload');
 const renderUnsolvedList = require('./unsolved');
+const renderContributorPage = require('./contributorPage');
 const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
@@ -149,6 +150,22 @@ const searchLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 30,
     message: { error: 'Too many search requests, please slow down.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Credential stuffing: loginLimiter above is keyed by IP, which is the express-rate-limit
+// default and is worth almost nothing here. The proxy pool already pointed at this site
+// spreads over 12,000+ residential addresses in a week, so an attacker spraying one
+// password across many accounts gets five attempts *per address*. This limiter is keyed by
+// the account instead, so a single username cannot be attacked from anywhere at any rate.
+// skipSuccessfulRequests means a legitimate user is never locked out by their own logins.
+const loginAccountLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10,                  // failed attempts per account per hour
+    keyGenerator: (req) => `u:${String(req.body?.username || '').trim().toLowerCase().slice(0, 150)}`,
+    skipSuccessfulRequests: true,
+    message: 'Too many failed login attempts for this account, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -1512,6 +1529,9 @@ app.get("/notifications", checkAuthenticated, async (req, res) => {
 
 // Add a new route for user profiles
 app.get("/user/:username", getUserProfile);
+// Public, English, CV-linkable record of what a contributor has actually done. The
+// leaderboard stops at the edge of the site; this is the part they can show someone.
+app.get("/contributor/:username", renderContributorPage);
 
 app.post("/create-problem", checkAuthenticated, async (req, res) => {
     const { problemName, chapter, lang = 'en' } = req.body;
@@ -2037,7 +2057,11 @@ app.post("/register", registerLimiter, async (req, res) => {
 
         // Insert into the database
         const newUser = await pool.query(
-            "INSERT INTO users (username, email, full_name, password) VALUES ($1, $2, $3, $4) RETURNING id",
+            // created_at is set explicitly rather than left to the column DEFAULT so the
+            // provenance is recorded too: 'exact' distinguishes real signup times from the
+            // dates scripts/backfill-user-created-at.js inferred for pre-existing accounts,
+            // which are only upper bounds.
+            "INSERT INTO users (username, email, full_name, password, created_at, created_at_source) VALUES ($1, $2, $3, $4, now(), 'exact') RETURNING id",
             [username, email, fullname, hashedPassword]
         );
 
@@ -2101,8 +2125,14 @@ app.post("/register", registerLimiter, async (req, res) => {
 
 
 // Login Route
-app.post("/login", loginLimiter, async (req, res) => {
+app.post("/login", loginLimiter, loginAccountLimiter, async (req, res) => {
     const { username, password, lang = 'en' } = req.body;
+
+    // bcrypt.compare is the expensive part of this route and it is otherwise a free
+    // CPU-exhaustion vector on a 2-vCPU box, so refuse automated clients before hashing.
+    if (req.bot && req.bot.cls === 'block') {
+        return res.redirect(`/${lang}/login?error=${i18n.__('Invalid credentials')}`);
+    }
 
     if (!username || !password) {
         return res.redirect(`/${lang}/login?error=${i18n.__('Username and password are required')}`);
@@ -2217,6 +2247,15 @@ app.get("/", async (req, res) => {
         getRecentContributors(6),
     ]);
 
+    // "Most wanted" = unsolved problems ranked by how many people looked for them and
+    // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
+    // worklist is visible rather than buried: a physicist is far more likely to write
+    // 5.5.7 when told 287 people wanted it than when asked to "contribute".
+    const mostWanted = await renderUnsolvedList
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .catch(() => []);
+    const proofNumbers = await getProofNumbers();
+
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2242,8 +2281,39 @@ app.get("/", async (req, res) => {
         recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
+        mostWanted,
+        proofNumbers,
     });
 });
+
+// Three numbers that prove other people are here: solutions, contributors, edits.
+// Shown to logged-out visitors in place of a top-ten leaderboard, which means nothing to
+// someone who has never seen the site. Cached — these move slowly and the homepage is
+// the most-hit page there is.
+let _proofCache = { at: 0, value: null };
+async function getProofNumbers() {
+    if (_proofCache.value && Date.now() - _proofCache.at < 10 * 60 * 1000) return _proofCache.value;
+    try {
+        const { rows } = await pool.query(`
+            SELECT
+              -- contributions has no "author" column; the free-text name field is
+              -- full_name, used when someone uploads without an account.
+              (SELECT count(DISTINCT COALESCE(user_id::text, NULLIF(btrim(full_name), '')))
+                 FROM contributions
+                WHERE COALESCE(user_id::text, NULLIF(btrim(full_name), '')) IS NOT NULL) AS contributors,
+              (SELECT count(*) FROM contributions)                                  AS edits
+        `);
+        const value = {
+            contributors: parseInt(rows[0].contributors, 10) || 0,
+            edits: parseInt(rows[0].edits, 10) || 0,
+        };
+        _proofCache = { at: Date.now(), value };
+        return value;
+    } catch (err) {
+        console.error('getProofNumbers failed:', err.message);
+        return _proofCache.value || { contributors: 0, edits: 0 };
+    }
+}
 
 async function getRecentContributions(limit) {
     try {
@@ -2313,6 +2383,15 @@ app.get("/ru", async (req, res) => {
         getCurrentChallengeWidget(),
         getRecentContributors(6),
     ]);
+
+    // "Most wanted" = unsolved problems ranked by how many people looked for them and
+    // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
+    // worklist is visible rather than buried: a physicist is far more likely to write
+    // 5.5.7 when told 287 people wanted it than when asked to "contribute".
+    const mostWanted = await renderUnsolvedList
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .catch(() => []);
+    const proofNumbers = await getProofNumbers();
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2338,6 +2417,8 @@ app.get("/ru", async (req, res) => {
         recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
+        mostWanted,
+        proofNumbers,
     });
 });
 
@@ -2398,6 +2479,15 @@ app.get("/en", async (req, res) => {
         getCurrentChallengeWidget(),
         getRecentContributors(6),
     ]);
+
+    // "Most wanted" = unsolved problems ranked by how many people looked for them and
+    // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
+    // worklist is visible rather than buried: a physicist is far more likely to write
+    // 5.5.7 when told 287 people wanted it than when asked to "contribute".
+    const mostWanted = await renderUnsolvedList
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 6)
+        .catch(() => []);
+    const proofNumbers = await getProofNumbers();
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2423,6 +2513,8 @@ app.get("/en", async (req, res) => {
         recentContributors,
         enSolvedSet: getSolvedSet('en'),
         ruSolvedSet: getSolvedSet('ru'),
+        mostWanted,
+        proofNumbers,
     });
 });
 
@@ -2743,6 +2835,34 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
 
 app.get("/file-list", renderFileList);
 
+// GET /find — the homepage's one action: "get me to my problem".
+//
+// Resolving server-side rather than jumping client-side matters because English covers
+// only about a third of the collection: /en/2.2.12 is a 404 while /ru/2.2.12 exists. A
+// naive client-side jump would send English visitors to dead pages for most problems.
+// This prefers the requested language, falls back to the other, and otherwise hands off
+// to search. Being a plain GET, it also works with JavaScript disabled.
+app.get("/find", searchLimiter, (req, res) => {
+    const raw = String(req.query.search || req.query.q || "").trim();
+    const lang = req.query.lang === "ru" ? "ru" : "en";
+    const other = lang === "en" ? "ru" : "en";
+
+    // Chapters 1-14; tolerate the comma some keyboard layouts produce for a full stop.
+    const m = /^(\d{1,2})[.,](\d{1,2})[.,](\d{1,3})$/.exec(raw.replace(/\s+/g, ""));
+    if (m && Number(m[1]) >= 1 && Number(m[1]) <= 14) {
+        const problem = `${m[1]}.${m[2]}.${m[3]}`;
+        const exists = (l) => fs.existsSync(path.join(__dirname, `posts/${l}`, `${problem}.md`));
+        if (exists(lang)) return res.redirect(302, `/${lang}/${problem}`);
+        if (exists(other)) return res.redirect(302, `/${other}/${problem}`);
+        // A real problem number with nothing written yet. The unsolved list is the honest
+        // destination — and it is where someone might decide to write one.
+        return res.redirect(302, `/${lang}/unsolved`);
+    }
+
+    if (!raw) return res.redirect(302, `/${lang}/`);
+    return res.redirect(302, `/global-search?search=${encodeURIComponent(raw)}&lang=${lang}`);
+});
+
 app.get("/search", searchLimiter, (req, res) => {
     const query = req.query.q?.trim();
     const userLang = req.query.lang || res.getLocale() || 'en';
@@ -2928,9 +3048,17 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start the main server
-app.listen(PORT, () => {
-    console.log(`Main server listening on port ${PORT}`);
+// Start the main server.
+//
+// Bound to loopback on purpose. Caddy is the only thing that should ever reach this port,
+// and until now 0.0.0.0:3000 answered directly from the internet — which bypassed every
+// control in Caddy and, worse, made req.ip forgeable: with `trust proxy: 1` a direct
+// connection carrying its own X-Forwarded-For resolves to whatever the caller wrote,
+// defeating the blocklist, the allowlists and the rate limiters in one header.
+// HOST is overridable so a container or a different proxy setup can still work.
+const HOST = process.env.BIND_HOST || '127.0.0.1';
+app.listen(PORT, HOST, () => {
+    console.log(`Main server listening on ${HOST}:${PORT}`);
 });
 
 // Add this function near your other database query functions

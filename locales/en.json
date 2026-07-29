@@ -32,7 +32,7 @@
 		"intro": "The collection of problems in physics edited by O.Y. Savchenko has remained one of the most sought-after resources for physics olympiad preparation in post-soviet countries for over 30 years. However, during this time, not a single complete solution manual for this collection has been created.",
 		"project": "This website presents a non-profit project aimed at collaboratively creating the first solution manual with solutions from ",
 		"moto": "Currently, more than 1434 solutions out of 2023 problems have been published. The project, launched in 2023, is actively developing in both Russian and English. ",
-        "introFirst": "For over 30 years, the Savchenko physics problem collection has challenged students across post-Soviet countries—yet no comprehensive solution manual existed, until now. <strong>Savchenko Solutions</strong> is the first global, student-led effort to compile and refine detailed explanations for all 2,023 problems. With {{uniqueSolutions}} published solutions in multiple languages, our thriving platform welcomes learners worldwide to collaborate, share insights, and publish in rigorous peer review.",
+		"introFirst": "Free, written by students, reviewed by students. {{uniqueSolutions}} solved so far.",
 		"introSecond": "What began as a modest \"archive\" for personal solutions soon evolved into a vibrant international community, drawing thousands of regular users. This unprecedented collective intelligence fosters an environment where students and teachers learn from one another, transforming how physics is studied and taught — embracing a spirit of open collaboration and proving that knowledge shared is knowledge multiplied.",
 		"problemStatements": "Problem statements",
 		"downloadPDF": "Download PDF",
@@ -44,7 +44,11 @@
 			"label": "Platform Update",
 			"message": "I'm thinking about the future of this platform. Should we expand beyond Savchenko? Create collaborative study guides? Cover new subjects like math or astronomy? If you have a few minutes, I'd appreciate hearing your thoughts—what works, what doesn't, what you'd like to see.",
 			"feedbackLink": "Share feedback"
-		}
+		},
+		"heroHeadline": "Worked solutions to all 2,023 Savchenko physics problems.",
+		"heroSearchLabel": "Find a problem",
+		"heroSearchHint": "Type a problem number like 2.2.12, or search by topic.",
+		"heroSearchButton": "Go"
 	},
 	"contents": "Contents",
 	"chapter": "Chapter",

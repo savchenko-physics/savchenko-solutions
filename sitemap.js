@@ -277,4 +277,9 @@ async function generateSitemaps() {
 
 // Generate on startup and then every 60 seconds
 generateSitemaps();
-setInterval(generateSitemaps, 60 * 1000);
+// Hourly, not every 60 seconds. generateSitemaps() does a full readdirSync + per-file
+// statSync over ~3,000 markdown files plus four DB queries; at the old interval that was
+// 1,440 filesystem walks and 5,760 queries a day on a 2-vCPU box, to regenerate a file
+// that only changes when someone edits a solution. writeIfChanged() already meant almost
+// none of that work produced a write — it was pure I/O burn.
+setInterval(generateSitemaps, 60 * 60 * 1000);

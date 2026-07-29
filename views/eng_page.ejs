@@ -83,7 +83,7 @@
 </head>
 
 <body>
-  <%- include('default/main_site_header') %>
+  <%- include('default/main_site_header', { pageHasOwnH1: true }) %>
 
   <!-- ============================
        MAIN CONTENT (FULL WIDTH)
@@ -185,6 +185,64 @@
     </script>
     <% } %>
 
+    <!-- Hero: one headline, one byline, one call to action.
+         The single action is "get me to my problem" — nine in ten human visitors arrive
+         from Google or Yandex having searched a problem number, and the on-site searches
+         people type are numbers (4.2.22, 2.7.10, 6.2.14). So the search field is the
+         primary object on the page, not a field in the header. -->
+      <section class="hero-primary mb-4" aria-labelledby="heroHeadline">
+        <h1 class="hero-headline" id="heroHeadline"><%= __({ phrase: 'description.heroHeadline', locale: lang }) %></h1>
+        <p class="hero-byline">
+          <%- __({ phrase: 'description.introFirst', locale: lang }, { uniqueSolutions: solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') }) %>
+        </p>
+        <!-- Plain GET to /find, which resolves a problem number to whichever language
+             actually has that solution (English covers only about a third of the
+             collection, so a naive jump to /en/<n> would 404 most of the time) and falls
+             back to full-text search otherwise. No JavaScript required. -->
+        <form class="hero-search" action="/find" method="get" id="heroSearchForm" role="search">
+          <label class="hero-search-label" for="heroSearchInput"><%= __({ phrase: 'description.heroSearchLabel', locale: lang }) %></label>
+          <div class="hero-search-row">
+            <input
+              type="text"
+              id="heroSearchInput"
+              name="search"
+              class="hero-search-input"
+              placeholder="2.2.12"
+              autocomplete="off"
+              inputmode="text"
+              aria-describedby="heroSearchHint"
+            />
+            <input type="hidden" name="lang" value="<%= lang %>" />
+            <button type="submit" class="hero-search-button"><%= __({ phrase: 'description.heroSearchButton', locale: lang }) %></button>
+          </div>
+          <span class="hero-search-hint" id="heroSearchHint"><%= __({ phrase: 'description.heroSearchHint', locale: lang }) %></span>
+        </form>
+
+        <%# The worklist, second thing on the page after the search. Ranked by unmet
+            demand — people who came looking for this solution and found nothing. %>
+        <% if (typeof mostWanted !== 'undefined' && mostWanted && mostWanted.length) { %>
+        <div class="most-wanted">
+          <div class="most-wanted-head">
+            <span class="most-wanted-title"><%= lang === 'ru' ? 'Больше всего ждут' : 'Most wanted' %></span>
+            <a class="most-wanted-all" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Все нерешённые' : 'All unsolved' %> &rarr;</a>
+          </div>
+          <ul class="most-wanted-list">
+            <% mostWanted.forEach(w => { %>
+            <li>
+              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(w.problem_name) %>" class="most-wanted-item">
+                <span class="mw-num"><%= w.problem_name %></span>
+                <span class="mw-demand">
+                  <%= w.total_views.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
+                  <%= lang === 'ru' ? 'искали · не решено' : 'looked · unsolved' %>
+                </span>
+              </a>
+            </li>
+            <% }); %>
+          </ul>
+        </div>
+        <% } %>
+      </section>
+
     <!-- Compact Introduction -->
       <div class="compact-intro mb-4">
         <div class="row align-items-start g-3 compact-intro-row">
@@ -205,9 +263,7 @@
             </figure>
           </div>
           <div class="col-12 col-sm col-lg-5 compact-intro-main">
-            <p class="intro-text mb-3">
-              <%- __({ phrase: 'description.introFirst', locale: lang }, { uniqueSolutions: solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') }) %>
-            </p>
+            <!-- The intro paragraph moved up into the hero as a one-line byline. -->
             <!-- Stacked action cards (left) + progress panel (right) -->
             <div class="row g-3 align-items-stretch intro-actions-stats-row">
               <div class="col-12 intro-actions-stats-col d-flex flex-column">
@@ -219,7 +275,9 @@
                           <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path>
                         </svg>
                         <span>
-                          <% if (lang === 'en') { %>Contributing Guide<% } else { %>Руководство по участию<% } %>
+                          <%# A card without a verb does not read as something you can do.
+                              "Upload Solution" survived only because it happens to contain one. %>
+                          <% if (lang === 'en') { %>Read the contributing guide<% } else { %>Читать руководство по участию<% } %>
                         </span>
                       </strong>
                       <span class="action-desc">
@@ -359,22 +417,24 @@
           </p>
         </div>
 
-        <!-- Color legend -->
-        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; font-size: 12px; color: #6c757d;">
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #7d3c98;"></span>
+        <!-- Legend. Swatches mirror the dot shapes exactly, so the key works in
+             greyscale and for colour-deficient readers. Sits directly above the grid,
+             which is where it is needed. -->
+        <div class="grid-legend">
+          <span class="legend-item">
+            <span class="legend-swatch legend-both"></span>
             <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
           </span>
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #2471a3;"></span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-en"></span>
             <%= lang === 'ru' ? 'Только английский' : 'English only' %>
           </span>
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #27ae60;"></span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-ru"></span>
             <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
           </span>
-          <span style="display: flex; align-items: center; gap: 5px;">
-            <span style="display: inline-block; width: 14px; height: 14px; border-radius: 3px; background: #ebedf0; border: 1px solid #dee2e6;"></span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-unsolved"></span>
             <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
           </span>
         </div>
@@ -382,6 +442,7 @@
         <!-- Chapter Grid -->
         <div class="chapter-grid">
           <% const otherLang = lang === 'ru' ? 'en' : 'ru'; %>
+          <% const gridStates = {}; %>
           <% chapters.forEach((chapter, chapterIndex) => {
             const chNum = chapterIndex + 1;
             let chSolved = 0;
@@ -393,32 +454,21 @@
               const sSolved = allProbs.length;
               chTotal += sMax;
               chSolved += sSolved;
-              const sectionProblems = [];
+              // One character per problem instead of a full <a> element. Every dot's
+              // href, class and title is derivable from this state plus the problem
+              // number, so shipping 2,023 anchors in the HTML was pure waste: it made the
+              // homepage 522 KB with 2,121 links, all but ~98 of them inside collapsed
+              // chapters nobody had opened. The dots are now built on first expand.
+              //   3 = solved in both languages, 2 = English only, 1 = Russian only, 0 = unsolved
+              let states = '';
               for (let p = 1; p <= sMax; p++) {
                 const probName = section.number + '.' + p;
                 const isEn = enSolvedSet.has(probName);
                 const isRu = ruSolvedSet.has(probName);
-                let dotClass, href, dotLabel;
-                if (isEn && isRu) {
-                  dotClass = 'solved-both';
-                  href = '/' + lang + '/' + probName;
-                  dotLabel = lang === 'ru' ? 'Оба языка' : 'Both languages';
-                } else if (isEn) {
-                  dotClass = 'solved-en';
-                  href = '/en/' + probName;
-                  dotLabel = lang === 'ru' ? 'Только английский' : 'English only';
-                } else if (isRu) {
-                  dotClass = 'solved-ru';
-                  href = '/ru/' + probName;
-                  dotLabel = lang === 'ru' ? 'Только русский' : 'Russian only';
-                } else {
-                  dotClass = 'unsolved';
-                  href = '/' + lang + '/upload';
-                  dotLabel = lang === 'ru' ? 'Не решено' : 'Unsolved';
-                }
-                sectionProblems.push({ name: probName, dotClass, href, dotLabel });
+                states += (isEn && isRu) ? '3' : isEn ? '2' : isRu ? '1' : '0';
               }
-              chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, problems: sectionProblems });
+              gridStates[section.number] = states;
+              chSections.push({ number: section.number, title: section.title, solved: sSolved, total: sMax, count: sMax });
             });
             const chPct = chTotal > 0 ? ((chSolved / chTotal) * 100).toFixed(0) : '0';
           %>
@@ -453,19 +503,15 @@
                   <span class="section-name">&sect; <%= sec.number %> &mdash; <%= sec.title %></span>
                   <span class="section-count"><%= sec.solved %> / <%= sec.total %></span>
                 </div>
-                <div class="problem-dots">
-                  <% sec.problems.forEach(prob => { %>
-                  <a href="<%= prob.href %>"
-                     class="problem-dot <%= prob.dotClass %>"
-                     title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.name + ' · ' + prob.dotLabel %>"><%= prob.name.split('.')[2] %></a>
-                  <% }); %>
-                </div>
+                <!-- Populated on first expand from the state payload below. -->
+                <div class="problem-dots" data-section="<%= sec.number %>" data-count="<%= sec.count %>"></div>
               </div>
               <% }); %>
             </div>
           </div>
           <% }); %>
         </div>
+        <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
 
         <!-- Problempedia callout removed for now -->
 
@@ -516,6 +562,28 @@
 
           <!-- Top Authors -->
           <div class="sidebar-section">
+            <%# A top-ten leaderboard means nothing to someone who has never been here —
+                they don't know any of the names. What a first-time visitor needs is
+                evidence that other humans use this. Logged-in contributors get the
+                leaderboard, because for them it is the competitive mechanic it is
+                supposed to be. %>
+            <% if (!userId && typeof proofNumbers !== 'undefined' && proofNumbers) { %>
+            <div class="proof-numbers">
+              <div class="proof-item">
+                <span class="proof-value"><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
+                <span class="proof-label"><%= lang === 'ru' ? 'решений' : 'solutions' %></span>
+              </div>
+              <div class="proof-item">
+                <span class="proof-value"><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
+                <span class="proof-label"><%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
+              </div>
+              <div class="proof-item">
+                <span class="proof-value"><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></span>
+                <span class="proof-label"><%= lang === 'ru' ? 'правок' : 'edits' %></span>
+              </div>
+              <a class="proof-all" href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %> &rarr;</a>
+            </div>
+            <% } else { %>
             <div class="sidebar-section-header">
               <h3 class="sidebar-title"><%= lang === 'ru' ? 'Лучшие авторы' : 'Top Authors' %></h3>
               <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %> &rarr;</a>
@@ -554,6 +622,7 @@
               </div>
               <% }); %>
             </div>
+            <% } %>
           </div>
 
           <!-- Recently Joined -->
@@ -768,6 +837,110 @@
       text-decoration: underline;
     }
 
+    /* Hero — one headline, one byline, one action. Mobile-first. */
+    .hero-primary {
+      padding: 1.75rem 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border, #dee2e6);
+      background: #ffffff;
+    }
+    .hero-headline {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-weight: 600;
+      font-size: 1.5rem;
+      line-height: 1.25;
+      color: var(--text, #2d2d2d);
+      margin: 0 0 0.5rem;
+      max-width: 34ch;
+    }
+    .hero-byline {
+      font-size: 0.95rem;
+      color: var(--text-secondary, #6c757d);
+      margin: 0 0 1.25rem;
+      max-width: 56ch;
+    }
+    .hero-search-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text, #2d2d2d);
+      margin-bottom: 0.375rem;
+    }
+    .hero-search-row {
+      display: flex;
+      gap: 0.5rem;
+      max-width: 30rem;
+    }
+    .hero-search-input {
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 44px;
+      padding: 0 0.75rem;
+      font-size: 1rem;
+      color: var(--text, #2d2d2d);
+      border: 1px solid var(--border, #dee2e6);
+      border-radius: 6px;
+      background: #ffffff;
+    }
+    .hero-search-input:focus {
+      outline: none;
+      border-color: #1a1a2e;
+      box-shadow: 0 0 0 3px rgba(26, 26, 46, 0.08);
+    }
+    .hero-search-button {
+      flex: 0 0 auto;
+      height: 44px;
+      padding: 0 1.25rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #1a1a2e;
+      border: 1px solid #1a1a2e;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .hero-search-button:hover { background: #0d0d1a; }
+    .hero-search-hint {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.8125rem;
+      color: var(--text-secondary, #6c757d);
+    }
+    .most-wanted { margin-top: 1.5rem; max-width: 44rem; }
+    .most-wanted-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      gap: 1rem; margin-bottom: 0.5rem;
+    }
+    .most-wanted-title {
+      font-size: 0.8125rem; font-weight: 600; letter-spacing: 0.02em;
+      text-transform: uppercase; color: var(--text-secondary, #6c757d);
+    }
+    .most-wanted-all { font-size: 0.8125rem; color: #1a5276; text-decoration: none; }
+    .most-wanted-all:hover { text-decoration: underline; }
+    .most-wanted-list {
+      list-style: none; margin: 0; padding: 0;
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .most-wanted-item {
+      display: inline-flex; align-items: baseline; gap: 0.5rem;
+      padding: 0.4rem 0.7rem; border: 1px solid #dee2e6; border-radius: 6px;
+      background: #ffffff; text-decoration: none; transition: border-color 0.15s ease;
+    }
+    .most-wanted-item:hover { border-color: #1a1a2e; background: #f8f9fa; }
+    .mw-num { font-weight: 600; font-size: 0.9375rem; color: var(--text, #2d2d2d); }
+    .mw-demand { font-size: 0.75rem; color: var(--text-secondary, #6c757d); }
+
+    .hero-search-input.is-problem-number {
+      border-color: #27ae60;
+      box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.10);
+    }
+    @media (min-width: 768px) {
+      .hero-primary { padding: 2.5rem 1.5rem 2rem; }
+      .hero-headline { font-size: 2rem; }
+      .hero-byline { font-size: 1rem; }
+      .hero-search-input { height: 48px; font-size: 1.0625rem; }
+      .hero-search-button { height: 48px; }
+    }
+
     /* Compact Introduction */
     .compact-intro {
       background: white;
@@ -896,15 +1069,34 @@
       line-height: 1.38;
     }
 
+    /* These read as flat text until you hover them, so nobody knows they are clickable.
+       A visible border, a real hover state and a cursor fix that. */
     .action-link {
       display: flex;
       align-items: center;
       gap: 0.85rem;
       padding: 0.95rem 1.1rem;
-      border-radius: 0;
+      border-radius: 6px;
       text-decoration: none;
-      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-      border: 1px solid transparent;
+      transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+      border: 1px solid #dee2e6;
+      background: #ffffff;
+      cursor: pointer;
+    }
+    .action-link:hover {
+      border-color: #1a1a2e;
+      background: #f8f9fa;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .action-link:focus-visible {
+      outline: 2px solid #1a1a2e;
+      outline-offset: 2px;
+    }
+    /* The arrow is the "this goes somewhere" affordance Eve was missing. */
+    .action-link .action-title::after {
+      content: " →";
+      color: #6c757d;
+      font-weight: 400;
     }
 
     .action-link.primary-action {
@@ -1451,6 +1643,37 @@
       color: #6c757d;
       white-space: nowrap;
     }
+    .proof-numbers {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 1.25rem;
+      padding: 0.25rem 0 0.75rem;
+    }
+    .proof-item { display: flex; flex-direction: column; }
+    .proof-value {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 1.375rem; font-weight: 600; line-height: 1.1; color: var(--text, #2d2d2d);
+    }
+    .proof-label {
+      font-size: 0.75rem; color: var(--text-secondary, #6c757d);
+      text-transform: uppercase; letter-spacing: 0.02em;
+    }
+    .proof-all {
+      flex-basis: 100%; font-size: 0.8125rem; color: #1a5276; text-decoration: none;
+    }
+    .proof-all:hover { text-decoration: underline; }
+
+    .grid-legend {
+      display: flex; flex-wrap: wrap; gap: 14px;
+      margin-bottom: 12px; font-size: 12px; color: #6c757d;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch {
+      display: inline-block; width: 16px; height: 14px; border-radius: 3px; flex: 0 0 auto;
+    }
+    .legend-both     { background: #7d3c98; border: 1px solid #7d3c98; }
+    .legend-en       { background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%); border: 1px solid #2471a3; }
+    .legend-ru       { background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%); border: 1px solid #27ae60; }
+    .legend-unsolved { background: #ffffff; border: 1px dashed #c6ccd2; }
+
     .problem-dots {
       display: flex;
       flex-wrap: wrap;
@@ -1469,40 +1692,60 @@
       line-height: 1;
       transition: opacity 0.15s ease;
     }
+    /* Shape carries the meaning; colour only reinforces it.
+       Purple, blue and green are exactly the three hues red-green colour deficiency
+       compresses — roughly one man in twelve, against an audience of mostly male
+       teenagers. For those readers the old grid was not low-contrast, it was unreadable.
+       So: solved-in-both is a solid block, a single language is half-filled (left half
+       for English, bottom half for Russian, so the two are distinguishable without any
+       colour at all), and unsolved is a hollow dashed outline. */
     a.problem-dot.solved-both,
     a.problem-dot.solved-both:link,
     a.problem-dot.solved-both:visited,
     a.problem-dot.solved-both:active {
       background: #7d3c98;
       color: #fff;
+      border: 1px solid #7d3c98;
     }
     a.problem-dot.solved-both:hover { opacity: 0.8; }
+
+    /* English only — left half filled. */
     a.problem-dot.solved-en,
     a.problem-dot.solved-en:link,
     a.problem-dot.solved-en:visited,
     a.problem-dot.solved-en:active {
-      background: #2471a3;
-      color: #fff;
+      background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%);
+      color: #17466b;
+      border: 1px solid #2471a3;
+      font-weight: 600;
     }
-    a.problem-dot.solved-en:hover { opacity: 0.85; }
+    a.problem-dot.solved-en:hover { background: linear-gradient(to right, #b9d3e8 0 50%, #f2f7fb 50% 100%); }
+
+    /* Russian only — bottom half filled. */
     a.problem-dot.solved-ru,
     a.problem-dot.solved-ru:link,
     a.problem-dot.solved-ru:visited,
     a.problem-dot.solved-ru:active {
-      background: #27ae60;
-      color: #fff;
+      background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%);
+      color: #1b6b41;
+      border: 1px solid #27ae60;
+      font-weight: 600;
     }
-    a.problem-dot.solved-ru:hover { opacity: 0.85; }
+    a.problem-dot.solved-ru:hover { background: linear-gradient(to bottom, #f3faf6 0 50%, #b6e1c8 50% 100%); }
+
+    /* Unsolved — hollow, dashed. Nothing filled, so it reads as absent at a glance. */
     a.problem-dot.unsolved,
     a.problem-dot.unsolved:link,
     a.problem-dot.unsolved:visited,
-    a.problem-dot.unsolved:hover,
     a.problem-dot.unsolved:active {
-      background: #ebedf0;
-      color: #6c757d;
+      background: #ffffff;
+      color: #8c959f;
+      border: 1px dashed #c6ccd2;
     }
     a.problem-dot.unsolved:hover {
-      background: #dee2e6;
+      background: #f8f9fa;
+      border-color: #8c959f;
+      color: #6c757d;
     }
 
     /* Overall progress bar */
@@ -1797,6 +2040,21 @@
   
   <%- include('default/main_site_search_script') %>
 
+  <script>
+  // Navigation is entirely server-side (GET /find). This only adds the affordance that
+  // the field recognised a problem number, so the input confirms itself as you type.
+  (function () {
+    const input = document.getElementById('heroSearchInput');
+    if (!input) return;
+    const PROBLEM = /^(\d{1,2})[.,](\d{1,2})[.,](\d{1,3})$/;
+    input.addEventListener('input', () => {
+      const m = PROBLEM.exec(input.value.trim().replace(/\s+/g, ''));
+      const ok = Boolean(m) && Number(m[1]) >= 1 && Number(m[1]) <= 14;
+      input.classList.toggle('is-problem-number', ok);
+    });
+  })();
+  </script>
+
   <!-- Pop-up handling -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
@@ -1983,12 +2241,75 @@
   <!-- Chapter card expand/collapse -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      // Chapter dots are built on first expand rather than shipped in the HTML. The four
+      // states below carry everything a dot needs; href, class and label all derive from
+      // the state plus the problem number.
+      const LANG = <%- JSON.stringify(lang) %>;
+      const STATES = (() => {
+        try { return JSON.parse(document.getElementById('gridStates').textContent); }
+        catch (_) { return {}; }
+      })();
+      const DOT = {
+        '3': { cls: 'solved-both', label: LANG === 'ru' ? 'Оба языка' : 'Both languages' },
+        '2': { cls: 'solved-en',   label: LANG === 'ru' ? 'Только английский' : 'English only' },
+        '1': { cls: 'solved-ru',   label: LANG === 'ru' ? 'Только русский' : 'Russian only' },
+        '0': { cls: 'unsolved',    label: LANG === 'ru' ? 'Не решено' : 'Unsolved' },
+      };
+      const PROBLEM_WORD = LANG === 'ru' ? 'Задача ' : 'Problem ';
+
+      function hrefFor(state, problem) {
+        if (state === '3') return '/' + LANG + '/' + problem;   // both — stay in this language
+        if (state === '2') return '/en/' + problem;             // English only
+        if (state === '1') return '/ru/' + problem;             // Russian only
+        return '/' + LANG + '/upload';                          // unsolved — offer to write it
+      }
+
+      function fillSection(container) {
+        if (container.dataset.filled) return;
+        const section = container.dataset.section;
+        const states = STATES[section] || '';
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < states.length; i++) {
+          const state = states[i];
+          const number = String(i + 1);
+          const problem = section + '.' + number;
+          const meta = DOT[state] || DOT['0'];
+          const a = document.createElement('a');
+          a.href = hrefFor(state, problem);
+          a.className = 'problem-dot ' + meta.cls;
+          a.title = PROBLEM_WORD + problem + ' · ' + meta.label;
+          a.textContent = number;
+          frag.appendChild(a);
+        }
+        container.appendChild(frag);
+        container.dataset.filled = '1';
+      }
+
       document.querySelectorAll('.chapter-card-header').forEach(header => {
         header.addEventListener('click', () => {
           const card = header.closest('.chapter-card');
+          const opening = !card.classList.contains('open');
+          if (opening) card.querySelectorAll('.problem-dots').forEach(fillSection);
           card.classList.toggle('open');
         });
       });
+
+      // Deep links like /ru/#2.1 must still land on the right section, so open the
+      // chapter that contains it and fill it before scrolling.
+      function openFromHash() {
+        const target = decodeURIComponent(location.hash.replace(/^#/, ''));
+        if (!target) return;
+        const el = document.getElementById(target);
+        if (!el) return;
+        const card = el.closest('.chapter-card');
+        if (card) {
+          card.querySelectorAll('.problem-dots').forEach(fillSection);
+          card.classList.add('open');
+        }
+        el.scrollIntoView({ block: 'start' });
+      }
+      openFromHash();
+      window.addEventListener('hashchange', openFromHash);
 
       // Blog widget (main column cards)
       fetch('/blog/api/posts?limit=3')

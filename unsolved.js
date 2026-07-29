@@ -107,16 +107,21 @@ async function getMostWantedProblems(allSolvedProblems, limit = 10) {
             ORDER BY total_views DESC
         `);
 
-        // Filter to only unsolved problems and take top N
+        // Filter to only unsolved problems and take top N.
+        // page_views contains legacy zero-padded names ("04.1.3") alongside the canonical
+        // form ("4.1.3"), so compare on a normalised key — otherwise a solved problem
+        // reappears in the most-wanted list under its padded alias.
+        const canonical = (n) => n.split('.').map((part) => String(parseInt(part, 10))).join('.');
         const mostWanted = [];
+        const seen = new Set();
         for (const row of result.rows) {
-            if (!allSolvedProblems.has(row.problem_name) && /^\d+\.\d+\.\d+$/.test(row.problem_name)) {
-                mostWanted.push({
-                    problem_name: row.problem_name,
-                    total_views: parseInt(row.total_views, 10)
-                });
-                if (mostWanted.length >= limit) break;
-            }
+            if (!/^\d+\.\d+\.\d+$/.test(row.problem_name)) continue;
+            const key = canonical(row.problem_name);
+            if (allSolvedProblems.has(key) || allSolvedProblems.has(row.problem_name)) continue;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            mostWanted.push({ problem_name: key, total_views: parseInt(row.total_views, 10) });
+            if (mostWanted.length >= limit) break;
         }
         return mostWanted;
     } catch (err) {
@@ -253,3 +258,7 @@ async function renderUnsolvedList(req, res) {
 
 renderUnsolvedList.getSolutionProgressStats = getSolutionProgressStats;
 module.exports = renderUnsolvedList;
+// Also exposed so the homepage can show the same "most wanted" list without duplicating
+// the query. "287 people looked for this and it isn't written yet" is a far better
+// prompt to a physicist than a generic call to contribute.
+module.exports.getMostWantedProblems = getMostWantedProblems;

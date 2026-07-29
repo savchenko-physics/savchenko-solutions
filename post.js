@@ -336,10 +336,18 @@ async function renderPost(req, res) {
         const canonicalUrl = `${SITE}/${lang}/${name}`;
         const jsonLdSafe = (o) => JSON.stringify(o)
             .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+        // ScholarlyArticle, not Article. Answer engines surface what looks like a source,
+        // and a worked physics solution with a named author, a review date and an explicit
+        // licence is a citable object; a wiki page with a coloured dot is not. The licence
+        // and author are also stated visibly on the page — structured data alone is a
+        // claim nobody can see.
         const articleJsonLd = {
             "@context": "https://schema.org",
-            "@type": "Article",
+            "@type": ["ScholarlyArticle", "Article"],
             "headline": seoTitle,
+            "license": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "isAccessibleForFree": true,
+            "creativeWorkStatus": "Published",
             "description": plainDesc,
             "image": ogImage,
             "inLanguage": lang,
@@ -355,8 +363,17 @@ async function renderPost(req, res) {
             },
             "mainEntityOfPage": { "@type": "WebPage", "@id": canonicalUrl },
         };
-        if (contributorName) articleJsonLd.author = { "@type": "Person", "name": contributorName };
+        if (contributorName) {
+            articleJsonLd.author = {
+                "@type": "Person",
+                "name": contributorName,
+                "url": `${SITE}/user/${encodeURIComponent(contributorName)}`,
+            };
+        }
         if (creationDate) articleJsonLd.datePublished = creationDate;
+        // dateModified doubles as the last-reviewed date: every edit passes through
+        // peer review, so the most recent change is the most recent review.
+        if (lastModified) articleJsonLd.dateModified = lastModified;
 
         let breadcrumbJsonLdStr = null;
         if (problemBreadcrumb) {

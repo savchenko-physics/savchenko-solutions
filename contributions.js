@@ -58,8 +58,13 @@ async function getContribution(req, res) {
         }
 
         const contribution = result.rows[0];
-        const originalLines = contribution.original_content.split('\n');
-        const newLines = contribution.new_content.split('\n');
+        // original_content is NULL for any contribution that created a file rather than
+        // editing one, and new_content is NULL for a deletion. Both are nullable columns,
+        // and calling .split() on them was throwing on every such diff — a 500 on one of
+        // the few pages where a visitor can watch the community working, repeating often
+        // enough to fill the error log.
+        const originalLines = (contribution.original_content || '').split('\n');
+        const newLines = (contribution.new_content || '').split('\n');
         const changes = [];
 
         // Calculate changes
@@ -85,8 +90,12 @@ async function getContribution(req, res) {
             },
             usernameCurrent: req.session.username,
             userIdCurrent: req.session.userId,
-            newContent: contribution.new_content,
-            originalContent: contribution.original_content,
+            // Coalesced here rather than in the template: contribution.ejs calls
+            // .replace() on both of these, so a NULL — which every file-creating
+            // contribution has for original_content, 183 rows of them — took the render
+            // down with the same TypeError the diff loop had.
+            newContent: contribution.new_content || '',
+            originalContent: contribution.original_content || '',
             changes, // Pass the changes array to the template
             formatDate: (date) => {
                 return new Date(date).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US', {
