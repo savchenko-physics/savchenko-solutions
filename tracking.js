@@ -52,7 +52,9 @@ function sig(dest) {
 
 async function logEvent(campaign, userId, event, url, req, username) {
     try {
-        const ip = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim().slice(0, 64);
+        // req.ip, not XFF[0]: Caddy appends the peer address, so the FIRST element is the
+        // caller-supplied one and the last is real. req.ip already resolves this correctly.
+        const ip = String(req.ip || '').slice(0, 64);
         const ua = String(req.headers['user-agent'] || '').slice(0, 300);
         await pool.query(
             'INSERT INTO email_events (campaign, user_id, event, url, ip, ua, username) VALUES ($1,$2,$3,$4,$5,$6,$7)',

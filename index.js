@@ -36,6 +36,8 @@ const { sendEmail } = require("./email");
 const { processAvatar } = require("./avatar");
 
 const rateLimit = require('express-rate-limit');
+const { botgate, isCountable, isTaggable, init: initBotgate } = require('./botgate');
+const tracker = require('./tracker');
 const { router: adminRouter, isIpBlocked } = require('./admin');
 const searchIndex = require('./searchIndex');
 const blogRouter = require('./blog');
@@ -57,10 +59,19 @@ const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('
 const app = express();
 const PORT = 3000;
 
+// Caddy APPENDS the peer address to X-Forwarded-For, so with one trusted hop req.ip is
+// the real client and the raw header is attacker-controlled. Always prefer req.ip.
 app.set('trust proxy', 1);
 
 // Gzip compression — first middleware for best coverage
 app.use(compression());
+
+// Bot classification runs BEFORE session() on purpose: a machine must never reach the
+// session store, because writing to a session is what creates a row (see the lang
+// middleware below). It never blocks on IP address — see botgate.js for why.
+app.use(botgate);
+// Standing request log, so a wave can be read off a dashboard instead of tcpdump.
+app.use(tracker.middleware);
 
 // Require SESSION_SECRET — refuse to start with the insecure default
 if (!process.env.SESSION_SECRET) {
@@ -77,6 +88,10 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
 
+// botgate and tracker need the shared pool for their cached IP lists and buffered writes.
+initBotgate(pool);
+tracker.init(pool);
+
 const DEFAULT_PROFILE_AVATAR = "/img/profile_images/Default_placeholder.svg";
 
 // Session configuration (AFTER pool is created)
@@ -91,7 +106,10 @@ app.use(
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 1000 * 60 * 60 * 24 * 365,
+            // 30 days for anonymous sessions. This used to be a year, which meant
+            // connect-pg-simple's pruner (which deletes WHERE expire < now()) had nothing
+            // to delete, ever. Logged-in users get the year back on successful login.
+            maxAge: 1000 * 60 * 60 * 24 * 30,
             httpOnly: true,
             sameSite: 'lax'
         },
@@ -159,6 +177,27 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 // The src directory contains Python scripts and CSV data — must not be publicly served.
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
+// Analytics tag gate. Registered BEFORE the /js static mount so it wins for this one URL.
+//
+// 40 templates carry a bare <script src="/js/analytics.js">, so intercepting the URL is
+// the only single-point fix. Machines get an inert file and therefore never appear in
+// Google Analytics or Yandex Metrika — which is the entire reason realtime showed ~800
+// "users" from Singapore while the database saw a couple of hundred requests.
+//
+// no-store matters: /js is served with maxAge 7d, and a shared cache must never be able
+// to hand a person the empty version.
+app.get('/js/analytics.js', (req, res) => {
+    if (!isTaggable(req)) {
+        return res
+            .type('application/javascript')
+            .set('Cache-Control', 'no-store')
+            .send('/* analytics: not loaded for automated traffic */\n');
+    }
+    res.set('Cache-Control', 'private, max-age=604800');
+    res.set('Vary', 'User-Agent, Accept-Language');
+    return res.sendFile(path.join(__dirname, 'js', 'analytics.js'));
+});
+
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
 // MathJax 3 served from the installed mathjax-full package instead of a public CDN.
 // cdn.jsdelivr.net is blocked on some networks (notably several post-Soviet ISPs),
@@ -200,7 +239,13 @@ app.locals.asset = assetUrl;   // available in every res.render (incl. partials)
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
-    if (langMatch) {
+    // Writing to the session marks it dirty, and express-session persists any session
+    // that was modified — saveUninitialized:false does NOT save you here (shouldSave()
+    // reduces to isModified() for a cookie-less request). With a 30-day cookie that used
+    // to be a year, every crawler hit was an INSERT that nothing could prune: 1.46M rows
+    // and 497 MB by the time anyone looked. So only real visitors get to write, and only
+    // when the value would actually change.
+    if (langMatch && isCountable(req) && req.session.lang !== langMatch[1]) {
         req.session.lang = langMatch[1];
     }
     next();
@@ -1605,7 +1650,7 @@ $$ x(t)=\\frac{bt^3}{6} $$
 `
 
     const userId = req.session.userId || null; // Retrieve userId from session
-    const clientIp = req.headers["x-forwarded-for"] || req.ip; // Retrieve client IP address
+    const clientIp = req.ip; // Caddy appends to XFF, so req.ip is the real client (see botgate.js)
 
     try {
         await fs.promises.writeFile(filePath, content);
@@ -1692,7 +1737,7 @@ app.post("/forgot-password", async (req, res) => {
 
     try {
         const result = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
-        const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+        const ip = req.ip || '';
 
         let token = null;
         let userId = null;
@@ -1896,7 +1941,7 @@ app.post("/recover-account", async (req, res) => {
     const lang = req.body.lang || 'en';
     const email = String(req.body.email || "").trim();
     const message = String(req.body.message || "").trim().slice(0, 2000);
-    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || '';
+    const ip = req.ip || '';
 
     if (!email) {
         return res.redirect(`/recover-account?lang=${lang}&error=${encodeURIComponent(
@@ -2072,6 +2117,9 @@ app.post("/login", loginLimiter, async (req, res) => {
         req.session.userId = result.rows[0].id;
         req.session.username = result.rows[0].username;
         req.session.lang = lang; // Store language preference in session
+        // Signed-in users keep the old year-long "remember me"; the 30-day default in the
+        // session config exists only so abandoned anonymous sessions become prunable.
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 365;
 
         res.redirect(`/${lang}/profile`);
     } catch (error) {
@@ -2545,7 +2593,7 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
     const { lang, name } = req.params;
     const { content } = req.body;
     const userId = req.session.userId || null; // Will be null for unauthenticated users
-    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+    const clientIp = req.ip;
 
     if (!isValidSolutionLang(lang) || !isValidSolutionProblemName(name)) {
         if (editSaveWantsJson(req)) {
@@ -3014,7 +3062,7 @@ app.get("/api/related-problems/:problemName", async (req, res) => {
 app.post("/api/report-solution", async (req, res) => {
     const { problemName, language, reason } = req.body;
     const userId = req.session.userId;
-    const clientIp = req.headers["x-forwarded-for"] || req.ip;
+    const clientIp = req.ip;
 
     if (!reason || reason.trim().length === 0) {
         return res.status(400).json({ error: "Reason is required" });

@@ -229,7 +229,7 @@ ${imageResults.map(img => {
         // Record the creation in contributions table
         const userId = req.session.userId || null;
         const fullName = req.body.fullName || null;
-        const clientIp = req.headers["x-forwarded-for"] || req.ip;
+        const clientIp = req.ip;
 
         await pool.query(
             `INSERT INTO contributions (

@@ -9,6 +9,7 @@ const { getPathsForProblem } = require("./paths");
 const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
 const { getSolutionJudgingWidget, isContestOrganizer } = require("./contestJudge");
 const { renderMathInHtml } = require("./mathRender");
+const { isCountable } = require("./botgate");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -36,35 +37,43 @@ async function renderPost(req, res) {
         // Increment page views in the database
         const today = new Date().toISOString().split('T')[0]; // Get today's date in YYYY-MM-DD format
 
-        // Check if the same IP has viewed this problem in the last minute
-        const clientIp = req.headers["x-forwarded-for"] || req.ip;
+        // req.ip, not the raw X-Forwarded-For header. Caddy APPENDS the peer address, so
+        // with `trust proxy: 1` req.ip is the real client while the raw header (and
+        // especially its first element) is whatever the caller chose to send. Reading the
+        // header let anyone defeat this dedupe — and the blocklist — with one line of curl.
+        const clientIp = req.ip;
         const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString();
 
-        const recentViewCheck = await pool.query(
-            `SELECT COUNT(*) AS count FROM recent_views 
-             WHERE ip_address = $1 AND problem_name = $2 AND language = $3 
-             AND timestamp > $4`,
-            [clientIp, name, lang, oneMinuteAgo]
-        );
-
-        // console.log(recentViewCheck.rows[0].count);
-
-        if (parseInt(recentViewCheck.rows[0].count) === 0 && clientIp !== '::1') {
-            // Increment page views in the database
-            await pool.query(
-                `INSERT INTO page_views (problem_name, language, date, views) 
-                 VALUES ($1, $2, $3, 1) 
-                 ON CONFLICT (problem_name, language, date) 
-                 DO UPDATE SET views = page_views.views + 1`,
-                [name, lang, today]
+        // Machines are served the page in full but never counted. Skipping the lookup as
+        // well as the writes also takes the app's hottest query off the bot path: this
+        // SELECT runs on every solution render against 1.8M rows.
+        if (isCountable(req) && clientIp !== '::1' && clientIp !== '127.0.0.1') {
+            const recentViewCheck = await pool.query(
+                `SELECT COUNT(*) AS count FROM recent_views
+                 WHERE ip_address = $1 AND problem_name = $2 AND language = $3
+                 AND timestamp > $4`,
+                [clientIp, name, lang, oneMinuteAgo]
             );
 
-            // Record the view in the recent_views table
-            await pool.query(
-                `INSERT INTO recent_views (ip_address, problem_name, language, timestamp) 
-                 VALUES ($1, $2, $3, NOW())`,
-                [clientIp, name, lang]
-            );
+            if (parseInt(recentViewCheck.rows[0].count) === 0) {
+                // Increment page views in the database
+                await pool.query(
+                    `INSERT INTO page_views (problem_name, language, date, views)
+                     VALUES ($1, $2, $3, 1)
+                     ON CONFLICT (problem_name, language, date)
+                     DO UPDATE SET views = page_views.views + 1`,
+                    [name, lang, today]
+                );
+
+                // Record the view. user_agent is new (migration 037): without it, a future
+                // wave cannot be reclassified after the fact — which is exactly why the
+                // historical rows in this table are uncleanable.
+                await pool.query(
+                    `INSERT INTO recent_views (ip_address, problem_name, language, timestamp, user_agent)
+                     VALUES ($1, $2, $3, NOW(), $4)`,
+                    [clientIp, name, lang, String(req.headers['user-agent'] || '').slice(0, 300)]
+                );
+            }
         }
 
         // Fetch total views from the database
