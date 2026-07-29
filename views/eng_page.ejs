@@ -190,7 +190,7 @@
          from Google or Yandex having searched a problem number, and the on-site searches
          people type are numbers (4.2.22, 2.7.10, 6.2.14). So the search field is the
          primary object on the page, not a field in the header. -->
-      <section class="hero-primary mb-4" aria-labelledby="heroHeadline">
+      <section class="hero-primary mb-2" aria-labelledby="heroHeadline">
         <div class="hero-main">
         <h1 class="hero-headline" id="heroHeadline"><%= __({ phrase: 'description.heroHeadline', locale: lang }) %></h1>
         <p class="hero-byline">
@@ -390,7 +390,7 @@
     <!-- Secondary: team, actions, progress, video. Moved below the grid so the
          first screen is the problem index rather than decoration. -->
     <!-- Compact Introduction -->
-      <div class="compact-intro mb-4">
+      <div class="compact-intro mb-2">
         <div class="row align-items-start g-3 compact-intro-row">
           <div class="col-12 col-sm-auto col-lg-3 intro-team-col">
             <figure class="intro-team-figure mb-0">
@@ -533,7 +533,7 @@
         <!-- Problempedia callout removed for now -->
 
         <!-- Latest from the Blog (in main column) -->
-        <div id="blogWidgetMain" style="display:none; margin-top: 1.5rem;">
+        <div id="blogWidgetMain" style="display:none; margin-top: 0.75rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="font-size: 16px; font-weight: 600; color: #2d2d2d; margin: 0;">
               <%= lang === 'ru' ? 'Блог' : 'Latest from the Blog' %>
@@ -542,7 +542,7 @@
               <%= lang === 'ru' ? 'Все' : 'View all' %> &rarr;
             </a>
           </div>
-          <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem;"></div>
+          <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
         </div>
       </div>
 
@@ -944,7 +944,7 @@
       box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.10);
     }
     @media (min-width: 768px) {
-      .hero-primary { padding: 1rem 1.5rem 1.25rem; }
+      .hero-primary { padding: 1rem 1.5rem 0.75rem; }
       .hero-headline { font-size: 2rem; max-width: 22ch; }
       .hero-byline { font-size: 1.0625rem; }
       .hero-search-input { height: 48px; font-size: 1.0625rem; }
@@ -988,6 +988,18 @@
     .intro-team-col {
       display: flex;
       justify-content: center;
+    }
+
+    /* Stretch every column of the band to the tallest, so no column leaves a strip. */
+    @media (min-width: 992px) {
+      .compact-intro-row { align-items: stretch; }
+      .compact-intro-row > .intro-youtube-col,
+      .compact-intro-row > .compact-intro-main,
+      .compact-intro-row > .intro-team-col { display: flex; flex-direction: column; }
+      .compact-intro-row > .intro-youtube-col > *,
+      .compact-intro-row > .intro-team-col > * { flex: 1 1 auto; }
+      .intro-actions-stats-row { flex: 1 1 auto; }
+      .intro-actions-stats-row > .intro-actions-stats-col { justify-content: flex-start; }
     }
 
     @media (min-width: 992px) {
@@ -1061,15 +1073,15 @@
       }
 
       .intro-actions-stats-row > .intro-actions-stats-col {
-        flex: 0 0 47.5%;
-        max-width: 47.5%;
-        width: 47.5%;
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
       }
 
       .intro-actions-stats-row > .solution-progress-stats-col {
-        flex: 0 0 52.5%;
-        max-width: 52.5%;
-        width: 52.5%;
+        flex: 0 0 100%;
+        max-width: 100%;
+        width: 100%;
       }
     }
 
