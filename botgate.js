@@ -287,6 +287,31 @@ function chromeEncodingContradiction(ua, acceptEncoding) {
     return hasBr && !hasZstd && noSpaceSeparators;
 }
 
+// Chrome and every Chromium fork have sent Sec-CH-UA on secure origins since v89
+// (2021). Absence, on a UA claiming a modern Chrome, means the UA string is invented.
+function missingClientHints(ua, secChUa) {
+    if (secChUa) return false;
+    if (!/Chrome\/(\d+)/.test(ua)) return false;
+    if (/Edg\/|EdgA\/|OPR\/|SamsungBrowser|YaBrowser|Yowser|CriOS|Vivaldi|Whale/i.test(ua)) return false;
+    const major = Number(/Chrome\/(\d+)/.exec(ua)[1]);
+    return major >= 89;
+}
+
+// A genuine Chrome older than ~v70 does not exist in 2026 — it auto-updates, and it
+// could not render this site if it did. The instances seen here also carry randomised
+// build numbers (Chrome/43.0.9291.1758; the real 43.x builds were 2357.x) and pair
+// Chrome 43-50 with Android 8.0, which shipped two years after those releases.
+function impossibleChromeVersion(ua) {
+    const m = /Chrome\/(\d+)\.\d+\.(\d+)\.\d+/.exec(ua);
+    if (!m) return false;
+    const major = Number(m[1]);
+    const build = Number(m[2]);
+    if (major >= 70) return false;
+    // Real pre-70 Chrome build numbers sit in the 1000-3600 band; anything above that
+    // for an old major version was generated, not shipped.
+    return build > 3800 || major <= 60;
+}
+
 // ── The classifier ──────────────────────────────────────────────────────────────────
 // Rules in order; first match wins. Ordering is load-bearing: verified-crawler checks
 // MUST precede the Accept-Language rule, because bingbot and Amazonbot omit that header.
@@ -353,6 +378,14 @@ function classify(req) {
 
     // ── Below here, nothing blocks. Only visibility is affected. ──
     if (GENERIC_BOT_UA.test(ua)) reasons.push('self-declared-bot');
+    // Chrome has sent Sec-CH-UA on every secure origin since v89, so a UA claiming a
+    // modern Chrome without it is a forged string. Demote only, never block: a few
+    // privacy builds strip client hints, and being uncounted costs such a reader nothing.
+    if (missingClientHints(ua, req.headers['sec-ch-ua'])) reasons.push('no-client-hints');
+    // Chrome auto-updates. A 2015-era version number in 2026 is a UA randomiser, and the
+    // ones seen here pair impossible build numbers (Chrome/43.0.9291.1758) with an
+    // Android release that postdates the browser by two years.
+    if (impossibleChromeVersion(ua)) reasons.push('implausible-chrome-version');
     if (req.headers['accept-language'] === undefined) reasons.push('no-accept-language');
     if (inCidrs(ipInt, TOR)) reasons.push('tor-exit');
     if (inCidrs(ipInt, DATACENTER)) reasons.push('datacenter');

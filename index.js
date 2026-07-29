@@ -210,7 +210,14 @@ app.get('/js/analytics.js', (req, res) => {
             .set('Cache-Control', 'no-store')
             .send('/* analytics: not loaded for automated traffic */\n');
     }
-    res.set('Cache-Control', 'private, max-age=604800');
+    // no-store, not a week's cache. This file's content depends on a per-request
+    // classification, so caching it hands a client a verdict that outlives the decision.
+    // That is not theoretical: the browser farm fetched it while it was still being
+    // served freely, then kept firing Google Analytics from the cached copy for hours
+    // after every one of its requests started returning 403 — the beacons go straight
+    // from its browser to Google and never touch this server, so nothing here could stop
+    // them. An extra ~3 KB per pageview is a cheap price for the gate actually applying.
+    res.set('Cache-Control', 'no-store');
     res.set('Vary', 'User-Agent, Accept-Language');
     return res.sendFile(path.join(__dirname, 'js', 'analytics.js'));
 });

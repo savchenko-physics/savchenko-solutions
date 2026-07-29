@@ -11,11 +11,23 @@ const assert = require('node:assert');
 const { classify, CLASS } = require('../botgate');
 
 // Minimal request double. botgate runs before session(), so req.session is undefined.
-function req({ ua, ip = '203.0.113.5', lang = 'ru-RU,ru;q=0.9', encoding = 'gzip, deflate, br, zstd', cookie, path = '/ru/1.1.1' }) {
+//
+// A plain-Chrome UA gets a Sec-CH-UA header by default, because that is what a real
+// Chrome sends on a secure origin — omitting it made the fixture describe a browser that
+// does not exist, and the classifier rightly demoted it. Pass `hints: null` to model a
+// forged UA. Firefox and Safari fixtures pass their own UA and never get hints.
+function req({ ua, ip = '203.0.113.5', lang = 'ru-RU,ru;q=0.9', encoding = 'gzip, deflate, br, zstd', cookie, path = '/ru/1.1.1', hints }) {
     const headers = { 'user-agent': ua };
     if (lang !== null) headers['accept-language'] = lang;
     if (encoding !== null) headers['accept-encoding'] = encoding;
     if (cookie) headers.cookie = cookie;
+    const isPlainChrome = /Chrome\/\d+/.test(ua || '')
+        && !/Edg\/|OPR\/|YaBrowser|SamsungBrowser|CriOS|HeadlessChrome|bot|crawler|spider/i.test(ua || '');
+    if (hints === undefined && isPlainChrome) {
+        headers['sec-ch-ua'] = '"Not;A=Brand";v="8", "Chromium";v="149", "Google Chrome";v="149"';
+    } else if (hints) {
+        headers['sec-ch-ua'] = hints;
+    }
     return { headers, ip, path };
 }
 
@@ -136,6 +148,41 @@ test('unverified search-engine claims are not blocked while DNS is still pending
     const v = classify(req({ ua: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', ip: '66.249.73.65' }));
     assert.strictEqual(v.cls, CLASS.COUNT_NOTHING);
     assert.strictEqual(v.rule, 1);
+});
+
+test('forged UA strings are demoted, never blocked', () => {
+    // Caught live: a UA randomiser pairing impossible Chrome build numbers with an
+    // Android release that postdates the browser, and modern-Chrome claims with no
+    // Sec-CH-UA. These reach GA if left as human, so they must be demoted — but they are
+    // inferences, so they must never 403.
+    const forged = [
+        'Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.3537.1298 Mobile Safari/537.36',
+        'Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.9291.1758 Mobile Safari/537.36',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
+    ];
+    for (const ua of forged) {
+        const v = classify(req({ ua, hints: null }));
+        assert.strictEqual(v.cls, CLASS.COUNT_NOTHING, `expected demotion for ${ua}`);
+        assert.notStrictEqual(v.cls, CLASS.BLOCK);
+    }
+});
+
+test('real browsers survive the client-hint and version checks', () => {
+    const real = [
+        // Sends Sec-CH-UA — plain modern Chrome.
+        [REAL_CHROME, { 'sec-ch-ua': '"Chromium";v="149", "Google Chrome";v="149"' }],
+        // Chromium forks ship hints on their own schedule; Yandex Browser is ~11.5% here.
+        ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 YaBrowser/24.10.0 Safari/537.36', {}],
+        // Firefox and Safari never send client hints at all.
+        [REAL_FIREFOX, {}],
+        ['Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1', {}],
+        // A genuinely old Chrome, with a build number that really shipped.
+        ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36', {}],
+    ];
+    for (const [ua, extra] of real) {
+        const r = req({ ua, hints: extra['sec-ch-ua'] || undefined });
+        assert.strictEqual(classify(r).cls, CLASS.HUMAN, `must stay human: ${ua}`);
+    }
 });
 
 test('classify never throws on malformed or absent headers', () => {
