@@ -1814,7 +1814,7 @@
                             <% const otherLangCode = lang === 'en' ? 'ru' : 'en'; %>
                             <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %>" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else { %>
-                            <a href="/upload#<%= p.name %>" class="problem-grid-item problem-grid-item--unsolved" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(p.name) %>" class="problem-grid-item problem-grid-item--unsolved" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
                         <% } %>
                     <% }); %>
                 </div>

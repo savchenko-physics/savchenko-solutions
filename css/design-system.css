@@ -827,10 +827,16 @@ pre {
 .ss-statement-body img,
 .ss-statement-body svg { max-width: 100%; height: auto; }
 .ss-statement-body figure { margin: 0.6rem 0; }
-/* Savchenko's own harder-problem marker, carried through from the printed book. */
+/* Savchenko's own harder-problem marker, carried through from the printed book, where it
+   is a superscript. U+2217 is the ASTERISK OPERATOR — a maths glyph, centred on the line
+   by design — so beside capitals it reads as sitting at the foot of the text. Raised here
+   to match the book. */
 .ss-statement-star {
     font-weight: 700;
     color: var(--ss-navy, #1a1a2e);
+    vertical-align: super;
+    font-size: 1.15em;
+    line-height: 0;
 }
 .ss-statement-note {
     margin-top: 0.5rem;
@@ -849,9 +855,9 @@ pre {
 .ss-difficulty .section-grid-title { display: flex; align-items: center; gap: 0.4rem; }
 .ss-diff-star {
     font-weight: 700; color: var(--ss-navy, #1a1a2e);
-    /* At the title's 13px the asterisk-operator glyph reads as a bullet, which is
-       not what Savchenko's mark means. */
-    font-size: 17px; line-height: 0.8;
+    /* Same glyph, same problem: at the title's 13px the centred asterisk-operator reads as
+       a bullet sitting on the baseline. Raised and enlarged to read as the book's mark. */
+    vertical-align: super; font-size: 17px; line-height: 0;
 }
 .ss-diff-headline {
     display: flex; align-items: baseline; gap: 0.5rem;

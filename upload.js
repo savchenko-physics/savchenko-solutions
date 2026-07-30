@@ -290,10 +290,21 @@ router.get(["/upload", "/:lang([a-z]{2})/upload"], (req, res) => {
         return res.redirect(`/${lang}/login?error=${encodeURIComponent(i18n.__('Please log in to upload solutions'))}`);
     }
 
+    // Two link shapes reach this page and both must work. The homepage "Most Wanted" list
+    // sends ?problem=14.4.4; the unsolved list and the solution-page grid send #14.4.4.
+    // A query parameter is the better of the two because the server can see it, so the box
+    // arrives already filled rather than being populated by script after first paint — but
+    // the fragment form is in three templates and in whatever anyone has bookmarked, so it
+    // keeps working, handled client-side.
+    const prefillProblem = /^\d{1,2}\.\d{1,2}\.\d{1,3}$/.test(req.query.problem || '')
+        ? req.query.problem
+        : '';
+
     res.render("upload_page", {
         __: i18n.__,
         lang,
         usernameCurrent: req.session.username,
+        prefillProblem,
     });
 });
 

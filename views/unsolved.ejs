@@ -270,7 +270,7 @@
       <ul class="most-wanted-list">
         <% mostWanted.forEach(function(mw) { %>
         <li class="most-wanted-item">
-          <a href="/<%= lang %>/upload#<%= mw.problem %>"><%= mw.problem %></a>
+          <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(mw.problem) %>"><%= mw.problem %></a>
           <span class="most-wanted-context"><%= mw.chapter %> &mdash; <%= mw.section %></span>
           <span class="most-wanted-views"><%= lang === 'ru' ? 'просмотров: ' + mw.views : 'viewed ' + mw.views + ' times' %></span>
         </li>
@@ -299,7 +299,7 @@
             </div>
             <div class="problem-grid">
               <% sec.unsolved.forEach(function(prob) { %>
-              <a href="/<%= lang %>/upload#<%= prob.problem %>" class="problem-chip"><%= prob.problem %></a>
+              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(prob.problem) %>" class="problem-chip"><%= prob.problem %></a>
               <% }); %>
             </div>
           </div>
