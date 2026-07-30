@@ -209,7 +209,7 @@ function diskFigure(problem) {
     return fs.existsSync(p) ? `/img/${problem}/statement.png` : null;
 }
 
-(async () => {
+async function main() {
     const problems = authoritativeProblems();
     const en = englishStatements();
     const ruMd = fromMarkdown('ru');
@@ -351,4 +351,9 @@ function diskFigure(problem) {
     console.log('\n  in database now:');
     for (const x of check) console.log(`    ${x.lang}: ${x.n} rows, ${x.starred} starred`);
     await pool.end();
-})();
+}
+
+// Guarded so the pure parts above can be unit-tested without opening a database
+// connection or writing anything. See tests/statements.test.js.
+if (require.main === module) main();
+module.exports = { repairMath, applyOneOffs, markdownStatement, ONE_OFFS };

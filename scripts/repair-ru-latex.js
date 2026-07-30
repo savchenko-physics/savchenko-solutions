@@ -114,7 +114,7 @@ function acceptable(before, after) {
     return null;
 }
 
-(async () => {
+async function main() {
     const apiKey = (process.env.OPENAI_API_KEY || '').trim();
     if (!apiKey && !DRY) { console.error('set OPENAI_API_KEY'); process.exit(1); }
 
@@ -190,4 +190,7 @@ function acceptable(before, after) {
     );
     console.log(`  now: ${s.pdf} raw pdf, ${s.repaired} re-typeset`);
     await pool.end();
-})();
+}
+
+if (require.main === module) main();
+module.exports = { acceptable, HAS_MATHS };
