@@ -122,14 +122,25 @@ async function collect(batchId) {
     if (!['completed', 'failed', 'expired', 'cancelled'].includes(batch.status)) return { status: batch.status, batch };
     if (batch.status !== 'completed') return { status: batch.status, batch, results: [] };
 
-    const body = await fetch(`https://api.openai.com/v1/files/${batch.output_file_id}/content`, {
+    // The download is a separate request from the status check and can fail on its own —
+    // a gateway will happily hand back an HTML error page with a 200-shaped body. Parsing
+    // that as JSONL threw and killed a run that had already collected 1,800 paid-for
+    // scores, so the status is checked and the body sniffed before anything is parsed.
+    const res = await fetch(`https://api.openai.com/v1/files/${batch.output_file_id}/content`, {
         headers: { Authorization: `Bearer ${apiKey()}` },
-    }).then((r) => r.text());
+    });
+    const body = await res.text();
+    if (!res.ok || body.trimStart().startsWith('<')) {
+        console.log(`  output download for ${batchId} returned ${res.status}, will retry`);
+        return { status: 'in_progress', batch };   // treated as not-ready; the caller polls on
+    }
 
     const results = [];
+    let unparsed = 0;
     for (const line of body.split('\n')) {
         if (!line.trim()) continue;
-        const row = JSON.parse(line);
+        let row;
+        try { row = JSON.parse(line); } catch { unparsed++; continue; }
         const resp = row.response?.body;
         if (!resp || row.response?.status_code !== 200) continue;
         const text = (resp.output || [])
@@ -147,8 +158,9 @@ async function collect(batchId) {
                     out: resp.usage.output_tokens,
                 },
             });
-        } catch { /* a malformed line is dropped and reported by the caller's count */ }
+        } catch { unparsed++; }
     }
+    if (unparsed) console.log(`  ${batchId}: ${unparsed} unreadable line(s) dropped`);
     return { status: 'completed', batch, results };
 }
 
