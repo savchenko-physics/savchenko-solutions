@@ -306,6 +306,20 @@ async function renderPost(req, res) {
         // Study paths containing this problem
         const problemPaths = await getPathsForProblem(name);
 
+        // Difficulty rating, if this problem has been scored. Null keeps the panel out of
+        // the page entirely rather than rendering an empty card.
+        let difficulty = null;
+        try {
+            const { rows } = await pool.query(
+                `SELECT scores, calibrated, starred, key_idea, prerequisites, est_minutes
+                   FROM problem_difficulty WHERE problem_name = $1`,
+                [name]
+            );
+            if (rows.length) difficulty = rows[0];
+        } catch (err) {
+            if (err.code !== '42P01') console.error('difficulty lookup:', err.message);
+        }
+
         // Brainstorm Room — rotating block (unified per problem, all languages).
         // Server-rendered on first paint (cached) so the hot page pays no extra
         // client round-trip. brainstormMode is the logged-in user's quiet-mode
@@ -416,6 +430,7 @@ async function renderPost(req, res) {
             attribution,
             relatedProblems,
             problemPaths,
+            difficulty,
             editHistory,
             brainstormMode,
             brainstormRelated,

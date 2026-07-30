@@ -842,3 +842,43 @@ pre {
 /* The create-problem popup is fixed-position with no max-height, so a long statement
    would run off the viewport with no way to scroll it. */
 #edit-popup .ss-statement { max-height: 40vh; overflow-y: auto; margin-bottom: 22px; }
+
+/* ── Per-problem difficulty panel (solution page sidebar) ─────────────────────
+   Bars rather than a radar chart: the sidebar is ~280px wide, a radar would be
+   illegible at that size, and this needs no charting library on the hot page. */
+.ss-difficulty .section-grid-title { display: flex; align-items: center; gap: 0.4rem; }
+.ss-diff-star { font-weight: 700; color: var(--ss-navy, #1a1a2e); }
+.ss-diff-headline {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    margin: 0.3rem 0 0.75rem;
+}
+.ss-diff-score { font-family: Inter, sans-serif; font-size: 30px; font-weight: 700; color: var(--ss-navy, #1a1a2e); line-height: 1; }
+.ss-diff-of { font-size: 13px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-time { margin-left: auto; font-size: 12px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-group {
+    margin: 0.7rem 0 0.35rem; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-diff-row { display: flex; align-items: center; gap: 0.5rem; padding: 2px 0; }
+.ss-diff-label { flex: 0 0 45%; font-size: 12px; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-track { flex: 1; height: 6px; background: #eceff1; border-radius: 3px; overflow: hidden; }
+.ss-diff-fill { display: block; height: 100%; background: var(--ss-navy, #1a1a2e); border-radius: 3px; }
+.ss-diff-fill-reward { background: #1a5276; }
+.ss-diff-num { flex: 0 0 22px; text-align: right; font-size: 11px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.7rem; }
+.ss-diff-tag {
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    background: var(--ss-card-bg, #f8f9fa); border: 1px solid var(--ss-border-card, #dee2e6);
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-diff-idea { margin-top: 0.7rem; }
+.ss-diff-idea summary {
+    cursor: pointer; font-size: 12px; color: var(--ss-link, #1a5276);
+    list-style: none;
+}
+.ss-diff-idea summary::-webkit-details-marker { display: none; }
+.ss-diff-idea summary::before { content: '\2192  '; }
+.ss-diff-idea[open] summary::before { content: '\2193  '; }
+.ss-diff-idea p { margin: 0.4rem 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-note { margin-top: 0.7rem; font-size: 11px; line-height: 1.4; color: var(--ss-text-secondary, #6c757d); }

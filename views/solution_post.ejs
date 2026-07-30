@@ -1848,6 +1848,81 @@
                 <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %> &rarr;</a>
             </div>
             <% } %>
+            <% if (typeof difficulty !== 'undefined' && difficulty) { %>
+            <%
+              // Two groups, because they answer different questions: what this problem
+              // costs you, and what it pays back. The reward axes were judged from the
+              // published solution — you cannot tell whether a problem is beautiful until
+              // you have seen how it comes out.
+              const cost = [
+                ['insight_required', lang === 'ru' ? 'Идея' : 'Insight'],
+                ['math_level',       lang === 'ru' ? 'Математика' : 'Mathematics'],
+                ['computational_load', lang === 'ru' ? 'Вычисления' : 'Computation'],
+                ['trap_density',     lang === 'ru' ? 'Подводные камни' : 'Traps'],
+                ['specialist_knowledge', lang === 'ru' ? 'Спец. знания' : 'Specialist knowledge'],
+              ];
+              const reward = [
+                ['elegance',   lang === 'ru' ? 'Красота решения' : 'Elegance'],
+                ['novelty',    lang === 'ru' ? 'Новизна' : 'Novelty'],
+                ['curiosity',  lang === 'ru' ? 'Любопытство' : 'Curiosity'],
+                ['pleasure',   lang === 'ru' ? 'Удовольствие' : 'Pleasure'],
+              ];
+              const bar = (v) => Math.max(0, Math.min(100, Number(v) || 0));
+            %>
+            <div class="section-grid-card ss-difficulty" style="margin-top: 1rem;">
+                <div class="section-grid-title">
+                    <%= lang === 'ru' ? 'Сложность' : 'Difficulty' %>
+                    <% if (difficulty.starred) { %>
+                    <span class="ss-diff-star" title="<%= lang === 'ru' ? 'Отмечена Савченко как задача повышенной трудности' : 'Marked by Savchenko as a harder problem' %>">&#8727;</span>
+                    <% } %>
+                </div>
+                <div class="ss-diff-headline">
+                    <span class="ss-diff-score"><%= difficulty.calibrated %></span><span class="ss-diff-of">/100</span>
+                    <% if (difficulty.est_minutes) { %>
+                    <span class="ss-diff-time">&asymp; <%= difficulty.est_minutes %> <%= lang === 'ru' ? 'мин' : 'min' %></span>
+                    <% } %>
+                </div>
+
+                <div class="ss-diff-group"><%= lang === 'ru' ? 'Чего стоит' : 'What it costs' %></div>
+                <% cost.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
+                <div class="ss-diff-row">
+                    <span class="ss-diff-label"><%= a[1] %></span>
+                    <span class="ss-diff-track"><span class="ss-diff-fill" style="width: <%= bar(difficulty.scores[a[0]]) %>%"></span></span>
+                    <span class="ss-diff-num"><%= bar(difficulty.scores[a[0]]) %></span>
+                </div>
+                <% }); %>
+
+                <div class="ss-diff-group"><%= lang === 'ru' ? 'Что даёт' : 'What it repays' %></div>
+                <% reward.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
+                <div class="ss-diff-row">
+                    <span class="ss-diff-label"><%= a[1] %></span>
+                    <span class="ss-diff-track"><span class="ss-diff-fill ss-diff-fill-reward" style="width: <%= bar(difficulty.scores[a[0]]) %>%"></span></span>
+                    <span class="ss-diff-num"><%= bar(difficulty.scores[a[0]]) %></span>
+                </div>
+                <% }); %>
+
+                <% if (difficulty.prerequisites && difficulty.prerequisites.length) { %>
+                <div class="ss-diff-tags">
+                    <% difficulty.prerequisites.forEach(function(t) { %><span class="ss-diff-tag"><%= t %></span><% }); %>
+                </div>
+                <% } %>
+
+                <% if (difficulty.key_idea) { %>
+                <!-- Behind a click on purpose: the whole point of the book is finding this
+                     yourself, and a hint printed in the margin is not a hint. -->
+                <details class="ss-diff-idea">
+                    <summary><%= lang === 'ru' ? 'Показать ключевую идею' : 'Reveal the key idea' %></summary>
+                    <p><%= difficulty.key_idea %></p>
+                </details>
+                <% } %>
+
+                <div class="ss-diff-note">
+                    <%= lang === 'ru'
+                        ? 'Оценка модели, не человека. Звёздочка — пометка самого Савченко.'
+                        : 'Rated by a model, not a person. The star is Savchenko\'s own mark.' %>
+                </div>
+            </div>
+            <% } %>
         </div>
         <% } %>
         </aside>
