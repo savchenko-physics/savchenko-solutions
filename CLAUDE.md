@@ -156,7 +156,12 @@ All new UI must follow these rules:
 - Index any column used in WHERE clauses on large tables.
 
 ## Content Structure
-- 14 chapters, 78 sections, 2,023 total problems
+- 14 chapters, 77 sections, 2,023 total problems (the third column of
+  `src/database/sections.csv` is authoritative and sums to exactly 2,023)
+- Problem statements live in the `problem_statements` table, 4,046 rows — one per problem
+  per language, built by `scripts/build-statements.js`. Savchenko's own `∗` harder-problem
+  marker is the `starred` column, 565 of 2,023, and is the only independent difficulty
+  ground truth the project has: never feed it to a scoring model.
 - Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24)
 - Solutions stored as markdown files in `posts/en/` and `posts/ru/`
 - Custom markdown image syntax: `![alt|WxH,scale%](../../img/folder/file)`
@@ -169,7 +174,13 @@ All new UI must follow these rules:
 - Do NOT expose internal IPs, emails, or database credentials in client-side code.
 - Do NOT use `res.send()` for HTML pages. Use `res.render()` with EJS templates.
 - Do NOT add social media features (stories, reels, feeds). This is an academic tool.
-- Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be human-written.
+- Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be
+  human-written. Two narrow exceptions exist, both about *metadata*, never content:
+  `scripts/score-difficulty.js` rates human-written problems on the axes in
+  `difficultyRubric.js`, and `scripts/repair-ru-latex.js` re-typesets the mathematics in
+  the Russian statements recovered from the scanned book (notation only — the prose is
+  checked word-for-word against the original and a changed statement is rejected).
+  Neither writes physics. Anything that would author or complete a solution is still out.
 - Do NOT load stylesheets, fonts, or scripts from any third-party origin (jsdelivr, cdnjs, unpkg, Google Fonts, code.jquery.com, …). Every such origin is a single point of failure: a corporate or ISP web filter that blocks that one hostname leaves the site unstyled or broken for everyone behind it. This actually happened — `cdn.jsdelivr.net` is blocked by filters that classify it as a malware-distribution host, and Bootstrap was loaded from it on every page. Vendor new libraries into `css/vendor/` or `js/vendor/` and reference them with an absolute local path. `npm test` enforces this (`tests/external-assets.test.js`).
 - Analytics (`googletagmanager`, `mc.yandex.ru`) is the one allowed exception: it is injected asynchronously and the page is fully usable without it.
 
