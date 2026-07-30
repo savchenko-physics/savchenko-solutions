@@ -166,6 +166,28 @@
             position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px;
             border-radius: 50%; background: #27ae60; border: 2px solid #fff;
         }
+        /* Recency, not status: green is the five-minute window, amber the hour, red the
+           day. Someone who read a solution this morning is not "away" or "busy" — the
+           colours only say how long ago, so the label beside each is what carries meaning
+           and the dot alone is never the whole message. Avatars dim as they age so the
+           ordering survives without colour. */
+        /* The class is doubled to raise specificity to (0,2,0), matching the
+           `.online-now-item .online-dot` rule above that would otherwise keep every dot
+           green — without tying the colour to one parent. Scoping it to .online-now-item
+           was the first attempt and left the legend's own swatches green, since those live
+           somewhere else. */
+        .online-dot--recent.online-dot--recent { background: #d68910; }
+        .online-dot--today.online-dot--today   { background: #c0392b; }
+        .online-now-item--recent img { opacity: 0.82; }
+        .online-now-item--today img  { opacity: 0.62; }
+        .online-now-legend {
+            display: flex; flex-wrap: wrap; gap: 4px 14px;
+            margin: -2px 0 10px; font-size: 12.5px; color: #6c757d;
+        }
+        .online-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+        .online-now-legend .online-dot {
+            position: static; width: 8px; height: 8px; border-width: 0; flex: none;
+        }
         .online-now-empty { font-size: 13px; color: #6c757d; margin: 0; }
 
         /* ── Geographic distribution: interactive 3D globe ── */
@@ -597,6 +619,7 @@
 
         <section class="card" id="onlineNowCard" style="display:none;">
             <h2 class="section-title"><%= lang === 'ru' ? 'Сейчас в сети' : 'Online now' %> <span id="onlineNowCount" class="online-now-count"></span></h2>
+            <div id="onlineNowLegend" class="online-now-legend"></div>
             <div id="onlineNowList" class="online-now-list"></div>
         </section>
 
@@ -1489,27 +1512,48 @@
             const list = document.getElementById("onlineNowList");
             const countEl = document.getElementById("onlineNowCount");
             const users = data.users || [];
-            if (!data.total) {
+            const counts = data.counts || { online: data.total || 0, recent: 0, today: 0 };
+            const shown = counts.online + counts.recent + counts.today;
+            if (!shown) {
                 card.style.display = "none";
                 return;
             }
             card.style.display = "block";
-            countEl.textContent = "(" + data.total.toLocaleString(dateLocale) + ")";
+            // The headline stays the five-minute count, because that is what "online now"
+            // means. The other two tiers are named separately rather than folded in.
+            countEl.textContent = "(" + counts.online.toLocaleString(dateLocale) + ")";
+
+            const TIER_LABEL = {
+                online: lang === "ru" ? "в сети" : "online",
+                recent: lang === "ru" ? "был(а) в течение часа" : "here within the hour",
+                today:  lang === "ru" ? "был(а) сегодня" : "here today",
+            };
+            const legend = document.getElementById("onlineNowLegend");
+            if (legend) {
+                legend.innerHTML = [["recent", counts.recent], ["today", counts.today]]
+                    .filter(([, n]) => n > 0)
+                    .map(([tier, n]) => `<span class="online-legend-item">`
+                        + `<span class="online-dot online-dot--${tier}" aria-hidden="true"></span>`
+                        + `${n.toLocaleString(dateLocale)} ${TIER_LABEL[tier]}</span>`)
+                    .join("");
+            }
+
             list.innerHTML = users.map((u) => {
                 const href = "/user/" + encodeURIComponent(u.username);
-                const full = escapeAttr(u.fullName);
+                const tier = ["online", "recent", "today"].includes(u.tier) ? u.tier : "online";
+                const full = escapeAttr(u.fullName + " — " + TIER_LABEL[tier]);
                 const pic = escapeAttr(u.profilePicture);
-                return `<a class="online-now-item" href="${href}" title="${full}" aria-label="${full}">`
+                return `<a class="online-now-item online-now-item--${tier}" href="${href}" title="${full}" aria-label="${full}">`
                     + `<img src="${pic}" width="40" height="40" alt="${full}" loading="lazy">`
-                    + `<span class="online-dot" aria-hidden="true"></span></a>`;
+                    + `<span class="online-dot online-dot--${tier}" aria-hidden="true"></span></a>`;
             }).join("");
-            if (data.total > users.length) {
+            if (shown > users.length) {
                 const more = document.createElement("span");
                 more.className = "online-now-empty";
                 more.style.alignSelf = "center";
                 more.textContent = lang === "ru"
-                    ? `и ещё ${(data.total - users.length).toLocaleString(dateLocale)}`
-                    : `and ${(data.total - users.length).toLocaleString(dateLocale)} more`;
+                    ? `и ещё ${(shown - users.length).toLocaleString(dateLocale)}`
+                    : `and ${(shown - users.length).toLocaleString(dateLocale)} more`;
                 list.appendChild(more);
             }
         }

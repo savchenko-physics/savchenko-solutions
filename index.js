@@ -344,36 +344,60 @@ app.use((req, res, next) => {
 
 // Currently-online users (last_seen within 5 min), respecting the
 // show_online_status privacy preference. Powers the "Online now" avatar strip.
+// Three tiers rather than one. Strictly "online now" is a five-minute window, and on a
+// site this size that is usually one or two people — a strip built from it is nearly always
+// empty, which reads as nobody being here at all. Widening it to a day and colouring by
+// recency shows the place is inhabited without overstating who is present right now: the
+// headline count still means the five-minute window and nothing else.
+//
+// The same show_online_status preference governs all three. It already covers "last seen"
+// as well as the online dot (see user_settings.ejs), so this exposes nothing that opting in
+// did not already cover.
 app.get("/api/online-users", async (req, res) => {
     try {
-        const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 24));
-        const whereOnline = `
-            u.last_seen_at > NOW() - INTERVAL '5 minutes'
-            AND COALESCE(p.show_online_status, true) = true`;
+        const limit = Math.min(60, Math.max(1, parseInt(req.query.limit, 10) || 40));
+        const visible = `COALESCE(p.show_online_status, true) = true`;
         const [usersResult, countResult] = await Promise.all([
             pool.query(
                 `SELECT u.username, u.full_name, u.profile_picture, u.last_seen_at
                  FROM users u
                  LEFT JOIN user_preferences p ON p.user_id = u.id
-                 WHERE ${whereOnline}
+                 WHERE u.last_seen_at > NOW() - INTERVAL '24 hours' AND ${visible}
                  ORDER BY u.last_seen_at DESC
                  LIMIT $1`,
                 [limit]
             ),
             pool.query(
-                `SELECT COUNT(*)::int AS total
+                `SELECT
+                   COUNT(*) FILTER (WHERE u.last_seen_at > NOW() - INTERVAL '5 minutes')::int AS online,
+                   COUNT(*) FILTER (WHERE u.last_seen_at > NOW() - INTERVAL '1 hour')::int      AS within_hour,
+                   COUNT(*)::int AS total
                  FROM users u
                  LEFT JOIN user_preferences p ON p.user_id = u.id
-                 WHERE ${whereOnline}`
+                 WHERE u.last_seen_at > NOW() - INTERVAL '24 hours' AND ${visible}`
             ),
         ]);
+
+        const c = countResult.rows[0];
+        const now = Date.now();
+        const tierOf = (seenAt) => {
+            const minutes = (now - new Date(seenAt).getTime()) / 60000;
+            if (minutes < 5) return "online";
+            if (minutes < 60) return "recent";
+            return "today";
+        };
+
         res.set("Cache-Control", "no-store");
         res.json({
-            total: countResult.rows[0].total,
+            // `total` keeps its old meaning for any caller that only wants a headline
+            // number: people here in the last five minutes.
+            total: c.online,
+            counts: { online: c.online, recent: c.within_hour - c.online, today: c.total - c.within_hour },
             users: usersResult.rows.map((r) => ({
                 username: r.username,
                 fullName: r.full_name || r.username,
                 profilePicture: r.profile_picture || "/img/profile_images/Default_placeholder.svg",
+                tier: tierOf(r.last_seen_at),
             })),
         });
     } catch (error) {
