@@ -26,7 +26,7 @@
     href="/css/vendor/fonts/fonts.css"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
   <link rel="stylesheet" href="/css/main_page.css" />
   <link
     rel="stylesheet"
@@ -735,7 +735,7 @@
           const data = await res.json();
           if (ticket !== statementRequest) return;
           statementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
-            (data.starred ? ' <span class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</span>' : '');
+            (data.starred ? '<sup class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
           statementBody.innerHTML = data.html +
             (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
           statementPreview.classList.add('is-visible');

@@ -834,9 +834,11 @@ pre {
 .ss-statement-star {
     font-weight: 700;
     color: var(--ss-navy, #1a1a2e);
-    vertical-align: super;
-    font-size: 1.15em;
-    line-height: 0;
+    /* A <sup> element, so the raise comes from the browser's own default rather than from
+       this file — the mark still sits where the book puts it even if a cached stylesheet
+       arrives. Only the size is nudged, because sup's default `smaller` makes U+2217
+       almost invisible — and Bootstrap's reboot shrinks it again to .75em on top of that. */
+    font-size: 1.3em;
 }
 .ss-statement-note {
     margin-top: 0.5rem;

@@ -39,7 +39,7 @@
 
   
   <!-- Design system + page CSS -->
-  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
   <link rel="stylesheet" href="/css/main_page.css" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
@@ -2241,7 +2241,7 @@
                     const data = await res.json();
                     if (ticket !== popupStatementTicket) return;
                     popupStatementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
-                        (data.starred ? ' <span class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</span>' : '');
+                        (data.starred ? '<sup class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
                     popupStatementBody.innerHTML = data.html +
                         (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
                     popupStatement.classList.add("is-visible");

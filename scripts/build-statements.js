@@ -203,6 +203,33 @@ function fromMarkdown(lang) {
     return out;
 }
 
+// ── unwrapping the printed page ─────────────────────────────────────────────────────
+// A newline in text lifted from the book is where the column ran out, not where a sentence
+// ended. marked runs with breaks:true, so leaving them in puts a <br> in the middle of a
+// sentence — "…при диафрагме 4. Определите<br>границу резкости…".
+//
+// Four things do genuinely start a line and are kept: an image, display maths, a lettered
+// part ("а)"), and a numbered or bulleted item. Of 172 affected statements exactly one —
+// 12.1.15, which sets up a formula and then poses parts а and б — still has a break after
+// this runs, which is the right answer.
+//
+// Only ever applied to book-sourced text. The Russian markdown is human-typed and a line
+// break there may be deliberate.
+const KEEPS_LINE = /^\s*(!\[|\$\$|[а-яa-z]\)|\d+[).]|[-—•*])/i;
+
+function unwrapPrintedLines(text) {
+    return text
+        .split('\n')
+        .reduce((out, line) => {
+            if (!out.length || KEEPS_LINE.test(line) || KEEPS_LINE.test(out[out.length - 1])) out.push(line);
+            else out[out.length - 1] = `${out[out.length - 1].replace(/\s+$/, '')} ${line.replace(/^\s+/, '')}`;
+            return out;
+        }, [])
+        .join('\n')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim();
+}
+
 // ── figures on disk ─────────────────────────────────────────────────────────────────
 function diskFigure(problem) {
     const p = path.join(ROOT, 'img', problem, 'statement.png');
@@ -263,7 +290,7 @@ async function main() {
             const figures = fallbackFig ? [fallbackFig] : [];
             // Flagged for review: pdftotext flattens the maths, so this is a faithful
             // transcription rather than valid LaTeX until repair-ru-latex.js runs.
-            rows.push([name, 'ru', chapter, section, idx, pdf[name].text, figures, starred, 'pdf', true]);
+            rows.push([name, 'ru', chapter, section, idx, unwrapPrintedLines(pdf[name].text), figures, starred, 'pdf', true]);
         } else missing.ru.push(name);
     }
 
@@ -335,7 +362,11 @@ async function main() {
                  ON CONFLICT (problem_name, lang) DO UPDATE SET
                    statement_tex = EXCLUDED.statement_tex, figures = EXCLUDED.figures,
                    starred = EXCLUDED.starred, source = EXCLUDED.source,
-                   needs_review = EXCLUDED.needs_review, updated_at = now()`,
+                   needs_review = EXCLUDED.needs_review, updated_at = now()
+                 -- A row already re-typeset by scripts/repair-ru-latex.js keeps its
+                 -- mathematics. Without this guard, re-running the builder quietly reverts
+                 -- every repair back to the flattened text it started from.
+                 WHERE problem_statements.source <> 'pdf+llm' OR EXCLUDED.source <> 'pdf'`,
                 r
             );
         }
