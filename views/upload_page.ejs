@@ -807,6 +807,17 @@
         });
       });
 
+      // A value can already be in the box before anyone types: /ru/upload#5.3.8 fills it
+      // from the hash, and browsers restore form fields on back-navigation. The hash block
+      // near the top of this handler does dispatch an 'input' event, but it runs some 300
+      // lines before any listener exists, so nothing hears it — which is why the statement
+      // (and the problem-number validation) only appeared once you nudged the language
+      // radio, whose change handler dispatches the same event again. Fire it here, where
+      // the listeners are actually attached.
+      if (problemNameInput.value.trim()) {
+        problemNameInput.dispatchEvent(new Event('input'));
+      }
+
       // Update the validation function and add validation triggers
       const formElements = [
         problemNameInput,
