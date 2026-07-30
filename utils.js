@@ -473,8 +473,6 @@ const transformImageMarkdown = (htmlContent) => {
         if (scale) {
             const percentage = parseInt(scale);
             scalePercentage = `${Math.round(600 * (percentage/100))}px`;
-
-            console.log(scalePercentage);
         }
 
         const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');

@@ -791,3 +791,54 @@ pre {
 .cj-save-btn { background: var(--ss-primary-btn); color: #fff; border: none; border-radius: 6px; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
 .cj-save-btn:hover { background: var(--ss-primary-btn-hover); }
 .cj-save-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Problem statement preview ────────────────────────────────────────────────
+   Shown under the problem-number input on /upload and in the create-problem
+   popup, so people can see the problem they are being asked to solve. Maths
+   arrives as server-rendered SVG; neither page loads MathJax. */
+.ss-statement {
+    display: none;
+    margin-top: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--ss-card-bg, #f8f9fa);
+    border: 1px solid var(--ss-border-card, #dee2e6);
+    border-left: 3px solid var(--ss-navy, #1a1a2e);
+    border-radius: 6px;
+}
+.ss-statement.is-visible { display: block; }
+.ss-statement-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-statement-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ss-body-text, #2d2d2d);
+}
+.ss-statement-body p { margin: 0 0 0.5rem; }
+.ss-statement-body p:last-child { margin-bottom: 0; }
+.ss-statement-body img,
+.ss-statement-body svg { max-width: 100%; height: auto; }
+.ss-statement-body figure { margin: 0.6rem 0; }
+/* Savchenko's own harder-problem marker, carried through from the printed book. */
+.ss-statement-star {
+    font-weight: 700;
+    color: var(--ss-navy, #1a1a2e);
+}
+.ss-statement-note {
+    margin-top: 0.5rem;
+    font-size: 12px;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-statement-muted { color: var(--ss-text-secondary, #6c757d); font-size: 13px; }
+
+/* The create-problem popup is fixed-position with no max-height, so a long statement
+   would run off the viewport with no way to scroll it. */
+#edit-popup .ss-statement { max-height: 40vh; overflow-y: auto; margin-bottom: 22px; }

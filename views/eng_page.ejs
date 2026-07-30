@@ -696,6 +696,10 @@
       id="problem-name"
       placeholder="<%= __('popup.placeholder') %>"
     />
+    <div id="popup-statement" class="ss-statement" aria-live="polite">
+      <div class="ss-statement-head"><span id="popup-statement-label"></span></div>
+      <div id="popup-statement-body" class="ss-statement-body"></div>
+    </div>
     <button id="submit-problem"><%= __('popup.submit') %></button>
     <button id="cancel-edit"><%= __('popup.cancel') %></button>
   </div>
@@ -2146,8 +2150,47 @@
                 popup.style.display = "none";
                 overlay.style.display = "none";
                 problemInput.value = "";
+                popupStatement.classList.remove("is-visible");
+                popupStatementBody.innerHTML = "";
             }, 300);
         }
+
+        // Show the problem under the input, the same as /upload does. This popup had no
+        // debounce or validation of any kind, so it gets its own.
+        const popupStatement = document.getElementById("popup-statement");
+        const popupStatementBody = document.getElementById("popup-statement-body");
+        const popupStatementLabel = document.getElementById("popup-statement-label");
+        let popupStatementTimer, popupStatementTicket = 0;
+
+        problemInput.addEventListener("input", () => {
+            clearTimeout(popupStatementTimer);
+            popupStatementTimer = setTimeout(async () => {
+                const name = problemInput.value.trim();
+                const ticket = ++popupStatementTicket;
+                if (!/^\d+\.\d+\.\d+$/.test(name)) {
+                    popupStatement.classList.remove("is-visible");
+                    popupStatementBody.innerHTML = "";
+                    return;
+                }
+                try {
+                    const res = await fetch(`/api/problem/${name}/statement?lang=<%= lang %>`);
+                    if (ticket !== popupStatementTicket) return;   // stale reply
+                    if (!res.ok) {
+                        popupStatement.classList.remove("is-visible");
+                        return;
+                    }
+                    const data = await res.json();
+                    if (ticket !== popupStatementTicket) return;
+                    popupStatementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
+                        (data.starred ? ' <span class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</span>' : '');
+                    popupStatementBody.innerHTML = data.html +
+                        (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
+                    popupStatement.classList.add("is-visible");
+                } catch (err) {
+                    if (ticket === popupStatementTicket) popupStatement.classList.remove("is-visible");
+                }
+            }, 350);
+        });
 
         document.querySelectorAll(".chapter-upload-pill").forEach(button => {
             button.addEventListener("click", (event) => {

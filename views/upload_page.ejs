@@ -209,6 +209,12 @@
               required
             />
             <div id="problemStatus" class="form-text mt-2"></div>
+            <div id="statementPreview" class="ss-statement" aria-live="polite">
+              <div class="ss-statement-head">
+                <span id="statementLabel"></span>
+              </div>
+              <div id="statementBody" class="ss-statement-body"></div>
+            </div>
           </div>
 
           <!-- Add Language Selection Step -->
@@ -706,19 +712,54 @@
       const isSignedIn = <%= !!locals.usernameCurrent %>;
       
       let problemDebounceTimer;
-      
+
+      // Show the problem itself under the input. Until now the form asked people to write
+      // a solution without ever showing them what they were solving.
+      const statementPreview = document.getElementById('statementPreview');
+      const statementBody = document.getElementById('statementBody');
+      const statementLabel = document.getElementById('statementLabel');
+      let statementRequest = 0;
+
+      function hideStatement() {
+        statementPreview.classList.remove('is-visible');
+        statementBody.innerHTML = '';
+      }
+
+      async function showStatement(problemName, lang) {
+        const ticket = ++statementRequest;      // a slower earlier reply must not win
+        try {
+          const res = await fetch(`/api/problem/${problemName}/statement?lang=${lang}`);
+          if (ticket !== statementRequest) return;
+          if (!res.ok) return hideStatement();
+          const data = await res.json();
+          if (ticket !== statementRequest) return;
+          statementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
+            (data.starred ? ' <span class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</span>' : '');
+          statementBody.innerHTML = data.html +
+            (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
+          statementPreview.classList.add('is-visible');
+        } catch (err) {
+          if (ticket === statementRequest) hideStatement();
+        }
+      }
+
+      const selectedLang = () => document.querySelector('input[name="solutionLanguage"]:checked').value;
+
       problemNameInput.addEventListener('input', function() {
         clearTimeout(problemDebounceTimer);
         problemDebounceTimer = setTimeout(async () => {
           const problemName = this.value.trim();
-          
+
           // Basic format validation
           const problemFormat = /^\d+\.\d+\.\d+$/;
           if (problemName && !problemFormat.test(problemName)) {
             problemStatus.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Invalid format. Use format: chapter.section.problem (e.g., 13.4.1)</span>';
             anonymousSection.style.display = 'none';
+            hideStatement();
             return;
           }
+          if (!problemName) hideStatement();
+          else showStatement(problemName, selectedLang());
 
           if (problemName) {
             try {
@@ -753,15 +794,16 @@
             }
           }
         }, 500);
+      });
 
-        // Add language change listener to trigger problem verification
-        document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
-          radio.addEventListener('change', () => {
-            if (problemNameInput.value.trim()) {
-              // Trigger the input event on problemNameInput to recheck status
-              problemNameInput.dispatchEvent(new Event('input'));
-            }
-          });
+      // Registered once, not once per keystroke. These used to live inside the input
+      // handler, so every character typed added another listener to each radio and a
+      // single language change then fired the whole verification chain N times over.
+      document.querySelectorAll('input[name="solutionLanguage"]').forEach(radio => {
+        radio.addEventListener('change', () => {
+          if (problemNameInput.value.trim()) {
+            problemNameInput.dispatchEvent(new Event('input'));
+          }
         });
       });
 

@@ -1465,6 +1465,72 @@ app.get("/api/problems/search", (req, res) => {
     }
 });
 
+// ─── Problem statements ──────────────────────────────────────
+//
+// The upload and create-problem forms ask people to write a solution to a problem the site
+// has never actually shown them; this is what puts the statement under the input. Maths is
+// rendered to SVG here rather than in the browser so neither form has to load MathJax.
+const statementCache = new Map();          // 4,046 rendered statements, ~15 MB at worst
+
+app.get("/api/problem/:name/statement", async (req, res) => {
+    const name = req.params.name;
+    const lang = isValidSolutionLang(req.query.lang) ? req.query.lang : "en";
+    if (!isValidSolutionProblemName(name)) {
+        return res.status(400).json({ error: "bad problem name" });
+    }
+
+    const key = `${name}:${lang}`;
+    if (statementCache.has(key)) return res.json(statementCache.get(key));
+
+    try {
+        const { rows } = await pool.query(
+            `SELECT statement_tex, figures, starred, source, needs_review
+               FROM problem_statements WHERE problem_name = $1 AND lang = $2`,
+            [name, lang]
+        );
+        if (!rows.length) return res.status(404).json({ error: "no statement on record" });
+
+        const row = rows[0];
+        const { parseMarkdown, transformImageMarkdown } = require("./utils");
+        const { renderMathInHtml } = require("./mathRender");
+
+        // Order matters and matches post.js:103 — transformImageMarkdown consumes the
+        // site's "![alt|WxH,scale%](…)" syntax, so it has to see the raw markdown. Run it
+        // after marked() and the dimensions end up as literal text in the alt attribute.
+        //
+        // It then emits "../../img/…", which resolves only from a two-segment URL like
+        // /en/1.1.1. On /upload that is a 404, so the paths are made absolute here.
+        let html = parseMarkdown(transformImageMarkdown(row.statement_tex))
+            .replace(/(src|srcset)="\.\.\/\.\.\/img\//g, '$1="/img/');
+        html = renderMathInHtml(html);
+
+        // Statements recovered from the book carry no image markdown, but many of them do
+        // have a figure sitting on disk that nothing currently references. Attach it when
+        // the text itself did not already bring one.
+        if (!/<img/i.test(html) && row.figures.length) {
+            html += row.figures
+                .map((src) => `<figure><img src="${src}" alt="" loading="lazy" /></figure>`)
+                .join("");
+        }
+
+        const payload = {
+            name,
+            lang,
+            html,
+            figures: row.figures,
+            starred: row.starred,
+            // Statements recovered from the printed book still have flattened maths; the UI
+            // says so rather than presenting them as clean.
+            needsReview: row.needs_review,
+        };
+        statementCache.set(key, payload);
+        res.json(payload);
+    } catch (err) {
+        console.error("statement lookup failed:", err.message);
+        res.status(500).json({ error: "lookup failed" });
+    }
+});
+
 // ─── Notification API ────────────────────────────────────────
 
 // Get notifications for current user (JSON)
