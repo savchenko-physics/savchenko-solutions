@@ -261,50 +261,71 @@ function withinSectionAuc(scored, starredSet) {
         console.log(`  in flight  : ${state.chunks.filter((ch) => !ch.collected).length} chunk(s)`);
         console.log(`  to submit  : ${todo.length}\n`);
 
-        // Submit whatever is left, in chunks, stopping if the projection would overrun.
-        for (let i = 0; i < todo.length; i += CHUNK) {
-            const slice = todo.slice(i, i + CHUNK);
-            const requests = buildRequests(slice, sectionTitles);
-
-            // Project this chunk from what has already been paid for; before anything has
-            // come back, fall back to a deliberately pessimistic 2,000 in / 900 out.
+        // One batch at a time, start to finish, and only then the next.
+        //
+        // Submitting all nine chunks up front looked like the obvious parallel win and was
+        // wrong twice over. The organisation has a 2,000,000 ENQUEUED-token ceiling per
+        // model; 2,023 requests at ~2,100 tokens each is 4.2M, so four of the nine batches
+        // came straight back "token_limit_exceeded". And nothing had been billed yet when
+        // the later chunks were submitted, so the budget guard — which compares spend so
+        // far against the ceiling — waved through work that projected to $2.27.
+        //
+        // Sequential submission fixes both: the enqueued total is never more than one
+        // batch, and every chunk after the first is checked against real measured spend.
+        let remaining = todo;
+        let failures = 0;
+        while (remaining.length && failures < 3) {
             const perProblem = state.scored.length
                 ? state.spentUsd / state.scored.length
+                // Nothing measured yet: assume a deliberately pessimistic 2,000 in / 900 out.
                 : ((2000 / 1e6) * PRICING[MODEL].in + (900 / 1e6) * PRICING[MODEL].out) * 0.5;
-            if (state.spentUsd + perProblem * slice.length > BUDGET) {
-                console.log(`  stopping: another ${slice.length} problems would project past $${BUDGET.toFixed(2)}`);
+            const affordable = Math.floor((BUDGET - state.spentUsd) / perProblem);
+            if (affordable < 1) {
+                console.log(`  stopping: $${state.spentUsd.toFixed(4)} spent of $${BUDGET.toFixed(2)}, no room for another problem`);
                 break;
             }
 
-            const chunk = await submitChunk(requests, state.chunks.length);
+            const slice = remaining.slice(0, Math.min(CHUNK, affordable));
+            const chunk = await submitChunk(buildRequests(slice, sectionTitles), state.chunks.length);
             chunk.problems = slice.map((r) => r.problem_name);
             chunk.collected = false;
             state.chunks.push(chunk);
             saveState(state);          // written before any wait, so a kill loses nothing
-            console.log(`  submitted chunk ${chunk.index}: ${chunk.count} problems, batch ${chunk.batchId}`);
-        }
+            console.log(`  chunk ${chunk.index}: submitted ${chunk.count}, batch ${chunk.batchId}`);
 
-        // Poll until every outstanding chunk has been collected.
-        while (state.chunks.some((ch) => !ch.collected)) {
-            await sleep(POLL_SECONDS * 1000);
-            for (const ch of state.chunks) {
-                if (ch.collected) continue;
-                const { status, batch, results } = await collect(ch.batchId);
-                if (status !== 'completed') {
-                    const counts = batch.request_counts || {};
-                    console.log(`  chunk ${ch.index}: ${status} (${counts.completed || 0}/${counts.total || ch.count})`);
-                    continue;
+            // Wait this one out before touching the next.
+            for (;;) {
+                await sleep(POLL_SECONDS * 1000);
+                const { status, batch, results } = await collect(chunk.batchId);
+                const counts = batch.request_counts || {};
+                if (status === 'completed') {
+                    chunk.collected = true;
+                    chunk.returned = results.length;
+                    for (const r of results) {
+                        state.spentUsd += ((r.usage.in / 1e6) * PRICING[MODEL].in + (r.usage.out / 1e6) * PRICING[MODEL].out) * 0.5;
+                        state.scored.push(r);
+                    }
+                    saveState(state);
+                    console.log(`  chunk ${chunk.index}: collected ${results.length}/${chunk.count}, total $${state.spentUsd.toFixed(4)}`);
+                    remaining = remaining.slice(slice.length);
+                    failures = 0;
+                    break;
                 }
-                ch.collected = true;
-                ch.returned = results.length;
-                for (const r of results) {
-                    state.spentUsd += ((r.usage.in / 1e6) * PRICING[MODEL].in + (r.usage.out / 1e6) * PRICING[MODEL].out) * 0.5;
-                    state.scored.push(r);
+                if (['failed', 'expired', 'cancelled'].includes(status)) {
+                    // Put the problems back rather than losing them: the chunk is dropped
+                    // from state so a retry does not treat them as already submitted.
+                    const why = (batch.errors?.data || []).map((e) => e.code).join(', ') || status;
+                    console.log(`  chunk ${chunk.index}: ${status} (${why}) — requeueing ${slice.length}`);
+                    state.chunks = state.chunks.filter((c) => c !== chunk);
+                    saveState(state);
+                    failures++;
+                    if (failures < 3) await sleep(60_000);
+                    break;
                 }
-                saveState(state);
-                console.log(`  chunk ${ch.index}: collected ${results.length}/${ch.count}, running total $${state.spentUsd.toFixed(4)}`);
+                console.log(`  chunk ${chunk.index}: ${status} (${counts.completed || 0}/${counts.total || chunk.count})`);
             }
         }
+        if (failures >= 3) console.log('  giving up after three consecutive batch failures');
     }
 
     // ── calibrate, report, store ────────────────────────────────────────────────────
