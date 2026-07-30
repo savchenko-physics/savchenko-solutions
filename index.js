@@ -1470,7 +1470,15 @@ app.get("/api/problems/search", (req, res) => {
 // The upload and create-problem forms ask people to write a solution to a problem the site
 // has never actually shown them; this is what puts the statement under the input. Maths is
 // rendered to SVG here rather than in the browser so neither form has to load MathJax.
-const statementCache = new Map();          // 4,046 rendered statements, ~15 MB at worst
+// Rendering maths to SVG is the expensive part, so results are cached — but bounded and
+// with a TTL, not indefinitely. Statement SVG runs to tens of kilobytes and there are 4,046
+// of them, which is real memory on a process that already sits at 227 MB; and the
+// statements do change under a running server when scripts/repair-ru-latex.js re-typesets
+// a row, so a cache that never expires would serve the flattened version until the next
+// restart.
+const STATEMENT_CACHE_MAX = 600;
+const STATEMENT_CACHE_TTL = 30 * 60 * 1000;
+const statementCache = new Map();
 
 app.get("/api/problem/:name/statement", async (req, res) => {
     const name = req.params.name;
@@ -1480,7 +1488,8 @@ app.get("/api/problem/:name/statement", async (req, res) => {
     }
 
     const key = `${name}:${lang}`;
-    if (statementCache.has(key)) return res.json(statementCache.get(key));
+    const hit = statementCache.get(key);
+    if (hit && Date.now() - hit.at < STATEMENT_CACHE_TTL) return res.json(hit.payload);
 
     try {
         const { rows } = await pool.query(
@@ -1523,7 +1532,11 @@ app.get("/api/problem/:name/statement", async (req, res) => {
             // says so rather than presenting them as clean.
             needsReview: row.needs_review,
         };
-        statementCache.set(key, payload);
+        // Map preserves insertion order, so the oldest key is the first one it yields.
+        if (statementCache.size >= STATEMENT_CACHE_MAX) {
+            statementCache.delete(statementCache.keys().next().value);
+        }
+        statementCache.set(key, { at: Date.now(), payload });
         res.json(payload);
     } catch (err) {
         console.error("statement lookup failed:", err.message);
