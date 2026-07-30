@@ -847,7 +847,12 @@ pre {
    Bars rather than a radar chart: the sidebar is ~280px wide, a radar would be
    illegible at that size, and this needs no charting library on the hot page. */
 .ss-difficulty .section-grid-title { display: flex; align-items: center; gap: 0.4rem; }
-.ss-diff-star { font-weight: 700; color: var(--ss-navy, #1a1a2e); }
+.ss-diff-star {
+    font-weight: 700; color: var(--ss-navy, #1a1a2e);
+    /* At the title's 13px the asterisk-operator glyph reads as a bullet, which is
+       not what Savchenko's mark means. */
+    font-size: 17px; line-height: 0.8;
+}
 .ss-diff-headline {
     display: flex; align-items: baseline; gap: 0.5rem;
     margin: 0.3rem 0 0.75rem;
