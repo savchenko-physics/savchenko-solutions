@@ -311,7 +311,28 @@
             <span class="legend-swatch legend-unsolved"></span>
             <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
           </span>
+          <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
+          <!-- Off by default: without it the grid is byte-identical to what it has always
+               been, and nobody has to opt out of a view they did not ask for. -->
+          <label class="grid-mode-toggle" for="heatmapToggle">
+            <input type="checkbox" id="heatmapToggle" />
+            <span><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
+          </label>
+          <% } %>
         </div>
+        <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
+        <div class="grid-legend heat-legend" id="heatLegend" hidden>
+          <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
+          <span class="heat-ramp">
+            <% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %>
+          </span>
+          <span class="legend-item"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+          <span class="legend-item">
+            <span class="legend-swatch legend-star"></span>
+            <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
+          </span>
+        </div>
+        <% } %>
 
         <!-- Chapter Grid -->
         <div class="chapter-grid">
@@ -386,6 +407,9 @@
           <% }); %>
         </div>
         <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
+        <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
+        <script type="application/json" id="gridDifficulty"><%- JSON.stringify(difficultyGrid) %></script>
+        <% } %>
 
     <!-- Secondary: team, actions, progress, video. Moved below the grid so the
          first screen is the problem index rather than decoration. -->
@@ -1739,6 +1763,41 @@
       flex-wrap: wrap;
       gap: 4px;
     }
+    /* ── Difficulty heatmap ──────────────────────────────────────────────────
+       Opt-in, off by default. Colour takes over the FILL only; the borders set by the
+       solved-* rules below are left alone, so language status still reads in heat mode
+       (purple = both, blue = English, green = Russian, dashed = unsolved) while the fill
+       carries difficulty. Both facts stay visible at once.
+
+       The ramp is ColorBrewer YlOrRd, chosen because its lightness decreases monotonically
+       across all nine steps: it survives greyscale and red-green colour deficiency, which
+       matters here for the same reason set out under the dot shapes below. */
+    .grid-mode-toggle {
+      display: inline-flex; align-items: center; gap: 6px;
+      margin-left: auto; font-size: 12.5px; color: var(--ss-text-secondary, #6c757d);
+      cursor: pointer; user-select: none;
+    }
+    .grid-mode-toggle input { margin: 0; cursor: pointer; }
+    .heat-legend { gap: 8px; }
+    .heat-ramp { display: inline-flex; gap: 2px; }
+    .heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
+    .legend-star { background: #fed976; border: 2px solid #1a1a2e; }
+
+    .heat-1, body.grid-heat a.problem-dot.heat-1 { background: #ffffcc; color: #2d2d2d; }
+    .heat-2, body.grid-heat a.problem-dot.heat-2 { background: #ffeda0; color: #2d2d2d; }
+    .heat-3, body.grid-heat a.problem-dot.heat-3 { background: #fed976; color: #2d2d2d; }
+    .heat-4, body.grid-heat a.problem-dot.heat-4 { background: #feb24c; color: #2d2d2d; }
+    .heat-5, body.grid-heat a.problem-dot.heat-5 { background: #fd8d3c; color: #2d2d2d; }
+    .heat-6, body.grid-heat a.problem-dot.heat-6 { background: #fc4e2a; color: #fff; }
+    .heat-7, body.grid-heat a.problem-dot.heat-7 { background: #e31a1c; color: #fff; }
+    .heat-8, body.grid-heat a.problem-dot.heat-8 { background: #bd0026; color: #fff; }
+    .heat-9, body.grid-heat a.problem-dot.heat-9 { background: #800026; color: #fff; }
+    /* Not yet scored — shown as absent rather than as easy. */
+    body.grid-heat a.problem-dot.heat-none { background: #ffffff; color: #adb5bd; }
+    /* Savchenko's own ∗. A heavier dark border rather than a hue, so his judgement and the
+       model's are separable at a glance and the marker survives greyscale. */
+    body.grid-heat a.problem-dot.heat-starred { border: 2px solid #1a1a2e; font-weight: 700; }
+
     .problem-dot {
       display: inline-flex;
       align-items: center;
@@ -2363,6 +2422,24 @@
         return '/' + LANG + '/upload';                          // unsolved — offer to write it
       }
 
+      // One character per problem again, this time difficulty: '0' unknown, '1'-'9' the
+      // bucket, 'a'-'i' the same nine buckets for a problem Savchenko marked with a ∗.
+      const HEAT = (() => {
+        const el = document.getElementById('gridDifficulty');
+        if (!el) return null;
+        try { return JSON.parse(el.textContent); } catch (_) { return null; }
+      })();
+      const HEAT_WORD = LANG === 'ru' ? 'сложность' : 'difficulty';
+      const STAR_WORD = LANG === 'ru' ? 'отмечена ∗ Савченко' : 'marked ∗ by Savchenko';
+
+      function heatFor(section, i) {
+        const row = HEAT && HEAT[section];
+        const ch = row && row[i];
+        if (!ch || ch === '0') return null;
+        const starred = ch >= 'a' && ch <= 'i';
+        return { bucket: starred ? ch.charCodeAt(0) - 96 : Number(ch), starred };
+      }
+
       function fillSection(container) {
         if (container.dataset.filled) return;
         const section = container.dataset.section;
@@ -2375,14 +2452,41 @@
           const meta = DOT[state] || DOT['0'];
           const a = document.createElement('a');
           a.href = hrefFor(state, problem);
-          a.className = 'problem-dot ' + meta.cls;
-          a.title = PROBLEM_WORD + problem + ' · ' + meta.label;
+          // Difficulty rides as a SECOND class, so the solved-status class keeps working
+          // and the two readings never fight: colour carries difficulty in heat mode, the
+          // filled/half/hollow shapes keep carrying solved status in both modes.
+          const heat = heatFor(section, i);
+          a.className = 'problem-dot ' + meta.cls
+            + (heat ? ' heat-' + heat.bucket + (heat.starred ? ' heat-starred' : '') : ' heat-none');
+          a.title = PROBLEM_WORD + problem + ' · ' + meta.label
+            + (heat ? ' · ' + HEAT_WORD + ' ' + heat.bucket + '/9' + (heat.starred ? ', ' + STAR_WORD : '') : '');
           a.textContent = number;
           frag.appendChild(a);
         }
         container.appendChild(frag);
         container.dataset.filled = '1';
       }
+
+      // The toggle only ever flips one class on <body>; every dot already carries its heat
+      // class from the moment it is built, so switching modes repaints nothing.
+      (function heatToggle() {
+        const toggle = document.getElementById('heatmapToggle');
+        if (!toggle || !HEAT) return;
+        const legend = document.getElementById('heatLegend');
+        const KEY = 'ss-grid-mode';
+        const apply = (on) => {
+          document.body.classList.toggle('grid-heat', on);
+          if (legend) legend.hidden = !on;
+          toggle.checked = on;
+        };
+        let saved = null;
+        try { saved = localStorage.getItem(KEY); } catch (_) { /* private mode */ }
+        apply(saved === 'difficulty');
+        toggle.addEventListener('change', () => {
+          apply(toggle.checked);
+          try { localStorage.setItem(KEY, toggle.checked ? 'difficulty' : 'progress'); } catch (_) { /* ignore */ }
+        });
+      })();
 
       document.querySelectorAll('.chapter-card-header').forEach(header => {
         header.addEventListener('click', () => {

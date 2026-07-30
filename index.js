@@ -2334,6 +2334,7 @@ app.get("/", async (req, res) => {
         .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
+    const difficultyGrid = await getDifficultyGrid();
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -2362,8 +2363,55 @@ app.get("/", async (req, res) => {
         ruSolvedSet: getSolvedSet('ru'),
         mostWanted,
         proofNumbers,
+        difficultyGrid,
     });
 });
+
+// The homepage grid can recolour itself by difficulty instead of by progress. The payload
+// is one character per problem, in the same section-keyed shape as gridStates, so the
+// existing lazy fill can read it without a second request:
+//
+//   '0'       no score yet
+//   '1'-'9'   difficulty bucket, from the calibrated 0-100 score
+//   'a'-'i'   the same nine buckets, for a problem Savchenko marked with a ∗
+//
+// Packing the star into the same character rather than shipping a parallel array is what
+// keeps this around 2 KB for all 2,023 problems. Returns null when nothing has been scored,
+// and the toggle is then not rendered at all.
+let _difficultyCache = { at: 0, value: undefined };
+async function getDifficultyGrid() {
+    if (_difficultyCache.value !== undefined && Date.now() - _difficultyCache.at < 10 * 60 * 1000) {
+        return _difficultyCache.value;
+    }
+    let value = null;
+    try {
+        const { rows } = await pool.query(
+            `SELECT problem_name, calibrated, starred FROM problem_difficulty WHERE calibrated IS NOT NULL`
+        );
+        if (rows.length) {
+            const bySection = new Map();
+            for (const r of rows) {
+                const cut = r.problem_name.lastIndexOf('.');
+                const section = r.problem_name.slice(0, cut);
+                const idx = parseInt(r.problem_name.slice(cut + 1), 10) - 1;
+                if (!(idx >= 0)) continue;
+                const bucket = Math.min(9, Math.max(1, Math.ceil((r.calibrated / 100) * 9) || 1));
+                if (!bySection.has(section)) bySection.set(section, []);
+                bySection.get(section)[idx] = r.starred ? String.fromCharCode(96 + bucket) : String(bucket);
+            }
+            value = {};
+            for (const [section, chars] of bySection) {
+                for (let i = 0; i < chars.length; i++) if (!chars[i]) chars[i] = '0';
+                value[section] = chars.join('');
+            }
+        }
+    } catch (err) {
+        // A missing table must not take the homepage down.
+        if (err.code !== '42P01') console.error('difficulty grid:', err.message);
+    }
+    _difficultyCache = { at: Date.now(), value };
+    return value;
+}
 
 // Three numbers that prove other people are here: solutions, contributors, edits.
 // Shown to logged-out visitors in place of a top-ten leaderboard, which means nothing to
@@ -2471,6 +2519,7 @@ app.get("/ru", async (req, res) => {
         .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
+    const difficultyGrid = await getDifficultyGrid();
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2498,6 +2547,7 @@ app.get("/ru", async (req, res) => {
         ruSolvedSet: getSolvedSet('ru'),
         mostWanted,
         proofNumbers,
+        difficultyGrid,
     });
 });
 
@@ -2567,6 +2617,7 @@ app.get("/en", async (req, res) => {
         .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
         .catch(() => []);
     const proofNumbers = await getProofNumbers();
+    const difficultyGrid = await getDifficultyGrid();
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2594,6 +2645,7 @@ app.get("/en", async (req, res) => {
         ruSolvedSet: getSolvedSet('ru'),
         mostWanted,
         proofNumbers,
+        difficultyGrid,
     });
 });
 
