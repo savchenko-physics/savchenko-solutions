@@ -253,13 +253,48 @@ function withinSectionAuc(scored, starredSet) {
         }
         const done = new Set(state.scored.map((s) => s.problem));
         const submitted = new Set(state.chunks.flatMap((ch) => ch.problems || []));
-        const todo = rows.filter((r) => !done.has(r.problem_name) && !submitted.has(r.problem_name));
+        let todo = rows.filter((r) => !done.has(r.problem_name) && !submitted.has(r.problem_name));
 
         console.log(`  model      : ${state.model}`);
         console.log(`  budget     : $${BUDGET.toFixed(2)}   spent so far $${state.spentUsd.toFixed(4)}`);
         console.log(`  scored     : ${state.scored.length} / ${rows.length}`);
         console.log(`  in flight  : ${state.chunks.filter((ch) => !ch.collected).length} chunk(s)`);
         console.log(`  to submit  : ${todo.length}\n`);
+
+        // Adopt anything a previous process left in flight before submitting more. Without
+        // this a resumed run sees every problem as "already submitted", finds nothing to do
+        // and reports a completed run of zero — which is exactly what happened once, and is
+        // the failure mode that made the batch ids worth writing down in the first place.
+        for (const ch of state.chunks.filter((c) => !c.collected)) {
+            console.log(`  chunk ${ch.index}: adopting batch ${ch.batchId} from an earlier run`);
+            for (;;) {
+                const { status, batch, results } = await collect(ch.batchId);
+                if (status === 'completed') {
+                    ch.collected = true;
+                    ch.returned = results.length;
+                    for (const r of results) {
+                        state.spentUsd += ((r.usage.in / 1e6) * PRICING[MODEL].in + (r.usage.out / 1e6) * PRICING[MODEL].out) * 0.5;
+                        state.scored.push(r);
+                    }
+                    saveState(state);
+                    console.log(`  chunk ${ch.index}: collected ${results.length}/${ch.count}, total $${state.spentUsd.toFixed(4)}`);
+                    break;
+                }
+                if (['failed', 'expired', 'cancelled'].includes(status)) {
+                    console.log(`  chunk ${ch.index}: ${status} — its problems go back on the queue`);
+                    state.chunks = state.chunks.filter((c) => c !== ch);
+                    saveState(state);
+                    break;
+                }
+                console.log(`  chunk ${ch.index}: ${status} (${batch.request_counts?.completed || 0}/${ch.count})`);
+                await sleep(POLL_SECONDS * 1000);
+            }
+        }
+        // Recompute what is left: adoption may have returned results or freed problems.
+        const stillDone = new Set(state.scored.map((s) => s.problem));
+        const stillSubmitted = new Set(state.chunks.flatMap((ch) => ch.problems || []));
+        todo = rows.filter((r) => !stillDone.has(r.problem_name) && !stillSubmitted.has(r.problem_name));
+        if (todo.length !== 0 || state.scored.length) console.log(`  after adoption: ${state.scored.length} scored, ${todo.length} to submit\n`);
 
         // One batch at a time, start to finish, and only then the next.
         //
@@ -273,7 +308,7 @@ function withinSectionAuc(scored, starredSet) {
         // Sequential submission fixes both: the enqueued total is never more than one
         // batch, and every chunk after the first is checked against real measured spend.
         let remaining = todo;
-        let failures = 0;
+        let failures = 0, waits = 0;
         while (remaining.length && failures < 3) {
             const perProblem = state.scored.length
                 ? state.spentUsd / state.scored.length
@@ -314,12 +349,26 @@ function withinSectionAuc(scored, starredSet) {
                 if (['failed', 'expired', 'cancelled'].includes(status)) {
                     // Put the problems back rather than losing them: the chunk is dropped
                     // from state so a retry does not treat them as already submitted.
-                    const why = (batch.errors?.data || []).map((e) => e.code).join(', ') || status;
+                    const codes = (batch.errors?.data || []).map((e) => e.code);
+                    const why = codes.join(', ') || status;
                     console.log(`  chunk ${chunk.index}: ${status} (${why}) — requeueing ${slice.length}`);
                     state.chunks = state.chunks.filter((c) => c !== chunk);
                     saveState(state);
-                    failures++;
-                    if (failures < 3) await sleep(60_000);
+
+                    // Running out of enqueued-token quota is a queue that is briefly full,
+                    // not a broken run — an earlier batch of ours may still be draining or
+                    // cancelling. Wait it out instead of counting it against the three
+                    // strikes that stop the run, otherwise a transient full queue looks
+                    // exactly like a permanently broken model.
+                    if (codes.includes('token_limit_exceeded')) {
+                        waits++;
+                        if (waits > 20) { console.log('  enqueue quota never freed up; stopping'); failures = 3; break; }
+                        console.log(`  waiting 3 min for enqueue capacity (attempt ${waits})`);
+                        await sleep(180_000);
+                    } else {
+                        failures++;
+                        if (failures < 3) await sleep(60_000);
+                    }
                     break;
                 }
                 console.log(`  chunk ${chunk.index}: ${status} (${counts.completed || 0}/${counts.total || chunk.count})`);
