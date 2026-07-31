@@ -444,6 +444,9 @@
             text-decoration: none;
             transition: opacity 0.15s;
         }
+        .sg-heat-switch { margin-top: 8px; }
+        .sg-heat-legend { align-items: center; gap: 6px; }
+
         .problem-grid-item:hover {
             opacity: 0.85;
             text-decoration: none;
@@ -1797,33 +1800,55 @@
                 <div class="problem-grid">
                     <% sectionGrid.problems.forEach(function(p) { %>
                         <%
+                        // Difficulty rides as extra classes so the solved-status class keeps
+                        // working: in heat mode colour carries difficulty and the border still
+                        // carries language, exactly as on the homepage grid.
+                        const heatCls = p.heat
+                            ? ' heat-' + p.heat + (p.heatStarred ? ' heat-starred' : '')
+                            : ' heat-none';
                         let pTip;
                         if (p.current) pTip = p.name;
                         else if (p.solved && p.solvedOther) pTip = p.name + ' · ' + (lang === 'ru' ? 'Оба языка' : 'Both languages');
                         else if (p.solved) pTip = p.name + ' · ' + (lang === 'en' ? 'English only' : 'Только русский');
                         else if (p.solvedOther) pTip = p.name + ' · ' + (lang === 'en' ? 'Russian only' : 'Только английский');
                         else pTip = p.name + ' · ' + (lang === 'ru' ? 'Не решено' : 'Unsolved');
+                        const heatTip = p.calibrated
+                            ? ' · ' + (lang === 'ru' ? 'сложность ' : 'difficulty ') + p.calibrated + '/100'
+                              + (p.heatStarred ? (lang === 'ru' ? ', отмечена ∗' : ', marked ∗') : '')
+                            : '';
                         %>
                         <% if (p.current) { %>
-                            <span class="problem-grid-item problem-grid-item--current" title="<%= pTip %>"><%= p.name.split('.')[2] %></span>
+                            <span class="problem-grid-item problem-grid-item--current<%= heatCls %>" title="<%= pTip %><%= heatTip %>"><%= p.name.split('.')[2] %></span>
                         <% } else if (p.solved && p.solvedOther) { %>
-                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved-both" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--solved-both<%= heatCls %>" title="<%= pTip %><%= heatTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else if (p.solved) { %>
-                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-en' : 'solved-ru' %>" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-en' : 'solved-ru' %><%= heatCls %>" title="<%= pTip %><%= heatTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else if (p.solvedOther) { %>
                             <% const otherLangCode = lang === 'en' ? 'ru' : 'en'; %>
-                            <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %>" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= otherLangCode %>/<%= p.name %>" class="problem-grid-item problem-grid-item--<%= lang === 'en' ? 'solved-ru' : 'solved-en' %><%= heatCls %>" title="<%= pTip %><%= heatTip %>"><%= p.name.split('.')[2] %></a>
                         <% } else { %>
-                            <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(p.name) %>" class="problem-grid-item problem-grid-item--unsolved" title="<%= pTip %>"><%= p.name.split('.')[2] %></a>
+                            <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(p.name) %>" class="problem-grid-item problem-grid-item--unsolved<%= heatCls %>" title="<%= pTip %><%= heatTip %>"><%= p.name.split('.')[2] %></a>
                         <% } %>
                     <% }); %>
                 </div>
-                <div class="sg-legend">
+                <div class="sg-legend" id="sgStatusLegend">
                     <span class="sg-leg"><span class="sg-sw sg-sw-both"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-en"></span>EN</span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-ru"></span>RU</span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет' : 'None' %></span>
                 </div>
+                <% if (sectionGrid.hasDifficulty) { %>
+                <div class="sg-legend sg-heat-legend" id="sgHeatLegend" hidden>
+                    <span class="sg-leg"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
+                    <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
+                    <span class="sg-leg"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+                </div>
+                <label class="ss-switch sg-heat-switch" for="sgHeatToggle">
+                    <input type="checkbox" id="sgHeatToggle" role="switch" />
+                    <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
+                    <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
+                </label>
+                <% } %>
             </div>
             <% if (typeof relatedProblems !== 'undefined' && relatedProblems && relatedProblems.length > 0) { %>
             <div class="section-grid-card" style="margin-top: 1rem;">
@@ -2885,6 +2910,31 @@
                 }
             });
         }
+    </script>
+    <script>
+        // Difficulty mode for the section grid. The preference is shared with the homepage
+        // grid under the same localStorage key, so turning it on in one place turns it on
+        // everywhere — it is a way of reading the site, not a per-page setting.
+        (function sectionHeatToggle() {
+            const toggle = document.getElementById('sgHeatToggle');
+            if (!toggle) return;                       // nothing in this section is scored
+            const heatLegend = document.getElementById('sgHeatLegend');
+            const statusLegend = document.getElementById('sgStatusLegend');
+            const KEY = 'ss-grid-mode';
+            const apply = (on) => {
+                document.body.classList.toggle('grid-heat', on);
+                if (heatLegend) heatLegend.hidden = !on;
+                if (statusLegend) statusLegend.hidden = on;
+                toggle.checked = on;
+            };
+            let saved = null;
+            try { saved = localStorage.getItem(KEY); } catch (_) { /* private mode */ }
+            apply(saved === 'difficulty');
+            toggle.addEventListener('change', () => {
+                apply(toggle.checked);
+                try { localStorage.setItem(KEY, toggle.checked ? 'difficulty' : 'progress'); } catch (_) { /* ignore */ }
+            });
+        })();
     </script>
     <%- include('default/main_site_search_script') %>
 </body>

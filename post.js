@@ -172,6 +172,32 @@ async function renderPost(req, res) {
         // Section problems grid for sidebar
         const sectionGrid = getSectionProblemsGrid(name, lang);
 
+        // Difficulty for the same section, so the sidebar grid can recolour by it. One
+        // query for the whole section rather than one per dot; a missing table or an
+        // unscored problem simply leaves the grid as it was.
+        if (sectionGrid && sectionGrid.problems.length) {
+            try {
+                const { rows: diffRows } = await pool.query(
+                    `SELECT problem_name, calibrated, starred FROM problem_difficulty
+                      WHERE problem_name = ANY($1) AND calibrated IS NOT NULL`,
+                    [sectionGrid.problems.map((p) => p.name)]
+                );
+                const byName = new Map(diffRows.map((r) => [r.problem_name, r]));
+                let scored = 0;
+                for (const p of sectionGrid.problems) {
+                    const d = byName.get(p.name);
+                    if (!d) continue;
+                    p.heat = Math.min(9, Math.max(1, Math.ceil((d.calibrated / 100) * 9) || 1));
+                    p.heatStarred = d.starred;
+                    p.calibrated = d.calibrated;
+                    scored++;
+                }
+                sectionGrid.hasDifficulty = scored > 0;
+            } catch (err) {
+                if (err.code !== '42P01') console.error('section difficulty:', err.message);
+            }
+        }
+
         // Contributor attribution
         let attribution = null;
         try {

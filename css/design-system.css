@@ -956,3 +956,49 @@ pre {
 @media (prefers-reduced-motion: reduce) {
     .ss-switch-track, .ss-switch-knob { transition: none; }
 }
+
+/* ── Difficulty heat ramp ─────────────────────────────────────────────────────
+   Shared by the homepage chapter grid and the section grid on every solution
+   page, so the two read as one scale. Defined once here rather than inline in
+   each template.
+
+   ColorBrewer YlOrRd: its lightness falls monotonically across all nine steps,
+   so it survives greyscale and red-green colour deficiency — which matters for
+   an audience that is mostly teenage boys, roughly one in twelve of whom cannot
+   separate the purple/blue/green the solved-status colours use.
+
+   The class is doubled to reach specificity (0,3,1). It has to outrank both
+   `a.problem-dot.solved-both` (0,2,1) on the homepage and
+   `a.problem-grid-item--solved-both` (0,1,1) on the solution page, whichever
+   stylesheet happens to load later.
+
+   Colour takes the fill only; the borders those rules set are left alone, so
+   language status still reads while difficulty is showing. */
+body.grid-heat .heat-1.heat-1 { background: #ffffcc; color: #2d2d2d; }
+body.grid-heat .heat-2.heat-2 { background: #ffeda0; color: #2d2d2d; }
+body.grid-heat .heat-3.heat-3 { background: #fed976; color: #2d2d2d; }
+body.grid-heat .heat-4.heat-4 { background: #feb24c; color: #2d2d2d; }
+body.grid-heat .heat-5.heat-5 { background: #fd8d3c; color: #2d2d2d; }
+body.grid-heat .heat-6.heat-6 { background: #fc4e2a; color: #ffffff; }
+body.grid-heat .heat-7.heat-7 { background: #e31a1c; color: #ffffff; }
+body.grid-heat .heat-8.heat-8 { background: #bd0026; color: #ffffff; }
+body.grid-heat .heat-9.heat-9 { background: #800026; color: #ffffff; }
+/* Not yet scored — shown as absent rather than as easy. */
+body.grid-heat .heat-none.heat-none { background: #ffffff; color: #adb5bd; }
+/* Savchenko's own ∗: a heavier dark border rather than a hue, so his judgement
+   and the model's stay separable and the marker survives greyscale. */
+body.grid-heat .heat-starred.heat-starred { border: 2px solid #1a1a2e; font-weight: 700; }
+
+/* Legend swatches: always coloured, regardless of whether heat mode is on. */
+.heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
+.heat-chip.heat-1 { background: #ffffcc; }
+.heat-chip.heat-2 { background: #ffeda0; }
+.heat-chip.heat-3 { background: #fed976; }
+.heat-chip.heat-4 { background: #feb24c; }
+.heat-chip.heat-5 { background: #fd8d3c; }
+.heat-chip.heat-6 { background: #fc4e2a; }
+.heat-chip.heat-7 { background: #e31a1c; }
+.heat-chip.heat-8 { background: #bd0026; }
+.heat-chip.heat-9 { background: #800026; }
+.heat-ramp { display: inline-flex; gap: 2px; }
+.legend-star { background: #fed976; border: 2px solid #1a1a2e; }

@@ -1776,24 +1776,9 @@
     /* Layout only — the control itself is .ss-switch in design-system.css. */
     .grid-mode-toggle { margin-left: auto; }
     .heat-legend { gap: 8px; }
-    .heat-ramp { display: inline-flex; gap: 2px; }
-    .heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
-    .legend-star { background: #fed976; border: 2px solid #1a1a2e; }
 
-    .heat-1, body.grid-heat a.problem-dot.heat-1 { background: #ffffcc; color: #2d2d2d; }
-    .heat-2, body.grid-heat a.problem-dot.heat-2 { background: #ffeda0; color: #2d2d2d; }
-    .heat-3, body.grid-heat a.problem-dot.heat-3 { background: #fed976; color: #2d2d2d; }
-    .heat-4, body.grid-heat a.problem-dot.heat-4 { background: #feb24c; color: #2d2d2d; }
-    .heat-5, body.grid-heat a.problem-dot.heat-5 { background: #fd8d3c; color: #2d2d2d; }
-    .heat-6, body.grid-heat a.problem-dot.heat-6 { background: #fc4e2a; color: #fff; }
-    .heat-7, body.grid-heat a.problem-dot.heat-7 { background: #e31a1c; color: #fff; }
-    .heat-8, body.grid-heat a.problem-dot.heat-8 { background: #bd0026; color: #fff; }
-    .heat-9, body.grid-heat a.problem-dot.heat-9 { background: #800026; color: #fff; }
-    /* Not yet scored — shown as absent rather than as easy. */
-    body.grid-heat a.problem-dot.heat-none { background: #ffffff; color: #adb5bd; }
-    /* Savchenko's own ∗. A heavier dark border rather than a hue, so his judgement and the
-       model's are separable at a glance and the marker survives greyscale. */
-    body.grid-heat a.problem-dot.heat-starred { border: 2px solid #1a1a2e; font-weight: 700; }
+    /* The ramp itself now lives in design-system.css, shared with the section grid
+       on every solution page so the two read as one scale. */
 
     .problem-dot {
       display: inline-flex;
