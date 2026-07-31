@@ -314,9 +314,10 @@
           <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
           <!-- Off by default: without it the grid is byte-identical to what it has always
                been, and nobody has to opt out of a view they did not ask for. -->
-          <label class="grid-mode-toggle" for="heatmapToggle">
-            <input type="checkbox" id="heatmapToggle" />
-            <span><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
+          <label class="ss-switch grid-mode-toggle" for="heatmapToggle">
+            <input type="checkbox" id="heatmapToggle" role="switch" />
+            <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
+            <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
           </label>
           <% } %>
         </div>
@@ -1772,12 +1773,8 @@
        The ramp is ColorBrewer YlOrRd, chosen because its lightness decreases monotonically
        across all nine steps: it survives greyscale and red-green colour deficiency, which
        matters here for the same reason set out under the dot shapes below. */
-    .grid-mode-toggle {
-      display: inline-flex; align-items: center; gap: 6px;
-      margin-left: auto; font-size: 12.5px; color: var(--ss-text-secondary, #6c757d);
-      cursor: pointer; user-select: none;
-    }
-    .grid-mode-toggle input { margin: 0; cursor: pointer; }
+    /* Layout only — the control itself is .ss-switch in design-system.css. */
+    .grid-mode-toggle { margin-left: auto; }
     .heat-legend { gap: 8px; }
     .heat-ramp { display: inline-flex; gap: 2px; }
     .heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
