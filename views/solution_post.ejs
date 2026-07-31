@@ -1831,20 +1831,20 @@
                         <% } %>
                     <% }); %>
                 </div>
-                <div class="sg-legend" id="sgStatusLegend">
+                <div class="sg-legend">
                     <span class="sg-leg"><span class="sg-sw sg-sw-both"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-en"></span>EN</span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-ru"></span>RU</span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет' : 'None' %></span>
                 </div>
                 <% if (sectionGrid.hasDifficulty) { %>
-                <div class="sg-legend sg-heat-legend" id="sgHeatLegend" hidden>
+                <div class="sg-legend sg-heat-legend" id="sgHeatLegend" data-grid-mode-when="difficulty" hidden>
                     <span class="sg-leg"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
                     <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
                     <span class="sg-leg"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
                 </div>
                 <label class="ss-switch sg-heat-switch" for="sgHeatToggle">
-                    <input type="checkbox" id="sgHeatToggle" role="switch" />
+                    <input type="checkbox" id="sgHeatToggle" role="switch" data-grid-mode-toggle />
                     <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
                     <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
                 </label>
@@ -2911,31 +2911,7 @@
             });
         }
     </script>
-    <script>
-        // Difficulty mode for the section grid. The preference is shared with the homepage
-        // grid under the same localStorage key, so turning it on in one place turns it on
-        // everywhere — it is a way of reading the site, not a per-page setting.
-        (function sectionHeatToggle() {
-            const toggle = document.getElementById('sgHeatToggle');
-            if (!toggle) return;                       // nothing in this section is scored
-            const heatLegend = document.getElementById('sgHeatLegend');
-            const statusLegend = document.getElementById('sgStatusLegend');
-            const KEY = 'ss-grid-mode';
-            const apply = (on) => {
-                document.body.classList.toggle('grid-heat', on);
-                if (heatLegend) heatLegend.hidden = !on;
-                if (statusLegend) statusLegend.hidden = on;
-                toggle.checked = on;
-            };
-            let saved = null;
-            try { saved = localStorage.getItem(KEY); } catch (_) { /* private mode */ }
-            apply(saved === 'difficulty');
-            toggle.addEventListener('change', () => {
-                apply(toggle.checked);
-                try { localStorage.setItem(KEY, toggle.checked ? 'difficulty' : 'progress'); } catch (_) { /* ignore */ }
-            });
-        })();
-    </script>
+    <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
     <%- include('default/main_site_search_script') %>
 </body>
 </html>

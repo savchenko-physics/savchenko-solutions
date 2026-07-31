@@ -315,14 +315,14 @@
           <!-- Off by default: without it the grid is byte-identical to what it has always
                been, and nobody has to opt out of a view they did not ask for. -->
           <label class="ss-switch grid-mode-toggle" for="heatmapToggle">
-            <input type="checkbox" id="heatmapToggle" role="switch" />
+            <input type="checkbox" id="heatmapToggle" role="switch" data-grid-mode-toggle />
             <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
             <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
           </label>
           <% } %>
         </div>
         <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
-        <div class="grid-legend heat-legend" id="heatLegend" hidden>
+        <div class="grid-legend heat-legend" id="heatLegend" data-grid-mode-when="difficulty" hidden>
           <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
           <span class="heat-ramp">
             <% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %>
@@ -407,6 +407,7 @@
           </div>
           <% }); %>
         </div>
+        <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
         <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
         <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
         <script type="application/json" id="gridDifficulty"><%- JSON.stringify(difficultyGrid) %></script>
@@ -2449,26 +2450,8 @@
         container.dataset.filled = '1';
       }
 
-      // The toggle only ever flips one class on <body>; every dot already carries its heat
-      // class from the moment it is built, so switching modes repaints nothing.
-      (function heatToggle() {
-        const toggle = document.getElementById('heatmapToggle');
-        if (!toggle || !HEAT) return;
-        const legend = document.getElementById('heatLegend');
-        const KEY = 'ss-grid-mode';
-        const apply = (on) => {
-          document.body.classList.toggle('grid-heat', on);
-          if (legend) legend.hidden = !on;
-          toggle.checked = on;
-        };
-        let saved = null;
-        try { saved = localStorage.getItem(KEY); } catch (_) { /* private mode */ }
-        apply(saved === 'difficulty');
-        toggle.addEventListener('change', () => {
-          apply(toggle.checked);
-          try { localStorage.setItem(KEY, toggle.checked ? 'difficulty' : 'progress'); } catch (_) { /* ignore */ }
-        });
-      })();
+      // The switch itself is wired by /js/grid-mode.js, shared with the section grid on
+      // every solution page so the two can never disagree.
 
       document.querySelectorAll('.chapter-card-header').forEach(header => {
         header.addEventListener('click', () => {
