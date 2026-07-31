@@ -967,27 +967,32 @@ pre {
    an audience that is mostly teenage boys, roughly one in twelve of whom cannot
    separate the purple/blue/green the solved-status colours use.
 
-   The class is doubled to reach specificity (0,3,1). It has to outrank both
-   `a.problem-dot.solved-both` (0,2,1) on the homepage and
-   `a.problem-grid-item--solved-both` (0,1,1) on the solution page, whichever
-   stylesheet happens to load later.
+   `!important` is deliberate, and is the honest way to say what this is: a mode
+   switch. When difficulty is on, difficulty owns the fill — it has to outrank
+   every state variant of the progress colours on both grids, and those are
+   written out as :link, :visited, :active and :hover. `a.problem-dot.solved-both:link`
+   scores (0,3,1), which ties any selector short enough to be readable here and
+   then wins on document order, because the homepage's rules sit in an inline
+   <style> that loads after this file. Chasing that with ever-longer selectors is
+   an arms race; stating the precedence once is clearer and cannot be lost by a
+   later :hover rule.
 
    Colour takes the fill only; the borders those rules set are left alone, so
    language status still reads while difficulty is showing. */
-body.grid-heat .heat-1.heat-1 { background: #ffffcc; color: #2d2d2d; }
-body.grid-heat .heat-2.heat-2 { background: #ffeda0; color: #2d2d2d; }
-body.grid-heat .heat-3.heat-3 { background: #fed976; color: #2d2d2d; }
-body.grid-heat .heat-4.heat-4 { background: #feb24c; color: #2d2d2d; }
-body.grid-heat .heat-5.heat-5 { background: #fd8d3c; color: #2d2d2d; }
-body.grid-heat .heat-6.heat-6 { background: #fc4e2a; color: #ffffff; }
-body.grid-heat .heat-7.heat-7 { background: #e31a1c; color: #ffffff; }
-body.grid-heat .heat-8.heat-8 { background: #bd0026; color: #ffffff; }
-body.grid-heat .heat-9.heat-9 { background: #800026; color: #ffffff; }
+body.grid-heat .heat-1 { background: #ffffcc !important; color: #2d2d2d !important; }
+body.grid-heat .heat-2 { background: #ffeda0 !important; color: #2d2d2d !important; }
+body.grid-heat .heat-3 { background: #fed976 !important; color: #2d2d2d !important; }
+body.grid-heat .heat-4 { background: #feb24c !important; color: #2d2d2d !important; }
+body.grid-heat .heat-5 { background: #fd8d3c !important; color: #2d2d2d !important; }
+body.grid-heat .heat-6 { background: #fc4e2a !important; color: #ffffff !important; }
+body.grid-heat .heat-7 { background: #e31a1c !important; color: #ffffff !important; }
+body.grid-heat .heat-8 { background: #bd0026 !important; color: #ffffff !important; }
+body.grid-heat .heat-9 { background: #800026 !important; color: #ffffff !important; }
 /* Not yet scored — shown as absent rather than as easy. */
-body.grid-heat .heat-none.heat-none { background: #ffffff; color: #adb5bd; }
+body.grid-heat .heat-none { background: #ffffff !important; color: #adb5bd !important; }
 /* Savchenko's own ∗: a heavier dark border rather than a hue, so his judgement
    and the model's stay separable and the marker survives greyscale. */
-body.grid-heat .heat-starred.heat-starred { border: 2px solid #1a1a2e; font-weight: 700; }
+body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight: 700; }
 
 /* Legend swatches: always coloured, regardless of whether heat mode is on. */
 .heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
