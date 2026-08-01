@@ -579,7 +579,9 @@
             <strong><%= f.author_name || 'Anonymous' %></strong>
             <span style="color: var(--admin-muted);"><%= new Date(f.created_at).toLocaleString() %></span>
             <a href="/feedback/<%= f.public_id %>" target="_blank">receipt</a>
-            <% if (f.votes > 0) { %><span class="status-badge">▲ <%= f.votes %></span><% } %>
+            <% if (f.upvotes || f.downvotes) { %>
+              <span class="status-badge" title="score / up / down"><%= f.votes %> &nbsp;&uarr;<%= f.upvotes %> &darr;<%= f.downvotes %></span>
+            <% } %>
             <% if (f.notified_at) { %><span class="status-badge">notified</span><% } %>
           </div>
 

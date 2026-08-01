@@ -13,7 +13,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { validateFeedback, validatePollAnswer, voterKey, MIN_BODY, MAX_BODY } = require('../feedback');
+const { validateFeedback, validatePollAnswer, voterKey, nextVote, MIN_BODY, MAX_BODY } = require('../feedback');
 const { pickPollQuestion, POLL_IDS, CATEGORY_IDS, getCategories, getWidgetCopy } = require('../feedbackQuestions');
 
 const ok = (over) => ({ category: 'idea', body: 'Добавьте, пожалуйста, задачник Иродова.', ...over });
@@ -213,6 +213,45 @@ test('a request with no session at all does not throw', () => {
     assert.doesNotThrow(() => voterKey({}));
     assert.equal(voterKey({}), null);
     assert.equal(voterKey({}, { create: true }), null);
+});
+
+// ── The up/down toggle ──────────────────────────────────────────────────────────────
+//
+// Reddit's rule, and people already have it in their fingers: the direction you already
+// hold clears the vote, the other one takes over. A mis-click must always be undoable with
+// the same button that caused it — a board where you cannot take a downvote back is a board
+// people stop touching.
+
+test('pressing an arrow from neutral casts that vote', () => {
+    assert.equal(nextVote(0, 1), 1);
+    assert.equal(nextVote(0, -1), -1);
+});
+
+test('pressing the arrow you already hold clears the vote', () => {
+    assert.equal(nextVote(1, 1), 0);
+    assert.equal(nextVote(-1, -1), 0);
+});
+
+test('pressing the opposite arrow switches, so the score swings by two', () => {
+    assert.equal(nextVote(1, -1), -1);
+    assert.equal(nextVote(-1, 1), 1);
+});
+
+test('a nonsense direction leaves the existing vote untouched', () => {
+    // The endpoint is open to the internet, so it will be sent 0, 7, "up" and null.
+    for (const bad of [0, 7, -2, null, undefined, NaN, 'up', {}]) {
+        assert.equal(nextVote(1, bad), 1, String(bad));
+        assert.equal(nextVote(-1, bad), -1, String(bad));
+        assert.equal(nextVote(0, bad), 0, String(bad));
+    }
+});
+
+test('the toggle always lands on one of exactly three states', () => {
+    for (const was of [-1, 0, 1]) {
+        for (const dir of [-1, 1]) {
+            assert.ok([-1, 0, 1].includes(nextVote(was, dir)));
+        }
+    }
 });
 
 // ── Copy ────────────────────────────────────────────────────────────────────────────

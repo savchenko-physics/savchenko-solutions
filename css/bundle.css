@@ -1183,47 +1183,132 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-poll-thanks { font-size: 13px; color: var(--ss-text-secondary); margin: 0; }
 
-/* ── The public board ── */
-.fb-board { max-width: 820px; margin: 0 auto; padding: 2rem 1rem 3rem; }
-.fb-board h1 { font-size: 1.6rem; font-weight: 600; margin: 0 0 0.4rem; }
-.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; margin: 0 0 1.5rem; }
-.fb-group { margin-bottom: 2rem; }
-.fb-group-head {
-  display: flex; align-items: baseline; gap: 0.5rem; margin: 0 0 0.7rem;
-  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--ss-text-secondary);
+/* ── The public board ─────────────────────────────────────────────────────────────────
+   A Reddit-shaped feed: hairline-separated posts, a title that carries the item, and a
+   horizontal vote pill with both directions and the score between them. Structure and
+   interaction are borrowed; the palette is not — up is the site's navy, down is its error
+   red, and there is no orange anywhere. The vote control is the one place the 8px radius
+   rule is broken on purpose: a pill is what makes the affordance read as "vote" at a
+   glance, and it is the single most recognisable part of the pattern. */
+.fb-board { max-width: 740px; margin: 0 auto; padding: 1.75rem 1rem 4rem; }
+.fb-board-head { margin-bottom: 1rem; }
+.fb-board h1 { font-size: 1.55rem; font-weight: 600; margin: 0 0 0.35rem; color: var(--ss-heading); }
+.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; line-height: 1.55; margin: 0; max-width: 60ch; }
+
+/* Sort + compose row */
+.fb-toolbar {
+  display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;
+  padding: 0.75rem 0; margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--ss-border-card);
 }
-.fb-item {
-  display: flex; gap: 0.8rem; align-items: flex-start;
-  padding: 0.8rem 0.9rem; margin-bottom: 0.5rem;
+.fb-sort {
+  padding: 0.3rem 0.8rem; border-radius: 999px; border: 1px solid transparent;
+  background: none; font-family: inherit; font-size: 13px; font-weight: 500;
+  color: var(--ss-text-secondary); text-decoration: none; cursor: pointer;
+}
+.fb-sort:hover { background: var(--ss-card-bg); color: var(--ss-body-text); }
+.fb-sort.is-active { background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-white); }
+.fb-compose {
+  margin-left: auto; padding: 0.35rem 0.9rem; border-radius: 999px;
+  background: var(--ss-primary-btn); color: var(--ss-white); border: none;
+  font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.fb-compose:hover { background: var(--ss-primary-btn-hover); color: var(--ss-white); }
+
+/* Posts */
+.fb-group { margin: 0; }
+.fb-group-head {
+  display: flex; align-items: baseline; gap: 0.4rem;
+  margin: 1.5rem 0 0.25rem; font-size: 11.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--ss-text-secondary);
+}
+.fb-item { display: block; padding: 0.95rem 0; border-bottom: 1px solid var(--ss-border-card); }
+.fb-item:hover { background: transparent; }
+.fb-item-meta {
+  display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
+  font-size: 12px; color: var(--ss-text-secondary); margin: 0 0 0.35rem;
+}
+.fb-item-title { font-size: 1.05rem; font-weight: 600; line-height: 1.35; margin: 0 0 0.3rem; }
+.fb-item-title a { color: var(--ss-heading); text-decoration: none; }
+.fb-item-title a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.fb-item-body {
+  font-size: 14px; line-height: 1.55; color: var(--ss-body-text); margin: 0 0 0.6rem;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.fb-item-body.is-full { display: block; overflow: visible; }
+
+.fb-badge {
+  display: inline-block; font-size: 11px; font-weight: 600; padding: 0.1rem 0.5rem;
+  border-radius: 999px; background: var(--ss-card-bg); border: 1px solid var(--ss-border-card);
+  color: var(--ss-text-secondary); white-space: nowrap;
+}
+.fb-badge-planned    { border-color: #1a5276; color: #1a5276; }
+.fb-badge-in_progress{ border-color: #1a1a2e; color: #1a1a2e; }
+.fb-badge-done       { border-color: #27ae60; color: #1e8449; }
+.fb-badge-declined   { border-color: #c0392b; color: #c0392b; }
+
+/* Action row */
+.fb-actions { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.fb-vote {
+  display: inline-flex; align-items: center; gap: 0.15rem;
+  background: var(--ss-card-bg); border: 1px solid var(--ss-border-card);
+  border-radius: 999px; padding: 1px;
+}
+.fb-arrow {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; padding: 0; border: none; border-radius: 999px;
+  background: none; color: var(--ss-text-secondary); cursor: pointer;
+}
+.fb-arrow:hover { background: #e9ecef; color: var(--ss-body-text); }
+.fb-arrow svg { width: 15px; height: 15px; fill: currentColor; display: block; }
+.fb-arrow:disabled { cursor: default; opacity: 0.6; }
+.fb-score {
+  min-width: 1.4rem; text-align: center; font-size: 13px; font-weight: 600;
+  color: var(--ss-body-text); font-variant-numeric: tabular-nums;
+}
+/* One state per direction, applied to the whole pill so the score matches the arrow. */
+.fb-vote.is-up   .fb-arrow-up   { color: var(--ss-navy); }
+.fb-vote.is-up   .fb-score      { color: var(--ss-navy); }
+.fb-vote.is-down .fb-arrow-down { color: #c0392b; }
+.fb-vote.is-down .fb-score      { color: #c0392b; }
+
+.fb-action {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.3rem 0.7rem; border-radius: 999px; border: none; background: none;
+  font-family: inherit; font-size: 12.5px; font-weight: 500;
+  color: var(--ss-text-secondary); text-decoration: none; cursor: pointer;
+}
+.fb-action:hover { background: var(--ss-card-bg); color: var(--ss-body-text); }
+
+/* The owner's public reply, rendered as the reply it is — the one thing that proves
+   somebody read the thing. */
+.fb-reply {
+  margin: 0.7rem 0 0 0.25rem; padding-left: 0.85rem;
+  border-left: 2px solid var(--ss-border-card);
+}
+.fb-reply-head {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 12px; color: var(--ss-text-secondary); margin-bottom: 0.2rem;
+}
+.fb-reply-who { font-weight: 600; color: var(--ss-body-text); }
+.fb-reply-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase;
+  color: #c0392b;
+}
+.fb-reply-body { font-size: 13.5px; line-height: 1.55; color: var(--ss-body-text); }
+
+.fb-empty {
+  padding: 2.5rem 1rem; text-align: center; color: var(--ss-text-secondary); font-size: 14px;
   background: var(--ss-card-bg); border: 1px solid var(--ss-border-card); border-radius: 8px;
 }
-.fb-vote {
-  flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 1px;
-  min-width: 44px; padding: 0.3rem 0.25rem; background: var(--ss-white);
-  border: 1px solid var(--ss-border-card); border-radius: 6px;
-  font-family: inherit; color: var(--ss-body-text); cursor: pointer;
-}
-.fb-vote:hover { border-color: var(--ss-navy); }
-.fb-vote[aria-pressed="true"] { background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-white); }
-.fb-vote-caret { font-size: 10px; line-height: 1; }
-.fb-vote-n { font-size: 14px; font-weight: 600; line-height: 1.1; }
-.fb-item-main { min-width: 0; flex: 1 1 auto; }
-.fb-item-title { font-size: 14px; color: var(--ss-body-text); margin: 0 0 0.2rem; }
-.fb-item-title a { color: var(--ss-body-text); text-decoration: none; }
-.fb-item-title a:hover { color: var(--ss-link); text-decoration: underline; }
-.fb-item-meta { font-size: 11.5px; color: var(--ss-text-secondary); }
-.fb-item-reply {
-  margin-top: 0.5rem; padding-left: 0.7rem; border-left: 2px solid var(--ss-border-card);
-  font-size: 13px; color: var(--ss-text-secondary);
-}
-.fb-badge {
-  display: inline-block; font-size: 11px; font-weight: 600; padding: 0.1rem 0.45rem;
-  border-radius: 6px; background: var(--ss-white); border: 1px solid var(--ss-border-card);
+
+/* Single item page */
+.fb-post-body { font-size: 15px; line-height: 1.65; white-space: pre-wrap; margin: 0 0 0.9rem; }
+.fb-back { font-size: 13px; color: var(--ss-link); text-decoration: none; }
+.fb-back:hover { text-decoration: underline; }
+.fb-note {
+  margin-top: 1rem; padding: 0.7rem 0.85rem; font-size: 13px; line-height: 1.55;
   color: var(--ss-text-secondary);
-}
-.fb-empty {
-  padding: 2rem 1rem; text-align: center; color: var(--ss-text-secondary); font-size: 14px;
   background: var(--ss-card-bg); border: 1px solid var(--ss-border-card); border-radius: 8px;
 }
 
@@ -1243,7 +1328,9 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
     max-height: 88vh; border-radius: 8px 8px 0 0; border-bottom: none;
   }
   .fb-cat { flex: 1 1 45%; }
-  .fb-board { padding: 1.25rem 0.9rem 2.5rem; }
+  .fb-board { padding: 1.25rem 0.9rem 3rem; }
+  .fb-item-title { font-size: 1rem; }
+  .fb-toolbar { gap: 0.3rem; }
 }
 
 /* The panel animates in; anyone who has asked the system not to move things gets it

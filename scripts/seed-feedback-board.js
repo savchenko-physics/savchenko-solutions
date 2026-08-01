@@ -167,8 +167,8 @@ async function main() {
         // ON CONFLICT on the fixed public_id makes a re-run a no-op rather than a duplicate.
         await pool.query(
             `INSERT INTO feedback_items
-                (public_id, category, body, lang, status, is_public, public_title, public_reply, votes)
-             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7)
+                (public_id, category, body, lang, status, is_public, public_title, public_reply, votes, upvotes)
+             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7)
              ON CONFLICT (public_id) DO UPDATE
                SET status = EXCLUDED.status,
                    public_title = EXCLUDED.public_title,

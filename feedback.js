@@ -166,6 +166,13 @@ function voterKey(req, { create = false } = {}) {
     return `a:${crypto.createHmac('sha256', SECRET).update(`feedback-vote:${id}`).digest('hex').slice(0, 40)}`;
 }
 
+// Reddit's toggle rule, pulled out so it can be tested without a database: pressing the
+// direction you already hold clears the vote, anything else takes that direction.
+function nextVote(was, dir) {
+    if (dir !== 1 && dir !== -1) return was;
+    return was === dir ? 0 : dir;
+}
+
 function newPublicId() {
     return crypto.randomBytes(12).toString('base64url'); // 16 url-safe chars
 }
@@ -279,16 +286,20 @@ router.get('/', async (req, res) => {
     // The shared header partial calls __() for the site title and menu, so the locale has
     // to be set even though this page's own copy comes from feedbackQuestions.js.
     i18n.setLocale(req, lang);
+    // Top by default; New matters because a score-only order permanently buries whatever
+    // arrived most recently, which is exactly the thing nobody has voted on yet.
+    const sort = req.query.sort === 'new' ? 'new' : 'top';
     try {
         const { rows } = await pool.query(
-            `SELECT f.public_id, f.category, f.status, f.votes, f.created_at, f.lang,
+            `SELECT f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes,
+                    f.created_at, f.lang, f.body,
                     COALESCE(f.public_title, left(f.body, 120)) AS title,
                     f.public_reply,
-                    (v.voter_key IS NOT NULL) AS voted
+                    COALESCE(v.value, 0) AS my_vote
              FROM feedback_items f
              LEFT JOIN feedback_votes v ON v.item_id = f.id AND v.voter_key = $1
              WHERE f.is_public
-             ORDER BY f.votes DESC, f.created_at DESC`,
+             ORDER BY ${sort === 'new' ? 'f.created_at DESC' : 'f.votes DESC, f.created_at DESC'}`,
             [voterKey(req) || '']
         );
         const groups = PUBLIC_STATUS_ORDER
@@ -304,6 +315,7 @@ router.get('/', async (req, res) => {
             lang,
             pageLang: lang,
             groups,
+            sort,
             total: rows.length,
             copy: getWidgetCopy(lang),
             categories: getCategories(lang),
@@ -311,7 +323,7 @@ router.get('/', async (req, res) => {
     } catch (err) {
         console.error('feedback board error:', err);
         res.status(500).render('feedback/board', {
-            __: req.__, lang, pageLang: lang, groups: [], total: 0,
+            __: req.__, lang, pageLang: lang, groups: [], sort: 'top', total: 0,
             copy: getWidgetCopy(lang), categories: getCategories(lang),
         });
     }
@@ -324,9 +336,10 @@ router.get('/:publicId([A-Za-z0-9_-]{10,24})', async (req, res) => {
     i18n.setLocale(req, lang);
     try {
         const { rows } = await pool.query(
-            `SELECT f.id, f.public_id, f.category, f.status, f.votes, f.created_at, f.body,
+            `SELECT f.id, f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes,
+                    f.created_at, f.body,
                     f.is_public, f.public_title, f.public_reply, f.problem_name, f.problem_lang,
-                    (v.voter_key IS NOT NULL) AS voted
+                    COALESCE(v.value, 0) AS my_vote
              FROM feedback_items f
              LEFT JOIN feedback_votes v ON v.item_id = f.id AND v.voter_key = $1
              WHERE f.public_id = $2`,
@@ -395,7 +408,17 @@ api.post('/', submitLimiter, async (req, res) => {
     }
 });
 
+// Reddit's exact semantics, because they are what people already have in their fingers:
+// pressing the direction you already chose clears the vote, pressing the opposite one swings
+// it by two. Never an error, never a "you have already voted" — a mis-click has to be
+// undoable with the same button that caused it.
+//
+// The whole thing is one transaction against a locked row: two people voting on the same
+// item at the same moment would otherwise interleave read-modify-write and lose a vote.
 api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res) => {
+    const dir = Number(req.body && req.body.dir);
+    if (dir !== 1 && dir !== -1) return res.status(400).json({ error: 'direction' });
+
     const key = voterKey(req, { create: true });
     const client = await pool.connect();
     try {
@@ -410,21 +433,39 @@ api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res)
         }
         const id = found.rows[0].id;
 
-        // A second press removes the vote rather than erroring. People do click twice, and
-        // "you already voted" is a worse answer than simply toggling.
-        const del = await client.query('DELETE FROM feedback_votes WHERE item_id = $1 AND voter_key = $2', [id, key]);
-        let voted;
-        if (del.rowCount > 0) {
-            await client.query('UPDATE feedback_items SET votes = GREATEST(0, votes - 1) WHERE id = $1', [id]);
-            voted = false;
+        const prev = await client.query(
+            'SELECT value FROM feedback_votes WHERE item_id = $1 AND voter_key = $2',
+            [id, key]
+        );
+        const was = prev.rows.length ? prev.rows[0].value : 0;
+        const now = nextVote(was, dir);
+
+        if (now === 0) {
+            await client.query('DELETE FROM feedback_votes WHERE item_id = $1 AND voter_key = $2', [id, key]);
+        } else if (was === 0) {
+            await client.query('INSERT INTO feedback_votes (item_id, voter_key, value) VALUES ($1, $2, $3)', [id, key, now]);
         } else {
-            await client.query('INSERT INTO feedback_votes (item_id, voter_key) VALUES ($1, $2)', [id, key]);
-            await client.query('UPDATE feedback_items SET votes = votes + 1 WHERE id = $1', [id]);
-            voted = true;
+            await client.query('UPDATE feedback_votes SET value = $3 WHERE item_id = $1 AND voter_key = $2', [id, key, now]);
         }
-        const count = await client.query('SELECT votes FROM feedback_items WHERE id = $1', [id]);
+
+        // Recomputed from the vote rows rather than nudged by a delta. The counters are a
+        // cache, and a cache that drifts on one lost request stays wrong forever.
+        const upd = await client.query(
+            `UPDATE feedback_items f SET
+                 upvotes   = COALESCE(t.up, 0),
+                 downvotes = COALESCE(t.down, 0),
+                 votes     = COALESCE(t.up, 0) - COALESCE(t.down, 0)
+             FROM (SELECT
+                     count(*) FILTER (WHERE value = 1)  AS up,
+                     count(*) FILTER (WHERE value = -1) AS down
+                   FROM feedback_votes WHERE item_id = $1) t
+             WHERE f.id = $1
+             RETURNING f.votes, f.upvotes, f.downvotes`,
+            [id]
+        );
         await client.query('COMMIT');
-        res.json({ ok: true, voted, votes: count.rows[0].votes });
+        const r = upd.rows[0];
+        res.json({ ok: true, myVote: now, votes: r.votes, upvotes: r.upvotes, downvotes: r.downvotes });
     } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
         console.error('feedback vote error:', err);
@@ -481,6 +522,7 @@ module.exports = {
     validateFeedback,
     validatePollAnswer,
     voterKey,
+    nextVote,
     MIN_BODY,
     MAX_BODY,
     MIN_ELAPSED_MS,

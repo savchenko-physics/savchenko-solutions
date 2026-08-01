@@ -1,7 +1,26 @@
 <!DOCTYPE html>
 <%
   const ru = pageLang === 'ru';
-  const home = '/' + pageLang;
+  // Relative time, Reddit-style. Cheap, and it makes an eight-month-old request read as old
+  // instead of as a date nobody parses.
+  function ago(d) {
+    const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
+    const pick = (n, forms) => {
+      n = Math.floor(n);
+      if (!ru) return `${n} ${forms[3]}${n === 1 ? '' : 's'} ago`;
+      const m100 = n % 100, m10 = n % 10;
+      const f = (m100 >= 11 && m100 <= 14) ? forms[2] : (m10 === 1 ? forms[0] : (m10 >= 2 && m10 <= 4 ? forms[1] : forms[2]));
+      return `${n} ${f} назад`;
+    };
+    if (s < 60) return ru ? 'только что' : 'just now';
+    if (s < 3600) return pick(s / 60, ['минуту', 'минуты', 'минут', 'minute']);
+    if (s < 86400) return pick(s / 3600, ['час', 'часа', 'часов', 'hour']);
+    if (s < 2592000) return pick(s / 86400, ['день', 'дня', 'дней', 'day']);
+    if (s < 31536000) return pick(s / 2592000, ['месяц', 'месяца', 'месяцев', 'month']);
+    return pick(s / 31536000, ['год', 'года', 'лет', 'year']);
+  }
+  const ARROW_UP = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5 3 11h4v5.5h6V11h4z"/></svg>';
+  const ARROW_DOWN = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16.5 3 9h4V3.5h6V9h4z"/></svg>';
 %>
 <html lang="<%= pageLang %>">
 <head>
@@ -30,24 +49,28 @@
 
   <main class="flex-grow-1">
     <div class="fb-board">
-      <h1><%= ru ? 'Предложения' : 'Suggestions' %></h1>
-      <p class="fb-board-lede">
-        <%= ru
-          ? 'Что предложили читатели и что с этим стало. Голосуйте за то, что нужно вам — аккаунт не нужен.'
-          : 'What readers have asked for, and what came of it. Vote for what you need — no account required.' %>
-      </p>
+      <div class="fb-board-head">
+        <h1><%= ru ? 'Предложения' : 'Suggestions' %></h1>
+        <p class="fb-board-lede">
+          <%= ru
+            ? 'Что предложили читатели и что с этим стало. Голосуйте за и против — аккаунт не нужен.'
+            : 'What readers have asked for, and what came of it. Vote it up or down — no account needed.' %>
+        </p>
+      </div>
 
-      <p style="margin: -0.7rem 0 1.6rem;">
-        <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
-          <%= ru ? 'Предложить своё' : 'Suggest something' %>
+      <div class="fb-toolbar">
+        <%# Top by default, but New has to exist: a score-only order permanently buries
+            whatever arrived most recently, which is the thing nobody has voted on yet. %>
+        <a class="fb-sort <%= sort === 'top' ? 'is-active' : '' %>" href="/<%= pageLang %>/feedback"><%= ru ? 'Лучшие' : 'Top' %></a>
+        <a class="fb-sort <%= sort === 'new' ? 'is-active' : '' %>" href="/<%= pageLang %>/feedback?sort=new"><%= ru ? 'Новые' : 'New' %></a>
+        <button type="button" class="fb-compose" data-fb-open data-fb-category="idea">
+          <%= ru ? 'Предложить' : 'Suggest' %>
         </button>
-      </p>
+      </div>
 
       <% if (!groups.length) { %>
-        <div class="fb-empty">
-          <%= ru
-            ? 'Пока пусто. Напишите первым — мы отвечаем.'
-            : 'Nothing here yet. Be the first — we do reply.' %>
+        <div class="fb-empty" style="margin-top:1.5rem;">
+          <%= ru ? 'Пока пусто. Напишите первым — мы отвечаем.' : 'Nothing here yet. Be the first — we do reply.' %>
         </div>
       <% } %>
 
@@ -55,31 +78,55 @@
         <section class="fb-group">
           <h2 class="fb-group-head">
             <span><%= g.label %></span>
-            <span style="font-weight: 400;"><%= g.items.length %></span>
+            <span style="font-weight:400;"><%= g.items.length %></span>
           </h2>
           <% g.items.forEach(function (item) { %>
             <article class="fb-item">
-              <%# Voting is open to signed-out visitors on purpose. Every gated voting feature
-                  this site has shipped has ~zero rows, because the people who read it are not
-                  signed in. %>
-              <button type="button" class="fb-vote" data-fb-vote="<%= item.public_id %>"
-                      aria-pressed="<%= item.voted ? 'true' : 'false' %>"
-                      aria-label="<%= ru ? 'Голосовать' : 'Upvote' %>">
-                <span class="fb-vote-caret" aria-hidden="true">&#9650;</span>
-                <span class="fb-vote-n"><%= item.votes %></span>
-              </button>
-              <div class="fb-item-main">
-                <p class="fb-item-title">
-                  <a href="/<%= pageLang %>/feedback/<%= item.public_id %>"><%= item.title %></a>
-                </p>
-                <p class="fb-item-meta">
-                  <span class="fb-badge"><%= item.category %></span>
-                  <%= new Date(item.created_at).toISOString().slice(0, 10) %>
-                </p>
-                <% if (item.public_reply) { %>
-                  <div class="fb-item-reply"><%= item.public_reply %></div>
-                <% } %>
+              <p class="fb-item-meta">
+                <span class="fb-badge fb-badge-<%= item.status %>"><%= g.label %></span>
+                <span><%= item.category %></span>
+                <span aria-hidden="true">&middot;</span>
+                <span><%= ago(item.created_at) %></span>
+              </p>
+
+              <h3 class="fb-item-title">
+                <a href="/<%= pageLang %>/feedback/<%= item.public_id %>"><%= item.title %></a>
+              </h3>
+
+              <% if (item.body && item.body !== item.title) { %>
+                <p class="fb-item-body"><%= item.body %></p>
+              <% } %>
+
+              <div class="fb-actions">
+                <%# Both directions, score between them, exactly where the thumb expects it.
+                    Pressing the same arrow twice clears the vote; pressing the other swings
+                    it by two. Open to signed-out visitors on purpose — every sign-in-gated
+                    voting feature this site has shipped has ~zero rows. %>
+                <div class="fb-vote <%= item.my_vote === 1 ? 'is-up' : (item.my_vote === -1 ? 'is-down' : '') %>"
+                     data-fb-vote="<%= item.public_id %>">
+                  <button type="button" class="fb-arrow fb-arrow-up" data-dir="1"
+                          aria-label="<%= ru ? 'За' : 'Upvote' %>"
+                          aria-pressed="<%= item.my_vote === 1 %>"><%- ARROW_UP %></button>
+                  <span class="fb-score"><%= item.votes %></span>
+                  <button type="button" class="fb-arrow fb-arrow-down" data-dir="-1"
+                          aria-label="<%= ru ? 'Против' : 'Downvote' %>"
+                          aria-pressed="<%= item.my_vote === -1 %>"><%- ARROW_DOWN %></button>
+                </div>
+
+                <a class="fb-action" href="/<%= pageLang %>/feedback/<%= item.public_id %>">
+                  <%= item.public_reply ? (ru ? '1 ответ' : '1 reply') : (ru ? 'Открыть' : 'Open') %>
+                </a>
               </div>
+
+              <% if (item.public_reply) { %>
+                <div class="fb-reply">
+                  <div class="fb-reply-head">
+                    <span class="fb-reply-who">astrosander</span>
+                    <span class="fb-reply-tag"><%= ru ? 'автор сайта' : 'maintainer' %></span>
+                  </div>
+                  <div class="fb-reply-body"><%= item.public_reply %></div>
+                </div>
+              <% } %>
             </article>
           <% }); %>
         </section>
@@ -90,25 +137,7 @@
   <%- include('../default/modern_footer', { lang: pageLang }) %>
 
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
-  <script>
-    // Optimistic toggle, corrected by the server's count. A second press removes the vote
-    // rather than erroring — people do click twice, and "you already voted" is a worse
-    // answer than simply undoing it.
-    document.addEventListener('click', async function (e) {
-      const btn = e.target.closest('[data-fb-vote]');
-      if (!btn) return;
-      btn.disabled = true;
-      try {
-        const res = await fetch('/api/feedback/' + encodeURIComponent(btn.dataset.fbVote) + '/vote', { method: 'POST' });
-        const data = await res.json();
-        if (data.ok) {
-          btn.setAttribute('aria-pressed', String(data.voted));
-          btn.querySelector('.fb-vote-n').textContent = data.votes;
-        }
-      } catch (_) { /* leave the button as it was */ }
-      btn.disabled = false;
-    });
-  </script>
+  <script src="<%= av('/js/feedback-vote.js') %>" defer></script>
   <%- include('../default/main_site_search_script') %>
 </body>
 </html>
