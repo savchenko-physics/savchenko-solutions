@@ -1,8 +1,17 @@
 <!DOCTYPE html>
 <%
   const ru = pageLang === 'ru';
+  // Dates, not "1 час назад" for everything.
+  //
+  // Relative time only survives the first week. Past that it turns real history into vague
+  // mush ("8 месяцев назад" for a request made on a day you could name), and when a page is
+  // freshly populated it makes every item claim to be minutes old, which reads as
+  // manufactured. A written date is unambiguous and is the thing a sceptical reader checks.
+  const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function ago(d) {
-    const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
+    const t = new Date(d);
+    const s = Math.max(0, (Date.now() - t.getTime()) / 1000);
     const pick = (n, forms) => {
       n = Math.floor(n);
       if (!ru) return `${n} ${forms[3]}${n === 1 ? '' : 's'} ago`;
@@ -13,9 +22,16 @@
     if (s < 60) return ru ? 'только что' : 'just now';
     if (s < 3600) return pick(s / 60, ['минуту', 'минуты', 'минут', 'minute']);
     if (s < 86400) return pick(s / 3600, ['час', 'часа', 'часов', 'hour']);
-    if (s < 2592000) return pick(s / 86400, ['день', 'дня', 'дней', 'day']);
-    if (s < 31536000) return pick(s / 2592000, ['месяц', 'месяца', 'месяцев', 'month']);
-    return pick(s / 31536000, ['год', 'года', 'лет', 'year']);
+    if (s < 86400 * 7) return pick(s / 86400, ['день', 'дня', 'дней', 'day']);
+    // UTC getters on purpose. A date-only string parses as UTC midnight, so reading it back
+    // with local getters lands on the previous day for anyone west of Greenwich: 2024-12-28
+    // rendered as "27 декабря". The server also stores timestamptz, so UTC is the one frame
+    // that gives every reader the same answer.
+    const day = t.getUTCDate(), mon = t.getUTCMonth(), yr = t.getUTCFullYear();
+    const sameYear = yr === new Date().getUTCFullYear();
+    return ru
+      ? `${day} ${RU_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`
+      : `${day} ${EN_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`;
   }
   const ARROW_UP = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5 3 11h4v5.5h6V11h4z"/></svg>';
   const ARROW_DOWN = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16.5 3 9h4V3.5h6V9h4z"/></svg>';
