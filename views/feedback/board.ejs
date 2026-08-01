@@ -87,6 +87,15 @@
                 <span><%= item.category %></span>
                 <span aria-hidden="true">&middot;</span>
                 <span><%= ago(item.created_at) %></span>
+                <% if (item.base_score > 0) { %>
+                  <%# Says out loud that part of the score is not votes but people recorded
+                      asking for this before the board existed. Folding the two together
+                      silently would be a small lie in the most visible number on the page. %>
+                  <span aria-hidden="true">&middot;</span>
+                  <span title="<%= ru ? 'Просили до появления этой страницы — из опроса, форума и писем' : 'Asked for before this page existed — from the survey, forum and mail' %>">
+                    <%= ru ? 'просили ранее: ' : 'asked before: ' %><%= item.base_score %>
+                  </span>
+                <% } %>
               </p>
 
               <h3 class="fb-item-title">

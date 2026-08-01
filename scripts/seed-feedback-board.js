@@ -13,9 +13,10 @@
 // of forty requests actually matter.
 //
 // Deliberately anonymous. The people who wrote these did not agree to be named on a public
-// page, and several wrote privately. `votes` starts at the number of DISTINCT people
-// independently recorded asking for that thing — never invented, and 1 where it was one
-// person.
+// page, and several wrote privately. The count goes into `base_score`, not `votes`: it is
+// the number of DISTINCT people independently recorded asking for that thing — evidenced,
+// never invented, 1 where it was one person — and it is kept separate from votes cast here
+// rather than faked as vote rows with fabricated voters.
 //
 // `status` is honest about commitment:
 //   planned  — the owner has stated an intention to do it, in writing
@@ -167,13 +168,15 @@ async function main() {
         // ON CONFLICT on the fixed public_id makes a re-run a no-op rather than a duplicate.
         await pool.query(
             `INSERT INTO feedback_items
-                (public_id, category, body, lang, status, is_public, public_title, public_reply, votes, upvotes)
+                (public_id, category, body, lang, status, is_public, public_title, public_reply, base_score, votes)
              VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7)
              ON CONFLICT (public_id) DO UPDATE
                SET status = EXCLUDED.status,
                    public_title = EXCLUDED.public_title,
                    public_reply = EXCLUDED.public_reply,
-                   is_public = true`,
+                   is_public = true,
+                   base_score = EXCLUDED.base_score,
+                   votes = EXCLUDED.base_score + feedback_items.upvotes - feedback_items.downvotes`,
             [it.id, it.body, it.lang, it.status, it.title, it.reply, it.votes]
         );
         written += 1;

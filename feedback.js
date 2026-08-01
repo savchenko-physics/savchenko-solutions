@@ -291,7 +291,7 @@ router.get('/', async (req, res) => {
     const sort = req.query.sort === 'new' ? 'new' : 'top';
     try {
         const { rows } = await pool.query(
-            `SELECT f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes,
+            `SELECT f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes, f.base_score,
                     f.created_at, f.lang, f.body,
                     COALESCE(f.public_title, left(f.body, 120)) AS title,
                     f.public_reply,
@@ -450,11 +450,16 @@ api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res)
 
         // Recomputed from the vote rows rather than nudged by a delta. The counters are a
         // cache, and a cache that drifts on one lost request stays wrong forever.
+        //
+        // base_score is added back, not overwritten. It holds the people recorded asking for
+        // an item before this board existed, which have no rows here — an earlier version
+        // recomputed straight over it and the first click on a seeded item deleted its whole
+        // history.
         const upd = await client.query(
             `UPDATE feedback_items f SET
                  upvotes   = COALESCE(t.up, 0),
                  downvotes = COALESCE(t.down, 0),
-                 votes     = COALESCE(t.up, 0) - COALESCE(t.down, 0)
+                 votes     = f.base_score + COALESCE(t.up, 0) - COALESCE(t.down, 0)
              FROM (SELECT
                      count(*) FILTER (WHERE value = 1)  AS up,
                      count(*) FILTER (WHERE value = -1) AS down
