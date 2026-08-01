@@ -1189,13 +1189,13 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
    red, and there is no orange anywhere. The vote control is the one place the 8px radius
    rule is broken on purpose: a pill is what makes the affordance read as "vote" at a
    glance, and it is the single most recognisable part of the pattern. */
-.fb-board { max-width: 1600px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+.fb-board { max-width: none; margin: 0; padding: 1.75rem 2rem 4rem; }
 /* Feed plus sidebar. A single narrow column on a 1920px screen is mostly empty space, and
    simply widening the text would give 200-character lines that nobody can read. The sidebar
    takes the surplus and puts something useful in it. */
 .fb-layout { display: flex; align-items: flex-start; gap: 2rem; }
 .fb-main { flex: 1 1 auto; min-width: 0; }
-.fb-side { flex: 0 0 320px; position: sticky; top: 1rem; }
+.fb-side { flex: 0 0 340px; position: sticky; top: 1rem; }
 .fb-card {
   background: var(--ss-card-bg); border: 1px solid var(--ss-border-card);
   border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1rem;
@@ -1239,7 +1239,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-board-head { margin-bottom: 1rem; }
 .fb-board h1 { font-size: 1.55rem; font-weight: 600; margin: 0 0 0.35rem; color: var(--ss-heading); }
-.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; line-height: 1.55; margin: 0; max-width: 75ch; }
+.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; line-height: 1.55; margin: 0; }
 
 /* Sort + compose row */
 .fb-toolbar {
@@ -1281,13 +1281,12 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
   font-size: 12px; color: var(--ss-text-secondary); margin: 0 0 0.35rem;
 }
-.fb-item-title { font-size: 1.1rem; font-weight: 600; line-height: 1.35; margin: 0 0 0.3rem; max-width: 90ch; }
+.fb-item-title { font-size: 1.1rem; font-weight: 600; line-height: 1.35; margin: 0 0 0.3rem; }
 .fb-item-title a { color: var(--ss-heading); text-decoration: none; }
 .fb-item-title a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .fb-item-body {
   font-size: 14px; line-height: 1.55; color: var(--ss-body-text); margin: 0 0 0.6rem;
-  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
-  max-width: 95ch;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
 .fb-item-body.is-full { display: block; overflow: visible; }
 

@@ -1384,6 +1384,7 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
             id: result.rows[0].id,
             content: content.trim(),
             parentId: parentId || null,
+            isBrainstorm,
             createdAt: result.rows[0].created_at,
             author: {
                 username: user.username,

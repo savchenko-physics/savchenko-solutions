@@ -143,9 +143,26 @@
       color: #6c757d;
       transition: transform 200ms ease;
       flex-shrink: 0;
+      width: 12px;
+      text-align: center;
     }
     .chapter-row.is-open .chapter-toggle {
       transform: rotate(90deg);
+    }
+    /* Fully-solved chapters get a lock instead of an expand toggle. */
+    .chapter-header--static {
+      cursor: default;
+    }
+    .chapter-header--static:hover {
+      background: none;
+    }
+    .chapter-lock {
+      font-size: 12px;
+      color: #adb5bd;
+      flex-shrink: 0;
+      width: 12px;
+      display: inline-flex;
+      justify-content: center;
     }
     .chapter-name {
       font-size: 15px;
@@ -163,10 +180,15 @@
       flex-shrink: 0;
     }
     .chapter-progress-fill {
+      display: block;
       height: 100%;
       border-radius: 3px;
       background: #1a1a2e;
       transition: width 300ms ease;
+    }
+    /* Completed chapters read as "done" — green fill behind the lock. */
+    .chapter-row.is-complete .chapter-progress-fill {
+      background: #27ae60;
     }
     .chapter-stats {
       font-size: 13px;
@@ -282,7 +304,18 @@
 
     <div class="chapter-accordion">
       <% chapterData.forEach(function(ch) { %>
-      <div class="chapter-row">
+      <% var isComplete = ch.solved >= ch.total; %>
+      <div class="chapter-row<%= isComplete ? ' is-complete' : '' %>">
+        <% if (isComplete) { %>
+        <div class="chapter-header chapter-header--static">
+          <span class="chapter-lock" title="<%= lang === 'ru' ? 'Глава полностью решена' : 'Chapter fully solved' %>"><i class="bi bi-lock-fill"></i></span>
+          <span class="chapter-name"><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.chapterNum %>. <%= ch.title %></span>
+          <span class="chapter-progress-bar">
+            <span class="chapter-progress-fill" style="width: 100%;"></span>
+          </span>
+          <span class="chapter-stats"><%= ch.solved %> / <%= ch.total %></span>
+        </div>
+        <% } else { %>
         <button type="button" class="chapter-header" aria-expanded="false">
           <span class="chapter-toggle">&#9654;</span>
           <span class="chapter-name"><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.chapterNum %>. <%= ch.title %></span>
@@ -306,6 +339,7 @@
           </div>
           <% }); %>
         </div>
+        <% } %>
       </div>
       <% }); %>
     </div>
@@ -315,7 +349,7 @@
 
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <script>
-    document.querySelectorAll('.chapter-header').forEach(function(btn) {
+    document.querySelectorAll('button.chapter-header').forEach(function(btn) {
       btn.addEventListener('click', function() {
         const row = btn.closest('.chapter-row');
         const isOpen = row.classList.toggle('is-open');

@@ -45,7 +45,7 @@
   }) %>
 
   <main class="flex-grow-1">
-    <div class="fb-board" style="max-width: 900px;">
+    <div class="fb-board">
       <p style="margin-bottom: 0.9rem;">
         <a class="fb-back" href="/<%= pageLang %>/feedback">&larr; <%= ru ? 'Все предложения' : 'All suggestions' %></a>
       </p>
@@ -70,7 +70,7 @@
 
         <%# Escaped, and pre-wrap, so a multi-paragraph derivation stays readable without the
             body ever being treated as markup. %>
-        <div class="fb-post-body"><%= item.body %></div>
+        <div class="fb-post-body" style="max-width: 110ch;"><%= item.body %></div>
 
         <div class="fb-actions">
           <% if (item.is_public) { %>

@@ -171,7 +171,10 @@ async function main() {
                 (public_id, category, body, lang, status, is_public, public_title, public_reply, base_score, votes)
              VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7)
              ON CONFLICT (public_id) DO UPDATE
-               SET status = EXCLUDED.status,
+               SET body = EXCLUDED.body,
+                   lang = EXCLUDED.lang,
+                   category = EXCLUDED.category,
+                   status = EXCLUDED.status,
                    public_title = EXCLUDED.public_title,
                    public_reply = EXCLUDED.public_reply,
                    is_public = true,

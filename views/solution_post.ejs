@@ -715,6 +715,38 @@
             margin-left: 0.5rem;
         }
 
+        /* Brainstorm mark: composer toggle + comment badge */
+        .comment-brainstorm-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: auto;
+            font-size: 13px;
+            color: #6c757d;
+            cursor: pointer;
+            user-select: none;
+        }
+        .comment-brainstorm-toggle input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #1a1a2e;
+        }
+        .comment-brainstorm-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 1px 7px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #1a1a2e;
+            background: #eef0f4;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            vertical-align: middle;
+        }
+
         /* Autocomplete dropdown */
         .comment-autocomplete {
             position: absolute;
@@ -1759,6 +1791,10 @@
                         <div class="comment-live-preview" id="commentLivePreview"></div>
                     </div>
                     <div class="comment-footer" id="commentFooter" style="display: none;">
+                        <label class="comment-brainstorm-toggle" title="<%= lang === 'ru' ? 'Пометить как идею для мозгового штурма' : 'Mark as a brainstorm idea' %>">
+                            <input type="checkbox" id="commentIsBrainstorm">
+                            <span><%= lang === 'ru' ? 'Мозговой штурм' : 'Brainstorm' %></span>
+                        </label>
                         <button type="button" class="comment-cancel-btn" id="cancelComment">
                             <%= lang === 'ru' ? 'Отмена' : 'Cancel' %>
                         </button>
@@ -2172,6 +2208,10 @@
                 ? '<span class="comment-edited-badge">(' + (language === 'ru' ? 'изменено' : 'edited') + ')</span>'
                 : '';
 
+            const brainstormBadge = comment.isBrainstorm
+                ? '<span class="comment-brainstorm-badge">' + (language === 'ru' ? 'Мозговой штурм' : 'Brainstorm') + '</span>'
+                : '';
+
             let html = '<div class="comment-item" data-comment-id="' + comment.id + '">' +
                 '<div class="comment-author">' +
                     '<span class="avatar-presence">' +
@@ -2179,7 +2219,7 @@
                         (comment.author.isOnline ? '<span class="online-dot" title="' + (language === 'ru' ? 'В сети' : 'Online') + '"></span>' : '') +
                     '</span>' +
                     '<div>' +
-                        '<a href="/user/' + escapeHtml(comment.author.username) + '" class="comment-username">' + escapeHtml(comment.author.fullName || comment.author.username) + '</a>' +
+                        '<a href="/user/' + escapeHtml(comment.author.username) + '" class="comment-username">' + escapeHtml(comment.author.fullName || comment.author.username) + '</a>' + brainstormBadge +
                         '<span class="comment-time">' + relativeTime(comment.createdAt) + editedBadge + '</span>' +
                     '</div>' +
                 '</div>' +
@@ -2389,14 +2429,16 @@
             document.getElementById('submitComment').addEventListener('click', async function() {
                 const content = document.getElementById('commentText').value.trim();
                 if (!content) return;
+                const isBrainstorm = document.getElementById('commentIsBrainstorm').checked;
                 try {
                     const response = await fetch('/api/solutions/' + problemName + '/' + language + '/comments', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ content: content })
+                        body: JSON.stringify({ content: content, isBrainstorm: isBrainstorm })
                     });
                     if (response.ok) {
                         document.getElementById('commentText').value = '';
+                        document.getElementById('commentIsBrainstorm').checked = false;
                         document.getElementById('commentEditor').classList.remove('active');
                         document.getElementById('commentFooter').style.display = 'none';
                         document.getElementById('commentTrigger').style.display = '';
@@ -2521,6 +2563,7 @@
                 commentFooter.style.display = 'none';
                 commentTrigger.style.display = '';
                 commentText.value = '';
+                document.getElementById('commentIsBrainstorm').checked = false;
                 commentLivePreview.style.display = 'none';
                 commentLivePreview.innerHTML = '';
             });
