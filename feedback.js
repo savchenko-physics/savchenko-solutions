@@ -137,16 +137,33 @@ function validatePollAnswer(input) {
 
 // ── Identity for vote de-duplication ────────────────────────────────────────────────
 //
-// Members are keyed by account. Everyone else is keyed by a hash of their session id and
-// address, which is stable for one browser and cheap to reset by anyone determined to.
+// Members are keyed by account. Everyone else is keyed by a random id kept in their
+// session, which is stable for one browser and cheap to reset by anyone determined to.
 // That is accepted on purpose: the alternative — requiring an account — is not a stricter
 // version of this, it is zero votes. Every gated voting feature on this site has ~no rows
 // (bank_difficulty_votes 0, votes 4, user_interests 4, three of those from one person).
 // The board is advisory; it informs a decision, it does not make one.
-function voterKey(req) {
+//
+// `create` is the whole subtlety, and getting it wrong is a bug that shipped once already.
+// Sessions are saveUninitialized:false, so a visitor who has not caused a write has NO
+// session cookie and `req.sessionID` is a fresh random value on every single request —
+// which made every repeat vote look like a first vote and let one browser inflate a count
+// without limit. Writing `fbv` marks the session dirty, which is what makes express-session
+// persist it and send the cookie.
+//
+// But only ever on the vote itself. Doing it while rendering the board would create a
+// session row for every crawler that looks at the page, which is exactly how the session
+// table previously reached 1.46M rows (see the lang middleware in index.js). Reads pass
+// create:false and simply get null: nothing matches, so nothing shows as already voted.
+function voterKey(req, { create = false } = {}) {
     if (req.session && req.session.userId) return `u:${req.session.userId}`;
-    const material = `${req.sessionID || ''}|${req.ip || ''}`;
-    return `a:${crypto.createHmac('sha256', SECRET).update(`feedback-vote:${material}`).digest('hex').slice(0, 40)}`;
+    let id = req.session && req.session.fbv;
+    if (!id) {
+        if (!create || !req.session) return null;
+        id = crypto.randomBytes(12).toString('base64url');
+        req.session.fbv = id;
+    }
+    return `a:${crypto.createHmac('sha256', SECRET).update(`feedback-vote:${id}`).digest('hex').slice(0, 40)}`;
 }
 
 function newPublicId() {
@@ -272,7 +289,7 @@ router.get('/', async (req, res) => {
              LEFT JOIN feedback_votes v ON v.item_id = f.id AND v.voter_key = $1
              WHERE f.is_public
              ORDER BY f.votes DESC, f.created_at DESC`,
-            [voterKey(req)]
+            [voterKey(req) || '']
         );
         const groups = PUBLIC_STATUS_ORDER
             .map((status) => ({
@@ -313,7 +330,7 @@ router.get('/:publicId([A-Za-z0-9_-]{10,24})', async (req, res) => {
              FROM feedback_items f
              LEFT JOIN feedback_votes v ON v.item_id = f.id AND v.voter_key = $1
              WHERE f.public_id = $2`,
-            [voterKey(req), req.params.publicId]
+            [voterKey(req) || '', req.params.publicId]
         );
         if (rows.length === 0) {
             return res.status(404).render('404', { __: req.__, pageUrl: req.originalUrl, lang });
@@ -379,7 +396,7 @@ api.post('/', submitLimiter, async (req, res) => {
 });
 
 api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res) => {
-    const key = voterKey(req);
+    const key = voterKey(req, { create: true });
     const client = await pool.connect();
     try {
         await client.query('BEGIN');

@@ -13,7 +13,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
-const { validateFeedback, validatePollAnswer, MIN_BODY, MAX_BODY } = require('../feedback');
+const { validateFeedback, validatePollAnswer, voterKey, MIN_BODY, MAX_BODY } = require('../feedback');
 const { pickPollQuestion, POLL_IDS, CATEGORY_IDS, getCategories, getWidgetCopy } = require('../feedbackQuestions');
 
 const ok = (over) => ({ category: 'idea', body: 'Добавьте, пожалуйста, задачник Иродова.', ...over });
@@ -168,6 +168,51 @@ test('poll answers require an actual answer', () => {
     assert.equal(validatePollAnswer({ questionId: 'role' }).error, 'empty');
     assert.equal(validatePollAnswer({ questionId: 'role', choice: '   ' }).error, 'empty');
     assert.equal(validatePollAnswer({ questionId: 'made_up', choice: 'x' }).error, 'question');
+});
+
+// ── Vote identity ───────────────────────────────────────────────────────────────────
+//
+// This block exists because the first deploy shipped a bug. voterKey hashed req.sessionID,
+// but sessions are saveUninitialized:false, so a visitor who has never caused a session
+// write has no cookie and gets a brand-new sessionID on every request. Every repeat vote
+// therefore looked like a first vote, and one browser could run a counter up without limit.
+// Caught by pressing the button twice on production and watching 4 become 5.
+
+test('a signed-in member is keyed by account, and never gets an anonymous id', () => {
+    const req = { session: { userId: 28 } };
+    assert.equal(voterKey(req), 'u:28');
+    assert.equal(voterKey(req, { create: true }), 'u:28');
+    assert.equal(req.session.fbv, undefined);
+});
+
+test('an anonymous voter gets one id and keeps it across requests', () => {
+    const session = {};
+    const first = voterKey({ session }, { create: true });
+    const second = voterKey({ session }, { create: true });
+    assert.ok(first.startsWith('a:'));
+    assert.equal(first, second, 'a second press must produce the SAME key or it cannot toggle');
+    assert.ok(session.fbv, 'the id has to land in the session, which is what persists the cookie');
+});
+
+test('two browsers get different keys', () => {
+    const a = voterKey({ session: {} }, { create: true });
+    const b = voterKey({ session: {} }, { create: true });
+    assert.notEqual(a, b);
+});
+
+test('reads never mint an identity — that would create a session row per crawler', () => {
+    const session = {};
+    assert.equal(voterKey({ session }), null);
+    assert.equal(session.fbv, undefined, 'rendering the board must not write to the session');
+    // An existing id is still honoured on a read, so "you already voted" renders correctly.
+    voterKey({ session }, { create: true });
+    assert.equal(voterKey({ session }), voterKey({ session }, { create: true }));
+});
+
+test('a request with no session at all does not throw', () => {
+    assert.doesNotThrow(() => voterKey({}));
+    assert.equal(voterKey({}), null);
+    assert.equal(voterKey({}, { create: true }), null);
 });
 
 // ── Copy ────────────────────────────────────────────────────────────────────────────
