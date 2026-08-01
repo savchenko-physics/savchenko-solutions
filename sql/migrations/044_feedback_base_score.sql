@@ -2,18 +2,18 @@
 --
 -- Fixes a flaw exposed by the first real vote on production.
 --
--- The board was seeded with fourteen requests that people had actually made — in the
--- September 2025 survey, in the forum, in DMs — and each carried a count of how many
+-- The board was seeded with fourteen requests that people had actually made, in the
+-- September 2025 survey, in the forum, in DMs, and each carried a count of how many
 -- distinct people were recorded asking for it. But those counts were written straight into
 -- `votes`, and 043 recomputes `votes` from the rows in feedback_votes inside the vote
 -- transaction. There are no vote rows behind a seeded count, so the first click on an item
 -- silently deleted its entire history: the theory-wiki request went from 10 to 1.
 --
--- Recomputing is still right — a counter nudged by deltas drifts and stays wrong. What was
+-- Recomputing is still right, because a counter nudged by deltas drifts and stays wrong. What was
 -- wrong is conflating two different facts in one column. So they are separated:
 --
 --   base_score  people recorded asking for this BEFORE the board existed. Fixed, evidenced,
---               never changes. Not a vote and not pretending to be one — the alternative was
+--               never changes. Not a vote and not pretending to be one, since the alternative was
 --               inventing fake rows in feedback_votes with fabricated voter keys.
 --   upvotes/downvotes   actual votes cast here.
 --   votes       base_score + upvotes - downvotes, i.e. what gets displayed.
@@ -40,6 +40,6 @@ WHERE f.public_id NOT LIKE 'seed-%'
   AND NOT EXISTS (SELECT 1 FROM feedback_votes v WHERE v.item_id = f.id);
 
 COMMENT ON COLUMN feedback_items.base_score IS
-    'People recorded asking for this before the board existed, from the survey/forum/DM archive. Evidenced, fixed, and deliberately NOT stored as votes — inventing vote rows would have meant fabricating voters.';
+    'People recorded asking for this before the board existed, from the survey/forum/DM archive. Evidenced, fixed, and deliberately NOT stored as votes, because inventing vote rows would have meant fabricating voters.';
 COMMENT ON COLUMN feedback_items.votes IS
     'Displayed score: base_score + upvotes - downvotes. May go negative.';

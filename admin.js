@@ -218,7 +218,7 @@ router.post('/reports/:id/dismiss', async (req, res) => {
 
 // ─── Feedback inbox ─────────────────────────────────────────────────────
 //
-// This screen is not optional decoration on the feedback feature — it IS the feature. The
+// This screen is not optional decoration on the feedback feature, it IS the feature. The
 // thing that was broken was never intake: 63 reports arrived and 62 of them are still
 // pending at a mean age of 245 days, because reading them was a chore with no home. Every
 // status change here is visible to the person who wrote in, at their receipt URL, and

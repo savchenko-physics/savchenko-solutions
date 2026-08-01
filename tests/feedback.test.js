@@ -3,7 +3,7 @@
 // Same approach as tests/brainstorm.test.js: node:test, no framework, no database. The
 // route handlers are not covered here because there is no test database in the project;
 // what IS covered is everything that decides whether a person's message is accepted, which
-// is the part where a bug is silent and expensive — a rejected submission produces no error
+// is the part where a bug is silent and expensive. A rejected submission produces no error
 // anyone will ever see, just one more person who tried to help and gave up.
 //
 // The last block mirrors the "must never block" invariants in tests/botgate.test.js and
@@ -65,7 +65,7 @@ test('a filled honeypot is rejected', () => {
     assert.equal(validateFeedback(ok({ hp: 'http://spam.example' })).error, 'honeypot');
 });
 
-test('an empty honeypot does not reject — the field ships on every real submission', () => {
+test('an empty honeypot does not reject, since the field ships on every real submission', () => {
     assert.equal(validateFeedback(ok({ hp: '' })).ok, true);
     assert.equal(validateFeedback(ok({ hp: '   ' })).ok, true);
 });
@@ -85,7 +85,7 @@ test('a missing or unusable elapsedMs never rejects', () => {
 
 // ── Contact ─────────────────────────────────────────────────────────────────────────
 
-test('no contact at all is fine — it is optional and most people leave it blank', () => {
+test('no contact at all is fine, it is optional and most people leave it blank', () => {
     const r = validateFeedback(ok({ contactValue: '', contactKind: 'telegram' }));
     assert.equal(r.ok, true);
     assert.equal(r.value.contactKind, null);
@@ -200,7 +200,7 @@ test('two browsers get different keys', () => {
     assert.notEqual(a, b);
 });
 
-test('reads never mint an identity — that would create a session row per crawler', () => {
+test('reads never mint an identity, that would create a session row per crawler', () => {
     const session = {};
     assert.equal(voterKey({ session }), null);
     assert.equal(session.fbv, undefined, 'rendering the board must not write to the session');
@@ -219,7 +219,7 @@ test('a request with no session at all does not throw', () => {
 //
 // Reddit's rule, and people already have it in their fingers: the direction you already
 // hold clears the vote, the other one takes over. A mis-click must always be undoable with
-// the same button that caused it — a board where you cannot take a downvote back is a board
+// the same button that caused it. A board where you cannot take a downvote back is a board
 // people stop touching.
 
 test('pressing an arrow from neutral casts that vote', () => {
@@ -258,7 +258,7 @@ test('the toggle always lands on one of exactly three states', () => {
 
 test('every category and every widget string exists in both languages', () => {
     // A missing translation renders as "undefined" on a page seen by the ~73% of readers
-    // who arrive on /ru — the kind of thing nobody reports, they just leave.
+    // who arrive on /ru, and it is the kind of thing nobody reports, they just leave.
     for (const lang of ['ru', 'en']) {
         const cats = getCategories(lang);
         assert.equal(cats.length, CATEGORY_IDS.length);
@@ -301,7 +301,7 @@ test('every poll question is fully translated in both languages', () => {
 
 test('real messages the site has received are all accepted', () => {
     const real = [
-        // A terse but specific correction — the most common useful report shape.
+        // A terse but specific correction, the most common useful report shape.
         { category: 'error', body: 'В решении ошибка, в третьей строке потерян множитель 2.' },
         // A bug that only ever reached the owner as a private DM.
         { category: 'broken', body: 'когда пишу в LaTeX-е не компилируется и кнопка submit не активен' },
@@ -312,7 +312,7 @@ test('real messages the site has received are all accepted', () => {
         // A rendering bug that got mis-filed as a physics error, for want of a category.
         { category: 'error', body: 'we cannot understand the type of answer with symbols like $, varphi, left or right' },
         // Mixed script, emoji, newlines and maths all in one.
-        { category: 'other', body: 'Привет! 👋\n\nВопрос по $\\vec{v}_\\parallel$ — это компонента вдоль线? thanks' },
+        { category: 'other', body: 'Привет! 👋\n\nВопрос по $\\vec{v}_\\parallel$: это компонента вдоль线? thanks' },
     ];
     for (const m of real) {
         const r = validateFeedback(m);

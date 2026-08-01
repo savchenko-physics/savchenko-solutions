@@ -4,7 +4,7 @@
 -- That is a real gap, not just a missing button: with fourteen seeded requests competing for
 -- one person's attention, "nobody objects to this" and "half the readers actively do not
 -- want it" look identical, and the second one is the more useful thing to learn. Reddit's
--- arrangement — one score, two directions — is the cheapest way to ask.
+-- arrangement, one score with two directions, is the cheapest way to ask.
 --
 -- `votes` keeps its meaning as the displayed score (up minus down) so nothing that reads it
 -- needs to change. The two directions are also counted separately, because a score of 2 from

@@ -1,4 +1,4 @@
-// feedback-vote.js — the up/down control on the suggestion board.
+// feedback-vote.js: the up/down control on the suggestion board.
 //
 // Reddit's semantics, because they are the ones people already have in their fingers:
 // pressing the direction you already chose clears the vote, pressing the opposite swings it

@@ -1,15 +1,15 @@
-// feedbackQuestions.js — all the words the feedback widget says, plus the poll queue.
+// feedbackQuestions.js: all the words the feedback widget says, plus the poll queue.
 //
 // Config-in-code, in the shape of practicum.js and contest.js: a DB-free descriptor the
 // router injects into res.locals so every template renders the same copy. It lives here
-// rather than in locales/ because the wording IS the design — the placeholder text is the
+// rather than in locales/ because the wording IS the design. The placeholder text is the
 // only mechanism forcing specificity, and splitting it across two JSON files would let the
 // two languages drift apart silently.
 //
 // Two things this file encodes that came out of reading every piece of feedback the site
 // has ever received:
 //
-//   1. The category prompts follow the Mom Test rule — ask about a concrete past moment,
+//   1. The category prompts follow the Mom Test rule: ask about a concrete past moment,
 //      never an opinion about the future. "Would you use X?" produces flattery; "what were
 //      you doing when it broke?" produces a bug report. 13% of the legacy reports were just
 //      "неверно" with no detail, which is a question-design failure, not a user failure.
@@ -26,7 +26,7 @@
 // Four categories, one tap, no typing. `broken` is the new one and the whole reason for the
 // split: eight distinct bugs reached the owner only as private DMs from top-ten
 // contributors, and people in five countries have emailed solutions as attachments because
-// the uploader failed. There was never a door marked "something is broken" — only "report an
+// the uploader failed. There was never a door marked "something is broken", only "report an
 // error in this solution", so display bugs got filed as physics mistakes (8% of reports).
 const CATEGORIES = [
     {
@@ -35,14 +35,14 @@ const CATEGORIES = [
             label: 'Ошибка в решении',
             prompt: 'Что именно неверно?',
             placeholder:
-                'Укажите шаг, формулу или строку — и правильный ответ, если знаете. '
+                'Укажите шаг, формулу или строку, а также правильный ответ, если знаете. '
                 + 'Например: «в третьей строке потеряна двойка, должно быть a = 2F/m».',
         },
         en: {
             label: 'Error in a solution',
             prompt: 'What exactly is wrong?',
             placeholder:
-                'Name the step, formula or line — and the correct answer if you know it. '
+                'Name the step, formula or line, plus the correct answer if you know it. '
                 + 'For example: "line 3 drops a factor of 2, it should be a = 2F/m".',
         },
     },
@@ -68,7 +68,7 @@ const CATEGORIES = [
         ru: {
             // The single best-performing question the site has ever asked: 95% answered it,
             // zero junk, median 103 characters, and nearly every named book, feature and bug
-            // in the whole dataset came out of it. "Одно" is what does the work — it caps the
+            // in the whole dataset came out of it. "Одно" is what does the work: it caps the
             // effort and forces a priority. Kept almost verbatim.
             label: 'Идея или пожелание',
             prompt: 'Одно предложение по улучшению сайта',
@@ -117,7 +117,7 @@ const POLL = [
     },
     {
         id: 'disappointed',
-        // The Sean Ellis test. Nothing on this site measures whether it is load-bearing —
+        // The Sean Ellis test. Nothing on this site measures whether it is load-bearing:
         // there is no rating, no NPS, no frequency question anywhere. The share answering
         // "very" is the one externally comparable read available on whether the niche is
         // saturated; the conventional product-market-fit threshold is 40%.
@@ -130,7 +130,7 @@ const POLL = [
         // extend the site to other problem books starting with Ovchinkin, and it currently
         // rests on twenty survey responses. Search data shows literally zero spillover
         // demand (Irodov drew 10 visits in 22 months, Goldfarb 0), so this is greenfield and
-        // will not be free — which makes asking real readers first worth a great deal.
+        // will not be free, which makes asking real readers first worth a great deal.
         // Options are the books users named unprompted, nothing invented.
         ru: { q: 'Какой ещё задачник вы сейчас решаете?', options: ['Иродов', 'Овчинкин–Прут', 'Гольдфарб', 'Мешерский', 'Листки mathus.ru', 'Олимпиадные архивы', 'Никакой'], allowOther: true },
         en: { q: 'Which other problem book are you working through?', options: ['Irodov', 'Ovchinkin–Prut', 'Goldfarb', 'Meshchersky', 'mathus.ru sheets', 'Olympiad archives', 'None'], allowOther: true },
@@ -145,7 +145,7 @@ const POLL = [
     {
         id: 'contribute_barrier',
         // Under 10% of registered users have ever contributed and the other 90% have never
-        // been asked why. Options are lifted verbatim from real messages — one contributor
+        // been asked why. Options are lifted verbatim from real messages: one contributor
         // threw away about ten sheets of worked solutions rather than retype them; another
         // writes in Word because he does not know LaTeX. The last option is the one the
         // email archive proves is happening and nobody counts.
@@ -155,7 +155,7 @@ const POLL = [
     {
         id: 'ever_paid',
         // Deliberately about past behaviour. "Would you pay?" is the textbook Mom Test
-        // violation — people are optimistic and want to be kind. This is the only honest
+        // violation, because people are optimistic and want to be kind. This is the only honest
         // read available on the claim that the platform must pay its authors or the author
         // count stays vanishingly small, which currently rests on one person's opinion.
         ru: { q: 'Вы когда-нибудь платили за подготовку по физике?', options: ['Репетитор', 'Курсы', 'Книги', 'Нет, никогда'] },
@@ -230,7 +230,7 @@ function getWidgetCopy(lang) {
         lang: k,
         tabLabel: ru ? 'Предложить' : 'Suggest',
         title: ru ? 'Обратная связь' : 'Feedback',
-        // No account required, said up front — 59% of visits never return and almost none of
+        // No account required, said up front. 59% of visits never return and almost none of
         // them are signed in, so the sign-in wall was the single biggest thing suppressing
         // every other channel on this site.
         subtitle: ru
@@ -251,14 +251,14 @@ function getWidgetCopy(lang) {
         close: ru ? 'Закрыть' : 'Close',
         thanksTitle: ru ? 'Спасибо' : 'Thank you',
         thanksBody: ru
-            ? 'Мы прочитаем и ответим. Сохраните ссылку — по ней видно, что стало с вашим сообщением.'
-            : 'We will read it and reply. Keep the link — it shows what happened to your message.',
+            ? 'Мы прочитаем и ответим. Сохраните ссылку: по ней видно, что стало с вашим сообщением.'
+            : 'We will read it and reply. Keep the link: it shows what happened to your message.',
         receiptLabel: ru ? 'Ссылка на ваше сообщение' : 'Link to your message',
         boardLink: ru ? 'Все предложения' : 'All suggestions',
         again: ru ? 'Отправить ещё' : 'Send another',
         errorGeneric: ru ? 'Не удалось отправить. Попробуйте ещё раз.' : 'Could not send. Please try again.',
         errorTooShort: ru ? 'Напишите хотя бы пару слов.' : 'Please write at least a few words.',
-        errorTooLong: ru ? 'Слишком длинно — сократите, пожалуйста.' : 'That is too long — please shorten it.',
+        errorTooLong: ru ? 'Слишком длинно, сократите, пожалуйста.' : 'That is too long, please shorten it.',
         errorTooFast: ru ? 'Слишком быстро. Попробуйте ещё раз.' : 'That was too fast. Please try again.',
         // Never a block. A student behind a school's shared NAT gateway must always be able
         // to come back and try; the cost of turning one real person away is total and the
@@ -272,7 +272,7 @@ function getWidgetCopy(lang) {
         pollSubmit: ru ? 'Ответить' : 'Answer',
         promptSolution: ru ? 'Нашли ошибку или есть идея?' : 'Found an error, or have an idea?',
         promptSolutionCta: ru ? 'Напишите нам' : 'Tell us',
-        promptSearch: ru ? 'Не нашли, что искали? Скажите, что именно — мы добавим.' : 'Did not find what you were after? Tell us what it was.',
+        promptSearch: ru ? 'Не нашли, что искали? Скажите, что именно, и мы добавим.' : 'Did not find what you were after? Tell us what it was.',
         promptSearchCta: ru ? 'Сообщить' : 'Tell us',
         prompt404: ru ? 'Пришли по ссылке, которая не работает?' : 'Followed a link that does not work?',
         prompt404Cta: ru ? 'Сообщить об этом' : 'Report it',

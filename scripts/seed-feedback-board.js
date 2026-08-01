@@ -1,12 +1,12 @@
-// seed-feedback-board.js — open the public board with the requests already on record.
+// seed-feedback-board.js: open the public board with the requests already on record.
 //
 // Run once, after migration 042:   node scripts/seed-feedback-board.js
 // Idempotent: every row carries a fixed public_id and is upserted, so re-running changes
 // nothing. Add --dry to print without writing.
 //
 // Why seed at all. A board with three items reads as "nobody uses this" and nobody adds a
-// fourth. Every item below was actually asked for — in the September 2025 survey, in the
-// forum, in a comment, or in a direct message — and several were asked for more than once
+// fourth. Every item below was actually asked for, in the September 2025 survey, in the
+// forum, in a comment, or in a direct message, and several were asked for more than once
 // by different people. Publishing them is not decoration: it is the site finally
 // acknowledging requests that in some cases have gone unanswered for a year, and it gives
 // the first real visitor something to vote on, which is the only way the owner learns which
@@ -14,13 +14,13 @@
 //
 // Deliberately anonymous. The people who wrote these did not agree to be named on a public
 // page, and several wrote privately. The count goes into `base_score`, not `votes`: it is
-// the number of DISTINCT people independently recorded asking for that thing — evidenced,
-// never invented, 1 where it was one person — and it is kept separate from votes cast here
+// the number of DISTINCT people independently recorded asking for that thing: evidenced,
+// never invented, 1 where it was one person. It is kept separate from votes cast here
 // rather than faked as vote rows with fabricated voters.
 //
 // `status` is honest about commitment:
-//   planned  — the owner has stated an intention to do it, in writing
-//   new      — asked for, not yet decided ("Suggested" on the board)
+//   planned  the owner has stated an intention to do it, in writing
+//   new      asked for, not yet decided ("Suggested" on the board)
 require('dotenv').config();
 const { Pool } = require('pg');
 
@@ -40,7 +40,7 @@ const ITEMS = [
         title: 'Добавить решения задачника Иродова',
         body: 'Запрошено в опросе сентября 2025 отдельно двумя людьми, и ещё раз на форуме. '
             + '«Добавьте книги такие как Иродов или же Прут Овчинкин».',
-        reply: 'Расширение за пределы Савченко — направление номер один: за него в опросе '
+        reply: 'Расширение за пределы Савченко это направление номер один: за него в опросе '
             + 'высказались 14 человек из 21. Иродов и Овчинкин–Прут названы чаще всего.',
     },
     {
@@ -90,7 +90,7 @@ const ITEMS = [
         id: 'seed-photo-upload1',
         status: 'new', votes: 2, lang: 'ru',
         title: 'Загрузка решения фотографией, без перенабора в LaTeX',
-        body: 'Перенабор с листа — названный барьер: один из авторов рассказал, что около '
+        body: 'Перенабор с листа это названный барьер: один из авторов рассказал, что около '
             + 'десяти раз выбрасывал листки с решениями, потому что не хотелось их '
             + 'перенабирать. Другой оформляет задачи в Word, потому что не знает LaTeX.',
         reply: null,
@@ -108,8 +108,8 @@ const ITEMS = [
         id: 'seed-chapter-tabs1',
         status: 'planned', votes: 1, lang: 'ru',
         title: 'Кнопки глав и разделов на главной странице',
-        body: 'Предложено сделать на главной кнопки с главами и разделами, по нажатию — '
-            + 'список задач раздела.',
+        body: 'Предложено сделать на главной кнопки с главами и разделами, по нажатию '
+            + 'открывается список задач раздела.',
         reply: 'Добавлено в список ближайших улучшений.',
     },
     {
@@ -141,7 +141,7 @@ const ITEMS = [
         id: 'seed-theory-wiki1',
         status: 'new', votes: 10, lang: 'ru',
         title: 'Совместный учебник: теория, нужная для решения задач',
-        body: 'Раздел с теоретической базой — что нужно знать, чтобы решить задачу. '
+        body: 'Раздел с теоретической базой: что нужно знать, чтобы решить задачу. '
             + 'В опросе вариант «совместный учебник по физике (как Википедия)» набрал '
             + '10 голосов из 21.',
         reply: null,
@@ -151,8 +151,8 @@ const ITEMS = [
         status: 'new', votes: 1, lang: 'ru',
         title: 'Финансовая поддержка авторов решений',
         body: 'Предложение: платить за создание и рецензирование решений, оставляя чтение '
-            + 'бесплатным. Аргумент автора предложения — без этого число регулярных авторов '
-            + 'останется очень небольшим.',
+            + 'бесплатным. Аргумент автора предложения в том, что без этого число регулярных '
+            + 'авторов останется очень небольшим.',
         reply: null,
     },
 ];

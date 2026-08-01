@@ -1010,7 +1010,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 
 /* ── Feedback: the suggestion box, the poll and the public board ─────────────────────
    Site-wide, and deliberately quiet. The tab has to be findable without competing with
-   the solution it sits beside — this is a reference the reader came here to read, not a
+   the solution it sits beside. This is a reference the reader came here to read, not a
    funnel. Everything below stays inside the design system: navy ground, one border
    colour, no gradients, radius <= 8px, shadow no heavier than 0 1px 3px rgba(0,0,0,.08).
    Mobile is not an afterthought here: roughly half of term-time sessions are phones and
@@ -1079,7 +1079,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 .fb-input::placeholder { color: #9aa0a6; }
 
 /* Revealed only once something has been typed. The commitment is already made by then, so
-   the extra field costs almost nothing in completion — asking for it up front does. */
+   the extra field costs almost nothing in completion, whereas asking up front does. */
 .fb-more { margin-top: 0.75rem; }
 .fb-more[hidden] { display: none; }
 .fb-contact-row { display: flex; gap: 0.35rem; margin-bottom: 0.4rem; }
@@ -1097,7 +1097,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 .fb-check { display: flex; align-items: center; gap: 0.4rem; font-size: 12.5px; color: var(--ss-text-secondary); }
 .fb-check input { margin: 0; }
 
-/* Off-screen rather than display:none — a bot that skips hidden fields still fills this
+/* Off-screen rather than display:none, because a bot that skips hidden fields still fills this
    one, and a screen reader is told to leave it alone. */
 .fb-hp {
   position: absolute !important; left: -9999px !important;
@@ -1120,7 +1120,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 .fb-error[hidden] { display: none; }
 
 /* The receipt. This screen is the entire reason the feature is a table and not a mailto:
-   — a signed-out submitter has no account to check, so this link is all they get, and
+   A signed-out submitter has no account to check, so this link is all they get, and
    without it people re-post the same message elsewhere assuming the first one vanished. */
 .fb-done { padding: 1.1rem 0.9rem; text-align: left; }
 .fb-done h3 { font-size: 15px; font-weight: 600; margin: 0 0 0.4rem; color: var(--ss-heading); }
@@ -1152,7 +1152,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-inline-cta:hover { color: var(--ss-link-hover); }
 
-/* One question, once, ever. Inline and dismissible — never a modal, never on first paint. */
+/* One question, once, ever. Inline and dismissible, never a modal, never on first paint. */
 .fb-poll {
   margin: 1.5rem 0; padding: 0.85rem 1rem;
   background: var(--ss-card-bg); border: 1px solid var(--ss-border-card); border-radius: 8px;
@@ -1185,14 +1185,61 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 /* ── The public board ─────────────────────────────────────────────────────────────────
    A Reddit-shaped feed: hairline-separated posts, a title that carries the item, and a
    horizontal vote pill with both directions and the score between them. Structure and
-   interaction are borrowed; the palette is not — up is the site's navy, down is its error
+   interaction are borrowed; the palette is not. Up is the site's navy, down is its error
    red, and there is no orange anywhere. The vote control is the one place the 8px radius
    rule is broken on purpose: a pill is what makes the affordance read as "vote" at a
    glance, and it is the single most recognisable part of the pattern. */
-.fb-board { max-width: 740px; margin: 0 auto; padding: 1.75rem 1rem 4rem; }
+.fb-board { max-width: 1600px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+/* Feed plus sidebar. A single narrow column on a 1920px screen is mostly empty space, and
+   simply widening the text would give 200-character lines that nobody can read. The sidebar
+   takes the surplus and puts something useful in it. */
+.fb-layout { display: flex; align-items: flex-start; gap: 2rem; }
+.fb-main { flex: 1 1 auto; min-width: 0; }
+.fb-side { flex: 0 0 320px; position: sticky; top: 1rem; }
+.fb-card {
+  background: var(--ss-card-bg); border: 1px solid var(--ss-border-card);
+  border-radius: 8px; padding: 1rem 1.1rem; margin-bottom: 1rem;
+}
+.fb-card h2 {
+  font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--ss-text-secondary); margin: 0 0 0.6rem;
+}
+.fb-card p { font-size: 13px; line-height: 1.6; color: var(--ss-body-text); margin: 0 0 0.6rem; }
+.fb-card p:last-child { margin-bottom: 0; }
+.fb-steps { list-style: none; margin: 0; padding: 0; counter-reset: fbstep; }
+.fb-steps li {
+  position: relative; padding-left: 1.6rem; margin-bottom: 0.55rem;
+  font-size: 13px; line-height: 1.5; color: var(--ss-body-text);
+}
+.fb-steps li:last-child { margin-bottom: 0; }
+.fb-steps li::before {
+  counter-increment: fbstep; content: counter(fbstep);
+  position: absolute; left: 0; top: 0.05rem;
+  width: 1.1rem; height: 1.1rem; border-radius: 999px;
+  background: var(--ss-navy); color: var(--ss-white);
+  font-size: 10px; font-weight: 700; line-height: 1.1rem; text-align: center;
+}
+.fb-tally { display: flex; flex-direction: column; gap: 0.35rem; }
+.fb-tally-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  font-size: 13px; color: var(--ss-body-text);
+}
+.fb-tally-n { font-weight: 600; font-variant-numeric: tabular-nums; }
+.fb-side-cta {
+  display: block; width: 100%; padding: 0.5rem 1rem; border-radius: 999px;
+  background: var(--ss-primary-btn); color: var(--ss-white); border: none;
+  font-family: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; text-align: center;
+}
+.fb-side-cta:hover { background: var(--ss-primary-btn-hover); color: var(--ss-white); }
+
+@media (max-width: 991.98px) {
+  /* Below this the sidebar would squeeze the feed, and the feed is the point. */
+  .fb-layout { display: block; }
+  .fb-side { display: none; }
+}
 .fb-board-head { margin-bottom: 1rem; }
 .fb-board h1 { font-size: 1.55rem; font-weight: 600; margin: 0 0 0.35rem; color: var(--ss-heading); }
-.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; line-height: 1.55; margin: 0; max-width: 60ch; }
+.fb-board-lede { color: var(--ss-text-secondary); font-size: 14px; line-height: 1.55; margin: 0; max-width: 75ch; }
 
 /* Sort + compose row */
 .fb-toolbar {
@@ -1206,7 +1253,14 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
   color: var(--ss-text-secondary); text-decoration: none; cursor: pointer;
 }
 .fb-sort:hover { background: var(--ss-card-bg); color: var(--ss-body-text); }
-.fb-sort.is-active { background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-white); }
+.fb-sort.is-active,
+a.fb-sort.is-active:link,
+a.fb-sort.is-active:visited,
+a.fb-sort.is-active:hover {
+  background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-white);
+}
+a.fb-sort:link, a.fb-sort:visited { color: var(--ss-text-secondary); }
+a.fb-sort:hover { color: var(--ss-body-text); }
 .fb-compose {
   margin-left: auto; padding: 0.35rem 0.9rem; border-radius: 999px;
   background: var(--ss-primary-btn); color: var(--ss-white); border: none;
@@ -1227,12 +1281,13 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
   display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap;
   font-size: 12px; color: var(--ss-text-secondary); margin: 0 0 0.35rem;
 }
-.fb-item-title { font-size: 1.05rem; font-weight: 600; line-height: 1.35; margin: 0 0 0.3rem; }
+.fb-item-title { font-size: 1.1rem; font-weight: 600; line-height: 1.35; margin: 0 0 0.3rem; max-width: 90ch; }
 .fb-item-title a { color: var(--ss-heading); text-decoration: none; }
 .fb-item-title a:hover { text-decoration: underline; text-underline-offset: 2px; }
 .fb-item-body {
   font-size: 14px; line-height: 1.55; color: var(--ss-body-text); margin: 0 0 0.6rem;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+  max-width: 95ch;
 }
 .fb-item-body.is-full { display: block; overflow: visible; }
 
@@ -1279,7 +1334,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-action:hover { background: var(--ss-card-bg); color: var(--ss-body-text); }
 
-/* The owner's public reply, rendered as the reply it is — the one thing that proves
+/* The owner's public reply, rendered as the reply it is, and the one thing that proves
    somebody read the thing. */
 .fb-reply {
   margin: 0.7rem 0 0 0.25rem; padding-left: 0.85rem;
@@ -1328,6 +1383,7 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
   }
   .fb-cat { flex: 1 1 45%; }
   .fb-board { padding: 1.25rem 0.9rem 3rem; }
+  .fb-item-body { -webkit-line-clamp: 3; }
   .fb-item-title { font-size: 1rem; }
   .fb-toolbar { gap: 0.3rem; }
 }

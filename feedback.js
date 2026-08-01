@@ -1,4 +1,4 @@
-// feedback.js — the suggestion box, the public board, and the one-question poll.
+// feedback.js: the suggestion box, the public board, and the one-question poll.
 //
 // Why this exists: the site had six feedback channels and none of them worked. The Google
 // Form took 20 responses in 162 days. solution_reports has 63 rows, 62 of them still
@@ -9,7 +9,7 @@
 // Two design rules run through the whole file:
 //
 //   NO ACCOUNT, EVER. user_id is nullable everywhere and every write path works signed out.
-//   That is not a nicety — 59% of visits never return and a sign-in wall is precisely what
+//   That is not a nicety. 59% of visits never return, and a sign-in wall is precisely what
 //   made every other channel here hear only from the same ten people.
 //
 //   CLOSURE IS THE FEATURE. Anyone can build intake. What was missing was a submitter being
@@ -58,7 +58,7 @@ const MIN_ELAPSED_MS = 3000;
 // ── Validation ──────────────────────────────────────────────────────────────────────
 //
 // Pure, exported, and deliberately free of req/res or the pool so tests can cover it
-// without a database — the same shape as brainstorm.js's link parser, and the only part of
+// without a database, the same shape as brainstorm.js's link parser, and the only part of
 // this module that is unit-testable at all.
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -139,14 +139,14 @@ function validatePollAnswer(input) {
 //
 // Members are keyed by account. Everyone else is keyed by a random id kept in their
 // session, which is stable for one browser and cheap to reset by anyone determined to.
-// That is accepted on purpose: the alternative — requiring an account — is not a stricter
+// That is accepted on purpose. The alternative, requiring an account, is not a stricter
 // version of this, it is zero votes. Every gated voting feature on this site has ~no rows
 // (bank_difficulty_votes 0, votes 4, user_interests 4, three of those from one person).
 // The board is advisory; it informs a decision, it does not make one.
 //
 // `create` is the whole subtlety, and getting it wrong is a bug that shipped once already.
 // Sessions are saveUninitialized:false, so a visitor who has not caused a write has NO
-// session cookie and `req.sessionID` is a fresh random value on every single request —
+// session cookie and `req.sessionID` is a fresh random value on every single request,
 // which made every repeat vote look like a first vote and let one browser inflate a count
 // without limit. Writing `fbv` marks the session dirty, which is what makes express-session
 // persist it and send the cookie.
@@ -183,7 +183,7 @@ const clip = (s, n) => (typeof s === 'string' && s ? s.slice(0, n) : null);
 //
 // Keyed on req.ip, which is trustworthy here because trust proxy is 1 and Caddy appends the
 // peer address. NOT keyed on a constant like editSaveLimiter's `?? 'anonymous'`, which puts
-// every signed-out visitor on the planet in one bucket — and signed-out visitors are the
+// every signed-out visitor on the planet in one bucket, and signed-out visitors are the
 // entire point of this feature. The global apiLimiter is no help either: it is set to
 // MAX_SAFE_INTEGER and does nothing.
 //
@@ -220,7 +220,7 @@ const lightLimiter = rateLimit({
 //
 // This is the half of the loop that makes the other half worth building. Called from
 // admin.js when an item reaches `done`. Everyone who submitted it or voted for it and asked
-// to hear about it gets told once — notified_at is what makes it once.
+// to hear about it gets told once. notified_at is what makes it once.
 async function notifyShipped(itemId, notifications, sendEmail) {
     const r = await pool.query(
         `SELECT id, public_id, lang, user_id, contact_kind, contact_value, notify_on_ship,
@@ -240,7 +240,7 @@ async function notifyShipped(itemId, notifications, sendEmail) {
     const link = `/feedback/${item.public_id}`;
     const title = ru ? 'Ваше предложение реализовано' : 'Your suggestion has shipped';
     const message = ru
-        ? `«${item.title}» — сделано. Спасибо, что написали.`
+        ? `«${item.title}»: сделано. Спасибо, что написали.`
         : `"${item.title}" is done. Thank you for writing in.`;
 
     let notified = 0;
@@ -253,7 +253,7 @@ async function notifyShipped(itemId, notifications, sendEmail) {
         }
     }
     // An anonymous submitter has no bell to ring, so the address they chose to leave is the
-    // only way to close the loop with them — and they are the majority.
+    // only way to close the loop with them, and they are the majority.
     if (!item.user_id && item.contact_kind === 'email' && item.contact_value && sendEmail) {
         try {
             const url = `https://savchenkosolutions.com${link}`;
@@ -280,7 +280,7 @@ const router = express.Router({ mergeParams: true });
 const langOf = (req) => (req.params.lang === 'ru' || req.session?.lang === 'ru' ? 'ru' : 'en');
 
 // The public board. Grouped by status rather than sorted flat, so "what is being worked on"
-// reads at a glance — which is the thing that persuades the next person to write in.
+// reads at a glance, which is the thing that persuades the next person to write in.
 router.get('/', async (req, res) => {
     const lang = langOf(req);
     // The shared header partial calls __() for the site title and menu, so the locale has
@@ -410,7 +410,7 @@ api.post('/', submitLimiter, async (req, res) => {
 
 // Reddit's exact semantics, because they are what people already have in their fingers:
 // pressing the direction you already chose clears the vote, pressing the opposite one swings
-// it by two. Never an error, never a "you have already voted" — a mis-click has to be
+// it by two. Never an error, never a "you have already voted". A mis-click has to be
 // undoable with the same button that caused it.
 //
 // The whole thing is one transaction against a locked row: two people voting on the same
@@ -452,7 +452,7 @@ api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res)
         // cache, and a cache that drifts on one lost request stays wrong forever.
         //
         // base_score is added back, not overwritten. It holds the people recorded asking for
-        // an item before this board existed, which have no rows here — an earlier version
+        // an item before this board existed, which have no rows here. An earlier version
         // recomputed straight over it and the first click on a seeded item deleted its whole
         // history.
         const upd = await client.query(

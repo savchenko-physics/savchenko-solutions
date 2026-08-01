@@ -1,9 +1,9 @@
-// feedback.js — the suggestion box, the contextual prompts and the one-question poll.
+// feedback.js: the suggestion box, the contextual prompts and the one-question poll.
 //
 // Vanilla, no dependencies, no third-party origin (tests/external-assets.test.js enforces
 // the last one). Loaded on every page from the site-wide header partial.
 //
-// Markup contract — the templates stay almost empty and everything else is built here, so
+// Markup contract. The templates stay almost empty and everything else is built here, so
 // there is one copy of this UI rather than one per page:
 //
 //   <script type="application/json" id="fb-config">{...}</script>   copy + categories, from feedbackQuestions.js
@@ -297,7 +297,7 @@
         const actions = el('div', 'fb-done-actions');
         const again = el('button', 'fb-linkbtn', T.again);
         again.type = 'button';
-        // Sending a second, separate message is the intended pattern — two short ones beat
+        // Sending a second, separate message is the intended pattern: two short ones beat
         // one long one nobody finishes.
         again.addEventListener('click', () => {
             state.root.remove();

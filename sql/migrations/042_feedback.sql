@@ -70,7 +70,7 @@ COMMENT ON COLUMN feedback_items.viewport_w IS
 
 -- Anonymous voting, deliberately. Sign-in-gated voting is not a trade-off here, it is a
 -- guaranteed zero: every voting feature this site has shipped has ~no rows
--- (bank_difficulty_votes 0, votes 4, user_interests 4 — three of those from one person),
+-- (bank_difficulty_votes 0, votes 4, user_interests 4, three of those from one person),
 -- because the people who read the site are not signed in. voter_key is 'u:<id>' for
 -- members and 'a:<hmac>' over an IP plus a per-browser cookie for everyone else. Gameable
 -- by anyone determined; the board is advisory, not a ballot.

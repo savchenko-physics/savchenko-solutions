@@ -31,7 +31,7 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <link rel="icon" type="image/png" href="/img/logo.png" />
   <link rel="apple-touch-icon" href="/img/logo.png" />
-  <title><%= item.public_title || (ru ? 'Сообщение' : 'Your message') %> — <%= __('title') %></title>
+  <title><%= item.public_title || (ru ? 'Сообщение' : 'Your message') %> | <%= __('title') %></title>
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
   <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
@@ -45,7 +45,7 @@
   }) %>
 
   <main class="flex-grow-1">
-    <div class="fb-board" style="max-width: 680px;">
+    <div class="fb-board" style="max-width: 900px;">
       <p style="margin-bottom: 0.9rem;">
         <a class="fb-back" href="/<%= pageLang %>/feedback">&larr; <%= ru ? 'Все предложения' : 'All suggestions' %></a>
       </p>
@@ -106,8 +106,8 @@
               they had no way to tell whether it had arrived. %>
           <p class="fb-note">
             <%= ru
-              ? 'Сообщение получено и ждёт разбора. Эта ссылка постоянная — по ней всегда видно, что с ним стало.'
-              : 'Received and waiting to be read. This link is permanent — it always shows what happened to it.' %>
+              ? 'Сообщение получено и ждёт разбора. Эта ссылка постоянная: по ней всегда видно, что с ним стало.'
+              : 'Received and waiting to be read. This link is permanent: it always shows what happened to it.' %>
           </p>
         <% } %>
       </article>

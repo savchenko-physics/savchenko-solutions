@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <%
   const ru = pageLang === 'ru';
-  // Relative time, Reddit-style. Cheap, and it makes an eight-month-old request read as old
-  // instead of as a date nobody parses.
+  // Relative time, Reddit-style. Cheap, and it makes an eight-month-old request read as
+  // old instead of as a date nobody parses.
   function ago(d) {
     const s = Math.max(0, (Date.now() - new Date(d).getTime()) / 1000);
     const pick = (n, forms) => {
@@ -30,7 +30,7 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <link rel="icon" type="image/png" href="/img/logo.png" />
   <link rel="apple-touch-icon" href="/img/logo.png" />
-  <title><%= ru ? 'Предложения' : 'Suggestions' %> — <%= __('title') %></title>
+  <title><%= ru ? 'Предложения' : 'Suggestions' %> | <%= __('title') %></title>
   <link rel="canonical" href="https://savchenkosolutions.com/<%= pageLang %>/feedback" />
   <link rel="alternate" hreflang="en" href="https://savchenkosolutions.com/en/feedback" />
   <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/feedback" />
@@ -53,13 +53,16 @@
         <h1><%= ru ? 'Предложения' : 'Suggestions' %></h1>
         <p class="fb-board-lede">
           <%= ru
-            ? 'Что предложили читатели и что с этим стало. Голосуйте за и против — аккаунт не нужен.'
-            : 'What readers have asked for, and what came of it. Vote it up or down — no account needed.' %>
+            ? 'Что предложили читатели и что с этим стало. Голосуйте за и против, аккаунт не нужен.'
+            : 'What readers have asked for, and what came of it. Vote it up or down, no account needed.' %>
         </p>
       </div>
 
+      <div class="fb-layout">
+      <div class="fb-main">
+
       <div class="fb-toolbar">
-        <%# Top by default, but New has to exist: a score-only order permanently buries
+        <%# Top by default, but New has to exist. A score-only order permanently buries
             whatever arrived most recently, which is the thing nobody has voted on yet. %>
         <a class="fb-sort <%= sort === 'top' ? 'is-active' : '' %>" href="/<%= pageLang %>/feedback"><%= ru ? 'Лучшие' : 'Top' %></a>
         <a class="fb-sort <%= sort === 'new' ? 'is-active' : '' %>" href="/<%= pageLang %>/feedback?sort=new"><%= ru ? 'Новые' : 'New' %></a>
@@ -70,7 +73,7 @@
 
       <% if (!groups.length) { %>
         <div class="fb-empty" style="margin-top:1.5rem;">
-          <%= ru ? 'Пока пусто. Напишите первым — мы отвечаем.' : 'Nothing here yet. Be the first — we do reply.' %>
+          <%= ru ? 'Пока пусто. Напишите первым, мы отвечаем.' : 'Nothing here yet. Be the first, we do reply.' %>
         </div>
       <% } %>
 
@@ -92,7 +95,7 @@
                       asking for this before the board existed. Folding the two together
                       silently would be a small lie in the most visible number on the page. %>
                   <span aria-hidden="true">&middot;</span>
-                  <span title="<%= ru ? 'Просили до появления этой страницы — из опроса, форума и писем' : 'Asked for before this page existed — from the survey, forum and mail' %>">
+                  <span title="<%= ru ? 'Просили до появления этой страницы: из опроса, форума и писем' : 'Asked for before this page existed: from the survey, forum and mail' %>">
                     <%= ru ? 'просили ранее: ' : 'asked before: ' %><%= item.base_score %>
                   </span>
                 <% } %>
@@ -109,8 +112,8 @@
               <div class="fb-actions">
                 <%# Both directions, score between them, exactly where the thumb expects it.
                     Pressing the same arrow twice clears the vote; pressing the other swings
-                    it by two. Open to signed-out visitors on purpose — every sign-in-gated
-                    voting feature this site has shipped has ~zero rows. %>
+                    it by two. Open to signed-out visitors on purpose, because every
+                    sign-in-gated voting feature this site has shipped has ~zero rows. %>
                 <div class="fb-vote <%= item.my_vote === 1 ? 'is-up' : (item.my_vote === -1 ? 'is-down' : '') %>"
                      data-fb-vote="<%= item.public_id %>">
                   <button type="button" class="fb-arrow fb-arrow-up" data-dir="1"
@@ -140,6 +143,49 @@
           <% }); %>
         </section>
       <% }); %>
+
+      </div><%# /fb-main %>
+
+      <%# The sidebar exists because a single narrow column on a wide screen is mostly empty
+          space. It carries the three things a first-time visitor actually needs: what
+          happens to a message, what the statuses mean, and a way to write one. %>
+      <aside class="fb-side">
+        <div class="fb-card">
+          <h2><%= ru ? 'Как это работает' : 'How this works' %></h2>
+          <ol class="fb-steps">
+            <li><%= ru ? 'Вы пишете. Аккаунт не нужен.' : 'You write. No account needed.' %></li>
+            <li><%= ru ? 'Получаете постоянную ссылку на своё сообщение.' : 'You get a permanent link to your message.' %></li>
+            <li><%= ru ? 'Мы читаем и отвечаем прямо на этой странице.' : 'We read it and reply, right on this page.' %></li>
+            <li><%= ru ? 'Когда сделано, сообщаем тем, кто просил.' : 'When it ships, everyone who asked is told.' %></li>
+          </ol>
+        </div>
+
+        <div class="fb-card">
+          <h2><%= ru ? 'Статусы' : 'Statuses' %></h2>
+          <div class="fb-tally">
+            <% groups.forEach(function (g) { %>
+              <div class="fb-tally-row">
+                <span class="fb-badge fb-badge-<%= g.status %>"><%= g.label %></span>
+                <span class="fb-tally-n"><%= g.items.length %></span>
+              </div>
+            <% }); %>
+          </div>
+        </div>
+
+        <div class="fb-card">
+          <h2><%= ru ? 'Что писать' : 'What to write' %></h2>
+          <p>
+            <%= ru
+              ? 'Чем конкретнее, тем лучше. Не «добавьте ещё задачник», а какой именно и для чего вы бы им пользовались.'
+              : 'The more specific the better. Not "add another problem book", but which one and what you would use it for.' %>
+          </p>
+          <button type="button" class="fb-side-cta" data-fb-open data-fb-category="idea">
+            <%= ru ? 'Написать' : 'Write to us' %>
+          </button>
+        </div>
+      </aside>
+
+      </div><%# /fb-layout %>
     </div>
   </main>
 

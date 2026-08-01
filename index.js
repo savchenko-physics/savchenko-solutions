@@ -1262,7 +1262,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT
-                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at,
+                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at, c.is_brainstorm,
                 u.username, u.full_name, u.profile_picture
             FROM solution_comments c
             JOIN users u ON c.user_id = u.id
@@ -1289,6 +1289,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
                 parentId: row.parent_id,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at,
+                isBrainstorm: row.is_brainstorm,
                 isOwnComment,
                 isEditable,
                 author: {
@@ -1311,6 +1312,8 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
 app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, async (req, res) => {
     const { problemName, language } = req.params;
     const { content, parentId } = req.body;
+    // Replies are always plain comments; only top-level comments carry the brainstorm mark.
+    const isBrainstorm = parentId ? false : Boolean(req.body.isBrainstorm);
     const userId = req.session.userId;
 
     if (!content || content.trim().length === 0) {
@@ -1319,8 +1322,8 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
 
     try {
         const result = await pool.query(
-            "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at",
-            [userId, problemName, language, content.trim(), parentId || null]
+            "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id, is_brainstorm) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at",
+            [userId, problemName, language, content.trim(), parentId || null, isBrainstorm]
         );
 
         // Get user info for response
