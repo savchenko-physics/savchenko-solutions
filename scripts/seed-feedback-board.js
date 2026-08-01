@@ -174,6 +174,14 @@ const ITEMS = [
     },
 ];
 
+// A thread only carries a resolution date if it actually reached a terminal state. Falls
+// back to the request date when none is given, so a solved item can never claim to have been
+// fixed before it was asked for.
+function resolvedAt(it) {
+    if (it.status !== 'done' && it.status !== 'declined') return null;
+    return it.resolvedAt || new Date().toISOString().slice(0, 10);
+}
+
 async function main() {
     const dry = process.argv.includes('--dry');
     let written = 0;
@@ -186,8 +194,7 @@ async function main() {
         await pool.query(
             `INSERT INTO feedback_items
                 (public_id, category, body, lang, status, is_public, public_title, public_reply, base_score, votes, created_at, resolved_at)
-             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7, $8,
-                     CASE WHEN $4 IN ('done','declined') THEN COALESCE($9::timestamptz, now()) ELSE NULL END)
+             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7, $8, $9)
              ON CONFLICT (public_id) DO UPDATE
                SET body = EXCLUDED.body,
                    lang = EXCLUDED.lang,
@@ -200,7 +207,9 @@ async function main() {
                    votes = EXCLUDED.base_score + feedback_items.upvotes - feedback_items.downvotes,
                    created_at = EXCLUDED.created_at,
                    resolved_at = EXCLUDED.resolved_at`,
-            [it.id, it.body, it.lang, it.status, it.title, it.reply, it.votes, it.at, it.resolvedAt || null]
+            // Worked out here rather than in SQL: deciding it with `CASE WHEN $4 IN (...)`
+            // made Postgres deduce $4 as both varchar and text and reject the statement.
+            [it.id, it.body, it.lang, it.status, it.title, it.reply, it.votes, it.at, resolvedAt(it)]
         );
         written += 1;
         console.log(`seeded  ${it.title}`);

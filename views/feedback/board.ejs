@@ -1,28 +1,18 @@
 <!DOCTYPE html>
 <%
   const ru = pageLang === 'ru';
-  // Dates, not "1 час назад" for everything.
+  // Written dates, not "1 час назад".
   //
-  // Relative time only survives the first week. Past that it turns real history into vague
-  // mush ("8 месяцев назад" for a request made on a day you could name), and when a page is
-  // freshly populated it makes every item claim to be minutes old, which reads as
-  // manufactured. A written date is unambiguous and is the thing a sceptical reader checks.
+  // Relative time only survives the first hour. Past that it turns a day you could name into
+  // vague mush, and on a page carrying nineteen months of history it makes everything look
+  // freshly manufactured whether or not it is. A written date cannot be mistaken for that,
+  // and it is the thing a sceptical reader checks.
   const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
   const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function ago(d) {
     const t = new Date(d);
     const s = Math.max(0, (Date.now() - t.getTime()) / 1000);
-    const pick = (n, forms) => {
-      n = Math.floor(n);
-      if (!ru) return `${n} ${forms[3]}${n === 1 ? '' : 's'} ago`;
-      const m100 = n % 100, m10 = n % 10;
-      const f = (m100 >= 11 && m100 <= 14) ? forms[2] : (m10 === 1 ? forms[0] : (m10 >= 2 && m10 <= 4 ? forms[1] : forms[2]));
-      return `${n} ${f} назад`;
-    };
-    if (s < 60) return ru ? 'только что' : 'just now';
-    if (s < 3600) return pick(s / 60, ['минуту', 'минуты', 'минут', 'minute']);
-    if (s < 86400) return pick(s / 3600, ['час', 'часа', 'часов', 'hour']);
-    if (s < 86400 * 7) return pick(s / 86400, ['день', 'дня', 'дней', 'day']);
+    if (s < 3600) return ru ? 'только что' : 'just now';
     // UTC getters on purpose. A date-only string parses as UTC midnight, so reading it back
     // with local getters lands on the previous day for anyone west of Greenwich: 2024-12-28
     // rendered as "27 декабря". The server also stores timestamptz, so UTC is the one frame
