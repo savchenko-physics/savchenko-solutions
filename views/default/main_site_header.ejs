@@ -74,8 +74,12 @@
         <div class="collapse navbar-collapse" id="navbarMain">
           <ul class="navbar-nav ms-auto align-items-lg-center">
 
+            <%# d-xl-block, not d-md-block. The full desktop nav appears at 992px, and with the
+                view counter also showing from 768px the row did not fit: solution pages
+                scrolled horizontally at 992-1199px while every other page was fine, because
+                only they carry this button. %>
             <% if (navShowViewsButton) { %>
-            <li class="nav-item px-1 d-none d-md-block">
+            <li class="nav-item px-1 d-none d-xl-block">
               <button class="views-button" id="viewsButton" type="button">
                 <i class="fas fa-eye"></i> <span id="viewCount"><%= typeof totalViews !== 'undefined' ? totalViews : '-' %></span>
               </button>
@@ -206,7 +210,9 @@
             <li class="nav-item px-1 d-none d-lg-block">
               <a href="/<%= navLang %>/upload" class="edit-button header-upload-btn text-decoration-none d-inline-flex align-items-center btn btn-sm btn-outline-dark rounded-pill" data-chapter="1">
                 <svg class="upload-icon" viewBox="0 0 24 24" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"></path></svg>
-                <span class="upload-text ms-2"><%= __('upload.upload') %></span>
+                <%# Label drops below xl. The icon still says what the button is, and the
+                    row has to fit at 992px, which is where a small laptop lands. %>
+                <span class="upload-text ms-2 d-none d-xl-inline"><%= __('upload.upload') %></span>
               </a>
             </li>
 

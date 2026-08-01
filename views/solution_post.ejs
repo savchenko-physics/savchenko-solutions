@@ -81,14 +81,23 @@
         }
 
         /* Main Layout */
+        /* Two caps used to stack here: 1400px on this container and 1100px on
+           .content-body inside it. On a 1920px screen that left 285px of dead margin on the
+           left and 264px on the right, roughly 30% of the viewport, while the solution the
+           reader came for sat in the middle at 1044px. The page fills the screen now and the
+           surplus goes to the two things that wanted it: the solution column and a sidebar
+           that was cramped enough to wrap its own heading over three lines. */
         .main-container {
             width: 100%;
-            max-width: 1400px;
+            max-width: none;
             margin: 0 auto;
-            padding: 0 0.75rem 1.25rem 0.75rem;
+            padding: 0 1.25rem 1.25rem 1.25rem;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 280px;
-            gap: 0.75rem;
+            /* The sidebar flexes instead of being pinned at 320px. A fixed 320 squeezed the
+               992px breakpoint into horizontal overflow, which is exactly where a small
+               laptop lands. */
+            grid-template-columns: minmax(0, 1fr) clamp(260px, 20vw, 320px);
+            gap: 1.25rem;
         }
 
         .content-section {
@@ -187,10 +196,17 @@
 
         /* Content Body */
         .content-body {
-            padding: 1rem 1.25rem;
-            font-size: 1.25rem;
-            line-height: 1.55;
-            max-width: 1100px;
+            padding: 1.1rem 1.75rem;
+            /* Bigger, because the solution is the point of the page and a wider column with
+               the same type would only mean longer lines.
+               The cap is a measure, not a page width. The card itself now spans the screen,
+               so nothing looks empty; this keeps the prose near the same character count it
+               had before and, more importantly, stops a short display equation from sitting
+               marooned in the middle of a 1450px column with its equation number stranded
+               half a screen away. */
+            font-size: 1.35rem;
+            line-height: 1.6;
+            max-width: 1280px;
             margin: 0 auto;
             font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
             text-align: justify;

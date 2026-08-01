@@ -571,6 +571,18 @@
           </div>
           <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
         </div>
+
+        <%# Feedback prompt + poll. Kept in the main column, under the blog, so they fill
+            the space beside the taller sidebar instead of leaving an empty band below the
+            grid. Copy is reused verbatim from locales; the poll is the same once-ever queue
+            as the solution pages, so a reader who answered there is never asked again. %>
+        <div class="fb-inline">
+          <span><%= __({ phrase: 'description.platformUpdate.message', locale: lang }) %></span>
+          <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+            <%= __({ phrase: 'description.platformUpdate.feedbackLink', locale: lang }) %>
+          </button>
+        </div>
+        <div data-fb-poll></div>
       </div>
 
       <!-- RIGHT COLUMN: Sticky Sidebar -->
@@ -709,24 +721,6 @@
 
         </div>
       </div>
-    </div>
-
-    <%# The homepage feedback prompt, reinstated.
-        A link to a Google Form lived here from Sept 2025 to March 2026 and collected 20
-        responses in 162 days; the markup was deleted in 1d8082e but its translated copy sat
-        unused in locales/*.json ever since. The copy was good — it asks the strategic
-        question directly, in both languages — so it is reused verbatim. What has changed is
-        the destination: the form is now on-site, works signed out, and answers back. %>
-    <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
-      <div class="fb-inline">
-        <span><%= __({ phrase: 'description.platformUpdate.message', locale: lang }) %></span>
-        <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
-          <%= __({ phrase: 'description.platformUpdate.feedbackLink', locale: lang }) %>
-        </button>
-      </div>
-      <%# One question, once, ever — the same queue as the solution pages, so a reader who
-          answered there is never asked again here. %>
-      <div data-fb-poll></div>
     </div>
 
   </main>

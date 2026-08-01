@@ -34,9 +34,9 @@
     }
 
     .unsolved-page {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 40px 20px 60px;
+      max-width: none;
+      margin: 0;
+      padding: 40px 32px 60px;
     }
 
     .unsolved-header {
@@ -172,7 +172,7 @@
       min-width: 0;
     }
     .chapter-progress-bar {
-      width: 120px;
+      width: 180px;
       height: 6px;
       border-radius: 3px;
       background: #ebedf0;
@@ -186,7 +186,11 @@
       background: #1a1a2e;
       transition: width 300ms ease;
     }
-    /* Completed chapters read as "done" — green fill behind the lock. */
+    /* Completed chapters are done — fade them back so the eye lands on the
+       chapters that still need work. */
+    .chapter-row.is-complete {
+      opacity: 0.5;
+    }
     .chapter-row.is-complete .chapter-progress-fill {
       background: #27ae60;
     }
@@ -255,6 +259,40 @@
       color: #0d3b54;
     }
 
+    /* Difficulty heatmap — the same YlOrRd scale as the homepage. The heat-N /
+       heat-none / heat-starred colour rules live in design-system.css and only bite
+       under body.grid-heat; grid-mode.js drives the toggle and shares its on/off choice
+       with the homepage via localStorage, so the reader's setting follows them here. */
+    .unsolved-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .grid-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 0;
+      font-size: 12px;
+      color: #6c757d;
+    }
+    .heat-legend { gap: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-swatch {
+      display: inline-block;
+      width: 16px;
+      height: 14px;
+      border-radius: 3px;
+      flex: 0 0 auto;
+    }
+    .unsolved-heat-toggle { margin-left: auto; }
+    body.grid-heat .problem-chip {
+      border-color: transparent;
+      font-weight: 600;
+    }
+
     @media (max-width: 576px) {
       .unsolved-page {
         padding: 24px 16px 40px;
@@ -302,10 +340,29 @@
     </div>
     <% } %>
 
+    <% if (typeof hasDifficulty !== 'undefined' && hasDifficulty) { %>
+    <div class="unsolved-toolbar">
+      <div class="grid-legend heat-legend" data-grid-mode-when="difficulty" hidden>
+        <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
+        <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
+        <span class="legend-item"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+        <span class="legend-item">
+          <span class="legend-swatch legend-star"></span>
+          <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
+        </span>
+      </div>
+      <label class="ss-switch unsolved-heat-toggle" for="heatmapToggle">
+        <input type="checkbox" id="heatmapToggle" role="switch" data-grid-mode-toggle />
+        <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
+        <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
+      </label>
+    </div>
+    <% } %>
+
     <div class="chapter-accordion">
       <% chapterData.forEach(function(ch) { %>
       <% var isComplete = ch.solved >= ch.total; %>
-      <div class="chapter-row<%= isComplete ? ' is-complete' : '' %>">
+      <div class="chapter-row<%= isComplete ? ' is-complete' : ' is-open' %>">
         <% if (isComplete) { %>
         <div class="chapter-header chapter-header--static">
           <span class="chapter-lock" title="<%= lang === 'ru' ? 'Глава полностью решена' : 'Chapter fully solved' %>"><i class="bi bi-lock-fill"></i></span>
@@ -316,7 +373,7 @@
           <span class="chapter-stats"><%= ch.solved %> / <%= ch.total %></span>
         </div>
         <% } else { %>
-        <button type="button" class="chapter-header" aria-expanded="false">
+        <button type="button" class="chapter-header" aria-expanded="true">
           <span class="chapter-toggle">&#9654;</span>
           <span class="chapter-name"><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.chapterNum %>. <%= ch.title %></span>
           <span class="chapter-progress-bar">
@@ -333,7 +390,7 @@
             </div>
             <div class="problem-grid">
               <% sec.unsolved.forEach(function(prob) { %>
-              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(prob.problem) %>" class="problem-chip"><%= prob.problem %></a>
+              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(prob.problem) %>" class="problem-chip <%= prob.heat ? 'heat-' + prob.heat + (prob.starred ? ' heat-starred' : '') : 'heat-none' %>" title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.problem + (prob.heat ? (lang === 'ru' ? ' · сложность ' : ' · difficulty ') + prob.heat + '/9' + (prob.starred ? (lang === 'ru' ? ', отмечена ∗ Савченко' : ', marked ∗ by Savchenko') : '') : '') %>"><%= prob.problem %></a>
               <% }); %>
             </div>
           </div>
@@ -348,6 +405,7 @@
   <%- include('default/modern_footer') %>
 
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+  <script src="<%= av('/js/grid-mode.js') %>" defer></script>
   <script>
     document.querySelectorAll('button.chapter-header').forEach(function(btn) {
       btn.addEventListener('click', function() {
