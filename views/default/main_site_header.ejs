@@ -648,3 +648,24 @@
   })();
   </script>
   <% } %>
+
+<%
+  // ── Feedback widget ───────────────────────────────────────────────────────────────
+  // This partial is the ONLY thing on every page. views/default/modern_footer.ejs is
+  // included by 43 templates but NOT by solution_post.ejs — the most-visited page type on
+  // the site — so a footer-mounted widget would miss exactly the traffic it exists for.
+  // Hence it lives here.
+  const fbW = (typeof feedbackWidget !== 'undefined') ? feedbackWidget : null;
+%>
+<% if (fbW) { %>
+  <script type="application/json" id="fb-config"><%- JSON.stringify(fbW) %></script>
+  <%# Hidden on the admin dashboard and inside the messenger, where a floating pill would
+      sit on top of the UI it is meant to be reporting on. %>
+  <% if (!(typeof hideFeedbackTab !== 'undefined' && hideFeedbackTab)) { %>
+    <button type="button" class="fb-tab" data-fb-tab title="<%= fbW.copy.tabLabel %>" aria-label="<%= fbW.copy.tabLabel %>">
+      <span class="fb-tab-glyph" aria-hidden="true">&#9998;</span>
+      <span class="fb-tab-text"><%= fbW.copy.tabLabel %></span>
+    </button>
+  <% } %>
+  <script src="/js/feedback.js" defer></script>
+<% } %>

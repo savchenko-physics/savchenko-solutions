@@ -40,6 +40,14 @@
         <a href="/upload" style="color: #1a5276;"><%= pageLang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a> &middot;
         <a href="/<%= pageLang %>/unsolved" style="color: #1a5276;"><%= pageLang === 'ru' ? 'Нерешённые задачи' : 'View unsolved problems' %></a>
       </p>
+      <%# A 404 is usually somebody else's broken link, and the person who landed on it is
+          the only one who can say where it came from. The referrer is captured silently. %>
+      <div class="fb-inline" style="justify-content: center; text-align: left;">
+        <span><%= pageLang === 'ru' ? 'Пришли по ссылке, которая не работает?' : 'Followed a link that does not work?' %></span>
+        <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="broken">
+          <%= pageLang === 'ru' ? 'Сообщить об этом' : 'Report it' %>
+        </button>
+      </div>
     </div>
   </main>
 

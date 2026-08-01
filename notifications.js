@@ -18,6 +18,11 @@ const SITE_URL = 'https://savchenkosolutions.com';
 const EMAIL_NOTIFICATION_TYPES = new Set([
     'reply_to_comment', 'comment_on_solution', 'new_follower',
     'challenge_result', 'report_resolved', 'forum_reply', 'forum_solution',
+    // Fires at most once per submitted suggestion, and only when the person explicitly
+    // asked to hear back. Low frequency, high value — the exact opposite of the likes and
+    // chat messages this list deliberately excludes, and the half of the loop that makes
+    // people write in a second time.
+    'feedback_update',
 ]);
 
 function escHtml(s) {
@@ -70,6 +75,7 @@ const DEFAULT_NOTIFICATION_SETTINGS = {
     forum_reply: true,
     forum_solution: true,
     new_message: true,
+    feedback_update: true,
 };
 
 // Above this member count a conversation is treated as an announcement channel

@@ -49,6 +49,8 @@ const { router: challengesRouter, getCurrentChallengeWidget } = require('./chall
 const { router: contestRouter, getActiveContestBanner } = require('./contest');
 const { getPracticumBanner } = require('./practicum');
 const { router: unsubscribeRouter } = require('./unsubscribe');
+const { router: feedbackRouter, api: feedbackApi } = require('./feedback');
+const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
@@ -292,6 +294,21 @@ app.use((req, res, next) => {
         res.locals.practicumBanner = getPracticumBanner(req.session.lang || 'en');
     } catch (_err) {
         res.locals.practicumBanner = null;
+    }
+    // Copy for the feedback widget, which the site-wide header renders on every page.
+    // The path prefix wins over the session because a reader can land on /ru/2.2.12 from a
+    // search with an 'en' session from months ago, and the widget must speak the language
+    // of the page they are actually looking at.
+    try {
+        const pathLang = (req.path.match(/^\/(en|ru)(\/|$)/) || [])[1];
+        const fbLang = pathLang || req.session.lang || 'en';
+        res.locals.feedbackWidget = {
+            lang: fbLang,
+            copy: getFeedbackCopy(fbLang),
+            categories: getFeedbackCategories(fbLang),
+        };
+    } catch (_err) {
+        res.locals.feedbackWidget = null;
     }
     next();
 });
@@ -2597,6 +2614,17 @@ app.use('/blog', blogRouter);
 
 // Email unsubscribe (one-click, token-based, no login) for announcement emails.
 app.use('/unsubscribe', unsubscribeRouter);
+
+// Feedback: suggestion box, public board, one-question poll.
+// Deliberately NOT auth-gated anywhere — 59% of visits never return and virtually none of
+// them are signed in, which is exactly why every other feedback channel on this site only
+// ever hears from the same ten people. The router carries its own per-IP rate limiter; the
+// global apiLimiter registered above is set to MAX_SAFE_INTEGER and protects nothing.
+// Mounted here, well ahead of the `/:lang/:name` solution route, so /ru/feedback is not
+// swallowed as a problem number.
+app.use('/:lang(en|ru)/feedback', feedbackRouter);
+app.use('/feedback', feedbackRouter);
+app.use('/api/feedback', feedbackApi);
 
 // Self-hosted email open/click tracking (pixel + signed click redirect).
 app.use('/e', trackingRouter);

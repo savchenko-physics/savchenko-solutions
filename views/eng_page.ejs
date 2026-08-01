@@ -710,6 +710,24 @@
       </div>
     </div>
 
+    <%# The homepage feedback prompt, reinstated.
+        A link to a Google Form lived here from Sept 2025 to March 2026 and collected 20
+        responses in 162 days; the markup was deleted in 1d8082e but its translated copy sat
+        unused in locales/*.json ever since. The copy was good — it asks the strategic
+        question directly, in both languages — so it is reused verbatim. What has changed is
+        the destination: the form is now on-site, works signed out, and answers back. %>
+    <div style="max-width: 1200px; margin: 0 auto; padding: 0 1rem;">
+      <div class="fb-inline">
+        <span><%= __({ phrase: 'description.platformUpdate.message', locale: lang }) %></span>
+        <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+          <%= __({ phrase: 'description.platformUpdate.feedbackLink', locale: lang }) %>
+        </button>
+      </div>
+      <%# One question, once, ever — the same queue as the solution pages, so a reader who
+          answered there is never asked again here. %>
+      <div data-fb-poll></div>
+    </div>
+
   </main>
 
   <!-- ============================
@@ -820,50 +838,6 @@
     .summit-header-link:hover {
       opacity: 1 !important;
       color: white !important;
-    }
-
-    /* Platform News Banner */
-    .platform-news-banner {
-      background: #fff9e6;
-      border-left: 4px solid #c9a227;
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    }
-
-    .news-label {
-      display: inline-block;
-      background: #ffc107;
-      color: #000;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-      letter-spacing: 0.5px;
-    }
-
-    .news-text {
-      color: #664d03;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
-
-    .feedback-link {
-      display: inline-block;
-      color: #856404;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      transition: color 0.2s ease;
-    }
-
-    .feedback-link:hover {
-      color: #533f03;
-      text-decoration: underline;
     }
 
     /* Hero — one headline, one byline, one action. Mobile-first. */
@@ -1484,18 +1458,6 @@
     }
 
     @media (max-width: 768px) {
-      .platform-news-banner {
-        padding: 1rem;
-      }
-
-      .news-text {
-        font-size: 0.9rem;
-      }
-
-      .feedback-link {
-        font-size: 0.85rem;
-      }
-
       .compact-intro {
         padding: 0.9rem 1rem;
       }

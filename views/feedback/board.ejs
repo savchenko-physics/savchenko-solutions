@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<%
+  const ru = pageLang === 'ru';
+  const home = '/' + pageLang;
+%>
+<html lang="<%= pageLang %>">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="content-language" content="<%= pageLang %>" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
+  <title><%= ru ? 'Предложения' : 'Suggestions' %> — <%= __('title') %></title>
+  <link rel="canonical" href="https://savchenkosolutions.com/<%= pageLang %>/feedback" />
+  <link rel="alternate" hreflang="en" href="https://savchenkosolutions.com/en/feedback" />
+  <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/feedback" />
+  <link rel="alternate" hreflang="x-default" href="https://savchenkosolutions.com/en/feedback" />
+  <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('../default/main_site_header', {
+    lang: pageLang,
+    langSwitchEnUrl: '/en/feedback',
+    langSwitchRuUrl: '/ru/feedback'
+  }) %>
+
+  <main class="flex-grow-1">
+    <div class="fb-board">
+      <h1><%= ru ? 'Предложения' : 'Suggestions' %></h1>
+      <p class="fb-board-lede">
+        <%= ru
+          ? 'Что предложили читатели и что с этим стало. Голосуйте за то, что нужно вам — аккаунт не нужен.'
+          : 'What readers have asked for, and what came of it. Vote for what you need — no account required.' %>
+      </p>
+
+      <p style="margin: -0.7rem 0 1.6rem;">
+        <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+          <%= ru ? 'Предложить своё' : 'Suggest something' %>
+        </button>
+      </p>
+
+      <% if (!groups.length) { %>
+        <div class="fb-empty">
+          <%= ru
+            ? 'Пока пусто. Напишите первым — мы отвечаем.'
+            : 'Nothing here yet. Be the first — we do reply.' %>
+        </div>
+      <% } %>
+
+      <% groups.forEach(function (g) { %>
+        <section class="fb-group">
+          <h2 class="fb-group-head">
+            <span><%= g.label %></span>
+            <span style="font-weight: 400;"><%= g.items.length %></span>
+          </h2>
+          <% g.items.forEach(function (item) { %>
+            <article class="fb-item">
+              <%# Voting is open to signed-out visitors on purpose. Every gated voting feature
+                  this site has shipped has ~zero rows, because the people who read it are not
+                  signed in. %>
+              <button type="button" class="fb-vote" data-fb-vote="<%= item.public_id %>"
+                      aria-pressed="<%= item.voted ? 'true' : 'false' %>"
+                      aria-label="<%= ru ? 'Голосовать' : 'Upvote' %>">
+                <span class="fb-vote-caret" aria-hidden="true">&#9650;</span>
+                <span class="fb-vote-n"><%= item.votes %></span>
+              </button>
+              <div class="fb-item-main">
+                <p class="fb-item-title">
+                  <a href="/<%= pageLang %>/feedback/<%= item.public_id %>"><%= item.title %></a>
+                </p>
+                <p class="fb-item-meta">
+                  <span class="fb-badge"><%= item.category %></span>
+                  <%= new Date(item.created_at).toISOString().slice(0, 10) %>
+                </p>
+                <% if (item.public_reply) { %>
+                  <div class="fb-item-reply"><%= item.public_reply %></div>
+                <% } %>
+              </div>
+            </article>
+          <% }); %>
+        </section>
+      <% }); %>
+    </div>
+  </main>
+
+  <%- include('../default/modern_footer', { lang: pageLang }) %>
+
+  <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+  <script>
+    // Optimistic toggle, corrected by the server's count. A second press removes the vote
+    // rather than erroring — people do click twice, and "you already voted" is a worse
+    // answer than simply undoing it.
+    document.addEventListener('click', async function (e) {
+      const btn = e.target.closest('[data-fb-vote]');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/feedback/' + encodeURIComponent(btn.dataset.fbVote) + '/vote', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          btn.setAttribute('aria-pressed', String(data.voted));
+          btn.querySelector('.fb-vote-n').textContent = data.votes;
+        }
+      } catch (_) { /* leave the button as it was */ }
+      btn.disabled = false;
+    });
+  </script>
+  <%- include('../default/main_site_search_script') %>
+</body>
+</html>

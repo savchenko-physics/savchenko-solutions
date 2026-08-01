@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<%
+  const ru = pageLang === 'ru';
+%>
+<html lang="<%= pageLang %>">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="content-language" content="<%= pageLang %>" />
+  <%# The URL is somebody's private receipt for a message they may have sent anonymously.
+      It must never appear in a search index. %>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
+  <title><%= ru ? 'Сообщение' : 'Your message' %> — <%= __('title') %></title>
+  <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/design-system.css" />
+  <link rel="stylesheet" href="/css/main_page.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('../default/main_site_header', {
+    lang: pageLang,
+    langSwitchEnUrl: '/en/feedback/' + item.public_id,
+    langSwitchRuUrl: '/ru/feedback/' + item.public_id
+  }) %>
+
+  <main class="flex-grow-1">
+    <div class="fb-board" style="max-width: 680px;">
+      <p class="fb-item-meta" style="margin-bottom: 0.6rem;">
+        <a href="/<%= pageLang %>/feedback" style="color: var(--ss-link);">
+          &larr; <%= ru ? 'Все предложения' : 'All suggestions' %>
+        </a>
+      </p>
+
+      <h1 style="font-size: 1.3rem;">
+        <%= item.public_title || (ru ? 'Ваше сообщение' : 'Your message') %>
+      </h1>
+
+      <p class="fb-item-meta" style="margin-bottom: 1.2rem;">
+        <span class="fb-badge"><%= statusLabel %></span>
+        <span class="fb-badge"><%= item.category %></span>
+        <%= new Date(item.created_at).toISOString().slice(0, 10) %>
+        <% if (item.problem_name) { %>
+          &middot;
+          <a href="/<%= item.problem_lang || pageLang %>/<%= item.problem_name %>" style="color: var(--ss-link);">
+            <%= ru ? 'Задача' : 'Problem' %> <%= item.problem_name %>
+          </a>
+        <% } %>
+      </p>
+
+      <div class="fb-item" style="display: block;">
+        <%# Escaped, and white-space:pre-wrap so a multi-paragraph derivation stays readable
+            without the body ever being treated as markup. %>
+        <div style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;"><%= item.body %></div>
+      </div>
+
+      <% if (item.public_reply) { %>
+        <div style="margin-top: 1.2rem;">
+          <span class="fb-legend"><%= ru ? 'Ответ' : 'Reply' %></span>
+          <div class="fb-item" style="display: block;">
+            <div style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;"><%= item.public_reply %></div>
+          </div>
+        </div>
+      <% } %>
+
+      <% if (item.is_public) { %>
+        <p style="margin-top: 1.2rem;">
+          <button type="button" class="fb-vote" style="flex-direction: row; gap: 0.4rem; min-width: 0; padding: 0.35rem 0.7rem;"
+                  data-fb-vote="<%= item.public_id %>" aria-pressed="<%= item.voted ? 'true' : 'false' %>">
+            <span class="fb-vote-caret" aria-hidden="true">&#9650;</span>
+            <span class="fb-vote-n"><%= item.votes %></span>
+          </button>
+        </p>
+      <% } else { %>
+        <p class="fb-item-meta" style="margin-top: 1.2rem;">
+          <%# The reassurance that was missing. Somebody once filed a correct, signed physics
+              correction, heard nothing, and re-posted the whole thing as a comment because
+              they had no way to tell whether it had arrived. %>
+          <%= ru
+            ? 'Сообщение получено и ждёт разбора. Эта ссылка постоянная — по ней всегда видно, что с ним стало.'
+            : 'Received and waiting to be read. This link is permanent — it always shows what happened to it.' %>
+        </p>
+      <% } %>
+
+      <p style="margin-top: 1.6rem;">
+        <button type="button" class="fb-inline-cta" data-fb-open>
+          <%= ru ? 'Написать ещё' : 'Send another' %>
+        </button>
+      </p>
+    </div>
+  </main>
+
+  <%- include('../default/modern_footer', { lang: pageLang }) %>
+
+  <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('click', async function (e) {
+      const btn = e.target.closest('[data-fb-vote]');
+      if (!btn) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/feedback/' + encodeURIComponent(btn.dataset.fbVote) + '/vote', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          btn.setAttribute('aria-pressed', String(data.voted));
+          btn.querySelector('.fb-vote-n').textContent = data.votes;
+        }
+      } catch (_) { /* leave the button as it was */ }
+      btn.disabled = false;
+    });
+  </script>
+  <%- include('../default/main_site_search_script') %>
+</body>
+</html>

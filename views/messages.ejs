@@ -1483,7 +1483,9 @@
 
 <div class="msg-app">
   <!-- Shared site header (same as the rest of the site) -->
-  <%- include('default/main_site_header') %>
+  <%# The messenger has its own composer pinned to the bottom-right; a floating tab
+      would sit on top of it. %>
+  <%- include('default/main_site_header', { hideFeedbackTab: true }) %>
 
   <!-- Main body -->
   <div class="msg-body<%= activeConversation ? ' has-active' : '' %>">

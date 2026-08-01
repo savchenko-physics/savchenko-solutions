@@ -196,6 +196,15 @@
                     </p>
                     <a href="/<%= lang %>"><%= lang === 'ru' ? 'К главам' : 'Browse chapters' %></a>
                 </div>
+                <%# Zero-result searches have never been recorded anywhere, so nobody knows
+                    what people come here for and do not get. This is the one place where
+                    that person is standing right in front of us, having just failed. %>
+                <div class="fb-inline" style="justify-content: center;">
+                    <span><%= lang === 'ru' ? 'Не нашли, что искали?' : 'Did not find what you were after?' %></span>
+                    <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+                        <%= lang === 'ru' ? 'Скажите, что именно' : 'Tell us what it was' %>
+                    </button>
+                </div>
             <% } else if (!searchTerm) { %>
                 <p style="color: #6c757d;"><%= __('menu.searchTypeToSeeResults') %></p>
             <% } else { %>
