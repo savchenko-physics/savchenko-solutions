@@ -10,7 +10,8 @@
   <link rel="apple-touch-icon" href="/img/logo.png" />
   <title><%= pageLang === 'ru' ? 'Ошибка сервера' : 'Server error' %> — Savchenko Solutions</title>
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
-  <link rel="stylesheet" href="/css/design-system.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
 </head>
 <body class="d-flex flex-column min-vh-100">
   <!-- Minimal self-contained header so the error page never depends on request/session state -->

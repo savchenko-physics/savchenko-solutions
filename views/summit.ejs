@@ -23,8 +23,9 @@
   <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
   
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/design-system.css" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   
   <title><%= __('summit.title') %></title>
   

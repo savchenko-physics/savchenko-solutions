@@ -7,7 +7,8 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <title>Admin Dashboard — Savchenko Solutions</title>
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
-  <link rel="stylesheet" href="/css/design-system.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
   <style>
     :root {
       --admin-nav: #1a1a2e;

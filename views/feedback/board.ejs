@@ -17,8 +17,9 @@
   <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/feedback" />
   <link rel="alternate" hreflang="x-default" href="https://savchenkosolutions.com/en/feedback" />
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
-  <link rel="stylesheet" href="/css/design-system.css" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
 </head>
 <body class="d-flex flex-column min-vh-100">
   <%- include('../default/main_site_header', {

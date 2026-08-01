@@ -15,8 +15,9 @@
     rel="stylesheet"
     href="/css/vendor/bootstrap.min.css"
   />
-  <link rel="stylesheet" href="/css/design-system.css" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
 </head>
 <body class="d-flex flex-column min-vh-100">
   <%- include('default/main_site_header', {

@@ -27,7 +27,8 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   <link
     rel="stylesheet"
     href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css"
