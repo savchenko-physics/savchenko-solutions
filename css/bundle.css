@@ -1386,7 +1386,16 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   border-radius: 999px; border: 1px solid var(--ss-border-card); background: var(--ss-card-bg);
   font-size: 12px; font-weight: 600; color: var(--ss-text-secondary);
 }
-.fb-solved svg, .fb-closed-tag svg { width: 15px; height: 15px; fill: currentColor; display: block; }
+/* Every inline icon in this family, sized in one place.
+   The check in .fb-resolution-head was missed and, because the SVG carries a viewBox but no
+   width/height attribute, it fell back to filling its container: a 1470px black circle in
+   the middle of a solved item. flex-shrink is pinned too, so a long label can never squash
+   an icon into an ellipse. */
+.fb-solved svg,
+.fb-closed-tag svg,
+.fb-resolution-head svg {
+  width: 15px; height: 15px; flex: 0 0 auto; fill: currentColor; display: block;
+}
 .fb-solved-when { font-weight: 400; opacity: 0.85; }
 
 /* The resolution reads as the answer, not as a footnote. */
@@ -1407,7 +1416,7 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   display: inline-flex; align-items: center; gap: 0.35rem;
   font-size: 12px; color: var(--ss-text-secondary);
 }
-.fb-locked-note svg { width: 13px; height: 13px; fill: currentColor; display: block; }
+.fb-locked-note svg { width: 13px; height: 13px; flex: 0 0 auto; fill: currentColor; display: block; }
 .fb-final {
   display: inline-flex; align-items: baseline; gap: 0.35rem;
   padding: 0.25rem 0.7rem; border-radius: 999px;
