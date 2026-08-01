@@ -14,7 +14,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 
 const { validateFeedback, validatePollAnswer, voterKey, nextVote, MIN_BODY, MAX_BODY } = require('../feedback');
-const { pickPollQuestion, POLL_IDS, CATEGORY_IDS, getCategories, getWidgetCopy } = require('../feedbackQuestions');
+const { pickPollQuestion, POLL_IDS, CATEGORY_IDS, STATUS_IDS, PUBLIC_STATUS_ORDER, isLocked, getCategories, getWidgetCopy } = require('../feedbackQuestions');
 
 const ok = (over) => ({ category: 'idea', body: 'Добавьте, пожалуйста, задачник Иродова.', ...over });
 
@@ -250,6 +250,47 @@ test('the toggle always lands on one of exactly three states', () => {
     for (const was of [-1, 0, 1]) {
         for (const dir of [-1, 1]) {
             assert.ok([-1, 0, 1].includes(nextVote(was, dir)));
+        }
+    }
+});
+
+// ── Locking a settled thread ────────────────────────────────────────────────────────
+//
+// Once an outcome is known there is nothing left to weigh in on, and a score that keeps
+// moving afterwards implies the decision is still open when it is not. Enforced in the
+// route as well as hidden in the template, because the endpoint is open to anyone with curl.
+
+test('done and declined are the only states that lock', () => {
+    assert.equal(isLocked('done'), true);
+    assert.equal(isLocked('declined'), true);
+    for (const s of ['new', 'planned', 'in_progress', 'duplicate']) {
+        assert.equal(isLocked(s), false, s);
+    }
+});
+
+test('an unknown or missing status never locks', () => {
+    // Failing open matters: a status this code has not heard of must not silently freeze
+    // an item nobody can then vote on.
+    for (const s of [undefined, null, '', 'DONE', 'resolved', 42]) {
+        assert.equal(isLocked(s), false, String(s));
+    }
+});
+
+test('every locked state is one the board actually displays', () => {
+    // A thread that locks but never appears would be settled where nobody can see it, which
+    // defeats the point of showing that asking works.
+    for (const s of ['done', 'declined']) {
+        assert.ok(STATUS_IDS.includes(s));
+        assert.ok(PUBLIC_STATUS_ORDER.includes(s), `${s} must be visible on the board`);
+    }
+});
+
+test('both languages have the solved and locked copy', () => {
+    for (const lang of ['ru', 'en']) {
+        const c = getWidgetCopy(lang);
+        for (const k of ['resolvedTitle', 'resolutionLabel', 'declinedTitle', 'lockedNote', 'lockedVote', 'finalScore', 'errorLocked']) {
+            assert.equal(typeof c[k], 'string', `${lang}/${k}`);
+            assert.ok(c[k].length > 0, `${lang}/${k} is empty`);
         }
     }
 });

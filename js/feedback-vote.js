@@ -44,8 +44,14 @@
                 body: JSON.stringify({ dir }),
             });
             const data = await res.json();
-            if (data && data.ok) applyState(pill, data.myVote, data.votes);
-            else applyState(pill, was, score);
+            if (data && data.ok) {
+                applyState(pill, data.myVote, data.votes);
+            } else {
+                applyState(pill, was, score);
+                // Someone had the page open when the thread was closed. Reloading is the
+                // honest response: the item now looks different, not just un-votable.
+                if (data && data.error === 'locked') location.reload();
+            }
         } catch (_) {
             applyState(pill, was, score);   // offline or blocked: put it back as it was
         }

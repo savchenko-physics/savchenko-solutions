@@ -89,7 +89,7 @@ function getPracticumBanner(lang) {
             rulesLabel: 'Правила конкурса',
             practiceLabel: 'Тренировочные задачи',
             proofText: 'Участники прошлого года доводили проекты практикума до настоящих препринтов — в том числе в соавторстве с организаторами практикума.',
-            proofCta: 'Пример работы →',
+            proofCta: 'Пример работы',
             stripText: 'Международный практикум по теоретической физике 2026 — конкурс на этом сайте.',
             stripCta: 'Регистрация до 26 июля',
         };
@@ -110,7 +110,7 @@ function getPracticumBanner(lang) {
         rulesLabel: 'Contest rules',
         practiceLabel: 'Practice problems',
         proofText: 'Past participants have taken practicum projects all the way to real preprints — some co-authored with the practicum’s own organizers.',
-        proofCta: 'See an example →',
+        proofCta: 'See an example',
         stripText: 'International Theoretical Physics Practicum 2026 — contest hosted on this site.',
         stripCta: 'Register by Jul 26',
     };

@@ -1338,7 +1338,7 @@
                     <span></span>
                 <% } %>
                 <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
+                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %></a>
                 <% } else { %>
                     <span></span>
                 <% } %>
@@ -1464,7 +1464,7 @@
                     <% if (judging.basePoints != null) { %>
                         <span>Текущий вес в таблице: <strong><%= judging.basePoints %></strong></span>
                     <% } %>
-                    <a href="/challenge/<%= judging.slug %>/judge" class="cj-table-link">Открыть таблицу оценок &rarr;</a>
+                    <a href="/challenge/<%= judging.slug %>/judge" class="cj-table-link">Открыть таблицу оценок</a>
                 </div>
 
                 <div class="cj-criteria" id="cjCriteria"></div>
@@ -1591,7 +1591,7 @@
                     <span></span>
                 <% } %>
                 <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
+                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %></a>
                 <% } else { %>
                     <span></span>
                 <% } %>
@@ -1701,7 +1701,7 @@
                         <% } %>,
                         <%= new Date(lastEdit.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %>
                     </div>
-                    <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %> &rarr;</a>
+                    <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %></a>
                 </div>
             </div>
             <% } %>
@@ -1814,19 +1814,9 @@
             </div>
         </div>
 
-        <!-- Right rail: live Brainstorm Room conversation (YouTube-style live chat) + section grid -->
+        <!-- Right rail: section grid. The Brainstorm Room panel was retired; its real
+             content now lives in the comment thread (see is_brainstorm comments). -->
         <aside class="right-rail">
-            <%- include('partials/brainstorm_room_panel', {
-                lang: lang,
-                name: name,
-                username: username,
-                isCurator: typeof brainstormIsCurator !== 'undefined' ? brainstormIsCurator : false,
-                reactions: typeof brainstormReactions !== 'undefined' ? brainstormReactions : [],
-                displayMode: typeof brainstormMode !== 'undefined' ? brainstormMode : 'rotate',
-                related: typeof brainstormRelated !== 'undefined' ? brainstormRelated : [],
-                roomRail: true
-            }) %>
-
         <% if (sectionGrid) { %>
         <div class="sidebar">
             <div class="section-grid-card">
@@ -1916,7 +1906,7 @@
                     <a href="/paths/<%= pp.slug %>" style="color: #1a5276; text-decoration: none; font-size: 13px; font-weight: 500;"><%= pp.title %></a>
                 </div>
                 <% }); %>
-                <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %> &rarr;</a>
+                <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %></a>
             </div>
             <% } %>
             <% if (typeof difficulty !== 'undefined' && difficulty) { %>
@@ -2008,7 +1998,7 @@
             <span></span>
         <% } %>
         <% if (nextProblem) { %>
-            <a href="/<%= lang %>/<%= nextProblem %>"><%= nextProblem %> &rarr;</a>
+            <a href="/<%= lang %>/<%= nextProblem %>"><%= nextProblem %></a>
         <% } else { %>
             <span></span>
         <% } %>

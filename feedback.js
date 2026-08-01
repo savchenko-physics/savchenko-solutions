@@ -32,6 +32,7 @@ const {
     pickPollQuestion,
     statusLabel,
     getWidgetCopy,
+    isLocked,
 } = require('./feedbackQuestions');
 
 const pool = new Pool({
@@ -292,7 +293,7 @@ router.get('/', async (req, res) => {
     try {
         const { rows } = await pool.query(
             `SELECT f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes, f.base_score,
-                    f.created_at, f.lang, f.body,
+                    f.created_at, f.resolved_at, f.lang, f.body,
                     COALESCE(f.public_title, left(f.body, 120)) AS title,
                     f.public_reply,
                     COALESCE(v.value, 0) AS my_vote
@@ -337,7 +338,7 @@ router.get('/:publicId([A-Za-z0-9_-]{10,24})', async (req, res) => {
     try {
         const { rows } = await pool.query(
             `SELECT f.id, f.public_id, f.category, f.status, f.votes, f.upvotes, f.downvotes,
-                    f.created_at, f.body,
+                    f.base_score, f.created_at, f.resolved_at, f.body,
                     f.is_public, f.public_title, f.public_reply, f.problem_name, f.problem_lang,
                     COALESCE(v.value, 0) AS my_vote
              FROM feedback_items f
@@ -424,12 +425,18 @@ api.post('/:publicId([A-Za-z0-9_-]{10,24})/vote', lightLimiter, async (req, res)
     try {
         await client.query('BEGIN');
         const found = await client.query(
-            'SELECT id FROM feedback_items WHERE public_id = $1 AND is_public FOR UPDATE',
+            'SELECT id, status FROM feedback_items WHERE public_id = $1 AND is_public FOR UPDATE',
             [req.params.publicId]
         );
         if (found.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'not_found' });
+        }
+        // Enforced here and not only hidden in the template. The buttons are gone from a
+        // resolved thread, but the endpoint is open to anyone with curl.
+        if (isLocked(found.rows[0].status)) {
+            await client.query('ROLLBACK');
+            return res.status(409).json({ error: 'locked' });
         }
         const id = found.rows[0].id;
 

@@ -291,12 +291,17 @@ router.post('/feedback/:id/update', async (req, res) => {
         const before = await pool.query('SELECT status FROM feedback_items WHERE id = $1', [id]);
         if (before.rows.length === 0) return res.status(404).send('Not found');
 
+        // resolved_at is stamped once, on the transition into a terminal state, and cleared
+        // if the thread is reopened. reviewed_at cannot serve here because it moves on every
+        // triage edit, which would drift the "solved on" date forward forever.
+        const terminal = status === 'done' || status === 'declined';
         await pool.query(
             `UPDATE feedback_items
              SET status = $1, is_public = $2, public_title = $3, public_reply = $4,
-                 reviewed_by = $5, reviewed_at = now()
+                 reviewed_by = $5, reviewed_at = now(),
+                 resolved_at = CASE WHEN $7 THEN COALESCE(resolved_at, now()) ELSE NULL END
              WHERE id = $6`,
-            [status, isPublic, title, reply, req.session.userId, id]
+            [status, isPublic, title, reply, req.session.userId, id, terminal]
         );
         await logAdminAction(req.session.userId, 'update_feedback', 'feedback_item', id, { status, isPublic });
 

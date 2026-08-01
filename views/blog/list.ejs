@@ -259,7 +259,7 @@
 
             <% if (page < totalPages) { %>
                 <a href="/blog<%= activeTag ? '/tag/' + activeTag : '' %>?page=<%= page + 1 %>">
-                    <%= lang === 'ru' ? 'Далее' : 'Next' %> &rarr;
+                    <%= lang === 'ru' ? 'Далее' : 'Next' %>
                 </a>
             <% } else { %>
                 <span class="blog-pagination-disabled"></span>

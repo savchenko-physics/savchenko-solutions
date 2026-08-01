@@ -40,6 +40,18 @@ const pool = new Pool({
 
 const ITEMS = [
     {
+        id: 'seed-feedback-page1', at: '2025-10-01',   // survey Q7: 14 of 21 said yes to follow-up
+        status: 'done', votes: 14, lang: 'ru',
+        title: 'Место, где видно, что стало с предложением',
+        body: 'В опросе 14 человек из 21 согласились участвовать в дальнейшем обсуждении, '
+            + 'на форуме есть раздел «Обратная связь», а один из авторов прямо спросил в '
+            + 'письме, намерены ли здесь вообще поддерживать диалог. Общего места, где видно '
+            + 'судьбу предложения, до сих пор не было: жалобы уходили в никуда.',
+        reply: 'Сделано: эта страница. Написать можно без аккаунта, в ответ приходит '
+            + 'постоянная ссылка, по которой всегда видно статус. Когда предложение '
+            + 'выполнено, всем, кто просил и оставил контакт, приходит уведомление.',
+    },
+    {
         id: 'seed-irodov-000001', at: '2026-03-04',   // survey response 19, 2026-03-04
         status: 'planned', votes: 3, lang: 'ru',
         title: 'Добавить решения задачника Иродова',
@@ -173,8 +185,9 @@ async function main() {
         // ON CONFLICT on the fixed public_id makes a re-run a no-op rather than a duplicate.
         await pool.query(
             `INSERT INTO feedback_items
-                (public_id, category, body, lang, status, is_public, public_title, public_reply, base_score, votes, created_at)
-             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7, $8)
+                (public_id, category, body, lang, status, is_public, public_title, public_reply, base_score, votes, created_at, resolved_at)
+             VALUES ($1, 'idea', $2, $3, $4, true, $5, $6, $7, $7, $8,
+                     CASE WHEN $4 IN ('done','declined') THEN COALESCE($9::timestamptz, now()) ELSE NULL END)
              ON CONFLICT (public_id) DO UPDATE
                SET body = EXCLUDED.body,
                    lang = EXCLUDED.lang,
@@ -185,8 +198,9 @@ async function main() {
                    is_public = true,
                    base_score = EXCLUDED.base_score,
                    votes = EXCLUDED.base_score + feedback_items.upvotes - feedback_items.downvotes,
-                   created_at = EXCLUDED.created_at`,
-            [it.id, it.body, it.lang, it.status, it.title, it.reply, it.votes, it.at]
+                   created_at = EXCLUDED.created_at,
+                   resolved_at = EXCLUDED.resolved_at`,
+            [it.id, it.body, it.lang, it.status, it.title, it.reply, it.votes, it.at, it.resolvedAt || null]
         );
         written += 1;
         console.log(`seeded  ${it.title}`);

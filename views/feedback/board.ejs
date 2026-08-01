@@ -33,6 +33,8 @@
       ? `${day} ${RU_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`
       : `${day} ${EN_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`;
   }
+  const CHECK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm4.1 5.8-4.9 5a.9.9 0 0 1-1.3 0L3.9 8.7a.9.9 0 1 1 1.3-1.3l1.4 1.5 4.2-4.4a.9.9 0 0 1 1.3 1.3z"/></svg>';
+  const LOCK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.5V5a3.5 3.5 0 1 1 7 0v1.5h.5A1.5 1.5 0 0 1 13.5 8v5A1.5 1.5 0 0 1 12 14.5H4A1.5 1.5 0 0 1 2.5 13V8A1.5 1.5 0 0 1 4 6.5h.5zm1.6 0h3.8V5a1.9 1.9 0 1 0-3.8 0v1.5z"/></svg>';
   const ARROW_UP = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5 3 11h4v5.5h6V11h4z"/></svg>';
   const ARROW_DOWN = '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16.5 3 9h4V3.5h6V9h4z"/></svg>';
 %>
@@ -98,7 +100,24 @@
             <span style="font-weight:400;"><%= g.items.length %></span>
           </h2>
           <% g.items.forEach(function (item) { %>
-            <article class="fb-item">
+            <%
+              const locked = item.status === 'done' || item.status === 'declined';
+              const solved = item.status === 'done';
+            %>
+            <article class="fb-item <%= solved ? 'is-resolved' : (locked ? 'is-closed' : '') %>">
+              <% if (solved) { %>
+                <%# The loudest thing on the page, on purpose. Somebody asked, it got done,
+                    and here is the date. That is the entire argument for writing in again. %>
+                <p class="fb-solved">
+                  <%- CHECK %>
+                  <span><%= copy.resolvedTitle %></span>
+                  <% if (item.resolved_at) { %>
+                    <span class="fb-solved-when"><%= ago(item.resolved_at) %></span>
+                  <% } %>
+                </p>
+              <% } else if (locked) { %>
+                <p class="fb-closed-tag"><%- LOCK %><span><%= copy.declinedTitle %></span></p>
+              <% } %>
               <p class="fb-item-meta">
                 <span class="fb-badge fb-badge-<%= item.status %>"><%= g.label %></span>
                 <span><%= item.category %></span>
@@ -124,27 +143,39 @@
               <% } %>
 
               <div class="fb-actions">
-                <%# Both directions, score between them, exactly where the thumb expects it.
-                    Pressing the same arrow twice clears the vote; pressing the other swings
-                    it by two. Open to signed-out visitors on purpose, because every
-                    sign-in-gated voting feature this site has shipped has ~zero rows. %>
-                <div class="fb-vote <%= item.my_vote === 1 ? 'is-up' : (item.my_vote === -1 ? 'is-down' : '') %>"
-                     data-fb-vote="<%= item.public_id %>">
-                  <button type="button" class="fb-arrow fb-arrow-up" data-dir="1"
-                          aria-label="<%= ru ? 'За' : 'Upvote' %>"
-                          aria-pressed="<%= item.my_vote === 1 %>"><%- ARROW_UP %></button>
-                  <span class="fb-score"><%= item.votes %></span>
-                  <button type="button" class="fb-arrow fb-arrow-down" data-dir="-1"
-                          aria-label="<%= ru ? 'Против' : 'Downvote' %>"
-                          aria-pressed="<%= item.my_vote === -1 %>"><%- ARROW_DOWN %></button>
-                </div>
+                <% if (locked) { %>
+                  <%# Shown as closed rather than removed. A vote control that simply vanished
+                      would read as a bug; this reads as settled. %>
+                  <span class="fb-final"><%= copy.finalScore %> <b><%= item.votes %></b></span>
+                  <span class="fb-locked-note"><%- LOCK %><%= copy.lockedVote %></span>
+                <% } else { %>
+                  <%# Both directions, score between them, exactly where the thumb expects it.
+                      Pressing the same arrow twice clears the vote; pressing the other swings
+                      it by two. Open to signed-out visitors on purpose, because every
+                      sign-in-gated voting feature this site has shipped has ~zero rows. %>
+                  <div class="fb-vote <%= item.my_vote === 1 ? 'is-up' : (item.my_vote === -1 ? 'is-down' : '') %>"
+                       data-fb-vote="<%= item.public_id %>">
+                    <button type="button" class="fb-arrow fb-arrow-up" data-dir="1"
+                            aria-label="<%= ru ? 'За' : 'Upvote' %>"
+                            aria-pressed="<%= item.my_vote === 1 %>"><%- ARROW_UP %></button>
+                    <span class="fb-score"><%= item.votes %></span>
+                    <button type="button" class="fb-arrow fb-arrow-down" data-dir="-1"
+                            aria-label="<%= ru ? 'Против' : 'Downvote' %>"
+                            aria-pressed="<%= item.my_vote === -1 %>"><%- ARROW_DOWN %></button>
+                  </div>
+                <% } %>
 
                 <a class="fb-action" href="/<%= pageLang %>/feedback/<%= item.public_id %>">
                   <%= item.public_reply ? (ru ? '1 ответ' : '1 reply') : (ru ? 'Открыть' : 'Open') %>
                 </a>
               </div>
 
-              <% if (item.public_reply) { %>
+              <% if (item.public_reply && solved) { %>
+                <div class="fb-resolution">
+                  <div class="fb-resolution-head"><%- CHECK %><span><%= copy.resolutionLabel %></span></div>
+                  <div class="fb-resolution-body"><%= item.public_reply %></div>
+                </div>
+              <% } else if (item.public_reply) { %>
                 <div class="fb-reply">
                   <div class="fb-reply-head">
                     <span class="fb-reply-who">astrosander</span>

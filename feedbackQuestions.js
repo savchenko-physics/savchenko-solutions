@@ -180,6 +180,13 @@ const STATUS = {
 
 const STATUS_IDS = Object.keys(STATUS);
 
+// Terminal states. A thread in one of these stops taking votes: the outcome is known, so
+// there is nothing left to weigh in on, and a score that keeps moving afterwards implies
+// the decision is still open when it is not. Derived from status rather than stored as a
+// flag, because a separate boolean could only ever disagree with it.
+const LOCKED_STATUSES = new Set(['done', 'declined']);
+const isLocked = (status) => LOCKED_STATUSES.has(status);
+
 // Statuses the public board shows, in the order it shows them: what is happening now, what
 // is committed, what has merely been asked for, and what has been settled. Nothing is public
 // until the owner sets is_public, so an unread item can never appear here.
@@ -270,6 +277,16 @@ function getWidgetCopy(lang) {
         pollThanks: ru ? 'Спасибо!' : 'Thanks!',
         pollOther: ru ? 'Другое' : 'Other',
         pollSubmit: ru ? 'Ответить' : 'Answer',
+        // The resolved thread. Deliberately unambiguous: somebody asked, it got done, and
+        // here is the date. That is the whole argument for writing in again.
+        resolvedTitle: ru ? 'Решено' : 'Solved',
+        resolvedOn: ru ? 'Решено' : 'Solved on',
+        resolutionLabel: ru ? 'Что сделали' : 'What we did',
+        declinedTitle: ru ? 'Закрыто' : 'Closed',
+        lockedNote: ru ? 'Обсуждение закрыто, голосование больше не идёт.' : 'This thread is closed. Voting has ended.',
+        lockedVote: ru ? 'Голосование закрыто' : 'Voting closed',
+        finalScore: ru ? 'Итог' : 'Final',
+        errorLocked: ru ? 'Обсуждение закрыто.' : 'This thread is closed.',
         promptSolution: ru ? 'Нашли ошибку или есть идея?' : 'Found an error, or have an idea?',
         promptSolutionCta: ru ? 'Напишите нам' : 'Tell us',
         promptSearch: ru ? 'Не нашли, что искали? Скажите, что именно, и мы добавим.' : 'Did not find what you were after? Tell us what it was.',
@@ -288,6 +305,8 @@ module.exports = {
     POLL_IDS,
     STATUS,
     STATUS_IDS,
+    LOCKED_STATUSES,
+    isLocked,
     PUBLIC_STATUS_ORDER,
     getCategories,
     pickPollQuestion,

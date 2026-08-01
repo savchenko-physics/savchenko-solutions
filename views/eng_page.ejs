@@ -226,7 +226,7 @@
           <span><strong><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'решений' : 'solutions' %></span>
           <span><strong><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
           <span><strong><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'правок' : 'edits' %></span>
-          <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %> &rarr;</a>
+          <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %></a>
         </div>
         <% } %>
         </div>
@@ -239,7 +239,7 @@
         <div class="most-wanted">
           <div class="most-wanted-head">
             <span class="most-wanted-title"><%= lang === 'ru' ? 'Больше всего ждут' : 'Most wanted' %></span>
-            <a class="most-wanted-all" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Все нерешённые' : 'All unsolved' %> &rarr;</a>
+            <a class="most-wanted-all" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Все нерешённые' : 'All unsolved' %></a>
           </div>
           <ul class="most-wanted-list">
             <% mostWanted.forEach(w => { %>
@@ -566,7 +566,7 @@
               <%= lang === 'ru' ? 'Блог' : 'Latest from the Blog' %>
             </h3>
             <a href="/blog" style="font-size: 13px; color: #1a5276; text-decoration: none; font-weight: 500;">
-              <%= lang === 'ru' ? 'Все' : 'View all' %> &rarr;
+              <%= lang === 'ru' ? 'Все' : 'View all' %>
             </a>
           </div>
           <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
@@ -613,7 +613,7 @@
                 supposed to be. %>
             <div class="sidebar-section-header">
               <h3 class="sidebar-title"><%= lang === 'ru' ? 'Лучшие авторы' : 'Top Authors' %></h3>
-              <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %> &rarr;</a>
+              <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %></a>
             </div>
             <div class="top-authors-list">
               <div class="top-authors-header">
@@ -701,7 +701,7 @@
               <% }); %>
             </div>
             <a href="/<%= lang %>/contributions/all" class="sidebar-view-all" style="display: inline-block; margin-top: 8px;">
-              <%= lang === 'ru' ? 'Посмотреть все' : 'View all' %> &rarr;
+              <%= lang === 'ru' ? 'Посмотреть все' : 'View all' %>
             </a>
           </div>
 
@@ -1139,12 +1139,6 @@
     .action-link:focus-visible {
       outline: 2px solid #1a1a2e;
       outline-offset: 2px;
-    }
-    /* The arrow is the "this goes somewhere" affordance Eve was missing. */
-    .action-link .action-title::after {
-      content: " →";
-      color: #6c757d;
-      font-weight: 400;
     }
 
     .action-link.primary-action {
