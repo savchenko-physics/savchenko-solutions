@@ -1,0 +1,136 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+<link rel="icon" type="image/png" href="/img/logo.png" />
+<link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+<link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="/css/design-system.css" />
+<%# main_page.css carries the site header's own rules. Without it the shared
+    header include renders unstyled — an oversized logo and broken nav. Every
+    other full-page template loads it; this one must too. %>
+<link rel="stylesheet" href="/css/main_page.css" />
+<script src="/js/vendor/bootstrap.bundle.min.js"></script>
+<style>
+    /* Dense academic directory. Reference points: Yandex.Katalog's numbered rows
+       and the score bars in the original PageRank paper. Design system: no
+       gradients, no shadow above 0 1px 3px, no radius above 8px, no emoji. */
+    /* Sticky footer: short pages otherwise leave white space BELOW the footer,
+       because body stops at content height. Flex column + min-height:100vh puts
+       the footer at the bottom of the viewport and flush to the page end. */
+    html, body { height: auto; }
+    body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+    body > footer { flex-shrink: 0; margin-top: auto; }
+
+    /* Use the width. A 1180px column in a 1900px viewport wastes a third of the
+       screen on a directory whose whole job is showing many rows at once. */
+    .rec-wrap { width: 100%; max-width: 1660px; margin: 0 auto;
+                padding: 16px 32px 24px; flex: 1 0 auto; }
+    .rec-crumb { font-size: 13px; color: #6c757d; margin-bottom: 8px; }
+    .rec-crumb a { color: #1a5276; text-decoration: none; }
+    .rec-crumb a:hover { color: #0d3b54; text-decoration: underline; }
+    .rec-h1 { font-family: Inter, system-ui, sans-serif; font-weight: 600; color: #1a1a2e;
+              font-size: 25px; margin: 0 0 4px; }
+    /* High specificity + every link state: the site-wide `a` colour would
+       otherwise paint this blue-on-navy and make the label unreadable. */
+    .rec-wrap a.rec-dl,
+    .rec-wrap a.rec-dl:link,
+    .rec-wrap a.rec-dl:visited,
+    .rec-wrap a.rec-dl:hover,
+    .rec-wrap a.rec-dl:active,
+    .rec-wrap a.rec-dl:focus {
+        display: inline-block; background: #1a1a2e; color: #ffffff !important;
+        text-decoration: none; font-size: 14px; font-weight: 500;
+        padding: 9px 17px; border-radius: 6px; border: 1px solid #1a1a2e;
+    }
+    .rec-wrap a.rec-dl:hover { background: #2d2d4a; border-color: #2d2d4a; }
+    .rec-wrap a.rec-dl:focus-visible { outline: 2px solid #1a5276; outline-offset: 2px; }
+    .rec-sub { color: #6c757d; font-size: 13.5px; line-height: 1.55; margin: 0 0 10px; max-width: 900px; }
+    .rec-sub a { color: #1a5276; text-decoration: none; }
+    .rec-sub a:hover { text-decoration: underline; }
+
+    /* Tabs — the two corpora are separate collections, and the page has to say so. */
+    .rec-tabs { display: flex; gap: 2px; border-bottom: 1px solid #dee2e6; margin-bottom: 4px; }
+    .rec-tab { padding: 7px 14px; font-size: 14px; color: #6c757d; text-decoration: none;
+               border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0;
+               position: relative; top: 1px; }
+    .rec-tab:hover { color: #1a5276; }
+    .rec-tab.on { color: #1a1a2e; font-weight: 600; background: #fff;
+                  border-color: #dee2e6; }
+    .rec-tab .n { color: #8c959f; font-weight: 400; font-size: 12.5px; margin-left: 4px; }
+    .rec-tabnote { font-size: 12.5px; color: #8c959f; margin: 7px 0 12px; }
+
+    .rec-count { font-size: 12px; color: #8c959f; text-transform: uppercase;
+                 letter-spacing: .05em; font-weight: 600; margin: 16px 0 12px; }
+
+    /* Four columns so four core rubrics fill one row instead of leaving a gap. */
+    .rec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                gap: 20px 32px; align-items: start; }
+    /* The rubric grid is the centrepiece — cells get real presence rather than
+       reading as a footnote under a paragraph of explanation. */
+    .rec-grid-main { gap: 30px 36px; margin-bottom: 10px; align-items: start; }
+    .rec-grid-main .rec-cell { border-left: 2px solid #dee2e6; padding-left: 16px; }
+    .rec-grid-main .rec-rubric-title { font-size: 19px; margin-bottom: 8px; }
+    .rec-grid-main .rec-rubric-items { font-size: 16px; line-height: 1.8; color: #495057; }
+    .rec-more { white-space: nowrap; color: #8c959f !important; font-size: 14px; }
+    .rec-more:hover { color: #1a5276 !important; }
+    .rec-rubric-title { font-size: 16.5px; font-weight: 600; margin: 0 0 3px; line-height: 1.3; }
+    .rec-rubric-title a { color: #1a5276; text-decoration: none; }
+    .rec-rubric-title a:hover { text-decoration: underline; }
+    /* white-space:nowrap keeps the count on the same line as the last word of
+       the rubric name; the non-breaking space in the markup does the joining. */
+    .rec-rubric-n { color: #8c959f; font-weight: 400; font-size: 12.5px; white-space: nowrap; }
+    .rec-rubric-items { font-size: 13.5px; color: #6c757d; line-height: 1.6; }
+    .rec-rubric-items a { color: #1a5276; text-decoration: none; }
+    .rec-rubric-items a:hover { text-decoration: underline; }
+
+    .rec-layout { display: grid; grid-template-columns: 190px 1fr; gap: 38px; align-items: start; }
+    .rec-rail h3 { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
+                   color: #8c959f; font-weight: 600; margin: 0 0 5px; }
+    .rec-rail ul { list-style: none; padding: 0; margin: 0 0 18px; font-size: 14px; }
+    .rec-rail li { margin-bottom: 2px; }
+    .rec-rail a { color: #1a5276; text-decoration: none; }
+    .rec-rail a:hover { text-decoration: underline; }
+    .rec-rail a.on { font-weight: 600; color: #1a1a2e; }
+    .rec-rail .n { color: #8c959f; }
+
+    .rec-list { list-style: none; counter-reset: rec; padding: 0; margin: 0; }
+    .rec-item { counter-increment: rec; position: relative; padding: 0 0 15px 32px;
+                margin-bottom: 15px; border-bottom: 1px solid #f1f3f5; }
+    .rec-item::before { content: counter(rec) "."; position: absolute; left: 0; top: 1px;
+                        color: #8c959f; font-size: 13.5px; }
+    .rec-title { font-size: 16.5px; font-weight: 600; margin: 0 0 2px; line-height: 1.35; }
+    .rec-title a { color: #1a5276; text-decoration: none; }
+    .rec-title a:hover { text-decoration: underline; }
+    .rec-badge { display: inline-block; font-size: 11px; color: #6c757d;
+                 border: 1px solid #dee2e6; border-radius: 4px; padding: 0 5px; margin-left: 5px;
+                 vertical-align: 2px; font-weight: 400; }
+    .rec-summary { font-size: 14.5px; color: #2d2d2d; line-height: 1.55; margin: 0 0 4px; }
+    .rec-quote { font-size: 13px; color: #6c757d; line-height: 1.45; margin: 0 0 4px;
+                 border-left: 2px solid #dee2e6; padding-left: 8px; }
+    .rec-meta { font-size: 13px; color: #6c757d; display: flex; flex-wrap: wrap;
+                gap: 12px; align-items: center; }
+    .rec-url { color: #27ae60; }
+    .rec-bar { font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: -1px;
+               color: #1a1a2e; }
+    .rec-bar .off { color: #dee2e6; }
+    .rec-tags { font-size: 13px; color: #8c959f; margin-top: 3px; }
+
+    .rec-chips { margin-bottom: 12px; font-size: 12.5px; }
+    .rec-chip { display: inline-block; border: 1px solid #dee2e6; border-radius: 6px;
+                padding: 1px 8px; margin-right: 5px; color: #2d2d2d; }
+    .rec-chip a { color: #c0392b; text-decoration: none; margin-left: 5px; }
+
+    .rec-note { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;
+                padding: 14px 16px; font-size: 13px; color: #6c757d; line-height: 1.6;
+                margin: 26px 0 0; max-width: 1000px;
+                display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .rec-note-text { flex: 1 1 320px; }
+    .rec-note a { color: #1a5276; }
+
+    @media (max-width: 820px) {
+        .rec-wrap { padding: 16px 16px 24px; }
+        .rec-layout { grid-template-columns: 1fr; gap: 16px; }
+        .rec-rail { display: flex; flex-wrap: wrap; gap: 0 20px; }
+        .rec-rail ul { margin-bottom: 8px; }
+    }
+</style>

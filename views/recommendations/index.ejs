@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <title><%= lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru'
+        ? 'Каталог Telegram-каналов и сайтов по олимпиадной физике: задачи, подготовка к экзаменам, теория, астрономия. Порядок — по числу ссылок от других участников каталога.'
+        : 'A catalog of physics Telegram channels and websites for olympiad preparation, ordered by how often other catalog members cite them.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/recommendations<%= tab === 'websites' ? '/sites' : '' %>" />
+    <meta property="og:title" content="<%= lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources' %> — Savchenko Solutions" />
+    <meta property="og:url" content="https://savchenkosolutions.com/recommendations" />
+    <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
+    <%- include('_head') %>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="rec-wrap">
+    <%# Deliberately plain. The catalog is the thing worth looking at — the counts
+        and the channel names carry it. Claims about how it was built belong on the
+        methodology page, not in front of someone who came here for a link. %>
+    <h1 class="rec-h1"><%= lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources' %></h1>
+    <p class="rec-sub">
+        <% if (lang === 'ru') { %>
+            Крупнейший в мире каталог материалов для подготовки к олимпиадам по физике и научной работы.
+            Предложения и дополнения: <a href="mailto:alex@savchenkosolutions.com">alex@savchenkosolutions.com</a>
+        <% } else { %>
+            The world&rsquo;s biggest recommendation source for physics olympiad preparation and research materials.
+            For suggestions and completeness, please contact
+            <a href="mailto:alex@savchenkosolutions.com">alex@savchenkosolutions.com</a>
+        <% } %>
+    </p>
+
+    <%- include('_tabs') %>
+
+    <% if (!core.length && !adjacent.length) { %>
+        <p class="rec-sub" style="margin-top:20px;">
+            <%= lang === 'ru' ? 'Этот раздел каталога пока готовится.' : 'This half of the catalog is still being built.' %>
+        </p>
+    <% } %>
+
+    <% if (core.length) { %>
+        <div class="rec-count"><%= lang === 'ru' ? 'Для решения задач' : 'For working problems' %></div>
+        <div class="rec-grid rec-grid-main">
+            <% core.forEach(function (r) { %>
+                <div class="rec-cell">
+                    <div class="rec-rubric-title">
+                        <a href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? r.ru : r.en %></a><span class="rec-rubric-n">&nbsp;<%= r.count %></span>
+                    </div>
+                    <div class="rec-rubric-items">
+                        <% r.entries.forEach(function (e, i) { %><a href="<%= e.url %>" rel="noopener nofollow" target="_blank"><%= e.title %></a><%= i < r.entries.length - 1 ? ', ' : '' %><% }); %><% if (r.count > r.entries.length) { %>&nbsp;<a class="rec-more" href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? 'ещё ' + (r.count - r.entries.length) : (r.count - r.entries.length) + ' more' %></a><% } %>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    <% } %>
+
+    <% if (adjacent.length) { %>
+        <div class="rec-count"><%= lang === 'ru' ? 'Смежное' : 'Adjacent' %></div>
+        <div class="rec-rubric-items" style="font-size:13.5px;line-height:2;">
+            <% adjacent.forEach(function (r, i) { %><a href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? r.ru : r.en %></a> <span class="rec-rubric-n"><%= r.count %></span><%= i < adjacent.length - 1 ? ' · ' : '' %><% }); %>
+        </div>
+        <p class="rec-sub" style="margin-top:4px;font-size:13px;">
+            <%= lang === 'ru'
+                ? 'Тоже наука, но не материал для решения задач — вынесено отдельно, чтобы не мешать разделам выше.'
+                : 'Science, but not problem-solving material — kept separate so it does not crowd the sections above.' %>
+        </p>
+    <% } %>
+
+    <div class="rec-note">
+        <a class="rec-dl" href="/physics-telegram-catalog.pdf" download><%= lang === 'ru' ? 'Скачать PDF' : 'Download PDF' %></a>
+        <span class="rec-note-text">
+            <%= lang === 'ru'
+                ? 'Весь каталог одним файлом, 68 страниц. Собран обходом 200 434 узлов Telegram и 1 299 403 веб-страниц.'
+                : 'The whole catalog in one file, 68 pages. Assembled from a crawl of 200,434 Telegram nodes and 1,299,403 web pages.' %>
+            <a href="/<%= lang %>/recommendations/methodology"><%= lang === 'ru' ? 'Как это устроено' : 'How this was built' %></a>.
+            <% if (generated) { %><%= lang === 'ru' ? 'Срез от' : 'Snapshot' %> <%= generated %>.<% } %>
+        </span>
+    </div>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>

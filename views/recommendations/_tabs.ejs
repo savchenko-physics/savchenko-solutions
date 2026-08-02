@@ -1,0 +1,13 @@
+<%# The two corpora are separate collections and the page must say which one you
+    are looking at. They share one interaction model — same rows, same authority
+    number, same facet rail — so only the corpus changes when you switch. %>
+<div class="rec-tabs">
+    <a class="rec-tab <%= tab === 'websites' ? 'on' : '' %>" href="/<%= lang %>/recommendations">
+        <%= lang === 'ru' ? 'Сайты' : 'Websites' %>
+        <% if (typeof counts !== 'undefined' && counts.websites) { %><span class="n"><%= counts.websites %></span><% } %>
+    </a>
+    <a class="rec-tab <%= tab === 'telegram' ? 'on' : '' %>" href="/<%= lang %>/recommendations/channels">
+        <%= lang === 'ru' ? 'Telegram-каналы' : 'Telegram channels' %>
+        <% if (typeof counts !== 'undefined' && counts.telegram) { %><span class="n"><%= counts.telegram %></span><% } %>
+    </a>
+</div>

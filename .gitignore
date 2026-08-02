@@ -18,3 +18,5 @@ public/sitemap_recent.xml
 /posts-old
 /posts
 /src/__pycache__
+# offline catalog build state (never committed; data/recommendations.json is)
+data/.build/

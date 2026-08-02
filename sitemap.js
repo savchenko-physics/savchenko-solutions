@@ -204,6 +204,18 @@ async function generateStaticSitemap() {
         { loc: `${BASE_URL}/tools/units`, changefreq: 'monthly', priority: 0.6, lastmod: now },
         { loc: `${BASE_URL}/tools/constants`, changefreq: 'monthly', priority: 0.6, lastmod: now },
         { loc: `${BASE_URL}/tools/latex`, changefreq: 'monthly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations`, changefreq: 'weekly', priority: 0.7, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/methodology`, changefreq: 'monthly', priority: 0.4, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/olympiad_problem_solving`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/entrance_exam_prep`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/physics_concepts_resources`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/astronomy_olympiad`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/university_announcements`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/research_seminars`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/research_news_preprints`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/institutional_news_noninstructional`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/popular_science`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+        { loc: `${BASE_URL}/recommendations/mathematics`, changefreq: 'weekly', priority: 0.6, lastmod: now },
     ];
 
     // Add published study paths

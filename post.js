@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { recommendationsForChapter } = require('./lib/recommendationsForChapter');
 const path = require("path");
 const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText, buildMetaDescription } = require("./utils"); // Adjust the import based on your utils file
 const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts, getPrevNextProblems, getSectionProblemsGrid, getRelatedProblems } = require("./parents");
@@ -430,7 +431,14 @@ async function renderPost(req, res) {
         }
         const articleJsonLdStr = jsonLdSafe(articleJsonLd);
 
+        let chapterRecommendations = [];
+        try {
+            const rec = require('./recommendations');
+            chapterRecommendations = recommendationsForChapter(rec.getCatalog(), name, lang, 3);
+        } catch (_e) { /* catalog optional — the block simply does not render */ }
+
         res.render("solution_post", {
+            chapterRecommendations,
             __: i18n.__,
             lang,
             pageRef,

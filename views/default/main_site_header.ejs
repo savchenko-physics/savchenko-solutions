@@ -143,6 +143,15 @@
                     </div>
                   </a>
                 </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="/recommendations">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#6c757d" class="mt-1 flex-shrink-0"><path d="M2 2.5A.5.5 0 0 1 2.5 2h3a.5.5 0 0 1 0 1h-3A.5.5 0 0 1 2 2.5zm0 3A.5.5 0 0 1 2.5 5h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 5.5zm0 3A.5.5 0 0 1 2.5 8h11a.5.5 0 0 1 0 1h-11A.5.5 0 0 1 2 8.5zm0 3a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5z"/></svg>
+                    <div>
+                      <div style="font-weight:500;color:#2d2d2d;"><%= navLang === 'ru' ? 'Рекомендации' : 'Recommendations' %></div>
+                      <div style="font-size:12px;color:#6c757d;"><%= navLang === 'ru' ? 'Каналы и сайты по физике' : 'Physics channels and sites' %></div>
+                    </div>
+                  </a>
+                </li>
               </ul>
             </li>
 
@@ -324,6 +333,7 @@
                     <a href="/<%= navLang %>/study-guide" class="mobile-nav-link"><%= navLang === 'ru' ? 'Руководство' : 'Study Guide' %></a>
                     <a href="/paths" class="mobile-nav-link"><%= navLang === 'ru' ? 'Учебные пути' : 'Study Paths' %></a>
                     <a href="/tools" class="mobile-nav-link"><%= navLang === 'ru' ? 'Инструменты' : 'Tools' %></a>
+                    <a href="/recommendations" class="mobile-nav-link"><%= navLang === 'ru' ? 'Рекомендации' : 'Recommendations' %></a>
                   </div>
                 </div>
 

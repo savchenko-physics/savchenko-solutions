@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <title><%= lang === 'ru' ? 'Как построен каталог' : 'How this catalog was built' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? 'Методика: обход, отбор, ранжирование и что было исключено.' : 'Methodology: crawl, selection, ranking, and what was excluded.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/recommendations/methodology" />
+    <%- include('_head') %>
+    <style>
+        .rec-body { max-width: 700px; font-size: 14.5px; line-height: 1.72; color: #2d2d2d; }
+        .rec-body h2 { font-family: Inter, system-ui, sans-serif; font-size: 17px; font-weight: 600;
+                       color: #1a1a2e; margin: 30px 0 8px; }
+        .rec-body p { margin: 0 0 12px; }
+        .rec-body table { border-collapse: collapse; font-size: 13.5px; margin: 6px 0 16px; }
+        .rec-body td { border-bottom: 1px solid #f1f3f5; padding: 4px 18px 4px 0; }
+        .rec-body td.n { color: #6c757d; text-align: right; }
+    </style>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="rec-wrap">
+    <div class="rec-crumb">
+        <a href="/<%= lang %>/recommendations"><%= lang === 'ru' ? 'Каталог ресурсов' : 'Resource catalog' %></a>
+        &nbsp;/&nbsp;<%= lang === 'ru' ? 'Методика' : 'Methodology' %>
+    </div>
+    <h1 class="rec-h1"><%= lang === 'ru' ? 'Как построен каталог' : 'How this catalog was built' %></h1>
+
+    <%- include('_tabs') %>
+
+    <div class="rec-body">
+    <% if (lang === 'ru') { %>
+        <h2>Откуда данные</h2>
+        <p>Обход Telegram прошёл по 200&nbsp;434 узлам; после проверки и классификации осталось 728 каналов и групп по физике. Для каждого сохранён архив записей — всего 1&nbsp;578&nbsp;436 сообщений, около 455&nbsp;МБ текста за 2015–2026&nbsp;годы. Описание каждого канала строилось по выборке записей, равномерно распределённой по всей его истории, а не по последним постам: канал, сменивший тему, иначе выглядел бы как то, что он публиковал на прошлой неделе.</p>
+
+        <h2>Разделы получены из данных, а не заданы заранее</h2>
+        <p>Готовая разметка исходного набора не годилась: признаки «STEM» и «физика» были истинны у всех 728&nbsp;записей, «олимпиада» и «физическая олимпиада» совпадали ровно, «исследования» и «физические исследования» тоже. То есть разные метки возвращали один и тот же список — ровно та проблема, которой каталог должен избегать.</p>
+        <p>Поэтому разделы выведены заново: модель описала назначение каждого канала своими словами, затем эти формулировки сгруппированы, и раздел попадал в каталог только если набирал достаточно участников. Разделы, не прошедшие порог, объединены или отброшены.</p>
+
+        <h2>Число рядом с записью</h2>
+        <p>Это количество других участников каталога, которые ссылаются на эту запись. Связь означает, что описание канала или его недавние видимые записи упоминают другой канал, <strong>либо</strong> что его называет собственный список «похожих каналов» Telegram — то есть часть графа сформирована рекомендательным алгоритмом Telegram, а не редакторским выбором. Это стоит знать, читая число.</p>
+        <p>PageRank по этому графу тоже посчитан и используется как вспомогательная сортировка. Как основное число он не показывается: сумма PageRank равна единице, поэтому при росте каталога все значения падают без изменения структуры ссылок. Простой счётчик ссылок ведёт себя предсказуемо.</p>
+
+        <h2>Порядок внутри раздела</h2>
+        <p>Не только по цитируемости — иначе крупные институциональные каналы возглавляли бы каждый раздел. Учитывается, насколько запись характерна именно для этого раздела, а также уровень и язык: сайт читают в основном из России, Казахстана, Беларуси, Украины, Узбекистана и Киргизии. Записи на других языках остаются в каталоге и доступны через фильтр — просто не по умолчанию.</p>
+
+        <h2>Что исключено</h2>
+        <p>Восемь записей с псевдонаукой (в том числе канал на 20&nbsp;300 подписчиков, предсказывающий землетрясения по расположению планет), три нерабочих, а также вакансии, гранты, консультации по эмиграции и личные блоги — всё, что не является наукой. Математика и информатика оставлены в отдельных разделах. Приватные ссылки-приглашения не публикуются никогда.</p>
+        <p>Записи, отмеченные как каналы для широкой аудитории, вынесены отдельно и не смешиваются с тематическими разделами.</p>
+
+        <h2>Чего каталог не утверждает</h2>
+        <p>Оценка релевантности получена языковой моделью, а не размечена людьми. Точность отбора измерялась на выборке, а не на всём наборе. Часть каналов имеет слишком мало текста для уверенной классификации — они помечены как «мало данных».</p>
+    <% } else { %>
+        <h2>Where the data comes from</h2>
+        <p>A crawl of 200,434 Telegram nodes, narrowed after verification to 728 physics channels and groups. Each one's post archive was kept — 1,578,436 messages, roughly 455&nbsp;MB of text spanning 2015 to 2026. Every description was written from posts sampled evenly across a channel's whole lifetime rather than its recent output: a channel that changed direction would otherwise be described as whatever it happened to post last week.</p>
+
+        <h2>The sections came from the data, not from a list</h2>
+        <p>The original labelling could not be reused. Its "STEM" and "physics" flags were true for all 728 entries; "olympiad" and "physics olympiad" covered exactly the same rows, as did "research" and "physics research". Different tags returned identical lists — precisely the failure a catalog like this exists to avoid.</p>
+        <p>So the sections were rebuilt: the model described what each channel is for in its own words, those descriptions were grouped, and a section was published only if enough entries fell into it. Sections below that floor were merged or dropped.</p>
+
+        <h2>The number beside each entry</h2>
+        <p>It counts how many other catalog members link to that entry. A link means the channel's bio or its recent visible posts reference another channel, <strong>or</strong> that Telegram's own "similar channels" list names it — so part of this graph reflects Telegram's recommendation algorithm rather than anyone's editorial judgement. That is worth knowing when reading the number.</p>
+        <p>PageRank over the same graph is also computed and used as a secondary sort. It is not the headline number: PageRank sums to one, so every score falls as the catalog grows even when nothing about the link structure changes. A plain citation count behaves predictably.</p>
+
+        <h2>How entries are ordered</h2>
+        <p>Not by citations alone, which would put the largest institutional accounts at the top of every section. The order also accounts for how distinctive an entry is to its section, and for level and language: this site is read mostly from Russia, Kazakhstan, Belarus, Ukraine, Uzbekistan and Kyrgyzstan. Entries in other languages remain in the catalog and are reachable through the language filter — they are simply not the default.</p>
+
+        <h2>What was removed</h2>
+        <p>Eight pseudoscience entries, including a 20,300-subscriber channel predicting earthquakes from planetary alignment; three broken ones; and job boards, funding notices, immigration consulting and personal brand channels — anything that is not science. Mathematics and informatics were kept, in their own sections. Private invite links are never published.</p>
+        <p>Entries judged to be general-audience are held separately so they do not sit beside topic-specific sections.</p>
+
+        <h2>What this catalog does not claim</h2>
+        <p>Relevance judgements come from a language model, not from human annotation. Selection accuracy was measured on a sample, not across the whole set. Some channels carry too little text to classify confidently and are marked "thin data".</p>
+    <% } %>
+
+    <% if (diagnostics) { %>
+        <h2><%= lang === 'ru' ? 'Итоговые числа' : 'The numbers' %></h2>
+        <table>
+            <tr><td><%= lang === 'ru' ? 'Описано каналов' : 'Channels described' %></td><td class="n"><%= diagnostics.described %></td></tr>
+            <tr><td><%= lang === 'ru' ? 'Опубликовано' : 'Published' %></td><td class="n"><%= diagnostics.kept %></td></tr>
+            <tr><td><%= lang === 'ru' ? 'Исключено как не наука' : 'Removed as not science' %></td><td class="n"><%= diagnostics.cut.rubric %></td></tr>
+            <tr><td><%= lang === 'ru' ? 'Исключено как не про обучение физике' : 'Removed as not physics education' %></td><td class="n"><%= diagnostics.cut.notEducation %></td></tr>
+            <tr><td><%= lang === 'ru' ? 'Отмечено как для широкой аудитории' : 'Flagged general-audience' %></td><td class="n"><%= diagnostics.generic %></td></tr>
+        </table>
+    <% } %>
+    <% if (generated) { %><p style="color:#6c757d;font-size:13px;"><%= lang === 'ru' ? 'Срез от' : 'Snapshot' %> <%= generated %>.</p><% } %>
+    </div>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>

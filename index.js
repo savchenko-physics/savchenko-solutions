@@ -43,6 +43,7 @@ const { router: adminRouter, isIpBlocked } = require('./admin');
 const searchIndex = require('./searchIndex');
 const blogRouter = require('./blog');
 const toolsRouter = require('./tools');
+const recommendationsRouter = require('./recommendations');
 const bankRouter = require('./bank');
 const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
@@ -199,6 +200,7 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 // Removed: app.use(express.static(path.join(__dirname, "src")));
 // The src directory contains Python scripts and CSV data — must not be publicly served.
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
+app.use("/physics-telegram-catalog.pdf", express.static(path.join(__dirname, "pdf/physics-telegram-catalog.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
 // Analytics tag gate. Registered BEFORE the /js static mount so it wins for this one URL.
 //
@@ -2604,6 +2606,8 @@ app.use('/e', trackingRouter);
 // Physics tools
 app.use('/:lang/tools', toolsRouter);
 app.use('/tools', toolsRouter);
+app.use('/:lang(en|ru)/recommendations', recommendationsRouter);
+app.use('/recommendations', recommendationsRouter);
 
 // Problem Bank
 app.use('/bank', bankRouter);

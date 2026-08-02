@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <title><%= lang === 'ru' ? rubric.ru : rubric.en %> — <%= lang === 'ru' ? 'Каталог ресурсов' : 'Resource catalog' %> | Savchenko Solutions</title>
+    <meta name="description" content="<%= totalInRubric %> <%= lang === 'ru' ? 'источников по теме' : 'sources for' %> <%= lang === 'ru' ? rubric.ru : rubric.en %>." />
+    <link rel="canonical" href="https://savchenkosolutions.com/recommendations/<%= rubric.id %>" />
+    <%- include('_head') %>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="rec-wrap">
+    <div class="rec-crumb">
+        <a href="/<%= lang %>/recommendations"><%= lang === 'ru' ? 'Каталог ресурсов' : 'Resource catalog' %></a>
+        &nbsp;/&nbsp;<%= lang === 'ru' ? rubric.ru : rubric.en %>
+    </div>
+    <h1 class="rec-h1"><%= lang === 'ru' ? rubric.ru : rubric.en %></h1>
+
+    <%- include('_tabs') %>
+
+    <div class="rec-count">
+        <%= entries.length %><% if (entries.length !== totalInRubric) { %> <%= lang === 'ru' ? 'из' : 'of' %> <%= totalInRubric %><% } %>
+        <%= lang === 'ru' ? 'источников' : 'sources' %>
+    </div>
+
+    <% var q = function (over) {
+         var p = { lang: active.lang, level: active.level, format: active.format };
+         Object.keys(over).forEach(function (k) { p[k] = over[k]; });
+         var s = Object.keys(p).filter(function (k) { return p[k]; })
+                   .map(function (k) { return k + '=' + encodeURIComponent(p[k]); }).join('&');
+         return '/' + lang + '/recommendations/' + rubric.id + (s ? '?' + s : '');
+       }; %>
+
+    <% if (active.lang || active.level || active.format) { %>
+        <div class="rec-chips">
+            <% if (active.lang) { %><span class="rec-chip"><%= label('language', active.lang, lang) %> <a href="<%= q({ lang: '' }) %>">&times;</a></span><% } %>
+            <% if (active.level) { %><span class="rec-chip"><%= label('level', active.level, lang) %> <a href="<%= q({ level: '' }) %>">&times;</a></span><% } %>
+            <% if (active.format) { %><span class="rec-chip"><%= label('format', active.format, lang) %> <a href="<%= q({ format: '' }) %>">&times;</a></span><% } %>
+        </div>
+    <% } %>
+
+    <div class="rec-layout">
+        <aside class="rec-rail">
+            <div>
+                <h3><%= lang === 'ru' ? 'Язык' : 'Language' %></h3>
+                <ul>
+                    <% facets.languages.slice(0, 7).forEach(function (p) { %>
+                        <li><a class="<%= active.lang === p[0] ? 'on' : '' %>" href="<%= q({ lang: active.lang === p[0] ? '' : p[0] }) %>"><%= label('language', p[0], lang) %></a> <span class="n"><%= p[1] %></span></li>
+                    <% }); %>
+                </ul>
+            </div>
+            <div>
+                <h3><%= lang === 'ru' ? 'Уровень' : 'Level' %></h3>
+                <ul>
+                    <% facets.levels.forEach(function (p) { %>
+                        <li><a class="<%= active.level === p[0] ? 'on' : '' %>" href="<%= q({ level: active.level === p[0] ? '' : p[0] }) %>"><%= label('level', p[0], lang) %></a> <span class="n"><%= p[1] %></span></li>
+                    <% }); %>
+                </ul>
+            </div>
+            <div>
+                <h3><%= lang === 'ru' ? 'Формат' : 'Format' %></h3>
+                <ul>
+                    <% facets.formats.forEach(function (p) { %>
+                        <li><a class="<%= active.format === p[0] ? 'on' : '' %>" href="<%= q({ format: active.format === p[0] ? '' : p[0] }) %>"><%= label('format', p[0], lang) %></a> <span class="n"><%= p[1] %></span></li>
+                    <% }); %>
+                </ul>
+            </div>
+        </aside>
+
+        <ol class="rec-list">
+            <% entries.forEach(function (e) { %>
+                <li class="rec-item">
+                    <div class="rec-title">
+                        <a href="<%= e.url %>" rel="noopener nofollow" target="_blank"><%= e.title %></a>
+                        <% if (e.format === 'group' || e.format === 'forum') { %><span class="rec-badge"><%= lang === 'ru' ? 'можно спросить' : 'you can post' %></span><% } %>
+                        <% if (e.lowConfidence) { %><span class="rec-badge"><%= lang === 'ru' ? 'мало данных' : 'thin data' %></span><% } %>
+                    </div>
+                    <p class="rec-summary"><%= lang === 'ru' ? (e.summaryRu || e.summaryEn) : (e.summaryEn || e.summaryRu) %></p>
+                    <% if (e.evidence) { %><p class="rec-quote"><%= e.evidence %></p><% } %>
+                    <div class="rec-meta">
+                        <span class="rec-url"><%= e.url.replace(/^https?:\/\//, '') %></span>
+                        <span title="<%= lang === 'ru' ? 'Сколько других источников каталога ссылаются на этот' : 'How many other catalog sources link to this one' %>"><%= lang === 'ru' ? 'ссылаются с' : 'linked from' %> <strong><%= e.inRefs %></strong> <%= lang === 'ru' ? (e.inRefs % 10 === 1 && e.inRefs % 100 !== 11 ? 'источника' : 'источников') : (e.inRefs === 1 ? 'source' : 'sources') %>
+                            <span class="rec-bar"><% for (var b = 0; b < 10; b++) { %><span class="<%= b < e.bar ? '' : 'off' %>">&#9646;</span><% } %></span>
+                        </span>
+                        <% if (e.subscribers) { %><span><%= e.subscribers.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %> <%= lang === 'ru' ? 'подписчиков' : 'subscribers' %></span><% } %>
+                        <span><%= label('language', e.language, lang) %></span>
+                    </div>
+                    <% if ((e.topics || []).length || e.level) { %>
+                        <div class="rec-tags">
+                            <%= label('level', e.level, lang) %><% (e.topics || []).forEach(function (t) { %> · <%= label('topic', t, lang) %><% }); %>
+                        </div>
+                    <% } %>
+                </li>
+            <% }); %>
+        </ol>
+    </div>
+
+    <div class="rec-note">
+        <%= lang === 'ru'
+            ? 'Порядок — по числу ссылок от других участников каталога, с поправкой на уровень и язык аудитории сайта. Цитата под описанием взята дословно из записей источника.'
+            : 'Ordered by citations from other catalog members, adjusted for level and for the languages this site\'s readers actually use. The quote under each description is verbatim from the source.' %>
+        <a href="/<%= lang %>/recommendations/methodology"><%= lang === 'ru' ? 'Подробнее' : 'More' %></a>.
+    </div>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>
