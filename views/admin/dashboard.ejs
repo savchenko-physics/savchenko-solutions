@@ -7,7 +7,8 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <title>Admin Dashboard — Savchenko Solutions</title>
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
-  <link rel="stylesheet" href="/css/design-system.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
   <style>
     :root {
       --admin-nav: #1a1a2e;
@@ -382,6 +383,12 @@
         <span class="badge-count"><%= pendingReportsCount %></span>
       <% } %>
     </a>
+    <a href="/admin/feedback" class="<%= tab === 'feedback' ? 'active' : '' %>">
+      Feedback
+      <% if (typeof feedbackNewCount !== 'undefined' && feedbackNewCount > 0) { %>
+        <span class="badge-count"><%= feedbackNewCount %></span>
+      <% } %>
+    </a>
     <a href="/admin/flagged" class="<%= tab === 'flagged' ? 'active' : '' %>">
       Flagged Edits
       <% if (typeof stats !== 'undefined' && stats.flaggedEdits > 0) { %>
@@ -530,6 +537,135 @@
         <% }); %>
       </tbody>
     </table>
+    <% } %>
+
+<% } else if (tab === 'feedback') { %>
+    <!-- ═══ FEEDBACK INBOX ═══ -->
+    <h1>Feedback</h1>
+    <p style="color: var(--admin-muted); max-width: 62ch;">
+      Everything here is visible to whoever wrote it, at <code>/feedback/&lt;id&gt;</code>.
+      Changing a status changes what they see. Moving an item to <strong>done</strong> notifies
+      everyone who asked to be told — once.
+    </p>
+
+    <div style="margin: 16px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <% if (showAll) { %>
+        <a href="/admin/feedback" class="btn-admin-outline" style="text-decoration:none;">Show new only</a>
+      <% } else { %>
+        <a href="/admin/feedback?all=1" class="btn-admin-outline" style="text-decoration:none;">Show all</a>
+      <% } %>
+      <% (statusCounts || []).forEach(function (c) { %>
+        <span class="status-badge"><%= c.status %>: <%= c.n %></span>
+      <% }); %>
+      <% if (legacyReportCount > 0) { %>
+        <%# Surfaced here on purpose. 62 of these have been pending for an average of 245
+            days, and the single biggest reason is that nothing ever put them in front of
+            anyone. %>
+        <a href="/admin/reports" class="status-badge" style="text-decoration:none; border-color:#c0392b; color:#c0392b;">
+          <%= legacyReportCount %> legacy solution reports unread
+        </a>
+      <% } %>
+    </div>
+
+    <% if (!items || items.length === 0) { %>
+      <p style="color: var(--admin-muted);">Nothing to triage.</p>
+    <% } else { %>
+      <% items.forEach(function (f) { %>
+        <div class="content-card" style="border:1px solid var(--admin-border,#dee2e6); border-radius:8px; padding:14px; margin-bottom:12px;">
+          <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; margin-bottom:8px;">
+            <span class="status-badge status-<%= f.status %>"><%= f.status %></span>
+            <span class="status-badge"><%= f.category %></span>
+            <span class="status-badge"><%= (f.lang || '').toUpperCase() %></span>
+            <strong><%= f.author_name || 'Anonymous' %></strong>
+            <span style="color: var(--admin-muted);"><%= new Date(f.created_at).toLocaleString() %></span>
+            <a href="/feedback/<%= f.public_id %>" target="_blank">receipt</a>
+            <% if (f.upvotes || f.downvotes) { %>
+              <span class="status-badge" title="score / up / down"><%= f.votes %> &nbsp;&uarr;<%= f.upvotes %> &darr;<%= f.downvotes %></span>
+            <% } %>
+            <% if (f.notified_at) { %><span class="status-badge">notified</span><% } %>
+          </div>
+
+          <div style="white-space:pre-wrap; font-size:14px; line-height:1.55; margin-bottom:10px;"><%= f.body %></div>
+
+          <%# The context nobody had to be asked for. A one-line "it's broken" is only
+              actionable because of this row. %>
+          <div style="font-size:12px; color: var(--admin-muted); margin-bottom:10px; word-break:break-word;">
+            <% if (f.problem_name) { %>
+              <a href="/<%= f.problem_lang || 'ru' %>/<%= f.problem_name %>" target="_blank">problem <%= f.problem_name %></a> &middot;
+            <% } %>
+            <% if (f.page_url) { %><a href="<%= f.page_url %>" target="_blank">page</a> &middot;<% } %>
+            <% if (f.viewport_w) { %><%= f.viewport_w %>px<% if (f.viewport_w < 576) { %> (mobile)<% } %> &middot;<% } %>
+            <% if (f.contact_value) { %>
+              <strong><%= f.contact_kind %>:</strong>
+              <% if (f.contact_kind === 'telegram') { %>
+                <a href="https://t.me/<%= f.contact_value.replace('@','') %>" target="_blank"><%= f.contact_value %></a>
+              <% } else { %>
+                <a href="mailto:<%= f.contact_value %>"><%= f.contact_value %></a>
+              <% } %>
+              &middot;
+            <% } %>
+            <% if (f.notify_on_ship) { %><strong>wants to be told</strong> &middot;<% } %>
+            <span title="<%= f.user_agent || '' %>"><%= (f.user_agent || '').slice(0, 60) %></span>
+          </div>
+
+          <form method="POST" action="/admin/feedback/<%= f.id %>/update<%= showAll ? '?all=1' : '' %>"
+                style="display:grid; gap:8px; grid-template-columns: 1fr; max-width: 720px;">
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <select name="status" style="height:34px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px;">
+                <% ['new','planned','in_progress','done','declined','duplicate'].forEach(function (s) { %>
+                  <option value="<%= s %>" <%= f.status === s ? 'selected' : '' %>><%= s %></option>
+                <% }); %>
+              </select>
+              <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+                <input type="checkbox" name="is_public" <%= f.is_public ? 'checked' : '' %> />
+                show on the public board
+              </label>
+              <button type="submit" class="btn-admin-success">Save</button>
+            </div>
+            <input type="text" name="public_title" maxlength="160" value="<%= f.public_title || '' %>"
+                   placeholder="Public title (shown on the board instead of the raw message)"
+                   style="height:34px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px;" />
+            <textarea name="public_reply" rows="2"
+                      placeholder="Public reply — the submitter sees this at their receipt URL"
+                      style="border:1px solid #dee2e6; border-radius:6px; padding:6px 8px; font-family:inherit;"><%= f.public_reply || '' %></textarea>
+          </form>
+        </div>
+      <% }); %>
+    <% } %>
+
+    <!-- ═══ POLL ═══ -->
+    <h2 style="margin-top: 32px;">Poll</h2>
+    <p style="color: var(--admin-muted); max-width: 62ch;">
+      One question per visitor, ever. These are the segmentation answers no channel on this
+      site has ever been able to collect, because they come from people with no account.
+    </p>
+    <% if (!pollTotals || pollTotals.length === 0) { %>
+      <p style="color: var(--admin-muted);">No answers yet.</p>
+    <% } else { %>
+      <table class="admin-table">
+        <thead><tr><th>Question</th><th>Answer</th><th>Count</th></tr></thead>
+        <tbody>
+          <% pollTotals.forEach(function (p) { %>
+            <tr><td><%= p.question_id %></td><td><%= p.choice || '(free text)' %></td><td><%= p.n %></td></tr>
+          <% }); %>
+        </tbody>
+      </table>
+    <% } %>
+
+    <% if (pollTexts && pollTexts.length) { %>
+      <h3 style="margin-top: 20px;">Written answers</h3>
+      <table class="admin-table">
+        <thead><tr><th>Question</th><th>Answer</th><th>Date</th></tr></thead>
+        <tbody>
+          <% pollTexts.forEach(function (p) { %>
+            <tr>
+              <td style="white-space:nowrap;"><%= p.question_id %></td>
+              <td style="word-break:break-word;"><%= p.free_text %></td>
+              <td style="white-space:nowrap;"><%= new Date(p.created_at).toLocaleDateString() %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
     <% } %>
 
 <% } else if (tab === 'flagged') { %>

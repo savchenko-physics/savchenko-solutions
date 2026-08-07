@@ -81,14 +81,23 @@
         }
 
         /* Main Layout */
+        /* Two caps used to stack here: 1400px on this container and 1100px on
+           .content-body inside it. On a 1920px screen that left 285px of dead margin on the
+           left and 264px on the right, roughly 30% of the viewport, while the solution the
+           reader came for sat in the middle at 1044px. The page fills the screen now and the
+           surplus goes to the two things that wanted it: the solution column and a sidebar
+           that was cramped enough to wrap its own heading over three lines. */
         .main-container {
             width: 100%;
-            max-width: 1400px;
+            max-width: none;
             margin: 0 auto;
-            padding: 0 0.75rem 1.25rem 0.75rem;
+            padding: 0 1.25rem 1.25rem 1.25rem;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) 280px;
-            gap: 0.75rem;
+            /* The sidebar flexes instead of being pinned at 320px. A fixed 320 squeezed the
+               992px breakpoint into horizontal overflow, which is exactly where a small
+               laptop lands. */
+            grid-template-columns: minmax(0, 1fr) clamp(260px, 20vw, 320px);
+            gap: 1.25rem;
         }
 
         .content-section {
@@ -187,10 +196,17 @@
 
         /* Content Body */
         .content-body {
-            padding: 1rem 1.25rem;
-            font-size: 1.25rem;
-            line-height: 1.55;
-            max-width: 1100px;
+            padding: 1.1rem 1.75rem;
+            /* Bigger, because the solution is the point of the page and a wider column with
+               the same type would only mean longer lines.
+               The cap is a measure, not a page width. The card itself now spans the screen,
+               so nothing looks empty; this keeps the prose near the same character count it
+               had before and, more importantly, stops a short display equation from sitting
+               marooned in the middle of a 1450px column with its equation number stranded
+               half a screen away. */
+            font-size: 1.35rem;
+            line-height: 1.6;
+            max-width: 1280px;
             margin: 0 auto;
             font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
             text-align: justify;
@@ -325,20 +341,10 @@
             color: #1a1a2e;
         }
 
-        /* Report Link */
-        .report-link {
-            padding: 0.5rem 1.25rem 0.75rem;
-            border-top: 1px solid #dee2e6;
-        }
-        .report-link a {
-            font-size: 12px;
-            color: #999;
-            text-decoration: none;
-        }
-        .report-link a:hover {
-            text-decoration: underline;
-            color: #666;
-        }
+        /* The old .report-link styles lived here; the link they styled is now the
+           .fb-inline prompt, which is defined once in design-system.css and shared with
+           the search, 404 and upload entry points. */
+        .fb-inline { margin: 0 1.25rem 1rem; }
 
         /* Right rail (Brainstorm block + section grid). The rail is the sticky
            grid item; the section grid nested inside is a normal block. */
@@ -723,6 +729,38 @@
             font-size: 11px;
             color: #adb5bd;
             margin-left: 0.5rem;
+        }
+
+        /* Brainstorm mark: composer toggle + comment badge */
+        .comment-brainstorm-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-right: auto;
+            font-size: 13px;
+            color: #6c757d;
+            cursor: pointer;
+            user-select: none;
+        }
+        .comment-brainstorm-toggle input {
+            width: 15px;
+            height: 15px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #1a1a2e;
+        }
+        .comment-brainstorm-badge {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 1px 7px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #1a1a2e;
+            background: #eef0f4;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            vertical-align: middle;
         }
 
         /* Autocomplete dropdown */
@@ -1316,7 +1354,7 @@
                     <span></span>
                 <% } %>
                 <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
+                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %></a>
                 <% } else { %>
                     <span></span>
                 <% } %>
@@ -1442,7 +1480,7 @@
                     <% if (judging.basePoints != null) { %>
                         <span>Текущий вес в таблице: <strong><%= judging.basePoints %></strong></span>
                     <% } %>
-                    <a href="/challenge/<%= judging.slug %>/judge" class="cj-table-link">Открыть таблицу оценок &rarr;</a>
+                    <a href="/challenge/<%= judging.slug %>/judge" class="cj-table-link">Открыть таблицу оценок</a>
                 </div>
 
                 <div class="cj-criteria" id="cjCriteria"></div>
@@ -1569,7 +1607,7 @@
                     <span></span>
                 <% } %>
                 <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
+                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %></a>
                 <% } else { %>
                     <span></span>
                 <% } %>
@@ -1679,7 +1717,7 @@
                         <% } %>,
                         <%= new Date(lastEdit.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %>
                     </div>
-                    <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %> &rarr;</a>
+                    <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %></a>
                 </div>
             </div>
             <% } %>
@@ -1704,10 +1742,30 @@
                 </span>
             </div>
 
-            <!-- Report Link -->
-            <div class="report-link">
-                <a href="#" id="reportBtn"><%= lang === 'ru' ? 'Сообщить об ошибке в этом решении' : 'Report an error in this solution' %></a>
+            <%# Feedback prompt. Replaces a window.prompt() that produced 63 reports in two
+                years, 13% of which were just "wrong" with no detail and 8% of which were
+                display bugs filed as physics errors because there was no other door. The
+                two named categories are that fix; the problem number and page context are
+                attached silently, so a one-line report still arrives actionable. %>
+            <div class="fb-inline">
+                <span><%= lang === 'ru' ? 'Нашли ошибку или что-то не работает?' : 'Found an error, or something not working?' %></span>
+                <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="error">
+                    <%= lang === 'ru' ? 'Ошибка в решении' : 'Error in the solution' %>
+                </button>
+                <span aria-hidden="true">&middot;</span>
+                <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="broken">
+                    <%= lang === 'ru' ? 'Что-то сломалось' : 'Something is broken' %>
+                </button>
+                <span aria-hidden="true">&middot;</span>
+                <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+                    <%= lang === 'ru' ? 'Есть идея' : 'I have an idea' %>
+                </button>
             </div>
+
+            <%# The one-question poll. Placed here, after the solution, so it only meets
+                somebody who has actually read something — never on first paint, never a
+                modal, and never twice for the same browser. %>
+            <div data-fb-poll></div>
 
             <!-- Comments / Discussion -->
             <div class="comments-section" id="commentsSection">
@@ -1749,6 +1807,10 @@
                         <div class="comment-live-preview" id="commentLivePreview"></div>
                     </div>
                     <div class="comment-footer" id="commentFooter" style="display: none;">
+                        <label class="comment-brainstorm-toggle" title="<%= lang === 'ru' ? 'Пометить как идею для мозгового штурма' : 'Mark as a brainstorm idea' %>">
+                            <input type="checkbox" id="commentIsBrainstorm">
+                            <span><%= lang === 'ru' ? 'Мозговой штурм' : 'Brainstorm' %></span>
+                        </label>
                         <button type="button" class="comment-cancel-btn" id="cancelComment">
                             <%= lang === 'ru' ? 'Отмена' : 'Cancel' %>
                         </button>
@@ -1768,19 +1830,9 @@
             </div>
         </div>
 
-        <!-- Right rail: live Brainstorm Room conversation (YouTube-style live chat) + section grid -->
+        <!-- Right rail: section grid. The Brainstorm Room panel was retired; its real
+             content now lives in the comment thread (see is_brainstorm comments). -->
         <aside class="right-rail">
-            <%- include('partials/brainstorm_room_panel', {
-                lang: lang,
-                name: name,
-                username: username,
-                isCurator: typeof brainstormIsCurator !== 'undefined' ? brainstormIsCurator : false,
-                reactions: typeof brainstormReactions !== 'undefined' ? brainstormReactions : [],
-                displayMode: typeof brainstormMode !== 'undefined' ? brainstormMode : 'rotate',
-                related: typeof brainstormRelated !== 'undefined' ? brainstormRelated : [],
-                roomRail: true
-            }) %>
-
         <% if (sectionGrid) { %>
         <div class="sidebar">
             <div class="section-grid-card">
@@ -1888,7 +1940,7 @@
                     <a href="/paths/<%= pp.slug %>" style="color: #1a5276; text-decoration: none; font-size: 13px; font-weight: 500;"><%= pp.title %></a>
                 </div>
                 <% }); %>
-                <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %> &rarr;</a>
+                <a href="/paths" style="display: inline-block; margin-top: 0.5rem; font-size: 12px; color: #1a5276; text-decoration: none;"><%= lang === 'ru' ? 'Все пути' : 'All paths' %></a>
             </div>
             <% } %>
             <% if (typeof difficulty !== 'undefined' && difficulty) { %>
@@ -1997,7 +2049,7 @@
             <span></span>
         <% } %>
         <% if (nextProblem) { %>
-            <a href="/<%= lang %>/<%= nextProblem %>"><%= nextProblem %> &rarr;</a>
+            <a href="/<%= lang %>/<%= nextProblem %>"><%= nextProblem %></a>
         <% } else { %>
             <span></span>
         <% } %>
@@ -2024,9 +2076,6 @@
             noComments: language === 'ru' ? 'Комментариев пока нет. Будьте первым!' : 'No comments yet. Be the first to share your thoughts!',
             linkCopied: language === 'ru' ? 'Ссылка скопирована!' : 'Link copied!',
             viewsLabel: language === 'ru' ? 'Просмотры' : 'Views',
-            reportPrompt: language === 'ru' ? 'Укажите причину жалобы:' : 'Please provide a reason for reporting this solution:',
-            reportSuccess: language === 'ru' ? 'Жалоба отправлена. Спасибо.' : 'Report submitted. Thank you.',
-            reportFail: language === 'ru' ? 'Не удалось отправить жалобу.' : 'Failed to submit report.'
         };
 
         /* Relative time helper */
@@ -2200,6 +2249,10 @@
                 ? '<span class="comment-edited-badge">(' + (language === 'ru' ? 'изменено' : 'edited') + ')</span>'
                 : '';
 
+            const brainstormBadge = comment.isBrainstorm
+                ? '<span class="comment-brainstorm-badge">' + (language === 'ru' ? 'Мозговой штурм' : 'Brainstorm') + '</span>'
+                : '';
+
             let html = '<div class="comment-item" data-comment-id="' + comment.id + '">' +
                 '<div class="comment-author">' +
                     '<span class="avatar-presence">' +
@@ -2207,7 +2260,7 @@
                         (comment.author.isOnline ? '<span class="online-dot" title="' + (language === 'ru' ? 'В сети' : 'Online') + '"></span>' : '') +
                     '</span>' +
                     '<div>' +
-                        '<a href="/user/' + escapeHtml(comment.author.username) + '" class="comment-username">' + escapeHtml(comment.author.fullName || comment.author.username) + '</a>' +
+                        '<a href="/user/' + escapeHtml(comment.author.username) + '" class="comment-username">' + escapeHtml(comment.author.fullName || comment.author.username) + '</a>' + brainstormBadge +
                         '<span class="comment-time">' + relativeTime(comment.createdAt) + editedBadge + '</span>' +
                     '</div>' +
                 '</div>' +
@@ -2231,7 +2284,6 @@
             await loadComments();
             initializeMobileMenu();
             initializeViewsChart();
-            initializeReportButton();
         });
 
         /* Load solution statistics */
@@ -2418,14 +2470,16 @@
             document.getElementById('submitComment').addEventListener('click', async function() {
                 const content = document.getElementById('commentText').value.trim();
                 if (!content) return;
+                const isBrainstorm = document.getElementById('commentIsBrainstorm').checked;
                 try {
                     const response = await fetch('/api/solutions/' + problemName + '/' + language + '/comments', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ content: content })
+                        body: JSON.stringify({ content: content, isBrainstorm: isBrainstorm })
                     });
                     if (response.ok) {
                         document.getElementById('commentText').value = '';
+                        document.getElementById('commentIsBrainstorm').checked = false;
                         document.getElementById('commentEditor').classList.remove('active');
                         document.getElementById('commentFooter').style.display = 'none';
                         document.getElementById('commentTrigger').style.display = '';
@@ -2550,6 +2604,7 @@
                 commentFooter.style.display = 'none';
                 commentTrigger.style.display = '';
                 commentText.value = '';
+                document.getElementById('commentIsBrainstorm').checked = false;
                 commentLivePreview.style.display = 'none';
                 commentLivePreview.innerHTML = '';
             });
@@ -2924,27 +2979,12 @@
             }
         }
 
-        /* Report */
-        function initializeReportButton() {
-            const reportBtn = document.getElementById('reportBtn');
-            reportBtn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                const reason = prompt(i18nText.reportPrompt);
-                if (reason && reason.trim()) {
-                    try {
-                        const response = await fetch('/api/report-solution', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ problemName: problemName, language: language, reason: reason.trim() })
-                        });
-                        alert(response.ok ? i18nText.reportSuccess : i18nText.reportFail);
-                    } catch (error) {
-                        console.error('Error submitting report:', error);
-                        alert(i18nText.reportFail);
-                    }
-                }
-            });
-        }
+        /* Reporting is now handled by js/feedback.js — see the .fb-inline block above.
+           What was here was a window.prompt() into /api/report-solution: no categories, no
+           context, no length limit, no rate limit, and no way for the person reporting to
+           learn whether anything came of it. Two years of it produced 63 rows of which 62
+           are still pending. The route itself is left in place so any cached page still
+           works, but nothing on the site calls it any more. */
     </script>
     <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
     <script src="<%= asset('/js/difficulty-vote.js') %>" defer></script>

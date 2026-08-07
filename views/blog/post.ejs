@@ -56,8 +56,9 @@
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
     <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/design-system.css" />
-    <link rel="stylesheet" href="/css/main_page.css" />
+    <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
 
@@ -748,7 +749,7 @@
             <% } %>
             <% if (nextPost) { %>
             <a href="/blog/<%= nextPost.slug %>" class="blog-post-nav-next">
-                <span class="blog-nav-label"><%= lang === 'ru' ? 'Следующая' : 'Next' %> &rarr;</span>
+                <span class="blog-nav-label"><%= lang === 'ru' ? 'Следующая' : 'Next' %></span>
                 <span class="blog-nav-title"><%= nextPost.title %></span>
             </a>
             <% } %>

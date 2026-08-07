@@ -9,8 +9,9 @@
     <link rel="apple-touch-icon" href="/img/logo.png">
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/design-system.css" />
-    <link rel="stylesheet" href="/css/main_page.css" />
+    <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
     <link rel="stylesheet" href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css" />
     <style>
         :root {

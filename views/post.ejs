@@ -31,8 +31,9 @@
     <!-- Bootstrap -->
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/design-system.css" />
-    <link rel="stylesheet" href="/css/main_page.css" />
+    <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
     
     <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->

@@ -23,10 +23,10 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
 - **Database:** PostgreSQL (AWS RDS) via `pg` module
 - **Sessions:** PostgreSQL via connect-pg-simple
 - **Auth:** Custom bcrypt + express-session (no Passport in practice)
-- **CSS:** Bootstrap 5.3.3 (CDN) + custom CSS files
-- **Math:** MathJax 2.7.7 (CDN, upgrading to 3.x)
+- **CSS:** Bootstrap 5.3.3 (self-hosted, `css/vendor/`) + custom CSS files
+- **Math:** MathJax 3 (self-hosted at `/vendor/mathjax/`); solution pages render LaTeX to SVG server-side (`mathRender.js`)
 - **Editor:** CodeMirror 5.65.10 (edit page only)
-- **No SPA framework. No TypeScript. No bundler. No build step.**
+- **No SPA framework. No TypeScript. No bundler.** One build step only: `npm run build:css`.
 
 ## Architecture
 Monolithic server-side rendered Express app. All pages are EJS templates. Client-side JS handles search, form validation, CodeMirror, and Chart.js. Entry point is `index.js` (~2200 lines). A separate sandbox app runs on port 4000 (`sandbox/sandbox-app.js`).
@@ -56,42 +56,79 @@ pdf/                              # Textbook PDFs
 ```
 
 ## Database Tables (key ones)
-- `users` — 710 registered users
-- `contributions` — 6,311 edits (post-migration)
+Counts measured 2026-07-31. 61 tables in total; `sql/migrations/` only creates the ones
+added after the GitHub-Pages migration, so `users`, `contributions`, `solution_comments`,
+`solution_reports` and friends have no `CREATE TABLE` anywhere in the repo.
+- `users` — 964 accounts, but only 118 ever seen online and **94 have ever contributed**
+- `contributions` — 8,137 edits; 2,157 of them (27%) have `user_id = NULL`, from the era
+  when anyone could edit anonymously
 - `github_contributions` — 11,493 edits (pre-migration, from GitHub Pages era)
-- `solution_comments` — 89 threaded comments
-- `solution_likes` — 325 likes/dislikes
-- `solution_reports` — 51 pending reports (NO admin UI to review them)
+- `solution_comments` — 318 comments, **61% of them written by two people**
+- `solution_likes` — 742 likes/dislikes
+- `solution_reports` — 63 reports, **62 still pending**, mean age 245 days. Admin UI at
+  `/admin/reports`; also surfaced on `/admin/feedback`
+- `feedback_items` / `feedback_votes` / `poll_answers` — the suggestion box, the public
+  board and the one-question poll (migration 042). All three accept anonymous writes
+- `messages` / `conversations` — user-to-user DMs and the site-wide announcement channel
+  (conversation 5, all users). Above 25 members a conversation is treated as an announcement
+  channel and does not fan out one notification per member (`notifications.js:75`)
 - `page_views` / `recent_views` — view tracking
-- `user_preferences` — privacy and notification settings
+- `user_preferences` — privacy and notification settings (**only 19 rows for 964 users**)
 - `user_activities` — activity log (follows, likes, stars, comments)
 - `starred_solutions` — bookmarked problems
 - `special_contributions` — flagged edits (blocked IPs, emoji content)
+- `problem_statements` (4,046) / `problem_difficulty` (2,023) — see Content Structure
 - `session` — Express session store
 
-## Critical Security Issues (fix these FIRST)
-1. **Anyone can edit any solution without logging in.** `POST /:lang/save/:name` has no auth check.
-2. **Anyone can upload solutions without logging in.** `POST /api/upload` has no auth check.
-3. **Anyone can create problems without logging in.** `POST /create-problem` has no auth check.
-4. **No rate limiting** on any endpoint (login, registration, API, search).
-5. **Weak session secret fallback** — defaults to "your_secret_key" if env var missing.
-6. **No CSRF protection.**
-7. **No password reset flow.**
-8. **No email verification on registration.**
-9. **51 unreviewed reports** sitting in the database with no admin UI.
-10. **Hardcoded IP blocklist** (13 IPs in source code instead of database).
+## Security — open issues
+1. **No CSRF protection anywhere.** Zero occurrences of `csrf` outside `node_modules`. The
+   only mitigation is the session cookie's `sameSite: 'lax'` (`index.js:121`).
+2. **`apiLimiter` is a no-op.** `index.js:146` sets `max: Number.MAX_SAFE_INTEGER`, so
+   mounting it on `/api/` at `:191` protects nothing. Any new public endpoint must bring its
+   own limiter (see `feedback.js`).
+3. **`editSaveLimiter` collapses every signed-out visitor into one bucket** —
+   `keyGenerator: (req) => String(req.session?.userId ?? 'anonymous')` (`index.js:182`). Same
+   pattern in `brainstorm.js:168`. Key on `ipKeyGenerator(req.ip)` instead; a bare `req.ip`
+   is also wrong, because one IPv6 client owns a whole /64.
+4. **`express.static(path.join(__dirname, "src"))`** still exposes the Python source
+   directory publicly.
+
+### Fixed since this list was first written — do not "re-fix" these
+Anonymous edit / upload / create-problem are all `checkAuthenticated` now (`index.js:2852`,
+`upload.js:29`, `index.js:1652`). `SESSION_SECRET` throws on startup if unset
+(`index.js:84`). Rate limiting exists (`express-rate-limit`, six limiters at
+`index.js:130-186`). Password reset and email verification both ship (migrations 003, 015,
+035). The report queue has an admin UI (`admin.js:140-215`) — the real problem is that
+**62 of 63 reports are still pending at a mean age of 245 days**, which is a closure
+problem, not a UI one; the `/admin/feedback` tab surfaces the backlog. The IP blocklist
+moved to the `blocked_ips` table (migration 002).
 
 ## Known Technical Debt
-- Dual Bootstrap: Bootstrap 5.3.3 (CDN) AND Bootstrap 3.0.0 (local `/css/bootstrap.css`) loaded simultaneously
+- Dual Bootstrap: Bootstrap 5.3.3 AND Bootstrap 3.0.0 (local `/css/bootstrap.css`) loaded simultaneously (both self-hosted; neither is a CDN)
 - jQuery 1.10.1 still loaded on every page (nothing requires it)
-- No build step: no minification, no bundling, no CSS concatenation
-- MathJax 2.7.7 is slow; should upgrade to MathJax 3.x
+- **`npm run build:css` is a required step, not an optional one.** `main_site_header_head.ejs`
+  loads `/css/bundle.css`, which `scripts/build-css.js` concatenates from `design-system.css`
+  + `main_page.css` + `solutions.css`. Editing `design-system.css` without rebuilding ships
+  invisible CSS. Some pages (`404.ejs`, `solution_post.ejs`, `views/feedback/*`) link the
+  source files directly instead — an inconsistency worth resolving.
 - Search scans filesystem on every query (no search index)
-- Multiple overlapping header templates: main_site_header.ejs, modern_header.ejs, header.ejs, header_mobile.ejs
-- Legacy templates still exist: eng_page_old.ejs, profile.ejs
+- **`views/default/modern_footer.ejs` is included by 43 templates but NOT by nine of them,
+  including `solution_post.ejs`** — the most-visited page type on the site. Only
+  `views/default/main_site_header.ejs` is genuinely on every page, so anything that must
+  appear site-wide belongs there.
+- Dead templates, zero includes: `modern_header.ejs`, `header_mobile.ejs`, `footer_en.ejs`,
+  `footer_ru.ejs`, `eng_page_old.ejs`, `profile.ejs`. `header.ejs` is a one-line alias for
+  `main_site_header.ejs`.
+- **Dead `en.json` / `ru.json` at the repo root**, unrelated to `locales/*.json` and loaded by
+  nothing. Edit only the files in `locales/` — they are tab-indented, and `updateFiles: false`
+  (`index.js:2522`) means hand edits are safe.
 - `express.static(path.join(__dirname, "src"))` exposes Python source directory publicly
 - Instagram field deprecated but column still in database
 - Windows path separators in image paths (`\\` instead of `/`)
+- Features shipped with essentially zero usage, worth knowing before building another one:
+  `bank_*` tables (0 rows across the whole problem bank), `bank_difficulty_votes` (0),
+  `votes` (4), `user_interests` (4, three from one person), `user_preferences` (19 rows for
+  964 users). Anything gated behind sign-in on this site collects nothing.
 
 ## Design System
 All new UI must follow these rules:
@@ -185,8 +222,21 @@ All new UI must follow these rules:
 - Analytics (`googletagmanager`, `mc.yandex.ru`) is the one allowed exception: it is injected asynchronously and the page is fully usable without it.
 
 ## Testing
-- No test framework is currently set up. When adding one, use Jest.
-- At minimum, test: authentication middleware, API endpoints, input validation.
+- `npm test` runs `node --test tests/` — Node's built-in runner. **No Jest, no test
+  dependency**, and adding one is not wanted; the rationale is written down at
+  `tests/brainstorm.test.js:1-10`.
+- Suites: `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
+  `brainstorm.test.js`, `feedback.test.js`.
+- There is **no test database**, so route handlers are not integration-tested. The house
+  pattern is to export the pure decision logic from a module and test that
+  (`parseProblemLinks`, `validateFeedback`), then say plainly in the file header what is left
+  uncovered.
+- Two conventions worth keeping: a prose header explaining which real incident the file
+  guards against, and — for anything that can reject a user — a closing block of
+  "must never block a real person" invariants built from real traffic
+  (`botgate.test.js`, `feedback.test.js`).
+- `external-assets.test.js` walks the whole tree and fails on any third-party asset origin,
+  so it will catch a CDN reference in a new template automatically.
 - Run the app locally with `node index.js` on port 3000.
 
 ## Deployment

@@ -51,6 +51,8 @@ const { router: challengesRouter, getCurrentChallengeWidget } = require('./chall
 const { router: contestRouter, getActiveContestBanner } = require('./contest');
 const { getPracticumBanner } = require('./practicum');
 const { router: unsubscribeRouter } = require('./unsubscribe');
+const { router: feedbackRouter, api: feedbackApi } = require('./feedback');
+const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
@@ -295,6 +297,21 @@ app.use((req, res, next) => {
         res.locals.practicumBanner = getPracticumBanner(req.session.lang || 'en');
     } catch (_err) {
         res.locals.practicumBanner = null;
+    }
+    // Copy for the feedback widget, which the site-wide header renders on every page.
+    // The path prefix wins over the session because a reader can land on /ru/2.2.12 from a
+    // search with an 'en' session from months ago, and the widget must speak the language
+    // of the page they are actually looking at.
+    try {
+        const pathLang = (req.path.match(/^\/(en|ru)(\/|$)/) || [])[1];
+        const fbLang = pathLang || req.session.lang || 'en';
+        res.locals.feedbackWidget = {
+            lang: fbLang,
+            copy: getFeedbackCopy(fbLang),
+            categories: getFeedbackCategories(fbLang),
+        };
+    } catch (_err) {
+        res.locals.feedbackWidget = null;
     }
     next();
 });
@@ -1281,7 +1298,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT
-                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at,
+                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at, c.is_brainstorm,
                 u.username, u.full_name, u.profile_picture
             FROM solution_comments c
             JOIN users u ON c.user_id = u.id
@@ -1308,6 +1325,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
                 parentId: row.parent_id,
                 createdAt: row.created_at,
                 updatedAt: row.updated_at,
+                isBrainstorm: row.is_brainstorm,
                 isOwnComment,
                 isEditable,
                 author: {
@@ -1330,6 +1348,8 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
 app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, async (req, res) => {
     const { problemName, language } = req.params;
     const { content, parentId } = req.body;
+    // Replies are always plain comments; only top-level comments carry the brainstorm mark.
+    const isBrainstorm = parentId ? false : Boolean(req.body.isBrainstorm);
     const userId = req.session.userId;
 
     if (!content || content.trim().length === 0) {
@@ -1338,8 +1358,8 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
 
     try {
         const result = await pool.query(
-            "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at",
-            [userId, problemName, language, content.trim(), parentId || null]
+            "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id, is_brainstorm) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at",
+            [userId, problemName, language, content.trim(), parentId || null, isBrainstorm]
         );
 
         // Get user info for response
@@ -1400,6 +1420,7 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
             id: result.rows[0].id,
             content: content.trim(),
             parentId: parentId || null,
+            isBrainstorm,
             createdAt: result.rows[0].created_at,
             author: {
                 username: user.username,
@@ -2582,6 +2603,17 @@ app.use('/blog', blogRouter);
 
 // Email unsubscribe (one-click, token-based, no login) for announcement emails.
 app.use('/unsubscribe', unsubscribeRouter);
+
+// Feedback: suggestion box, public board, one-question poll.
+// Deliberately NOT auth-gated anywhere — 59% of visits never return and virtually none of
+// them are signed in, which is exactly why every other feedback channel on this site only
+// ever hears from the same ten people. The router carries its own per-IP rate limiter; the
+// global apiLimiter registered above is set to MAX_SAFE_INTEGER and protects nothing.
+// Mounted here, well ahead of the `/:lang/:name` solution route, so /ru/feedback is not
+// swallowed as a problem number.
+app.use('/:lang(en|ru)/feedback', feedbackRouter);
+app.use('/feedback', feedbackRouter);
+app.use('/api/feedback', feedbackApi);
 
 // Self-hosted email open/click tracking (pixel + signed click redirect).
 app.use('/e', trackingRouter);

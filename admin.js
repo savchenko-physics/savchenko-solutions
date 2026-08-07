@@ -6,6 +6,8 @@ const fs = require('fs');
 const notifications = require('./notifications');
 const { isValidSolutionLang, isValidSolutionProblemName } = require('./utils');
 const { invalidateStandingsCache } = require('./contest');
+const { notifyShipped } = require('./feedback');
+const { sendEmail } = require('./email');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -210,6 +212,113 @@ router.post('/reports/:id/dismiss', async (req, res) => {
         res.redirect('/admin/reports');
     } catch (err) {
         console.error('Error dismissing report:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// ─── Feedback inbox ─────────────────────────────────────────────────────
+//
+// This screen is not optional decoration on the feedback feature, it IS the feature. The
+// thing that was broken was never intake: 63 reports arrived and 62 of them are still
+// pending at a mean age of 245 days, because reading them was a chore with no home. Every
+// status change here is visible to the person who wrote in, at their receipt URL, and
+// moving an item to `done` tells them so.
+//
+// The legacy solution_reports queue is surfaced on the same page rather than left on its
+// own tab, so the backlog stops being something you have to remember to go and look at.
+router.get('/feedback', async (req, res) => {
+    try {
+        const showAll = req.query.all === '1';
+        const where = showAll ? '' : "WHERE f.status = 'new'";
+        const items = await pool.query(
+            `SELECT f.*, u.username AS author_name
+             FROM feedback_items f
+             LEFT JOIN users u ON f.user_id = u.id
+             ${where}
+             ORDER BY f.created_at DESC
+             LIMIT 300`
+        );
+        const counts = await pool.query(
+            `SELECT status, count(*)::int AS n FROM feedback_items GROUP BY status`
+        );
+        const newCount = (counts.rows.find((r) => r.status === 'new') || {}).n || 0;
+        const legacy = await pool.query(
+            "SELECT COUNT(*)::int AS n FROM solution_reports WHERE status = 'pending' OR status IS NULL"
+        );
+        const pollTotals = await pool.query(
+            `SELECT question_id, choice, count(*)::int AS n
+             FROM poll_answers
+             GROUP BY question_id, choice
+             ORDER BY question_id, n DESC`
+        );
+        const pollTexts = await pool.query(
+            `SELECT question_id, free_text, created_at
+             FROM poll_answers
+             WHERE free_text IS NOT NULL AND free_text <> ''
+             ORDER BY created_at DESC
+             LIMIT 100`
+        );
+
+        res.render('admin/dashboard', {
+            __: req.__,
+            lang: 'en',
+            tab: 'feedback',
+            items: items.rows,
+            showAll,
+            feedbackNewCount: newCount,
+            statusCounts: counts.rows,
+            legacyReportCount: legacy.rows[0].n,
+            pollTotals: pollTotals.rows,
+            pollTexts: pollTexts.rows,
+        });
+    } catch (err) {
+        console.error('Admin feedback error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+const FEEDBACK_STATUSES = new Set(['new', 'planned', 'in_progress', 'done', 'declined', 'duplicate']);
+
+router.post('/feedback/:id/update', async (req, res) => {
+    const id = parseInt(req.params.id, 10);
+    if (!id) return res.status(400).send('Bad id');
+    const status = FEEDBACK_STATUSES.has(req.body.status) ? req.body.status : 'new';
+    const isPublic = req.body.is_public === 'on' || req.body.is_public === 'true';
+    const title = (req.body.public_title || '').trim().slice(0, 160) || null;
+    const reply = (req.body.public_reply || '').trim() || null;
+
+    try {
+        const before = await pool.query('SELECT status FROM feedback_items WHERE id = $1', [id]);
+        if (before.rows.length === 0) return res.status(404).send('Not found');
+
+        // resolved_at is stamped once, on the transition into a terminal state, and cleared
+        // if the thread is reopened. reviewed_at cannot serve here because it moves on every
+        // triage edit, which would drift the "solved on" date forward forever.
+        const terminal = status === 'done' || status === 'declined';
+        await pool.query(
+            `UPDATE feedback_items
+             SET status = $1, is_public = $2, public_title = $3, public_reply = $4,
+                 reviewed_by = $5, reviewed_at = now(),
+                 resolved_at = CASE WHEN $7 THEN COALESCE(resolved_at, now()) ELSE NULL END
+             WHERE id = $6`,
+            [status, isPublic, title, reply, req.session.userId, id, terminal]
+        );
+        await logAdminAction(req.session.userId, 'update_feedback', 'feedback_item', id, { status, isPublic });
+
+        // Only on the transition into `done`, and notifyShipped's notified_at guard makes it
+        // idempotent even if this route is replayed.
+        if (status === 'done' && before.rows[0].status !== 'done') {
+            try {
+                await notifyShipped(id, notifications, sendEmail);
+            } catch (notifErr) {
+                // A failed notification must not roll back a triage decision the operator
+                // already made; it is recoverable, the lost status change is not.
+                console.error('Feedback ship notification failed:', notifErr);
+            }
+        }
+        res.redirect('/admin/feedback' + (req.query.all === '1' ? '?all=1' : ''));
+    } catch (err) {
+        console.error('Error updating feedback item:', err);
         res.status(500).send('Internal server error');
     }
 });

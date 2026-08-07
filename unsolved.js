@@ -13,6 +13,33 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
 });
 
+// Same 1-9 difficulty bucket the homepage heatmap uses (index.js getDifficultyGrid),
+// keyed per problem so the unsolved chips can be coloured on the same YlOrRd scale.
+// `calibrated` is 0-100; bucket = ceil(calibrated/100 * 9), clamped to 1-9. `starred`
+// is Savchenko's own ∗ marker. Cached 10 min — this page is far cooler than the homepage
+// but there is no reason to re-run the 2k-row scan on every hit.
+let _diffByProblemCache = { at: 0, value: null };
+async function getDifficultyByProblem() {
+    if (_diffByProblemCache.value && Date.now() - _diffByProblemCache.at < 10 * 60 * 1000) {
+        return _diffByProblemCache.value;
+    }
+    const map = new Map();
+    try {
+        const { rows } = await pool.query(
+            `SELECT problem_name, calibrated, starred FROM problem_difficulty WHERE calibrated IS NOT NULL`
+        );
+        for (const r of rows) {
+            const bucket = Math.min(9, Math.max(1, Math.ceil((r.calibrated / 100) * 9) || 1));
+            map.set(r.problem_name, { bucket, starred: !!r.starred });
+        }
+    } catch (err) {
+        // A missing table must not take the unsolved page down.
+        if (err.code !== '42P01') console.error('difficulty by problem:', err.message);
+    }
+    _diffByProblemCache = { at: Date.now(), value: map };
+    return map;
+}
+
 async function getUnsolvedProblems(lang = 'en') {
     const { chapters } = await getLanguageData(lang);
     const postsDir = path.join(__dirname, 'posts', lang);
@@ -183,6 +210,16 @@ async function renderUnsolvedList(req, res) {
             return a.problemNum - b.problemNum;
         });
 
+        // Attach difficulty so each unsolved chip can be coloured on the homepage's
+        // heatmap scale. chapterData below reuses these same objects (via .filter), so
+        // enriching here is enough for the sections too.
+        const diffByProblem = await getDifficultyByProblem();
+        unsolved.forEach(p => {
+            const d = diffByProblem.get(p.problem);
+            p.heat = d ? d.bucket : 0;
+            p.starred = d ? d.starred : false;
+        });
+
         // Build chapter-level aggregation for accordion
         const chapterData = [];
         chapters.forEach((chapter, chapterIndex) => {
@@ -244,6 +281,7 @@ async function renderUnsolvedList(req, res) {
             unsolved,
             chapterData,
             mostWanted: mostWantedEnriched,
+            hasDifficulty: diffByProblem.size > 0,
             lang,
             __: i18n.__,
             title: i18n.__('unsolved.title'),

@@ -7,8 +7,9 @@
   <title><%= __('pathsPage.title') %> — <%= __('title') %></title>
   <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
   <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="/css/design-system.css" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <style>
@@ -70,7 +71,7 @@
         <div class="path-card-meta">
           <% if (p.difficulty_start && p.difficulty_end) { %>
           <span class="path-meta-item">
-            <span class="difficulty-range"><%= __('pathsPage.difficulty') %> <%= p.difficulty_start %> &rarr; <%= p.difficulty_end %></span>
+            <span class="difficulty-range"><%= __('pathsPage.difficulty') %> <%= p.difficulty_start %> &ndash; <%= p.difficulty_end %></span>
           </span>
           <% } %>
           <span class="path-meta-item"><%= totalCount %> <%= __('pathsPage.problems') %></span>

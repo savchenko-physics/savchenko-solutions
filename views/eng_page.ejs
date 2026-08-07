@@ -40,7 +40,8 @@
   
   <!-- Design system + page CSS -->
   <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
   <title><%= __('title') %></title>
@@ -225,7 +226,7 @@
           <span><strong><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'решений' : 'solutions' %></span>
           <span><strong><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
           <span><strong><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'правок' : 'edits' %></span>
-          <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %> &rarr;</a>
+          <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %></a>
         </div>
         <% } %>
         </div>
@@ -238,7 +239,7 @@
         <div class="most-wanted">
           <div class="most-wanted-head">
             <span class="most-wanted-title"><%= lang === 'ru' ? 'Больше всего ждут' : 'Most wanted' %></span>
-            <a class="most-wanted-all" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Все нерешённые' : 'All unsolved' %> &rarr;</a>
+            <a class="most-wanted-all" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Все нерешённые' : 'All unsolved' %></a>
           </div>
           <ul class="most-wanted-list">
             <% mostWanted.forEach(w => { %>
@@ -565,11 +566,23 @@
               <%= lang === 'ru' ? 'Блог' : 'Latest from the Blog' %>
             </h3>
             <a href="/blog" style="font-size: 13px; color: #1a5276; text-decoration: none; font-weight: 500;">
-              <%= lang === 'ru' ? 'Все' : 'View all' %> &rarr;
+              <%= lang === 'ru' ? 'Все' : 'View all' %>
             </a>
           </div>
           <div id="blogWidgetMainList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;"></div>
         </div>
+
+        <%# Feedback prompt + poll. Kept in the main column, under the blog, so they fill
+            the space beside the taller sidebar instead of leaving an empty band below the
+            grid. Copy is reused verbatim from locales; the poll is the same once-ever queue
+            as the solution pages, so a reader who answered there is never asked again. %>
+        <div class="fb-inline">
+          <span><%= __({ phrase: 'description.platformUpdate.message', locale: lang }) %></span>
+          <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="idea">
+            <%= __({ phrase: 'description.platformUpdate.feedbackLink', locale: lang }) %>
+          </button>
+        </div>
+        <div data-fb-poll></div>
       </div>
 
       <!-- RIGHT COLUMN: Sticky Sidebar -->
@@ -612,7 +625,7 @@
                 supposed to be. %>
             <div class="sidebar-section-header">
               <h3 class="sidebar-title"><%= lang === 'ru' ? 'Лучшие авторы' : 'Top Authors' %></h3>
-              <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %> &rarr;</a>
+              <a href="/<%= lang %>/contributors" class="sidebar-view-all"><%= lang === 'ru' ? 'Все' : 'View All' %></a>
             </div>
             <div class="top-authors-list">
               <div class="top-authors-header">
@@ -700,7 +713,7 @@
               <% }); %>
             </div>
             <a href="/<%= lang %>/contributions/all" class="sidebar-view-all" style="display: inline-block; margin-top: 8px;">
-              <%= lang === 'ru' ? 'Посмотреть все' : 'View all' %> &rarr;
+              <%= lang === 'ru' ? 'Посмотреть все' : 'View all' %>
             </a>
           </div>
 
@@ -820,50 +833,6 @@
     .summit-header-link:hover {
       opacity: 1 !important;
       color: white !important;
-    }
-
-    /* Platform News Banner */
-    .platform-news-banner {
-      background: #fff9e6;
-      border-left: 4px solid #c9a227;
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    }
-
-    .news-label {
-      display: inline-block;
-      background: #ffc107;
-      color: #000;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 0.75rem;
-      letter-spacing: 0.5px;
-    }
-
-    .news-text {
-      color: #664d03;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 1rem;
-    }
-
-    .feedback-link {
-      display: inline-block;
-      color: #856404;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      transition: color 0.2s ease;
-    }
-
-    .feedback-link:hover {
-      color: #533f03;
-      text-decoration: underline;
     }
 
     /* Hero — one headline, one byline, one action. Mobile-first. */
@@ -1164,12 +1133,6 @@
     .action-link:focus-visible {
       outline: 2px solid #1a1a2e;
       outline-offset: 2px;
-    }
-    /* The arrow is the "this goes somewhere" affordance Eve was missing. */
-    .action-link .action-title::after {
-      content: " →";
-      color: #6c757d;
-      font-weight: 400;
     }
 
     .action-link.primary-action {
@@ -1484,18 +1447,6 @@
     }
 
     @media (max-width: 768px) {
-      .platform-news-banner {
-        padding: 1rem;
-      }
-
-      .news-text {
-        font-size: 0.9rem;
-      }
-
-      .feedback-link {
-        font-size: 0.85rem;
-      }
-
       .compact-intro {
         padding: 0.9rem 1rem;
       }

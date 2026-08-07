@@ -27,7 +27,8 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="/css/main_page.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   <link
     rel="stylesheet"
     href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css"
@@ -390,6 +391,20 @@
               <i class="bi bi-cloud-upload me-2"></i> Submit Solution
             </button>
           </div>
+
+          <%# Shown only when the upload actually fails, and this is the single
+              best-evidenced entry point on the site. People have given up here and emailed
+              their solutions as attachments from Brazil, Azerbaijan, Georgia, Moldova and
+              Cuba; one contributor reverse-engineered a dead Submit button with ChatGPT and
+              pasted JS into the console rather than tell anyone. In 22 months fewer than a
+              thousand accounts have ever completed this form. Every one of those failures
+              was silent because there was nowhere to report it. %>
+          <div id="uploadFailPrompt" class="fb-inline" style="justify-content: center;" hidden>
+            <span><%= lang === 'ru' ? 'Не получается загрузить решение?' : 'Cannot upload your solution?' %></span>
+            <button type="button" class="fb-inline-cta" data-fb-open data-fb-category="broken">
+              <%= lang === 'ru' ? 'Напишите нам, поможем' : 'Tell us and we will help' %>
+            </button>
+          </div>
         </div>
       </div>
       <!-- /Main Content Column -->
@@ -503,6 +518,14 @@
       const solutionContent = document.getElementById('solutionContent');
       const latexPreview = document.getElementById('latexPreview');
       const submitBtn = document.getElementById('submitBtn');
+
+      // Once revealed it stays revealed for the rest of the visit: somebody whose upload
+      // just failed is likely to try again a few times before giving up, and the offer to
+      // help should still be on screen when they do.
+      function revealUploadFailPrompt() {
+        const p = document.getElementById('uploadFailPrompt');
+        if (p) p.hidden = false;
+      }
       const selectFilesBtn = document.getElementById('selectFilesBtn');
 
       // Toggle sections based on selected method
@@ -940,10 +963,12 @@
             window.location.href = data.redirectUrl;
           } else {
             alert(data.message || 'There was an error uploading your solution.');
+            revealUploadFailPrompt();
           }
         } catch (err) {
           console.error(err);
           alert('An error occurred while uploading. Please try again.');
+          revealUploadFailPrompt();
         }
       });
 
