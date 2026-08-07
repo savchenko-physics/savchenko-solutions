@@ -4,11 +4,11 @@
 <link rel="icon" type="image/png" href="/img/logo.png" />
 <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
 <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="/css/design-system.css" />
+<link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
 <%# main_page.css carries the site header's own rules. Without it the shared
     header include renders unstyled — an oversized logo and broken nav. Every
     other full-page template loads it; this one must too. %>
-<link rel="stylesheet" href="/css/main_page.css" />
+<link rel="stylesheet" href="<%= asset('/css/main_page.css') %>" />
 <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 <style>
     /* Dense academic directory. Reference points: Yandex.Katalog's numbered rows
