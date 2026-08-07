@@ -95,6 +95,27 @@
         </ol>
     </div>
 
+    <%# Entries filed under another heading that also belong here.
+
+        Some resources genuinely serve two purposes — mathus.ru is olympiad
+        material and exam material both. Listing it under both headings would
+        inflate every count and let two rubrics return near-identical lists, so it
+        is filed once where it fits best and pointed to from here. The reader
+        loses nothing; the counts keep meaning something. %>
+    <% if (typeof alsoRelevant !== 'undefined' && alsoRelevant.length) { %>
+        <div class="rec-also">
+            <div class="rec-count"><%= lang === 'ru' ? 'Также подходит' : 'Also relevant' %></div>
+            <p class="rec-band-note">
+                <%= lang === 'ru'
+                    ? 'Эти ресурсы отнесены к другим разделам, но подходят и сюда.'
+                    : 'These are filed under other headings but serve this one too.' %>
+            </p>
+            <div class="rec-rubric-items rec-also-items">
+                <% alsoRelevant.forEach(function (e, i) { %><a href="<%= e.url %>" rel="noopener nofollow" target="_blank"><%= e.title %></a><span class="rec-also-where"> — <a href="/<%= lang %>/recommendations/<%= e.rubric %>"><%= e.rubricName || e.rubric %></a></span><%= i < alsoRelevant.length - 1 ? ' · ' : '' %><% }); %>
+            </div>
+        </div>
+    <% } %>
+
     <div class="rec-note">
         <%= lang === 'ru'
             ? 'Порядок — по числу ссылок от других участников каталога, с поправкой на уровень и язык аудитории сайта. Цитата под описанием взята дословно из записей источника.'

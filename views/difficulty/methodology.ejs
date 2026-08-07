@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Как считается сложность задач' : 'How problem difficulty is scored' %> — Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru'
+        ? 'Что означает каждая из осей сложности, откуда берётся число, и почему это не то же самое, что сырая оценка модели.'
+        : 'What every difficulty axis means, where the number comes from, and why it is not the same as the raw model score.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems/methodology" />
+
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+
+    <style>
+        html, body { height: auto; }
+        body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+        body > footer { flex-shrink: 0; margin-top: auto; }
+
+        .diffm-wrap { width: 100%; max-width: 780px; margin: 0 auto; padding: 24px 24px 40px; flex: 1 0 auto; }
+        .diffm-crumb { font-size: 13px; color: #6c757d; margin-bottom: 8px; }
+        .diffm-crumb a { color: #1a5276; text-decoration: none; }
+        .diffm-crumb a:hover { color: #0d3b54; text-decoration: underline; }
+        .diffm-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
+        .diffm-tabs { display: flex; gap: 0.5rem; margin: 14px 0 20px; border-bottom: 1px solid #dee2e6; }
+        .diffm-tab { padding: 8px 4px; font-size: 13.5px; color: #6c757d; text-decoration: none; border-bottom: 2px solid transparent; }
+        .diffm-tab.on { color: #1a1a2e; font-weight: 600; border-bottom-color: #1a1a2e; }
+        .diffm-tab:hover { color: #1a1a2e; }
+
+        .diffm-body { font-size: 14.5px; line-height: 1.72; color: #2d2d2d; }
+        .diffm-body h2 { font-family: Inter, sans-serif; font-size: 17px; font-weight: 600; color: #1a1a2e; margin: 30px 0 8px; }
+        .diffm-body h3 { font-family: Inter, sans-serif; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #6c757d; margin: 20px 0 6px; }
+        .diffm-body p { margin: 0 0 12px; }
+        .diffm-body a { color: #1a5276; }
+        .diffm-body a:hover { color: #0d3b54; }
+
+        .diffm-axis-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 10px; }
+        .diffm-axis-table td { border-bottom: 1px solid #f1f3f5; padding: 6px 10px 6px 0; vertical-align: top; }
+        .diffm-axis-table td.label { white-space: nowrap; font-weight: 600; color: #2d2d2d; width: 1%; }
+        .diffm-axis-table td.explain { color: #2d2d2d; }
+        .diffm-axis-badge {
+            display: inline-block; margin-left: 6px; font-size: 9.5px; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.02em; color: #6c757d;
+            border: 1px solid #dee2e6; border-radius: 4px; padding: 1px 4px; vertical-align: middle;
+        }
+
+        .diffm-stat-row { display: flex; flex-wrap: wrap; gap: 20px; margin: 6px 0 16px; }
+        .diffm-stat { min-width: 120px; }
+        .diffm-stat-n { font-family: Inter, sans-serif; font-size: 22px; font-weight: 700; color: #1a1a2e; line-height: 1; }
+        .diffm-stat-label { font-size: 12px; color: #6c757d; margin-top: 2px; }
+
+        .diffm-records { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+        .diffm-record-link {
+            font-size: 12.5px; padding: 5px 11px; border-radius: 6px;
+            border: 1px solid #dee2e6; background: #f8f9fa; color: #1a5276; text-decoration: none;
+        }
+        .diffm-record-link:hover { background: #eef1f4; color: #0d3b54; }
+
+        .diffm-100-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 16px; }
+        /* Specificity, not source order, decides CSS conflicts: `.diffm-body a` (a class
+           plus an element selector) outranks a single-class rule like `.diffm-100-item`
+           even though this one is declared later — that's exactly what made this badge's
+           text render in the prose link color instead of white, on a background dark
+           enough that the two are nearly unreadable together. Every rule below is written
+           `a.diffm-100-item`, matching `.diffm-body a`'s own specificity so it wins on
+           source order, plus !important as a hard backstop so this can't silently regress
+           again if another wrapping rule gets added later. */
+        /* Background/text color are computed per problem from its exact 0-100 calibrated
+           score (lib/heatColor.js — the same YlOrRd ramp as the finder page and the
+           homepage heat toggle, interpolated continuously rather than snapped to 1-of-9
+           buckets) and set inline below, same reasoning as the difficulty bars elsewhere
+           on the site using an inline width%: a continuously-computed value can't be
+           expressed as a fixed set of classes. Bucketing would make this whole list one
+           flat color, since every entry here is already in the top bucket by definition —
+           interpolating on the raw score instead gives each problem its own shade. */
+        a.diffm-100-item {
+            font-size: 12.5px; padding: 3px 9px; border-radius: 5px;
+            text-decoration: none; display: inline-block;
+        }
+        a.diffm-100-item:hover { filter: brightness(0.85); }
+        .diffm-100-item .star { opacity: 0.75; }
+
+        @media (max-width: 640px) {
+            .diffm-wrap { padding: 16px 14px 32px; }
+            .diffm-axis-table td.label { white-space: normal; }
+        }
+    </style>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="diffm-wrap">
+    <div class="diffm-crumb">
+        <a href="/<%= lang %>/problems"><%= lang === 'ru' ? 'Задачи по сложности' : 'Problems by difficulty' %></a>
+        &nbsp;/&nbsp;<%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %>
+    </div>
+    <h1 class="diffm-h1"><%= lang === 'ru' ? 'Как считается сложность задач' : 'How problem difficulty is scored' %></h1>
+
+    <div class="diffm-tabs">
+        <a class="diffm-tab" href="/<%= lang %>/problems"><%= lang === 'ru' ? 'Найти задачи' : 'Find problems' %></a>
+        <a class="diffm-tab on" href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
+    </div>
+
+    <div class="diffm-body">
+    <% if (lang === 'ru') { %>
+
+        <h2>Это ИИ?</h2>
+        <p>Да, прямо и без экивоков: языковая модель оценивает каждую из 2023 задач Савченко по 22 осям — от того, насколько задача требует «озарения», до того, насколько красиво устроено решение. Оценки помогают читателю выбрать, за что браться дальше, — они не заменяют и не проверяют сами решения.</p>
+
+        <h2>Почему «сложность» — не сырая оценка модели</h2>
+        <p>Модель сначала выставляет каждой задаче число 0–100 по оси <code>overall_difficulty</code>. Это ещё не то число, которое видно на странице задачи, — сначала оно превращается в процентиль относительно всех 2023 задач книги: «эта задача труднее, чем N% остальных». Так шкала использует весь диапазон 0–100, а не собирается там, где модель просто была щедрее на баллы.</p>
+        <p>Показанное же число — <strong>рейтинг от <%= ratingFloor %> до <%= ratingCeil %></strong>: ничего никогда не читается как «0» (что звучало бы как «вообще не сложно», а не «самая простая в книге»). Само распределение этого рейтинга не растянуто линейно — иначе получилась бы неестественно ровная гистограмма, ведь процентиль по построению равномерен, — а намеренно смещено так, чтобы выглядеть как настоящая шкала сложности: большое скопление лёгких задач внизу, широкое плато в середине, длинный редеющий хвост наверху.</p>
+
+        <h2>22 оси, по группам</h2>
+        <p>На странице задачи показаны 9 из них — панель шириной около 280&nbsp;пикселей не выдержит больше и остаться читаемой. Вот все 22, с пояснением, что каждая на самом деле измеряет.</p>
+
+        <h3>Итог</h3>
+        <table class="diffm-axis-table">
+            <% axes.headline.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelRu %></td><td class="explain"><%= a.explainRu %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>Чего стоит</h3>
+        <table class="diffm-axis-table">
+            <% axes.cost.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelRu %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">на странице</span><% } %></td><td class="explain"><%= a.explainRu %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>Форма задачи</h3>
+        <table class="diffm-axis-table">
+            <% axes.shape.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelRu %></td><td class="explain"><%= a.explainRu %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>Что даёт</h3>
+        <table class="diffm-axis-table">
+            <% axes.reward.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelRu %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">на странице</span><% } %></td><td class="explain"><%= a.explainRu %></td></tr>
+            <% }); %>
+        </table>
+        <p>Пять осей «формы задачи» и ещё несколько из «Чего стоит» / «Что даёт» на странице решения не показаны — они здесь и в <a href="/<%= lang %>/problems">панели фильтров</a> для тех, кому интересно глубже.</p>
+
+        <h2>Бывает ли когда-нибудь максимальный рейтинг?</h2>
+        <% if (topRatingProblems.length) { %>
+        <p>Да. Прямо сейчас ровно <strong><%= topRatingProblems.length %></strong> <%= topRatingProblems.length === 1 ? 'задача набирает' : 'задач набирают' %> максимум — <strong><%= maxRating %></strong> — потому что несколько эффектов складываются на самом верху шкалы: сырые оценки модели совпадают у нескольких задач сразу, а деление на рейтинговые «сотни» ещё и объединяет соседние процентили в одну ступень. Вот они:</p>
+        <div class="diffm-100-list">
+            <% topRatingProblems.forEach(function(p) { %>
+            <a class="diffm-100-item" style="background:<%= p.bg %>;color:<%= p.fg %>;" href="/<%= lang %>/<%= p.problem_name %>"><%= p.problem_name %><% if (p.starred) { %> <span class="star">&#8727;</span><% } %></a>
+            <% }); %>
+        </div>
+        <% } else { %>
+        <p>Пока ни одна задача не достигла верхней ступени шкалы — но по мере переоценки задач это меняется.</p>
+        <% } %>
+
+        <h2>Рекорды</h2>
+        <div class="diffm-records">
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=calibrated&amp;dir=desc"><%= lang === 'ru' ? 'Сложнее всего' : 'Hardest' %></a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=calibrated&amp;dir=asc">Легче всего</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=est_minutes&amp;dir=asc">Быстрее всего</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=elegance&amp;dir=desc">Красивее всего</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?starred=1">Задачи со звёздочкой ∗</a>
+        </div>
+
+        <h2>Насколько это надёжно</h2>
+        <p>У Савченко в книге отмечены звёздочкой 565 из 2023 задач — «труднее своих соседей по разделу». Это единственная независимая точка отсчёта, которая есть у проекта, и модели она никогда не показывается: иначе оценка просто повторяла бы звёздочку. Проверка — сравнить, ставит ли модель отмеченные задачи выше неотмеченных <em>внутри того же раздела</em>, где это верно чаще случайного.</p>
+        <div class="diffm-stat-row">
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.auc.toFixed(3) %></div><div class="diffm-stat-label">AUC модели</div></div>
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.baselineAuc.toFixed(3) %></div><div class="diffm-stat-label">базовый уровень (по длине решения)</div></div>
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.pairs.toLocaleString('ru-RU') %></div><div class="diffm-stat-label">пар внутри разделов</div></div>
+        </div>
+        <p>0,714 — не идеально, но заметно выше 0,584, того уровня, который даёт одна лишь длина опубликованного решения. Модель угадывает не потому, что решения подлиннее у отмеченных задач.</p>
+
+        <h2>Чего это не утверждает</h2>
+        <p>Это суждение модели, а не человека — см. панель на странице каждой задачи. Она пока не сверена с тем, сколько реального времени решение занимает у живых читателей; с этого и начинается <a href="/<%= lang %>/problems">оценка читателей</a> прямо под панелью ИИ. Звёздочка Савченко — относительная метка внутри раздела, «труднее своих соседей», а не абсолютная шкала: раздел 14 по природе своей труднее раздела 1, и это никогда не сравнивается напрямую.</p>
+
+    <% } else { %>
+
+        <h2>Is this AI?</h2>
+        <p>Yes, plainly: a language model rates each of the 2,023 Savchenko problems on 22 axes — from how much of an "aha" a problem takes, to how beautiful the solution turns out to be. The scores help a reader choose what to attempt next. They do not replace or check the solutions themselves.</p>
+
+        <h2>Why "difficulty" isn't the raw model score</h2>
+        <p>The model first gives every problem a 0-100 number on the <code>overall_difficulty</code> axis. That still isn't the number shown on the problem page — it first becomes a <strong>percentile rank</strong> across all 2,023 problems in the book: "harder than N% of the rest." That way the scale uses its full 0-100 width instead of clustering wherever the model happened to be generous.</p>
+        <p>The number actually shown is a <strong>rating from <%= ratingFloor %> to <%= ratingCeil %></strong> — nothing ever reads as "0" (which sounds like "no difficulty at all" rather than "easiest in the book"). That rating's own distribution isn't stretched linearly, which would produce an artificially flat histogram (a percentile is uniform by construction) — it's deliberately reshaped to look like a real difficulty scale: a large cluster of easy problems at the bottom, a broad plateau in the middle, a long declining tail at the top.</p>
+
+        <h2>The 22 axes, grouped</h2>
+        <p>The problem page shows 9 of these — a panel about 280px wide can't fit more and stay legible. Here are all 22, with what each one actually measures.</p>
+
+        <h3>Headline</h3>
+        <table class="diffm-axis-table">
+            <% axes.headline.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelEn %></td><td class="explain"><%= a.explainEn %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>What it costs</h3>
+        <table class="diffm-axis-table">
+            <% axes.cost.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelEn %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">on the page</span><% } %></td><td class="explain"><%= a.explainEn %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>The shape of the problem</h3>
+        <table class="diffm-axis-table">
+            <% axes.shape.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelEn %></td><td class="explain"><%= a.explainEn %></td></tr>
+            <% }); %>
+        </table>
+
+        <h3>What it repays</h3>
+        <table class="diffm-axis-table">
+            <% axes.reward.forEach(function(a) { %>
+            <tr><td class="label"><%= a.labelEn %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">on the page</span><% } %></td><td class="explain"><%= a.explainEn %></td></tr>
+            <% }); %>
+        </table>
+        <p>The five "shape of the problem" axes, and a few more from "costs"/"repays", aren't shown on the solution page — they're here and in the <a href="/<%= lang %>/problems">finder's filter panel</a> for anyone who wants to go deeper.</p>
+
+        <h2>Is there ever a maximum rating?</h2>
+        <% if (topRatingProblems.length) { %>
+        <p>Yes. Right now exactly <strong><%= topRatingProblems.length %></strong> problem<%= topRatingProblems.length === 1 ? '' : 's' %> reach<%= topRatingProblems.length === 1 ? 'es' : '' %> the maximum — <strong><%= maxRating %></strong> — because two effects compound at the very top of the scale: the model's raw scores genuinely tie across several problems, and rounding into rating buckets merges neighbouring percentiles into the same step. Here they are:</p>
+        <div class="diffm-100-list">
+            <% topRatingProblems.forEach(function(p) { %>
+            <a class="diffm-100-item" style="background:<%= p.bg %>;color:<%= p.fg %>;" href="/<%= lang %>/<%= p.problem_name %>"><%= p.problem_name %><% if (p.starred) { %> <span class="star">&#8727;</span><% } %></a>
+            <% }); %>
+        </div>
+        <% } else { %>
+        <p>Not right now — but that changes as problems get rescored.</p>
+        <% } %>
+
+        <h2>Records</h2>
+        <div class="diffm-records">
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=calibrated&amp;dir=desc">Hardest</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=calibrated&amp;dir=asc">Easiest</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=est_minutes&amp;dir=asc">Quickest</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?sort=elegance&amp;dir=desc">Most elegant</a>
+            <a class="diffm-record-link" href="/<%= lang %>/problems?starred=1">Asterisked problems</a>
+        </div>
+
+        <h2>How reliable this is</h2>
+        <p>Savchenko marked 565 of 2,023 problems with his own ∗ in the printed book — "harder than its neighbours in that section." It's the only independent ground truth this project has, and the model is never shown it — otherwise the score would just echo the star back. The check is whether the model ranks starred problems above unstarred ones <em>within the same section</em> more often than chance.</p>
+        <div class="diffm-stat-row">
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.auc.toFixed(3) %></div><div class="diffm-stat-label">model AUC</div></div>
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.baselineAuc.toFixed(3) %></div><div class="diffm-stat-label">baseline (solution length alone)</div></div>
+            <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.pairs.toLocaleString('en-US') %></div><div class="diffm-stat-label">within-section pairs</div></div>
+        </div>
+        <p>0.714 isn't perfect, but it's clearly above 0.584 — what solution length alone predicts. The model isn't just guessing that starred problems have longer solutions.</p>
+
+        <h2>What this does not claim</h2>
+        <p>This is a model's judgement, not a person's — see the note on every problem page. It hasn't yet been checked against how long solving actually takes real readers; that's what <a href="/<%= lang %>/problems">readers' ratings</a> right below the AI panel start to collect. Savchenko's ∗ is a within-section relative marker — "harder than its neighbours" — never an absolute scale: chapter 14 is intrinsically harder than chapter 1, and the two are never compared directly.</p>
+
+    <% } %>
+    </div>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>

@@ -1,0 +1,478 @@
+{
+ "tags": [
+  {
+   "key": "energy_conservation",
+   "labelEn": "Energy Conservation",
+   "labelRu": "Сохранение энергии",
+   "description": "Conservation of mechanical and total energy in isolated systems."
+  },
+  {
+   "key": "momentum_conservation",
+   "labelEn": "Momentum Conservation",
+   "labelRu": "Сохранение импульса",
+   "description": "Conservation of linear momentum in collisions and isolated systems."
+  },
+  {
+   "key": "newtons_laws",
+   "labelEn": "Newton's Laws",
+   "labelRu": "Законы Ньютона",
+   "description": "Newton's three laws of motion and their applications."
+  },
+  {
+   "key": "kinematics",
+   "labelEn": "Kinematics",
+   "labelRu": "Кинематика",
+   "description": "Description of motion without considering forces: displacement, velocity, acceleration."
+  },
+  {
+   "key": "circular_motion",
+   "labelEn": "Circular Motion",
+   "labelRu": "Круговое движение",
+   "description": "Uniform and non-uniform circular motion, centripetal acceleration and force."
+  },
+  {
+   "key": "projectile_motion",
+   "labelEn": "Projectile Motion",
+   "labelRu": "Движение снаряда",
+   "description": "Motion of objects under gravity with initial velocity at an angle."
+  },
+  {
+   "key": "relative_motion",
+   "labelEn": "Relative Motion",
+   "labelRu": "Относительное движение",
+   "description": "Kinematics in different reference frames and velocity addition."
+  },
+  {
+   "key": "rotational_dynamics",
+   "labelEn": "Rotational Dynamics",
+   "labelRu": "Динамика вращения",
+   "description": "Torque, moment of inertia, angular momentum, and rotational equations of motion."
+  },
+  {
+   "key": "center_of_mass",
+   "labelEn": "Center of Mass",
+   "labelRu": "Центр масс",
+   "description": "Motion of composite systems and center of mass frame analysis."
+  },
+  {
+   "key": "statics",
+   "labelEn": "Statics",
+   "labelRu": "Статика",
+   "description": "Equilibrium conditions for forces and torques in non-moving systems."
+  },
+  {
+   "key": "friction",
+   "labelEn": "Friction",
+   "labelRu": "Трение",
+   "description": "Static and kinetic friction forces between surfaces."
+  },
+  {
+   "key": "hookes_law",
+   "labelEn": "Hooke's Law",
+   "labelRu": "Закон Гука",
+   "description": "Elastic deformation of springs and elastic materials under stress."
+  },
+  {
+   "key": "work_energy",
+   "labelEn": "Work and Energy",
+   "labelRu": "Работа и энергия",
+   "description": "Work done by forces, kinetic and potential energy, and power."
+  },
+  {
+   "key": "collisions",
+   "labelEn": "Collisions",
+   "labelRu": "Столкновения",
+   "description": "Elastic and inelastic collisions with momentum and energy analysis."
+  },
+  {
+   "key": "harmonic_oscillations",
+   "labelEn": "Harmonic Oscillations",
+   "labelRu": "Гармонические колебания",
+   "description": "Simple harmonic motion of springs and pendulums with periodic solutions."
+  },
+  {
+   "key": "damped_oscillations",
+   "labelEn": "Damped Oscillations",
+   "labelRu": "Затухающие колебания",
+   "description": "Oscillatory motion with energy dissipation and exponential decay."
+  },
+  {
+   "key": "forced_oscillations",
+   "labelEn": "Forced Oscillations",
+   "labelRu": "Вынужденные колебания",
+   "description": "Oscillations driven by external periodic forces and resonance phenomena."
+  },
+  {
+   "key": "wave_propagation",
+   "labelEn": "Wave Propagation",
+   "labelRu": "Распространение волн",
+   "description": "Propagation of mechanical waves, wave equation, and wave parameters."
+  },
+  {
+   "key": "wave_superposition",
+   "labelEn": "Wave Superposition",
+   "labelRu": "Суперпозиция волн",
+   "description": "Interference and superposition of waves, standing waves and normal modes."
+  },
+  {
+   "key": "wave_interference",
+   "labelEn": "Wave Interference",
+   "labelRu": "Интерференция волн",
+   "description": "Constructive and destructive interference patterns in wave overlaps."
+  },
+  {
+   "key": "doppler_effect",
+   "labelEn": "Doppler Effect",
+   "labelRu": "Эффект Доплера",
+   "description": "Frequency shift due to relative motion of source and observer."
+  },
+  {
+   "key": "sound_waves",
+   "labelEn": "Sound Waves",
+   "labelRu": "Звуковые волны",
+   "description": "Acoustic waves, speed of sound, and acoustic phenomena."
+  },
+  {
+   "key": "hydrostatics",
+   "labelEn": "Hydrostatics",
+   "labelRu": "Гидростатика",
+   "description": "Pressure in fluids at rest, buoyancy, and Archimedes' principle."
+  },
+  {
+   "key": "fluid_dynamics",
+   "labelEn": "Fluid Dynamics",
+   "labelRu": "Гидродинамика",
+   "description": "Flow of fluids, continuity equation, and Bernoulli's equation."
+  },
+  {
+   "key": "surface_tension",
+   "labelEn": "Surface Tension",
+   "labelRu": "Поверхностное натяжение",
+   "description": "Interfacial effects, surface tension forces, and capillary action."
+  },
+  {
+   "key": "ideal_gas_law",
+   "labelEn": "Ideal Gas Law",
+   "labelRu": "Закон идеального газа",
+   "description": "Equation of state for ideal gases and thermodynamic processes."
+  },
+  {
+   "key": "kinetic_theory",
+   "labelEn": "Kinetic Theory",
+   "labelRu": "Кинетическая теория",
+   "description": "Molecular motion, mean free path, and Maxwell distribution of velocities."
+  },
+  {
+   "key": "thermodynamics_first_law",
+   "labelEn": "First Law of Thermodynamics",
+   "labelRu": "Первый закон термодинамики",
+   "description": "Energy conservation in thermodynamic systems with heat and work."
+  },
+  {
+   "key": "thermodynamics_second_law",
+   "labelEn": "Second Law of Thermodynamics",
+   "labelRu": "Второй закон термодинамики",
+   "description": "Entropy, irreversible processes, and Carnot cycle efficiency."
+  },
+  {
+   "key": "heat_transfer",
+   "labelEn": "Heat Transfer",
+   "labelRu": "Передача тепла",
+   "description": "Conduction, convection, radiation, and heat capacity."
+  },
+  {
+   "key": "phase_transitions",
+   "labelEn": "Phase Transitions",
+   "labelRu": "Фазовые переходы",
+   "description": "Melting, freezing, evaporation, and latent heat."
+  },
+  {
+   "key": "electrostatics",
+   "labelEn": "Electrostatics",
+   "labelRu": "Электростатика",
+   "description": "Electric charges, Coulomb's law, and electric field strength."
+  },
+  {
+   "key": "coulomb_law",
+   "labelEn": "Coulomb's Law",
+   "labelRu": "Закон Кулона",
+   "description": "Force between point charges and inverse square law."
+  },
+  {
+   "key": "electric_field",
+   "labelEn": "Electric Field",
+   "labelRu": "Электрическое поле",
+   "description": "Electric field from charge distributions and field superposition."
+  },
+  {
+   "key": "gauss_law",
+   "labelEn": "Gauss's Law",
+   "labelRu": "Закон Гаусса",
+   "description": "Electric flux and field calculation using symmetry arguments."
+  },
+  {
+   "key": "electric_potential",
+   "labelEn": "Electric Potential",
+   "labelRu": "Электрический потенциал",
+   "description": "Potential energy, potential difference, and equipotential surfaces."
+  },
+  {
+   "key": "capacitance",
+   "labelEn": "Capacitance",
+   "labelRu": "Емкость",
+   "description": "Capacitors, capacitance, and energy storage in electric fields."
+  },
+  {
+   "key": "dielectrics",
+   "labelEn": "Dielectrics",
+   "labelRu": "Диэлектрики",
+   "description": "Polarization of dielectrics and permittivity effects on fields."
+  },
+  {
+   "key": "lorentz_force",
+   "labelEn": "Lorentz Force",
+   "labelRu": "Сила Лоренца",
+   "description": "Force on charged particles in electric and magnetic fields."
+  },
+  {
+   "key": "charged_particle_motion",
+   "labelEn": "Charged Particle Motion",
+   "labelRu": "Движение заряженных частиц",
+   "description": "Trajectories of charged particles in uniform and complex fields."
+  },
+  {
+   "key": "cyclotron_motion",
+   "labelEn": "Cyclotron Motion",
+   "labelRu": "Циклотронное движение",
+   "description": "Circular motion of charged particles in magnetic fields."
+  },
+  {
+   "key": "ohms_law",
+   "labelEn": "Ohm's Law",
+   "labelRu": "Закон Ома",
+   "description": "Relationship between voltage, current, and resistance in conductors."
+  },
+  {
+   "key": "kirchhoff_laws",
+   "labelEn": "Kirchhoff's Laws",
+   "labelRu": "Законы Кирхгофа",
+   "description": "Current and voltage conservation in electric circuits."
+  },
+  {
+   "key": "circuit_analysis",
+   "labelEn": "Circuit Analysis",
+   "labelRu": "Анализ цепей",
+   "description": "Series and parallel circuits, equivalent resistance, and circuit solving."
+  },
+  {
+   "key": "resistivity",
+   "labelEn": "Resistivity",
+   "labelRu": "Удельное сопротивление",
+   "description": "Electrical resistance, conductivity, and temperature dependence."
+  },
+  {
+   "key": "power_circuits",
+   "labelEn": "Power in Circuits",
+   "labelRu": "Мощность в цепях",
+   "description": "Electrical power, Joule heating, and energy dissipation in circuits."
+  },
+  {
+   "key": "ac_circuits",
+   "labelEn": "AC Circuits",
+   "labelRu": "Цепи переменного тока",
+   "description": "Alternating current, impedance, resonance, and phasor analysis."
+  },
+  {
+   "key": "inductance",
+   "labelEn": "Inductance",
+   "labelRu": "Индуктивность",
+   "description": "Self-inductance, mutual inductance, and energy in magnetic fields."
+  },
+  {
+   "key": "transformers",
+   "labelEn": "Transformers",
+   "labelRu": "Трансформаторы",
+   "description": "Voltage and current transformation in coupled coils."
+  },
+  {
+   "key": "magnetic_field",
+   "labelEn": "Magnetic Field",
+   "labelRu": "Магнитное поле",
+   "description": "Magnetic field sources, field lines, and field strength."
+  },
+  {
+   "key": "ampere_law",
+   "labelEn": "Ampère's Law",
+   "labelRu": "Закон Ампера",
+   "description": "Magnetic field from current distributions using symmetry."
+  },
+  {
+   "key": "biot_savart_law",
+   "labelEn": "Biot-Savart Law",
+   "labelRu": "Закон Био-Савара",
+   "description": "Magnetic field calculation from arbitrary current elements."
+  },
+  {
+   "key": "magnetic_flux",
+   "labelEn": "Magnetic Flux",
+   "labelRu": "Магнитный поток",
+   "description": "Magnetic flux through surfaces and flux conservation."
+  },
+  {
+   "key": "electromagnetic_induction",
+   "labelEn": "Electromagnetic Induction",
+   "labelRu": "Электромагнитная индукция",
+   "description": "Faraday's law, induced EMF, and Lenz's law."
+  },
+  {
+   "key": "faraday_law",
+   "labelEn": "Faraday's Law",
+   "labelRu": "Закон Фарадея",
+   "description": "Induced electric field from changing magnetic flux."
+  },
+  {
+   "key": "maxwell_equations",
+   "labelEn": "Maxwell's Equations",
+   "labelRu": "Уравнения Максвелла",
+   "description": "Complete set of equations governing electric and magnetic fields."
+  },
+  {
+   "key": "electromagnetic_waves",
+   "labelEn": "Electromagnetic Waves",
+   "labelRu": "Электромагнитные волны",
+   "description": "Electromagnetic radiation, wave propagation, and wave properties."
+  },
+  {
+   "key": "poynting_vector",
+   "labelEn": "Poynting Vector",
+   "labelRu": "Вектор Пойнтинга",
+   "description": "Energy flow direction and intensity in electromagnetic waves."
+  },
+  {
+   "key": "radiation_pressure",
+   "labelEn": "Radiation Pressure",
+   "labelRu": "Давление излучения",
+   "description": "Momentum and pressure from electromagnetic radiation."
+  },
+  {
+   "key": "geometrical_optics",
+   "labelEn": "Geometrical Optics",
+   "labelRu": "Геометрическая оптика",
+   "description": "Ray optics, reflection, refraction, and optical path."
+  },
+  {
+   "key": "snells_law",
+   "labelEn": "Snell's Law",
+   "labelRu": "Закон Снеллиуса",
+   "description": "Refraction of light at interfaces between media."
+  },
+  {
+   "key": "lens_optics",
+   "labelEn": "Lens Optics",
+   "labelRu": "Оптика линз",
+   "description": "Thin lens formula, magnification, and image formation."
+  },
+  {
+   "key": "mirror_optics",
+   "labelEn": "Mirror Optics",
+   "labelRu": "Оптика зеркал",
+   "description": "Reflection from curved mirrors and mirror formula."
+  },
+  {
+   "key": "total_internal_reflection",
+   "labelEn": "Total Internal Reflection",
+   "labelRu": "Полное внутреннее отражение",
+   "description": "Light reflection at critical angle in denser media."
+  },
+  {
+   "key": "wave_optics",
+   "labelEn": "Wave Optics",
+   "labelRu": "Волновая оптика",
+   "description": "Diffraction, interference, and polarization of light."
+  },
+  {
+   "key": "diffraction",
+   "labelEn": "Diffraction",
+   "labelRu": "Дифракция",
+   "description": "Light bending around obstacles and apertures."
+  },
+  {
+   "key": "polarization",
+   "labelEn": "Polarization",
+   "labelRu": "Поляризация",
+   "description": "Polarization states of light and polarizers."
+  },
+  {
+   "key": "photon_momentum",
+   "labelEn": "Photon Momentum",
+   "labelRu": "Импульс фотона",
+   "description": "Momentum and energy of photons, photoelectric effect."
+  },
+  {
+   "key": "blackbody_radiation",
+   "labelEn": "Blackbody Radiation",
+   "labelRu": "Излучение черного тела",
+   "description": "Thermal radiation, Stefan-Boltzmann law, and quantum nature."
+  },
+  {
+   "key": "special_relativity",
+   "labelEn": "Special Relativity",
+   "labelRu": "Специальная теория относительности",
+   "description": "Relativity of simultaneity, time dilation, and length contraction."
+  },
+  {
+   "key": "lorentz_transformations",
+   "labelEn": "Lorentz Transformations",
+   "labelRu": "Преобразования Лоренца",
+   "description": "Coordinate and velocity transformations between inertial frames."
+  },
+  {
+   "key": "relativistic_kinematics",
+   "labelEn": "Relativistic Kinematics",
+   "labelRu": "Релятивистская кинематика",
+   "description": "Velocity addition and motion at relativistic speeds."
+  },
+  {
+   "key": "relativistic_dynamics",
+   "labelEn": "Relativistic Dynamics",
+   "labelRu": "Релятивистская динамика",
+   "description": "Relativistic mass, momentum, and force."
+  },
+  {
+   "key": "relativistic_energy",
+   "labelEn": "Relativistic Energy",
+   "labelRu": "Релятивистская энергия",
+   "description": "Rest energy, kinetic energy, and energy-momentum relation."
+  },
+  {
+   "key": "vector_mathematics",
+   "labelEn": "Vector Mathematics",
+   "labelRu": "Векторная математика",
+   "description": "Vector operations, decomposition, and component analysis."
+  },
+  {
+   "key": "trigonometry",
+   "labelEn": "Trigonometry",
+   "labelRu": "Тригонометрия",
+   "description": "Trigonometric functions, identities, and small angle approximations."
+  },
+  {
+   "key": "calculus",
+   "labelEn": "Calculus",
+   "labelRu": "Математический анализ",
+   "description": "Differentiation, integration, and differential equations."
+  },
+  {
+   "key": "differential_equations",
+   "labelEn": "Differential Equations",
+   "labelRu": "Дифференциальные уравнения",
+   "description": "Solving differential equations for physical systems."
+  },
+  {
+   "key": "dimensional_analysis",
+   "labelEn": "Dimensional Analysis",
+   "labelRu": "Размерный анализ",
+   "description": "Unit analysis and order of magnitude estimation."
+  }
+ ]
+}

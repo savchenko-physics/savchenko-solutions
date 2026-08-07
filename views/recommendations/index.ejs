@@ -32,39 +32,61 @@
 
     <%- include('_tabs') %>
 
-    <% if (!core.length && !adjacent.length) { %>
+    <% if (!core.length && !exam.length && !adjacent.length) { %>
         <p class="rec-sub" style="margin-top:20px;">
             <%= lang === 'ru' ? 'Этот раздел каталога пока готовится.' : 'This half of the catalog is still being built.' %>
         </p>
     <% } %>
 
-    <% if (core.length) { %>
-        <div class="rec-count"><%= lang === 'ru' ? 'Для решения задач' : 'For working problems' %></div>
-        <div class="rec-grid rec-grid-main">
-            <% core.forEach(function (r) { %>
+    <%# One band per purpose, each its own grid so its last row is always full.
+
+        A single "core" band used to carry olympiad archives and ЕГЭ drill sites
+        side by side. The page above promises a catalog for olympiad preparation
+        and research, and school leaving exams are a different and easier target —
+        a reader who came for Savchenko should not meet them first. Nothing is
+        removed: a large share of readers do sit these exams, and Belarus and
+        Ukraine alone are around 12,000 of them. They just sit behind a heading
+        that says what they are. %>
+    <% var bands = [
+        { rows: core,     cols: coreCols, id: 'core' },
+        { rows: exam,     cols: examCols, id: 'exam' },
+        { rows: adjacent, cols: adjCols,  id: 'adjacent' }
+    ]; %>
+    <% bands.forEach(function (band) { %>
+        <% if (!band.rows.length) { return; } %>
+
+        <% if (band.id === 'core') { %>
+            <div class="rec-count"><%= lang === 'ru' ? 'Для решения задач' : 'For working problems' %></div>
+        <% } else if (band.id === 'exam') { %>
+            <div class="rec-count"><%= lang === 'ru' ? 'Подготовка к экзаменам' : 'Exam preparation' %></div>
+            <p class="rec-band-note">
+                <%= lang === 'ru'
+                    ? 'Школьные экзамены — ЕГЭ, ЦТ, ЗНО. Задачи там проще олимпиадных, поэтому вынесено отдельно.'
+                    : 'School leaving and entrance exams. The problems are easier than olympiad ones, so they are kept apart.' %>
+            </p>
+        <% } else { %>
+            <div class="rec-count"><%= lang === 'ru' ? 'Смежное' : 'Adjacent' %></div>
+            <p class="rec-band-note">
+                <%= lang === 'ru'
+                    ? 'Тоже наука, но не материал для решения задач — вынесено отдельно, чтобы не мешать разделам выше.'
+                    : 'Science, but not problem-solving material — kept separate so it does not crowd the sections above.' %>
+            </p>
+        <% } %>
+
+        <div class="rec-grid rec-grid-main<%= band.id === 'core' ? '' : ' rec-band-soft' %>" style="--cols:<%= band.cols %>">
+            <% band.rows.forEach(function (r) { %>
+                <% var shown = band.id === 'core' ? r.entries : r.entries.slice(0, 12); %>
                 <div class="rec-cell">
                     <div class="rec-rubric-title">
                         <a href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? r.ru : r.en %></a><span class="rec-rubric-n">&nbsp;<%= r.count %></span>
                     </div>
                     <div class="rec-rubric-items">
-                        <% r.entries.forEach(function (e, i) { %><a href="<%= e.url %>" rel="noopener nofollow" target="_blank"><%= e.title %></a><%= i < r.entries.length - 1 ? ', ' : '' %><% }); %><% if (r.count > r.entries.length) { %>&nbsp;<a class="rec-more" href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? 'ещё ' + (r.count - r.entries.length) : (r.count - r.entries.length) + ' more' %></a><% } %>
+                        <% shown.forEach(function (e, i) { %><a href="<%= e.url %>" rel="noopener nofollow" target="_blank"><%= e.title %></a><%= i < shown.length - 1 ? ', ' : '' %><% }); %><% if (r.count > shown.length) { %>&nbsp;<a class="rec-more" href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? 'ещё ' + (r.count - shown.length) : (r.count - shown.length) + ' more' %></a><% } %>
                     </div>
                 </div>
             <% }); %>
         </div>
-    <% } %>
-
-    <% if (adjacent.length) { %>
-        <div class="rec-count"><%= lang === 'ru' ? 'Смежное' : 'Adjacent' %></div>
-        <div class="rec-rubric-items" style="font-size:13.5px;line-height:2;">
-            <% adjacent.forEach(function (r, i) { %><a href="/<%= lang %>/recommendations/<%= r.id %>"><%= lang === 'ru' ? r.ru : r.en %></a> <span class="rec-rubric-n"><%= r.count %></span><%= i < adjacent.length - 1 ? ' · ' : '' %><% }); %>
-        </div>
-        <p class="rec-sub" style="margin-top:4px;font-size:13px;">
-            <%= lang === 'ru'
-                ? 'Тоже наука, но не материал для решения задач — вынесено отдельно, чтобы не мешать разделам выше.'
-                : 'Science, but not problem-solving material — kept separate so it does not crowd the sections above.' %>
-        </p>
-    <% } %>
+    <% }); %>
 
     <div class="rec-note">
         <a class="rec-dl" href="/physics-telegram-catalog.pdf" download><%= lang === 'ru' ? 'Скачать PDF' : 'Download PDF' %></a>

@@ -1842,6 +1842,7 @@
                     <span class="sg-leg"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
                     <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
                     <span class="sg-leg"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+                    <a href="/<%= lang %>/problems/methodology" class="sg-heat-methodology-link"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
                 </div>
                 <label class="ss-switch sg-heat-switch" for="sgHeatToggle">
                     <input type="checkbox" id="sgHeatToggle" role="switch" data-grid-mode-toggle />
@@ -1895,20 +1896,12 @@
               // Two groups, because they answer different questions: what this problem
               // costs you, and what it pays back. The reward axes were judged from the
               // published solution — you cannot tell whether a problem is beautiful until
-              // you have seen how it comes out.
-              const cost = [
-                ['insight_required', lang === 'ru' ? 'Идея' : 'Insight'],
-                ['math_level',       lang === 'ru' ? 'Математика' : 'Mathematics'],
-                ['computational_load', lang === 'ru' ? 'Вычисления' : 'Computation'],
-                ['trap_density',     lang === 'ru' ? 'Подводные камни' : 'Traps'],
-                ['specialist_knowledge', lang === 'ru' ? 'Спец. знания' : 'Specialist knowledge'],
-              ];
-              const reward = [
-                ['elegance',   lang === 'ru' ? 'Красота решения' : 'Elegance'],
-                ['novelty',    lang === 'ru' ? 'Новизна' : 'Novelty'],
-                ['curiosity',  lang === 'ru' ? 'Любопытство' : 'Curiosity'],
-                ['pleasure',   lang === 'ru' ? 'Удовольствие' : 'Pleasure'],
-              ];
+              // you have seen how it comes out. Labels/explanations come from
+              // lib/difficultyAxes.js via post.js (difficultyCostAxes/difficultyRewardAxes)
+              // so the methodology page and the problem finder never disagree with this
+              // widget on what an axis is called or what it means.
+              const cost = (typeof difficultyCostAxes !== 'undefined' ? difficultyCostAxes : []).map((a) => [a.key, a.label, a.explain]);
+              const reward = (typeof difficultyRewardAxes !== 'undefined' ? difficultyRewardAxes : []).map((a) => [a.key, a.label, a.explain]);
               const bar = (v) => Math.max(0, Math.min(100, Number(v) || 0));
             %>
             <div class="section-grid-card ss-difficulty" style="margin-top: 1rem;">
@@ -1919,27 +1912,29 @@
                     <% } %>
                 </div>
                 <div class="ss-diff-headline">
-                    <span class="ss-diff-score"><%= difficulty.calibrated %></span><span class="ss-diff-of">/100</span>
+                    <span class="ss-diff-score"><%= typeof difficultyRating !== 'undefined' && difficultyRating != null ? difficultyRating : difficulty.calibrated %></span>
                     <% if (difficulty.est_minutes) { %>
                     <span class="ss-diff-time">&asymp; <%= difficulty.est_minutes %> <%= lang === 'ru' ? 'мин' : 'min' %></span>
                     <% } %>
                 </div>
 
                 <div class="ss-diff-group"><%= lang === 'ru' ? 'Чего стоит' : 'What it costs' %></div>
+                <div class="ss-diff-hint"><%= lang === 'ru' ? 'Выше — тяжелее решать' : 'Higher = harder to solve' %></div>
                 <% cost.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
-                <div class="ss-diff-row">
+                <div class="ss-diff-row" title="<%= a[2] %>">
                     <span class="ss-diff-label"><%= a[1] %></span>
                     <span class="ss-diff-track"><span class="ss-diff-fill" style="width: <%= bar(difficulty.scores[a[0]]) %>%"></span></span>
-                    <span class="ss-diff-num"><%= bar(difficulty.scores[a[0]]) %></span>
+                    <span class="ss-diff-num"><%= bucketWord(difficulty.scores[a[0]], lang) %> <span class="ss-diff-n"><%= bar(difficulty.scores[a[0]]) %></span></span>
                 </div>
                 <% }); %>
 
                 <div class="ss-diff-group"><%= lang === 'ru' ? 'Что даёт' : 'What it repays' %></div>
+                <div class="ss-diff-hint"><%= lang === 'ru' ? 'Выше — приятнее решать' : 'Higher = more rewarding to solve' %></div>
                 <% reward.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
-                <div class="ss-diff-row">
+                <div class="ss-diff-row" title="<%= a[2] %>">
                     <span class="ss-diff-label"><%= a[1] %></span>
                     <span class="ss-diff-track"><span class="ss-diff-fill ss-diff-fill-reward" style="width: <%= bar(difficulty.scores[a[0]]) %>%"></span></span>
-                    <span class="ss-diff-num"><%= bar(difficulty.scores[a[0]]) %></span>
+                    <span class="ss-diff-num"><%= bucketWord(difficulty.scores[a[0]], lang) %> <span class="ss-diff-n"><%= bar(difficulty.scores[a[0]]) %></span></span>
                 </div>
                 <% }); %>
 
@@ -1959,10 +1954,33 @@
                 <% } %>
 
                 <div class="ss-diff-note">
-                    <%= lang === 'ru'
-                        ? 'Оценка модели, не человека. Звёздочка — пометка самого Савченко.'
-                        : 'Rated by a model, not a person. The star is Savchenko\'s own mark.' %>
+                    <%= lang === 'ru' ? 'Оценка ' : 'Rated by a ' %><a href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'модели' : 'model' %></a><%= lang === 'ru'
+                        ? ', не человека. Звёздочка — пометка самого Савченко.'
+                        : ', not a person. The star is Savchenko\'s own mark.' %>
                 </div>
+
+                <% if (typeof difficultyVotes !== 'undefined') { %>
+                <div class="ss-diff-votes">
+                    <div class="ss-diff-votes-label"><%= lang === 'ru' ? 'Мнение читателей' : "Readers' rating" %></div>
+                    <% if (difficultyVotes.count) { %>
+                    <span class="ss-diff-votes-score" id="ssDiffVotesScore"><%= difficultyVotes.avg %>/10</span>
+                    <span class="ss-diff-votes-count" id="ssDiffVotesCount">(<%= lang === 'ru' ? ruVotes(difficultyVotes.count) : (difficultyVotes.count + (difficultyVotes.count === 1 ? ' vote' : ' votes')) %>)</span>
+                    <% } else { %>
+                    <span class="ss-diff-votes-empty" id="ssDiffVotesEmpty"><%= lang === 'ru' ? 'Пока нет оценок' : 'No votes yet' %></span>
+                    <% } %>
+                    <% if (typeof userId !== 'undefined' && userId) { %>
+                    <div class="ss-diff-vote-row">
+                        <input type="range" min="1" max="10" value="<%= difficultyVotes.mine || 5 %>" class="ss-diff-vote-slider" id="ssDiffVoteSlider" />
+                        <span class="ss-diff-vote-val" id="ssDiffVoteVal"><%= difficultyVotes.mine || 5 %></span>
+                        <button class="ss-diff-vote-submit" id="ssDiffVoteBtn" data-problem="<%= name %>" data-voted="<%= difficultyVotes.mine ? '1' : '' %>">
+                            <%= difficultyVotes.mine ? (lang === 'ru' ? 'Изменить оценку' : 'Update rating') : (lang === 'ru' ? 'Оценить' : 'Rate') %>
+                        </button>
+                    </div>
+                    <% } else { %>
+                    <a href="/<%= lang %>/login" class="ss-diff-votes-login"><%= lang === 'ru' ? 'Войдите, чтобы оценить' : 'Log in to rate' %></a>
+                    <% } %>
+                </div>
+                <% } %>
             </div>
             <% } %>
         </div>
@@ -2929,6 +2947,7 @@
         }
     </script>
     <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
+    <script src="<%= asset('/js/difficulty-vote.js') %>" defer></script>
     <%- include('default/main_site_search_script') %>
 </body>
 </html>

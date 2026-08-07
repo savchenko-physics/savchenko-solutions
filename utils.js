@@ -201,11 +201,22 @@ const escapeMarkdown = (text) => {
     return text;
 };
 
+// CommonMark eats a backslash that sits in front of ASCII punctuation, so every TeX
+// macro spelled that way loses its backslash on the way to MathJax. For the math
+// delimiters that means `\[`…`\]` never opens a formula; for the spacing macros it is
+// worse, because the formula still renders and the punctuation shows up inside it —
+// `\,` typeset as a comma, `\!` as a factorial. Handing marked a doubled backslash,
+// which it halves back to one, is the fix in both cases, and it converges: sources
+// written `\,` and sources written `\\,` (the older convention) both come out as `\,`.
+const escapeTexBackslashes = (content) => content
+    .replace(/\\\[/g, '\\\\[').replace(/\\\]/g, '\\\\]')
+    .replace(/\\\(/g, '\\\\(').replace(/\\\)/g, '\\\\)')
+    .replace(/\\([,;:!])/g, '\\\\$1');
+
 // Function to parse Markdown content into HTML
 const parseMarkdown = (markdownText) => {
     let content = escapeMarkdown(markdownText);
-    content = content.replace(/\\\[/g, '\\\\[').replace(/\\\]/g, '\\\\]');
-    content = content.replace(/\\\(/g, '\\\\(').replace(/\\\)/g, '\\\\)');
+    content = escapeTexBackslashes(content);
     return sanitizeParsedMarkdownHtml(marked(content));
 };
 
@@ -718,6 +729,7 @@ function buildMetaDescription(rawText, name, sectionTitle, lang) {
 
 module.exports = {
     parseMarkdown,
+    escapeTexBackslashes,
     buildMetaDescription,
     getMarkdownFiles,
     getLineStatement,

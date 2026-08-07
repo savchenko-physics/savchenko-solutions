@@ -129,8 +129,10 @@ def main():
     story.append(Spacer(1, 5))
 
     rubrics = {r['id']: r for r in cat.get('rubrics', [])}
-    order = [r for r in cat.get('rubrics', []) if r.get('class') == 'core'] \
-        + [r for r in cat.get('rubrics', []) if r.get('class') != 'core']
+    # Same three bands as the web page: olympiad and research material first,
+    # school exams next, adjacent science last.
+    rank = {'core': 0, 'exam': 1}
+    order = sorted(cat.get('rubrics', []), key=lambda r: rank.get(r.get('class'), 2))
 
     for r in order:
         rows = [e for e in tg + web if e.get('rubric') == r['id']]

@@ -873,12 +873,17 @@ pre {
     letter-spacing: 0.03em; text-transform: uppercase;
     color: var(--ss-text-secondary, #6c757d);
 }
+.ss-diff-hint { margin: -0.25rem 0 0.35rem; font-size: 10.5px; font-style: italic; color: var(--ss-text-secondary, #6c757d); }
 .ss-diff-row { display: flex; align-items: center; gap: 0.5rem; padding: 2px 0; }
 .ss-diff-label { flex: 0 0 45%; font-size: 12px; color: var(--ss-body-text, #2d2d2d); }
 .ss-diff-track { flex: 1; height: 6px; background: #eceff1; border-radius: 3px; overflow: hidden; }
 .ss-diff-fill { display: block; height: 100%; background: var(--ss-navy, #1a1a2e); border-radius: 3px; }
 .ss-diff-fill-reward { background: #1a5276; }
-.ss-diff-num { flex: 0 0 22px; text-align: right; font-size: 11px; color: var(--ss-text-secondary, #6c757d); }
+/* Word first (this is the actual fix — "75" alone means nothing without the 0-100 scale
+   memorized, "High" doesn't), the raw number kept small and secondary for readers who want
+   precision. */
+.ss-diff-num { flex: 0 0 74px; text-align: right; font-size: 11px; font-weight: 600; color: var(--ss-body-text, #2d2d2d); white-space: nowrap; }
+.ss-diff-n { font-weight: 400; color: var(--ss-text-secondary, #6c757d); }
 .ss-diff-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.7rem; }
 .ss-diff-tag {
     font-size: 11px; padding: 2px 7px; border-radius: 4px;
@@ -895,6 +900,35 @@ pre {
 .ss-diff-idea[open] summary::before { content: '\2193  '; }
 .ss-diff-idea p { margin: 0.4rem 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ss-body-text, #2d2d2d); }
 .ss-diff-note { margin-top: 0.7rem; font-size: 11px; line-height: 1.4; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-note a { color: var(--ss-link, #1a5276); }
+.ss-diff-note a:hover { color: var(--ss-link-hover, #0d3b54); }
+
+/* Reader difficulty votes — a separate, clearly-labeled number below the AI panel's
+   note, never blended into the /100 score or the bars above it. */
+.ss-diff-votes { margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--ss-border-card, #dee2e6); }
+.ss-diff-votes-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d); margin-bottom: 0.3rem;
+}
+.ss-diff-votes-score { font-family: Inter, sans-serif; font-size: 16px; font-weight: 700; color: var(--ss-link, #1a5276); }
+.ss-diff-votes-count { font-size: 11px; color: var(--ss-text-secondary, #6c757d); margin-left: 0.25rem; }
+.ss-diff-votes-empty { font-size: 12px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-votes-login { font-size: 12px; color: var(--ss-link, #1a5276); text-decoration: none; }
+.ss-diff-votes-login:hover { color: var(--ss-link-hover, #0d3b54); text-decoration: underline; }
+.ss-diff-vote-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem; }
+.ss-diff-vote-slider { flex: 1; accent-color: var(--ss-navy, #1a1a2e); }
+.ss-diff-vote-val { font-size: 13px; font-weight: 600; min-width: 18px; text-align: center; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-vote-submit {
+    font-size: 11px; padding: 4px 10px; border-radius: 6px; border: none;
+    background: var(--ss-navy, #1a1a2e); color: #fff; cursor: pointer;
+}
+.ss-diff-vote-submit:disabled { opacity: 0.6; cursor: default; }
+.ss-diff-vote-submit:hover:not(:disabled) { background: var(--ss-link-hover, #0d3b54); }
+
+.sg-heat-methodology-link {
+    display: block; font-size: 11px; color: var(--ss-link, #1a5276); text-decoration: none; margin-top: 4px;
+}
+.sg-heat-methodology-link:hover { color: var(--ss-link-hover, #0d3b54); text-decoration: underline; }
 
 /* ── Toggle switch ────────────────────────────────────────────────────────────
    A real <input type="checkbox" role="switch"> underneath: keyboard focus, space

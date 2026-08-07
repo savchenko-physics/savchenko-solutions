@@ -45,6 +45,7 @@ const blogRouter = require('./blog');
 const toolsRouter = require('./tools');
 const recommendationsRouter = require('./recommendations');
 const bankRouter = require('./bank');
+const problemsRouter = require('./problems');
 const forumRouter = require('./forum');
 const { router: challengesRouter, getCurrentChallengeWidget } = require('./challenges');
 const { router: contestRouter, getActiveContestBanner } = require('./contest');
@@ -1178,6 +1179,39 @@ app.post("/api/solutions/:problemName/:language/star", checkAuthenticated, async
     }
 });
 
+// Vote on a problem's perceived difficulty (1-10), separate from the AI score.
+// Deliberately not `checkAuthenticated`: that middleware redirects, which a
+// fetch() POST can't follow usefully — a logged-out vote should fail loudly
+// with 401 JSON instead of silently landing on a login page's HTML.
+app.post("/api/problems/:name/difficulty-vote", async (req, res) => {
+    if (!req.session.userId) return res.status(401).json({ error: "Log in to vote" });
+
+    const vote = parseInt(req.body.vote, 10);
+    if (!Number.isInteger(vote) || vote < 1 || vote > 10) {
+        return res.status(400).json({ error: "Vote must be an integer 1-10" });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO problem_difficulty_votes (problem_name, user_id, vote)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (problem_name, user_id) DO UPDATE SET vote = $3, created_at = now()`,
+            [req.params.name, req.session.userId, vote]
+        );
+        const { rows } = await pool.query(
+            `SELECT AVG(vote)::numeric(3,1) AS avg_vote, COUNT(*)::int AS vote_count
+               FROM problem_difficulty_votes WHERE problem_name = $1`,
+            [req.params.name]
+        );
+        res.json({ ok: true, avgVote: rows[0].avg_vote, voteCount: rows[0].vote_count });
+    } catch (err) {
+        if (err.code === '23503') return res.status(404).json({ error: "Unknown problem" });
+        if (err.code === '42P01') return res.status(503).json({ error: "Voting is temporarily unavailable" });
+        console.error("difficulty vote error:", err.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
 // Get solution stats (likes, dislikes, stars, comments)
 app.get("/api/solutions/:problemName/:language/stats", async (req, res) => {
     const { problemName, language } = req.params;
@@ -1495,16 +1529,12 @@ app.get("/api/problems/search", (req, res) => {
 //
 // The upload and create-problem forms ask people to write a solution to a problem the site
 // has never actually shown them; this is what puts the statement under the input. Maths is
-// rendered to SVG here rather than in the browser so neither form has to load MathJax.
-// Rendering maths to SVG is the expensive part, so results are cached — but bounded and
-// with a TTL, not indefinitely. Statement SVG runs to tens of kilobytes and there are 4,046
-// of them, which is real memory on a process that already sits at 227 MB; and the
-// statements do change under a running server when scripts/repair-ru-latex.js re-typesets
-// a row, so a cache that never expires would serve the flattened version until the next
-// restart.
-const STATEMENT_CACHE_MAX = 600;
-const STATEMENT_CACHE_TTL = 30 * 60 * 1000;
-const statementCache = new Map();
+// rendered to SVG server-side rather than in the browser so neither form has to load MathJax.
+//
+// The rendering and its bounded, TTL'd cache live in lib/statementRender.js — shared with
+// the problem finder's batch endpoint (problems.js) so there is only ever one copy of a
+// given statement's SVG in memory.
+const { getStatement } = require("./lib/statementRender");
 
 app.get("/api/problem/:name/statement", async (req, res) => {
     const name = req.params.name;
@@ -1513,56 +1543,9 @@ app.get("/api/problem/:name/statement", async (req, res) => {
         return res.status(400).json({ error: "bad problem name" });
     }
 
-    const key = `${name}:${lang}`;
-    const hit = statementCache.get(key);
-    if (hit && Date.now() - hit.at < STATEMENT_CACHE_TTL) return res.json(hit.payload);
-
     try {
-        const { rows } = await pool.query(
-            `SELECT statement_tex, figures, starred, source, needs_review
-               FROM problem_statements WHERE problem_name = $1 AND lang = $2`,
-            [name, lang]
-        );
-        if (!rows.length) return res.status(404).json({ error: "no statement on record" });
-
-        const row = rows[0];
-        const { parseMarkdown, transformImageMarkdown } = require("./utils");
-        const { renderMathInHtml } = require("./mathRender");
-
-        // Order matters and matches post.js:103 — transformImageMarkdown consumes the
-        // site's "![alt|WxH,scale%](…)" syntax, so it has to see the raw markdown. Run it
-        // after marked() and the dimensions end up as literal text in the alt attribute.
-        //
-        // It then emits "../../img/…", which resolves only from a two-segment URL like
-        // /en/1.1.1. On /upload that is a 404, so the paths are made absolute here.
-        let html = parseMarkdown(transformImageMarkdown(row.statement_tex))
-            .replace(/(src|srcset)="\.\.\/\.\.\/img\//g, '$1="/img/');
-        html = renderMathInHtml(html);
-
-        // Statements recovered from the book carry no image markdown, but many of them do
-        // have a figure sitting on disk that nothing currently references. Attach it when
-        // the text itself did not already bring one.
-        if (!/<img/i.test(html) && row.figures.length) {
-            html += row.figures
-                .map((src) => `<figure><img src="${src}" alt="" loading="lazy" /></figure>`)
-                .join("");
-        }
-
-        const payload = {
-            name,
-            lang,
-            html,
-            figures: row.figures,
-            starred: row.starred,
-            // Statements recovered from the printed book still have flattened maths; the UI
-            // says so rather than presenting them as clean.
-            needsReview: row.needs_review,
-        };
-        // Map preserves insertion order, so the oldest key is the first one it yields.
-        if (statementCache.size >= STATEMENT_CACHE_MAX) {
-            statementCache.delete(statementCache.keys().next().value);
-        }
-        statementCache.set(key, { at: Date.now(), payload });
+        const payload = await getStatement(pool, name, lang);
+        if (!payload) return res.status(404).json({ error: "no statement on record" });
         res.json(payload);
     } catch (err) {
         console.error("statement lookup failed:", err.message);
@@ -2611,6 +2594,10 @@ app.use('/recommendations', recommendationsRouter);
 
 // Problem Bank
 app.use('/bank', bankRouter);
+
+// Problem difficulty finder + methodology
+app.use('/:lang(en|ru)/problems', problemsRouter);
+app.use('/problems', problemsRouter);
 
 // Discussion Forum
 app.use('/discuss', forumRouter);

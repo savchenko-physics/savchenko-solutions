@@ -216,7 +216,26 @@ async function generateStaticSitemap() {
         { loc: `${BASE_URL}/recommendations/institutional_news_noninstructional`, changefreq: 'weekly', priority: 0.6, lastmod: now },
         { loc: `${BASE_URL}/recommendations/popular_science`, changefreq: 'weekly', priority: 0.6, lastmod: now },
         { loc: `${BASE_URL}/recommendations/mathematics`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+
+        // Problem difficulty finder + methodology
+        { loc: `${BASE_URL}/problems`, changefreq: 'weekly', priority: 0.7, lastmod: now },
+        { loc: `${BASE_URL}/problems/methodology`, changefreq: 'monthly', priority: 0.4, lastmod: now },
     ];
+
+    // Add one landing page per canonical difficulty tag (scripts/canonicalize-tags.js)
+    try {
+        const taxonomy = require('./data/topic-taxonomy.json');
+        (taxonomy.tags || []).forEach((t) => {
+            entries.push({
+                loc: `${BASE_URL}/problems/topic/${t.key}`,
+                changefreq: 'monthly',
+                priority: 0.5,
+                lastmod: now,
+            });
+        });
+    } catch (err) {
+        // Taxonomy not built yet
+    }
 
     // Add published study paths
     try {

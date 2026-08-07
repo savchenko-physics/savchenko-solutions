@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? 'Найти задачи по сложности' : 'Find problems by difficulty' %> — Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru'
+        ? 'Фильтруйте и сортируйте все 2023 задачи Савченко по сложности, теме и отдельным навыкам — идея, математика, вычисления, красота решения и другие.'
+        : 'Filter and sort all 2,023 Savchenko problems by difficulty, topic and individual skill axes — insight, mathematics, computation, elegance and more.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems" />
+
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <!-- Card statement previews arrive pre-rendered as SVG math from
+         GET /api/problem/:name/statement (index.js — the same endpoint the upload page
+         uses), fetched per card after it renders. This stylesheet styles that SVG output;
+         no client-side MathJax is loaded on this page. -->
+    <link rel="stylesheet" href="/css/mathjax.css" />
+    <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+
+    <style>
+        html, body { height: auto; }
+        body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+        body > footer { flex-shrink: 0; margin-top: auto; }
+
+        .pf-wrap { width: 100%; max-width: 1500px; margin: 0 auto; padding: 20px 24px 40px; flex: 1 0 auto; }
+        .pf-crumb { font-size: 13px; color: #6c757d; margin-bottom: 6px; }
+        .pf-crumb a { color: #1a5276; text-decoration: none; }
+        .pf-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
+        .pf-tabs { display: flex; gap: 0.5rem; margin: 10px 0 6px; border-bottom: 1px solid #dee2e6; }
+        .pf-tab { padding: 8px 4px; font-size: 13.5px; color: #6c757d; text-decoration: none; border-bottom: 2px solid transparent; }
+        .pf-tab.on { color: #1a1a2e; font-weight: 600; border-bottom-color: #1a1a2e; }
+        .pf-stat-line { font-size: 12.5px; color: #6c757d; margin: 10px 0 14px; }
+
+        .pf-records { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .pf-record-chip {
+            font-size: 12.5px; padding: 5px 11px; border-radius: 6px;
+            border: 1px solid #dee2e6; background: #f8f9fa; color: #1a5276; text-decoration: none; cursor: pointer;
+        }
+        .pf-record-chip:hover { background: #eef1f4; color: #0d3b54; }
+        .pf-record-chip.pf-clear { color: #c0392b; border-color: #eccfcb; }
+
+        .pf-layout { display: flex; gap: 22px; align-items: flex-start; }
+        .pf-filters {
+            flex: 0 0 270px; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa;
+            padding: 14px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto;
+        }
+        .pf-filter-group { margin-bottom: 16px; }
+        .pf-filter-group:last-child { margin-bottom: 0; }
+        .pf-filter-label { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #6c757d; margin-bottom: 6px; }
+        .pf-search-input {
+            height: 40px; width: 100%; border: 1px solid #dee2e6; border-radius: 6px; padding: 0 12px; font-size: 14px; box-sizing: border-box;
+        }
+        .pf-search-input:focus { outline: none; border-color: #1a1a2e; }
+
+        .pf-range-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 12.5px; color: #2d2d2d; margin-bottom: 2px; }
+        .pf-range-val { font-size: 11.5px; color: #6c757d; font-variant-numeric: tabular-nums; }
+        /* The whole track is the drag surface (not just the native thumb pixel) — a plain
+           input[type=range]'s hit-testing is too small/fragile for two overlapping handles,
+           so dragging is handled manually in problems-finder.js via pointer capture on this
+           element; the <input>s underneath are purely visual (pointer-events: none). */
+        .pf-range-track { position: relative; height: 26px; cursor: pointer; touch-action: none; }
+        .pf-range-track::before {
+            content: ''; position: absolute; top: 11px; left: 0; right: 0; height: 4px;
+            background: #dee2e6; border-radius: 2px;
+        }
+        .pf-range-fill {
+            position: absolute; top: 11px; height: 4px; background: var(--ss-navy, #1a1a2e);
+            border-radius: 2px; pointer-events: none; left: 0; right: 100%;
+        }
+        .pf-range-input {
+            position: absolute; width: 100%; height: 14px; top: 6px; left: 0; margin: 0; padding: 0;
+            -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none;
+        }
+        .pf-range-input::-webkit-slider-thumb {
+            -webkit-appearance: none; pointer-events: none; width: 16px; height: 16px;
+            border-radius: 50%; background: #1a1a2e; margin-top: -6px; box-shadow: 0 0 0 2px #fff;
+        }
+        .pf-range-input::-moz-range-thumb { pointer-events: none; width: 16px; height: 16px; border-radius: 50%; background: #1a1a2e; border: none; box-shadow: 0 0 0 2px #fff; }
+        .pf-range-input::-webkit-slider-runnable-track { width: 100%; height: 4px; background: transparent; }
+        .pf-range-input::-moz-range-track { width: 100%; height: 4px; background: transparent; }
+
+        .pf-check-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #2d2d2d; padding: 3px 0; }
+        .pf-seg { display: flex; border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden; }
+        .pf-seg button {
+            flex: 1; border: none; background: #fff; padding: 6px 4px; font-size: 11.5px; color: #6c757d; cursor: pointer;
+            border-right: 1px solid #dee2e6;
+        }
+        .pf-seg button:last-child { border-right: none; }
+        .pf-seg button.on { background: #1a1a2e; color: #fff; }
+
+        .pf-chapter-list { max-height: 160px; overflow-y: auto; border: 1px solid #eceff1; border-radius: 6px; padding: 6px 8px; background: #fff; }
+
+        .pf-tag-toggle { display: flex; gap: 4px; margin-bottom: 6px; }
+        .pf-tag-toggle button { flex: 1; font-size: 11px; padding: 3px 6px; border: 1px solid #dee2e6; background: #fff; color: #6c757d; cursor: pointer; border-radius: 4px; }
+        .pf-tag-toggle button.on { background: #1a5276; color: #fff; border-color: #1a5276; }
+        .pf-tag-search { height: 30px; width: 100%; border: 1px solid #dee2e6; border-radius: 5px; padding: 0 8px; font-size: 12.5px; margin-bottom: 6px; box-sizing: border-box; }
+        .pf-tag-list { max-height: 220px; overflow-y: auto; border: 1px solid #eceff1; border-radius: 6px; padding: 6px 8px; background: #fff; }
+        .pf-tag-row { display: flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 2px 0; }
+        .pf-tag-row .n { margin-left: auto; color: #adb5bd; font-size: 11px; }
+
+        .pf-advanced summary { cursor: pointer; font-size: 12.5px; color: #1a5276; list-style: none; padding: 4px 0; }
+        .pf-advanced summary::-webkit-details-marker { display: none; }
+        .pf-advanced summary::before { content: '\2192  '; }
+        .pf-advanced[open] summary::before { content: '\2193  '; }
+        .pf-advanced h4 { font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #6c757d; margin: 10px 0 4px; }
+
+        .pf-clear-btn {
+            width: 100%; margin-top: 14px; height: 34px; border-radius: 6px; border: 1px solid #dee2e6;
+            background: #fff; color: #6c757d; font-size: 12.5px; cursor: pointer;
+        }
+        .pf-clear-btn:hover { background: #f1f3f5; }
+
+        .pf-results { flex: 1 1 auto; min-width: 0; }
+        .pf-result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12.5px; color: #6c757d; gap: 10px; flex-wrap: wrap; }
+        .pf-sort-label { color: #6c757d; }
+        .pf-sort-select {
+            height: 34px; border: 1px solid #dee2e6; border-radius: 6px; padding: 0 8px; font-size: 12.5px;
+            color: #2d2d2d; background: #fff;
+        }
+
+        /* ── Result cards: heat-coloured accent border, tags at the top (clickable filter
+           buttons — active tags render green), then the actual rendered problem statement.
+           No section/time badges: the chapter.section is already the leading two segments
+           of the problem number, and the AI's minute estimate reads as more precise than it
+           is once you're looking at the actual problem instead of a table cell. ── */
+        .pf-card {
+            border: 1px solid #dee2e6; border-left-width: 5px; border-radius: 8px; background: #fff;
+            padding: 16px 18px; margin-bottom: 14px;
+        }
+        .pf-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .pf-card-tag {
+            font-size: 11px; padding: 3px 9px; border-radius: 12px; border: 1px solid #dee2e6;
+            background: #f8f9fa; color: #6c757d; cursor: pointer; white-space: nowrap;
+        }
+        .pf-card-tag:hover { border-color: #1a5276; color: #1a5276; }
+        .pf-card-tag.active { background: #27ae60; color: #fff; border-color: #27ae60; }
+        .pf-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .pf-card-name { font-family: Inter, sans-serif; font-weight: 700; font-size: 16px; color: #1a5276; text-decoration: none; }
+        .pf-card-name:hover { color: #0d3b54; text-decoration: underline; }
+        /* Raised like a footnote marker (LaTeX's $^*$), not sitting on the baseline — a
+           centred asterisk at body size reads as a bullet, not Savchenko's own mark. */
+        .pf-star { font-weight: 700; color: #1a1a2e; vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
+        .pf-card-rating {
+            font-family: Inter, sans-serif; font-weight: 700; font-size: 13px; padding: 2px 9px;
+            border-radius: 4px; color: #fff;
+        }
+        .pf-card-status { display: flex; gap: 3px; margin-left: auto; font-size: 10px; }
+        .pf-card-status span { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 3px; }
+        .pf-card-status .en { background: #e8f0fe; color: #1a5276; }
+        .pf-card-status .ru { background: #fef3e6; color: #b5651d; }
+        .pf-card-statement {
+            font-family: "Latin Modern Roman", "STIX Two Math", Georgia, serif; font-size: 14.5px; line-height: 1.65; color: #2d2d2d;
+            min-height: 1.4em;
+        }
+        .pf-card-statement img { max-width: 100%; height: auto; }
+        .pf-card-statement p:last-child { margin-bottom: 0; }
+        .pf-card-statement.is-loading { color: #adb5bd; font-family: inherit; font-style: italic; font-size: 13px; }
+        .pf-card-foot { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f3f5; font-size: 12px; color: #6c757d; }
+        .pf-card-vote { }
+        .pf-card-open { margin-left: auto; color: #1a5276; text-decoration: none; }
+        .pf-card-open:hover { color: #0d3b54; text-decoration: underline; }
+        .pf-none { color: #adb5bd; font-size: 12px; }
+
+        .pf-load-more { display: block; width: 100%; margin-top: 6px; height: 42px; border-radius: 8px; border: 1px solid #dee2e6; background: #f8f9fa; color: #1a1a2e; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+        .pf-load-more:hover { background: #eef1f4; }
+        .pf-load-more[hidden] { display: none; }
+
+        .pf-empty { padding: 40px 0; text-align: center; color: #6c757d; font-size: 13.5px; }
+        .pf-unavailable { padding: 40px; text-align: center; color: #6c757d; font-size: 14px; border: 1px solid #dee2e6; border-radius: 8px; }
+        .pf-load-error { padding: 24px; text-align: center; border: 1px solid #eccfcb; border-radius: 8px; background: #fdf2f0; }
+        .pf-load-error p { margin: 0 0 10px; color: #c0392b; font-size: 13.5px; }
+        .pf-load-error button { height: 36px; padding: 0 18px; border-radius: 6px; border: none; background: #1a1a2e; color: #fff; font-size: 13px; cursor: pointer; }
+        .pf-load-error button:hover { background: #0d3b54; }
+        .pf-load-error[hidden] { display: none; }
+
+        .pf-heat-1 { border-left-color: #ffffcc; } .pf-heat-2 { border-left-color: #ffeda0; } .pf-heat-3 { border-left-color: #fed976; }
+        .pf-heat-4 { border-left-color: #feb24c; } .pf-heat-5 { border-left-color: #fd8d3c; } .pf-heat-6 { border-left-color: #fc4e2a; }
+        .pf-heat-7 { border-left-color: #e31a1c; } .pf-heat-8 { border-left-color: #bd0026; } .pf-heat-9 { border-left-color: #800026; }
+        .pf-heat-bg-1 { background: #ffffcc; } .pf-heat-bg-2 { background: #ffeda0; } .pf-heat-bg-3 { background: #fed976; }
+        .pf-heat-bg-4 { background: #feb24c; } .pf-heat-bg-5 { background: #fd8d3c; } .pf-heat-bg-6 { background: #fc4e2a; }
+        .pf-heat-bg-7 { background: #e31a1c; } .pf-heat-bg-8 { background: #bd0026; } .pf-heat-bg-9 { background: #800026; }
+        .pf-heat-bg-1, .pf-heat-bg-2, .pf-heat-bg-3, .pf-heat-bg-4 { color: #2d2d2d; }
+        .pf-heat-bg-5, .pf-heat-bg-6, .pf-heat-bg-7, .pf-heat-bg-8, .pf-heat-bg-9 { color: #fff; }
+        .pf-heat-none { background: #adb5bd; color: #fff; }
+
+        @media (max-width: 900px) {
+            .pf-layout { flex-direction: column; }
+            .pf-filters { position: static; flex: 1 1 auto; max-height: none; width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="pf-wrap">
+    <div class="pf-crumb"><a href="/<%= lang %>">Savchenko Solutions</a>&nbsp;/&nbsp;<%= lang === 'ru' ? 'Задачи по сложности' : 'Problems by difficulty' %></div>
+    <h1 class="pf-h1"><%= lang === 'ru' ? 'Найти задачи' : 'Find problems' %></h1>
+
+    <div class="pf-tabs">
+        <a class="pf-tab on" href="/<%= lang %>/problems"><%= lang === 'ru' ? 'Найти задачи' : 'Find problems' %></a>
+        <a class="pf-tab" href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
+    </div>
+
+    <% if (!dataset) { %>
+    <div class="pf-unavailable"><%= lang === 'ru' ? 'Данные о сложности временно недоступны.' : 'Difficulty data is temporarily unavailable.' %></div>
+    <% } else { %>
+
+    <div class="pf-records">
+        <button class="pf-record-chip" data-preset="hardest"><%= lang === 'ru' ? 'Сложнее всего' : 'Hardest' %></button>
+        <button class="pf-record-chip" data-preset="easiest"><%= lang === 'ru' ? 'Легче всего' : 'Easiest' %></button>
+        <button class="pf-record-chip" data-preset="quickest"><%= lang === 'ru' ? 'Быстрее всего' : 'Quickest' %></button>
+        <button class="pf-record-chip" data-preset="elegant"><%= lang === 'ru' ? 'Красивее всего' : 'Most elegant' %></button>
+        <button class="pf-record-chip" data-preset="starred"><%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></button>
+        <button class="pf-record-chip pf-clear" data-preset="clear"><%= lang === 'ru' ? 'Сбросить всё' : 'Clear all' %></button>
+    </div>
+
+    <div class="pf-layout">
+        <aside class="pf-filters" id="pfFilters">
+            <div class="pf-filter-group">
+                <div class="pf-filter-label"><%= lang === 'ru' ? 'Поиск' : 'Search' %></div>
+                <input type="text" class="pf-search-input" id="pfSearch" placeholder="<%= lang === 'ru' ? 'Номер задачи, тема...' : 'Problem number, topic...' %>" />
+            </div>
+
+            <div class="pf-filter-group">
+                <div class="pf-range-head"><span><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span><span class="pf-range-val" id="pfCalibVal"><%= ratingFloor %>–<%= ratingCeil %></span></div>
+                <div class="pf-range-track">
+                    <div class="pf-range-fill"></div>
+                    <input type="range" min="<%= ratingFloor %>" max="<%= ratingCeil %>" value="<%= ratingFloor %>" step="<%= ratingStep %>" class="pf-range-input" id="pfCalibLo" />
+                    <input type="range" min="<%= ratingFloor %>" max="<%= ratingCeil %>" value="<%= ratingCeil %>" step="<%= ratingStep %>" class="pf-range-input" id="pfCalibHi" />
+                </div>
+            </div>
+
+            <div class="pf-filter-group">
+                <div class="pf-range-head"><span><%= lang === 'ru' ? 'Время решения, мин' : 'Solve time, min' %></span><span class="pf-range-val" id="pfMinutesVal">0–180+</span></div>
+                <div class="pf-range-track">
+                    <div class="pf-range-fill"></div>
+                    <input type="range" min="0" max="180" value="0" step="5" class="pf-range-input" id="pfMinutesLo" />
+                    <input type="range" min="0" max="180" value="180" step="5" class="pf-range-input" id="pfMinutesHi" />
+                </div>
+            </div>
+
+            <div class="pf-filter-group">
+                <label class="pf-check-row"><input type="checkbox" id="pfStarred" /> <%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></label>
+                <% if (userId) { %>
+                <label class="pf-check-row"><input type="checkbox" id="pfBookmarked" /> <%= lang === 'ru' ? 'Мои закладки' : 'My bookmarks' %></label>
+                <% } %>
+            </div>
+
+            <div class="pf-filter-group">
+                <div class="pf-filter-label"><%= lang === 'ru' ? 'Язык решения' : 'Solution language' %></div>
+                <div class="pf-seg" id="pfLangSeg">
+                    <button data-val="any" class="on"><%= lang === 'ru' ? 'Все' : 'Any' %></button>
+                    <button data-val="en">EN</button>
+                    <button data-val="ru">RU</button>
+                    <button data-val="none"><%= lang === 'ru' ? 'Нет' : 'Unsolved' %></button>
+                </div>
+            </div>
+
+            <div class="pf-filter-group">
+                <div class="pf-filter-label"><%= lang === 'ru' ? 'Главы' : 'Chapters' %></div>
+                <div class="pf-chapter-list" id="pfChapterList">
+                    <% for (const num of Object.keys(dataset.chapters)) { %>
+                    <label class="pf-check-row"><input type="checkbox" class="pf-chapter-cb" value="<%= num %>" /> <%= num %>. <%= dataset.chapters[num] %></label>
+                    <% } %>
+                </div>
+            </div>
+
+            <div class="pf-filter-group">
+                <div class="pf-filter-label"><%= lang === 'ru' ? 'Темы' : 'Topics' %></div>
+                <div class="pf-tag-toggle" id="pfTagMode">
+                    <button data-val="or" class="on"><%= lang === 'ru' ? 'ЛЮБАЯ из тем' : 'ANY of these' %></button>
+                    <button data-val="and"><%= lang === 'ru' ? 'ВСЕ темы' : 'ALL of these' %></button>
+                </div>
+                <input type="text" class="pf-tag-search" id="pfTagSearch" placeholder="<%= lang === 'ru' ? 'Фильтр списка тем...' : 'Filter topic list...' %>" />
+                <div class="pf-tag-list" id="pfTagList"></div>
+            </div>
+
+            <details class="pf-advanced">
+                <summary><%= lang === 'ru' ? 'Отдельные навыки' : 'Individual skill axes' %></summary>
+                <div id="pfAxisFilters">
+                    <h4><%= lang === 'ru' ? 'Чего стоит' : 'What it costs' %></h4>
+                    <% axisMeta.cost.forEach(function(a) { %>
+                    <div class="pf-range-head"><span><%= lang === 'ru' ? a.labelRu : a.labelEn %></span><span class="pf-range-val" data-axis-val="<%= a.key %>">0–100</span></div>
+                    <div class="pf-range-track">
+                        <div class="pf-range-fill"></div>
+                        <input type="range" min="0" max="100" value="0" class="pf-range-input pf-axis-lo" data-axis="<%= a.key %>" />
+                        <input type="range" min="0" max="100" value="100" class="pf-range-input pf-axis-hi" data-axis="<%= a.key %>" />
+                    </div>
+                    <% }); %>
+                    <h4><%= lang === 'ru' ? 'Форма задачи' : 'Shape of the problem' %></h4>
+                    <% axisMeta.shape.forEach(function(a) { %>
+                    <div class="pf-range-head"><span><%= lang === 'ru' ? a.labelRu : a.labelEn %></span><span class="pf-range-val" data-axis-val="<%= a.key %>">0–100</span></div>
+                    <div class="pf-range-track">
+                        <div class="pf-range-fill"></div>
+                        <input type="range" min="0" max="100" value="0" class="pf-range-input pf-axis-lo" data-axis="<%= a.key %>" />
+                        <input type="range" min="0" max="100" value="100" class="pf-range-input pf-axis-hi" data-axis="<%= a.key %>" />
+                    </div>
+                    <% }); %>
+                    <h4><%= lang === 'ru' ? 'Что даёт' : 'What it repays' %></h4>
+                    <% axisMeta.reward.forEach(function(a) { %>
+                    <div class="pf-range-head"><span><%= lang === 'ru' ? a.labelRu : a.labelEn %></span><span class="pf-range-val" data-axis-val="<%= a.key %>">0–100</span></div>
+                    <div class="pf-range-track">
+                        <div class="pf-range-fill"></div>
+                        <input type="range" min="0" max="100" value="0" class="pf-range-input pf-axis-lo" data-axis="<%= a.key %>" />
+                        <input type="range" min="0" max="100" value="100" class="pf-range-input pf-axis-hi" data-axis="<%= a.key %>" />
+                    </div>
+                    <% }); %>
+                </div>
+            </details>
+
+            <button class="pf-clear-btn" id="pfClearBtn"><%= lang === 'ru' ? 'Сбросить фильтры' : 'Clear filters' %></button>
+        </aside>
+
+        <main class="pf-results">
+            <div class="pf-result-bar">
+                <span id="pfResultCount"><%= lang === 'ru' ? 'Показано' : 'Showing' %> <%= ssrRows.length %> <%= lang === 'ru' ? 'из' : 'of' %> <%= total %></span>
+                <span>
+                    <span class="pf-sort-label"><%= lang === 'ru' ? 'Сортировка:' : 'Sort:' %></span>
+                    <select class="pf-sort-select" id="pfSortSelect">
+                        <option value=""><%= lang === 'ru' ? 'По номеру' : 'Problem order' %></option>
+                        <option value="calibrated:desc"><%= lang === 'ru' ? 'Сложнее сначала' : 'Hardest first' %></option>
+                        <option value="calibrated:asc"><%= lang === 'ru' ? 'Легче сначала' : 'Easiest first' %></option>
+                        <option value="elegance:desc"><%= lang === 'ru' ? 'Красивее сначала' : 'Most elegant first' %></option>
+                        <option value="vote_avg:desc"><%= lang === 'ru' ? 'Выше оценка читателей' : "Highest readers' rating" %></option>
+                    </select>
+                </span>
+            </div>
+            <%
+            const heatOf = (c) => c == null ? null : Math.min(9, Math.max(1, Math.ceil((c / 100) * 9) || 1));
+            // dataset.tags is [key, labelEn, labelRu] — SSR cards need the same localized
+            // label the client JS shows after hydration, not the raw snake_case key.
+            const tagLabelMap = {};
+            dataset.tags.forEach(function(t) { tagLabelMap[t[0]] = lang === 'ru' ? t[2] : t[1]; });
+            %>
+            <div id="pfCards">
+                <% ssrRows.forEach(function(r) {
+                    const heat = heatOf(r[5]); const rating = toRating(r[5]);
+                    const isCanonical = r[8].length > 0;
+                    const tagSource = isCanonical ? r[8] : r[7];
+                %>
+                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>">
+                    <% if (tagSource.length) { %>
+                    <div class="pf-card-tags">
+                        <% tagSource.forEach(function(t) { %><button type="button" class="pf-card-tag" data-tag="<%= t %>"><%= isCanonical ? (tagLabelMap[t] || t) : t %></button><% }); %>
+                    </div>
+                    <% } %>
+                    <div class="pf-card-head">
+                        <a class="pf-card-name" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a>
+                        <% if (r[4] === 1) { %><span class="pf-star" title="Asterisked by Savchenko">&#8727;</span><% } %>
+                        <% if (rating != null) { %><span class="pf-card-rating <%= heat ? 'pf-heat-bg-' + heat : 'pf-heat-none' %>"><%= rating %></span><% } %>
+                        <span class="pf-card-status">
+                            <% if (r[11]) { %><span class="en" title="English solution">EN</span><% } %>
+                            <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
+                        </span>
+                    </div>
+                    <div class="pf-card-statement is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
+                    <div class="pf-card-foot">
+                        <span class="pf-card-vote"><% if (r[10]) { %><%= r[9] %>/10 (<%= r[10] %> <%= lang === 'ru' ? 'оценок' : 'ratings' %>)<% } else { %><span class="pf-none"><%= lang === 'ru' ? 'Нет оценок читателей' : 'No reader ratings yet' %></span><% } %></span>
+                        <a class="pf-card-open" href="/<%= lang %>/<%= r[0] %>"><%= lang === 'ru' ? 'Открыть решение' : 'Open solution' %> &rarr;</a>
+                    </div>
+                </div>
+                <% }); %>
+            </div>
+            <div class="pf-empty" id="pfEmpty" hidden><%= lang === 'ru' ? 'Ни одна задача не соответствует фильтрам.' : 'No problems match these filters.' %></div>
+            <div class="pf-load-error" id="pfLoadError" hidden>
+                <p><%= lang === 'ru' ? 'Не удалось загрузить список задач.' : 'Could not load the problem list.' %></p>
+                <button type="button" id="pfRetryBtn"><%= lang === 'ru' ? 'Повторить' : 'Retry' %></button>
+            </div>
+            <button type="button" class="pf-load-more" id="pfLoadMore" hidden><%= lang === 'ru' ? 'Показать ещё' : 'Load more' %></button>
+        </main>
+    </div>
+
+    <!-- The filterable dataset is fetched (js/problems-finder.js), not embedded here — see
+         problems.js's GET /data comment for why. Only small values are inlined. -->
+    <script type="application/json" id="pfBookmarked"><%- JSON.stringify(bookmarked).replace(/</g, '\\u003c') %></script>
+    <script>
+        window.__PF_QUERY__ = <%- JSON.stringify(query || {}).replace(/</g, '\\u003c') %>;
+        window.__PF_LANG__ = <%- JSON.stringify(lang) %>;
+        window.__PF_DATA_URL__ = <%- JSON.stringify(`/${lang}/problems/data`) %>;
+        // Server-authoritative, so the number of cards rendered here, the client's page
+        // size and the statement-batch size can never drift apart again.
+        window.__PF_PAGE_SIZE__ = <%- JSON.stringify(pageSize) %>;
+    </script>
+    <script src="<%= asset('/js/problems-finder.js') %>" defer></script>
+    <% } %>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>

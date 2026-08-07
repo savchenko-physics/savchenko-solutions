@@ -67,10 +67,29 @@
                 gap: 20px 32px; align-items: start; }
     /* The rubric grid is the centrepiece — cells get real presence rather than
        reading as a footnote under a paragraph of explanation. */
-    .rec-grid-main { gap: 30px 36px; margin-bottom: 10px; align-items: start; }
+    /* Column count comes from the rubric count (see gridColumns in
+       recommendations.js) so the final row is always full. auto-fit would fit as
+       many as the width allows and leave the remainder as a hole. */
+    .rec-grid-main { gap: 30px 36px; margin-bottom: 10px; align-items: start;
+        grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); }
+    @media (max-width: 1240px) { .rec-grid-main { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 900px)  { .rec-grid-main { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 620px)  { .rec-grid-main { grid-template-columns: minmax(0, 1fr); } }
     .rec-grid-main .rec-cell { border-left: 2px solid #dee2e6; padding-left: 16px; }
     .rec-grid-main .rec-rubric-title { font-size: 19px; margin-bottom: 8px; }
     .rec-grid-main .rec-rubric-items { font-size: 16px; line-height: 1.8; color: #495057; }
+    /* Bands below the first one: same structure, one step down in weight. They
+       are secondary, not invisible — an earlier version set them in 13.5px
+       inline text and readers went whole sessions without noticing them. */
+    .rec-band-soft { gap: 22px 36px; }
+    .rec-band-soft .rec-cell { border-left-color: #eceff2 !important; }
+    .rec-band-soft .rec-rubric-title { font-size: 16.5px !important; margin-bottom: 5px; }
+    .rec-band-soft .rec-rubric-items { font-size: 14.5px !important; line-height: 1.7 !important; color: #6c757d; }
+    .rec-also { margin-top: 26px; padding-top: 4px; border-top: 1px solid #eceff2; }
+    .rec-also-items { font-size: 14.5px; line-height: 1.9; }
+    .rec-also-where { color: #adb5bd; font-size: 13px; }
+    .rec-also-where a { color: #8c959f !important; }
+    .rec-band-note { font-size: 13px; color: #8c959f; margin: 0 0 13px; max-width: 66ch; }
     .rec-more { white-space: nowrap; color: #8c959f !important; font-size: 14px; }
     .rec-more:hover { color: #1a5276 !important; }
     .rec-rubric-title { font-size: 16.5px; font-weight: 600; margin: 0 0 3px; line-height: 1.3; }

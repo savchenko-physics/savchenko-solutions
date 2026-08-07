@@ -11,6 +11,9 @@ const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTI
 const { getSolutionJudgingWidget, isContestOrganizer } = require("./contestJudge");
 const { renderMathInHtml } = require("./mathRender");
 const { isCountable } = require("./botgate");
+const { label: axisLabel, explain: axisExplain, bucketWord, WIDGET_COST_KEYS, WIDGET_REWARD_KEYS } = require("./lib/difficultyAxes");
+const { toRating } = require("./lib/difficultyRating");
+const { ruVotes } = require("./lib/ruPlural");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -93,14 +96,10 @@ async function renderPost(req, res) {
         // Prepare the content for rendering
         let fileContents = fs.readFileSync(filePath, "utf8").replace(/\*/g, "\\*").replace(/~/g, "\\~");
 
-        // Handle both inline and display math LaTeX
-        fileContents = fileContents.replace(/\$\$([\s\S]+?)\$\$/g, (match, p1) => {
-            return '$$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$$';
-        });
-        fileContents = fileContents.replace(/\$([^\$\n]+?)\$/g, (match, p1) => {
-            return '$' + p1.replace(/\\,\s*/g, '\\\\, ').replace(/\\;\s*/g, '\\\\; ') + '$';
-        });
-
+        // The TeX spacing macros used to be protected here, per `$…$` span, which missed
+        // inline math spanning a line break, `\[…\]` and bare `\begin{equation}` blocks —
+        // every `\,` in those rendered as a comma. parseMarkdown now does it for the whole
+        // document, alongside the identical protection the math delimiters already had.
         fileContents = transformImageMarkdown(fileContents);
         const titleContent = getLineStatement(fileContents);
 
@@ -347,6 +346,39 @@ async function renderPost(req, res) {
             if (err.code !== '42P01') console.error('difficulty lookup:', err.message);
         }
 
+        // Reader difficulty votes (1-10) — a completely separate table from
+        // problem_difficulty, never blended into the AI's scores/calibrated. Only
+        // aggregated here, at display time.
+        const difficultyVotes = { avg: null, count: 0, mine: null };
+        try {
+            const { rows } = await pool.query(
+                `SELECT AVG(vote)::numeric(3,1) AS avg_vote, COUNT(*)::int AS vote_count
+                   FROM problem_difficulty_votes WHERE problem_name = $1`,
+                [name]
+            );
+            difficultyVotes.avg = rows[0]?.avg_vote || null;
+            difficultyVotes.count = rows[0]?.vote_count || 0;
+            if (req.session.userId) {
+                const mine = await pool.query(
+                    `SELECT vote FROM problem_difficulty_votes WHERE problem_name = $1 AND user_id = $2`,
+                    [name, req.session.userId]
+                );
+                difficultyVotes.mine = mine.rows[0]?.vote || null;
+            }
+        } catch (err) {
+            if (err.code !== '42P01') console.error('difficulty votes lookup:', err.message);
+        }
+
+        // The widget's two axis groups (see lib/difficultyAxes.js — same labels and
+        // explanations are reused by the methodology page and the problem finder, so
+        // they are computed once here rather than inline in the template).
+        const difficultyCostAxes = WIDGET_COST_KEYS.map((key) => ({
+            key, label: axisLabel(key, lang), explain: axisExplain(key, lang),
+        }));
+        const difficultyRewardAxes = WIDGET_REWARD_KEYS.map((key) => ({
+            key, label: axisLabel(key, lang), explain: axisExplain(key, lang),
+        }));
+
         // Brainstorm Room — rotating block (unified per problem, all languages).
         // Server-rendered on first paint (cached) so the hot page pays no extra
         // client round-trip. brainstormMode is the logged-in user's quiet-mode
@@ -449,6 +481,7 @@ async function renderPost(req, res) {
             problemBreadcrumbTitle,
             problemBreadcrumb,
             username: req.session.username || null,
+            userId: req.session.userId || null,
             title: seoTitle,
             content: html,
             totalViews,
@@ -465,6 +498,12 @@ async function renderPost(req, res) {
             relatedProblems,
             problemPaths,
             difficulty,
+            difficultyVotes,
+            ruVotes,
+            difficultyRating: difficulty ? toRating(difficulty.calibrated) : null,
+            difficultyCostAxes,
+            difficultyRewardAxes,
+            bucketWord,
             editHistory,
             brainstormMode,
             brainstormRelated,

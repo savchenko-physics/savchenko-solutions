@@ -98,11 +98,45 @@ maybe('every entry carries an id, a link and a summary', () => {
 });
 
 maybe('every assigned tag is backed by evidence', () => {
-    const missing = entriesOf(catalog)
-        .filter((e) => e.rubric && !(e.evidence || '').trim() && !e.lowConfidence)
-        .map((e) => e.id);
-    assert.strictEqual(missing.length, 0,
-        `${missing.length} entries carry a rubric with no supporting quote: ${missing.slice(0, 5).join(', ')}`);
+    // The two corpora ground their tags differently, and conflating them is what
+    // let internal crawl notes reach readers.
+    //
+    // A Telegram entry quotes a sampled post verbatim, so `evidence` is a real
+    // quote and is shown. A website has no equivalent: its note is an internal
+    // annotation someone wrote while running the crawl — "digitized published
+    // manual", "(verify: 000 on first probe)" — in English regardless of the
+    // reader's language. Those are grounding for US, not captions for a reader,
+    // so `evidence` is empty for websites and the note is kept in `note`.
+    //
+    // The gate is therefore per-corpus: something must still vouch for every
+    // tag, but the something differs.
+    const ungrounded = entriesOf(catalog).filter((e) => {
+        if (!e.rubric || e.lowConfidence) return false;
+        const backing = e.type === 'website' ? (e.note || '') : (e.evidence || '');
+        return !backing.trim();
+    }).map((e) => e.id);
+    assert.strictEqual(ungrounded.length, 0,
+        `${ungrounded.length} entries carry a rubric with nothing backing it: ${ungrounded.slice(0, 5).join(', ')}`);
+});
+
+maybe('no internal crawl scaffolding is shown to readers', () => {
+    // Regression test for what shipped: mipt.ru displayed "(verify: 000 on first
+    // probe)" and olimpiada.ru "DNS-override recovery crawl (main id stalled)" as
+    // their reader-facing captions on the live site.
+    const SCAFFOLDING = /\(verify\b|first probe|DNS-override|recovery crawl|stalled|automated fetch|data dump|already in sites\.yaml|search-discovery|\bTODO\b/i;
+    const leaked = entriesOf(catalog)
+        .filter((e) => SCAFFOLDING.test(e.evidence || ''))
+        .map((e) => `${e.id}: ${e.evidence}`);
+    assert.strictEqual(leaked.length, 0,
+        `${leaked.length} entries display crawl scaffolding: ${leaked.slice(0, 3).join(' | ')}`);
+});
+
+maybe('website captions are never raw registry notes', () => {
+    const sites = entriesOf(catalog).filter((e) => e.type === 'website');
+    assert.ok(sites.length > 0, 'no website entries to check');
+    const captioned = sites.filter((e) => (e.evidence || '').trim()).map((e) => e.id);
+    assert.strictEqual(captioned.length, 0,
+        `${captioned.length} websites would render a registry note as a quote: ${captioned.slice(0, 5).join(', ')}`);
 });
 
 maybe('rendered titles carry no emoji', () => {

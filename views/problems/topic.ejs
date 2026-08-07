@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= lang === 'ru' ? tagMeta.labelRu : tagMeta.labelEn %> <%= lang === 'ru' ? '— задачи Савченко' : 'problems' %> — Savchenko Solutions</title>
+    <meta name="description" content="<%= lang === 'ru' ? tagMeta.description : tagMeta.description %> <%= total %> <%= lang === 'ru' ? 'задач.' : 'problems.' %>" />
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems/topic/<%= tagMeta.key %>" />
+
+    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/design-system.css" />
+    <link rel="stylesheet" href="/css/main_page.css" />
+    <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+
+    <style>
+        html, body { height: auto; }
+        body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
+        body > footer { flex-shrink: 0; margin-top: auto; }
+        .pft-wrap { width: 100%; max-width: 900px; margin: 0 auto; padding: 20px 24px 40px; flex: 1 0 auto; }
+        .pft-crumb { font-size: 13px; color: #6c757d; margin-bottom: 6px; }
+        .pft-crumb a { color: #1a5276; text-decoration: none; }
+        .pft-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
+        .pft-desc { font-size: 14px; color: #6c757d; margin: 6px 0 4px; max-width: 640px; }
+        .pft-count { font-size: 12.5px; color: #6c757d; margin-bottom: 16px; }
+        .pft-count a { color: #1a5276; text-decoration: none; }
+        .pft-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
+        .pft-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: #6c757d; background: #f8f9fa; padding: 9px 10px; border-bottom: 1px solid #dee2e6; }
+        .pft-table td { padding: 8px 10px; border-bottom: 1px solid #f1f3f5; }
+        .pft-table tr:last-child td { border-bottom: none; }
+        .pft-pname { font-weight: 600; color: #1a5276; text-decoration: none; }
+        .pft-pname:hover { color: #0d3b54; text-decoration: underline; }
+        .pft-star { font-weight: 700; color: #1a1a2e; vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
+        .pft-badge { display: inline-block; min-width: 28px; text-align: center; font-weight: 700; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eceff1; color: #2d2d2d; }
+        .pft-none { color: #adb5bd; }
+        .pft-pager { display: flex; gap: 8px; margin-top: 16px; }
+        .pft-pager a { font-size: 13px; padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 6px; color: #1a5276; text-decoration: none; }
+        .pft-pager a:hover { background: #f8f9fa; }
+        .pft-empty { padding: 30px 0; text-align: center; color: #6c757d; }
+    </style>
+</head>
+<body>
+<%- include('../default/main_site_header') %>
+
+<div class="pft-wrap">
+    <div class="pft-crumb">
+        <a href="/<%= lang %>/problems"><%= lang === 'ru' ? 'Задачи по сложности' : 'Problems by difficulty' %></a>
+        &nbsp;/&nbsp;<%= lang === 'ru' ? tagMeta.labelRu : tagMeta.labelEn %>
+    </div>
+    <h1 class="pft-h1"><%= lang === 'ru' ? tagMeta.labelRu : tagMeta.labelEn %></h1>
+    <p class="pft-desc"><%= tagMeta.description %></p>
+    <div class="pft-count">
+        <%= total %> <%= lang === 'ru' ? 'задач' : 'problems' %>
+        &middot; <a href="/<%= lang %>/problems?tag=<%= tagMeta.key %>"><%= lang === 'ru' ? 'открыть в конструкторе фильтров' : 'open in the interactive finder' %></a>
+    </div>
+
+    <% if (!rows.length) { %>
+    <div class="pft-empty"><%= lang === 'ru' ? 'Задачи не найдены.' : 'No problems found.' %></div>
+    <% } else { %>
+    <table class="pft-table">
+        <thead><tr>
+            <th><%= lang === 'ru' ? 'Задача' : 'Problem' %></th>
+            <th><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></th>
+        </tr></thead>
+        <tbody>
+            <% rows.forEach(function(r) { %>
+            <tr>
+                <td><a class="pft-pname" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a><% if (r[4] === 1) { %><span class="pft-star">&#8727;</span><% } %></td>
+                <td><% if (r[5] != null) { %><span class="pft-badge"><%= toRating(r[5]) %></span><% } else { %><span class="pft-none">—</span><% } %></td>
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+    <% if (totalPages > 1) { %>
+    <div class="pft-pager">
+        <% if (page > 1) { %><a href="?page=<%= page - 1 %>">&larr; <%= lang === 'ru' ? 'Назад' : 'Previous' %></a><% } %>
+        <span style="font-size:13px;color:#6c757d;padding:6px 0;"><%= page %> / <%= totalPages %></span>
+        <% if (page < totalPages) { %><a href="?page=<%= page + 1 %>"><%= lang === 'ru' ? 'Далее' : 'Next' %> &rarr;</a><% } %>
+    </div>
+    <% } %>
+    <% } %>
+</div>
+
+<%- include('../default/modern_footer') %>
+</body>
+</html>

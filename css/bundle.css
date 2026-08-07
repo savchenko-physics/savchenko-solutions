@@ -747,6 +747,302 @@ pre {
 .online-dot--lg { width: 12px; height: 12px; border-width: 2px; }
 .online-dot--xl { width: 18px; height: 18px; border-width: 3px; }
 
+/* ── Contest quality-judging widget (solution page, organizers only) ──
+   Blind dual-judge evaluation card. Academic look: flat, thin borders,
+   design tokens only. Shares the .cj-* namespace with the widget markup. */
+.cj-widget {
+  border: 1px solid var(--ss-border-card);
+  border-radius: 8px;
+  background: var(--ss-card-bg);
+  padding: 1.1rem 1.25rem;
+  margin: 1.75rem 0;
+}
+.cj-widget.cj-both { border-color: #27ae60; }
+.cj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.cj-title { font-family: Inter, sans-serif; font-size: 16px; font-weight: 600; color: var(--ss-navy); margin: 0; }
+.cj-sub { font-size: 12.5px; color: var(--ss-text-secondary); margin: 2px 0 0; }
+.cj-combined { text-align: center; min-width: 84px; }
+.cj-combined-value { display: block; font-family: Inter, sans-serif; font-size: 26px; font-weight: 800; line-height: 1; color: #adb5bd; }
+.cj-widget.cj-both .cj-combined-value { color: var(--ss-navy); }
+.cj-combined-label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ss-text-secondary); margin-top: 3px; }
+
+.cj-meta { display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; align-items: center; font-size: 13px; color: var(--ss-text-secondary); margin: 0.75rem 0 0.9rem; }
+.cj-meta a { color: var(--ss-link); text-decoration: none; }
+.cj-meta strong { color: var(--ss-body-text); }
+.cj-table-link { margin-left: auto; font-size: 13px; color: var(--ss-link); text-decoration: none; }
+.cj-table-link:hover { color: var(--ss-link-hover); }
+
+.cj-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem 1.25rem; }
+@media (max-width: 560px) { .cj-criteria { grid-template-columns: 1fr; } }
+.cj-crit { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.cj-crit-label { font-size: 13.5px; color: var(--ss-body-text); }
+.cj-crit-input { width: 72px; height: 38px; border: 1px solid var(--ss-border-card); border-radius: 6px; padding: 0 8px; font-size: 14px; text-align: center; color: var(--ss-body-text); background: #fff; }
+.cj-crit-input:focus { outline: none; border-color: var(--ss-link); }
+
+.cj-total-row { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; border-top: 1px dashed var(--ss-border-card); margin-top: 0.85rem; padding-top: 0.6rem; font-size: 13px; color: var(--ss-text-secondary); }
+.cj-total-value { font-family: Inter, sans-serif; font-size: 18px; font-weight: 700; color: var(--ss-navy); }
+
+.cj-comment-label { display: block; font-size: 12px; color: var(--ss-text-secondary); margin: 0.5rem 0 0.35rem; }
+.cj-comment { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--ss-border-card); border-radius: 6px; padding: 10px 12px; font-size: 14px; line-height: 1.5; color: var(--ss-body-text); font-family: inherit; background: #fff; }
+.cj-comment:focus { outline: none; border-color: var(--ss-link); }
+
+.cj-actions { display: flex; align-items: center; gap: 0.85rem; margin-top: 0.7rem; }
+.cj-status { font-size: 12.5px; color: var(--ss-text-secondary); margin-right: auto; }
+.cj-status.cj-status-ok { color: #1e8449; }
+.cj-save-btn { background: var(--ss-primary-btn); color: #fff; border: none; border-radius: 6px; height: 40px; padding: 0 18px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.cj-save-btn:hover { background: var(--ss-primary-btn-hover); }
+.cj-save-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* ── Problem statement preview ────────────────────────────────────────────────
+   Shown under the problem-number input on /upload and in the create-problem
+   popup, so people can see the problem they are being asked to solve. Maths
+   arrives as server-rendered SVG; neither page loads MathJax. */
+.ss-statement {
+    display: none;
+    margin-top: 0.75rem;
+    padding: 0.85rem 1rem;
+    background: var(--ss-card-bg, #f8f9fa);
+    border: 1px solid var(--ss-border-card, #dee2e6);
+    border-left: 3px solid var(--ss-navy, #1a1a2e);
+    border-radius: 6px;
+}
+.ss-statement.is-visible { display: block; }
+.ss-statement-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-statement-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ss-body-text, #2d2d2d);
+}
+.ss-statement-body p { margin: 0 0 0.5rem; }
+.ss-statement-body p:last-child { margin-bottom: 0; }
+.ss-statement-body img,
+.ss-statement-body svg { max-width: 100%; height: auto; }
+.ss-statement-body figure { margin: 0.6rem 0; }
+/* Savchenko's own harder-problem marker, carried through from the printed book, where it
+   is a superscript. U+2217 is the ASTERISK OPERATOR — a maths glyph, centred on the line
+   by design — so beside capitals it reads as sitting at the foot of the text. Raised here
+   to match the book. */
+.ss-statement-star {
+    font-weight: 700;
+    color: var(--ss-navy, #1a1a2e);
+    /* A <sup> element, so the raise comes from the browser's own default rather than from
+       this file — the mark still sits where the book puts it even if a cached stylesheet
+       arrives. Only the size is nudged, because sup's default `smaller` makes U+2217
+       almost invisible — and Bootstrap's reboot shrinks it again to .75em on top of that. */
+    font-size: 1.3em;
+}
+.ss-statement-note {
+    margin-top: 0.5rem;
+    font-size: 12px;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-statement-muted { color: var(--ss-text-secondary, #6c757d); font-size: 13px; }
+
+/* The create-problem popup is fixed-position with no max-height, so a long statement
+   would run off the viewport with no way to scroll it. */
+#edit-popup .ss-statement { max-height: 40vh; overflow-y: auto; margin-bottom: 22px; }
+
+/* ── Per-problem difficulty panel (solution page sidebar) ─────────────────────
+   Bars rather than a radar chart: the sidebar is ~280px wide, a radar would be
+   illegible at that size, and this needs no charting library on the hot page. */
+.ss-difficulty .section-grid-title { display: flex; align-items: center; gap: 0.4rem; }
+.ss-diff-star {
+    font-weight: 700; color: var(--ss-navy, #1a1a2e);
+    /* Same glyph, same problem: at the title's 13px the centred asterisk-operator reads as
+       a bullet sitting on the baseline. Raised and enlarged to read as the book's mark. */
+    vertical-align: super; font-size: 17px; line-height: 0;
+}
+.ss-diff-headline {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    margin: 0.3rem 0 0.75rem;
+}
+.ss-diff-score { font-family: Inter, sans-serif; font-size: 30px; font-weight: 700; color: var(--ss-navy, #1a1a2e); line-height: 1; }
+.ss-diff-of { font-size: 13px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-time { margin-left: auto; font-size: 12px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-group {
+    margin: 0.7rem 0 0.35rem; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-diff-hint { margin: -0.25rem 0 0.35rem; font-size: 10.5px; font-style: italic; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-row { display: flex; align-items: center; gap: 0.5rem; padding: 2px 0; }
+.ss-diff-label { flex: 0 0 45%; font-size: 12px; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-track { flex: 1; height: 6px; background: #eceff1; border-radius: 3px; overflow: hidden; }
+.ss-diff-fill { display: block; height: 100%; background: var(--ss-navy, #1a1a2e); border-radius: 3px; }
+.ss-diff-fill-reward { background: #1a5276; }
+/* Word first (this is the actual fix — "75" alone means nothing without the 0-100 scale
+   memorized, "High" doesn't), the raw number kept small and secondary for readers who want
+   precision. */
+.ss-diff-num { flex: 0 0 74px; text-align: right; font-size: 11px; font-weight: 600; color: var(--ss-body-text, #2d2d2d); white-space: nowrap; }
+.ss-diff-n { font-weight: 400; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.7rem; }
+.ss-diff-tag {
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    background: var(--ss-card-bg, #f8f9fa); border: 1px solid var(--ss-border-card, #dee2e6);
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-diff-idea { margin-top: 0.7rem; }
+.ss-diff-idea summary {
+    cursor: pointer; font-size: 12px; color: var(--ss-link, #1a5276);
+    list-style: none;
+}
+.ss-diff-idea summary::-webkit-details-marker { display: none; }
+.ss-diff-idea summary::before { content: '\2192  '; }
+.ss-diff-idea[open] summary::before { content: '\2193  '; }
+.ss-diff-idea p { margin: 0.4rem 0 0; font-size: 12.5px; line-height: 1.5; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-note { margin-top: 0.7rem; font-size: 11px; line-height: 1.4; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-note a { color: var(--ss-link, #1a5276); }
+.ss-diff-note a:hover { color: var(--ss-link-hover, #0d3b54); }
+
+/* Reader difficulty votes — a separate, clearly-labeled number below the AI panel's
+   note, never blended into the /100 score or the bars above it. */
+.ss-diff-votes { margin-top: 0.85rem; padding-top: 0.7rem; border-top: 1px solid var(--ss-border-card, #dee2e6); }
+.ss-diff-votes-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+    color: var(--ss-text-secondary, #6c757d); margin-bottom: 0.3rem;
+}
+.ss-diff-votes-score { font-family: Inter, sans-serif; font-size: 16px; font-weight: 700; color: var(--ss-link, #1a5276); }
+.ss-diff-votes-count { font-size: 11px; color: var(--ss-text-secondary, #6c757d); margin-left: 0.25rem; }
+.ss-diff-votes-empty { font-size: 12px; color: var(--ss-text-secondary, #6c757d); }
+.ss-diff-votes-login { font-size: 12px; color: var(--ss-link, #1a5276); text-decoration: none; }
+.ss-diff-votes-login:hover { color: var(--ss-link-hover, #0d3b54); text-decoration: underline; }
+.ss-diff-vote-row { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.5rem; }
+.ss-diff-vote-slider { flex: 1; accent-color: var(--ss-navy, #1a1a2e); }
+.ss-diff-vote-val { font-size: 13px; font-weight: 600; min-width: 18px; text-align: center; color: var(--ss-body-text, #2d2d2d); }
+.ss-diff-vote-submit {
+    font-size: 11px; padding: 4px 10px; border-radius: 6px; border: none;
+    background: var(--ss-navy, #1a1a2e); color: #fff; cursor: pointer;
+}
+.ss-diff-vote-submit:disabled { opacity: 0.6; cursor: default; }
+.ss-diff-vote-submit:hover:not(:disabled) { background: var(--ss-link-hover, #0d3b54); }
+
+.sg-heat-methodology-link {
+    display: block; font-size: 11px; color: var(--ss-link, #1a5276); text-decoration: none; margin-top: 4px;
+}
+.sg-heat-methodology-link:hover { color: var(--ss-link-hover, #0d3b54); text-decoration: underline; }
+
+/* ── Toggle switch ────────────────────────────────────────────────────────────
+   A real <input type="checkbox" role="switch"> underneath: keyboard focus, space
+   to toggle and screen-reader state all come free, and the visible track is just
+   decoration driven by :checked. Bootstrap ships .form-switch but it is #0d6efd
+   with an SVG-in-a-data-URI knob, which is more to override than to replace.
+
+   The track is 8px-rounded rather than a pill, which is the design system's cap
+   and reads closer to GitHub than to iOS. */
+.ss-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 12.5px;
+    color: var(--ss-text-secondary, #6c757d);
+}
+.ss-switch input {
+    /* Kept in the layout and focusable — not display:none, which would take it out
+       of the tab order and silence assistive technology. */
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: 0; padding: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+.ss-switch-track {
+    position: relative;
+    flex: none;
+    width: 34px; height: 18px;
+    background: var(--ss-border-card, #dee2e6);
+    border-radius: 8px;
+    transition: background-color 0.15s ease;
+}
+.ss-switch-knob {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    background: #ffffff;
+    border-radius: 7px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: transform 0.15s ease;
+}
+.ss-switch input:checked + .ss-switch-track {
+    background: var(--ss-navy, #1a1a2e);
+}
+.ss-switch input:checked + .ss-switch-track .ss-switch-knob {
+    transform: translateX(16px);
+}
+.ss-switch input:focus-visible + .ss-switch-track {
+    outline: 2px solid var(--ss-link, #1a5276);
+    outline-offset: 2px;
+}
+.ss-switch input:checked ~ .ss-switch-label {
+    color: var(--ss-navy, #1a1a2e);
+    font-weight: 500;
+}
+@media (prefers-reduced-motion: reduce) {
+    .ss-switch-track, .ss-switch-knob { transition: none; }
+}
+
+/* ── Difficulty heat ramp ─────────────────────────────────────────────────────
+   Shared by the homepage chapter grid and the section grid on every solution
+   page, so the two read as one scale. Defined once here rather than inline in
+   each template.
+
+   ColorBrewer YlOrRd: its lightness falls monotonically across all nine steps,
+   so it survives greyscale and red-green colour deficiency — which matters for
+   an audience that is mostly teenage boys, roughly one in twelve of whom cannot
+   separate the purple/blue/green the solved-status colours use.
+
+   `!important` is deliberate, and is the honest way to say what this is: a mode
+   switch. When difficulty is on, difficulty owns the fill — it has to outrank
+   every state variant of the progress colours on both grids, and those are
+   written out as :link, :visited, :active and :hover. `a.problem-dot.solved-both:link`
+   scores (0,3,1), which ties any selector short enough to be readable here and
+   then wins on document order, because the homepage's rules sit in an inline
+   <style> that loads after this file. Chasing that with ever-longer selectors is
+   an arms race; stating the precedence once is clearer and cannot be lost by a
+   later :hover rule.
+
+   Colour takes the fill only; the borders those rules set are left alone, so
+   language status still reads while difficulty is showing. */
+body.grid-heat .heat-1 { background: #ffffcc !important; color: #2d2d2d !important; }
+body.grid-heat .heat-2 { background: #ffeda0 !important; color: #2d2d2d !important; }
+body.grid-heat .heat-3 { background: #fed976 !important; color: #2d2d2d !important; }
+body.grid-heat .heat-4 { background: #feb24c !important; color: #2d2d2d !important; }
+body.grid-heat .heat-5 { background: #fd8d3c !important; color: #2d2d2d !important; }
+body.grid-heat .heat-6 { background: #fc4e2a !important; color: #ffffff !important; }
+body.grid-heat .heat-7 { background: #e31a1c !important; color: #ffffff !important; }
+body.grid-heat .heat-8 { background: #bd0026 !important; color: #ffffff !important; }
+body.grid-heat .heat-9 { background: #800026 !important; color: #ffffff !important; }
+/* Not yet scored — shown as absent rather than as easy. */
+body.grid-heat .heat-none { background: #ffffff !important; color: #adb5bd !important; }
+/* Savchenko's own ∗: a heavier dark border rather than a hue, so his judgement
+   and the model's stay separable and the marker survives greyscale. */
+body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight: 700; }
+
+/* Legend swatches: always coloured, regardless of whether heat mode is on. */
+.heat-chip { width: 14px; height: 12px; border-radius: 2px; display: inline-block; }
+.heat-chip.heat-1 { background: #ffffcc; }
+.heat-chip.heat-2 { background: #ffeda0; }
+.heat-chip.heat-3 { background: #fed976; }
+.heat-chip.heat-4 { background: #feb24c; }
+.heat-chip.heat-5 { background: #fd8d3c; }
+.heat-chip.heat-6 { background: #fc4e2a; }
+.heat-chip.heat-7 { background: #e31a1c; }
+.heat-chip.heat-8 { background: #bd0026; }
+.heat-chip.heat-9 { background: #800026; }
+.heat-ramp { display: inline-flex; gap: 2px; }
+.legend-star { background: #fed976; border: 2px solid #1a1a2e; }
+
 
 /* === main_page.css === */
 /* Base resets and font — colors from /css/design-system.css */

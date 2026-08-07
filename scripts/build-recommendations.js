@@ -41,7 +41,12 @@ const has = (f) => process.argv.includes(f);
  */
 const DISPOSITION = {
     olympiad_problem_solving: 'core',
-    entrance_exam_prep: 'core',
+    // Its own band, not part of the core. The page says this is a catalog for
+    // olympiad preparation and research; school leaving exams are a different,
+    // easier target, and a student who came for Savchenko should not land on ЕГЭ
+    // drill sheets first. Kept in full — a large share of readers do sit these —
+    // just behind a heading that says what they are.
+    entrance_exam_prep: 'exam',
     physics_concepts_resources: 'core',
     astronomy_olympiad: 'core',
 
@@ -82,6 +87,15 @@ const RUBRIC_NAMES = {
 const ENTRY_OVERRIDES = {
     // A directory must not recommend the site it lives on.
     'savchenkosolutions.com': { drop: true },
+    // Kept by hand, one point under the merit floor at 28. University admission
+    // was on the original wish list for this catalog, and of everything the gate
+    // rejected in the 20s this is the only entry that speaks to it directly —
+    // the rest are university front pages with nothing behind them.
+    'mitadmissions.org': { keep: true },
+    // Also kept by hand, at 28. An education-department portal rather than
+    // teaching material — it belongs in the institutional band, not beside the
+    // problem archives, and the destination check files it there.
+    'educom.ru': { keep: true },
     'narod.ru': {
         // The upstream registry lists this as covering Savchenko. Drop that
         // association: this site charges per problem, and Savchenko solutions are
@@ -90,6 +104,34 @@ const ENTRY_OVERRIDES = {
         strip: [/\s*и\s+Савченко/gi, /\s*and\s+Savchenko/gi, /\s*,?\s*Савченко/gi, /\s*,?\s*Savchenko/gi],
     },
 };
+
+/**
+ * What to print as an entry's name.
+ *
+ * The catalog keys sites by registrable domain, because that is what the link
+ * graph counts and what deduplicates ipho.olimpicos.net against olimpicos.net.
+ * Printing that key was misleading: the entry described as "официальный сайт
+ * физического факультета МГУ" was labelled `msu.ru`, which is the university's
+ * front page, while the link actually went to the physics faculty. Same for
+ * `harvard.edu`, which points at David Morin's mechanics page.
+ *
+ * So the label comes from the URL the reader will actually open — host and path,
+ * minus the noise. The domain stays the entry's id.
+ */
+function displayUrl(url, fallbackDomain) {
+    let u;
+    try { u = new URL(url); } catch { return fallbackDomain; }
+    const host = u.hostname.replace(/^www\./, '');
+    let pathPart = u.pathname.replace(/\/+$/, '');
+    // A trailing index file is the directory, and says nothing extra.
+    if (/\/(index|default|home)\.(html?|php|aspx?|jsp)$/i.test(pathPart)) {
+        pathPart = pathPart.replace(/\/[^/]+$/, '');
+    }
+    const full = host + pathPart;
+    if (full.length <= 44) return full;
+    const room = 44 - host.length - 1;
+    return room > 4 ? `${host}${pathPart.slice(0, room)}…` : host;
+}
 
 /** Apply any override for this entry, in place. @returns false if it should be dropped. */
 function applyOverride(entry) {
@@ -119,7 +161,10 @@ function applyOverride(entry) {
  * than to show the scaffolding.
  */
 const INTERNAL_NOTE = [
-    /\(verify\)/i,
+    /\(verify\b/i,
+    /\bprobe\b/i,
+    /DNS-override|recovery crawl|stalled/i,
+    /\b\d{3}s? to automated fetch\b|\bdata dump\b/i,
     /already in sites\.yaml/i,
     /search-discovery/i,
     /incomplete cert/i,
@@ -371,6 +416,29 @@ const AUDIENCE_LANGUAGE_FIT = {
     fa: 0.15, ar: 0.15, zh: 0.15, hi: 0.2, ko: 0.15, vi: 0.2,
 };
 
+/** Subject-fit per entry, keyed `<kind>:<id>`; empty until rank-fit.js has run. */
+const SUBJECT_FIT = (() => {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', '.build', 'rank-fit.json'), 'utf8'));
+    } catch {
+        return {};
+    }
+})();
+
+/** @returns the number of entries that got a subject-fit, for reporting. */
+function attachSubjectFit(entries, kind) {
+    let n = 0;
+    for (const e of entries) {
+        const f = SUBJECT_FIT[`${kind}:${e.id}`];
+        if (!f) continue;
+        e.subject = f.subject;
+        e.subjectFit = f.fit;
+        e.physicsShare = f.physicsShare;
+        n += 1;
+    }
+    return n;
+}
+
 function scoreFor(entry, tag, prevalence, total) {
     const authority = Math.pow(1 + (entry.inRefs || 0), 0.7);
     const p = prevalence.get(tag) || 1;
@@ -381,7 +449,16 @@ function scoreFor(entry, tag, prevalence, total) {
     if (entry.level === 'research') fit *= 0.75;
     if (entry.generic) fit *= 0.25;
     if (entry.lowConfidence) fit *= 0.8;
-    if (!entry.evidence) fit *= 0.85;
+    if (!entry.evidence && !entry.note) fit *= 0.85;
+
+    // Subject-fit (scripts/rank-fit.js). Merit and subject are different axes:
+    // problems.ru and math.ru are outstanding problem archives and score high on
+    // merit, so they sorted above physics archives. They are still here — a
+    // physics olympiad student does use them — but a reader stuck on a Savchenko
+    // mechanics problem should reach physics material first.
+    if (typeof entry.subjectFit === 'number') {
+        fit *= 0.12 + 0.88 * (entry.subjectFit / 100) ** 1.25;
+    }
     return authority * lift * fit;
 }
 
@@ -451,9 +528,15 @@ function distinctness(entries, facet, limit = 0.6) {
             else { cut.rubric += 1; continue; }
         }
         if (!d.isPhysicsEducation && !['mathematics', 'informatics'].includes(rubric)
-            && DISPOSITION[rubric] === 'core') {
-            // The model says this is not physics education but the rubric is a core
-            // one — trust the per-channel read over the cluster.
+            && ['core', 'exam'].includes(DISPOSITION[rubric])) {
+            // The model says this is not physics education but the rubric promises
+            // it — trust the per-channel read over the cluster.
+            //
+            // `exam` is included for the same reason `core` is. When the exam
+            // rubric was moved out of the core band this test stopped applying to
+            // it, and quantumiasofficial — UPSC civil-service coaching, no physics
+            // at all — walked straight back into the catalog. A band being
+            // secondary is not a reason to stop checking what is in it.
             cut.notEducation += 1;
             continue;
         }
@@ -511,6 +594,8 @@ function distinctness(entries, facet, limit = 0.6) {
     // Ranking.
     const prevalence = new Map();
     for (const e of entries) prevalence.set(e.rubric, (prevalence.get(e.rubric) || 0) + 1);
+    const tFit = attachSubjectFit(entries, 'telegram');
+    if (tFit) console.log(`  subject-fit applied to ${tFit}/${entries.length} channels`);
     for (const e of entries) e.score = Number(scoreFor(e, e.rubric, prevalence, entries.length).toFixed(4));
     entries.sort((a, b) => b.score - a.score);
 
@@ -552,20 +637,41 @@ function distinctness(entries, facet, limit = 0.6) {
          * students, and leaving them in would put 271 useless rows in front of the
          * 272 useful ones.
          */
+        // Rubric ids come from the discovery pass and changed when 52 wrongly-skipped
+        // sites re-entered the corpus and the clustering was re-run. Keyed on the
+        // current ids; an unrecognised rubric falls back to `adjacent` rather than
+        // silently vanishing.
+        // Rubric ids come from the discovery pass, which re-clusters whenever the
+        // corpus changes — so these keys are not stable across rebuilds, and a
+        // stale key silently demotes a whole rubric to `adjacent`. The mismatch
+        // check below makes that visible instead.
+        //
+        // Maths gets its own rubric rather than a place in the physics ones. It is
+        // real material this reader uses, and problems.ru and math.ru are excellent,
+        // but a student stuck on a Savchenko mechanics problem should not have to
+        // scroll past a maths olympiad archive to reach a physics one.
         const WEB_DISPOSITION = {
-            olympiad_problems_solutions: 'core',
-            textbook_problem_solutions: 'core',
-            physics_theory_reference: 'core',
-            exam_preparation: 'core',
-            interactive_learning: 'core',
+            olympiad_problems: 'core',
+            problem_sets_and_solutions: 'core',
+            physics_theory_and_reference: 'core',
+            exams_and_entrance_prep: 'exam',
+            homework_help_and_qa: 'core',
+            lecture_notes_and_courses: 'core',
 
-            university_portals: 'adjacent',
-            research_papers_journals: 'adjacent',
-            general_reference: 'adjacent',
+            mathematics_resources: 'adjacent',
+            physics_research_and_journals: 'adjacent',
+            institutional_portals_and_directories: 'adjacent',
 
-            news_culture_unrelated: 'cut',
-            infrastructure_platforms: 'cut',
+            // CDNs, URL shorteners, ad networks, site builders — link-graph
+            // residue, never a destination for a reader.
+            infrastructure_and_utilities: 'cut',
         };
+
+        const known = new Set((wt.rubrics || []).map((r) => r.id));
+        const stale = Object.keys(WEB_DISPOSITION).filter((id) => !known.has(id));
+        const unplaced = [...known].filter((id) => !WEB_DISPOSITION[id]);
+        if (stale.length) console.log(`  ! WEB_DISPOSITION names ${stale.length} rubric(s) the taxonomy no longer has: ${stale.join(', ')}`);
+        if (unplaced.length) console.log(`  ! taxonomy has ${unplaced.length} unplaced rubric(s), defaulting to adjacent: ${unplaced.join(', ')}`);
 
         const surviving = new Set((wt.rubrics || [])
             .filter((r) => (WEB_DISPOSITION[r.id] || 'adjacent') !== 'cut')
@@ -575,18 +681,69 @@ function distinctness(entries, facet, limit = 0.6) {
             if (cls === 'cut') continue;
             webRubricMeta.push({ id: r.id, en: r.name_en, ru: r.name_ru, class: cls, count: 0 });
         }
+        // The blind merit audit (scripts/audit-inclusion.js). Rubric disposition
+        // alone was not enough: it works at the level of whole clusters, so a
+        // pirated textbook repository and a national olympiad archive could sit in
+        // one rubric and share its fate. libgen.is shipped that way — the pirated
+        // exclusion in corpus.js only covers domains registered in sites.yaml, and
+        // libgen came in from the link graph, where nothing checks it.
+        //
+        // The audit scores every domain individually against the measured audience,
+        // so the gate applies per entry regardless of rubric.
+        const MERIT_FLOOR = 30;
+        let merit = new Map();
+        try {
+            const a = JSON.parse(fs.readFileSync(path.join(STATE, 'websites-audit.json'), 'utf8'));
+            merit = new Map(a.judged.map((j) => [j.domain, j]));
+        } catch {
+            console.log('  ! no merit audit found — every describable site will ship');
+        }
+        const meritCut = { excluded: 0, belowFloor: 0, unscored: 0 };
+
         for (const d of wd) {
             const rubric = wRubricOf.get(d.domain);
             if (!rubric || !surviving.has(rubric)) continue;
-            if (!d.usefulToStudents && (webRubricMeta.find((r) => r.id === rubric) || {}).class === 'core') continue;
+            const m = merit.get(d.domain);
+            if (merit.size) {
+                if (!m) { meritCut.unscored += 1; continue; }
+                // Gate on the SCORE, not the verdict. The two disagree, and the
+                // score is the calibrated one — it is anchored to a described
+                // scale, while the verdict is a bare binary. Cutting on the
+                // verdict first removed 174 sites that scored 30 or better,
+                // among them reed.edu (the official free Griffiths solutions,
+                // 78), jpho.jp and tifr.res.in (national olympiad bodies, 75)
+                // and fipi.ru (65) — which is the board that actually sets the
+                // ЕГЭ these readers are sitting.
+                if (m.score < MERIT_FLOOR && !(ENTRY_OVERRIDES[d.domain] || {}).keep) {
+                    meritCut.belowFloor += 1; continue;
+                }
+                if (m.verdict === 'exclude') meritCut.excluded += 1;
+            }
+            // usefulToStudents predates the merit audit and duplicates it badly.
+            // It vetoed reed.edu (the official free Griffiths solutions, scored
+            // 78), jpho.jp and tifr.res.in (national olympiad bodies, 75) and
+            // fipi.ru (65, the board that sets the ЕГЭ these readers sit). Where
+            // the calibrated score is confident, it wins.
+            if (!d.usefulToStudents && (m ? m.score : 0) < 50
+                && !(ENTRY_OVERRIDES[d.domain] || {}).keep
+                && ['core', 'exam'].includes((webRubricMeta.find((r) => r.id === rubric) || {}).class)) continue;
             webEntries.push({
                 id: d.domain,
                 type: 'website',
                 url: d.url && d.url.startsWith('http') ? d.url : `https://${d.domain}`,
-                title: d.domain,
+                title: displayUrl(d.url && d.url.startsWith('http') ? d.url : `https://${d.domain}`, d.domain),
                 summaryEn: corpus.stripEmoji(d.summaryEn),
                 summaryRu: corpus.stripEmoji(d.summaryRu),
-                evidence: cleanEvidence(corpus.stripEmoji(d.evidence)).slice(0, 200),
+                // Deliberately NOT the registry note. For Telegram, `evidence` is a
+                // verbatim quote from a sampled post, which is what makes the entry
+                // sourced. Websites have no equivalent: their note is an internal
+                // English annotation written for whoever ran the crawl, so a Russian
+                // reader on /ru/recommendations/textbook_solutions was shown
+                // "digitized published manual" under narod.ru, and "(verify: 000 on
+                // first probe)" under mipt.ru. Better no caption than that one.
+                evidence: '',
+                note: cleanEvidence(corpus.stripEmoji(d.evidence)).slice(0, 200),
+                merit: m ? m.score : null,
                 rubric,
                 rubricClass: (webRubricMeta.find((r) => r.id === rubric) || {}).class || 'adjacent',
                 topics: d.topics || [],
@@ -614,6 +771,35 @@ function distinctness(entries, facet, limit = 0.6) {
         }
         await resolveSiteLanguages(client, webEntries);
 
+        const wFit = attachSubjectFit(webEntries, 'website');
+        if (wFit) console.log(`  subject-fit applied to ${wFit}/${webEntries.length} sites`);
+
+        // A rubric is a promise about subject. "Олимпиадные задачи и соревнования"
+        // promises physics olympiad problems, and problems.ru led it — a pure
+        // mathematics archive whose own catalogue lists Алгебра, Геометрия and
+        // Комбинаторика and contains no physics section at all. Demoting it by
+        // score was not enough: it still sat inside a physics rubric.
+        //
+        // So subject decides the rubric family, and the score decides the order
+        // within it. Nothing is deleted — problems.ru is excellent and a physics
+        // olympiad student does use it. It just belongs under maths.
+        const PHYSICS_RUBRICS = new Set(['olympiad_problems', 'problem_sets_and_solutions',
+            'physics_theory_and_reference', 'exams_and_entrance_prep',
+            'homework_help_and_qa', 'lecture_notes_and_courses']);
+        const REHOME = { math: 'mathematics_resources', cs: 'mathematics_resources', other: 'institutional_portals_and_directories' };
+        const rehomed = [];
+        for (const e of webEntries) {
+            if (!PHYSICS_RUBRICS.has(e.rubric)) continue;
+            const target = REHOME[e.subject];
+            if (!target || !surviving.has(target) || target === e.rubric) continue;
+            rehomed.push(`${e.id} ${e.rubric} -> ${target} (${e.subject}, ${e.physicsShare ?? '?'}% physics)`);
+            e.rubric = target;
+            e.rubricClass = (webRubricMeta.find((r) => r.id === target) || {}).class || 'adjacent';
+        }
+        if (rehomed.length) {
+            console.log(`  moved ${rehomed.length} non-physics sites out of physics rubrics:`);
+            for (const line of rehomed) console.log(`    ${line}`);
+        }
         const wPrev = new Map();
         for (const e of webEntries) wPrev.set(e.rubric, (wPrev.get(e.rubric) || 0) + 1);
         for (const e of webEntries) {
@@ -623,8 +809,107 @@ function distinctness(entries, facet, limit = 0.6) {
         for (const r of webRubricMeta) r.count = wPrev.get(r.id) || 0;
         console.log(`\nwebsites: ${webEntries.length} entries across `
             + `${webRubricMeta.filter((r) => r.count).length} rubrics`);
+        if (merit.size) {
+            console.log(`  merit gate removed ${meritCut.belowFloor} scoring under ${MERIT_FLOOR}`
+                + `${meritCut.unscored ? `, ${meritCut.unscored} unscored` : ''}`
+                + ` (kept ${meritCut.excluded} the binary verdict would have cut)`);
+        }
     } else {
         console.log('\nwebsites: no tagged data yet (run scripts/tag-websites.js) — tab will be empty');
+    }
+
+    /**
+     * File each entry under what the link actually leads to (scripts/verify-rubric.js).
+     *
+     * The clustering that produced the rubrics worked from one-line purposes, and
+     * a purpose line cannot tell "here are olympiad problems" from "we are a
+     * school that trains for olympiads". So fizmat.kz — a school — sat under
+     * lecture notes, and 312 of 963 entries turned out to lead to an
+     * organisation's own pages rather than to anything a reader can work through.
+     *
+     * Only confident verdicts naming a rubric that exists are applied.
+     *
+     * The disagreements are also the answer to entries that genuinely belong in
+     * two places. mathus.ru is olympiad material AND exam material; the clustering
+     * said exams, the destination check said olympiad, and both are right. Rather
+     * than duplicate it — which would make "Олимпиадные задачи 101" stop meaning
+     * anything and let two rubrics return near-identical lists, the exact failure
+     * this catalog was built to avoid — it is filed once under the harder, more
+     * distinctive use and cross-referenced from the other. Two independent passes
+     * disagreeing is a better signal of dual membership than either pass asserting
+     * it alone.
+     */
+    let verdicts = {};
+    try {
+        verdicts = JSON.parse(fs.readFileSync(path.join(STATE, 'rubric-verdicts.json'), 'utf8'));
+    } catch { /* pass has not run; rubrics stay as clustered */ }
+
+    if (Object.keys(verdicts).length) {
+        const webClass = new Map(webRubricMeta.map((r) => [r.id, r.class]));
+        const tgIds = new Set(Object.keys(DISPOSITION).filter((id) => DISPOSITION[id] !== 'cut')
+            .concat(['mathematics', 'informatics']));
+        const refiled = { moved: 0, crossListed: 0, byLanding: {} };
+
+        for (const [list, kind] of [[entries, 'telegram'], [webEntries, 'website']]) {
+            const valid = kind === 'telegram' ? tgIds : new Set(webClass.keys());
+            for (const e of list) {
+                const v = verdicts[`${kind}:${e.id}`];
+                if (!v) continue;
+                e.landsOn = v.landsOn;
+                refiled.byLanding[v.landsOn] = (refiled.byLanding[v.landsOn] || 0) + 1;
+                if (v.confidence !== 'high' || v.rubric === e.rubric || !valid.has(v.rubric)) continue;
+                // Genericity is computed from topic entropy and technical density
+                // over sampled posts — evidence this pass never saw. A channel in
+                // quarantine stays there: `general` exists precisely so a
+                // plausible-sounding description cannot talk its way into a
+                // specific rubric.
+                if (e.rubric === 'general' || e.generic) continue;
+                const previous = e.rubric;
+                e.rubric = v.rubric;
+                e.rubricClass = kind === 'telegram'
+                    ? (DISPOSITION[v.rubric] || 'adjacent')
+                    : (webClass.get(v.rubric) || 'adjacent');
+                refiled.moved += 1;
+                // Both passes had a defensible read; keep the loser as a pointer.
+                if (valid.has(previous)) { e.alsoIn = [previous]; refiled.crossListed += 1; }
+            }
+        }
+        console.log(`
+refiled by destination: ${refiled.moved} entries moved, `
+            + `${refiled.crossListed} cross-listed under their previous rubric`);
+        console.log('  what a reader reaches:', refiled.byLanding);
+
+        // Subject wins over destination where they disagree. This pass reads a
+        // one-line summary; verify-subject.js read the sites' own pages, and for
+        // problems.ru that meant its actual subject catalogue — Алгебра,
+        // Геометрия, Комбинаторика, no physics section at all. The summary says
+        // "olympiad problems", which is true and still the wrong shelf. Re-applied
+        // here so the grounded verdict is the last word.
+        const MATHS_RUBRIC = 'mathematics_resources';
+        if (webClass.has(MATHS_RUBRIC)) {
+            const physicsRubrics = new Set(webRubricMeta
+                .filter((r) => r.class === 'core' || r.class === 'exam').map((r) => r.id));
+            let back = 0;
+            for (const e of webEntries) {
+                if (!physicsRubrics.has(e.rubric)) continue;
+                if (e.subject !== 'math' && e.subject !== 'cs') continue;
+                e.alsoIn = [e.rubric];
+                e.rubric = MATHS_RUBRIC;
+                e.rubricClass = webClass.get(MATHS_RUBRIC) || 'adjacent';
+                back += 1;
+            }
+            if (back) console.log(`  ${back} re-filed under maths: page content outranks the summary`);
+        }
+
+        // Rubric membership changed, so every rank that depends on rubric
+        // prevalence is now stale.
+        for (const [list, kind] of [[entries, 'telegram'], [webEntries, 'website']]) {
+            const prev = new Map();
+            for (const e of list) prev.set(e.rubric, (prev.get(e.rubric) || 0) + 1);
+            for (const e of list) e.score = Number(scoreFor(e, e.rubric, prev, list.length).toFixed(4));
+            list.sort((a, b) => b.score - a.score);
+            if (kind === 'website') for (const r of webRubricMeta) r.count = prev.get(r.id) || 0;
+        }
     }
 
     const byRubric = {};
