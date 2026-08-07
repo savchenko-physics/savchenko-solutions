@@ -2810,10 +2810,11 @@ async function handleContributorsRanking(req, res) {
 app.get(["/contributors", "/:lang/contributors"], handleContributorsRanking);
 
 // Russian breadcrumb targets: /ru/1 and /ru/1,1 → main catalog anchors (not problem files)
-// Brainstorm Room — full per-problem chat page (must precede the /:lang/:name
-// catch-all). Unified across languages; works for unsolved problems too.
-app.get("/:lang(en|ru)/:name/brainstorm", (req, res, next) => {
-    return renderBrainstormRoom(req, res).catch(next);
+// Brainstorm Room retired: its real messages were moved into the solution's comment
+// thread (flagged is_brainstorm). Redirect any old room URL or bookmark to the solution
+// page so nothing 404s. Must precede the /:lang/:name catch-all.
+app.get("/:lang(en|ru)/:name/brainstorm", (req, res) => {
+    return res.redirect(301, `/${req.params.lang}/${req.params.name}`);
 });
 
 app.get("/:lang/:name", (req, res, next) => {
