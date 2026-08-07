@@ -219,13 +219,19 @@
         state.input.focus();
     }
 
+    // What an opener with no explicit category falls back to. NOT CATS[0], which is
+    // "error in a solution": the floating tab is labelled Suggest, so opening it used to
+    // greet the reader with "what exactly is wrong?" and a box asking which formula broke.
+    // Every contextual prompt passes its own category, so this only covers the generic tab.
+    const DEFAULT_CATEGORY = CATS.some((c) => c.id === 'idea') ? 'idea' : CATS[0].id;
+
     function show(category) {
         if (!panel) panel = buildPanel();
         panel.hidden = false;
         const tab = document.querySelector('[data-fb-tab]');
         if (tab) tab.hidden = true;
         state.openedAt = Date.now();
-        selectCategory(category && CATS.some((c) => c.id === category) ? category : CATS[0].id);
+        selectCategory(category && CATS.some((c) => c.id === category) ? category : DEFAULT_CATEGORY);
     }
 
     function hide() {
