@@ -3,7 +3,63 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <%# The page's data, gathered server-side while this HTML was rendered. Escaping
+        "<" keeps a stray "</script>" inside any user-authored string from ending the
+        block early. %>
+    <script>
+        window.__profileData = <%- profileBundle ? JSON.stringify(profileBundle).replace(/</g, '\\u003c') : 'null' %>;
+    </script>
+    <script>
+        // Every card on this page is filled in from an API call, so the calls are
+        // started here — first thing in the head, ahead of the stylesheets and the two
+        // chart libraries. On a first visit with a cold HTTP cache that turned several
+        // hundred milliseconds of dead time, in which nothing had been requested yet,
+        // into time the data spends travelling alongside the assets.
+        //
+        // This block MUST stay above every <link rel="stylesheet">: an inline script
+        // that follows a stylesheet is blocked until that stylesheet has loaded, which
+        // would put the requests right back where they started.
+        (function () {
+            const user = encodeURIComponent("<%= username %>");
+            const lang = "<%= lang %>";
+            const endpoints = {
+                stats: `/api/user/${user}/stats`,
+                heatmap: `/api/user/${user}/heatmap`,
+                rating: `/api/user/${user}/rating`,
+                timeline: `/api/user/${user}/timeline`,
+                radar: `/api/user/${user}/radar?lang=${lang}`,
+                social: `/api/user/${user}/social`,
+                contributions: `/api/user/${user}/contributions?page=1&limit=20`,
+            };
+            // The server already ran these queries while rendering this page and put
+            // the answers in the document, so the common case makes no request at all.
+            // Anything it could not supply still gets fetched, exactly as before.
+            const inlined = window.__profileData || {};
+            const started = {};
+            for (const [name, url] of Object.entries(endpoints)) {
+                if (inlined[name]) {
+                    started[name] = Promise.resolve(inlined[name]);
+                    continue;
+                }
+                const request = fetch(url).then((res) => {
+                    if (!res.ok) throw new Error(`Failed: ${url}`);
+                    return res.json();
+                });
+                // The renderers await these later; this only stops the browser from
+                // reporting an unhandled rejection in the meantime.
+                request.catch(() => {});
+                started[name] = request;
+            }
+            window.__profilePrefetch = started;
+        })();
+    </script>
+    <script defer src="/js/vendor/chart.umd.min.js"></script>
+    <script defer src="/js/vendor/d3.min.js"></script>
+    <script defer src="/js/vendor/d3-sankey.min.js"></script>
     <title>@<%= username %> - <%= lang === 'ru' ? 'Профиль участника' : 'Contributor Profile' %></title>
+    <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/user/<%= encodeURIComponent(username) %>">
+    <link rel="alternate" hreflang="en" href="https://savchenkosolutions.com/en/user/<%= encodeURIComponent(username) %>">
+    <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/user/<%= encodeURIComponent(username) %>">
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
@@ -947,7 +1003,7 @@
         .collab-item {
             text-decoration: none;
             color: var(--sv-text);
-            min-width: 78px;
+            min-width: 96px;
             text-align: center;
         }
 
@@ -955,19 +1011,21 @@
             position: relative;
             display: inline-flex;
         }
+        /* 64px on a 96px-wide thumbnail: large enough to recognise a face, still
+           inside the source resolution so it stays sharp on retina screens. */
         .collab-avatar {
-            width: 32px;
-            height: 32px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--sv-border);
         }
         .collab-online-dot {
             position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 9px;
-            height: 9px;
+            bottom: 2px;
+            right: 2px;
+            width: 11px;
+            height: 11px;
             border-radius: 50%;
             background: #27ae60;
             border: 2px solid #fff;
@@ -976,14 +1034,14 @@
         }
 
         .collab-name {
-            margin-top: 4px;
+            margin-top: 6px;
             font-size: 12px;
             font-weight: 600;
             color: #1a1a2e;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 96px;
+            max-width: 110px;
         }
 
         .collab-count {
@@ -991,6 +1049,140 @@
             font-size: 11px;
             color: #6c757d;
             font-variant-numeric: tabular-nums;
+        }
+
+        /* ── Community ── */
+
+        .people-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        @media (min-width: 768px) {
+            .people-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .people-col-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--sv-primary);
+            margin: 0 0 8px;
+        }
+
+        .people-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .people-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 6px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--sv-text);
+            font-size: 13px;
+        }
+
+        .people-item:hover {
+            background: var(--sv-card);
+        }
+
+        .people-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--sv-border);
+            flex-shrink: 0;
+        }
+
+        .people-name {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .people-count {
+            font-size: 12px;
+            color: var(--sv-secondary);
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
+        }
+
+        .people-empty {
+            font-size: 13px;
+            color: var(--sv-secondary);
+            margin: 0;
+            padding: 5px 6px;
+        }
+
+        /* ── Comments & likes ── */
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .comment-item {
+            display: block;
+            padding: 9px 11px;
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--sv-text);
+        }
+
+        .comment-item:hover {
+            background: var(--sv-card);
+        }
+
+        .comment-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--sv-secondary);
+            margin-bottom: 4px;
+        }
+
+        .comment-problem {
+            font-weight: 600;
+            color: #1a5276;
+        }
+
+        .comment-text {
+            font-size: 13px;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .problem-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .problem-chip {
+            display: inline-block;
+            padding: 4px 10px;
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1a5276;
+            text-decoration: none;
+        }
+
+        .problem-chip:hover {
+            background: var(--sv-card);
         }
 
         /* ── Footer ── */
@@ -1067,7 +1259,10 @@
     </style>
 </head>
 <body>
-    <%- include('default/main_site_header') %>
+    <%- include('default/main_site_header', {
+        langSwitchEnUrl: '/en/user/' + encodeURIComponent(username),
+        langSwitchRuUrl: '/ru/user/' + encodeURIComponent(username)
+    }) %>
 
     <main class="profile-page">
         <!-- Profile Header -->
@@ -1241,6 +1436,41 @@
             <div id="collab-row" class="collab-row"></div>
         </section>
 
+        <!-- Recent comments -->
+        <section id="comments-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Недавние комментарии' : 'Recent Comments' %></h2>
+            <div id="comment-list" class="comment-list"></div>
+        </section>
+
+        <!-- Liked solutions -->
+        <section id="liked-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Понравившиеся решения' : 'Liked Solutions' %></h2>
+            <div id="liked-chips" class="problem-chips"></div>
+        </section>
+
+        <!-- Community -->
+        <section id="community-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Сообщество' : 'Community' %></h2>
+            <div class="people-grid">
+                <div>
+                    <h3 class="people-col-title"><%= lang === 'ru' ? 'Кто чаще ставит лайки его решениям' : 'Who likes their solutions most' %></h3>
+                    <div id="people-liked-by" class="people-list"></div>
+                </div>
+                <div>
+                    <h3 class="people-col-title"><%= lang === 'ru' ? 'Кто чаще комментирует его решения' : 'Who comments on their solutions most' %></h3>
+                    <div id="people-commented-by" class="people-list"></div>
+                </div>
+                <div>
+                    <h3 class="people-col-title"><%= lang === 'ru' ? 'Чьи решения он чаще лайкает' : 'Whose solutions they like most' %></h3>
+                    <div id="people-likes-given" class="people-list"></div>
+                </div>
+                <div>
+                    <h3 class="people-col-title"><%= lang === 'ru' ? 'Чьи решения он чаще комментирует' : 'Whose solutions they comment on most' %></h3>
+                    <div id="people-comments-given" class="people-list"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Sankey -->
         <section id="sankey-card" class="card" style="display:none;">
             <h2 class="section-title"><%= lang === 'ru' ? 'Глава / Раздел / Статус' : 'Chapter / Section / Status' %></h2>
@@ -1333,9 +1563,6 @@
     <%- include('default/modern_footer') %>
     <%- include('default/main_site_footer_scripts') %>
 
-    <script src="/js/vendor/chart.umd.min.js"></script>
-    <script src="/js/vendor/d3.min.js"></script>
-    <script src="/js/vendor/d3-sankey.min.js"></script>
     <script>
         // Small contexts (collaborator/contribution grids) use the 96px thumbnail
         // instead of the 320px main avatar. Passes non-optimized URLs through.
@@ -1359,6 +1586,9 @@
         let radarChart = null;
         let timelineChart = null;
         let ratingChart = null;
+        // Resolves once renderHeader has run; anything that reuses the profile
+        // owner's name or avatar waits on this rather than on the raw request.
+        let headerReady = null;
 
         function fmtMonthYear(dateInput) {
             if (!dateInput) return "\u2014";
@@ -1453,6 +1683,23 @@
             const res = await fetch(url);
             if (!res.ok) throw new Error(`Failed: ${url}`);
             return res.json();
+        }
+
+        // Hands back the request the head script already started. Falls back to a
+        // fresh fetch so every renderer still works if the prefetch never ran.
+        function profileData(name) {
+            const prefetched = window.__profilePrefetch && window.__profilePrefetch[name];
+            if (prefetched) return prefetched;
+            const fallback = {
+                stats: `/api/user/${username}/stats`,
+                heatmap: `/api/user/${username}/heatmap`,
+                rating: `/api/user/${username}/rating`,
+                timeline: `/api/user/${username}/timeline`,
+                radar: `/api/user/${username}/radar?lang=${lang}`,
+                social: `/api/user/${username}/social`,
+                contributions: `/api/user/${username}/contributions?page=1&limit=20`,
+            }[name];
+            return fetchJSON(fallback);
         }
 
         /* ── Heatmap ── */
@@ -1945,7 +2192,7 @@
                     ? `<span class="collab-online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>`
                     : "";
                 a.innerHTML = `
-                    <span class="collab-avatar-wrap"><img class="collab-avatar" src="${avatarThumb(pic)}" alt="@${uname}">${dot}</span>
+                    <span class="collab-avatar-wrap"><img class="collab-avatar" src="${avatarThumb(pic)}" alt="@${uname}" width="64" height="64" loading="lazy">${dot}</span>
                     <div class="collab-name">${uname}</div>
                     <div class="collab-count">${count}</div>
                 `;
@@ -2047,7 +2294,7 @@
         async function renderRating() {
             let data;
             try {
-                data = await fetchJSON(`/api/user/${username}/rating`);
+                data = await profileData("rating");
             } catch (e) {
                 return;
             }
@@ -2177,7 +2424,7 @@
         /* ── Timeline ── */
 
         async function renderTimeline() {
-            const data = await fetchJSON(`/api/user/${username}/timeline`);
+            const data = await profileData("timeline");
             const labels = data.months.map((x) => x.label);
             const values = data.months.map((x) => x.count);
             const ctx = document.getElementById("timeline-chart");
@@ -2235,7 +2482,7 @@
         }
 
         async function renderRadarAndBreakdown() {
-            const data = await fetchJSON(`/api/user/${username}/radar`);
+            const data = await profileData("radar");
 
             // Hide radar if fewer than 5 contributions
             const totalSolved = data.radarAxes.reduce((s, x) => s + x.value, 0);
@@ -2380,7 +2627,14 @@
         }
 
         async function loadContributions() {
-            const data = await fetchJSON(`/api/user/${username}/contributions?page=${contribPage}&limit=20`);
+            const request = contribPage === 1
+                ? profileData("contributions")
+                : fetchJSON(`/api/user/${username}/contributions?page=${contribPage}&limit=20`);
+            // Each row is stamped with the profile owner's avatar, which renderHeader
+            // resolves. Both requests are already in flight by now, so waiting here
+            // only orders the rendering — it does not cost a round trip.
+            if (headerReady) await headerReady.catch(() => {});
+            const data = await request;
             appendContributionRows(data.rows || []);
             const link = document.getElementById("show-all-link");
             if (data.hasNext) {
@@ -2396,7 +2650,7 @@
         /* ── Sankey ── */
 
         async function renderSankey(chapter = null) {
-            const query = chapter ? `?chapter=${chapter}` : "";
+            const query = chapter ? `?lang=${lang}&chapter=${chapter}` : `?lang=${lang}`;
             const data = await fetchJSON(`/api/user/${username}/sankey${query}`);
             const select = document.getElementById("sankey-chapter");
             if (!select.dataset.bound) {
@@ -2439,7 +2693,7 @@
                 .data(graph.links)
                 .join("path")
                 .attr("d", d3.sankeyLinkHorizontal())
-                .attr("stroke", (d) => d.target.name === "Solved" ? "#1a1a2e" : "#b8c2cc")
+                .attr("stroke", (d) => d.target.status === "solved" ? "#1a1a2e" : "#b8c2cc")
                 .attr("stroke-opacity", 0.45)
                 .attr("stroke-width", (d) => Math.max(1, d.width));
 
@@ -2464,26 +2718,108 @@
             }
         }
 
+        /* ── Community ── */
+
+        function renderPeople(containerId, people) {
+            const box = document.getElementById(containerId);
+            if (!people || people.length === 0) {
+                box.innerHTML = `<p class="people-empty">${lang === "ru" ? "Пока никого" : "Nobody yet"}</p>`;
+                return;
+            }
+            box.innerHTML = people.map((p) => `
+                <a class="people-item" href="/user/${encodeURIComponent(p.username)}">
+                    <img class="people-avatar" src="${escapeHtml(avatarThumb(p.profilePicture))}" alt="" width="24" height="24" loading="lazy">
+                    <span class="people-name">${escapeHtml(p.fullName)}</span>
+                    <span class="people-count">${Number(p.count || 0).toLocaleString()}</span>
+                </a>
+            `).join("");
+        }
+
+        function renderSocial(data) {
+            if (!data) return;
+
+            const comments = data.recentComments || [];
+            if (comments.length) {
+                document.getElementById("comments-card").style.display = "";
+                document.getElementById("comment-list").innerHTML = comments.map((c) => {
+                    const href = `/${encodeURIComponent(c.language)}/${encodeURIComponent(c.problemName)}#comment-${c.id}`;
+                    return `
+                        <a class="comment-item" href="${href}">
+                            <span class="comment-head">
+                                <span class="comment-problem">${escapeHtml(c.problemName)}</span>
+                                <span>${escapeHtml(relTime(c.createdAt))}</span>
+                            </span>
+                            <span class="comment-text">${escapeHtml(c.excerpt)}</span>
+                        </a>
+                    `;
+                }).join("");
+            }
+
+            const liked = data.likedSolutions || [];
+            if (liked.length) {
+                document.getElementById("liked-card").style.display = "";
+                document.getElementById("liked-chips").innerHTML = liked.map((s) => `
+                    <a class="problem-chip" href="/${encodeURIComponent(s.language)}/${encodeURIComponent(s.problemName)}">${escapeHtml(s.problemName)}</a>
+                `).join("");
+            }
+
+            const hasPeople = ["likedBy", "commentedBy", "likesGiven", "commentsGiven"]
+                .some((key) => (data[key] || []).length > 0);
+            if (hasPeople) {
+                document.getElementById("community-card").style.display = "";
+                renderPeople("people-liked-by", data.likedBy);
+                renderPeople("people-commented-by", data.commentedBy);
+                renderPeople("people-likes-given", data.likesGiven);
+                renderPeople("people-comments-given", data.commentsGiven);
+            }
+        }
+
+        async function loadSocial() {
+            try {
+                renderSocial(await profileData("social"));
+            } catch (_error) {
+                // A profile with no comments or likes simply keeps these cards hidden.
+            }
+        }
+
         /* ── Init ── */
 
         async function init() {
-            const [stats, heatmap] = await Promise.all([
-                fetchJSON(`/api/user/${username}/stats`),
-                fetchJSON(`/api/user/${username}/heatmap`),
-            ]);
-            renderHeader(stats);
-            renderHeatmap(heatmap);
-            await Promise.all([renderRating(), renderTimeline(), renderRadarAndBreakdown(), loadContributions()]);
             document.getElementById("show-all-link").addEventListener("click", async (e) => {
                 e.preventDefault();
                 contribPage += 1;
                 await loadContributions();
             });
+
+            // All seven requests are already in flight from the head script, so each
+            // card renders the moment its own data lands. This used to run as two
+            // waves — header and heatmap first, everything else only after both had
+            // returned — which cost a full extra round trip before anything appeared.
+            headerReady = profileData("stats").then(renderHeader);
+            await Promise.all([
+                headerReady,
+                profileData("heatmap").then(renderHeatmap),
+                renderRating(),
+                renderTimeline(),
+                renderRadarAndBreakdown(),
+                loadContributions(),
+                loadSocial(),
+            ]);
         }
 
-        init().catch((error) => {
-            console.error("Profile page failed to load:", error);
-        });
+        // Chart.js and D3 are deferred, so they have executed by DOMContentLoaded but
+        // not yet when this inline script runs.
+        function startProfile() {
+            init().catch((error) => {
+                console.error("Profile page failed to load:", error);
+            });
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", startProfile);
+        } else {
+            startProfile();
+        }
     </script>
 </body>
 </html>

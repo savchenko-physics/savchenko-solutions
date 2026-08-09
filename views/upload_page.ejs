@@ -178,6 +178,13 @@
       overflow: hidden;
     }
 
+    .upload-video-heading {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin: 0 0 0.6rem;
+    }
+
     #searchResults {
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -427,6 +434,15 @@
               <%= __('upload.guideline3') %>
             </li>
           </ul>
+
+          <%# The walkthrough sits with the rules rather than above the form: someone
+              reading the guidelines is already asking "how do I actually do this". %>
+          <h5 class="upload-video-heading"><%= lang === 'ru' ? 'Как это делается' : 'How it works' %></h5>
+          <%- include('default/video_embed', {
+            videoId: 'd-x7Lk-mfTs',
+            videoPoster: '/img/yt_preview.webp',
+            videoTitle: lang === 'ru' ? 'Как пользоваться сайтом' : 'How to use the site'
+          }) %>
         </div>
       </div>
       <!-- /Guidelines Sidebar -->
@@ -1003,5 +1019,6 @@
     });
   </script>
   <%- include('default/main_site_footer_scripts') %>
+  <script defer src="<%= (typeof asset === 'function') ? asset('/js/video-embed.js') : '/js/video-embed.js' %>"></script>
 </body>
 </html>

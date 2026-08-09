@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { flagEmojiForCountryName } = require("./lib/countries");
+const { flagEmojiForCountryName, countryCodeForName } = require("./lib/countries");
 const { getOnlineUsernames } = require("./lib/presence");
 
 const CACHE_TTL_MS = 60 * 60 * 1000;
@@ -43,12 +43,26 @@ function parseCsvLineLoose(line) {
     ];
 }
 
-function loadBookStructure(baseDir) {
-    const chaptersPath = path.join(baseDir, "src", "database", "chapters.csv");
-    const sectionsPath = path.join(baseDir, "src", "database", "sections.csv");
+// The Russian CSVs use the same chapter/section numbering as the English ones —
+// only the titles differ — so a chapter keeps its identity across languages and
+// the two structures are interchangeable everywhere but in display text.
+const BOOK_STRUCTURE_DIRS = {
+    en: ["src", "database"],
+    ru: ["src", "ru", "database"],
+};
 
-    const chapters = fs
-        .readFileSync(chaptersPath, "utf8")
+// Both Russian CSVs start with a UTF-8 BOM, which would otherwise leave the first
+// chapter numbered NaN.
+function readCsv(filePath) {
+    return fs.readFileSync(filePath, "utf8").replace(/^﻿/, "");
+}
+
+function loadBookStructure(baseDir, lang = "en") {
+    const dir = BOOK_STRUCTURE_DIRS[lang] || BOOK_STRUCTURE_DIRS.en;
+    const chaptersPath = path.join(baseDir, ...dir, "chapters.csv");
+    const sectionsPath = path.join(baseDir, ...dir, "sections.csv");
+
+    const chapters = readCsv(chaptersPath)
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean)
@@ -60,8 +74,7 @@ function loadBookStructure(baseDir) {
             };
         });
 
-    const sections = fs
-        .readFileSync(sectionsPath, "utf8")
+    const sections = readCsv(sectionsPath)
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean)
@@ -190,6 +203,62 @@ function buildLast12MonthKeys() {
     return keys;
 }
 
+// The site owner: listed in score order but deliberately without a place number.
+const OWNER_USER_ID = 28;
+
+// A contributor's country as the leaderboard is allowed to show it. Users who
+// switched "show my country" off in their settings are excluded from the flag
+// column and from the country filter alike — otherwise the filter would leak
+// exactly the fact the setting is meant to hide.
+function countryOnLeaderboard(row) {
+    if (row.show_country === false) return null;
+    const name = String(row.country_location || "").trim();
+    return name || null;
+}
+
+// Turns the sorted contributor rows into what one leaderboard request needs:
+// every row with its place number, the subset matching the requested country, and
+// the facet counts behind the dropdown. Pure, so it is tested directly — there is
+// no test database for the route itself.
+function selectLeaderboardRows(sorted, countryFilter) {
+    // astrosander (user 28, the site owner) keeps their score-sorted position in the
+    // table but is NOT given a place number ("место"). Everyone else is numbered from
+    // 1 in the current sort order, so the top non-owner contributor shows as #1.
+    // Places are assigned over the full sorted list — before both filtering and
+    // pagination — so a filtered view shows real site-wide places (3, 11, 24…)
+    // rather than renumbering from 1.
+    let place = 0;
+    const placed = sorted.map((row) => {
+        if (Number(row.user_id) === OWNER_USER_ID) return { row, rank: null };
+        place += 1;
+        return { row, rank: place };
+    });
+
+    // The facet list is built from every contributor, not from the current page, so
+    // the dropdown reads the same whatever you happen to be looking at.
+    const facets = new Map();
+    for (const { row } of placed) {
+        const country = countryOnLeaderboard(row);
+        if (!country) continue;
+        facets.set(country, (facets.get(country) || 0) + 1);
+    }
+    const countries = [...facets.entries()]
+        .map(([name, count]) => ({
+            name,
+            code: countryCodeForName(name),
+            flag: flagEmojiForCountryName(name),
+            count,
+        }))
+        .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+    const wanted = String(countryFilter || "").trim().toLowerCase();
+    const matching = wanted
+        ? placed.filter(({ row }) => (countryOnLeaderboard(row) || "").toLowerCase() === wanted)
+        : placed;
+
+    return { placed, matching, countries };
+}
+
 function sortSafeContributors(rows, sortBy, sortOrder) {
     const order = sortOrder === "asc" ? 1 : -1;
     const compareText = (a, b) => String(a || "").localeCompare(String(b || ""));
@@ -197,7 +266,7 @@ function sortSafeContributors(rows, sortBy, sortOrder) {
     const map = {
         rank: (a, b) => compareNum(a.rank_position, b.rank_position),
         contributor: (a, b) => compareText(a.full_name || a.username, b.full_name || b.username),
-        country: (a, b) => compareText(a.country_location || "", b.country_location || ""),
+        country: (a, b) => compareText(countryOnLeaderboard(a) || "", countryOnLeaderboard(b) || ""),
         solutions: (a, b) => compareNum(a.unique_solutions, b.unique_solutions),
         score: (a, b) => compareNum(a.score, b.score),
         joined: (a, b) => compareText(a.joined_at || "", b.joined_at || ""),
@@ -207,8 +276,81 @@ function sortSafeContributors(rows, sortBy, sortOrder) {
     return [...rows].sort((a, b) => cmp(a, b) * order);
 }
 
+// Wording for the few labels the API generates itself rather than reading out of
+// the book CSVs (Sankey status nodes, the radar's catch-all axis).
+const CHART_LABELS = {
+    en: { solved: "Solved", unsolved: "Unsolved", other: "Other", chapter: (n) => `Chapter ${n}` },
+    ru: { solved: "Решено", unsolved: "Не решено", other: "Другое", chapter: (n) => `Глава ${n}` },
+};
+
+function normalizeLang(value) {
+    return String(value || "").toLowerCase() === "ru" ? "ru" : "en";
+}
+
 module.exports = function registerContributorAndUserMetricsApi({ app, pool, baseDir }) {
-    const structure = loadBookStructure(baseDir);
+    const structures = { en: loadBookStructure(baseDir, "en") };
+    try {
+        structures.ru = loadBookStructure(baseDir, "ru");
+    } catch (error) {
+        // Better an English chapter list than a 500 on the Russian profile page.
+        console.error("Russian book structure unavailable, falling back to English:", error.message);
+        structures.ru = structures.en;
+    }
+    const structureFor = (lang) => structures[normalizeLang(lang)];
+
+    // Each /api/user/:username/* handler is registered through here so a reference
+    // survives. The profile page then runs all of them in-process and ships the
+    // results inside its own HTML — seven network round trips, each costing a full
+    // RTT for one or two kilobytes, collapse to none. The handlers themselves are
+    // untouched, so the endpoints keep working for anything else that calls them.
+    const userEndpoints = {};
+    function defineUserEndpoint(name, handler) {
+        userEndpoints[name] = handler;
+        app.get(`/api/user/:username/${name}`, handler);
+    }
+
+    // Runs a handler with a stub response and hands back whatever it would have sent.
+    // Anything that errors or 404s resolves to null rather than taking the page down.
+    function runUserEndpoint(name, req) {
+        const handler = userEndpoints[name];
+        if (!handler) return Promise.resolve(null);
+        return new Promise((resolve) => {
+            let settled = false;
+            const done = (value) => { if (!settled) { settled = true; resolve(value); } };
+            const res = {
+                statusCode: 200,
+                set() { return this; },
+                setHeader() { return this; },
+                status(code) { this.statusCode = code; return this; },
+                json(body) { done(this.statusCode >= 400 ? null : body); return this; },
+                send(body) { done(this.statusCode >= 400 ? null : body); return this; },
+            };
+            Promise.resolve()
+                .then(() => handler(req, res))
+                .then(() => done(null))
+                .catch(() => done(null));
+        });
+    }
+
+    // Everything the profile page renders, gathered in one pass. Measured at 63 ms
+    // for all seven on a warm cache, against ~400 ms of latency per round trip.
+    app.locals.loadUserProfileBundle = async function loadUserProfileBundle(req, username, lang) {
+        const base = {
+            params: { username },
+            query: { lang },
+            session: req.session || {},
+            headers: req.headers || {},
+        };
+        const wanted = ['stats', 'heatmap', 'rating', 'timeline', 'radar', 'social'];
+        const results = await Promise.all([
+            ...wanted.map((name) => runUserEndpoint(name, { ...base, query: { lang } })),
+            runUserEndpoint('contributions', { ...base, query: { page: '1', limit: '20' } }),
+        ]);
+        const bundle = {};
+        wanted.forEach((name, i) => { bundle[name] = results[i]; });
+        bundle.contributions = results[wanted.length];
+        return bundle;
+    };
 
     app.get("/api/contributors/stats", async (_req, res) => {
         try {
@@ -440,8 +582,10 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));
             const sortBy = String(req.query.sortBy || "score");
             const sortOrder = String(req.query.sortOrder || "desc").toLowerCase() === "asc" ? "asc" : "desc";
+            const countryFilter = String(req.query.country || "").trim();
 
-            const payload = await withCache(`contributors:leaderboard`, async () => {
+            // v2: the row set now carries the show_country_on_leaderboard preference.
+            const payload = await withCache(`contributors:leaderboard:v2`, async () => {
                 const result = await pool.query(
                     `
                     WITH combined AS (
@@ -462,6 +606,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                             u.full_name,
                             u.profile_picture,
                             u.country_location,
+                            COALESCE(pr.show_country_on_leaderboard, true) AS show_country,
                             u.created_at,
                             u.is_verified_user,
                             COUNT(*)::int AS edits_total,
@@ -471,7 +616,9 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                             ROUND((19 * LN(COUNT(DISTINCT c.problem_name) * SQRT(COUNT(*))))::numeric, 0)::int AS score
                         FROM combined c
                         JOIN users u ON u.id = c.user_id
-                        GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.country_location, u.created_at, u.is_verified_user
+                        LEFT JOIN user_preferences pr ON pr.user_id = u.id
+                        GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.country_location,
+                                 pr.show_country_on_leaderboard, u.created_at, u.is_verified_user
                     ),
                     ranked AS (
                         SELECT
@@ -487,35 +634,29 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             });
 
             const sorted = sortSafeContributors(payload, sortBy, sortOrder);
-            const total = sorted.length;
+            const { placed, matching, countries } = selectLeaderboardRows(sorted, countryFilter);
+
+            const total = matching.length;
             const start = (page - 1) * limit;
 
-            // astrosander (user 28, the site owner) keeps their score-sorted position
-            // in the table but is NOT given a place number ("место"). Everyone else is
-            // numbered from 1 in the current sort order, so the top non-owner
-            // contributor (Eugene Dubrovin) shows as #1. Places are assigned over the
-            // full sorted list before pagination so they stay consistent across pages.
-            let place = 0;
-            const placed = sorted.map((row) => {
-                if (Number(row.user_id) === 28) return { row, rank: null };
-                place += 1;
-                return { row, rank: place };
+            const pageRows = matching.slice(start, start + limit).map(({ row, rank }) => {
+                const country = countryOnLeaderboard(row);
+                return {
+                    rank,
+                    rankPosition: row.rank_position,
+                    username: row.username,
+                    fullName: row.full_name || row.username,
+                    profilePicture: row.profile_picture || "/img/profile_images/Default_placeholder.svg",
+                    countryLocation: country,
+                    countryCode: country ? countryCodeForName(country) : "",
+                    countryFlag: country ? flagEmojiForCountryName(country) : "",
+                    solutions: row.unique_solutions,
+                    score: row.score,
+                    joinedAt: row.created_at || row.first_contribution_at,
+                    lastActiveAt: row.last_active_at,
+                    isVerifiedUser: row.is_verified_user,
+                };
             });
-
-            const pageRows = placed.slice(start, start + limit).map(({ row, rank }) => ({
-                rank,
-                rankPosition: row.rank_position,
-                username: row.username,
-                fullName: row.full_name || row.username,
-                profilePicture: row.profile_picture || "/img/profile_images/Default_placeholder.svg",
-                countryLocation: row.country_location || null,
-                countryFlag: row.country_location ? flagEmojiForCountryName(row.country_location) : "",
-                solutions: row.unique_solutions,
-                score: row.score,
-                joinedAt: row.created_at || row.first_contribution_at,
-                lastActiveAt: row.last_active_at,
-                isVerifiedUser: row.is_verified_user,
-            }));
 
             // Online presence is time-sensitive, so it is resolved fresh per
             // request (outside the 1h leaderboard cache) for the current page.
@@ -529,10 +670,13 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 page,
                 limit,
                 total,
+                totalAll: placed.length,
                 hasPrev: page > 1,
                 hasNext: start + limit < total,
                 sortBy,
                 sortOrder,
+                country: countryFilter || null,
+                countries,
                 rows,
             });
         } catch (error) {
@@ -545,7 +689,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
     // `current.score` use the SAME "combined" set + formula as the leaderboard
     // (/api/contributors/leaderboard), so the end of the line coincides exactly
     // with the value shown on /:lang/contributors.
-    app.get("/api/user/:username/rating", async (req, res) => {
+    defineUserEndpoint("rating", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
             const userRow = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
@@ -554,7 +698,8 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             }
             const userId = userRow.rows[0].id;
 
-            const payload = await withCache(`user:${username}:rating:v2`, async () => {
+            // v3: the series is anchored at zero before the first contribution.
+            const payload = await withCache(`user:${username}:rating:v3`, async () => {
                 const events = await pool.query(
                     `
                     SELECT problem_name, edited_at
@@ -597,6 +742,21 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                     });
                 }
                 const points = Array.from(byDay.values());
+
+                // Each day carries that day's *finished* score, so the very first
+                // point is already high — someone who made twenty edits on their
+                // first day starts the line at 20, hanging in mid-air. Anchor the
+                // series at zero on the day before, so it rises from the origin.
+                if (points.length > 0) {
+                    const anchor = new Date(`${points[0].date}T00:00:00Z`);
+                    anchor.setUTCDate(anchor.getUTCDate() - 1);
+                    points.unshift({
+                        date: anchor.toISOString().slice(0, 10),
+                        score: 0,
+                        solutions: 0,
+                        edits: 0,
+                    });
+                }
 
                 // Rank consistent with the leaderboard ordering (score DESC).
                 const rankResult = await pool.query(
@@ -651,11 +811,15 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/user/:username/stats", async (req, res) => {
+    defineUserEndpoint("stats", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
-            // v2: align headline stats with legacy profile (pair UNION; edits = row counts)
-            const cacheKey = `user:${username}:stats:v3:${req.session.userId || 0}`;
+            // v4: the cache key no longer carries the viewer's session id. It used to,
+            // purely so isOwnProfile and the owner-only platformOverview could live
+            // inside the cached object — which meant every signed-in visitor missed the
+            // cache on every profile and paid for the full query set. Both are now
+            // resolved after the cache, so all viewers share one warm payload.
+            const cacheKey = `user:${username}:stats:v4`;
             const payload = await withCache(cacheKey, async () => {
                 const userResult = await pool.query(
                     `
@@ -667,7 +831,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 );
                 if (userResult.rows.length === 0) return null;
                 const user = userResult.rows[0];
-                const isOwnProfile = req.session.userId === user.id;
+                // Deliberately not read from the session: this block is shared cache.
 
                 const statsResult = await pool.query(
                     `
@@ -779,7 +943,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 );
 
                 let platformOverview = null;
-                if (username === "astrosander" && isOwnProfile) {
+                if (username === "astrosander") {
                     const overview = await pool.query(
                         `
                         SELECT
@@ -840,7 +1004,6 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                         profilePicture: row.profile_picture || "/img/profile_images/Default_placeholder.svg",
                         sharedProblems: row.shared_problems,
                     })),
-                    isOwnProfile,
                     canShowSankey: Number(stats.edits || 0) >= 50 || username === "astrosander",
                     platformOverview,
                 };
@@ -850,8 +1013,17 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 return res.status(404).json({ error: "User not found" });
             }
 
-            // Follow status checked outside cache (changes frequently)
+            // Everything from here down depends on who is looking, so it is resolved
+            // per request against the one shared cached payload above.
             const result = { ...payload };
+            result.isOwnProfile = req.session.userId === payload.user.id;
+            // The platform-wide numbers are the owner's own dashboard; the cache holds
+            // them for astrosander's profile, but only astrosander gets to see them.
+            if (result.platformOverview && !result.isOwnProfile) {
+                result.platformOverview = null;
+            }
+
+            // Follow status checked outside cache (changes frequently)
             result.isFollowing = false;
             if (req.session.userId && req.session.userId !== payload.user.id) {
                 const followCheck = await pool.query(
@@ -907,7 +1079,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/user/:username/heatmap", async (req, res) => {
+    defineUserEndpoint("heatmap", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
             const rawYear = req.query.year;
@@ -1007,10 +1179,13 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/user/:username/radar", async (req, res) => {
+    defineUserEndpoint("radar", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
-            const payload = await withCache(`user:${username}:radar`, async () => {
+            const lang = normalizeLang(req.query.lang);
+            const structure = structureFor(lang);
+            const labels = CHART_LABELS[lang];
+            const payload = await withCache(`user:${username}:radar:${lang}`, async () => {
                 const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
                 if (user.rows.length === 0) return null;
                 const userId = user.rows[0].id;
@@ -1063,7 +1238,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 const other = top.slice(7).reduce((acc, x) => acc + x.solved, 0);
                 const radarAxes = radarBase.map((x) => ({ label: x.chapterName, value: x.solved }));
                 if (other > 0) {
-                    radarAxes.push({ label: "Other", value: other });
+                    radarAxes.push({ label: labels.other, value: other });
                 }
 
                 return { radarAxes, breakdown, solvedBySection };
@@ -1079,7 +1254,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/user/:username/timeline", async (req, res) => {
+    defineUserEndpoint("timeline", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
             const payload = await withCache(`user:${username}:timeline`, async () => {
@@ -1131,69 +1306,256 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/user/:username/contributions", async (req, res) => {
+    defineUserEndpoint("contributions", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
             const page = Math.max(1, parseInt(req.query.page, 10) || 1);
             const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
             const offset = (page - 1) * limit;
 
-            const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
-            if (user.rows.length === 0) {
+            // This was the one profile endpoint that hit the database on every
+            // request; page 1 is what every visitor loads, so it is worth caching
+            // on the same 1h clock as its neighbours.
+            const payload = await withCache(`user:${username}:contributions:${page}:${limit}`, async () => {
+                const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
+                if (user.rows.length === 0) return null;
+                const userId = user.rows[0].id;
+
+                const rows = await pool.query(
+                    `
+                    SELECT *
+                    FROM (
+                        SELECT
+                            id,
+                            problem_name,
+                            language,
+                            edited_at,
+                            'contribution' AS source
+                        FROM contributions
+                        WHERE user_id = $1
+                          AND invisible = false
+                        UNION ALL
+                        SELECT
+                            id,
+                            problem_name,
+                            language,
+                            edited_at,
+                            'github' AS source
+                        FROM github_contributions
+                        WHERE user_id = $1
+                    ) src
+                    ORDER BY edited_at DESC
+                    LIMIT $2 OFFSET $3
+                `,
+                    [userId, limit + 1, offset]
+                );
+
+                const hasNext = rows.rows.length > limit;
+                return {
+                    page,
+                    limit,
+                    hasNext,
+                    rows: hasNext ? rows.rows.slice(0, limit) : rows.rows,
+                };
+            });
+
+            if (!payload) {
                 return res.status(404).json({ error: "User not found" });
             }
-            const userId = user.rows[0].id;
-
-            const rows = await pool.query(
-                `
-                SELECT *
-                FROM (
-                    SELECT
-                        id,
-                        problem_name,
-                        language,
-                        edited_at,
-                        'contribution' AS source
-                    FROM contributions
-                    WHERE user_id = $1
-                      AND invisible = false
-                    UNION ALL
-                    SELECT
-                        id,
-                        problem_name,
-                        language,
-                        edited_at,
-                        'github' AS source
-                    FROM github_contributions
-                    WHERE user_id = $1
-                ) src
-                ORDER BY edited_at DESC
-                LIMIT $2 OFFSET $3
-            `,
-                [userId, limit + 1, offset]
-            );
-
-            const hasNext = rows.rows.length > limit;
-            const dataRows = hasNext ? rows.rows.slice(0, limit) : rows.rows;
-
             res.set("Cache-Control", "public, max-age=3600");
-            res.json({
-                page,
-                limit,
-                hasNext,
-                rows: dataRows,
-            });
+            res.json(payload);
         } catch (error) {
             console.error("Failed to load user contributions:", error);
             res.status(500).json({ error: "Failed to load user contributions" });
         }
     });
 
-    app.get("/api/user/:username/sankey", async (req, res) => {
+    // Who this contributor talks to and reads, in both directions.
+    //
+    // "Their solutions" means every problem they have edited — solutions here are
+    // collaborative, so there is no single author to attribute a like to. For a
+    // prolific editor that makes the incoming lists broad by construction; the
+    // counts still say who engages with their work most, which is the question.
+    defineUserEndpoint("social", async (req, res) => {
+        try {
+            const username = String(req.params.username || "").trim();
+
+            const payload = await withCache(`user:${username}:social`, async () => {
+                const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
+                if (user.rows.length === 0) return null;
+                const userId = user.rows[0].id;
+
+                // Problems this user has touched, and who else has touched each
+                // problem — the two building blocks every query below reuses.
+                const MINE = `
+                    SELECT DISTINCT problem_name
+                    FROM contributions
+                    WHERE user_id = $1 AND content_changed = true AND problem_name IS NOT NULL
+                    UNION
+                    SELECT DISTINCT problem_name
+                    FROM github_contributions
+                    WHERE user_id = $1 AND problem_name IS NOT NULL
+                `;
+                const AUTHORS = `
+                    SELECT DISTINCT problem_name, user_id
+                    FROM contributions
+                    WHERE user_id IS NOT NULL AND content_changed = true AND problem_name IS NOT NULL
+                    UNION
+                    SELECT DISTINCT problem_name, user_id
+                    FROM github_contributions
+                    WHERE user_id IS NOT NULL AND problem_name IS NOT NULL
+                `;
+                const PERSON = "u.username, u.full_name, u.profile_picture";
+
+                const [
+                    recentComments,
+                    likedSolutions,
+                    likedBy,
+                    commentedBy,
+                    likesGiven,
+                    commentsGiven,
+                    totals,
+                ] = await Promise.all([
+                    pool.query(
+                        `SELECT id, problem_name, language, content, created_at
+                         FROM solution_comments
+                         WHERE user_id = $1 AND is_deleted = false
+                         ORDER BY created_at DESC
+                         LIMIT 10`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `SELECT problem_name, language, created_at
+                         FROM solution_likes
+                         WHERE user_id = $1 AND is_like = true
+                         ORDER BY created_at DESC NULLS LAST
+                         LIMIT 12`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `WITH mine AS (${MINE})
+                         SELECT ${PERSON}, COUNT(*)::int AS count
+                         FROM solution_likes sl
+                         JOIN mine m ON m.problem_name = sl.problem_name
+                         JOIN users u ON u.id = sl.user_id
+                         WHERE sl.is_like = true AND sl.user_id <> $1
+                         GROUP BY ${PERSON}
+                         ORDER BY count DESC, u.username ASC
+                         LIMIT 8`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `WITH mine AS (${MINE})
+                         SELECT ${PERSON}, COUNT(*)::int AS count
+                         FROM solution_comments sc
+                         JOIN mine m ON m.problem_name = sc.problem_name
+                         JOIN users u ON u.id = sc.user_id
+                         WHERE sc.is_deleted = false AND sc.user_id <> $1
+                         GROUP BY ${PERSON}
+                         ORDER BY count DESC, u.username ASC
+                         LIMIT 8`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `WITH liked AS (
+                            SELECT DISTINCT problem_name
+                            FROM solution_likes
+                            WHERE user_id = $1 AND is_like = true AND problem_name IS NOT NULL
+                         ), authors AS (${AUTHORS})
+                         SELECT ${PERSON}, COUNT(DISTINCT a.problem_name)::int AS count
+                         FROM liked l
+                         JOIN authors a ON a.problem_name = l.problem_name
+                         JOIN users u ON u.id = a.user_id
+                         WHERE a.user_id <> $1
+                         GROUP BY ${PERSON}
+                         ORDER BY count DESC, u.username ASC
+                         LIMIT 8`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `WITH commented AS (
+                            SELECT problem_name, COUNT(*)::int AS n
+                            FROM solution_comments
+                            WHERE user_id = $1 AND is_deleted = false AND problem_name IS NOT NULL
+                            GROUP BY problem_name
+                         ), authors AS (${AUTHORS})
+                         SELECT ${PERSON}, SUM(c.n)::int AS count
+                         FROM commented c
+                         JOIN authors a ON a.problem_name = c.problem_name
+                         JOIN users u ON u.id = a.user_id
+                         WHERE a.user_id <> $1
+                         GROUP BY ${PERSON}
+                         ORDER BY count DESC, u.username ASC
+                         LIMIT 8`,
+                        [userId]
+                    ),
+                    pool.query(
+                        `WITH mine AS (${MINE})
+                         SELECT
+                            (SELECT COUNT(*)::int FROM solution_comments
+                             WHERE user_id = $1 AND is_deleted = false) AS comments_written,
+                            (SELECT COUNT(*)::int FROM solution_likes
+                             WHERE user_id = $1 AND is_like = true) AS likes_given,
+                            (SELECT COUNT(*)::int FROM solution_comments sc
+                             JOIN mine m ON m.problem_name = sc.problem_name
+                             WHERE sc.is_deleted = false AND sc.user_id <> $1) AS comments_received`,
+                        [userId]
+                    ),
+                ]);
+
+                const person = (row) => ({
+                    username: row.username,
+                    fullName: row.full_name || row.username,
+                    profilePicture: row.profile_picture || "/img/profile_images/Default_placeholder.svg",
+                    count: Number(row.count || 0),
+                });
+
+                return {
+                    recentComments: recentComments.rows.map((row) => ({
+                        id: row.id,
+                        problemName: row.problem_name,
+                        language: row.language,
+                        // The raw body can be long and carries Markdown/LaTeX; the
+                        // page shows a plain-text teaser and links to the thread.
+                        excerpt: String(row.content || "").replace(/\s+/g, " ").trim().slice(0, 220),
+                        createdAt: row.created_at,
+                    })),
+                    likedSolutions: likedSolutions.rows.map((row) => ({
+                        problemName: row.problem_name,
+                        language: row.language,
+                        createdAt: row.created_at,
+                    })),
+                    likedBy: likedBy.rows.map(person),
+                    commentedBy: commentedBy.rows.map(person),
+                    likesGiven: likesGiven.rows.map(person),
+                    commentsGiven: commentsGiven.rows.map(person),
+                    totals: {
+                        commentsWritten: Number(totals.rows[0]?.comments_written || 0),
+                        likesGiven: Number(totals.rows[0]?.likes_given || 0),
+                        commentsReceived: Number(totals.rows[0]?.comments_received || 0),
+                    },
+                };
+            });
+
+            if (!payload) {
+                return res.status(404).json({ error: "User not found" });
+            }
+            res.set("Cache-Control", "public, max-age=3600");
+            res.json(payload);
+        } catch (error) {
+            console.error("Failed to load user social activity:", error);
+            res.status(500).json({ error: "Failed to load user social activity" });
+        }
+    });
+
+    defineUserEndpoint("sankey", async (req, res) => {
         try {
             const username = String(req.params.username || "").trim();
             const chapterParam = parseInt(req.query.chapter, 10) || null;
-            const cacheKey = `user:${username}:sankey:${chapterParam || 0}`;
+            const lang = normalizeLang(req.query.lang);
+            const structure = structureFor(lang);
+            const labels = CHART_LABELS[lang];
+            const cacheKey = `user:${username}:sankey:${lang}:${chapterParam || 0}`;
             const payload = await withCache(cacheKey, async () => {
                 const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
                 if (user.rows.length === 0) return null;
@@ -1252,7 +1614,8 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                     : (solvedChapterNumbers[0] || chapterNumbers[0]);
 
                 const sectionNodes = structure.sections.filter((s) => s.chapter === selectedChapter);
-                const chapterName = structure.chapters.find((c) => c.number === selectedChapter)?.name || `Chapter ${selectedChapter}`;
+                const chapterName = structure.chapters.find((c) => c.number === selectedChapter)?.name
+                    || labels.chapter(selectedChapter);
 
                 const solvedBySection = {};
                 for (const problemName of solvedSet) {
@@ -1261,26 +1624,32 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                     solvedBySection[section] = (solvedBySection[section] || 0) + 1;
                 }
 
+                // Nodes are addressed by position, not by name: the titles are
+                // translated, and a section can legitimately share its wording with
+                // the chapter it belongs to.
+                const chapterIdx = 0;
+                const solvedIdx = 1 + sectionNodes.length;
+                const unsolvedIdx = solvedIdx + 1;
                 const nodes = [
                     { name: chapterName, kind: "chapter" },
                     ...sectionNodes.map((s) => ({ name: s.name, kind: "section" })),
-                    { name: "Solved", kind: "status" },
-                    { name: "Unsolved", kind: "status" },
+                    { name: labels.solved, kind: "status", status: "solved" },
+                    { name: labels.unsolved, kind: "status", status: "unsolved" },
                 ];
 
-                const nodeIndex = Object.fromEntries(nodes.map((n, i) => [n.name, i]));
                 const links = [];
-                for (const section of sectionNodes) {
+                sectionNodes.forEach((section, i) => {
+                    const sectionIdx = 1 + i;
                     const solved = solvedBySection[section.number] || 0;
                     const unsolved = Math.max(0, section.totalProblems - solved);
-                    links.push({ source: nodeIndex[chapterName], target: nodeIndex[section.name], value: section.totalProblems });
+                    links.push({ source: chapterIdx, target: sectionIdx, value: section.totalProblems });
                     if (solved > 0) {
-                        links.push({ source: nodeIndex[section.name], target: nodeIndex.Solved, value: solved });
+                        links.push({ source: sectionIdx, target: solvedIdx, value: solved });
                     }
                     if (unsolved > 0) {
-                        links.push({ source: nodeIndex[section.name], target: nodeIndex.Unsolved, value: unsolved });
+                        links.push({ source: sectionIdx, target: unsolvedIdx, value: unsolved });
                     }
-                }
+                });
 
                 return {
                     selectedChapter,
@@ -1306,3 +1675,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 };
+
+// Exported for tests only — the leaderboard route itself has no test database.
+module.exports.selectLeaderboardRows = selectLeaderboardRows;
+module.exports.countryOnLeaderboard = countryOnLeaderboard;

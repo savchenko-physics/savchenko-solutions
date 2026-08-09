@@ -1,0 +1,76 @@
+<%
+/*
+ * A video on the site, in whichever of three modes actually works for it.
+ *
+ * 1. videoFile — a file we host ourselves, played by a plain <video> element.
+ *    Best case: it plays on savchenkosolutions.com, no third-party origin, no
+ *    player but the browser's. Preferred whenever the file is available.
+ * 2. videoEmbeddable (default) — a poster that swaps in a youtube-nocookie iframe on
+ *    click, so nothing is requested from YouTube until someone presses play.
+ * 3. videoEmbeddable: false — the video's owner has switched embedding off, and the
+ *    YouTube player answers an <iframe> with "Playback on other websites has been
+ *    disabled by the video owner". Nothing on our side overrides that, so the poster
+ *    becomes a captioned link out rather than a player that can only ever fail.
+ *
+ * Locals: videoPoster, videoTitle, and either videoFile or videoId.
+ * Optional: videoStart (seconds), videoEmbeddable, videoSource (channel name).
+ *
+ * Modes 2 and 3 need /js/video-embed.js on the page; mode 1 needs no JavaScript.
+ */
+const localFile = (typeof videoFile !== 'undefined' && videoFile) ? videoFile : '';
+// /img is served with a 30-day max-age, so a poster referenced by a bare path stays
+// frozen in a returning visitor's cache for a month after it is replaced. The content
+// hash gives a changed poster a new URL; an unchanged one keeps its cache entry.
+const posterUrl = (typeof asset === 'function') ? asset(videoPoster) : videoPoster;
+const embedStart = (typeof videoStart !== 'undefined' && videoStart) ? Number(videoStart) : 0;
+const canEmbed = (typeof videoEmbeddable === 'undefined') ? true : !!videoEmbeddable;
+const sourceName = (typeof videoSource !== 'undefined' && videoSource) ? videoSource : '';
+const watchLabel = (typeof lang !== 'undefined' && lang === 'ru') ? 'Смотреть на YouTube' : 'Watch on YouTube';
+%>
+<% if (localFile) { %>
+<div class="video-embed video-embed-native">
+    <video class="video-embed-media" controls preload="none"
+           poster="<%= posterUrl %>"
+           <% if (embedStart > 0) { %>src="<%= localFile %>#t=<%= embedStart %>"<% } else { %>src="<%= localFile %>"<% } %>
+           playsinline>
+        <%= videoTitle %>
+    </video>
+</div>
+<% } else if (canEmbed) { %>
+<div class="video-embed">
+    <button type="button" class="video-embed-trigger"
+            data-video-id="<%= videoId %>"
+            <% if (embedStart > 0) { %>data-video-start="<%= embedStart %>"<% } %>
+            aria-label="<%= videoTitle %>">
+        <img class="video-embed-poster" src="<%= posterUrl %>" alt="" width="1280" height="720" loading="lazy" decoding="async">
+        <span class="video-embed-play" aria-hidden="true">
+            <svg viewBox="0 0 68 48" width="68" height="48" focusable="false">
+                <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#c0392b"/>
+                <path d="M45 24L27 14v20" fill="#ffffff"/>
+            </svg>
+        </span>
+        <span class="video-embed-title"><%= videoTitle %></span>
+    </button>
+</div>
+<% } else { %>
+<div class="video-embed video-embed-external">
+    <%# Deliberately NOT .video-embed-trigger. An older, still-cached copy of
+        video-embed.js intercepts every .video-embed-trigger click and calls
+        preventDefault(), which would leave this link doing nothing for up to a week.
+        A class no version of the script looks at cannot be swallowed by any of them. %>
+    <a class="video-embed-link" href="https://www.youtube.com/watch?v=<%= videoId %>"
+       target="_blank" rel="noopener" aria-label="<%= videoTitle %> — <%= watchLabel %>">
+        <img class="video-embed-poster" src="<%= posterUrl %>" alt="" width="1280" height="720" loading="lazy" decoding="async">
+        <span class="video-embed-play" aria-hidden="true">
+            <svg viewBox="0 0 68 48" width="68" height="48" focusable="false">
+                <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#c0392b"/>
+                <path d="M45 24L27 14v20" fill="#ffffff"/>
+            </svg>
+        </span>
+        <span class="video-embed-caption">
+            <span class="video-embed-caption-title"><%= videoTitle %></span>
+            <span class="video-embed-caption-meta"><% if (sourceName) { %><%= sourceName %> &middot; <% } %><%= watchLabel %></span>
+        </span>
+    </a>
+</div>
+<% } %>

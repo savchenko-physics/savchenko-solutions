@@ -536,21 +536,36 @@
             </div>
           </div>
           <div class="col-12 col-lg-4 intro-youtube-col">
-            <!-- YouTube Video (kept in current position) -->
+            <%# The LEX News segment about the project, served from our own /video and
+                played by the browser — YouTube refuses to embed it (LEX has embedding off,
+                so any <iframe> renders "Playback on other websites has been disabled by
+                the video owner"). The YouTube link-out below is the fallback if the file
+                is ever missing; the poster is a frame of the segment itself, keeping LEX's
+                own lower-third and attribution on screen. The how-to walkthrough that used
+                to sit here now lives on the study guide. %>
             <div class="mb-3">
-              <a href="https://www.youtube.com/watch?v=d-x7Lk-mfTs" target="_blank" class="video-preview">
-                <img
-                  src="/img/yt_preview.jpg"
-                  alt="Watch on YouTube"
-                  class="img-fluid"
-                />
-                <div class="play-button-overlay">
-                  <svg width="48" height="48" viewBox="0 0 68 48" fill="none">
-                    <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/>
-                    <path d="M45 24L27 14v20" fill="white"/>
-                  </svg>
-                </div>
-              </a>
+              <%- include('default/video_embed', {
+                videoId: 'cNSQZJMJFZs',
+                videoFile: (typeof assetIfPresent === 'function') ? assetIfPresent('/video/lex-news.mp4') : null,
+                videoPoster: '/img/lex-news-poster.webp',
+                videoTitle: lang === 'ru'
+                  ? '«Настоящее влияние»: студент Berea College создаёт бесплатные платформы для науки'
+                  : '‘Real impact’: Berea College student builds free science education platforms',
+                videoSource: 'LEX News',
+                videoEmbeddable: false
+              }) %>
+              <%# A press credit, not decoration: naming the outlet and its network is
+                  what makes the segment read as coverage rather than a self-made clip.
+                  LEX 18 is WLEX-TV, the NBC affiliate for Lexington, Kentucky since 1968
+                  (E. W. Scripps) — "(NBC)" is the affiliation, so it stays parenthetical
+                  rather than implying the network itself reported this. %>
+              <p class="video-credit">
+                <span class="video-credit-outlet">LEX 18 <span class="video-credit-network">(NBC)</span>,</span>
+                <a class="video-credit-link" href="https://www.lex18.com/news/covering-kentucky/real-impact-berea-college-student-builds-free-science-education-platforms"
+                   target="_blank" rel="noopener">
+                  <%= lang === 'ru' ? 'Читать оригинальный репортаж' : 'Read the original story' %>
+                </a>
+              </p>
             </div>
           </div>
         </div>
@@ -687,7 +702,8 @@
             </div>
             <div class="commit-thread">
               <% recentContributions.slice(0, 8).forEach(contribution => { %>
-              <div class="commit-entry<%= contribution.isNew ? ' new-solution' : '' %>">
+              <% const isComment = contribution.kind === 'comment'; %>
+              <div class="commit-entry<%= contribution.isNew ? ' new-solution' : '' %><%= isComment ? ' comment-entry' : '' %>">
                 <div class="commit-dot-wrapper">
                   <span class="commit-hline"></span>
                   <span class="commit-dot"></span>
@@ -696,7 +712,12 @@
                 <div class="commit-entry-body">
                   <div class="commit-entry-main">
                     <a href="/<%= contribution.lang %>/<%= contribution.version %>" class="commit-problem"><%= contribution.version %></a>
-                    <span class="commit-action"><%= contribution.isNew ? (lang === 'ru' ? 'добавлена' : 'new') : (lang === 'ru' ? 'изменена' : 'edited') %></span>
+                    <%# Same grammatical shape as the edit actions ("добавлена", "изменена"),
+                        so the three read as one list rather than two kinds of phrase. %>
+                    <span class="commit-action"><%
+                      if (isComment) { %><%= lang === 'ru' ? 'прокомментировано' : 'commented' %><%
+                      } else if (contribution.isNew) { %><%= lang === 'ru' ? 'добавлена' : 'new' %><%
+                      } else { %><%= lang === 'ru' ? 'изменена' : 'edited' %><% } %></span>
                     <span class="commit-by"><%= lang === 'ru' ? '' : 'by' %></span>
                     <% if (contribution.hasUser) { %>
                       <a href="/user/<%= contribution.editor %>" class="commit-author"><%= contribution.editor %></a>
@@ -706,7 +727,7 @@
                   </div>
                   <div class="commit-entry-footer">
                     <time class="commit-time" datetime="<%= contribution.relativeTime %>"><%= contribution.timestamp %></time>
-                    <a href="/<%= contribution.lang %>/contributions/<%= contribution.id %>" class="commit-id">#<%= contribution.id %></a>
+                    <a href="<%= contribution.href %>" class="commit-id"><%= isComment ? (lang === 'ru' ? 'к обсуждению' : 'thread') : '#' + contribution.id %></a>
                   </div>
                 </div>
               </div>
@@ -1413,39 +1434,6 @@
       color: #495057 !important;
     }
 
-    /* Video Preview */
-    .video-preview {
-      position: relative;
-      display: block;
-      border-radius: 0;
-      overflow: hidden;
-      transition: opacity 0.2s ease;
-      box-shadow: none;
-    }
-
-    .video-preview:hover {
-      opacity: 0.92;
-    }
-
-    .video-preview img {
-      width: 100%;
-      display: block;
-    }
-
-    .play-button-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      opacity: 0.9;
-      transition: opacity 0.3s ease;
-    }
-
-    .video-preview:hover .play-button-overlay {
-      opacity: 1;
-    }
-
     @media (max-width: 768px) {
       .compact-intro {
         padding: 0.9rem 1rem;
@@ -1548,11 +1536,44 @@
         font-size: 0.8rem;
       }
 
-      .play-button-overlay svg {
-        width: 36px;
-        height: 36px;
+      .video-embed-play svg {
+        width: 46px;
+        height: 32px;
       }
     }
+
+    /* Press credit under the segment: outlet, its network, and the way through to
+       the written story — one line, since it is an attribution, not a section. */
+    .video-credit {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.45rem;
+      margin: 0.55rem 0 0;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .video-credit-outlet {
+      font-weight: 600;
+      color: #1a1a2e;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .video-credit-network {
+      color: #1a5276;
+    }
+
+    .video-credit-link {
+      color: #1a5276;
+      text-decoration: none;
+    }
+
+    .video-credit-link:hover {
+      text-decoration: underline;
+    }
+
 
     /* ===== Chapter Grid ===== */
     .chapter-grid {
@@ -2021,6 +2042,13 @@
     .commit-entry.new-solution .commit-dot {
       background: #27ae60;
     }
+    /* A comment is a different kind of event from an edit, so its marker is hollow —
+       distinguishable at a glance without adding another colour to the sidebar. */
+    .commit-entry.comment-entry .commit-dot {
+      background: #ffffff;
+      border-color: #1a5276;
+      box-shadow: inset 0 0 0 1px #1a5276;
+    }
     .commit-entry-body {
       display: flex;
       flex-direction: column;
@@ -2484,5 +2512,6 @@
       }
     });
   </script>
+  <script defer src="<%= (typeof asset === 'function') ? asset('/js/video-embed.js') : '/js/video-embed.js' %>"></script>
 </body>
 </html>

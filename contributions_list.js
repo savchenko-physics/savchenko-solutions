@@ -66,17 +66,27 @@ function buildProblemGroups(contributions, lang) {
                 problemName: c.problem_name,
                 language: c.language,
                 rows: [],
-                earliestMs: t,
-                latestMs: t,
+                earliestMs: null,
+                latestMs: null,
             };
             groups.push(cur);
         }
         cur.rows.push(c);
-        cur.earliestMs = Math.min(cur.earliestMs, t);
-        cur.latestMs = Math.max(cur.latestMs, t);
+        // "solved in X" measures how long the writing took, so a comment left days
+        // later must not stretch it — the span is over edits only.
+        if (c.isComment) continue;
+        cur.earliestMs = cur.earliestMs === null ? t : Math.min(cur.earliestMs, t);
+        cur.latestMs = cur.latestMs === null ? t : Math.max(cur.latestMs, t);
     }
     groups.forEach((g, i) => {
-        const spanMs = g.latestMs - g.earliestMs;
+        // A group of nothing but comments has no edit span to report.
+        if (g.earliestMs === null) {
+            const t = new Date(g.rows[0].edited_at).getTime();
+            g.earliestMs = t;
+            g.latestMs = t;
+            g.commentsOnly = true;
+        }
+        const spanMs = g.commentsOnly ? 0 : g.latestMs - g.earliestMs;
         g.solvedPrefix = isRu ? 'решено·' : 'solved·';
         g.solvedInWord = isRu ? 'за' : 'in';
         g.spanDur = spanMs > 0 ? fmtGap(spanMs, lang) : null;
@@ -111,7 +121,10 @@ async function getContributionsList(req, res) {
                     u.full_name,
                     u.profile_picture,
                     CASE
-                        WHEN ROW_NUMBER() OVER (PARTITION BY c.problem_name ORDER BY c.edited_at ASC, c.id ASC) = 1
+                        WHEN c.source = 'comment' THEN 0
+                        WHEN ROW_NUMBER() OVER (
+                            PARTITION BY c.problem_name, (c.source = 'comment')
+                            ORDER BY c.edited_at ASC, c.id ASC) = 1
                         THEN 1 ELSE 0
                     END AS is_new
                 FROM (
@@ -122,6 +135,13 @@ async function getContributionsList(req, res) {
                     SELECT
                         id, user_id, edited_at, problem_name, language, content_changed, 'direct' AS source
                     FROM contributions
+                    UNION ALL
+                    -- A comment is an event on a solution, so it belongs in the same
+                    -- time-ordered thread as the edits, the way it does on the homepage.
+                    SELECT
+                        id, user_id, created_at AS edited_at, problem_name, language, false AS content_changed, 'comment' AS source
+                    FROM solution_comments
+                    WHERE is_deleted = false AND problem_name IS NOT NULL
                 ) c
                 LEFT JOIN users u ON c.user_id = u.id
                 ORDER BY c.edited_at DESC
@@ -159,7 +179,10 @@ async function getContributionsList(req, res) {
                     u.full_name,
                     u.profile_picture,
                     CASE
-                        WHEN ROW_NUMBER() OVER (PARTITION BY c.problem_name ORDER BY c.edited_at ASC, c.id ASC) = 1
+                        WHEN c.source = 'comment' THEN 0
+                        WHEN ROW_NUMBER() OVER (
+                            PARTITION BY c.problem_name, (c.source = 'comment')
+                            ORDER BY c.edited_at ASC, c.id ASC) = 1
                         THEN 1 ELSE 0
                     END AS is_new
                 FROM (
@@ -170,6 +193,13 @@ async function getContributionsList(req, res) {
                     SELECT
                         id, user_id, edited_at, problem_name, language, content_changed, 'direct' AS source
                     FROM contributions
+                    UNION ALL
+                    -- A comment is an event on a solution, so it belongs in the same
+                    -- time-ordered thread as the edits, the way it does on the homepage.
+                    SELECT
+                        id, user_id, created_at AS edited_at, problem_name, language, false AS content_changed, 'comment' AS source
+                    FROM solution_comments
+                    WHERE is_deleted = false AND problem_name IS NOT NULL
                 ) c
                 LEFT JOIN users u ON c.user_id = u.id
                 WHERE c.problem_name = $1 AND c.language = $2
@@ -207,6 +237,7 @@ async function getContributionsList(req, res) {
         const contributions = result.rows.map(row => ({
             ...row,
             isNew: Number(row.is_new) === 1,
+            isComment: row.source === 'comment',
             isOnline: onlineUsernames.has(row.username),
         }));
 
@@ -225,7 +256,7 @@ async function getContributionsList(req, res) {
                 limit,
                 offset,
                 shown: contributions.length,
-                hasMore: offset + contributions.length < totalRows,
+                hasMore: contributions.length === limit,
                 nextOffset: offset + contributions.length,
             },
             formatDate: (date) => {

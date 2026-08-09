@@ -271,6 +271,11 @@
             position: relative;
             z-index: 1;
         }
+        /* Hollow marker for a comment, matching the homepage feed. */
+        .cl-commit-row.is-comment .cl-commit-dot {
+            background: #ffffff;
+            box-shadow: inset 0 0 0 2px #1a5276;
+        }
         .cl-commit-dot::before,
         .cl-commit-dot::after {
             content: '';
@@ -326,6 +331,12 @@
         .cl-label-edit {
             background: #f0f3f6;
             color: #6c757d;
+        }
+        /* A comment is a different kind of event from an edit; the link tint keeps it
+           legible against the green "new solution" and the grey "edit". */
+        .cl-label-comment {
+            background: #e8eff5;
+            color: #1a5276;
         }
 
         .cl-commit-meta {
@@ -566,14 +577,16 @@
                     <% } %>
                 </div>
                 <% group.rows.forEach(contribution => { %>
-                <div class="cl-commit-row<%= contribution.isNew ? ' is-new' : '' %>">
+                <div class="cl-commit-row<%= contribution.isNew ? ' is-new' : '' %><%= contribution.isComment ? ' is-comment' : '' %>">
                     <div class="cl-commit-badge">
                         <div class="cl-commit-dot"></div>
                     </div>
                     <div class="cl-commit-main">
                         <div class="cl-commit-title">
                             <a href="/<%= contribution.language %>/<%= contribution.problem_name %>" class="cl-commit-problem"><%= contribution.problem_name %></a>
-                            <% if (contribution.isNew) { %>
+                            <% if (contribution.isComment) { %>
+                                <span class="cl-commit-label cl-label-comment"><%= lang === 'ru' ? 'комментарий' : 'comment' %></span>
+                            <% } else if (contribution.isNew) { %>
                                 <span class="cl-commit-label cl-label-new"><%= lang === 'ru' ? 'новое' : 'new solution' %></span>
                             <% } else { %>
                                 <span class="cl-commit-label cl-label-edit"><%= lang === 'ru' ? 'правка' : 'edit' %></span>
@@ -594,7 +607,12 @@
                         </div>
                     </div>
                     <div class="cl-commit-right">
-                        <a href="/<%= contribution.language %>/contributions/<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Посмотреть изменения' : 'View changes' %>">#<%= contribution.id %></a>
+                        <% if (contribution.isComment) { %>
+                            <%# A comment has no diff to show; go to it in the thread instead. %>
+                            <a href="/<%= contribution.language %>/<%= encodeURIComponent(contribution.problem_name) %>#comment-<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Открыть обсуждение' : 'Open the discussion' %>"><%= lang === 'ru' ? 'к обсуждению' : 'thread' %></a>
+                        <% } else { %>
+                            <a href="/<%= contribution.language %>/contributions/<%= contribution.id %>" class="cl-commit-hash" title="<%= lang === 'ru' ? 'Посмотреть изменения' : 'View changes' %>">#<%= contribution.id %></a>
+                        <% } %>
                     </div>
                 </div>
                 <% }); %>

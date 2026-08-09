@@ -544,6 +544,121 @@
         .comment-item:last-child {
             border-bottom: none;
         }
+        /* The comment a #comment-N link was pointing at. A left rule rather than a
+           flash of colour, so it still reads as the marker after the scroll settles. */
+        /* ── Reactions on comments ── */
+        /* The action row the reply/edit links already lived on. The reaction trigger
+           joins it rather than claiming a line of its own. */
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 0.4rem;
+        }
+
+        .comment-reactions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 0.45rem;
+        }
+
+        .comment-reaction {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 8px;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            background: #fff;
+            font-size: 14px;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .comment-reaction[disabled] { cursor: default; }
+        .comment-reaction:not([disabled]):hover { background: #f8f9fa; }
+        .comment-reaction.me { border-color: #1a5276; background: #eaf2f8; }
+
+        .comment-reaction-count {
+            font-size: 11px;
+            color: #6c757d;
+            font-variant-numeric: tabular-nums;
+        }
+        .comment-reaction.me .comment-reaction-count { color: #1a5276; }
+
+        /* Always visible. It used to fade in on hover, which meant nobody knew
+           reactions existed unless they happened to point at a comment — and on a
+           touch screen, never. Quiet grey is enough to keep it out of the way. */
+        .comment-react {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            color: #adb5bd;
+            cursor: pointer;
+            transition: color 0.12s;
+        }
+        .comment-react:hover,
+        .comment-react:focus-within { color: #1a5276; }
+
+        .comment-react-picker {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: -8px;
+            z-index: 1000;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 6px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            white-space: nowrap;
+        }
+        /* A padded halo so the pointer can cross the gap to the picker without it
+           closing underneath them. */
+        .comment-react-picker::after {
+            content: '';
+            position: absolute;
+            top: -10px; left: -10px; right: -10px; bottom: -10px;
+            z-index: -1;
+        }
+        .comment-react:hover .comment-react-picker,
+        .comment-react:focus-within .comment-react-picker { display: flex; }
+        /* Stays shut after a pick until the pointer leaves and comes back. */
+        .comment-react.is-dismissed .comment-react-picker { display: none; }
+
+        .comment-react-pick {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: none;
+            border-radius: 50%;
+            font-size: 19px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            cursor: pointer;
+            transition: transform 0.12s, background 0.12s;
+        }
+        .comment-react-pick:hover {
+            background: #f1f3f5;
+            transform: scale(1.25);
+        }
+        /* The one you already left, so the picker shows your current choice rather
+           than six identical options. Clicking a different one swaps it. */
+        .comment-react-pick.is-mine {
+            background: #eaf2f8;
+            box-shadow: inset 0 0 0 2px #1a5276;
+        }
+
+        .comment-item.comment-targeted {
+            background: #f8f9fa;
+            box-shadow: inset 3px 0 0 #1a5276;
+        }
 
         .comment-author {
             display: flex;
@@ -2070,6 +2185,9 @@
     <script>
         const problemName = '<%- name %>';
         const language = '<%- lang %>';
+        <%# Read server-side during this render. "<" is escaped so a "</script>" inside
+            any comment body cannot end this block early. %>
+        window.__solutionData = <%- (typeof solutionBundle !== 'undefined' && solutionBundle) ? JSON.stringify(solutionBundle).replace(/</g, '\\u003c') : 'null' %>;
         const defaultProfileAvatar = '/img/profile_images/Default_placeholder.svg';
         const isLoggedIn = Boolean(<%- username ? 1 : 0 %>);
         const i18nText = {
@@ -2253,7 +2371,12 @@
                 ? '<span class="comment-brainstorm-badge">' + (language === 'ru' ? 'Мозговой штурм' : 'Brainstorm') + '</span>'
                 : '';
 
-            let html = '<div class="comment-item" data-comment-id="' + comment.id + '">' +
+            const actionsInner = renderReactionTrigger(comment) + replyBtn + editBtn;
+            const actionsRow = actionsInner
+                ? '<div class="comment-actions">' + actionsInner + '</div>'
+                : '';
+
+            let html = '<div class="comment-item" id="comment-' + comment.id + '" data-comment-id="' + comment.id + '">' +
                 '<div class="comment-author">' +
                     '<span class="avatar-presence">' +
                         '<img src="' + escapeHtml(comment.author.profilePicture || defaultProfileAvatar) + '" alt="" class="comment-avatar">' +
@@ -2265,7 +2388,8 @@
                     '</div>' +
                 '</div>' +
                 '<div class="comment-content">' + formatCommentContent(comment.content) + '</div>' +
-                replyBtn + editBtn +
+                renderReactionChips(comment) +
+                actionsRow +
             '</div>';
 
             if (comment.replies && comment.replies.length > 0) {
@@ -2286,11 +2410,144 @@
             initializeViewsChart();
         });
 
+        /* ── Reactions ──────────────────────────────────────────────────────────
+           Modelled on the message thread: a smiley that appears on hover and opens a
+           floating pill of the same six emoji. Deliberately NOT a persistent "+"
+           button — that cost every comment a line of vertical space whether or not
+           anyone had reacted. The trigger sits in the row the reply/edit links
+           already occupy, and the chips only exist once there is something to show. */
+        const REACTION_EMOJI = <%- JSON.stringify(typeof brainstormReactions !== 'undefined' ? brainstormReactions : []) %>;
+        const canReact = <%- (typeof userId !== 'undefined' && userId) ? 'true' : 'false' %>;
+
+        const SMILEY_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/>' +
+            '<line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
+
+        /* Which emoji this viewer left on a comment, if any. There is at most one:
+           picking a different emoji replaces it rather than adding a second. */
+        function myReaction(comment) {
+            const mine = (comment.reactions || []).find(function (r) { return r.me; });
+            return mine ? mine.emoji : null;
+        }
+
+        /* Chips only — returns nothing at all when no one has reacted yet. */
+        function renderReactionChips(comment) {
+            const list = comment.reactions || [];
+            if (list.length === 0) return '';
+            return '<div class="comment-reactions" data-reactions-for="' + comment.id + '">' +
+                list.map(function (r) {
+                    return '<button type="button" class="comment-reaction' + (r.me ? ' me' : '') + '"' +
+                        ' data-comment-id="' + comment.id + '" data-emoji="' + escapeHtml(r.emoji) + '"' +
+                        (canReact ? '' : ' disabled') + '>' + escapeHtml(r.emoji) +
+                        '<span class="comment-reaction-count">' + r.count + '</span></button>';
+                }).join('') + '</div>';
+        }
+
+        /* The hover trigger, which lives inline with Ответить / Изменить. */
+        function renderReactionTrigger(comment) {
+            if (!canReact) return '';
+            const label = language === 'ru' ? 'Добавить реакцию' : 'Add a reaction';
+            const mine = myReaction(comment);
+            return '<span class="comment-react" data-comment-id="' + comment.id + '"' +
+                ' role="button" tabindex="0" aria-label="' + label + '">' + SMILEY_SVG +
+                '<span class="comment-react-picker">' +
+                    REACTION_EMOJI.map(function (e) {
+                        const isMine = e === mine;
+                        return '<button type="button" class="comment-react-pick' + (isMine ? ' is-mine' : '') +
+                            '" data-comment-id="' + comment.id + '" data-emoji="' + escapeHtml(e) + '"' +
+                            ' aria-pressed="' + (isMine ? 'true' : 'false') + '">' + escapeHtml(e) + '</button>';
+                    }).join('') +
+                '</span></span>';
+        }
+
+        async function toggleReaction(commentId, emoji) {
+            try {
+                const res = await fetch('/api/solutions/comments/' + encodeURIComponent(commentId) + '/reactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emoji: emoji }),
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+
+                /* Redraw from the counts the server returned, so the screen matches the
+                   database rather than an optimistic guess. */
+                const item = document.getElementById('comment-' + commentId);
+                if (!item) return;
+
+                item.querySelectorAll('.comment-react-pick').forEach(function (btn) {
+                    const isMine = btn.dataset.emoji === data.mine;
+                    btn.classList.toggle('is-mine', isMine);
+                    btn.setAttribute('aria-pressed', isMine ? 'true' : 'false');
+                });
+
+                const fresh = renderReactionChips({ id: commentId, reactions: data.reactions || [] });
+                const existing = item.querySelector('.comment-reactions');
+                if (existing && fresh) {
+                    const box = document.createElement('div');
+                    box.innerHTML = fresh;
+                    existing.replaceWith(box.firstElementChild);
+                } else if (existing) {
+                    existing.remove();            // last reaction removed
+                } else if (fresh) {
+                    const box = document.createElement('div');
+                    box.innerHTML = fresh;
+                    const content = item.querySelector('.comment-content');
+                    if (content) content.insertAdjacentElement('afterend', box.firstElementChild);
+                }
+            } catch (_) { /* leave the comment as it was */ }
+        }
+
+        /* Leaving the trigger re-arms it, so pointing at it again reopens the picker. */
+        document.addEventListener('mouseout', function (e) {
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const react = target.closest('.comment-react');
+            if (!react || react.contains(e.relatedTarget)) return;
+            react.classList.remove('is-dismissed');
+        });
+
+        /* Delegated, so it covers comments rendered now and after a reply is posted. */
+        document.addEventListener('click', function (e) {
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const pick = target.closest('.comment-react-pick');
+            if (pick) {
+                e.preventDefault();
+                /* Close the picker on choosing, the way a menu closes on selection —
+                   otherwise it sits open over the comment it just reacted to. The flag
+                   suppresses the hover rule until the pointer actually leaves the
+                   trigger, so moving away and coming back opens it again. */
+                const react = pick.closest('.comment-react');
+                if (react) react.classList.add('is-dismissed');
+                pick.blur();   // or :focus-within would hold it open
+                toggleReaction(pick.dataset.commentId, pick.dataset.emoji);
+                return;
+            }
+            const chip = target.closest('.comment-reaction:not([disabled])');
+            if (chip) {
+                e.preventDefault();
+                toggleReaction(chip.dataset.commentId, chip.dataset.emoji);
+            }
+        });
+
+        /* The server read these while rendering the page and put them in the document,
+           so the first paint costs no round trip. Each value is handed out once: a
+           reload after liking or commenting must go back to the network for the truth,
+           not replay what the page was born with. */
+        function takeInlined(key) {
+            const store = window.__solutionData;
+            if (!store || !store[key]) return null;
+            const value = store[key];
+            store[key] = null;
+            return value;
+        }
+
         /* Load solution statistics */
         async function loadSolutionStats() {
             try {
-                const response = await fetch('/api/solutions/' + problemName + '/' + language + '/stats');
-                const stats = await response.json();
+                const stats = takeInlined('stats')
+                    || await (await fetch('/api/solutions/' + problemName + '/' + language + '/stats')).json();
 
                 document.getElementById('likeCount').textContent = stats.likes;
                 document.getElementById('dislikeCount').textContent = stats.dislikes;
@@ -2343,8 +2600,8 @@
         /* Comments */
         async function loadComments() {
             try {
-                const response = await fetch('/api/solutions/' + problemName + '/' + language + '/comments');
-                const data = await response.json();
+                const data = takeInlined('comments')
+                    || await (await fetch('/api/solutions/' + problemName + '/' + language + '/comments')).json();
 
                 const commentsList = document.getElementById('commentsList');
                 const countEl = document.getElementById('discussionCount');
@@ -2377,6 +2634,8 @@
                     if (/[$]|\\\(|\\\[/.test(commentsList.textContent || '')) {
                         window.ensureMathJax(function () { MathJax.typesetPromise([commentsList]); });
                     }
+
+                    focusHashComment();
                 } else {
                     countEl.textContent = '(0)';
                     commentsList.innerHTML = '<div class="comment-item" style="text-align: center; color: #6c757d;">' + i18nText.noComments + '</div>';
@@ -2384,6 +2643,19 @@
             } catch (error) {
                 console.error('Error loading comments:', error);
             }
+        }
+
+        /* A #comment-N link (from the homepage's recent-changes feed, or a profile's
+           comment list) arrives before the thread has been fetched, so the browser has
+           nothing to scroll to and silently gives up. Do it here instead, once the
+           comments exist, and mark the target so it is obvious which one was meant. */
+        function focusHashComment() {
+            const match = /^#comment-(\d+)$/.exec(window.location.hash || '');
+            if (!match) return;
+            const target = document.getElementById('comment-' + match[1]);
+            if (!target) return;
+            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            target.classList.add('comment-targeted');
         }
 
         function showReplyForm(link) {

@@ -20,3 +20,6 @@ public/sitemap_recent.xml
 /src/__pycache__
 # offline catalog build state (never committed; data/recommendations.json is)
 data/.build/
+
+# Self-hosted video files (large binaries; see video/README.md)
+/video/*.mp4

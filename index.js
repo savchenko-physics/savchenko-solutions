@@ -59,7 +59,9 @@ const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
 const { pingIndexNow } = require('./indexnow');
-const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
+// ALLOWED_REACTIONS is shared with the chat and the brainstorm threads, so a reaction
+// means the same thing everywhere on the site.
+const { router: brainstormRouter, renderRoom: renderBrainstormRoom, ALLOWED_REACTIONS } = require('./brainstorm');
 
 const app = express();
 const PORT = 3000;
@@ -205,6 +207,11 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/physics-telegram-catalog.pdf", express.static(path.join(__dirname, "pdf/physics-telegram-catalog.pdf")));
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
+// The 3rd edition, which /savchenko.pdf served until the 4th replaced it. Kept
+// reachable because it is the typeset copy: the 4th edition is a scan with an OCR text
+// layer, so this one is still the better source for exact text and the smaller download
+// (5.4 MB against 21 MB).
+app.use("/savchenko-3rd-ed.pdf", express.static(path.join(__dirname, "pdf/savchenko-3rd-ed.pdf")));
 // Analytics tag gate. Registered BEFORE the /js static mount so it wins for this one URL.
 //
 // 40 templates carry a bare <script src="/js/analytics.js">, so intercepting the URL is
@@ -234,6 +241,11 @@ app.get('/js/analytics.js', (req, res) => {
 });
 
 app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
+// Self-hosted video. express.static answers Range requests, which is what a <video>
+// element needs in order to seek, so a file dropped in here plays on the site with no
+// third-party player involved. Empty until someone puts a file in it — see
+// views/default/video_embed.ejs.
+app.use("/video", express.static(path.join(__dirname, "video"), { maxAge: '30d' }));
 // MathJax 3 served from the installed mathjax-full package instead of a public CDN.
 // cdn.jsdelivr.net is blocked on some networks (notably several post-Soviet ISPs),
 // which left every page without its scripts and stylesheets. See css/vendor, js/vendor.
@@ -271,6 +283,20 @@ function assetUrl(p) {
     }
 }
 app.locals.asset = assetUrl;   // available in every res.render (incl. partials)
+
+// Versioned URL for a file that may or may not exist yet, or null if it does not.
+// Lets a template offer a self-hosted video the moment the file is copied onto the
+// server, with no code change and no redeploy.
+function assetIfPresent(p) {
+    try {
+        const clean = String(p).split("?")[0];
+        fs.statSync(path.join(__dirname, clean.replace(/^\/+/, "")));
+        return assetUrl(clean);
+    } catch (_err) {
+        return null;
+    }
+}
+app.locals.assetIfPresent = assetIfPresent;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
@@ -1313,6 +1339,25 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
         // Fresh online presence for comment-author avatars (privacy-aware).
         const online = await getOnlineUsernames(pool, result.rows.map(r => r.username));
 
+        // Every reaction for this thread in one query, grouped per comment. `me` marks
+        // the ones the viewer left, so the UI can show them as pressed.
+        const reactionsByComment = new Map();
+        if (result.rows.length > 0) {
+            const reactionRows = await pool.query(
+                `SELECT comment_id, emoji, COUNT(*)::int AS count,
+                        BOOL_OR(user_id = $2) AS me
+                 FROM solution_comment_reactions
+                 WHERE comment_id = ANY($1::int[])
+                 GROUP BY comment_id, emoji
+                 ORDER BY MIN(created_at)`,
+                [result.rows.map(r => r.id), currentUserId]
+            ).catch(() => ({ rows: [] }));   // pre-migration 048: simply no reactions
+            for (const r of reactionRows.rows) {
+                if (!reactionsByComment.has(r.comment_id)) reactionsByComment.set(r.comment_id, []);
+                reactionsByComment.get(r.comment_id).push({ emoji: r.emoji, count: r.count, me: !!r.me });
+            }
+        }
+
         const comments = result.rows.map(row => {
             const isOwnComment = currentUserId && row.user_id === currentUserId;
             const createdAt = new Date(row.created_at);
@@ -1328,6 +1373,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
                 isBrainstorm: row.is_brainstorm,
                 isOwnComment,
                 isEditable,
+                reactions: reactionsByComment.get(row.id) || [],
                 author: {
                     username: row.username,
                     fullName: row.full_name,
@@ -1341,6 +1387,89 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to get comments" });
+    }
+});
+
+// Toggle a reaction on a solution comment.
+//
+// Same six emoji as the chat and the brainstorm threads (ALLOWED_REACTIONS), and the
+// same toggle semantics: pressing the one you already left removes it. The emoji is
+// checked against that list rather than stored as sent — the column is VARCHAR(8) and
+// this is a public write path.
+app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, async (req, res) => {
+    const commentId = parseInt(req.params.commentId, 10);
+    const emoji = String(req.body?.emoji || "");
+    const userId = req.session.userId;
+
+    if (!Number.isFinite(commentId)) {
+        return res.status(400).json({ error: "Invalid comment id" });
+    }
+    if (!ALLOWED_REACTIONS.includes(emoji)) {
+        return res.status(400).json({ error: "Unsupported reaction" });
+    }
+
+    try {
+        // A reaction on a deleted comment would be invisible and uncountable.
+        const comment = await pool.query(
+            "SELECT id FROM solution_comments WHERE id = $1 AND is_deleted = false",
+            [commentId]
+        );
+        if (comment.rows.length === 0) {
+            return res.status(404).json({ error: "Comment not found" });
+        }
+
+        // One reaction per person per comment. Picking a different emoji replaces the
+        // one you had, in a single click — the alternative made changing your mind a
+        // three-click chore: un-react, reopen the picker, react again.
+        const existing = await pool.query(
+            "SELECT emoji FROM solution_comment_reactions WHERE comment_id = $1 AND user_id = $2",
+            [commentId, userId]
+        );
+        const current = existing.rows[0]?.emoji || null;
+
+        if (current === emoji) {
+            // Pressing the one you already left takes it back.
+            await pool.query(
+                "DELETE FROM solution_comment_reactions WHERE comment_id = $1 AND user_id = $2",
+                [commentId, userId]
+            );
+        } else {
+            // Swap. Both statements in one transaction so a failure between them
+            // cannot leave the comment with no reaction from someone who has one.
+            const client = await pool.connect();
+            try {
+                await client.query("BEGIN");
+                await client.query(
+                    "DELETE FROM solution_comment_reactions WHERE comment_id = $1 AND user_id = $2",
+                    [commentId, userId]
+                );
+                await client.query(
+                    `INSERT INTO solution_comment_reactions (comment_id, user_id, emoji)
+                     VALUES ($1, $2, $3)
+                     ON CONFLICT (comment_id, user_id, emoji) DO NOTHING`,
+                    [commentId, userId, emoji]
+                );
+                await client.query("COMMIT");
+            } catch (txError) {
+                await client.query("ROLLBACK").catch(() => {});
+                throw txError;
+            } finally {
+                client.release();
+            }
+        }
+
+        const reactions = await pool.query(
+            `SELECT emoji, COUNT(*)::int AS count, BOOL_OR(user_id = $2) AS me
+             FROM solution_comment_reactions
+             WHERE comment_id = $1
+             GROUP BY emoji ORDER BY MIN(created_at)`,
+            [commentId, userId]
+        );
+        const mine = reactions.rows.find((r) => r.me);
+        res.json({ ok: true, reactions: reactions.rows, mine: mine ? mine.emoji : null });
+    } catch (error) {
+        console.error("Comment reaction error:", error);
+        res.status(500).json({ error: "Failed to save reaction" });
     }
 });
 
@@ -1649,8 +1778,16 @@ app.get("/notifications", checkAuthenticated, async (req, res) => {
     }
 });
 
-// Add a new route for user profiles
-app.get("/user/:username", getUserProfile);
+// Add a new route for user profiles. /en/user/x and /ru/user/x give each language a
+// URL of its own, matching every other page on the site; the bare /user/x still works
+// and picks the language up from the session. Both must be registered before the
+// /:lang/:name catch-all, or "user" is treated as a problem slug.
+// /user/ with no username is not a page; send it to the list of people it implies.
+app.get(["/user", "/user/", "/:lang(en|ru)/user", "/:lang(en|ru)/user/"], (req, res) => {
+    const lang = req.params.lang === 'ru' ? 'ru' : 'en';
+    res.redirect(301, `/${lang}/contributors`);
+});
+app.get(["/user/:username", "/:lang(en|ru)/user/:username"], getUserProfile);
 // Public, English, CV-linkable record of what a contributor has actually done. The
 // leaderboard stops at the edge of the site; this is the part they can show someone.
 app.get("/contributor/:username", renderContributorPage);
@@ -2361,23 +2498,14 @@ app.get("/logout", (req, res) => {
 app.get("/", async (req, res) => {
     const lang = req.session.lang || req.acceptsLanguages('en', 'ru') || 'en';
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData(lang);
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
-        getRecentContributions(10),
-        getTopAuthors(),
-        renderUnsolvedList.getSolutionProgressStats(lang),
-        getCurrentChallengeWidget(),
-        getRecentContributors(6),
-    ]);
-
     // "Most wanted" = unsolved problems ranked by how many people looked for them and
     // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
-    const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
-        .catch(() => []);
-    const proofNumbers = await getProofNumbers();
-    const difficultyGrid = await getDifficultyGrid();
+    const {
+        recentContributions, topAuthors, solutionProgress, challengeWidget,
+        recentContributors, mostWanted, proofNumbers, difficultyGrid,
+    } = await getHomeWidgets(lang);
 
     i18n.setLocale(res, lang);
     res.locals.username = req.session.username || null;
@@ -2485,39 +2613,113 @@ async function getProofNumbers() {
     }
 }
 
+// The homepage "Последние изменения" thread. Edits and comments are both things that
+// happened to a solution, so they share one time-ordered feed rather than sitting in
+// two boxes competing for the same corner of the sidebar. Comments are rare next to
+// edits (355 against 8,277), so they read as occasional punctuation, not noise.
+function formatFeedTimestamp(date) {
+    return new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit',
+        minute: '2-digit',
+        month: 'short',
+        day: '2-digit',
+        timeZoneName: 'short'
+    }).format(date);
+}
+
+// The homepage widget set — recent changes, top authors, progress, most wanted — is
+// the same for every visitor and costs 400-600 ms of database work, which it used to
+// pay on every single request. None of it changes by the second, so it is held briefly
+// and shared. Sixty seconds keeps "Последние изменения" honest while taking the
+// queries off the hot path for essentially everyone.
+const HOME_WIDGET_TTL_MS = 60 * 1000;
+const homeWidgetCache = new Map();   // lang -> { at, value }
+
+async function getHomeWidgets(lang) {
+    const hit = homeWidgetCache.get(lang);
+    if (hit && Date.now() - hit.at < HOME_WIDGET_TTL_MS) return hit.value;
+
+    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] =
+        await Promise.all([
+            getRecentContributions(10),
+            getTopAuthors(),
+            renderUnsolvedList.getSolutionProgressStats(lang),
+            getCurrentChallengeWidget(),
+            getRecentContributors(6),
+        ]);
+    const mostWanted = await renderUnsolvedList
+        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
+        .catch(() => []);
+    const [proofNumbers, difficultyGrid] = await Promise.all([getProofNumbers(), getDifficultyGrid()]);
+
+    const value = {
+        recentContributions, topAuthors, solutionProgress, challengeWidget,
+        recentContributors, mostWanted, proofNumbers, difficultyGrid,
+    };
+    homeWidgetCache.set(lang, { at: Date.now(), value });
+    return value;
+}
+
 async function getRecentContributions(limit) {
     try {
-        const result = await pool.query(
-            `SELECT c.id, c.problem_name, c.language, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
-                    u.username,
-                    (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE AND c2.edited_at <= c.edited_at) AS edit_number
-             FROM contributions c
-             LEFT JOIN users u ON c.user_id = u.id
-             WHERE c.invisible IS NOT TRUE
-             ORDER BY c.edited_at DESC LIMIT $1`,
-            [limit]
-        );
+        // Each side is asked for `limit` rows because the merge can take all of its
+        // entries from either one.
+        const [edits, comments] = await Promise.all([
+            pool.query(
+                `SELECT c.id, c.problem_name, c.language, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
+                        u.username,
+                        (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE AND c2.edited_at <= c.edited_at) AS edit_number
+                 FROM contributions c
+                 LEFT JOIN users u ON c.user_id = u.id
+                 WHERE c.invisible IS NOT TRUE
+                 ORDER BY c.edited_at DESC LIMIT $1`,
+                [limit]
+            ),
+            pool.query(
+                `SELECT sc.id, sc.problem_name, sc.language, sc.created_at AT TIME ZONE 'UTC' as created_at,
+                        u.username
+                 FROM solution_comments sc
+                 LEFT JOIN users u ON sc.user_id = u.id
+                 WHERE sc.is_deleted = false
+                   AND sc.problem_name IS NOT NULL
+                 ORDER BY sc.created_at DESC LIMIT $1`,
+                [limit]
+            ).catch(() => ({ rows: [] })),
+        ]);
 
-        const contributions = result.rows.map(row => {
-            return {
-                version: row.problem_name,
-                lang: row.language || 'en',
-                editor: row.username || 'Anonymous',
-                hasUser: !!row.username,
-                isNew: parseInt(row.edit_number) === 1,
-                timestamp: new Intl.DateTimeFormat(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    month: 'short',
-                    day: '2-digit',
-                    timeZoneName: 'short'
-                }).format(row.edited_at),
-                relativeTime: row.edited_at,
-                id: row.id
-            };
-        });
+        const editEntries = edits.rows.map(row => ({
+            kind: 'edit',
+            version: row.problem_name,
+            lang: row.language || 'en',
+            editor: row.username || 'Anonymous',
+            hasUser: !!row.username,
+            isNew: parseInt(row.edit_number) === 1,
+            timestamp: formatFeedTimestamp(row.edited_at),
+            relativeTime: row.edited_at,
+            sortAt: new Date(row.edited_at).getTime(),
+            id: row.id,
+            // The diff view for this edit.
+            href: `/${row.language || 'en'}/contributions/${row.id}`,
+        }));
 
-        return contributions;
+        const commentEntries = comments.rows.map(row => ({
+            kind: 'comment',
+            version: row.problem_name,
+            lang: row.language || 'en',
+            editor: row.username || 'Anonymous',
+            hasUser: !!row.username,
+            isNew: false,
+            timestamp: formatFeedTimestamp(row.created_at),
+            relativeTime: row.created_at,
+            sortAt: new Date(row.created_at).getTime(),
+            id: row.id,
+            // Straight to the comment in the solution's thread.
+            href: `/${row.language || 'en'}/${encodeURIComponent(row.problem_name)}#comment-${row.id}`,
+        }));
+
+        return [...editEntries, ...commentEntries]
+            .sort((a, b) => b.sortAt - a.sortAt)
+            .slice(0, limit);
     } catch (error) {
         console.error("Error fetching recent contributions:", error);
         return [];
@@ -2546,23 +2748,14 @@ registerContributorAndUserMetricsApi({
 // Update the /ru route to use i18n.setLocale instead
 app.get("/ru", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('ru');
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
-        getRecentContributions(10),
-        getTopAuthors(),
-        renderUnsolvedList.getSolutionProgressStats('ru'),
-        getCurrentChallengeWidget(),
-        getRecentContributors(6),
-    ]);
-
     // "Most wanted" = unsolved problems ranked by how many people looked for them and
     // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
-    const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
-        .catch(() => []);
-    const proofNumbers = await getProofNumbers();
-    const difficultyGrid = await getDifficultyGrid();
+    const {
+        recentContributions, topAuthors, solutionProgress, challengeWidget,
+        recentContributors, mostWanted, proofNumbers, difficultyGrid,
+    } = await getHomeWidgets('ru');
     i18n.setLocale(res, 'ru');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;
@@ -2661,23 +2854,14 @@ app.use('/', uploadRouter);
 
 app.get("/en", async (req, res) => {
     const { chapters, theory, sections, pinnedChapters } = await getLanguageData('en');
-    const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] = await Promise.all([
-        getRecentContributions(10),
-        getTopAuthors(),
-        renderUnsolvedList.getSolutionProgressStats('en'),
-        getCurrentChallengeWidget(),
-        getRecentContributors(6),
-    ]);
-
     // "Most wanted" = unsolved problems ranked by how many people looked for them and
     // found nothing. Same query the /unsolved page uses, surfaced on the homepage so the
     // worklist is visible rather than buried: a physicist is far more likely to write
     // 5.5.7 when told 287 people wanted it than when asked to "contribute".
-    const mostWanted = await renderUnsolvedList
-        .getMostWantedProblems(new Set([...getSolvedSet('en'), ...getSolvedSet('ru')]), 7)
-        .catch(() => []);
-    const proofNumbers = await getProofNumbers();
-    const difficultyGrid = await getDifficultyGrid();
+    const {
+        recentContributions, topAuthors, solutionProgress, challengeWidget,
+        recentContributors, mostWanted, proofNumbers, difficultyGrid,
+    } = await getHomeWidgets('en');
     i18n.setLocale(res, 'en');
     res.locals.username = req.session.username || null;
     res.locals.userId = req.session.userId || null;

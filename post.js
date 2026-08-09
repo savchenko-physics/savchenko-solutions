@@ -8,6 +8,9 @@ const i18n = require('i18n');
 const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
 const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
+const { getOnlineUsernames } = require("./lib/presence");
+
+const DEFAULT_PROFILE_AVATAR = "/img/profile_images/Default_placeholder.svg";
 const { getSolutionJudgingWidget, isContestOrganizer } = require("./contestJudge");
 const { renderMathInHtml } = require("./mathRender");
 const { isCountable } = require("./botgate");
@@ -469,8 +472,27 @@ async function renderPost(req, res) {
             chapterRecommendations = recommendationsForChapter(rec.getCatalog(), name, lang, 3);
         } catch (_e) { /* catalog optional — the block simply does not render */ }
 
+        // The discussion and the like/star counts used to be two fetches the browser
+        // made after the page arrived — ~700 ms of round trip for data the server can
+        // read in single-digit milliseconds while it is already rendering. Gathered
+        // here and inlined into the page; the client still fetches if this is missing.
+        // Bounded for the same reason as the profile: these read in single-digit
+        // milliseconds, so if they ever do not, the solution itself must not wait.
+        let solutionBundle = null;
+        try {
+            const bundle = loadSolutionBundle(name, lang, req.session.userId || null);
+            bundle.catch(() => {});
+            solutionBundle = await Promise.race([
+                bundle,
+                new Promise((resolve) => setTimeout(() => resolve(null), 250)),
+            ]);
+        } catch (bundleError) {
+            console.error("Solution bundle failed, falling back to client fetches:", bundleError);
+        }
+
         res.render("solution_post", {
             chapterRecommendations,
+            solutionBundle,
             __: i18n.__,
             lang,
             pageRef,
@@ -569,6 +591,107 @@ async function getCreationDate(req, res) {
     // } else {
     //     res.status(404).json({ error: "Problem not found" });
     // }
+}
+
+// The like/star counts and the discussion, read in one pass so the solution page can
+// ship them inside its own HTML. Mirrors the shapes returned by
+// /api/solutions/:problemName/:language/stats and .../comments exactly, so the page's
+// existing renderers consume either source without knowing which it got.
+async function loadSolutionBundle(problemName, language, userId) {
+    const [likes, stars, commentRows] = await Promise.all([
+        pool.query(
+            `SELECT
+                COUNT(CASE WHEN is_like = true THEN 1 END) as likes,
+                COUNT(CASE WHEN is_like = false THEN 1 END) as dislikes
+             FROM solution_likes WHERE problem_name = $1 AND language = $2`,
+            [problemName, language]
+        ),
+        pool.query(
+            "SELECT COUNT(*) as stars FROM starred_solutions WHERE problem_name = $1 AND language = $2",
+            [problemName, language]
+        ),
+        pool.query(
+            `SELECT
+                c.id, c.user_id, c.content, c.parent_id, c.created_at, c.updated_at, c.is_brainstorm,
+                u.username, u.full_name, u.profile_picture
+             FROM solution_comments c
+             JOIN users u ON c.user_id = u.id
+             WHERE c.problem_name = $1 AND c.language = $2 AND c.is_deleted = false
+             ORDER BY c.created_at ASC`,
+            [problemName, language]
+        ),
+    ]);
+
+    // What this particular viewer has done to this solution.
+    const userInteraction = { liked: null, starred: false };
+    if (userId) {
+        const [likeRow, starRow] = await Promise.all([
+            pool.query(
+                "SELECT is_like FROM solution_likes WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                [userId, problemName, language]
+            ),
+            pool.query(
+                "SELECT id FROM starred_solutions WHERE user_id = $1 AND problem_name = $2 AND language = $3",
+                [userId, problemName, language]
+            ),
+        ]);
+        if (likeRow.rows.length > 0) userInteraction.liked = likeRow.rows[0].is_like;
+        userInteraction.starred = starRow.rows.length > 0;
+    }
+
+    const online = await getOnlineUsernames(pool, commentRows.rows.map((r) => r.username));
+
+    // Reactions for the whole thread in one query, so the inlined comments carry them
+    // exactly as the API version does.
+    const reactionsByComment = new Map();
+    if (commentRows.rows.length > 0) {
+        const reactionRows = await pool.query(
+            `SELECT comment_id, emoji, COUNT(*)::int AS count, BOOL_OR(user_id = $2) AS me
+             FROM solution_comment_reactions
+             WHERE comment_id = ANY($1::int[])
+             GROUP BY comment_id, emoji
+             ORDER BY MIN(created_at)`,
+            [commentRows.rows.map((r) => r.id), userId]
+        ).catch(() => ({ rows: [] }));   // pre-migration 048: simply no reactions
+        for (const r of reactionRows.rows) {
+            if (!reactionsByComment.has(r.comment_id)) reactionsByComment.set(r.comment_id, []);
+            reactionsByComment.get(r.comment_id).push({ emoji: r.emoji, count: r.count, me: !!r.me });
+        }
+    }
+
+    const now = new Date();
+    const comments = commentRows.rows.map((row) => {
+        const isOwnComment = !!userId && row.user_id === userId;
+        const hoursSinceCreation = (now - new Date(row.created_at)) / (1000 * 60 * 60);
+        return {
+            id: row.id,
+            content: row.content,
+            parentId: row.parent_id,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+            isBrainstorm: row.is_brainstorm,
+            isOwnComment,
+            isEditable: isOwnComment && hoursSinceCreation <= 24,
+            reactions: reactionsByComment.get(row.id) || [],
+            author: {
+                username: row.username,
+                fullName: row.full_name,
+                profilePicture: row.profile_picture || DEFAULT_PROFILE_AVATAR,
+                isOnline: online.has(row.username),
+            },
+        };
+    });
+
+    return {
+        stats: {
+            likes: parseInt(likes.rows[0].likes, 10),
+            dislikes: parseInt(likes.rows[0].dislikes, 10),
+            stars: parseInt(stars.rows[0].stars, 10),
+            comments: comments.length,
+            userInteraction,
+        },
+        comments: { comments },
+    };
 }
 
 module.exports = { renderPost, getPageViewsData }; 

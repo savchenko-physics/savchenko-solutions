@@ -167,9 +167,15 @@
             </strong>
         </h1>
         
-        <div class="video-container">
-            <iframe allowfullscreen="" class="video" frameborder="0" src="https://www.youtube.com/embed/d-x7Lk-mfTs"></iframe>
-        </div> 
+        <%# The walkthrough. Loaded on click, not on page load, so the guide itself is
+            never held up by (or broken behind a filter blocking) youtube.com. %>
+        <div style="margin: 20px 0;">
+            <%- include('default/video_embed', {
+                videoId: 'd-x7Lk-mfTs',
+                videoPoster: '/img/yt_preview.webp',
+                videoTitle: lang === 'ru' ? 'Как пользоваться сайтом' : 'How to use the site'
+            }) %>
+        </div>
         
         <h3 style="margin-top: 30px; display: flex; align-items: center;">
             <strong style="display: flex; align-items: center;">
@@ -279,6 +285,7 @@
 
     <%- include('default/modern_footer') %>
     <%- include('default/main_site_footer_scripts') %>
+    <script defer src="<%= (typeof asset === 'function') ? asset('/js/video-embed.js') : '/js/video-embed.js' %>"></script>
 </body>
 
 </html>

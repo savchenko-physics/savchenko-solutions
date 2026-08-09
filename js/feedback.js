@@ -442,7 +442,16 @@
             e.preventDefault();
             show(opener.dataset.fbCategory || null);
         });
-        initPoll();
+
+        // The poll is the least urgent thing on any page, and it was competing for
+        // bandwidth with the content during load — 356-680 ms on the same connection
+        // as the solution's own data. Hold it until the browser is idle, or two
+        // seconds in on browsers without requestIdleCallback.
+        if (typeof requestIdleCallback === 'function') {
+            requestIdleCallback(initPoll, { timeout: 4000 });
+        } else {
+            setTimeout(initPoll, 2000);
+        }
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

@@ -264,6 +264,59 @@
             border-collapse: collapse;
         }
 
+        .table-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        .filter-select {
+            height: 40px;
+            min-width: 220px;
+            max-width: 100%;
+            padding: 0 10px;
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            background: var(--sv-bg);
+            color: var(--sv-text);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .filter-clear {
+            height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            background: var(--sv-bg);
+            color: var(--sv-link, #1a5276);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .filter-clear:hover {
+            background: var(--sv-card);
+        }
+
+        .filter-count {
+            font-size: 13px;
+            color: var(--sv-secondary);
+        }
+
+        .leaderboard-empty {
+            padding: 18px 8px;
+            font-size: 14px;
+            color: var(--sv-secondary);
+        }
+
         .leaderboard-table thead th {
             font-size: 13px;
             color: var(--sv-secondary);
@@ -647,6 +700,14 @@
 
         <section class="card">
             <h2 class="section-title"><%= __('contributorsPage.leaderboard') %></h2>
+            <div class="table-filters">
+                <label class="filter-label" for="country-filter"><%= __('contributorsPage.filterByCountry') %></label>
+                <select id="country-filter" class="filter-select">
+                    <option value=""><%= __('contributorsPage.allCountries') %></option>
+                </select>
+                <button id="country-clear" class="filter-clear" type="button" style="display:none;"><%= __('contributorsPage.clearFilter') %></button>
+                <span id="filter-count" class="filter-count"></span>
+            </div>
             <div style="overflow-x:auto;">
                 <table class="leaderboard-table">
                     <thead>
@@ -661,6 +722,7 @@
                     </thead>
                     <tbody id="leaderboard-body"></tbody>
                 </table>
+                <p id="leaderboard-empty" class="leaderboard-empty" style="display:none;"><%= __('contributorsPage.noContributorsForCountry') %></p>
             </div>
             <div class="pagination-row">
                 <button id="prev-page" class="btn-nav" type="button"><%= __('contributorsPage.previous') %></button>
@@ -737,6 +799,9 @@
             specialist: "<%= __('badges.specialist') %>",
             pupil: "<%= __('badges.pupil') %>",
             newbie: "<%= __('badges.newbie') %>",
+            allCountries: "<%= __('contributorsPage.allCountries') %>",
+            contributorsShown: "<%= __('contributorsPage.contributorsShown') %>",
+            noContributorsForCountry: "<%= __('contributorsPage.noContributorsForCountry') %>",
         };
         const state = {
             page: 1,
@@ -744,7 +809,29 @@
             sortBy: "score",
             sortOrder: "desc",
             total: 0,
+            // Country names are stored in English; the dropdown shows them in the
+            // page language but always sends the stored name back to the API.
+            country: new URLSearchParams(window.location.search).get("country") || "",
         };
+
+        // Intl.DisplayNames turns "Kazakhstan" into "Казахстан" without shipping a
+        // translated country list. Browsers without it keep the English name.
+        const countryDisplayNames = (() => {
+            try {
+                return new Intl.DisplayNames([dateLocale], { type: "region" });
+            } catch (_error) {
+                return null;
+            }
+        })();
+
+        function localizeCountry(name, code) {
+            if (!code || !countryDisplayNames) return name;
+            try {
+                return countryDisplayNames.of(code) || name;
+            } catch (_error) {
+                return name;
+            }
+        }
 
         const heatColors = ["#ebedf0", "#b3c6d9", "#6d93b8", "#3a6a9e", "#1a1a2e"];
 
@@ -1097,6 +1184,44 @@
             });
         }
 
+        let countryFilterBuilt = false;
+
+        function buildCountryFilter(countries, grandTotal) {
+            const select = document.getElementById("country-filter");
+            const fragment = document.createDocumentFragment();
+            const all = document.createElement("option");
+            all.value = "";
+            all.textContent = `${t.allCountries} (${grandTotal.toLocaleString()})`;
+            fragment.appendChild(all);
+
+            countries
+                .map((c) => ({ ...c, label: localizeCountry(c.name, c.code) }))
+                .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, dateLocale))
+                .forEach((c) => {
+                    const option = document.createElement("option");
+                    option.value = c.name;
+                    option.textContent = `${c.flag ? c.flag + " " : ""}${c.label} (${c.count})`;
+                    fragment.appendChild(option);
+                });
+
+            select.innerHTML = "";
+            select.appendChild(fragment);
+            countryFilterBuilt = true;
+            select.value = state.country;
+            // A ?country= that nobody on the leaderboard matches falls back to "all".
+            if (select.value !== state.country) state.country = select.value;
+        }
+
+        function syncCountryUrl() {
+            const url = new URL(window.location.href);
+            if (state.country) {
+                url.searchParams.set("country", state.country);
+            } else {
+                url.searchParams.delete("country");
+            }
+            window.history.replaceState(null, "", url);
+        }
+
         async function loadLeaderboard() {
             const query = new URLSearchParams({
                 page: String(state.page),
@@ -1104,9 +1229,22 @@
                 sortBy: state.sortBy,
                 sortOrder: state.sortOrder,
             });
+            if (state.country) query.set("country", state.country);
             const data = await fetchJSON(`/api/contributors/leaderboard?${query.toString()}`);
             state.total = data.total;
             renderRows(data.rows);
+
+            if (!countryFilterBuilt && Array.isArray(data.countries)) {
+                buildCountryFilter(data.countries, data.totalAll || data.total);
+            }
+
+            document.getElementById("leaderboard-empty").style.display = data.rows.length === 0 ? "block" : "none";
+            document.getElementById("country-clear").style.display = state.country ? "" : "none";
+            document.getElementById("filter-count").textContent = state.country
+                ? t.contributorsShown
+                      .replace("%s", data.total.toLocaleString())
+                      .replace("%s", (data.totalAll || data.total).toLocaleString())
+                : "";
 
             document.getElementById("prev-page").disabled = !data.hasPrev;
             document.getElementById("next-page").disabled = !data.hasNext;
@@ -1434,6 +1572,20 @@
                 state.page = 1;
                 await loadLeaderboard();
             });
+        });
+
+        document.getElementById("country-filter").addEventListener("change", async (event) => {
+            state.country = event.target.value;
+            state.page = 1;
+            syncCountryUrl();
+            await loadLeaderboard();
+        });
+        document.getElementById("country-clear").addEventListener("click", async () => {
+            state.country = "";
+            state.page = 1;
+            document.getElementById("country-filter").value = "";
+            syncCountryUrl();
+            await loadLeaderboard();
         });
 
         document.getElementById("prev-page").addEventListener("click", async () => {

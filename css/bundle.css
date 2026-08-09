@@ -1506,6 +1506,131 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   .fb-tab, .fb-panel, .fb-poll, .fb-inline { display: none !important; }
 }
 
+/* ── Click-to-play video embed ──────────────────────────────────────────────
+   The poster is a local image and the YouTube iframe only replaces it once the
+   visitor presses play, so a page carrying a video costs nothing (and renders
+   fine where youtube.com is filtered) until someone actually watches. */
+
+.video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #1a1a2e;
+}
+
+.video-embed-trigger,
+.video-embed-link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.video-embed-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-embed-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  opacity: 0.92;
+  transition: opacity 120ms linear, transform 120ms ease-out;
+  pointer-events: none;
+}
+
+.video-embed-trigger:hover .video-embed-play,
+.video-embed-trigger:focus-visible .video-embed-play,
+.video-embed-link:hover .video-embed-play,
+.video-embed-link:focus-visible .video-embed-play {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.video-embed-trigger:focus-visible,
+.video-embed-link:focus-visible {
+  outline: 2px solid #1a5276;
+  outline-offset: -2px;
+}
+
+/* The title is for screen readers and for the case where the poster fails to
+   load; it is not meant to sit on top of the artwork. */
+.video-embed-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* A file we host ourselves: plays on the page with the browser's own controls, no
+   third-party player and no JavaScript at all. */
+.video-embed-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #1a1a2e;
+}
+
+/* A channel can switch embedding off, and YouTube then serves "Playback on other
+   websites has been disabled" in place of the film. Those videos get the same poster
+   but as an honest, captioned link out rather than a dead player. */
+.video-embed-external .video-embed-poster { filter: brightness(0.86); }
+
+.video-embed-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.6rem 0.8rem 0.65rem;
+  text-align: left;
+  background: rgba(26, 26, 46, 0.82);
+  color: #ffffff;
+}
+
+.video-embed-caption-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.video-embed-caption-meta {
+  font-size: 0.75rem;
+  color: #cfd4dd;
+}
+
+.video-embed-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-embed-play { transition: none; }
+  .video-embed-trigger:hover .video-embed-play,
+  .video-embed-link:hover .video-embed-play { transform: translate(-50%, -50%); }
+}
+
 
 /* === main_page.css === */
 /* Base resets and font — colors from /css/design-system.css */

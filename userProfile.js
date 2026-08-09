@@ -12,7 +12,10 @@ const pool = new Pool({
 
 async function getUserProfile(req, res) {
     const { username } = req.params;
-    const lang = req.query.lang || req.session.lang || "en";
+    // A /en or /ru prefix in the path is the explicit choice and wins over the
+    // session's remembered language.
+    const requested = req.params.lang || req.query.lang || req.session.lang || "en";
+    const lang = requested === "ru" ? "ru" : "en";
     i18n.setLocale(res, lang);
 
     try {
@@ -92,9 +95,38 @@ async function getUserProfile(req, res) {
             challengeHistory = challengeResult.rows;
         }
 
+        // Everything the page's cards need, gathered in-process and inlined below.
+        // Each of these used to be a separate fetch from the browser, and at ~400 ms
+        // of round-trip latency apiece that dominated the load — the queries
+        // themselves answer in single-digit milliseconds off the shared cache.
+        //
+        // Bounded, because a cold cache is a different animal from a warm one: warm is
+        // 25-60 ms, but the first view of the busiest profile after the hourly
+        // expiry runs every query from scratch and took 6.5 s. Blocking the HTML on
+        // that would trade a fast common case for a terrible rare one. So the render
+        // waits only briefly; if the data misses that window the page ships without it
+        // and the browser fetches as it always did — while the query set, still
+        // running, populates the cache for whoever arrives next.
+        const BUNDLE_BUDGET_MS = 400;
+        let profileBundle = null;
+        try {
+            if (typeof req.app.locals.loadUserProfileBundle === "function") {
+                const bundle = req.app.locals.loadUserProfileBundle(req, user.username, lang);
+                bundle.catch(() => {});   // it outlives this request on the slow path
+                profileBundle = await Promise.race([
+                    bundle,
+                    new Promise((resolve) => setTimeout(() => resolve(null), BUNDLE_BUDGET_MS)),
+                ]);
+            }
+        } catch (bundleError) {
+            // The page falls back to fetching each endpoint itself, as it always did.
+            console.error("Profile bundle failed, falling back to client fetches:", bundleError);
+        }
+
         return res.render("user_profile", {
             __: i18n.__,
             lang,
+            profileBundle,
             username: user.username,
             profileUserId: user.id,
             isOwner,
