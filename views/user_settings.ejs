@@ -486,6 +486,29 @@
 
                         <button type="submit" class="btn-primary" id="btnSaveProfile" disabled><%= __('settings.profile.save') %></button>
                     </form>
+
+                    <h2 class="section-heading"><%= lang === 'ru' ? 'Резюме (CV)' : 'CV' %></h2>
+                    <p style="font-size:14px;color:var(--text-secondary);margin:0 0 12px;">
+                        <%= lang === 'ru'
+                            ? 'PDF до 5 МБ. Появится на вашей странице участника рядом со ссылками — рядом с записью о том, что вы здесь сделали.'
+                            : 'PDF, up to 5 MB. It appears on your contributor page beside your links — next to the record of what you have done here.' %>
+                    </p>
+                    <% if (typeof cvUrl !== 'undefined' && cvUrl) { %>
+                        <p style="font-size:14px;margin:0 0 12px;">
+                            <a href="<%= cvUrl %>" target="_blank" rel="noopener"><%= lang === 'ru' ? 'Открыть загруженное резюме' : 'Open your uploaded CV' %></a>
+                        </p>
+                    <% } %>
+                    <form action="/<%= lang %>/settings/cv" method="POST" enctype="multipart/form-data"
+                          style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px;">
+                        <input type="file" name="cv" accept="application/pdf,.pdf" required
+                               style="font-size:14px;max-width:100%;">
+                        <button type="submit" class="btn-primary"><%= lang === 'ru' ? 'Загрузить' : 'Upload' %></button>
+                    </form>
+                    <% if (typeof cvUrl !== 'undefined' && cvUrl) { %>
+                        <form action="/<%= lang %>/settings/cv/delete" method="POST">
+                            <button type="submit" class="btn-secondary" style="font-size:13px;"><%= lang === 'ru' ? 'Удалить резюме' : 'Remove CV' %></button>
+                        </form>
+                    <% } %>
                 </div>
 
                 <!-- Account -->

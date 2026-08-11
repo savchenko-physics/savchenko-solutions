@@ -1506,6 +1506,36 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   .fb-tab, .fb-panel, .fb-poll, .fb-inline { display: none !important; }
 }
 
+/* YouTube embeds inside solution markdown: ![](https://www.youtube.com/embed/ID).
+   Full width of the content column, centred, 16:9.
+
+   The previous rules offset the box by `left: 10%` while giving it `width: 100%`
+   (so it overflowed to the right) and then sized the iframe to `width: 80%` of that,
+   which is why the player sat small and off-centre. And they lived only in
+   solutions.css, which the solution page does not load at all — there the iframe fell
+   back to its intrinsic 300x150. */
+.video-container {
+  position: relative;
+  width: 100%;
+  margin: 1.25rem auto;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #1a1a2e;
+}
+
+.video-container .video,
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
 /* ── Click-to-play video embed ──────────────────────────────────────────────
    The poster is a local image and the YouTube iframe only replaces it once the
    visitor presses play, so a page carrying a video costs nothing (and renders
@@ -1629,6 +1659,201 @@ a.fb-sort:hover { color: var(--ss-body-text); }
   .video-embed-play { transition: none; }
   .video-embed-trigger:hover .video-embed-play,
   .video-embed-link:hover .video-embed-play { transform: translate(-50%, -50%); }
+}
+
+/* ── My drafts (/drafts) ─────────────────────────────────────────────────────────
+   The page a contributor returns to. Deliberately plain: a list, a date, and three
+   things you can do with each row. */
+
+.drafts-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+.drafts-head h1 {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+}
+
+.drafts-lede {
+  color: #6c757d;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0 0 1.75rem;
+}
+
+.drafts-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #dee2e6;
+}
+
+.drafts-item {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 0;
+}
+
+.drafts-item-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.drafts-problem {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a5276;
+  text-decoration: none;
+}
+
+.drafts-problem:hover { color: #0d3b54; text-decoration: underline; }
+
+.drafts-lang {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+}
+
+.drafts-when { font-size: 0.8125rem; color: #6c757d; }
+
+.drafts-snippet {
+  color: #2d2d2d;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0.75rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.drafts-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.drafts-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 0.85rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2d2d2d;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* The site-wide link colour is applied by `a:link:not(.btn)` near the top of this file.
+   `:not()` contributes the specificity of its argument, so that selector is (0,2,1) —
+   it beats any plain `.class` or `.class:link` rule. Every button here that is an <a>
+   therefore has to be qualified with the element and both classes to win outright,
+   rather than by source order. */
+a.drafts-btn:link,
+a.drafts-btn:visited { color: #2d2d2d; }
+.drafts-btn:hover,
+a.drafts-btn:hover { background: #f8f9fa; color: #2d2d2d; }
+.drafts-btn:disabled { opacity: 0.55; cursor: default; }
+
+/* "Продолжить" is an <a>, so it was being painted link-blue on the navy fill and was
+   nearly unreadable. Two site-wide rules reach it — `a:link:not(.btn)` (0,2,1) here and
+   `a:visited` (0,1,1) in main_page.css — and a bare `.drafts-btn-primary` is only
+   (0,1,0). Qualifying with the tag and both classes gives (0,3,1), which wins on
+   specificity rather than on which file happens to load last. */
+.drafts-btn-primary,
+a.drafts-btn.drafts-btn-primary:link,
+a.drafts-btn.drafts-btn-primary:visited {
+  background: #1a1a2e;
+  border-color: #1a1a2e;
+  color: #ffffff;
+}
+
+.drafts-btn-primary:hover,
+a.drafts-btn.drafts-btn-primary:hover,
+a.drafts-btn.drafts-btn-primary:focus { background: #2a2a44; color: #ffffff; }
+.drafts-btn-danger { color: #c0392b; }
+.drafts-btn-danger:hover { background: #fdf3f2; color: #c0392b; }
+
+.drafts-msg { font-size: 0.8125rem; color: #6c757d; }
+
+.drafts-empty {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.drafts-empty p { margin: 0 0 0.4rem; color: #2d2d2d; }
+.drafts-empty-hint { color: #6c757d; font-size: 0.875rem; margin-bottom: 1.25rem !important; }
+
+/* Header entry, shown only when there is something to come back to. */
+.nav-drafts-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 30px;
+  padding: 0 0.6rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  color: #2d2d2d;
+  font-size: 0.8125rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-drafts-pill:hover { background: #f8f9fa; color: #1a1a2e; }
+.nav-drafts-pill .nav-drafts-count { color: #6c757d; }
+
+@media (min-width: 768px) {
+  .drafts-page { padding: 2.5rem 1rem 5rem; }
+}
+
+/* ── Upload: what is still missing ───────────────────────────────────────────────
+   Replaces a permanently-disabled Submit button that never said why. Shown only
+   after someone presses the button, so an untouched form is not scolded. */
+
+.upload-blockers {
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid #dee2e6;
+  border-left: 3px solid #c0392b;
+  border-radius: 6px;
+  background: #f8f9fa;
+  padding: 0.85rem 1rem;
+  text-align: left;
+}
+
+.upload-blockers-intro {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2d2d2d;
+}
+
+.upload-blockers ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: #2d2d2d;
+  font-size: 0.875rem;
+  line-height: 1.55;
 }
 
 
@@ -2340,21 +2565,7 @@ ul {
    font-size: 18px;
 }
 
-/* Video embed */
-.video-container {
-   position: relative;
-   left: 10%;
-   width: 100%;
-   padding-bottom: 56.25%; /* 16:9 aspect ratio */
-}
-
-.video {
-   position: absolute;
-   top: 0;
-   left: 0;
-   width: 80%;
-   height: 100%;
-}
+/* Video embed — see .video-container in design-system.css. */
 
 /* Statement images */
 .Statement {
@@ -2420,15 +2631,6 @@ hr {
 
 /* Mobile overrides */
 @media screen and (max-width: 768px) {
-   .video-container {
-      left: 0;
-      width: 80%;
-   }
-
-   .video {
-      width: 100%;
-   }
-
    .Statement {
       max-width: 250px;
    }

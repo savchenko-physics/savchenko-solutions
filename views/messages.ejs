@@ -407,6 +407,37 @@
       max-width: 100%;
     }
 
+    /* A message that did not reach the server. It stays on screen, visibly not sent,
+       with the text still recoverable — the alternative, which is what used to happen,
+       is that it silently disappeared. */
+    .msg-bubble-row.msg-unsent { flex-wrap: wrap; }
+    .msg-bubble-row.msg-unsent .msg-bubble { opacity: 0.62; }
+
+    .msg-unsent-note {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+      font-size: 11px;
+      color: #c0392b;
+    }
+
+    .msg-bubble-row.sent .msg-unsent-note { justify-content: flex-end; }
+
+    .msg-unsent-retry {
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #1a5276;
+      font-size: 11px;
+      font-family: inherit;
+      padding: 1px 8px;
+      cursor: pointer;
+    }
+
+    .msg-unsent-retry:hover { background: #f8f9fa; }
+
     .msg-bubble-avatar {
       width: 28px;
       height: 28px;
@@ -2251,11 +2282,20 @@
     sendBtn.disabled = true;
     msgInput.value = '';
     msgInput.style.height = 'auto';
-    clearDraft();
+    /* The saved draft is NOT cleared here. It used to be — the composer and the
+       localStorage copy were both wiped before the request was even issued, and the
+       only failure handler was console.error. So when the network dropped mid-send the
+       text was simply gone: "написал сообщение по каждому пункту, но пропал интернет и
+       ничего не отправилось :(((". It is cleared once the server has the message. */
 
     const localImageUrl = (pendingImage && pendingIsImage && imagePreviewImg.src) ? imagePreviewImg.src : null;
     const localFile = (pendingImage && !pendingIsImage) ? pendingImage : null;
     const replyData = replyingTo; // capture before it is cleared below
+
+    /* A client-side id, so this particular bubble can be found again when the request
+       resolves. Without one, a failed send left a bubble that looked delivered forever:
+       the id-0 rows are only reaped by a *successful* later poll. */
+    const pendingKey = 'p' + (++pendingSeq);
 
     appendMessage({
       id: 0,
@@ -2271,6 +2311,10 @@
       file_size: localFile ? localFile.size : null,
       reply: replyData,
     });
+    const pendingRow = chatEl
+      ? Array.prototype.slice.call(chatEl.querySelectorAll('[data-msg-id="0"]')).pop()
+      : null;
+    if (pendingRow) pendingRow.dataset.pendingKey = pendingKey;
 
     let fetchOpts;
     if (pendingImage) {
@@ -2298,10 +2342,122 @@
     if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
 
     fetch('/messages/' + CONV_ID + '/send', fetchOpts)
-    .then(function(r) { return r.json(); })
-    .then(function() { pollMessages(); refreshConvList(); })
-    .catch(function(err) { console.error('Send error:', err); });
+    .then(function(r) {
+      /* r.json() used to be called unconditionally. A 403 "Not a member", a 500 or a
+         429 from the rate limiter are all sent as plain text, so parsing them threw
+         into the silent catch below and the message looked sent. */
+      if (!r.ok) {
+        return r.text().then(function(t) {
+          const err = new Error(t || ('HTTP ' + r.status));
+          err.status = r.status;
+          throw err;
+        });
+      }
+      return r.json().catch(function() { return {}; });
+    })
+    .then(function() {
+      /* Only drop the stored draft if it is still the text that was just delivered —
+         the person may have started typing the next message while this one was in
+         flight, and that text is now what the draft holds. */
+      let stored = null;
+      try { stored = localStorage.getItem(draftKey()); } catch (e) {}
+      if (stored === null || stored.trim() === content) clearDraft();
+      clearFailed(pendingKey);
+      pollMessages();
+      refreshConvList();
+    })
+    .catch(function(err) {
+      console.error('Send error:', err);
+      markSendFailed(pendingKey, content, err);
+    });
   }
+
+  /* ── Unsent messages ───────────────────────────────────────────────────────
+     A send that does not arrive keeps its text. The bubble says so and offers to
+     try again, the composer gets the words back if it is empty, and anything still
+     unsent is retried when the connection returns. Attachments are not queued —
+     a File cannot be revived from localStorage — so those are handed straight back
+     to the composer instead. */
+  let pendingSeq = 0;
+  const FAILED_KEY = 'msgFailed:' + (typeof CONV_ID !== 'undefined' ? CONV_ID : '0');
+  const FAILED_MAX = 20;
+
+  function readFailed() {
+    try { return JSON.parse(localStorage.getItem(FAILED_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function writeFailed(list) {
+    try { localStorage.setItem(FAILED_KEY, JSON.stringify(list.slice(-FAILED_MAX))); } catch (e) {}
+  }
+  function clearFailed(key) {
+    const list = readFailed().filter(function(x) { return x.key !== key; });
+    if (list.length) writeFailed(list); else { try { localStorage.removeItem(FAILED_KEY); } catch (e) {} }
+  }
+
+  function markSendFailed(key, content, err) {
+    const row = chatEl && chatEl.querySelector('[data-pending-key="' + key + '"]');
+    if (row) {
+      row.classList.add('msg-unsent');
+      if (!row.querySelector('.msg-unsent-note')) {
+        const note = document.createElement('div');
+        note.className = 'msg-unsent-note';
+        const label = document.createElement('span');
+        label.textContent = (err && err.status && err.status !== 0)
+          ? (LANG === 'ru' ? 'Не отправлено' : 'Not sent')
+          : (LANG === 'ru' ? 'Не отправлено — нет связи' : 'Not sent — no connection');
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'msg-unsent-retry';
+        retry.textContent = LANG === 'ru' ? 'Повторить' : 'Retry';
+        retry.addEventListener('click', function() { retryOne(key); });
+        note.appendChild(label);
+        note.appendChild(retry);
+        row.appendChild(note);
+      }
+    }
+    if (content) {
+      const list = readFailed();
+      if (!list.some(function(x) { return x.key === key; })) {
+        list.push({ key: key, content: content, at: Date.now() });
+        writeFailed(list);
+      }
+      /* If they have not started typing something else, put the words back where
+         they can see and edit them. */
+      if (msgInput && !msgInput.value.trim()) {
+        msgInput.value = content;
+        msgInput.style.height = 'auto';
+        msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + 'px';
+        saveDraft();
+      }
+    }
+    updateSendEnabled();
+  }
+
+  function retryOne(key) {
+    const item = readFailed().filter(function(x) { return x.key === key; })[0];
+    if (!item) return;
+    const row = chatEl && chatEl.querySelector('[data-pending-key="' + key + '"]');
+    fetch('/messages/' + CONV_ID + '/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ content: item.content }),
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json().catch(function() { return {}; }); })
+    .then(function() {
+      clearFailed(key);
+      if (row) row.remove();
+      /* Only drop the composer copy if it is still the text we just delivered. */
+      if (msgInput && msgInput.value.trim() === item.content) { msgInput.value = ''; clearDraft(); updateSendEnabled(); }
+      pollMessages();
+      refreshConvList();
+    })
+    .catch(function() { /* stays unsent; the note and the queue entry remain */ });
+  }
+
+  function flushFailed() {
+    readFailed().forEach(function(item) { retryOne(item.key); });
+  }
+
+  window.addEventListener('online', flushFailed);
 
   // ── Reply flow ──────────────────────────────────────────────────────
   // Plain-text of a message with the quote / meta / image chrome stripped.
@@ -3062,7 +3218,9 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.messages && data.messages.length > 0) {
-          chatEl.querySelectorAll('[data-msg-id="0"]').forEach(function(el) { el.remove(); });
+          // Not the ones marked unsent: those are the messages that never arrived,
+          // and removing them would hide the only evidence the person has.
+          chatEl.querySelectorAll('[data-msg-id="0"]:not(.msg-unsent)').forEach(function(el) { el.remove(); });
           data.messages.forEach(function(m) {
             if (document.querySelector('[data-msg-id="' + m.id + '"]')) return;
             appendMessage(m);
@@ -3110,6 +3268,9 @@
       stopPollFallback();
       if (CONV_ID) pollMessages(); // catch up on anything missed before connect
       refreshConvList();
+      // The stream being up is the most reliable evidence the connection is back —
+      // more so than the `online` event, which fires for a captive portal too.
+      if (CONV_ID && typeof flushFailed === 'function') flushFailed();
     });
     sse.addEventListener('ping', function() { lastSseEventAt = Date.now(); });
 

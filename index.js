@@ -12,6 +12,9 @@ const {
     isValidSolutionLang,
     isValidSolutionProblemName,
 } = require("./utils"); // Importing functions from utils.js
+// Shared with the browser (views/edit_post.ejs loads the same file) so that "did this
+// text actually change?" has exactly one answer on both sides. See js/draft-state.js.
+const { isSameContent } = require("./js/draft-state");
 const { getLanguageData, getSolvedSet } = require("./parents"); // generating content for the main english page
 
 const bcrypt = require("bcrypt");
@@ -182,9 +185,15 @@ const loginAccountLimiter = rateLimit({
     legacyHeaders: false,
 });
 
+// 20/hour was low enough to punish the very people it should protect: one contributor
+// legitimately published the same problem 11 times in a session fixing LaTeX, and a
+// single second of held Ctrl+S (OS key repeat, ~30/s) used to burn the entire budget.
+// The burst itself is now closed at both ends — the editor refuses to publish while a
+// publish is in flight, and an unchanged save writes nothing — so this ceiling only has
+// to stop deliberate abuse, and 60 leaves plenty of room for a real person polishing.
 const editSaveLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20,
+    max: 60,
     keyGenerator: (req) => String(req.session?.userId ?? 'anonymous'),
     message: 'Too many save attempts, please try again later.',
     standardHeaders: true,
@@ -212,6 +221,9 @@ app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf
 // layer, so this one is still the better source for exact text and the smaller download
 // (5.4 MB against 21 MB).
 app.use("/savchenko-3rd-ed.pdf", express.static(path.join(__dirname, "pdf/savchenko-3rd-ed.pdf")));
+// Contributor CVs, uploaded from settings. Served read-only; the filename is derived
+// from the user id, never from what the browser sent.
+app.use("/cv", express.static(path.join(__dirname, "uploads", "cv"), { maxAge: '1d' }));
 // Analytics tag gate. Registered BEFORE the /js static mount so it wins for this one URL.
 //
 // 40 templates carry a bare <script src="/js/analytics.js">, so intercepting the URL is
@@ -350,15 +362,23 @@ app.use((req, res, next) => {
         return next();
     }
     res.locals.unreadMessageCount = 0;
+    res.locals.unfinishedDraftCount = 0;
     Promise.all([
         pool.query("SELECT profile_picture FROM users WHERE id = $1", [req.session.userId]),
         notifications.getUnreadCount(req.session.userId),
         getUnreadMessageCount(req.session.userId),
+        // Cheap (partial index on user_id) and it decides whether the header shows a
+        // Drafts entry at all — nothing appears for the people who have none.
+        pool.query(
+            "SELECT COUNT(*)::int AS n FROM solution_drafts WHERE user_id = $1 AND completed_at IS NULL",
+            [req.session.userId]
+        ).catch(() => ({ rows: [{ n: 0 }] })),
     ])
-        .then(([profileResult, unreadCount, unreadMessages]) => {
+        .then(([profileResult, unreadCount, unreadMessages, draftResult]) => {
             res.locals.profilePicture = profileResult.rows[0]?.profile_picture || null;
             res.locals.unreadNotificationCount = unreadCount;
             res.locals.unreadMessageCount = unreadMessages;
+            res.locals.unfinishedDraftCount = draftResult.rows[0]?.n || 0;
             next();
         })
         .catch((err) => {
@@ -593,6 +613,7 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
             email: user.email,
             bio: user.bio,
             countryLocation: user.country_location,
+            cvUrl: user.cv_url || null,
             institution: user.institution,
             linkedin: user.linkedin,
             github: user.github,
@@ -779,6 +800,68 @@ app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("pr
 });
 
 // Privacy settings update
+// Upload (or replace) your CV.
+//
+// The profile is already a public record of what someone has done here; attaching the
+// document they would send an admissions committee turns that record into something
+// usable as a credential. PDF only, 5 MB, and the stored name is derived from the user
+// id — a filename from the browser is attacker-controlled and has no business on disk.
+const CV_DIR = path.join(__dirname, "uploads", "cv");
+const cvUpload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            fs.mkdirSync(CV_DIR, { recursive: true });
+            cb(null, CV_DIR);
+        },
+        filename: (req, file, cb) => cb(null, `${req.session.userId}.pdf`),
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const isPdf = file.mimetype === "application/pdf" &&
+            path.extname(file.originalname).toLowerCase() === ".pdf";
+        cb(null, isPdf);
+    },
+});
+
+app.post("/:lang/settings/cv", checkAuthenticated, cvUpload.single("cv"), async (req, res) => {
+    const lang = req.params.lang === "ru" ? "ru" : "en";
+    try {
+        if (!req.file) {
+            return res.redirect(`/${lang}/settings?tab=profile&error=cv`);
+        }
+        // A .pdf extension and a claimed MIME type are both trivially forged; the magic
+        // bytes are the only check that means anything. A rejected file is removed
+        // rather than left sitting in uploads/.
+        const head = fs.readFileSync(req.file.path).subarray(0, 5).toString("latin1");
+        if (head !== "%PDF-") {
+            fs.unlinkSync(req.file.path);
+            return res.redirect(`/${lang}/settings?tab=profile&error=cv`);
+        }
+        // Cache-busted, so a replaced CV is not served from the old copy for a day.
+        const url = `/cv/${req.session.userId}.pdf?v=${Date.now()}`;
+        await pool.query(
+            "UPDATE users SET cv_url = $1, cv_uploaded_at = NOW() WHERE id = $2",
+            [url, req.session.userId]
+        );
+        res.redirect(`/${lang}/settings?tab=profile&saved=cv`);
+    } catch (error) {
+        console.error("CV upload failed:", error);
+        res.redirect(`/${lang}/settings?tab=profile&error=cv`);
+    }
+});
+
+app.post("/:lang/settings/cv/delete", checkAuthenticated, async (req, res) => {
+    const lang = req.params.lang === "ru" ? "ru" : "en";
+    try {
+        await pool.query(
+            "UPDATE users SET cv_url = NULL, cv_uploaded_at = NULL WHERE id = $1",
+            [req.session.userId]
+        );
+        fs.unlinkSync(path.join(CV_DIR, `${req.session.userId}.pdf`));
+    } catch (_error) { /* already gone is the desired state */ }
+    res.redirect(`/${lang}/settings?tab=profile&saved=cv`);
+});
+
 app.post("/:lang/settings/privacy", checkAuthenticated, async (req, res) => {
     const { lang } = req.params;
     i18n.setLocale(res, lang);
@@ -2997,6 +3080,52 @@ app.get(["/contributors", "/:lang/contributors"], handleContributorsRanking);
 // Brainstorm Room retired: its real messages were moved into the solution's comment
 // thread (flagged is_brainstorm). Redirect any old room URL or bookmark to the solution
 // page so nothing 404s. Must precede the /:lang/:name catch-all.
+// The page a contributor comes back to. Everything unfinished, newest first, private.
+//
+// This is the half of drafts that was missing: the editor has been autosaving since
+// 2026-08-09, but nothing ever showed anyone their own drafts or let them finish one, so
+// the reassurance the feature exists to give — "close the tab, it will still be here" —
+// was not something a person could actually see.
+//
+// Registered above the `/:lang/:name` catch-all below, for the same reason /user/:username
+// is: two segments, so otherwise "drafts" is parsed as a problem slug and 404s.
+app.get(["/drafts", "/:lang(en|ru)/drafts"], checkAuthenticated, async (req, res) => {
+    // Bare /drafts has no language in the path, so fall back to the visitor's own
+    // `lang` cookie rather than dropping a Russian-speaking contributor into English.
+    // Read from the header directly: cookie-parser is not mounted, so `req.cookies`
+    // does not exist, and adding a dependency for one lookup is not worth it.
+    const cookieLang = /(?:^|;\s*)lang=(en|ru)\b/.exec(req.get("cookie") || "")?.[1];
+    const lang = isValidSolutionLang(req.params.lang)
+        ? req.params.lang
+        : (cookieLang || "en");
+    i18n.setLocale(res, lang);
+    try {
+        const result = await pool.query(
+            `SELECT problem_name, language, content, updated_at
+             FROM solution_drafts
+             WHERE user_id = $1 AND completed_at IS NULL
+             ORDER BY updated_at DESC
+             LIMIT 100`,
+            [req.session.userId]
+        );
+        const drafts = result.rows.map((row) => {
+            // Same stripper the search index uses, so the preview line reads as prose
+            // rather than as LaTeX source.
+            const plain = searchIndex.stripLatexAndMarkdown(row.content || "");
+            return {
+                problemName: row.problem_name,
+                language: row.language,
+                updatedAt: row.updated_at,
+                snippet: plain.length > 160 ? `${plain.slice(0, 160)}…` : plain,
+            };
+        });
+        res.render("drafts", { __: i18n.__, lang, drafts });
+    } catch (error) {
+        console.error("Drafts page failed:", error);
+        res.status(500).render("drafts", { __: i18n.__, lang, drafts: [] });
+    }
+});
+
 app.get("/:lang(en|ru)/:name/brainstorm", (req, res) => {
     return res.redirect(301, `/${req.params.lang}/${req.params.name}`);
 });
@@ -3029,12 +3158,20 @@ app.get("/:lang/edit/:name", (req, res) => {
 
     if (fs.existsSync(filePath)) {
         let fileContents = fs.readFileSync(filePath, "utf8");
+        // When this text was last published. The editor needs it to decide whether a
+        // saved draft is still ahead of the solution or has been overtaken by someone
+        // else's edit — a stale draft must never silently reappear over newer work.
+        let fileModifiedAt = 0;
+        try {
+            fileModifiedAt = fs.statSync(filePath).mtimeMs;
+        } catch { /* fall back to 0: any draft then counts as newer */ }
         i18n.setLocale(res, lang);
         res.render("edit_post", {
             __: i18n.__,
             lang,
             name,
             content: fileContents,
+            fileModifiedAt: Math.round(fileModifiedAt),
             title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
             userId: req.session.userId || null,
         });
@@ -3057,9 +3194,129 @@ function editSaveWantsJson(req) {
 }
 
 // Route for saving edited content
+// ── Drafts ──────────────────────────────────────────────────────────────────────
+//
+// Autosaved from the editor. The point is not convenience — it is that an attempt
+// nobody finishes currently leaves no trace, so the site cannot tell a problem nobody
+// wants from one five people tried and gave up on.
+//
+// A draft is private: only its author can read it back. The only thing anyone else
+// ever sees is a count.
+//
+// Deliberately not `checkAuthenticated` — same reason as the difficulty vote above, but
+// it bites harder here: that middleware redirects, a fetch() follows the redirect, and
+// the login page comes back as 200 HTML. The editor would read `res.ok`, believe the
+// draft was stored and display "all changes saved" over an expired session that saved
+// nothing. A feature whose whole promise is "your work is safe" must fail loudly.
+const requireAuthJson = (req, res, next) => {
+    if (!req.session.userId) return res.status(401).json({ error: "Not logged in" });
+    next();
+};
+
+// Autosave writes on a debounce, so a fast typist is a few requests a minute; this only
+// has to stop something pathological. On 429 the editor keeps the work in localStorage
+// and says so, rather than treating it as an error.
+const draftSaveLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 400,
+    keyGenerator: (req) => `d:${req.session?.userId ?? 'anonymous'}`,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({ error: "rate_limited" }),
+});
+
+app.post("/api/drafts", requireAuthJson, draftSaveLimiter, async (req, res) => {
+    const problemName = String(req.body?.problemName || "").trim();
+    const language = String(req.body?.language || "").trim();
+    const content = String(req.body?.content || "");
+
+    if (!isValidSolutionProblemName(problemName) || !isValidSolutionLang(language)) {
+        return res.status(400).json({ error: "Invalid problem or language" });
+    }
+    // An empty editor is not a draft, and a megabyte of it is not one either.
+    if (content.trim().length === 0 || content.length > 200000) {
+        return res.status(400).json({ error: "Nothing to save" });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO solution_drafts (user_id, problem_name, language, content)
+             VALUES ($1, $2, $3, $4)
+             ON CONFLICT (user_id, problem_name, language)
+             DO UPDATE SET content = EXCLUDED.content, updated_at = NOW()`,
+            [req.session.userId, problemName, language, content]
+        );
+        res.json({ ok: true });
+    } catch (error) {
+        console.error("Draft save failed:", error);
+        res.status(500).json({ error: "Failed to save draft" });
+    }
+});
+
+app.get("/api/drafts/:problemName/:language", requireAuthJson, async (req, res) => {
+    if (!isValidSolutionProblemName(req.params.problemName) || !isValidSolutionLang(req.params.language)) {
+        return res.status(400).json({ error: "Invalid problem or language" });
+    }
+    try {
+        const result = await pool.query(
+            `SELECT content, updated_at FROM solution_drafts
+             WHERE user_id = $1 AND problem_name = $2 AND language = $3 AND completed_at IS NULL`,
+            [req.session.userId, req.params.problemName, req.params.language]
+        );
+        res.json({ draft: result.rows[0] || null });
+    } catch (error) {
+        console.error("Draft read failed:", error);
+        res.status(500).json({ error: "Failed to read draft" });
+    }
+});
+
+app.delete("/api/drafts/:problemName/:language", requireAuthJson, async (req, res) => {
+    if (!isValidSolutionProblemName(req.params.problemName) || !isValidSolutionLang(req.params.language)) {
+        return res.status(400).json({ error: "Invalid problem or language" });
+    }
+    try {
+        await pool.query(
+            `DELETE FROM solution_drafts
+             WHERE user_id = $1 AND problem_name = $2 AND language = $3 AND completed_at IS NULL`,
+            [req.session.userId, req.params.problemName, req.params.language]
+        );
+        res.json({ ok: true });
+    } catch (error) {
+        console.error("Draft delete failed:", error);
+        res.status(500).json({ error: "Failed to delete draft" });
+    }
+});
+
+// How many people are part-way through this problem. A count only — never who, and
+// never what they wrote.
+app.get("/api/drafts/:problemName/:language/count", async (req, res) => {
+    if (!isValidSolutionProblemName(req.params.problemName) || !isValidSolutionLang(req.params.language)) {
+        return res.status(400).json({ error: "Invalid problem or language" });
+    }
+    try {
+        const result = await pool.query(
+            `SELECT COUNT(*)::int AS n FROM solution_drafts
+             WHERE problem_name = $1 AND language = $2 AND completed_at IS NULL`,
+            [req.params.problemName, req.params.language]
+        );
+        res.set("Cache-Control", "public, max-age=300");
+        res.json({ inProgress: result.rows[0]?.n || 0 });
+    } catch (error) {
+        res.json({ inProgress: 0 });
+    }
+});
+
 app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
+    // Seconds of actual composition, as counted by the editor (it stops the clock when
+    // the tab is hidden or idle). Clamped hard: this arrives from the browser, so it is
+    // a claim, not a measurement, and six hours is already beyond generous for one
+    // problem. Anything absurd or missing is stored as NULL rather than as a lie.
+    const claimed = parseInt(req.body.composeSeconds, 10);
+    const composeSeconds = Number.isFinite(claimed) && claimed > 0 && claimed <= 6 * 3600
+        ? claimed
+        : null;
     const userId = req.session.userId || null; // Will be null for unauthenticated users
     const clientIp = req.ip;
 
@@ -3119,6 +3376,51 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
                 });
             }
             return res.status(500).send("Error reading original content");
+        }
+
+        // Nothing actually changed — so this is not an edit, and recording it as one is
+        // worse than useless. 1,931 of 8,318 contribution rows (23%) are exactly this,
+        // and the bursts behind them (peak: 15 rows in one second, 67 identical rows in
+        // one sitting) came from people pressing Save again because it looked dead.
+        // Answering success without writing anything makes a double-submit harmless.
+        if (isSameContent(originalContent, content)) {
+            if (userId) {
+                await pool.query(
+                    `UPDATE solution_drafts SET completed_at = NOW(), updated_at = NOW()
+                     WHERE user_id = $1 AND problem_name = $2 AND language = $3 AND completed_at IS NULL`,
+                    [userId, name, lang]
+                ).catch(() => {});
+            }
+            if (editSaveWantsJson(req)) {
+                return res.json({ ok: true, unchanged: true, redirect: `/${lang}/${name}` });
+            }
+            return res.redirect(`/${lang}/${name}`);
+        }
+
+        // Someone else published while this person was writing. Saving would silently
+        // erase their work, and "I lost my solution" is the complaint this whole change
+        // exists to answer — so refuse and say so. `baseModifiedAt` is only sent by the
+        // editor; any other caller skips the check exactly as before.
+        //
+        // Checked after the no-op case on purpose: if the submitted text already
+        // matches what is on disk, there is nothing to write and so nothing to
+        // conflict with, even though the file moved underneath.
+        const baseModifiedAt = parseInt(req.body.baseModifiedAt, 10);
+        if (Number.isFinite(baseModifiedAt) && baseModifiedAt > 0) {
+            let currentModifiedAt = 0;
+            try {
+                currentModifiedAt = Math.round(fs.statSync(filePath).mtimeMs);
+            } catch { /* unreadable stat: fall through and save as before */ }
+            // A second of slack: mtime resolution and the round-trip both cost a little.
+            if (currentModifiedAt > baseModifiedAt + 1000) {
+                const conflictMessage = lang === "ru"
+                    ? "Решение изменилось, пока вы писали. Ваш черновик сохранён — откройте решение в новой вкладке и объедините правки."
+                    : "This solution changed while you were writing. Your draft is saved — open it in a new tab and merge your work.";
+                if (editSaveWantsJson(req)) {
+                    return res.status(409).json({ ok: false, conflict: true, error: conflictMessage });
+                }
+                return res.status(409).send(conflictMessage);
+            }
         }
 
         // Check for emojis in the content
@@ -3183,12 +3485,26 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
                 original_content,
                 new_content,
                 ip_address,
-                content_changed
-            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7)`,
-            [userId, name, lang, originalContent, content, clientIp, contentChanged]
+                content_changed,
+                compose_seconds
+            ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8)`,
+            [userId, name, lang, originalContent, content, clientIp, contentChanged, composeSeconds]
         );
 
-        searchIndex.rebuildIndex();
+        // The draft became a solution. Kept rather than deleted, so the record of how
+        // long it sat unfinished survives; only the rows that never reach this line
+        // stay NULL, and those are the abandoned attempts.
+        if (userId) {
+            await pool.query(
+                `UPDATE solution_drafts SET completed_at = NOW(), updated_at = NOW()
+                 WHERE user_id = $1 AND problem_name = $2 AND language = $3 AND completed_at IS NULL`,
+                [userId, name, lang]
+            ).catch(() => {});
+        }
+
+        // One document, not all 2,500. A full rebuild here blocked the event loop for
+        // ~2 s, which is what made the Save button feel dead. See searchIndex.js.
+        searchIndex.updateDocument(lang, name, content);
 
         if (editSaveWantsJson(req)) {
             return res.json({ ok: true, redirect: `/${lang}/${name}` });

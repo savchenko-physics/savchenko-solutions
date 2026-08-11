@@ -29,6 +29,7 @@
                 timeline: `/api/user/${user}/timeline`,
                 radar: `/api/user/${user}/radar?lang=${lang}`,
                 social: `/api/user/${user}/social`,
+                impact: `/api/user/${user}/impact?lang=${lang}`,
                 contributions: `/api/user/${user}/contributions?page=1&limit=20`,
             };
             // The server already ran these queries while rendering this page and put
@@ -337,6 +338,16 @@
         .verified-check svg {
             width: 18px;
             height: 18px;
+        }
+
+        .social-link-cv {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: auto;
+            padding: 0 10px;
+            font-size: 13px;
+            font-weight: 500;
         }
 
         .social-row {
@@ -993,10 +1004,12 @@
 
         /* ── Collaborators ── */
 
+        /* Wraps rather than scrolling: twelve collaborators at 96px each ran well past
+           the viewport, and a sideways scrollbar inside a card is easy to miss entirely. */
         .collab-row {
             display: flex;
-            gap: 12px;
-            overflow-x: auto;
+            flex-wrap: wrap;
+            gap: 12px 10px;
             padding-bottom: 4px;
         }
 
@@ -1051,6 +1064,55 @@
             font-variant-numeric: tabular-nums;
         }
 
+        /* ── Impact ── */
+
+        .impact-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1px;
+            background: var(--sv-border);
+            border: 1px solid var(--sv-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .impact-tile {
+            background: var(--sv-card);
+            padding: 12px 14px 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .impact-value {
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--sv-primary);
+            font-variant-numeric: tabular-nums;
+            line-height: 1.2;
+        }
+
+        .impact-label { font-size: 12px; color: var(--sv-secondary); line-height: 1.35; }
+        .impact-note { font-size: 13px; color: var(--sv-secondary); margin: 0 0 10px; }
+        .impact-sub { margin-top: 12px; font-size: 13px; }
+        .impact-sub-title { font-size: 12px; color: var(--sv-secondary); margin: 0 0 6px; }
+
+        .queue-list { display: flex; flex-direction: column; gap: 6px; }
+
+        .queue-item {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            padding: 7px 10px;
+            border: 1px solid var(--sv-border);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .queue-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .queue-remaining { color: #c0392b; font-weight: 600; white-space: nowrap; }
+        .queue-progress { color: var(--sv-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
         /* ── Community ── */
 
         .people-grid {
@@ -1081,12 +1143,12 @@
         .people-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 5px 6px;
+            gap: 9px;
+            padding: 6px 6px;
             border-radius: 6px;
             text-decoration: none;
             color: var(--sv-text);
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .people-item:hover {
@@ -1094,16 +1156,19 @@
         }
 
         .people-avatar {
-            width: 24px;
-            height: 24px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--sv-border);
             flex-shrink: 0;
         }
 
+        /* The name takes only the width it needs, so the count sits beside it. It used
+           to stretch the full row, leaving a stripe of empty space between a name and
+           its own number. */
         .people-name {
-            flex: 1;
+            flex: 0 1 auto;
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1111,7 +1176,9 @@
         }
 
         .people-count {
-            font-size: 12px;
+            margin-right: auto;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--sv-secondary);
             font-variant-numeric: tabular-nums;
             flex-shrink: 0;
@@ -1436,6 +1503,40 @@
             <div id="collab-row" class="collab-row"></div>
         </section>
 
+        <!-- Impact: what the work amounts to, not how much of it there is -->
+        <section id="impact-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Влияние' : 'Impact' %></h2>
+            <section class="impact-row" id="impact-figures"></section>
+            <div id="impact-most-read" class="impact-sub" style="display:none;"></div>
+        </section>
+
+        <section id="queue-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Почти закончено' : 'Almost finished' %></h2>
+            <p class="impact-note"><%= lang === 'ru'
+                ? 'Разделы, где до полного решения осталось совсем немного.'
+                : 'Sections within touching distance of complete.' %></p>
+            <div id="queue-list" class="queue-list"></div>
+        </section>
+
+        <section id="drafts-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Незаконченные черновики' : 'Unfinished drafts' %></h2>
+            <p class="impact-note"><%= lang === 'ru'
+                ? 'Видно только вам. Продолжить можно с того места, где остановились.'
+                : 'Visible only to you. Pick up where you left off.' %></p>
+            <div id="drafts-chips" class="problem-chips"></div>
+            <p class="impact-note" style="margin-top:10px;">
+                <a href="/<%= lang %>/drafts"><%= lang === 'ru' ? 'Все черновики' : 'All drafts' %> &rarr;</a>
+            </p>
+        </section>
+
+        <section id="translate-card" class="card" style="display:none;">
+            <h2 class="section-title"><%= lang === 'ru' ? 'Ждут перевода' : 'Awaiting translation' %></h2>
+            <p class="impact-note"><%= lang === 'ru'
+                ? 'Решения, которые пока есть только на одном языке.'
+                : 'Solutions that exist in one language only.' %></p>
+            <div id="translate-chips" class="problem-chips"></div>
+        </section>
+
         <!-- Recent comments -->
         <section id="comments-card" class="card" style="display:none;">
             <h2 class="section-title"><%= lang === 'ru' ? 'Недавние комментарии' : 'Recent Comments' %></h2>
@@ -1697,6 +1798,7 @@
                 timeline: `/api/user/${username}/timeline`,
                 radar: `/api/user/${username}/radar?lang=${lang}`,
                 social: `/api/user/${username}/social`,
+                impact: `/api/user/${username}/impact?lang=${lang}`,
                 contributions: `/api/user/${username}/contributions?page=1&limit=20`,
             }[name];
             return fetchJSON(fallback);
@@ -2063,6 +2165,7 @@
 
         function renderHeader(data) {
             const user = data.user;
+            window.__isOwnProfile = !!data.isOwnProfile;
             profileAuthor = {
                 username: user.username,
                 fullName: user.fullName || user.username,
@@ -2154,15 +2257,20 @@
                 { url: user.github, icon: "bi-github", title: "GitHub" },
                 { url: user.linkedin, icon: "bi-linkedin", title: "LinkedIn" },
                 { url: user.website, icon: "bi-globe2", title: "Website" },
+                // The CV sits with the other outbound links rather than in a card of
+                // its own: it is one more way to find out who this person is.
+                { url: user.cvUrl, icon: "bi-file-earmark-person", title: lang === "ru" ? "Резюме (CV)" : "CV", cv: true },
             ].filter((x) => x.url && String(x.url).trim() !== "");
             links.forEach((x) => {
                 const a = document.createElement("a");
-                a.className = "social-link";
+                a.className = x.cv ? "social-link social-link-cv" : "social-link";
                 a.href = x.url;
                 a.target = "_blank";
                 a.rel = "noopener noreferrer";
                 a.title = x.title;
-                a.innerHTML = `<i class="bi ${x.icon}"></i>`;
+                a.innerHTML = x.cv
+                    ? `<i class="bi ${x.icon}"></i><span>${x.title}</span>`
+                    : `<i class="bi ${x.icon}"></i>`;
                 socialRow.appendChild(a);
             });
 
@@ -2339,7 +2447,10 @@
             const rawMax = scored.length ? Math.max(...scored) : 1;
             const current = Math.round(cur.score != null ? cur.score : rawMax);
             const yMin = 0;
-            const yMax = Math.max(1, current);
+            // Headroom above the peak. Pinning max to the current rating put the last
+            // point exactly on the top gridline, and Chart.js clips the dataset to the
+            // plot area — so the 2px stroke was sliced in half along the whole plateau.
+            const yMax = Math.max(2, Math.ceil(current * 1.08));
             const values = points.map((p) => p.score);
             const ctx = document.getElementById("rating-chart");
             if (ratingChart) ratingChart.destroy();
@@ -2407,6 +2518,15 @@
                             type: "linear",
                             min: yMin,
                             max: yMax,
+                            afterBuildTicks: function (axis) {
+                                // Add the current rating to whatever ticks Chart.js chose,
+                                // dropping any that would collide with it.
+                                const keep = axis.ticks.filter(function (t) {
+                                    return Math.abs(t.value - current) > yMax * 0.06;
+                                });
+                                keep.push({ value: current });
+                                axis.ticks = keep.sort(function (a, b) { return a.value - b.value; });
+                            },
                             grid: { color: "#eef0f2" },
                             ticks: {
                                 color: "#6c757d",
@@ -2774,6 +2894,107 @@
             }
         }
 
+        /* ── Impact ── */
+
+        function renderImpact(data) {
+            if (!data) return;
+            const nf = (n) => Number(n || 0).toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+            const r = data.readership || {};
+            const d = data.difficulty || {};
+            const st = data.streak || {};
+
+            const tiles = [];
+            if (r.views > 0) {
+                tiles.push([nf(r.views), lang === "ru"
+                    ? `просмотров решений, к которым он приложил руку (${nf(r.problems)} задач)`
+                    : `views of solutions they worked on, across ${nf(r.problems)} problems`]);
+            }
+            if (data.firstSolved > 0) {
+                tiles.push([nf(data.firstSolved), lang === "ru"
+                    ? "задач решено первым — первая версия решения принадлежит ему"
+                    : "problems solved first — the opening version is theirs"]);
+            }
+            if (d.starred > 0 && d.starredInBook > 0) {
+                tiles.push([`${nf(d.starred)} / ${nf(d.starredInBook)}`, lang === "ru"
+                    ? "задач со звёздочкой Савченко — тех, что он сам отметил как трудные"
+                    : "of Savchenko's starred problems — the ones he marked hard himself"]);
+            }
+            const ct = data.composeTime || {};
+            if (ct.seconds > 0) {
+                const hours = ct.seconds / 3600;
+                const shown = hours >= 1 ? `${hours.toFixed(hours >= 10 ? 0 : 1)} ${lang === "ru" ? "ч" : "h"}`
+                                         : `${Math.round(ct.seconds / 60)} ${lang === "ru" ? "мин" : "min"}`;
+                // Deliberately "at the editor", not "writing": the clock stops after
+                // five idle minutes, so this is a floor on the real effort, not a
+                // stopwatch on thinking.
+                tiles.push([shown, lang === "ru"
+                    ? `за редактором, не меньше (${nf(ct.measuredEdits)} правок с измерением)`
+                    : `at the editor, at least — over ${nf(ct.measuredEdits)} measured edits`]);
+            }
+            if (st.longest > 0) {
+                tiles.push([nf(st.longest) + (lang === "ru" ? " дн." : "d"), lang === "ru"
+                    ? (st.current > 0 ? `самая длинная серия · сейчас ${nf(st.current)}` : "самая длинная серия подряд")
+                    : (st.current > 0 ? `longest streak · ${nf(st.current)} running now` : "longest run of consecutive days")]);
+            }
+            if (tiles.length === 0) return;
+
+            document.getElementById("impact-card").style.display = "";
+            document.getElementById("impact-figures").innerHTML = tiles.map(([v, l]) =>
+                `<article class="impact-tile"><div class="impact-value">${escapeHtml(v)}</div>` +
+                `<div class="impact-label">${escapeHtml(l)}</div></article>`).join("");
+
+            const top = (r.top || []).filter((t) => t.views > 0).slice(0, 5);
+            if (top.length) {
+                const box = document.getElementById("impact-most-read");
+                box.style.display = "";
+                box.innerHTML = `<p class="impact-sub-title">${lang === "ru" ? "Самые читаемые" : "Most read"}</p>` +
+                    `<div class="problem-chips">` + top.map((t) =>
+                        `<a class="problem-chip" href="/${lang}/${encodeURIComponent(t.problemName)}">` +
+                        `${escapeHtml(t.problemName)} · ${nf(t.views)}</a>`).join("") + `</div>`;
+            }
+
+            const queue = data.workQueue || [];
+            if (queue.length) {
+                document.getElementById("queue-card").style.display = "";
+                document.getElementById("queue-list").innerHTML = queue.map((q) => {
+                    const left = lang === "ru"
+                        ? `осталось ${nf(q.remaining)}`
+                        : `${nf(q.remaining)} to go`;
+                    return `<div class="queue-item"><span class="queue-name">${escapeHtml(q.number)} · ${escapeHtml(q.name)}</span>` +
+                        `<span class="queue-progress">${nf(q.solved)}/${nf(q.total)}</span>` +
+                        `<span class="queue-remaining">${escapeHtml(left)}</span></div>`;
+                }).join("");
+            }
+
+            // Only on your own profile. An unfinished draft is private work, and the
+            // count of them is nobody else's business either.
+            const drafts = data.drafts || [];
+            if (drafts.length && window.__isOwnProfile) {
+                document.getElementById("drafts-card").style.display = "";
+                // The edit route is /:lang/edit/:name — the other order 404s, which is
+                // what every one of these chips did.
+                document.getElementById("drafts-chips").innerHTML = drafts.map((d) =>
+                    `<a class="problem-chip" href="/${encodeURIComponent(d.language)}/edit/${encodeURIComponent(d.problemName)}">` +
+                    `${escapeHtml(d.problemName)}</a>`).join("");
+            }
+
+            const untranslated = data.untranslated || [];
+            if (untranslated.length) {
+                document.getElementById("translate-card").style.display = "";
+                document.getElementById("translate-chips").innerHTML = untranslated.map((u) =>
+                    `<a class="problem-chip" href="/${encodeURIComponent(u.language)}/${encodeURIComponent(u.problemName)}">` +
+                    `${escapeHtml(u.problemName)} · ${escapeHtml(String(u.language).toUpperCase())}</a>`).join("");
+            }
+        }
+
+        async function loadImpact() {
+            try {
+                renderImpact(await profileData("impact"));
+            } catch (_error) {
+                // A profile with nothing to show simply keeps these cards hidden.
+            }
+        }
+
         async function loadSocial() {
             try {
                 renderSocial(await profileData("social"));
@@ -2804,6 +3025,7 @@
                 renderRadarAndBreakdown(),
                 loadContributions(),
                 loadSocial(),
+                loadImpact(),
             ]);
         }
 

@@ -22,10 +22,14 @@
     <link rel="apple-touch-icon" href="/img/logo.png" />
     <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
 
-    <script src="/js/vendor/codemirror/codemirror.min.js"></script>
-    <script src="/js/vendor/codemirror/mode/markdown/markdown.min.js"></script>
-    <script src="/js/vendor/codemirror/mode/stex/stex.min.js"></script>
-    <script src="/js/vendor/marked-4.3.0.min.js"></script>
+    <%# All render-blocking before: the editor could not appear until every one of these
+        had downloaded and parsed. `defer` keeps their relative order and runs them just
+        before DOMContentLoaded, which is when the editor initialises anyway. %>
+    <script defer src="/js/vendor/codemirror/codemirror.min.js"></script>
+    <script defer src="/js/vendor/codemirror/mode/markdown/markdown.min.js"></script>
+    <script defer src="/js/vendor/codemirror/mode/stex/stex.min.js"></script>
+    <script defer src="/js/vendor/marked-4.3.0.min.js"></script>
+    <script defer src="/js/draft-state.js"></script>
     <script>
     MathJax = {
       tex: {
@@ -38,13 +42,18 @@
       }
     };
     </script>
+    <%# CHTML, measured against tex-svg on this page: 2.26 MB vs 3.49 MB transferred.
+        SVG would match the published page's output format exactly, but that was never
+        the mismatch people hit — what differed was that mathRender.js repairs a
+        systematic escaping bug in the source and the preview did not. That repair is now
+        shared (js/tex-normalize.js), which fixes the real problem for free. Switching
+        this back to tex-svg.js is a one-line change if exact visual identity is wanted. %>
     <script id="MathJax-script" async src="/vendor/mathjax/tex-chtml.js"></script>
-    <script src="/js/vendor/codemirror/addon/mode/multiplex.min.js"></script>
-    <script src="/js/vendor/codemirror/addon/selection/active-line.min.js"></script>
-    <script
-        src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
-    <script src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
-    <script src="/js/vendor/codemirror/addon/edit/closebrackets.min.js"></script>
+    <script defer src="/js/tex-normalize.js"></script>
+    <script defer src="/js/vendor/codemirror/addon/mode/multiplex.min.js"></script>
+    <script defer src="/js/vendor/codemirror/addon/selection/active-line.min.js"></script>
+    <script defer src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
+    <script defer src="/js/vendor/codemirror/addon/edit/closebrackets.min.js"></script>
 
     <style>
         :root {
@@ -161,6 +170,39 @@
             width: 100%;
             height: 100%;
         }
+
+        /* Click-to-play stand-in for a YouTube embed. Nothing leaves the page until it
+           is pressed — see transformImageMarkdown. */
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .video-placeholder:hover { background: #eef1f4; }
+        .video-placeholder__play {
+            font-size: 26px;
+            color: #ffffff;
+            background: #1a1a2e;
+            width: 56px;
+            height: 40px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-placeholder__id { font-size: 12px; color: #6c757d; }
 
         /* LaTeX Syntax Highlighting (Overleaf-inspired) */
         .cm-keyword {
@@ -902,10 +944,124 @@
             letter-spacing: 0.2px;
             border-left: 1px solid rgba(125,125,125,0.3) !important;
         }
+
+        /* Draft status — the whole report that autosave gives. Calm by default; it must
+           never look like an error, because the common state is "everything is fine".
+           `margin-left:auto` parks it at the far end of the toolbar, so it grows into
+           empty space instead of competing with anything. */
+        /* Everything that lives at the empty end of the toolbar. One auto margin on the
+           group, not one per child — two competing auto margins would push the drafts
+           link and the status apart instead of keeping them together on the right. */
+        .toolbar-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 0;
+        }
+
+        .toolbar-drafts-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.82);
+            text-decoration: none;
+            white-space: nowrap;
+            padding: 3px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 5px;
+        }
+        .toolbar-drafts-link:link,
+        .toolbar-drafts-link:visited { color: rgba(255, 255, 255, 0.82); }
+        .toolbar-drafts-link:hover {
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .toolbar-drafts-count {
+            font-variant-numeric: tabular-nums;
+            color: rgba(255, 255, 255, 0.58);
+        }
+        @media (max-width: 700px) {
+            .toolbar-drafts-link span:not(.toolbar-drafts-count) { display: none; }
+        }
+
+        .draft-status {
+            padding-left: 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.72);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+        .draft-status.is-offline { color: #ffcf70; }
+        /* Below this the toolbar's own buttons need the width more than the reassurance
+           does; the restore bar and the Publish button still say everything essential. */
+        @media (max-width: 560px) {
+            .draft-status { display: none; }
+        }
+
+        /* On a phone the header ran out of room and clipped the primary button — it read
+           as a bare icon with no label at 380px, before this change too. The problem
+           number is already in the URL and the tab title, so the centre label is the one
+           thing here that can be given up. `!important` because the buttons carry inline
+           styles from long before the no-inline-styles rule. */
+        @media (max-width: 640px) {
+            .post-title { display: none; }
+            .header-right .submit-button {
+                font-size: 13px !important;
+                padding: 8px 10px !important;
+            }
+            .header-right .submit-button svg,
+            .header-right .submit-button .fa {
+                margin-right: 2px;
+            }
+            /* The wordmark is the widest thing in the row and the least load-bearing
+               here — you already know which site you are on, and it stays a link home.
+               Measured at a 500px viewport with these rules on: the header row totals
+               ~376px and reports zero overflow, so the primary button keeps its full
+               label down to the narrowest phones. */
+            .header-left .mw-logo-wordmark { max-width: 120px; }
+        }
+
+        /* Restore notice — shown once, when the editor opened a draft instead of the
+           published text. Sits under the toolbar so it cannot cover the first line. */
+        .draft-restored-bar {
+            position: fixed;
+            top: 72px;
+            left: 0;
+            right: 0;
+            z-index: 999;
+            display: none;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13px;
+            color: #2d2d2d;
+        }
+        .draft-restored-bar.show { display: flex; }
+        .draft-restored-bar a {
+            color: #1a5276;
+            text-decoration: none;
+        }
+        .draft-restored-bar a:hover { color: #0d3b54; text-decoration: underline; }
+        .draft-restored-bar button {
+            margin-left: auto;
+            border: none;
+            background: none;
+            color: #6c757d;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+        }
     </style>
 
     <link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet">
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet">
     <script src="/js/analytics.js"></script>
 </head>
@@ -948,9 +1104,9 @@
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
                 <button type="submit" id="save-button" class="submit-button"
                     style="font-size: 16px; color: #fff; opacity: 0.9; background-color: #007b0c; border-color: #6fae75; border-radius: 1px; box-shadow: none; padding: 10px 18px;">
-                    <i class="fa fa-save" aria-hidden="true"></i>
-                    <span>
-                        <%= __('post.saveChanges') %>
+                    <i class="fa fa-upload" aria-hidden="true"></i>
+                    <span id="save-button-label">
+                        <%= __('post.publish') %>
                     </span>
                 </button>
             </form>
@@ -973,6 +1129,12 @@
         </div>
     </div>
 
+    <div id="draft-restored-bar" class="draft-restored-bar" role="status">
+        <span id="draft-restored-text"></span>
+        <a href="#" id="draft-show-published"><%= __('post.showPublished') %></a>
+        <button type="button" id="draft-restored-close" aria-label="close">&times;</button>
+    </div>
+
     <div id="toolbar"
         style="position: fixed; top: 40px; left: 0; right: 0; height: 32px; background-color: #2f3a4c;display: flex; align-items: center; padding: 0 24px; z-index: 1000;">
         <button class="ol-cm-toolbar-button btn ol-cm-toolbar-button-math active" aria-label="Toggle Symbol Palette"
@@ -982,6 +1144,27 @@
         </button>
         <button type="button" id="matrix-btn" class="ol-cm-toolbar-button toolbar-text-btn btn" aria-label="Insert Matrix">Matrices</button>
         <button type="button" id="equations-btn" class="ol-cm-toolbar-button toolbar-text-btn btn" aria-label="Insert Equations">Equations</button>
+        <%# The right-hand group. Saving is continuous and automatic; the status line is
+            the only thing that ever reports it. It lives here, where the row is empty,
+            rather than in the header: sat between Back and Publish it was squeezed
+            between two fixed-width buttons and clipped mid-word. %>
+        <% if (userId) { %>
+        <div class="toolbar-right">
+            <%# Somebody who has drafts should be able to find the list without being told
+                it exists. The count comes from the global header middleware, which has
+                already run for this request, so this costs no extra query. Nothing shows
+                for the people with nothing to come back to. %>
+            <% const draftCount = (typeof unfinishedDraftCount !== 'undefined' && unfinishedDraftCount) ? unfinishedDraftCount : 0; %>
+            <% if (draftCount > 0) { %>
+            <a class="toolbar-drafts-link" href="/<%= lang %>/drafts">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zm1.647 5.354L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5z"/></svg>
+                <span><%= __('drafts.navLabel') %></span>
+                <span class="toolbar-drafts-count"><%= draftCount %></span>
+            </a>
+            <% } %>
+            <span id="draft-status" class="draft-status" aria-live="polite"></span>
+        </div>
+        <% } %>
     </div>
 
     <div class="ol-cm-toolbar-button-menu-popover"
@@ -1454,6 +1637,13 @@
     </div>
 
     <script>
+        /* The editor's libraries are `defer`red in <head> so the page can paint before
+           ~250 KB of JavaScript has parsed. Deferred scripts run before this event, so
+           CodeMirror, marked and DraftState are all defined by the time this begins.
+           Everything below stays inside the handler; nothing outside it refers to any of
+           these names (checked: the only inline handler in the template is a
+           `this.parentElement` one-liner, and the saveError block below is standalone). */
+        document.addEventListener('DOMContentLoaded', function () {
         // Define custom mixed mode for Markdown + LaTeX
         CodeMirror.defineMode("markdown-latex", function (config) {
             const markdownMode = CodeMirror.getMode(config, "markdown");
@@ -1572,8 +1762,18 @@
         const preview = document.getElementById('preview');
         const resizer = document.getElementById('resizer');
 
-        // Render Markdown and LaTeX
+        /* Render Markdown and LaTeX.
+           `lastPreviewHtml` matters more than it looks: without it every keystroke
+           replaced the whole pane, which threw away and rebuilt any video iframe in it
+           (re-downloading the player, megabytes at a time) and re-typeset every formula
+           on the page. Cursor movement and selection changes fire 'change' too. */
+        let lastPreviewHtml = null;
+
         function renderPreview(content) {
+            /* The same repair mathRender.js applies before the page is published, so a
+               formula cannot look broken here and correct there (or the reverse). */
+            if (window.TexNormalize) content = window.TexNormalize.normalizeTex(content);
+
             content = content.replace(/\\\[/g, '\\\\[').replace(/\\\]/g, '\\\\]');
             content = content.replace(/\\\(/g, '\\\\(').replace(/\\\)/g, '\\\\)');
 
@@ -1581,21 +1781,39 @@
             // Apply custom image and YouTube transformations
             html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
             html = html.replace(/\\\*/g, "*");
+
+            if (html === lastPreviewHtml) return;
+            lastPreviewHtml = html;
+
             preview.innerHTML = html;
             if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
                 MathJax.typesetPromise([preview]);
             }
         }
 
+        const PREVIEW_DEBOUNCE_MS = 200;
+        let previewTimer = null;
+        function schedulePreview() {
+            clearTimeout(previewTimer);
+            previewTimer = setTimeout(() => renderPreview(editor.getValue()), PREVIEW_DEBOUNCE_MS);
+        }
+
         // Add the transformImageMarkdown function
         function transformImageMarkdown(htmlContent) {
             // Regular expression for YouTube URL format
-            const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
+            const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/([a-zA-Z0-9_-]+)(\?t=\d+)?)\)/g;
 
-            // Replace YouTube URL format with video container HTML
-            htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
+            /* A placeholder, not an iframe. The published page uses the same click-to-play
+               approach (views/default/video_embed.ejs), and here it matters twice over:
+               nothing is requested from YouTube — no player, no analytics beacons, several
+               megabytes — until someone actually presses play, and an editor whose preview
+               is rebuilt while you type must never be able to restart a video. */
+            htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl, videoId) => {
                 return `<div class="video-container">
-                            <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
+                            <button type="button" class="video-placeholder" data-video-url="${youtubeUrl}" aria-label="YouTube">
+                                <span class="video-placeholder__play" aria-hidden="true">&#9654;</span>
+                                <span class="video-placeholder__id">youtube.com &middot; ${videoId}</span>
+                            </button>
                         </div>`;
             });
 
@@ -1629,8 +1847,22 @@
         renderPreview(editor.getValue());
 
         // Live preview update
-        editor.on('change', () => {
-            renderPreview(editor.getValue());
+        editor.on('change', schedulePreview);
+
+        /* Swap the placeholder for the real player only on an explicit click. Delegated,
+           because the preview's contents are replaced as the text changes. */
+        preview.addEventListener('click', (e) => {
+            const trigger = e.target.closest('.video-placeholder[data-video-url]');
+            if (!trigger) return;
+            const frame = document.createElement('iframe');
+            frame.className = 'video';
+            frame.setAttribute('allowfullscreen', '');
+            frame.setAttribute('frameborder', '0');
+            frame.src = trigger.getAttribute('data-video-url') + (trigger.getAttribute('data-video-url').includes('?') ? '&' : '?') + 'autoplay=1';
+            trigger.replaceWith(frame);
+            /* lastPreviewHtml is deliberately left alone: while the markdown is unchanged
+               renderPreview short-circuits, so a playing video is not torn down under
+               the person watching it. */
         });
 
         // Resizable divider logic
@@ -1689,15 +1921,305 @@
 
         let hasUnsavedChanges = false;
 
+        /* ── Composition clock ────────────────────────────────────────────────────
+           Wall-clock time from opening the editor would be a lie: people leave a tab
+           open overnight. This counts a second only while the page is visible AND
+           there has been a keystroke within the last two minutes, so it measures
+           writing rather than the tab existing. The server clamps it besides — the
+           number arrives from the browser and is a claim, not a measurement. */
+        /* Three things were wrong with the first version, all of them undercounting:
+
+           1. The clock lived in a page variable, so it reset to zero every time the
+              editor reloaded — which uploading an image does. One contributor worked on
+              6.3.10 from 10:33 to 12:34 and the site recorded 12 minutes, because two
+              image uploads wiped the counter twice. It now accumulates in localStorage
+              against the problem, and only a successful save clears it.
+
+           2. Only CodeMirror `change` events counted as activity, so reading your own
+              derivation, scrolling, or working the toolbar read as idle. Any interaction
+              counts now.
+
+           3. Two minutes of silence ended the session. Deriving a physics result means
+              thinking for longer than that with nothing typed; five minutes is a fairer
+              line for this kind of writing. */
+        const COMPOSE_IDLE_MS = 300000;
+        const COMPOSE_KEY = 'compose:<%= lang %>:<%= name %>';
+
+        function readComposeSeconds() {
+            try {
+                const n = parseInt(localStorage.getItem(COMPOSE_KEY), 10);
+                return Number.isFinite(n) && n >= 0 && n <= 6 * 3600 ? n : 0;
+            } catch (_) { return 0; }
+        }
+        function writeComposeSeconds(n) {
+            try { localStorage.setItem(COMPOSE_KEY, String(n)); } catch (_) {}
+        }
+        function clearComposeSeconds() {
+            try { localStorage.removeItem(COMPOSE_KEY); } catch (_) {}
+        }
+
+        let composeSeconds = readComposeSeconds();
+        let lastActivity = Date.now();
+
+        // Anything that shows somebody is still at the page, not only typing into it.
+        ['keydown', 'pointerdown', 'pointermove', 'wheel', 'scroll', 'touchstart', 'focus']
+            .forEach((evt) => {
+                window.addEventListener(evt, () => { lastActivity = Date.now(); },
+                    { passive: true, capture: true });
+            });
+
+        setInterval(() => {
+            if (document.visibilityState !== 'visible') return;
+            if (Date.now() - lastActivity > COMPOSE_IDLE_MS) return;
+            composeSeconds += 1;
+            // Persist once a second so a crash or a reload loses at most one second.
+            if (composeSeconds % 5 === 0) writeComposeSeconds(composeSeconds);
+        }, 1000);
+
+        // A reload mid-sentence must not lose the tail of the count.
+        window.addEventListener('pagehide', () => writeComposeSeconds(composeSeconds));
+
+        /* ── Drafts ───────────────────────────────────────────────────────────────
+           The editor saves continuously, like a document editor should. Nobody has to
+           press anything for their work to survive closing the tab, losing the network
+           or forgetting about it for an hour — a contributor asked for exactly this
+           ("надо было черновики хоть отправлять"), after throwing away about ten solved
+           problems rather than face retyping them here.
+
+           Three copies of a solution can exist: the published file, the draft on the
+           server, and the draft in this browser. js/draft-state.js decides which one the
+           editor opens, and it is the same module the server uses to decide whether a
+           publish actually changed anything. */
+        const DRAFT_KEY = { problemName: '<%= name %>', language: '<%= lang %>' };
+        const LOCAL_KEY = 'solDraft:<%= lang %>:<%= name %>';
+        const PUBLISHED_CONTENT = editor.getValue();
+        const FILE_MODIFIED_AT = <%= typeof fileModifiedAt !== 'undefined' && fileModifiedAt ? fileModifiedAt : 0 %>;
+
+        const DRAFT_DEBOUNCE_MS = 700;    // quiet period after typing stops
+        const DRAFT_MIN_GAP_MS = 2000;    // floor between network writes
+        const statusEl = document.getElementById('draft-status');
+
+        /* Complete sentences, no interpolation. `__()` runs every string through
+           Mustache, and with no values passed a `{{time}}` placeholder is *stripped*
+           server-side — which turned "Сохранено в {{time}}" into the dangling
+           "Сохранено в ". The exact time lives in the tooltip instead. */
+        const TXT_SAVED   = '<%= __('post.draftSaved') %>';
+        const TXT_SAVING  = '<%= __('post.draftSaving') %>';
+        const TXT_OFFLINE = '<%= __('post.draftOffline') %>';
+
+        let lastDraftSaved = PUBLISHED_CONTENT;
+        let lastDraftPostAt = 0;
+        let draftTimer = null;
+        let draftOffline = false;
+
+        const fmtTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        function setStatus(text, offline, title) {
+            if (!statusEl) return;
+            if (statusEl.textContent !== text) statusEl.textContent = text || '';
+            statusEl.title = title || '';
+            statusEl.classList.toggle('is-offline', !!offline);
+        }
+
+        /* localStorage is the copy that survives a dead network, which is not a corner
+           case here — contributors write from connections where a request simply does
+           not arrive. It is written on every change; the server write is debounced. */
+        function saveLocal(content) {
+            try {
+                localStorage.setItem(LOCAL_KEY, JSON.stringify({ content: content, savedAt: Date.now() }));
+            } catch (_) { /* private mode or quota — the server copy still applies */ }
+        }
+
+        function readLocal() {
+            try {
+                const raw = localStorage.getItem(LOCAL_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                return (parsed && typeof parsed.content === 'string') ? parsed : null;
+            } catch (_) { return null; }
+        }
+
+        function clearLocal() {
+            try { localStorage.removeItem(LOCAL_KEY); } catch (_) {}
+        }
+
+        async function saveDraft(force) {
+            if (!isLoggedIn) return;
+            const content = editor.getValue();
+            if (!content.trim() || content === lastDraftSaved) return;
+            if (!force && Date.now() - lastDraftPostAt < DRAFT_MIN_GAP_MS) {
+                scheduleDraft();
+                return;
+            }
+            lastDraftPostAt = Date.now();
+            setStatus(TXT_SAVING);
+            try {
+                const res = await fetch('/api/drafts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ ...DRAFT_KEY, content: content }),
+                });
+                if (res.ok) {
+                    lastDraftSaved = content;
+                    draftOffline = false;
+                    setStatus(TXT_SAVED, false, fmtTime(new Date()));
+                } else {
+                    /* Includes 429. The work is already in localStorage, so the honest
+                       message is "not on the server yet", never an error dialog. */
+                    draftOffline = true;
+                    setStatus(TXT_OFFLINE, true);
+                }
+            } catch (_) {
+                draftOffline = true;
+                setStatus(TXT_OFFLINE, true);
+            }
+        }
+
+        function scheduleDraft() {
+            clearTimeout(draftTimer);
+            draftTimer = setTimeout(() => saveDraft(false), DRAFT_DEBOUNCE_MS);
+        }
+
         editor.on('change', () => {
             hasUnsavedChanges = true;
+            lastActivity = Date.now();
+            if (!isLoggedIn) return;
+            const content = editor.getValue();
+            saveLocal(content);
+            /* Flip the label on the keystroke, not when the debounce expires. The
+               network write is still debounced, but "Все изменения сохранены" must not
+               sit there for a second after the text stopped matching it — that is the
+               one moment the line would be actively lying. */
+            if (!draftOffline && content !== lastDraftSaved) setStatus(TXT_SAVING);
+            scheduleDraft();
         });
 
-        async function submitSave() {
+        /* Anything that means "the person is leaving this text alone for a moment" is a
+           good time to make the server copy current. */
+        window.addEventListener('blur', () => saveDraft(true));
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') saveDraft(true);
+        });
+        window.addEventListener('online', () => { if (draftOffline) saveDraft(true); });
+
+        /* A closing tab gets one last attempt; keepalive is what lets it survive
+           teardown, which a normal fetch does not. */
+        window.addEventListener('pagehide', () => {
             if (!isLoggedIn) return;
+            const content = editor.getValue();
+            if (!content.trim() || content === lastDraftSaved) return;
+            saveLocal(content);
+            try {
+                fetch('/api/drafts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ ...DRAFT_KEY, content: content }),
+                    keepalive: true,
+                });
+            } catch (_) {}
+        });
+
+        /* ── Opening: restore whatever is newest ──────────────────────────────── */
+        const restoredBar = document.getElementById('draft-restored-bar');
+
+        function showRestored(savedAt) {
+            const text = document.getElementById('draft-restored-text');
+            if (text) {
+                text.textContent = '<%= __('post.draftRestored') %> \u00b7 '
+                    + new Date(savedAt).toLocaleString();
+            }
+            if (restoredBar) restoredBar.classList.add('show');
+        }
+
+        async function restoreDraft() {
+            if (!isLoggedIn || !window.DraftState) return;
+            let serverDraft = null;
+            try {
+                const res = await fetch('/api/drafts/<%= name %>/<%= lang %>', { credentials: 'same-origin' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.draft) {
+                        serverDraft = { content: data.draft.content, savedAt: data.draft.updated_at };
+                    }
+                }
+            } catch (_) { /* offline: the local copy below still applies */ }
+
+            const local = readLocal();
+            const picked = window.DraftState.pickEditorContent({
+                fileContent: PUBLISHED_CONTENT,
+                fileModifiedAt: FILE_MODIFIED_AT,
+                serverDraft: serverDraft,
+                localDraft: local,
+            });
+
+            if (picked.source === window.DraftState.SOURCE_FILE) {
+                /* Whatever was cached locally is now published or stale; drop it so it
+                   cannot come back and overwrite the published text later. */
+                if (local) clearLocal();
+                setStatus(TXT_SAVED);
+                return;
+            }
+
+            editor.setValue(picked.content);
+            hasUnsavedChanges = false;
+            showRestored(picked.savedAt);
+            setStatus(TXT_SAVED, false, fmtTime(new Date(picked.savedAt)));
+
+            if (picked.source === window.DraftState.SOURCE_LOCAL) {
+                /* The browser copy was ahead of the server — the connection dropped
+                   before the last POST landed. Push it now, and deliberately do NOT
+                   set lastDraftSaved first: saveDraft short-circuits on equal content,
+                   so pre-setting it here would silently skip the very sync this case
+                   exists for. */
+                saveDraft(true);
+            } else {
+                lastDraftSaved = picked.content;
+            }
+        }
+
+        if (isLoggedIn) {
+            setStatus(TXT_SAVED);
+            restoreDraft();
+        }
+
+        const showPublishedLink = document.getElementById('draft-show-published');
+        if (showPublishedLink) {
+            showPublishedLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                editor.setValue(PUBLISHED_CONTENT);
+                if (restoredBar) restoredBar.classList.remove('show');
+            });
+        }
+        const restoredClose = document.getElementById('draft-restored-close');
+        if (restoredClose) {
+            restoredClose.addEventListener('click', () => restoredBar.classList.remove('show'));
+        }
+
+        /* ── Publishing ───────────────────────────────────────────────────────────
+           A real in-flight flag, not just a disabled button. The button was the only
+           guard before, and the Ctrl+S handler below never looked at it — so OS key
+           repeat (~30 presses/second) fired one independent request per press. That is
+           where the duplicate contributions came from: 15 rows inside one second at the
+           peak, and one problem written 67 times in a single sitting. */
+        const saveButtonLabel = document.getElementById('save-button-label');
+        const publishLabel = saveButtonLabel ? saveButtonLabel.textContent : '';
+        let publishing = false;
+
+        async function submitSave() {
+            if (!isLoggedIn || publishing) return;
+            publishing = true;
             const content = editor.getValue();
             document.getElementById('hidden-content').value = content;
             saveButton.disabled = true;
+            if (saveButtonLabel) saveButtonLabel.textContent = '<%= __('post.publishing') %>';
+
+            /* Without this a request that never completes leaves the button dead
+               forever, which reads as "the site is broken" and starts the retry loop. */
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 30000);
+
             try {
                 const res = await fetch(saveForm.action, {
                     method: 'POST',
@@ -1706,8 +2228,13 @@
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: new URLSearchParams({ content: content }),
-                    credentials: 'same-origin'
+                    body: new URLSearchParams({
+                        content: content,
+                        composeSeconds: String(composeSeconds),
+                        baseModifiedAt: String(FILE_MODIFIED_AT),
+                    }),
+                    credentials: 'same-origin',
+                    signal: controller.signal
                 });
 
                 const ct = res.headers.get('content-type') || '';
@@ -1734,18 +2261,22 @@
                     return;
                 }
 
-                if (data.redirect) {
-                    hasUnsavedChanges = false;
-                    window.location.href = data.redirect;
-                    return;
-                }
-
+                /* Published, so the browser copy has served its purpose. The clock
+                   is cleared here and only here: the seconds just banked belong to the
+                   contribution that was saved, and leaving them behind would count them
+                   again on the next one. */
+                clearLocal();
+                clearComposeSeconds();
+                composeSeconds = 0;
                 hasUnsavedChanges = false;
-                window.location.href = '/<%= lang %>/<%= name %>';
+                window.location.href = data.redirect || '/<%= lang %>/<%= name %>';
             } catch (err) {
-                showSaveModal('<%= lang === "ru" ? "Сеть недоступна или запрос прерван." : "Network error or request was aborted." %>');
+                showSaveModal('<%= lang === "ru" ? "Сеть недоступна или запрос прерван. Ваш текст сохранён — попробуйте ещё раз." : "Network error or request was aborted. Your text is saved — try again." %>');
             } finally {
+                clearTimeout(timeout);
+                publishing = false;
                 saveButton.disabled = false;
+                if (saveButtonLabel) saveButtonLabel.textContent = publishLabel;
             }
         }
 
@@ -1761,25 +2292,41 @@
                 hideSaveModal();
                 return;
             }
+            /* Ctrl+S saves a draft. It used to publish, which is the muscle memory that
+               put an unfinished solution on the site. Publishing is Ctrl+Enter, or the
+               button that says so. */
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveDraft(true);
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 submitSave();
             }
         });
 
+        /* Leaving is only risky when the text never reached anywhere durable. Once
+           autosave has it, an unpublished draft is not lost work — it is in Drafts —
+           and prompting about it on every exit would be noise that trains people to
+           dismiss the one prompt that matters. */
+        function hasUnsafeChanges() {
+            if (!isLoggedIn) return hasUnsavedChanges;
+            const content = editor.getValue();
+            if (!content.trim() || content === lastDraftSaved) return false;
+            return true;
+        }
+
         // Add click handler to the Go Back button
         document.querySelector('a[href="/<%= lang %>/<%= name %>"]').addEventListener('click', (e) => {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                if (confirm('<%= __('post.unsavedChanges') %>')) {
-                    window.location.href = '/<%= lang %>/<%= name %>';
-                }
-            }
+            if (!hasUnsafeChanges()) return;
+            e.preventDefault();
+            saveDraft(true).finally(() => { window.location.href = '/<%= lang %>/<%= name %>'; });
         });
 
         // Handle browser navigation (optional, for better coverage)
         window.addEventListener('beforeunload', (e) => {
-            if (hasUnsavedChanges) {
+            if (hasUnsafeChanges()) {
                 e.preventDefault();
                 e.returnValue = '';
                 return '';
@@ -2115,6 +2662,7 @@
                 equationsPopover.classList.remove('show');
             });
         });
+        }); // DOMContentLoaded
     </script>
 
     <% if (typeof saveError !== 'undefined' && saveError) { %>

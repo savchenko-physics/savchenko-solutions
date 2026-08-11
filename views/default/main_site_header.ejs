@@ -15,6 +15,10 @@
     if (!navPic) navPic = '/img/profile_images/Default_placeholder.svg';
   }
   const navShowViewsButton = typeof showViewsButton !== 'undefined' && showViewsButton;
+  // Drafts are a private, personal thing, so the entry only exists for someone who has
+  // one. Zero drafts means no extra chrome at all — which is most people, most of the time.
+  const navDraftCount = (typeof unfinishedDraftCount !== 'undefined' && unfinishedDraftCount) ? unfinishedDraftCount : 0;
+  const navDraftLabel = navLang === 'ru' ? 'Черновики' : 'Drafts';
   const langHrefEn = typeof langSwitchEnUrl !== 'undefined' ? langSwitchEnUrl : '/en';
   const langHrefRu = typeof langSwitchRuUrl !== 'undefined' ? langSwitchRuUrl : '/ru';
 %>
@@ -234,6 +238,17 @@
               </a>
             </li>
 
+            <!-- Drafts (desktop) — only when there is something unfinished -->
+            <% if (navDraftCount > 0) { %>
+            <li class="nav-item px-1 d-none d-lg-block">
+              <a href="/<%= navLang %>/drafts" class="nav-drafts-pill" title="<%= navDraftLabel %>">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="#6c757d" aria-hidden="true"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zm1.647 5.354L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5z"/></svg>
+                <span class="d-none d-xl-inline"><%= navDraftLabel %></span>
+                <span class="nav-drafts-count"><%= navDraftCount %></span>
+              </a>
+            </li>
+            <% } %>
+
             <!-- Language switch (desktop only) -->
             <li class="nav-item px-1 language-switch d-none d-lg-block">
               <% if (navLang === 'en') { %>
@@ -367,6 +382,12 @@
                       <% if (typeof unreadMessageCount !== 'undefined' && unreadMessageCount > 0) { %>
                       <span class="badge rounded-pill" style="background:#c0392b;color:#fff;font-size:10px;margin-left:4px;"><%= unreadMessageCount > 99 ? '99+' : unreadMessageCount %></span>
                       <% } %>
+                    </a>
+                    <% } %>
+                    <% if (navDraftCount > 0) { %>
+                    <a href="/<%= navLang %>/drafts" class="mobile-nav-link">
+                      <%= navDraftLabel %>
+                      <span class="badge rounded-pill" style="background:#6c757d;color:#fff;font-size:10px;margin-left:4px;"><%= navDraftCount %></span>
                     </a>
                     <% } %>
                     <a href="/blog" class="mobile-nav-link"><%= navLang === 'ru' ? 'Блог' : 'Blog' %></a>

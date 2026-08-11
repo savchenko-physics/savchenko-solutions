@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<%
+  const ru = lang === 'ru';
+  const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Unlike the suggestions board, recency is the whole point here — "what was I in the
+  // middle of?" is answered by "four minutes ago", not by a date. Past a day, name the day.
+  function when(d) {
+    const t = new Date(d);
+    const mins = Math.max(0, (Date.now() - t.getTime()) / 60000);
+    if (mins < 1)  return ru ? 'только что' : 'just now';
+    if (mins < 60) return ru ? `${Math.round(mins)} мин назад` : `${Math.round(mins)} min ago`;
+    if (mins < 24 * 60) {
+      const h = Math.round(mins / 60);
+      return ru ? `${h} ч назад` : `${h} h ago`;
+    }
+    const day = t.getUTCDate(), mon = t.getUTCMonth(), yr = t.getUTCFullYear();
+    const sameYear = yr === new Date().getUTCFullYear();
+    return ru ? `${day} ${RU_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`
+              : `${day} ${EN_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`;
+  }
+%>
+<html lang="<%= lang %>">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="content-language" content="<%= lang %>" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <link rel="apple-touch-icon" href="/img/logo.png" />
+  <title><%= __('drafts.title') %></title>
+  <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
+  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <%- include('./default/main_site_header', {
+    lang: lang,
+    langSwitchEnUrl: '/en/drafts',
+    langSwitchRuUrl: '/ru/drafts'
+  }) %>
+
+  <main class="flex-grow-1">
+    <div class="drafts-page">
+      <div class="drafts-head">
+        <h1><%= __('drafts.title') %></h1>
+        <p class="drafts-lede"><%= __('drafts.lede') %></p>
+      </div>
+
+      <% if (!drafts.length) { %>
+        <div class="drafts-empty">
+          <p><%= __('drafts.emptyTitle') %></p>
+          <p class="drafts-empty-hint"><%= __('drafts.emptyHint') %></p>
+          <a class="drafts-btn drafts-btn-primary" href="/<%= lang %>/unsolved"><%= __('drafts.findProblem') %></a>
+        </div>
+      <% } else { %>
+        <ul class="drafts-list">
+        <% drafts.forEach(function (d) { %>
+          <li class="drafts-item" data-problem="<%= d.problemName %>" data-lang="<%= d.language %>">
+            <div class="drafts-item-head">
+              <a class="drafts-problem" href="/<%= d.language %>/edit/<%= d.problemName %>"><%= d.problemName %></a>
+              <span class="drafts-lang"><%= d.language %></span>
+              <span class="drafts-when"><%= when(d.updatedAt) %></span>
+            </div>
+            <p class="drafts-snippet"><%= d.snippet %></p>
+            <div class="drafts-actions">
+              <a class="drafts-btn drafts-btn-primary" href="/<%= d.language %>/edit/<%= d.problemName %>"><%= __('drafts.resume') %></a>
+              <button type="button" class="drafts-btn drafts-btn-quiet js-publish-draft"><%= __('drafts.publish') %></button>
+              <button type="button" class="drafts-btn drafts-btn-danger js-delete-draft"><%= __('drafts.delete') %></button>
+              <span class="drafts-msg" role="status"></span>
+            </div>
+          </li>
+        <% }); %>
+        </ul>
+      <% } %>
+    </div>
+  </main>
+
+  <%- include('./default/modern_footer', { lang: lang }) %>
+
+  <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    const T = {
+      publishing: <%- JSON.stringify(__('drafts.publishing')) %>,
+      confirmDelete: <%- JSON.stringify(__('drafts.confirmDelete')) %>,
+      failed: <%- JSON.stringify(__('drafts.failed')) %>,
+      unchanged: <%- JSON.stringify(__('drafts.unchanged')) %>,
+    };
+
+    function say(item, text) {
+      const el = item.querySelector('.drafts-msg');
+      if (el) el.textContent = text || '';
+    }
+
+    /* Publishing from here goes through the same POST the editor uses, so a draft
+       published from this page and one published from the editor take an identical
+       path — no second write path to keep in step. */
+    document.querySelectorAll('.js-publish-draft').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        const item = btn.closest('.drafts-item');
+        const problem = item.dataset.problem;
+        const language = item.dataset.lang;
+        if (btn.disabled) return;
+        btn.disabled = true;
+        say(item, T.publishing);
+        try {
+          const draftRes = await fetch('/api/drafts/' + problem + '/' + language, { credentials: 'same-origin' });
+          if (!draftRes.ok) throw new Error('read');
+          const draftData = await draftRes.json();
+          if (!draftData.draft) throw new Error('gone');
+
+          const res = await fetch('/' + language + '/save/' + problem, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin',
+            body: new URLSearchParams({ content: draftData.draft.content })
+          });
+          const data = await res.json().catch(function () { return {}; });
+          if (!res.ok) { say(item, data.error || T.failed); btn.disabled = false; return; }
+          if (data.review && data.message) { say(item, data.message); btn.disabled = false; return; }
+          if (data.unchanged) { say(item, T.unchanged); }
+          window.location.href = data.redirect || ('/' + language + '/' + problem);
+        } catch (e) {
+          say(item, T.failed);
+          btn.disabled = false;
+        }
+      });
+    });
+
+    document.querySelectorAll('.js-delete-draft').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        const item = btn.closest('.drafts-item');
+        if (!window.confirm(T.confirmDelete)) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch('/api/drafts/' + item.dataset.problem + '/' + item.dataset.lang, {
+            method: 'DELETE', credentials: 'same-origin'
+          });
+          if (!res.ok) throw new Error('delete');
+          /* The browser copy is the other half of this draft; leaving it behind would
+             let the editor restore what was just deleted. */
+          try { localStorage.removeItem('solDraft:' + item.dataset.lang + ':' + item.dataset.problem); } catch (_) {}
+          item.remove();
+          if (!document.querySelectorAll('.drafts-item').length) window.location.reload();
+        } catch (e) {
+          say(item, T.failed);
+          btn.disabled = false;
+        }
+      });
+    });
+  })();
+  </script>
+  <%- include('./default/main_site_search_script') %>
+</body>
+</html>

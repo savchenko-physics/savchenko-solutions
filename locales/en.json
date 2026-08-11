@@ -53,6 +53,16 @@
 	"contents": "Contents",
 	"chapter": "Chapter",
 	"upload": {
+		"blockers": {
+			"intro": "Before this can be uploaded:",
+			"problemMissing": "Enter the problem number.",
+			"problemFormat": "The problem number should look like 13.4.1 — chapter.section.problem.",
+			"methodMissing": "Choose how you are submitting: scans, or LaTeX.",
+			"languageMissing": "Choose the language of the solution.",
+			"scansMissing": "Add at least one page.",
+			"latexMissing": "The solution is empty.",
+			"nameMissing": "Enter a name so the solution can be credited."
+		},
 		"statementHeading": "Problem",
 		"statementStarred": "Marked by Savchenko as a harder problem",
 		"statementUnverified": "Recovered from the printed book \u2014 the formulas may not be typeset correctly.",
@@ -180,7 +190,32 @@
 		"insertUrlButton": "Insert URL",
 		"pixels": "pixels",
 		"loadingSize": "Loading size...",
-		"changesFor": "Changes for"
+		"changesFor": "Changes for",
+		"publish": "Publish",
+		"publishing": "Publishing...",
+		"draftSaved": "All changes saved",
+		"draftSaving": "Saving...",
+		"draftOffline": "No connection — saved in this browser",
+		"draftRestored": "Restored your draft",
+		"showPublished": "Show the published version",
+		"draftDiscarded": "Draft discarded",
+		"conflict": "This solution was changed while you were writing. Open it in a new tab and merge your work before publishing.",
+		"nothingToPublish": "Nothing to publish — the text has not changed."
+	},
+	"drafts": {
+		"title": "My drafts",
+		"navLabel": "Drafts",
+		"lede": "Solutions you have started and not published yet. Only you can see these — the editor saves them by itself as you write.",
+		"emptyTitle": "No drafts yet.",
+		"emptyHint": "Start writing a solution and it is kept here automatically, even if you close the tab.",
+		"findProblem": "Find a problem to solve",
+		"resume": "Continue",
+		"publish": "Publish",
+		"publishing": "Publishing...",
+		"delete": "Delete",
+		"confirmDelete": "Delete this draft? The text cannot be recovered.",
+		"failed": "Did not work — try again.",
+		"unchanged": "Already matches the published solution."
 	},
 	"menu": {
 		"main": "Main menu",

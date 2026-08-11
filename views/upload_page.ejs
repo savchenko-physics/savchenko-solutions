@@ -191,6 +191,7 @@
       background-color: rgba(255, 255, 255, 0.95);
     }
   </style>
+  <script src="/js/upload-validation.js"></script>
   <script src="/js/analytics.js"></script>
 </head>
 
@@ -393,10 +394,14 @@
           </div>
 
           <!-- Submit Button -->
+          <%# Never `disabled`. A button that is dead and silent is the most-reported
+              defect on this site — see js/upload-validation.js for the history. It is
+              always pressable; pressing it either uploads or says what is missing. %>
           <div class="text-center">
-            <button id="submitBtn" class="btn btn-primary rounded-pill px-4" disabled>
+            <button id="submitBtn" class="btn btn-primary rounded-pill px-4">
               <i class="bi bi-cloud-upload me-2"></i> Submit Solution
             </button>
+            <div id="submitBlockers" class="upload-blockers mt-3" role="alert" hidden></div>
           </div>
 
           <%# Shown only when the upload actually fails, and this is the single
@@ -534,6 +539,7 @@
       const solutionContent = document.getElementById('solutionContent');
       const latexPreview = document.getElementById('latexPreview');
       const submitBtn = document.getElementById('submitBtn');
+      const submitBlockers = document.getElementById('submitBlockers');
 
       // Once revealed it stays revealed for the rest of the visit: somebody whose upload
       // just failed is likely to try again a few times before giving up, and the offer to
@@ -885,51 +891,79 @@
       // Regular validation interval (every 2 seconds)
       setInterval(validateForm, 1000);
 
-      // Update validation function to be more comprehensive
-      function validateForm() {
-        const problemName = problemNameInput.value.trim();
-        const methodSelected = methodScans.checked || methodLatex.checked;
-        const languageSelected = document.querySelector('input[name="solutionLanguage"]:checked');
+      /* Reads the form into the plain object js/upload-validation.js understands.
+         `problemStatus` is derived from what the async check has written into the page,
+         and — crucially — none of its values can refuse a submission any more. */
+      function readFormState() {
         const fullNameInput = document.getElementById('fullName');
-        
-        // Update status check to allow both success and "exists in other language" status
-        const hasValidStatus = problemStatus.querySelector('.text-success, .text-info') !== null;
-        
-        // Check if anonymous section is visible and requires name
-        const needsFullName = !isSignedIn && anonymousSection.style.display !== 'none';
-        const hasFullName = fullNameInput ? fullNameInput.value.trim() : true;
+        let status = 'none';
+        if (problemStatus.querySelector('.text-success')) status = 'ok';
+        else if (problemStatus.querySelector('.text-info')) status = 'other-lang';
+        else if (problemStatus.querySelector('.text-warning')) status = 'exists';
+        else if (problemStatus.querySelector('.text-danger')) status = 'error';
+        else if (problemNameInput.value.trim()) status = 'pending';
 
-        // Check for content based on selected method
-        let hasContent = false;
-        if (methodScans.checked) {
-          hasContent = scansPreview.children.length > 0;
-        } else if (methodLatex.checked) {
-          hasContent = solutionContent.value.trim().length > 0;
-        }
+        return {
+          problemName: problemNameInput.value.trim(),
+          method: methodScans.checked ? 'scans' : (methodLatex.checked ? 'latex' : null),
+          language: (document.querySelector('input[name="solutionLanguage"]:checked') || {}).value || null,
+          scanCount: scansPreview.children.length,
+          latexLength: solutionContent.value.trim().length,
+          // Anonymous uploads still need a name to credit
+          needsFullName: !isSignedIn && anonymousSection.style.display !== 'none',
+          fullName: fullNameInput ? fullNameInput.value : '',
+          problemStatus: status,
+        };
+      }
 
-        // Enable submit button if all required fields are filled AND status is either success or exists in other language
-        const isValid = problemName && 
-          methodSelected && 
-          languageSelected &&
-          hasContent && 
-          (!needsFullName || hasFullName) &&
-          hasValidStatus;
+      const BLOCKER_TEXT = {
+        problem_missing:  <%- JSON.stringify(__('upload.blockers.problemMissing')) %>,
+        problem_format:   <%- JSON.stringify(__('upload.blockers.problemFormat')) %>,
+        method_missing:   <%- JSON.stringify(__('upload.blockers.methodMissing')) %>,
+        language_missing: <%- JSON.stringify(__('upload.blockers.languageMissing')) %>,
+        scans_missing:    <%- JSON.stringify(__('upload.blockers.scansMissing')) %>,
+        latex_missing:    <%- JSON.stringify(__('upload.blockers.latexMissing')) %>,
+        name_missing:     <%- JSON.stringify(__('upload.blockers.nameMissing')) %>,
+      };
 
-        submitBtn.disabled = !isValid;
-        
-        // Optional: Add visual feedback
-        if (isValid) {
-          submitBtn.classList.remove('btn-secondary');
-          submitBtn.classList.add('btn-primary');
-        } else {
-          submitBtn.classList.remove('btn-primary');
-          submitBtn.classList.add('btn-secondary');
-        }
+      function showBlockers(codes) {
+        if (!submitBlockers) return;
+        if (!codes.length) { submitBlockers.hidden = true; submitBlockers.textContent = ''; return; }
+        submitBlockers.textContent = '';
+        const intro = document.createElement('p');
+        intro.className = 'upload-blockers-intro';
+        intro.textContent = <%- JSON.stringify(__('upload.blockers.intro')) %>;
+        submitBlockers.appendChild(intro);
+        const list = document.createElement('ul');
+        codes.forEach(function (code) {
+          const li = document.createElement('li');
+          li.textContent = BLOCKER_TEXT[code] || code;
+          list.appendChild(li);
+        });
+        submitBlockers.appendChild(list);
+        submitBlockers.hidden = false;
+      }
+
+      /* Runs on every input and on a 1 s interval. It keeps the message current once one
+         is showing, and never touches `disabled`. */
+      function validateForm() {
+        if (!submitBlockers || submitBlockers.hidden) return;
+        showBlockers(window.UploadValidation.missingUploadFields(readFormState()).blocking);
       }
 
       // Update submit handler
       submitBtn.addEventListener('click', async function(e) {
         e.preventDefault();
+
+        /* The gate, moved here from `disabled`. Pressing the button now always does
+           something: it either uploads, or it names what is missing. */
+        const blocking = window.UploadValidation.missingUploadFields(readFormState()).blocking;
+        if (blocking.length) {
+          showBlockers(blocking);
+          submitBlockers.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          return;
+        }
+        showBlockers([]);
 
         const formData = new FormData();
         formData.append('problemName', problemNameInput.value);

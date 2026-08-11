@@ -43,9 +43,10 @@ function decodeEntities(s) {
 // marked halving `\\`→`\`, but brace delimiters were over-escaped, leaving an invalid
 // `\left\\{` (= `\left` + a `\\` line break) that MathJax rejects. `\left\\`/`\right\\`
 // (and the \big… variants) are never valid, so collapse the stray `\\` to a single `\`.
-function normalizeTex(tex) {
-    return tex.replace(/\\(left|right|bigl|bigr|Bigl|Bigr|biggl|biggr|Biggl|Biggr)\\\\/g, '\\$1\\');
-}
+//
+// Shared with the editor preview, which used to skip this and therefore disagreed with
+// the published page about which formulas render. See js/tex-normalize.js.
+const { normalizeTex } = require('./js/tex-normalize');
 
 const formulaCache = new Map();
 const CACHE_MAX = 20000;

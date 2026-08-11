@@ -341,7 +341,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             session: req.session || {},
             headers: req.headers || {},
         };
-        const wanted = ['stats', 'heatmap', 'rating', 'timeline', 'radar', 'social'];
+        const wanted = ['stats', 'heatmap', 'rating', 'timeline', 'radar', 'social', 'impact'];
         const results = await Promise.all([
             ...wanted.map((name) => runUserEndpoint(name, { ...base, query: { lang } })),
             runUserEndpoint('contributions', { ...base, query: { page: '1', limit: '20' } }),
@@ -937,7 +937,9 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                     FROM aggregated a
                     JOIN users u ON u.id = a.collaborator_id
                     ORDER BY a.shared_problems DESC, u.username ASC
-                    LIMIT 12
+                    -- Eleven, not twelve: the twelfth wrapped onto a line of its own,
+                    -- which read as a layout bug rather than as a longer list.
+                    LIMIT 11
                 `,
                     [user.id]
                 );
@@ -986,6 +988,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                         github: user.github || null,
                         linkedin: user.linkedin || null,
                         website: user.personal_website || null,
+                        cvUrl: user.cv_url || null,
                         createdAt: user.created_at || null,
                     },
                     stats: {
@@ -1545,6 +1548,216 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         } catch (error) {
             console.error("Failed to load user social activity:", error);
             res.status(500).json({ error: "Failed to load user social activity" });
+        }
+    });
+
+    // What a contributor's work actually amounts to, as opposed to how much of it there
+    // is. Every figure here comes from data the site already accrues — page views,
+    // Savchenko's own difficulty marks, edit timestamps — so nobody has to do anything
+    // for their profile to say something true.
+    defineUserEndpoint("impact", async (req, res) => {
+        try {
+            const username = String(req.params.username || "").trim();
+            const lang = normalizeLang(req.query.lang);
+            const structure = structureFor(lang);
+
+            const payload = await withCache(`user:${username}:impact:${lang}`, async () => {
+                const user = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
+                if (user.rows.length === 0) return null;
+                const userId = user.rows[0].id;
+
+                // The problem set this person has worked on, reused by nearly every
+                // query below.
+                const MINE = `
+                    SELECT DISTINCT problem_name
+                    FROM contributions
+                    WHERE user_id = $1 AND content_changed = true AND problem_name IS NOT NULL
+                    UNION
+                    SELECT DISTINCT problem_name
+                    FROM github_contributions
+                    WHERE user_id = $1 AND problem_name IS NOT NULL
+                `;
+
+                const [readership, mostRead, difficulty, bookStarred, firstSolved, solvedRows, editDays, soloLang, activity, composeTime, drafts] =
+                    await Promise.all([
+                        pool.query(
+                            `WITH mine AS (${MINE})
+                             SELECT COALESCE(SUM(pv.views), 0)::bigint AS views,
+                                    COUNT(DISTINCT pv.problem_name)::int AS problems
+                             FROM page_views pv JOIN mine m ON m.problem_name = pv.problem_name`,
+                            [userId]
+                        ),
+                        pool.query(
+                            `WITH mine AS (${MINE})
+                             SELECT pv.problem_name, SUM(pv.views)::int AS views
+                             FROM page_views pv JOIN mine m ON m.problem_name = pv.problem_name
+                             GROUP BY pv.problem_name ORDER BY views DESC LIMIT 5`,
+                            [userId]
+                        ),
+                        pool.query(
+                            `WITH mine AS (${MINE})
+                             SELECT COUNT(*)::int AS scored,
+                                    COUNT(*) FILTER (WHERE pd.starred)::int AS starred,
+                                    ROUND(AVG((pd.scores->>'local_z')::numeric), 3) AS avg_z
+                             FROM problem_difficulty pd JOIN mine m ON m.problem_name = pd.problem_name`,
+                            [userId]
+                        ).catch(() => ({ rows: [{}] })),
+                        pool.query(
+                            `SELECT COUNT(*) FILTER (WHERE starred)::int AS starred FROM problem_difficulty`
+                        ).catch(() => ({ rows: [{ starred: 0 }] })),
+                        // Who wrote the first version of each problem. On a wiki this is
+                        // the closest thing to authorship there is.
+                        pool.query(
+                            `WITH events AS (
+                                SELECT problem_name, user_id, edited_at, id FROM contributions
+                                 WHERE content_changed = true AND user_id IS NOT NULL AND problem_name IS NOT NULL
+                                UNION ALL
+                                SELECT problem_name, user_id, edited_at, id FROM github_contributions
+                                 WHERE user_id IS NOT NULL AND problem_name IS NOT NULL
+                             ), firsts AS (
+                                SELECT problem_name,
+                                       (ARRAY_AGG(user_id ORDER BY edited_at ASC, id ASC))[1] AS first_user
+                                FROM events GROUP BY problem_name
+                             )
+                             SELECT COUNT(*)::int AS n FROM firsts WHERE first_user = $1`,
+                            [userId]
+                        ),
+                        pool.query(
+                            `WITH mine AS (${MINE}) SELECT problem_name FROM mine`,
+                            [userId]
+                        ),
+                        // Distinct days with an edit, for the streak run.
+                        pool.query(
+                            `SELECT DISTINCT DATE(edited_at) AS d FROM (
+                                SELECT edited_at FROM contributions
+                                 WHERE user_id = $1 AND content_changed = true AND invisible = false
+                                UNION ALL
+                                SELECT edited_at FROM github_contributions WHERE user_id = $1
+                             ) t WHERE edited_at IS NOT NULL ORDER BY d`,
+                            [userId]
+                        ),
+                        // Problems they worked on that exist in one language only —
+                        // an invitation rather than a statistic.
+                        pool.query(
+                            `WITH mine AS (${MINE}), langs AS (
+                                SELECT problem_name, language FROM contributions
+                                 WHERE content_changed = true AND problem_name IS NOT NULL
+                                UNION
+                                SELECT problem_name, language FROM github_contributions
+                                 WHERE problem_name IS NOT NULL
+                             )
+                             SELECT l.problem_name, MIN(l.language) AS language
+                             FROM langs l JOIN mine m ON m.problem_name = l.problem_name
+                             GROUP BY l.problem_name HAVING COUNT(DISTINCT l.language) = 1
+                             ORDER BY l.problem_name LIMIT 24`,
+                            [userId]
+                        ),
+                        pool.query(
+                            `SELECT activity_type, target_problem, target_language, created_at
+                             FROM user_activities WHERE user_id = $1
+                             ORDER BY created_at DESC LIMIT 12`,
+                            [userId]
+                        ).catch(() => ({ rows: [] })),
+                        // Measured writing time, and drafts still open. Both are new
+                        // (migration 050), so every pre-existing edit contributes
+                        // nothing here and the totals start honest rather than guessed.
+                        pool.query(
+                            `SELECT COALESCE(SUM(compose_seconds), 0)::bigint AS seconds,
+                                    COUNT(*) FILTER (WHERE compose_seconds IS NOT NULL)::int AS measured
+                             FROM contributions WHERE user_id = $1`,
+                            [userId]
+                        ).catch(() => ({ rows: [{ seconds: 0, measured: 0 }] })),
+                        pool.query(
+                            `SELECT problem_name, language, updated_at
+                             FROM solution_drafts
+                             WHERE user_id = $1 AND completed_at IS NULL
+                             ORDER BY updated_at DESC LIMIT 12`,
+                            [userId]
+                        ).catch(() => ({ rows: [] })),
+                    ]);
+
+                // Streaks: longest run of consecutive days, and whether it is still live.
+                const days = editDays.rows.map((r) => new Date(r.d).toISOString().slice(0, 10));
+                let longest = 0, run = 0, prev = null;
+                for (const d of days) {
+                    const t = Date.parse(d + "T00:00:00Z");
+                    run = (prev !== null && t - prev === 86400000) ? run + 1 : 1;
+                    if (run > longest) longest = run;
+                    prev = t;
+                }
+                let current = 0;
+                if (days.length) {
+                    const today = Date.now();
+                    const last = Date.parse(days[days.length - 1] + "T00:00:00Z");
+                    const daysSince = Math.floor((today - last) / 86400000);
+                    if (daysSince <= 1) {
+                        current = 1;
+                        for (let i = days.length - 1; i > 0; i -= 1) {
+                            const a = Date.parse(days[i] + "T00:00:00Z");
+                            const b = Date.parse(days[i - 1] + "T00:00:00Z");
+                            if (a - b === 86400000) current += 1; else break;
+                        }
+                    }
+                }
+
+                // Sections this person is within touching distance of finishing. The
+                // most actionable thing the profile can say, and it needs no new data.
+                const solvedBySection = {};
+                for (const row of solvedRows.rows) {
+                    const section = sectionFromProblemName(row.problem_name);
+                    if (section) solvedBySection[section] = (solvedBySection[section] || 0) + 1;
+                }
+                const workQueue = structure.sections
+                    .map((sec) => {
+                        const solved = solvedBySection[sec.number] || 0;
+                        return { number: sec.number, name: sec.name, solved, total: sec.totalProblems,
+                                 remaining: sec.totalProblems - solved };
+                    })
+                    .filter((s) => s.solved > 0 && s.remaining > 0 && s.remaining <= 3)
+                    .sort((a, b) => a.remaining - b.remaining || b.solved - a.solved)
+                    .slice(0, 6);
+
+                const d = difficulty.rows[0] || {};
+                return {
+                    readership: {
+                        views: Number(readership.rows[0]?.views || 0),
+                        problems: Number(readership.rows[0]?.problems || 0),
+                        top: mostRead.rows.map((r) => ({ problemName: r.problem_name, views: Number(r.views) })),
+                    },
+                    difficulty: {
+                        scored: Number(d.scored || 0),
+                        starred: Number(d.starred || 0),
+                        starredInBook: Number(bookStarred.rows[0]?.starred || 0),
+                        averageZ: d.avg_z != null ? Number(d.avg_z) : null,
+                    },
+                    firstSolved: Number(firstSolved.rows[0]?.n || 0),
+                    streak: { longest, current },
+                    workQueue,
+                    untranslated: soloLang.rows.map((r) => ({ problemName: r.problem_name, language: r.language })),
+                    composeTime: {
+                        seconds: Number(composeTime.rows[0]?.seconds || 0),
+                        measuredEdits: Number(composeTime.rows[0]?.measured || 0),
+                    },
+                    drafts: drafts.rows.map((r) => ({
+                        problemName: r.problem_name,
+                        language: r.language,
+                        updatedAt: r.updated_at,
+                    })),
+                    activity: activity.rows.map((r) => ({
+                        type: r.activity_type,
+                        problemName: r.target_problem,
+                        language: r.target_language,
+                        createdAt: r.created_at,
+                    })),
+                };
+            });
+
+            if (!payload) return res.status(404).json({ error: "User not found" });
+            res.set("Cache-Control", "public, max-age=3600");
+            res.json(payload);
+        } catch (error) {
+            console.error("Failed to load user impact:", error);
+            res.status(500).json({ error: "Failed to load user impact" });
         }
     });
 

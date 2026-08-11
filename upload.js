@@ -246,7 +246,9 @@ ${imageResults.map(img => {
             [userId, problemName, lang, '', content, clientIp, false, fullName]
         );
 
-        searchIndex.rebuildIndex();
+        // Index the one new problem rather than rebuilding all ~2,500 documents, which
+        // is a ~2 s synchronous stall of the whole process. See searchIndex.js.
+        searchIndex.updateDocument(lang, problemName, content);
 
         return res.json({
             success: true,
