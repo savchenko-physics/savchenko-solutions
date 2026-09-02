@@ -206,8 +206,9 @@ All new UI must follow these rules:
   `figures.py` (attributes every bitmap by OCR-reading its caption, writes
   `img/<problem>/statement.png` and `figures.json`), `vectorize.py` (traces those bitmaps
   with potrace into `statement.svg` — transparent, a few KB, crisp at any zoom; the SVG's
-  own width/height attributes carry the display size; `figures.json` and the posts point
-  at the SVGs, the PNGs stay as the trace source), `compare.py` / `assemble.py` (the site's
+  own width/height attributes carry the display size; `figures.json` points at the SVGs,
+  the PNGs stay as the trace source and as what `posts/` still embeds), `compare.py` /
+  `assemble.py` (the site's
   markdown is kept only where its Cyrillic words and digits equal the book's; otherwise the
   book text, model-typeset by `typeset.py` under invariants that reject any changed word,
   digit, Latin or Greek symbol), `render-check.js` (MathJax must render every statement).
@@ -215,7 +216,12 @@ All new UI must follow these rules:
   ♦ gets no figure even if a `statement.png` exists — that fallback is how 8.3.3 showed
   8.3.4's circuit. Do not hand-edit `figures.json`; fix `OVERRIDES` in `figures.py`.
 - Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24)
-- Solutions stored as markdown files in `posts/en/` and `posts/ru/`
+- Solutions stored as markdown files in `posts/en/` and `posts/ru/`. **`posts/` on the
+  server is the contributors' work and the only authoritative copy**: the site's editor
+  writes it directly (a pre-edit copy goes to `posts-old/`, the saved text to
+  `contributions.new_content`), and the repo's copy lags behind. Never rsync local posts to
+  the server and never let a script rewrite them — the statements table is the place for
+  generated text.
 - Custom markdown image syntax: `![alt|WxH,scale%](../../img/folder/file)`
 - LaTeX inline: `$...$`, display: `$$...$$`
 
