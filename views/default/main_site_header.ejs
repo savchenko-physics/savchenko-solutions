@@ -92,7 +92,9 @@
 
             <!-- Problems dropdown -->
             <li class="nav-item dropdown px-1 d-none d-lg-block">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:14px;font-weight:500;color:#2d2d2d;">
+              <!-- A real link: the hover CSS below opens the menu on desktop (this item is
+                   d-lg-block only), so the click itself can go to the problems page. -->
+              <a class="nav-link dropdown-toggle" href="/<%= navLang %>/problems" style="font-size:14px;font-weight:500;color:#2d2d2d;">
                 <%= navLang === 'ru' ? 'Задачи' : 'Problems' %>
               </a>
               <ul class="dropdown-menu dropdown-menu-hover">

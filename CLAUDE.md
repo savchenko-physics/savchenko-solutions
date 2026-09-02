@@ -199,6 +199,21 @@ All new UI must follow these rules:
   per language, built by `scripts/build-statements.js`. Savchenko's own `∗` harder-problem
   marker is the `starred` column, 565 of 2,023, and is the only independent difficulty
   ground truth the project has: never feed it to a scoring model.
+- **The 3rd edition is the reference for Russian statements and for every figure.**
+  `pdf/savchenko-3rd-ed.pdf` is a pdfTeX file (exact text layer, figures as 300 dpi bitmaps
+  with "К задаче N" drawn inside them), not a scan. `scripts/book3/` turns it into
+  `src/database/book3/`: `extract.py` (text, ∗, ♦ = has-figure, from fonts and positions),
+  `figures.py` (attributes every bitmap by OCR-reading its caption, writes
+  `img/<problem>/statement.png` and `figures.json`), `vectorize.py` (traces those bitmaps
+  with potrace into `statement.svg` — transparent, a few KB, crisp at any zoom; the SVG's
+  own width/height attributes carry the display size; `figures.json` and the posts point
+  at the SVGs, the PNGs stay as the trace source), `compare.py` / `assemble.py` (the site's
+  markdown is kept only where its Cyrillic words and digits equal the book's; otherwise the
+  book text, model-typeset by `typeset.py` under invariants that reject any changed word,
+  digit, Latin or Greek symbol), `render-check.js` (MathJax must render every statement).
+  `build-statements.js` prefers these files when present. A problem the book does not mark
+  ♦ gets no figure even if a `statement.png` exists — that fallback is how 8.3.3 showed
+  8.3.4's circuit. Do not hand-edit `figures.json`; fix `OVERRIDES` in `figures.py`.
 - Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24)
 - Solutions stored as markdown files in `posts/en/` and `posts/ru/`
 - Custom markdown image syntax: `![alt|WxH,scale%](../../img/folder/file)`

@@ -40,7 +40,7 @@ const { sendEmail } = require("./email");
 const { processAvatar } = require("./avatar");
 
 const rateLimit = require('express-rate-limit');
-const { botgate, isCountable, isTaggable, init: initBotgate } = require('./botgate');
+const { botgate, botgateAfterSession, isCountable, isTaggable, init: initBotgate } = require('./botgate');
 const tracker = require('./tracker');
 const { router: adminRouter, isIpBlocked } = require('./admin');
 const searchIndex = require('./searchIndex');
@@ -131,6 +131,10 @@ app.use(
         },
     })
 );
+
+// Settles the one botgate verdict that has to wait for the session: rule 6 (a browser
+// that sends no Accept-Language) never turns away a signed-in person. See botgate.js.
+app.use(botgateAfterSession);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -1836,6 +1840,19 @@ app.get("/notifications", checkAuthenticated, async (req, res) => {
             notifications.getNotificationCount(req.session.userId),
         ]);
         const totalPages = Math.ceil(total / perPage);
+
+        // Opening the notifications page counts as having seen them, so the unread count
+        // clears in one go (YouTube-style) instead of only counting down as each item is
+        // clicked. `items` was already fetched above, so the list still renders the
+        // read/unread styling for this viewing; the header badge is forced to 0 below to
+        // match. The UPDATE only touches this signed-in user's rows and never throws out
+        // of the request — a failure here must not stop the page from rendering.
+        try {
+            await notifications.markAllAsRead(req.session.userId);
+        } catch (markErr) {
+            console.error("Failed to mark notifications read on page view:", markErr);
+        }
+        res.locals.unreadNotificationCount = 0;
 
         // Get current user info for header
         const currentUserResult = await pool.query(

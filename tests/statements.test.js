@@ -90,6 +90,17 @@ test('the number prefix is stripped along with its star', () => {
     assert.strictEqual(out.mdStarred, true);
 });
 
+test('the statement ends at the next heading, whatever it says', () => {
+    // 1.5.10 follows its statement with "### Геометрическое Решение:" and 6.3.38 with
+    // "### 1 способ". Neither is a solution heading the splitter knew, so both leaked a
+    // whole solution — images, formulas and all — into the statements table and onto
+    // /problems. Any heading closes the statement.
+    const md = '###  Условие:\n$1.5.10.$ Найдите траекторию точки обода колеса\n\n### Геометрическое Решение:\n![x](../../img/1.5.10/IMG_9574.jpeg)\n\n###  Решение:\nтекст';
+    assert.strictEqual(markdownStatement(md).text, 'Найдите траекторию точки обода колеса');
+    const md2 = '### Условие\n$6.3.38.$ Предложите эксперименты.\n### 1 способ\nНеобходимо взять два электрода.';
+    assert.strictEqual(markdownStatement(md2).text, 'Предложите эксперименты.');
+});
+
 test('all three number-prefix spellings are handled', () => {
     for (const prefix of ['$1.1.1.$', '$ 1.1.1.$', '$1.1.1$']) {
         const out = markdownStatement(`### Условие\n${prefix} Тело падает.\n### Решение\nx`);

@@ -18,6 +18,14 @@
  *            Produced by scripts/extract-pdf-ru.py; the maths in it is flattened Unicode,
  *            so those rows are flagged needs_review until scripts/repair-ru-latex.js runs.
  *
+ *   3rd edition (src/database/book3/, built by scripts/book3/*) — when present it wins:
+ *            statements_ru.json is the Russian text checked word for word against
+ *            pdf/savchenko-3rd-ed.pdf (see scripts/book3/assemble.py for how the site's
+ *            markdown, the model's typesetting and the raw book text rank), figures.json
+ *            attributes every figure by the caption drawn inside it, and problems.json
+ *            carries the ∗ read from the bold headers. The older sources above stay as the
+ *            fallback so the script still runs on a checkout without the book3 build.
+ *
  * The script asserts full coverage and exits non-zero if either language is short. A
  * statements table that is quietly 40 rows light is worse than none at all — every
  * consumer would trust it.
@@ -173,12 +181,20 @@ const SOLUTION_H = /^#{2,6}[ \t]*(Решение|Решения|Альтерна
 const NUMBER_PREFIX = /^\s*\$?\s*\d{1,2}\.\d{1,2}\.\d{1,3}\s*(?:\^\s*\{?\s*[*∗]\s*\}?)?\s*\.?\s*\$?[.\s]*/;
 const MD_STAR = /^\s*\$?\s*\d{1,2}\.\d{1,2}\.\d{1,3}\s*\^\s*\{?\s*[*∗]/;
 
+// The statement ends at the NEXT heading, whatever it says. SOLUTION_H lists the headings
+// people usually write, but the list can never be complete: 1.5.10 follows its statement
+// with "### Геометрическое Решение:" and 6.3.38 with "### 1 способ", and both leaked a whole
+// solution into the statements table (and onto /problems) because neither matched.
+const ANY_H = /^#{2,6}[ \t]*\S/m;
+
 function markdownStatement(md) {
     const s = md.match(STATEMENT_H);
     if (!s) return null;
     let body = md.slice(s.index + s[0].length);
     const e = body.match(SOLUTION_H);
-    if (e) body = body.slice(0, e.index);
+    const any = body.match(ANY_H);
+    const end = Math.min(e ? e.index : Infinity, any ? any.index : Infinity);
+    if (end !== Infinity) body = body.slice(0, end);
     const starred = MD_STAR.test(body);
     return { text: body.replace(NUMBER_PREFIX, '').trim(), mdStarred: starred };
 }
@@ -230,6 +246,27 @@ function unwrapPrintedLines(text) {
         .trim();
 }
 
+// ── the 3rd edition, when built ─────────────────────────────────────────────────────
+// figures.json is authoritative for BOTH languages: a problem the book does not mark ♦
+// gets no figure even if img/<name>/statement.png exists — that file is how 8.3.3 came to
+// show 8.3.4's circuit diagram on the upload page.
+function book3() {
+    const dir = path.join(ROOT, 'src/database/book3');
+    const read = (f) => {
+        const p = path.join(dir, f);
+        return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, 'utf8')) : null;
+    };
+    const problems = read('problems.json');
+    const statements = read('statements_ru.json');
+    const figures = read('figures.json');
+    if (!problems || !statements || !figures) return null;
+    // English corrections proposed by scripts/book3/fix-en.py (editor + judge model calls,
+    // digits and symbols provably unchanged) — reviewed via en_fixes_report.md. Delete the
+    // file and rebuild to revert every one of them.
+    const enFixes = read('en_fixes.json') || {};
+    return { problems, statements, figures, enFixes };
+}
+
 // ── figures on disk ─────────────────────────────────────────────────────────────────
 function diskFigure(problem) {
     const p = path.join(ROOT, 'img', problem, 'statement.png');
@@ -243,11 +280,13 @@ async function main() {
     const enMd = fromMarkdown('en');
     const pdfPath = path.join(ROOT, 'src/database/savchenko_ru_pdf.json');
     const pdf = fs.existsSync(pdfPath) ? JSON.parse(fs.readFileSync(pdfPath, 'utf8')) : {};
+    const b3 = book3();
 
     console.log(`  authoritative problems : ${problems.length}`);
     console.log(`  english from TeX       : ${en.size}`);
     console.log(`  russian from markdown  : ${ruMd.size}`);
     console.log(`  russian from PDF       : ${Object.keys(pdf).length}`);
+    console.log(`  3rd edition (book3)    : ${b3 ? `${Object.keys(b3.statements).length} statements, ${Object.keys(b3.figures).length} problems with figures` : 'not built'}`);
 
     // The markdown carries the star independently, as "$2.2.24^*.$". That is a second
     // witness to the same fact, transcribed by a different person from the same book, so
@@ -272,18 +311,25 @@ async function main() {
 
     for (const name of problems) {
         const [chapter, section, idx] = name.split('.').map(Number);
-        const starred = Boolean(pdf[name] && pdf[name].starred);
+        const starred = b3 && b3.problems[name]
+            ? Boolean(b3.problems[name].starred)
+            : Boolean(pdf[name] && pdf[name].starred);
         const fallbackFig = diskFigure(name);
+        const bookFigures = b3 ? (b3.figures[name] || []) : null;
 
         const e = en.get(name);
         if (!e || !e.text) missing.en.push(name);
         else {
-            const figures = fallbackFig ? [fallbackFig] : [];
-            rows.push([name, 'en', chapter, section, idx, e.text, figures, starred, 'tex', false]);
+            const figures = bookFigures || (fallbackFig ? [fallbackFig] : []);
+            const fix = b3 && b3.enFixes[name];
+            rows.push([name, 'en', chapter, section, idx, fix ? fix.text : e.text, figures, starred, fix ? 'tex+llm' : 'tex', false]);
         }
 
         const md = ruMd.get(name);
-        if (md && md.text) {
+        const b3s = b3 && b3.statements[name];
+        if (b3s && b3s.text) {
+            rows.push([name, 'ru', chapter, section, idx, b3s.text, bookFigures, starred, b3s.source, Boolean(b3s.needs_review)]);
+        } else if (md && md.text) {
             const figures = md.figures.length ? md.figures : (fallbackFig ? [fallbackFig] : []);
             rows.push([name, 'ru', chapter, section, idx, md.text, figures, starred, 'md', false]);
         } else if (pdf[name] && pdf[name].text) {
@@ -363,12 +409,25 @@ async function main() {
                    statement_tex = EXCLUDED.statement_tex, figures = EXCLUDED.figures,
                    starred = EXCLUDED.starred, source = EXCLUDED.source,
                    needs_review = EXCLUDED.needs_review, updated_at = now()
-                 -- A row already re-typeset by scripts/repair-ru-latex.js keeps its
-                 -- mathematics. Without this guard, re-running the builder quietly reverts
-                 -- every repair back to the flattened text it started from.
-                 WHERE problem_statements.source <> 'pdf+llm' OR EXCLUDED.source <> 'pdf'`,
+                 -- A row already re-typeset by a model (repair-ru-latex.js, or the book3
+                 -- pipeline) keeps its mathematics. Without this guard, re-running the
+                 -- builder quietly reverts every repair back to the flattened text it
+                 -- started from.
+                 WHERE NOT (problem_statements.source IN ('pdf+llm', 'book3+llm')
+                            AND EXCLUDED.source IN ('pdf', 'book3'))`,
                 r
             );
+        }
+        // The guard above keeps a model-typeset row's text, and with it the row's old
+        // figures. Figures and the ∗ are facts about the book, not about the text, so they
+        // are synced for every row regardless.
+        if (b3) {
+            for (const name of problems) {
+                await pool.query(
+                    'UPDATE problem_statements SET figures = $1, starred = $2 WHERE problem_name = $3',
+                    [b3.figures[name] || [], Boolean(b3.problems[name] && b3.problems[name].starred), name]
+                );
+            }
         }
         await pool.query('COMMIT');
     } catch (err) {
@@ -387,4 +446,4 @@ async function main() {
 // Guarded so the pure parts above can be unit-tested without opening a database
 // connection or writing anything. See tests/statements.test.js.
 if (require.main === module) main();
-module.exports = { repairMath, applyOneOffs, markdownStatement, ONE_OFFS };
+module.exports = { repairMath, applyOneOffs, markdownStatement, englishStatements, ONE_OFFS };

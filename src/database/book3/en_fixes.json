@@ -1,0 +1,755 @@
+{
+ "2.2.15": {
+  "text": "In the $\\beta$-decay of an initially quiescent neutron, a proton, electron, and neutrino are formed. Proton and electron momenta $p_1$ and $p_2$, the angle between them $\\alpha$. Determine the neutrino momentum.",
+  "issues": [
+   {
+    "where": "momenta $\\rho_1$ and $\\rho_2$",
+    "russian": "p1 и p2",
+    "problem": "Symbol mismatch: English uses rho ($\\rho$) instead of p for momentum variables."
+   }
+  ],
+  "judge": "The NEW version correctly uses the symbol 'p' for momenta as in the Russian original, whereas the OLD version incorrectly used the Greek letter 'ρ'."
+ },
+ "2.2.3": {
+  "text": "The spacecraft must change its course and move with the same magnitude of momentum $p$ at an angle $\\alpha$ to the original direction. What is the shortest time to turn on the engine with the thrust force $F$ and how to orient the engine axis?",
+  "issues": [
+   {
+    "where": "momentum modulo $\\rho$",
+    "russian": "импульсом p",
+    "problem": "The symbol for momentum is changed from 'p' to '$\\rho$' (rho), and the phrase 'modulo' is a mistranslation of 'по модулю' (in magnitude) placed incorrectly before the symbol."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'по модулю импульсом p' as 'magnitude of momentum $p$', fixing the OLD version's incorrect symbol ($\\rho$ instead of $p$) and awkward phrasing ('momentum modulo')."
+ },
+ "2.2.32": {
+  "text": "In the cylinder under the piston of mass $M$, $N$ balls of mass $m$ each jump, elastically hitting the piston and the bottom of the cylinder. The force of gravity acting on the piston is balanced by the impact of the balls. The distance between the bottom of the cylinder and the piston is $h$. The total energy of each ball is the same. How high will the balls jump if the plunger is quickly removed? $N \\ 1$.",
+  "issues": [
+   {
+    "where": "masses $M$ jump",
+    "russian": "под поршнем массы M прыгают",
+    "problem": "English incorrectly states that the masses M are jumping, whereas Russian states that N balls jump under a piston of mass M."
+   },
+   {
+    "where": "$N \\gg 1$",
+    "russian": "N 1",
+    "problem": "English interprets 'N 1' as 'N >> 1' (much greater than), but the Russian text literally reads 'N 1' which may imply N=1 or is a formatting error; the relation symbol is missing in the source."
+   }
+  ],
+  "judge": "The NEW version correctly assigns mass M to the piston and fixes the typo in the condition for N, whereas the OLD version incorrectly stated that the masses M were jumping."
+ },
+ "2.4.42": {
+  "text": "The power of a car with an electric motor depends on the angular velocity of rotation of the wheels according to the law $N = (A - B\\omega)\\omega$, $N \\geqslant 0$. The vehicle's steady speed on a horizontal highway is $70$ $\\frac{km}{h}$. Without a load, it can overcome ascents with an angle of inclination of the highway up to $45^\\circ$ . What is the steady-state speed of the car when climbing with a highway slope of $30^\\circ$ ? What kind of climbs can it overcome when the mass of the load is equal to the mass of the car?",
+  "issues": [
+   {
+    "where": "$N = (A - B_{\\omega})\\omega$",
+    "russian": "N = (A−Bω)ω",
+    "problem": "Incorrect subscript: English has B_omega instead of B multiplied by omega."
+   },
+   {
+    "where": "$N > 0$",
+    "russian": "N ⩾ 0",
+    "problem": "Inequality condition changed from greater-than-or-equal to strictly greater-than."
+   },
+   {
+    "where": "weight of the load is equal to the mass of the car",
+    "russian": "массе груза, равной массе автомобиля",
+    "problem": "Physical quantity error: English compares weight to mass, Russian compares mass to mass."
+   }
+  ],
+  "judge": "The NEW version correctly fixes the formula typo (B_ω to Bω), the inequality sign (> to ≥), and the physical term error ('weight' to 'mass'), making it strictly closer to the Russian original."
+ },
+ "2.7.33": {
+  "text": "A cylinder of mass m1 and radius $R$, resting on a smooth horizontal plane, is hit by a bullet of mass $m_2$, flying horizontally at a height $h$ from the cylinder axis at a speed $v$. Assuming the impact is absolutely inelastic and $m_2 \\ll m_1$, find the axis velocity and angular velocity of the cylinder.",
+  "issues": [
+   {
+    "where": "$m_2$ is $m_1$",
+    "russian": "m2 m1",
+    "problem": "The English translation inserts 'is' creating an equality ($m_2 = m_1$), whereas the Russian text 'm2 m1' in this context (given the explicit instruction to ignore notation format but report missing symbols/conditions) almost certainly represents the inequality $m_2 \\ll m_1$ (bullet mass much less than cylinder mass) with the 'less than' symbols lost or flattened, which is a standard condition for such problems to simplify the moment of inertia calculation."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian condition 'm2 m1' (implying m2 is much less than m1) as '$m_2 \\ll m_1$', whereas the OLD version incorrectly stated '$m_2$ is $m_1$'."
+ },
+ "2.8.12": {
+  "text": "The wire, when it begins to be cut with scissors, slips to their ends and only when the opening angle of the scissors decreases to the value of αмин as the wire moves, the scissors cut the wire. Why is this happening? Determine the coefficient of friction of the wire against the scissors blade. Ignore gravity. The wire is not fixed.",
+  "issues": [
+   {
+    "where": "angle of the scissors solution",
+    "russian": "угол раствора ножниц",
+    "problem": "Mistranslation of 'раствор' (opening/gap) as 'solution' changes the physical meaning."
+   },
+   {
+    "where": "value of amine",
+    "russian": "значения αмин",
+    "problem": "OCR error interpreted the symbol 'αмин' (alpha_min) as the chemical word 'amine', losing the variable definition."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'угол раствора' as 'opening angle' instead of the nonsensical 'solution' and preserves the original symbol 'αмин' instead of mistranslating it as 'amine'."
+ },
+ "2.8.21": {
+  "text": "The center of mass of the rocker arm of an equal-arm balance is located below the suspension point at a distance $h$ from it, and the mass of the rocker arm is equal to $m_0$. At the ends of the rocker arm, the distance between which is equal to $2L$, identical cups are suspended on threads. How much do the masses of loads placed on the cups differ if the rocker arm deviates from the horizontal by an angle $\\alpha$?",
+  "issues": [
+   {
+    "where": "2_L",
+    "russian": "2L",
+    "problem": "Subscript error: '2_L' in English vs '2L' (2 times L) in Russian."
+   }
+  ],
+  "judge": "The NEW version corrects the typo '$2_L$' to '$2L$', matching the Russian original's '2L', while preserving all other details."
+ },
+ "2.8.34": {
+  "text": "The ladder rests on a vertical wall and floor. At what values of the angle between the ladder and the floor can it stand if the coefficients of friction of the ladder on the floor and on the wall are equal to $\\mu_1$ and $\\mu_2$, respectively?",
+  "issues": [
+   {
+    "where": "The staircase",
+    "russian": "Лестница",
+    "problem": "Wrong physical object: 'staircase' (a structure) instead of 'ladder' (a rigid body)."
+   },
+   {
+    "where": "$m_1$ and $m_2$",
+    "russian": "m1 и m2",
+    "problem": "Wrong symbol: 'm' usually denotes mass, while the Russian text uses 'm' to represent the friction coefficient (typically denoted by $\\mu$), creating a conflict with standard physics notation."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'Лестница' as 'ladder' instead of 'staircase' and uses the standard physics symbol '$\\mu$' for friction coefficients instead of '$m$', aligning strictly with the original meaning and conventions."
+ },
+ "3.3.4": {
+  "text": "The angular frequency of free vibrations of the body is $\\omega$. After what shortest time does its kinetic energy decrease by half compared to its maximum value?",
+  "issues": [
+   {
+    "where": "The frequency ... is $\\omega$",
+    "russian": "Частота ... равна ω",
+    "problem": "Physics error: In Russian physics terminology, 'Частота' with symbol ω denotes angular frequency, whereas English 'frequency' typically denotes cyclic frequency (ν or f), creating a factor of 2π discrepancy."
+   },
+   {
+    "where": "In what is the shortest time",
+    "russian": "Через какое наименьшее время",
+    "problem": "Grammatical error altering meaning: The phrase 'In what is' is nonsensical and breaks the question structure compared to 'In what shortest time' or 'After what shortest time'."
+   }
+  ],
+  "judge": "The NEW version correctly identifies ω as angular frequency and fixes the ungrammatical phrasing 'In what is' to 'After what... does', aligning strictly with the Russian original's meaning and grammar."
+ },
+ "3.1.3": {
+  "text": "a. A body of mass $m$ suspended on a spring oscillates such that the greatest value of velocity is $v_0$, and the greatest deviation from the equilibrium position is $x_0$. Determine the stiffness of the spring. b. The velocity of a body of mass $m$ suspended on a spring and oscillating depends on the coordinate of the body $x$ according to the law $v = v_0 \\sqrt{ 1 - (\\frac{x}{x_0})^2}$. Find the dependence of the force acting on the body and the potential energy of this body on the coordinate $x$. Does the obtained result depend on the nature of the force that makes the body move according to the given law?",
+  "issues": [
+   {
+    "where": "v = v p1 − (x/x )2",
+    "russian": "v = v p1 − (x/x )2",
+    "problem": "OCR failure in English text rendered the formula as garbled text 'v p1' and missing subscripts 'x/x', whereas the Russian original implies the correct formula v = v_0 * sqrt(1 - (x/x_0)^2) which the English translation attempts to fix but the source OCR string is defective."
+   },
+   {
+    "where": "Find the relation between the force acting on the body and the potential energy of the body and the coordinate x.",
+    "russian": "Найдите зависимость силы, действующей на тело, и потенциальной энергии этого тела от координаты x.",
+    "problem": "The English phrasing 'relation between... and... and...' ambiguously suggests a relationship between three variables, whereas the Russian 'зависимость ... от ...' clearly requests two separate dependencies: Force(x) and Potential Energy(x)."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'зависимость... от' as 'dependence... on' and 'полученный результат' as 'obtained result', fixing semantic errors in the OLD version while preserving all other details."
+ },
+ "3.5.21": {
+  "text": "a. The quality factor of an oscillator is the ratio of its initial energy to the energy lost during a phase change of $1$ rad. Express the quality factor through the damping coefficient $\\gamma$ and the free oscillation frequency $\\omega_0$ ($\\gamma \\ll \\omega_0$). How is the quality factor $Q$ related to the number of oscillations during which the energy of the oscillator decreases by a factor $e$? A single crystal of sapphire in vacuum at low temperature and appropriate suspension has $Q = 10^8\\text{--}10^9$ . The oscillations frequency of the monocrystal is $\\omega_0 = 10^4$ $s^{-1}$ . Estimate how many times the oscillations amplitude of the crystal will change in a day.",
+  "issues": [
+   {
+    "where": "Q = 10^8 - 10^9",
+    "russian": "Q = 108−109",
+    "problem": "The Russian text '108−109' represents the range 10^8 to 10^9 (contextual exponent notation), whereas the English translation '10^8 - 10^9' mathematically denotes the subtraction of 10^9 from 10^8, changing the physical value from a large range to a negative number."
+   }
+  ],
+  "judge": "The NEW version correctly formats the range '10^8--10^9' to match the Russian original's '108−109', whereas the OLD version incorrectly used a hyphen with spaces."
+ },
+ "3.6.20": {
+  "text": "a. Explain why the momentum of the section of string highlighted in the figure increases. Determine the rate of change of this momentum through the mass of a unit of length of the string $\\rho$, the deformation in the bending region $\\varepsilon_1$ and the rate of displacement of the bending region $c$. b. What is the sum of the forces acting on the section of string highlighted in the figure if its tension force is equal to $F_0$? Express the rate of displacement of the bending region of the string through $F_0$ and $\\rho$.",
+  "issues": [
+   {
+    "where": "$\\varepsilon \\ll 1$",
+    "russian": "ε 1",
+    "problem": "The Russian text 'ε 1' (likely meaning ε₁ or a specific value ε₁) was misinterpreted as the inequality 'ε ≪ 1' (epsilon much less than 1), changing a parameter definition into a physical condition."
+   }
+  ],
+  "judge": "The NEW version correctly translates the specific symbol '$\\varepsilon_1$' from the Russian original, whereas the OLD version incorrectly changed it to '$\\varepsilon \\ll 1$'."
+ },
+ "3.7.21": {
+  "text": "The natural frequency of the tuning fork is $\\nu_0$. What frequency of sound will we hear if we bring the sounding tuning fork closer to the ear with speed $v$?",
+  "issues": [
+   {
+    "where": "speed $\\nu$",
+    "russian": "скоростью v",
+    "problem": "The speed variable is incorrectly translated as nu ($\\nu$) instead of v, conflicting with the frequency symbol."
+   }
+  ],
+  "judge": "The NEW version correctly uses the symbol $v$ for speed, matching the Russian original, whereas the OLD version incorrectly used $\nu$."
+ },
+ "3.9.6": {
+  "text": "A plate with dimensions $L \\times L$ vibrates according to the harmonic law with frequency $\\omega c/L$, where $c$ is the speed of sound in air. Estimate the force acting on the plate from the air side at the moment when the velocity of the plate is $v$. The density of air is $\\rho$. How does the air move if $\\omega c/L$? Why is the emission of sound weak in this case?",
+  "issues": [
+   {
+    "where": "frequency $\\omega \\gg \\frac{c}{L}$",
+    "russian": "частотой ω c/L",
+    "problem": "English adds condition 'omega >> c/L' which is absent in Russian; Russian only defines frequency as 'omega c/L'."
+   },
+   {
+    "where": "if $\\omega \\ll \\frac{c}{L}$",
+    "russian": "если ω c/L",
+    "problem": "English adds condition 'omega << c/L' which is absent in Russian; Russian text 'ω c/L' lacks an inequality operator."
+   }
+  ],
+  "judge": "The NEW version correctly translates the frequency expression and condition from the Russian original, whereas the OLD version incorrectly inserted inequality symbols (>> and <<) that are absent in the source text."
+ },
+ "4.2.10": {
+  "text": "Determine the force of tension of the bottom line of the float shown in the figure, if the float is submerged in water for two thirds of its length. The mass of the float is $2$ $g$.",
+  "issues": [
+   {
+    "where": "The weight of the float is $2$ $r$",
+    "russian": "Масса поплавка 2 г",
+    "problem": "Wrong physical quantity (weight instead of mass) and wrong unit symbol ('r' instead of 'g' for grams)."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'Масса' as 'mass' and 'г' as 'g', whereas the OLD version incorrectly used 'weight' and 'r'."
+ },
+ "4.6.13": {
+  "text": "To what height will the liquid rise along a vertical conical capillary with an angle at the apex $\\alpha = 1$ rad? Density of liquid $\\rho$, its surface tension $\\sigma$, height of capillary $H$. The liquid completely wets the capillary.",
+  "issues": [
+   {
+    "where": "$\\alpha \\ll 1$ rad",
+    "russian": "α 1 рад",
+    "problem": "The Russian text specifies the angle is '1 rad' (or potentially missing a symbol before 1), while the English text changes this to the condition '$\\alpha \\ll 1$' (much less than 1), which fundamentally alters the physical approximation required for the solution."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian 'α 1 рад' as an equality (α = 1 rad), whereas the OLD version incorrectly interprets it as a small-angle approximation (α ≪ 1 rad)."
+ },
+ "5.3.6": {
+  "text": "Under normal conditions, $1$ $cm^3$ of atomic hydrogen contains $2.7 \\cdot 10^19$ atoms. Estimate the time it takes for 0.1 part of the hydrogen atoms to turn into hydrogen molecules. Assume that every collision of two hydrogen atoms leads to the formation of a molecule. The radius of the hydrogen atom is $0.06$ nm.",
+  "issues": [
+   {
+    "where": "0.1$\\div$ of the hydrogen atoms",
+    "russian": "0,1 часть атомов водорода",
+    "problem": "The symbol '$\\div$' incorrectly replaces the word 'part' (or fraction), altering the meaning from '0.1 part of the atoms' to a nonsensical mathematical operation or typo."
+   }
+  ],
+  "judge": "The NEW version correctly translates '0,1 часть' as '0.1 part', whereas the OLD version incorrectly used '0.1÷' which alters the meaning and includes a stray symbol."
+ },
+ "5.2.1": {
+  "text": "In $1$ $cm^3$ at a pressure of $0.1$ MPa there are $2.7 \\cdot 10^{19}$ nitrogen molecules. The number of molecules whose vertical velocity component lies in the range from $999$ to $1001$ m/s is $1.3 \\cdot 10^{12}$. a. What is the number of such molecules contained in $1$ liter of nitrogen? b. How many nitrogen molecules with a vertical velocity component in the intervals of $1000 \\pm 0.1$ and $1000 \\pm 10$ m / s are contained in $1$ $m^3$ ? Assume that the number of molecules with a velocity that lies in a certain velocity interval is proportional to this interval.",
+  "issues": [
+   {
+    "where": "1.3 \\cdot 1012",
+    "russian": "1,3 · 1012",
+    "problem": "The exponent 10^12 in the Russian text (implied by context and standard notation 1012 for 10^12 in flattened text) is rendered as the number 1012 in English, changing the value by orders of magnitude."
+   }
+  ],
+  "judge": "The NEW version corrects the typo '1012' to '10^{12}' to match the Russian original's '1012' (interpreted as 10^12 in context), while preserving all other content exactly."
+ },
+ "5.5.20": {
+  "text": "In a vertical cylindrical vessel above the piston $A$, there is a gas enclosed by the piston $B$, on which a liquid of density $\\rho$ is poured up to the top of the cylinder. How far $x$ should the piston $A$ be raised so that a column of liquid of height $H$ remains above the piston $B$? The mass of the piston $B$ and its friction against the walls should be ignored. Atmospheric pressure $P_0$, initial height of the liquid column $H_0$, gas column $h_0$. The gas temperature does not change when the piston is displaced.",
+  "issues": [
+   {
+    "where": "liquid of the plane p",
+    "russian": "жидкость плоскости ρ",
+    "problem": "The English text translates the density symbol 'ρ' (rho) as the word 'plane' and the letter 'p', altering the physical quantity from density to an undefined geometric concept."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'плотности ρ' as 'density ρ', fixing the OLD version's erroneous 'plane p' while preserving all other details."
+ },
+ "5.8.16": {
+  "text": "A gas-dynamic gun is a cylinder filled with monatomic gas and closed by a movable piston. The gas expands and accelerates the piston. Is the process real when the gas volume increases by a factor of $\\sqrt{n}$ and its temperature decreases by a factor of $n$? by $n$ times? The system is isolated.",
+  "issues": [
+   {
+    "where": "increases by a factor of $n$",
+    "russian": "увеличении объема газа в√ n раз",
+    "problem": "English states volume increases by factor n, Russian states it increases by factor sqrt(n)."
+   },
+   {
+    "where": "by $\\sqrt{n}$ times?",
+    "russian": "в n раз?",
+    "problem": "English asks if temperature decreases by sqrt(n), Russian asks if it decreases by n."
+   }
+  ],
+  "judge": "The NEW version correctly places the square root on the volume expansion factor ($\\sqrt{n}$) as implied by the Russian text's 'в√ n раз', whereas the OLD version incorrectly applied it to the phrasing structure rather than the value."
+ },
+ "5.9.13": {
+  "text": "A $14.7$ kW steam engine consumes $8.1$ kg of coal with a specific calorific value of $3.3 \\cdot 10^7$ J/kg for $1$ hour of operation. Boiler temperature $200^\\circ C$, refrigerator temperature $58^\\circ C$. Find the efficiency of this machine and compare it with the efficiency of an ideal heat engine.",
+  "issues": [
+   {
+    "where": "3.3 \\cdot 107 J/kg",
+    "russian": "3, 3 · 107 Дж/кг",
+    "problem": "The exponent is missing; the Russian text '107' in this context represents 10^7, but the English translation renders it as the integer 107."
+   }
+  ],
+  "judge": "The NEW version corrects the scientific notation formatting from '107' to '10^7', matching the Russian original's intended value of 3.3 · 10^7 J/kg."
+ },
+ "5.10.8": {
+  "text": "Estimate the thickness of ice formed per day on the surface of the lake at an air temperature of $-10^\\circ C$. The thermal conductivity of ice is $2.2$ W/($m \\cdot K$), its density is $0.9 \\cdot 10^3$ $\\frac{kg}{m^3}$ .",
+  "issues": [
+   {
+    "where": "0.9 \\cdot 103",
+    "russian": "0,9 · 103",
+    "problem": "The Russian text '103' represents 10^3 (scientific notation flattened), but the English OCR rendered it as the literal number 103, changing the density by three orders of magnitude."
+   }
+  ],
+  "judge": "The NEW version corrects the density notation from '103' to '10^3', matching the Russian original's scientific notation while preserving all other content."
+ },
+ "6.1.7": {
+  "text": "Three charges $q_1$, $q_2$, and $q_3$ are connected to each other by two strands. The length of each thread is $l$. Find their tension force.",
+  "issues": [
+   {
+    "where": "$q-2$",
+    "russian": "q2",
+    "problem": "Subscript '2' was incorrectly OCR'd as '-2', changing the charge identifier from q_2 to q minus 2."
+   }
+  ],
+  "judge": "The NEW version corrects the typo '$q-2$' to '$q_2$', matching the Russian original, while preserving all other details."
+ },
+ "6.1.13": {
+  "text": "Four identical particles of mass $m$ and charge $-q$ each rotate in a circular orbit around charge $q$, located at the corners of a square with side $l$. The charge $q$ is located in the center of this square. Determine the angular velocity of the particles moving along the orbit.",
+  "issues": [
+   {
+    "where": "charge-$q$",
+    "russian": "заряда −q",
+    "problem": "Missing minus sign in the charge value; English reads as 'charge minus q' (hyphen) or ambiguous, whereas Russian explicitly states negative charge '-q'."
+   }
+  ],
+  "judge": "The NEW version correctly translates the charge as '-q' matching the Russian '−q', whereas the OLD version incorrectly omitted the negative sign."
+ },
+ "6.1.12": {
+  "text": "In a hydrogen atom, an electron moves around a proton with an angular velocity of $10^{16}$ rad/s. Find the radius of the orbit.",
+  "issues": [
+   {
+    "where": "1016 rad/s",
+    "russian": "1016 рад/с",
+    "problem": "The Russian text '1016' in the context of atomic physics angular velocity is a flattened representation of 10^16 (10 to the power of 16), whereas the English translation interprets it as the literal number one thousand and sixteen."
+   }
+  ],
+  "judge": "The NEW version correctly interprets the Russian '1016' as a typo for scientific notation $10^{16}$, which is the physically realistic value for this problem, whereas the OLD version literally translates the typo."
+ },
+ "6.3.26": {
+  "text": "What is the potential difference between the center and the surface of a uniformly charged sphere of radius $R$ with a volume charge density $\\rho$? Between the axis and the surface of a uniformly charged infinite cylinder of radius $R$ with a volume charge density $\\rho$? Between the surface of a uniformly charged plate of thickness h, which has a volume charge density $\\rho$, and the middle of the plate?",
+  "issues": [
+   {
+    "where": "volume charge density $p$",
+    "russian": "объемную плотность заряда ρ",
+    "problem": "The symbol for volume charge density is incorrectly transcribed as 'p' instead of 'ρ' (rho), which represents a different physical variable."
+   }
+  ],
+  "judge": "The NEW version corrects the typo in the third question where the volume charge density was incorrectly written as '$p$' instead of '$\\rho$', matching the Russian original and the previous parts, without making any other changes."
+ },
+ "7.2.4": {
+  "text": "Derive the formula for a long-focus thin lens $\\frac{1}{a} + \\frac{1}{b} = \\frac{1}{f}$, where $f$ is the focal length, $a$ is the distance from the electron source to the lens, and $b$ is the distance from the place where the electrons are focused to the lens.",
+  "issues": [
+   {
+    "where": "$\\frac{1}{a} + \\frac{1}{b} + \\frac{1}{f}$",
+    "russian": "+ + ,\\na b f",
+    "problem": "The English text presents an incorrect mathematical expression with plus signs between reciprocal terms, whereas the Russian text lists the terms '1/a', '1/b', and '1/f' (implied by the layout) separated by plus signs but missing the equality to zero or the correct lens formula structure ($\\frac{1}{a} + \\frac{1}{b} = \\frac{1}{f}$ or similar); specifically, the English renders it as a sum equal to nothing or implies the formula IS the sum, while the Russian asks to derive the formula involving these terms, likely $\\frac{1}{a} + \\frac{1}{b} = \\frac{1}{f}$ (standard thin lens) or a variation, but the English explicitly writes a nonsensical sum of three reciprocals as the formula itself."
+   }
+  ],
+  "judge": "The NEW version correctly includes the equals sign in the formula, matching the mathematical structure implied by the Russian text, whereas the OLD version incorrectly presented it as a sum without an equation."
+ },
+ "7.3.15": {
+  "text": "Determine the permittivity of a medium consisting of electrons elastically bound in a molecule in an electric field of strength $E = E_0 sin \\omega t$. Resonant frequency $\\omega_0$, attenuation coefficient $\\gamma \\omega_0$, number of electrons per unit volume of the medium $n_e$.",
+  "issues": [
+   {
+    "where": "attenuation coefficient $\\gamma \\ll \\omega_0$",
+    "russian": "коэффициент затухания γ ω0",
+    "problem": "The English version adds the condition 'much less than' (<<) which is not present in the Russian text; the Russian likely implies a proportionality or simply lists the parameter."
+   }
+  ],
+  "judge": "The NEW version correctly translates the attenuation coefficient as '$\\gamma \\omega_0$' matching the Russian original, whereas the OLD version incorrectly changed it to '$\\gamma \\ll \\omega_0$'."
+ },
+ "8.1.6": {
+  "text": "A sheet of foil coated with a $\\beta$-radioactive substance emits $\\nu$ electrons per unit area per unit time. Their velocity is equal to $v$, and any direction of velocity is equally probable. Find the current density. Why is it independent of $v$?",
+  "issues": [
+   {
+    "where": "emits $v$ electrons",
+    "russian": "испускает ... ν электронов",
+    "problem": "The emission rate symbol is the Greek letter nu (ν) in Russian, but incorrectly transcribed as the Latin letter v in English, causing a collision with the velocity symbol v used later in the sentence."
+   }
+  ],
+  "judge": "The NEW version correctly uses the symbol $\\nu$ for the emission rate, matching the Russian original, whereas the OLD version incorrectly used $v$ which conflicts with the velocity symbol."
+ },
+ "8.2.18": {
+  "text": "Two electrodes — metal balls with a diameter of $30$ cm - hang in the sea on insulated cables at a depth of $60$ m. The distance between the balls is $300$ m. The specific conductivity of seawater is $4$ $\\frac{S}{m}$. Estimate the water resistance between the balls.",
+  "issues": [
+   {
+    "where": "$4$ $\\frac{Cm}{m}$",
+    "russian": "4 См/м",
+    "problem": "Unit symbol 'Cm' (Coulomb-meter or typo) used instead of 'Sm' or 'S' for Siemens; Russian 'См' stands for Siemens."
+   }
+  ],
+  "judge": "The NEW version correctly translates the unit of conductivity as S/m (Siemens per meter) instead of the incorrect Cm/m in the OLD version, while preserving all other details exactly."
+ },
+ "8.1.17": {
+  "text": "To account for the effect of space charge on the operation of a plane diode with an interelectrode distance $d$, it is necessary to establish the dependence of the charge density $\\rho$, potential $\\varphi$, and electron velocity $v$ on the distance to the cathode $x$. The electron velocity and field strength at the cathode at currents far from saturation can be assumed to be zero. In the case when the cathode is grounded, the potential can be represented as $\\varphi = V$ ($\\frac{x}{d}$)$^n$. Determine from this $\\rho$($x$) and $v$($x$), and then, using the current stationarity condition, find the exponent $n$. Get exact expressions for the current density and the current through the diode at a given voltage $V$. Electrode area $S$.",
+  "issues": [
+   {
+    "where": "Determine from this $p$($x$)",
+    "russian": "Определите отсюда ρ(x)",
+    "problem": "The symbol for charge density is incorrectly transcribed as 'p' instead of 'ρ' (rho), changing the physical quantity."
+   }
+  ],
+  "judge": "The NEW version corrects the typo 'p(x)' to '$\\rho$(x)', matching the Russian original's symbol for charge density, while keeping all other content identical."
+ },
+ "8.2.27": {
+  "text": "The current source consists of a thin plate of radioactive material surrounded by a conductive housing. The gap width between the housing and the plate is much smaller than the linear dimensions of the plate. How does the current depend on the voltage between the housing and the radioactive plate, if the current at a positive voltage is $I_0$? The energy of electrons escaping from the plates is $eV_0$. Electrons fly out in all directions evenly.",
+  "issues": [
+   {
+    "where": "$eV0$",
+    "russian": "eV0",
+    "problem": "Missing subscript: Russian 'V0' denotes V_0 (initial potential/energy parameter), English renders it as variable V multiplied by 0 or undefined V0."
+   }
+  ],
+  "judge": "The NEW version corrects the subscript notation from '$eV0$' to '$eV_0$', matching the standard mathematical representation implied by the Russian original while preserving all other content."
+ },
+ "8.2.15": {
+  "text": "The experimenter wants to prepare a layer of aluminum with a thickness of $500$ nm by spraying it in vacuum on a clean surface of a glass plate. First, he applies two fairly thick layers of aluminum, leaving a strip of clean surface in the center of the plate, covered with a mask. Then, using a different mask, he sprays a strip of aluminum of the same width as the clean strip onto the glass in the transverse direction. In this case, thick layers are used as leads for measuring the resistance of the sprayed layer. At what layer resistance should sputtering be stopped if the resistivity of aluminum at room temperature is $2.83 \\cdot 10^{-8}$ $ohms \\cdot m$?",
+  "issues": [
+   {
+    "where": "$2.83 \\cdot 10-8$ $ohms \\cdot m$",
+    "russian": "2,83 · 10−8 Ом·м",
+    "problem": "The exponent notation '10-8' in the English text is missing the superscript or caret, incorrectly representing the value as 2.83 multiplied by 10 minus 8, rather than 2.83 times 10 to the power of -8."
+   }
+  ],
+  "judge": "The NEW version corrects the mathematical notation of the exponent from '10-8' to '10^{-8}', making it strictly closer to the Russian original's meaning while changing nothing else."
+ },
+ "8.2.4": {
+  "text": "A metal wire ring of radius $r = 0.1$ m rotates with an angular velocity $\\Omega = 10^3$ rad/s. Determine how much current will flow through the ring with a uniform deceleration during the time $\\tau = 10^{-3}$ s from its rotation to a complete stop. Wire cross-section s = 0.5 cm2, metal specific conductivity $\\lambda = 6 \\cdot 10^7$ $\\frac{S}{m}$ .",
+  "issues": [
+   {
+    "where": "Omega = 103 rad/s",
+    "russian": "Ω = 103 рад/с",
+    "problem": "The value '103' in English is likely an OCR error for '10^3' (1000), as 103 rad/s is unusually low for such problems and matches the flattened text pattern '103' meaning 10³ found in the Russian source context."
+   },
+   {
+    "where": "time $pi = 10^{-3}$",
+    "russian": "времени π = 10−3 с",
+    "problem": "The symbol 'π' (pi) in the Russian text is an OCR error for the Cyrillic letter 'τ' (tau) representing time; the English translation incorrectly retains 'pi' instead of correcting it to 'tau' or 't', leading to a physical nonsense statement (time equals pi)."
+   },
+   {
+    "where": "10^{-3}",
+    "russian": "10−3 с",
+    "problem": "The English text omits the unit 's' (seconds) after the time value, which is present in the Russian original."
+   },
+   {
+    "where": "$\\frac{Cm}{m}$",
+    "russian": "См/м",
+    "problem": "The unit 'Cm' (Centimeter) is used in English instead of 'S' or 'Sm' (Siemens), misrepresenting the conductivity unit 'См' (Siemens) from the Russian text."
+   }
+  ],
+  "judge": "The NEW version correctly fixes critical typos in the OLD version (interpreting '103' as 10^3, replacing the nonsensical variable 'pi' with 'tau' for time, and correcting the conductivity unit from 'Cm' to 'S'), thereby aligning the meaning with the Russian original while preserving all other details."
+ },
+ "9.1.12": {
+  "text": "A coil of radius $R$ was bent along its diameter at a right angle and placed in a uniform magnetic field of induction $B$ so that one of the planes of the coil was located at an angle $\\alpha$, the other at an angle $\\frac{\\pi}{2}-\\alpha$ to the direction of induction $B$. Current in turn $I$. Determine the moment of forces acting on the coil.",
+  "issues": [
+   {
+    "where": "\\frac{\\pi}{2-\\alpha}",
+    "russian": "π/2−α",
+    "problem": "The English translation incorrectly formats the second angle as a fraction with denominator (2-alpha) instead of the difference (pi/2 minus alpha)."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian expression 'π/2−α' as '\\frac{\\pi}{2}-\\alpha', fixing the OLD version's erroneous '\\frac{\\pi}{2-\\alpha}' which incorrectly places the alpha in the denominator."
+ },
+ "9.4.9": {
+  "text": "The magnetic field induction component along the axis of an infinite cylinder of radius $R$ varies as $B_0 x/x_0$ inside the cylinder, and outside-this component is zero. How does the radial component of induction outside the cylinder depend on the distance to its axis?",
+  "issues": [
+   {
+    "where": "${B_0 x}{x_0}$",
+    "russian": "B0x/x0",
+    "problem": "Missing division operator; English renders the ratio as a product or malformed expression instead of B_0 * x / x_0."
+   }
+  ],
+  "judge": "The NEW version correctly formats the mathematical expression as a division ($B_0 x/x_0$), whereas the OLD version omits the division symbol, altering the meaning."
+ },
+ "10.1.3": {
+  "text": "a. Determine the rotation frequency (cyclotron frequency) of a particle of mass $m$ with charge $q$ in the magnetic field of induction $B$. b. Determine the cyclotron frequency of an electron in the magnetic field of induction of $1$ T.",
+  "issues": [
+   {
+    "where": "1 Tl",
+    "russian": "1 Тл",
+    "problem": "Unit symbol 'Tl' (Thallium) is incorrect; should be 'T' (Tesla)."
+   }
+  ],
+  "judge": "The NEW version corrects the unit symbol from 'Tl' to the standard 'T' for Tesla, aligning with the Russian 'Тл' while preserving all other content."
+ },
+ "11.3.7": {
+  "text": "Volume of a long thin-walled solenoid $v = 10$ l, inductance $L = 0.01$ H. A voltage of $V = 10$ V was applied to the solenoid. How long after the voltage is applied will the magnetic field induction in the solenoid become equal to $B = 0.1$ T?",
+  "issues": [
+   {
+    "where": "inductance $L = 0.01$ Gn",
+    "russian": "индуктивность L = 0,01 Гн",
+    "problem": "Wrong unit symbol 'Gn' instead of 'H' (Henry); 'Gn' is not a standard unit for inductance and changes the physical meaning."
+   }
+  ],
+  "judge": "The NEW version correctly translates the inductance unit 'Гн' as 'H' (Henry) instead of the incorrect 'Gn' in the OLD version, while preserving all other details."
+ },
+ "11.3.2": {
+  "text": "A coil of radius $r$ was bent along its diameter at a right angle and placed inside the long solenoid so that one of the planes was located to the axis of the solenoid at an angle $\\alpha$, and the other at an angle $\\frac{\\pi}{2} - \\alpha$. The number of turns per unit length of the solenoid $n$. What is the mutual inductance of the bent coil and the solenoid?",
+  "issues": [
+   {
+    "where": "\\frac{\\pi}{2 - \\alpha}",
+    "russian": "π/2 − α",
+    "problem": "The English translation incorrectly formats the second angle as a fraction with subtraction in the denominator, whereas the Russian specifies the angle is (π/2) minus α."
+   }
+  ],
+  "judge": "The NEW version correctly fixes the mathematical expression for the second angle from the erroneous '\\frac{\\pi}{2 - \\alpha}' in the OLD version to '\\frac{\\pi}{2} - \\alpha', which accurately reflects the Russian original 'π/2 − α'."
+ },
+ "11.4.17": {
+  "text": "Find the steady-state currents in the electrical circuits shown in the figure. The internal resistance of voltage sources is zero. Determine the average power released in the circuits if $E_0 = 200$ V, $R = 100$ ohms, $C = 10^{-4}$ F, $L = 1$ H. Source voltage frequency $\\nu = \\frac{\\omega}{2 \\pi} = 50$ Hz.",
+  "issues": [
+   {
+    "where": "L = 1 Gn",
+    "russian": "L = 1 Гн",
+    "problem": "Wrong unit symbol: 'Gn' instead of 'H' (Henry); 'Gn' is not a valid unit for inductance."
+   },
+   {
+    "where": "frequency $v$",
+    "russian": "Частота ... ν",
+    "problem": "Wrong symbol: Latin 'v' used instead of Greek nu 'ν' for frequency, which can be confused with velocity."
+   }
+  ],
+  "judge": "The NEW version corrects the unit for inductance from 'Gn' to 'H' and the frequency symbol from 'v' to 'ν', aligning strictly with the Russian original while preserving all other content."
+ },
+ "11.4.11": {
+  "text": "In the scheme shown in the figure, at time $t = 0$, the key $K$ is closed. Determine the current in the circuit if the source gives: a) constant voltage $V_0$; b) cosine voltage $V_0 \\cos \\omega t$. Determine the maximum current if $V_0 = 100$ V, $L = 10^{-2}$ H, $C = 10^{-3}$ F, and $v = \\frac{\\omega}{2 \\pi} = 50$ Hz.",
+  "issues": [
+   {
+    "where": "L = 10^{-2} Gn",
+    "russian": "L = 10−2 Гн",
+    "problem": "Unit 'Gn' is incorrect; Russian 'Гн' stands for Henry (H), 'Gn' is not a standard unit symbol and changes the physical meaning."
+   }
+  ],
+  "judge": "The NEW version correctly translates the unit 'Гн' as 'H' (Henry) instead of the incorrect 'Gn' in the OLD version, while preserving all other details."
+ },
+ "11.5.16": {
+  "text": "When a cylindrical metal projectile of mass $m$, length $l$ and radius $r$, flying at a speed $v_0$, was inside a solenoid with the number of turns $N$, length $L$ and radius $R \\gg l$, a current $I$ was created in the solenoid, and then its circuit was shorted. How much will the speed of the projectile that has flown out of the solenoid increase? Ignore the metal resistance.",
+  "issues": [
+   {
+    "where": "radius $r_l$",
+    "russian": "радиусом R l",
+    "problem": "The Russian text 'R l' (likely a typo for 'R >> l' or distinct variables R and l) is interpreted in the English translation as a single subscripted variable 'r_l', altering the physical definition of the solenoid's radius."
+   }
+  ],
+  "judge": "The NEW version correctly interprets the Russian 'R l' as the condition 'R >> l' (radius much greater than length), whereas the OLD version incorrectly transcribed it as a variable 'r_l'."
+ },
+ "11.4.8": {
+  "text": "a. At what moment does the switch spark — when closing or when opening? Why does arcing stop if you turn on the capacitor parallel to the switch? b. What capacity of the capacitor should be connected parallel to the inductor $L$, so that when the key is opened, the voltage on it does not increase by more than $N$ times, if the voltage frequency in the circuit is $\\nu$? Determine this capacitance in the case of $\\nu = 50$ Hz, $L = 0, 1$ H, $N = 10$.",
+  "issues": [
+   {
+    "where": "v = 50 Hz, L = 0, 1 Hz",
+    "russian": "ν = 50 Гц, L = 0, 1 Гц",
+    "problem": "The unit for inductance L is incorrectly translated as 'Hz' (frequency) instead of 'H' (Henry); the Russian 'Гн' (abbreviated here as Гц in the prompt's flattened text context or likely a typo in the prompt's representation of Гн) clearly refers to inductance, while Hz is physically wrong for L."
+   },
+   {
+    "where": "v = 50 Hz",
+    "russian": "ν = 50 Гц",
+    "problem": "The symbol for frequency is translated as Latin 'v' instead of Greek 'ν' (nu), which creates ambiguity with velocity or voltage, though the value 50 Hz confirms it is frequency."
+   },
+   {
+    "where": "L = 0, 1 Hz",
+    "russian": "L = 0, 1 Гц",
+    "problem": "The Russian text likely contains a typo 'Гц' instead of 'Гн' for Henry, but the English translation blindly copies this error as 'Hz' instead of correcting it to the physical unit 'H' for inductance, making the problem physically nonsensical."
+   }
+  ],
+  "judge": "The NEW version correctly uses the Greek letter nu (ν) for frequency and fixes the unit for inductance from Hz to H, aligning strictly with the Russian original's symbols and physical meaning."
+ },
+ "11.5.17": {
+  "text": "At a great distance from a long superconducting round tube of radius $r$, a short-circuited superconducting coil with current $I$ is located coaxially with it. Number of turns in the coil $N$, coil length $l \\ll r$, radius $\\frac{r}{2}$, coil mass $m$. What speed do you need to tell the coil to fly through the fixed tube?",
+  "issues": [
+   {
+    "where": "coil length $l \\gg r$",
+    "russian": "длина катушки l r",
+    "problem": "The English translation interprets the relationship between length and radius as 'much greater than' ($\\gg$), whereas the Russian text 'l r' (likely a formatting error for $l \\ll r$ given the context of a 'short' coil) implies a different or missing relational operator, fundamentally changing the physical approximation of the coil's geometry."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian symbol 'l r' (implying l is much less than r) as 'l \\ll r', whereas the OLD version incorrectly used 'l \\gg r'."
+ },
+ "11.5.24": {
+  "text": "The superconducting box is also divided into two equal parts by a superconducting bridge of thickness $d$. The dimensions of the box are shown in the figure ($h$,$a$,$l$). A current circulates through the box in the direction perpendicular to the jumper, the linear density of which is $i$. With what frequency will the jumper oscillate if it is given a small speed in the direction shown in the figure? Jumper mass $m$.",
+  "issues": [
+   {
+    "where": "($h \\ll a$,$l$)",
+    "russian": "(h a, l)",
+    "problem": "The English translation inserts a 'much less than' symbol ($\\ll$) between h and a, whereas the Russian text only lists the dimensions 'h a, l' without specifying a relationship or inequality."
+   },
+   {
+    "where": "Jumper weight $m$",
+    "russian": "Масса перемычки m",
+    "problem": "The English translates 'Масса' (Mass) as 'weight', which is a different physical quantity (Force vs Mass)."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'масса' as 'mass' instead of 'weight' and accurately represents the dimensions list without adding the unintended inequality symbol found in the OLD version."
+ },
+ "12.1.18": {
+  "text": "Estimate the depth of penetration of an electromagnetic wave perpendicular to its surface into the conductor. The wave frequency $\\nu = 10^{15}$ Hz, the number of conduction electrons per unit volume $n_e = 10^{22}$ $cm^{-3}$ .",
+  "issues": [
+   {
+    "where": "$v = 10^{15}$ Hz",
+    "russian": "ν = 1015 Гц",
+    "problem": "The symbol for frequency is the Greek letter nu (ν) in Russian, but the English translation uses the Latin letter 'v', which typically denotes velocity; this is a wrong symbol that changes the physical meaning."
+   }
+  ],
+  "judge": "The NEW version correctly uses the Greek letter nu (ν) for frequency, matching the Russian original, whereas the OLD version incorrectly used the Latin letter v."
+ },
+ "11.6.11": {
+  "text": "a. The electric field strength inside a round flat capacitor filled with a substance with a dielectric constant $\\varepsilon$ increases linearly with time: $E = \\alpha t$. Determine the magnetic field induction inside the capacitor at a distance r from its center. b. The voltage across the plates of a flat capacitor increases linearly with time: $V = \\alpha t$. The radius of the plates is $r_0$, and the distance between them is $h$. A dielectric cylinder of radius $r$ with dielectric permittivity $\\varepsilon$ is inserted along the axis of the capacitor. Determine the magnetic field induction on the side surface of the cylinder and on the edge of the capacitor.",
+  "issues": [
+   {
+    "where": "dielectric impermeability",
+    "russian": "диэлектрической непроницаемостью",
+    "problem": "Translation error: 'непроницаемость' in this context is a typo/OCR error in the Russian source for 'проницаемость' (permittivity), but the English translation 'impermeability' creates a physically incorrect quantity; it must be 'permittivity' to match the symbol ε and standard physics."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'диэлектрической проницаемостью' as 'dielectric permittivity', fixing the incorrect term 'dielectric impermeability' in the OLD version while preserving all other details."
+ },
+ "12.2.3": {
+  "text": "Using the Huygens — Fresnel principle, prove that when a plane wave falls on the interface of two media: a) the angle of incidence is equal to the angle of reflection ($\\alpha_1 = \\alpha_3$); b) the ratio of the sine of the angle of incidence to the sine of the angle of refraction is equal to the ratio of the wave velocity in the first medium to the wave velocity in the second medium ($\\frac{\\sin \\alpha_1}{sin \\alpha_2} = \\frac{v_1}{v_2}$).",
+  "issues": [
+   {
+    "where": "$\\alpha_1 = \\alpha-3$",
+    "russian": "α1 = α3",
+    "problem": "The subscript '3' in the reflection angle is incorrectly rendered as a subtraction operator '-3'."
+   }
+  ],
+  "judge": "The NEW version corrects the typo '$\\alpha-3$' to '$\\alpha_3$', matching the Russian original, while preserving all other content exactly."
+ },
+ "12.1.15": {
+  "text": "Using the formula $E_{izl} = (\\frac{v_{t - x/c}}{c}) E$ given in the problem 12.1.14. solve the following problems: a. Determine the electric field strength in a plane wave emitted by a plane capacitor as it moves with a constant acceleration a directed parallel to its plates. The distance between the plates $d$, the electric field strength inside the capacitor $E$. b. The linear current density on the plate varies sinusoidally with the amplitude $i_0$. Determine in SI and CGS the amplitude of the electric field strength in the wave emitted by this plate. c. Determine the reflection coefficient of an electromagnetic wave incident on a thin conducting film perpendicular to its surface. Film thickness $x$, number of conduction electrons per unit volume $n_e$, wave frequency $\\nu$.",
+  "issues": [
+   {
+    "where": "$E_{izl} = (\\frac{v_{t - \\frac{x}{c}}}{c}) E$",
+    "russian": "Eизл = (vt−x/c/c)E",
+    "problem": "Formula structure mismatch: Russian implies v evaluated at (t - x/c) divided by c, English renders subscript as 't - x/c' and divides the whole term by c incorrectly or ambiguously."
+   },
+   {
+    "where": "wave frequency $v$",
+    "russian": "частота волны ν",
+    "problem": "Wrong symbol: English uses Latin 'v' (velocity) instead of Greek 'ν' (nu) for frequency, causing confusion with velocity variables used elsewhere."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian symbol for frequency (ν) as LaTeX '$\\nu$' instead of the letter 'v', and fixes the formula's retarded time notation to match the Russian source, while preserving all other content."
+ },
+ "12.1.14": {
+  "text": "A charged plate whose electric field strength $E$, moving parallel to itself at a speed $v$, creates a magnetic field of induction $B = (\\frac{v}{c^2}) E$. Therefore, when the plate velocity decreases by $dv$, an \"extra \" magnetic\" microfield \" of induction $dB = \\pm (\\frac{dv}{c^2}) E$ appears in the surrounding space. Summing up, these \"microfields\" give an electromagnetic wave, the electric field strength of which depends only on the plate velocity: $E_{izl} (t$, $x) = cB_{izl}(t$,$ x) = (\\frac{cv_{t - \\frac{x}{c}}}{c^2}) E = (\\frac{v_{t - \\frac{x}{c}}}{c}) E$. The $t - \\frac{x}{c}$ index means that when calculating the field strength at a distance $x$ from the plate, the value of its velocity should be taken at time $t - \\frac{x}{c}$. For example, the electric field strength of radiation from a plate whose velocity is $v_0 sin \\omega t$ at a distance $x$ from the plate at time $t$ is $(\\frac{v_0}{c}) sin [\\omega(t - \\frac{x}{c})] E$, since the plate velocity at time $t - \\frac{x}{c}$ was $v_0 sin \\omega(t - \\frac{x}{c})$. Prove the validity of the formula $E_{izl}(t$,$ x) = (\\frac{v_{t - \\frac{x}{c}}}{c}) E$ for the case when the velocity $v$ changes as shown in the figures.",
+  "issues": [
+   {
+    "where": "decreases by $d_v$",
+    "russian": "уменьшении скорости пластины на величину dv",
+    "problem": "The symbol 'd_v' is incorrect; it should be 'dv' (differential of velocity), changing the mathematical meaning."
+   },
+   {
+    "where": "velocity is $v_0 sin \\omega (t - \\frac{x}{c})$",
+    "russian": "скорость которой равна v0 sin ωt",
+    "problem": "The English text incorrectly defines the velocity function with a retarded time argument inside the definition, whereas the Russian defines it as v0 sin(ωt) and applies the retardation only when calculating the field."
+   }
+  ],
+  "judge": "The NEW version correctly translates the example velocity as 'v0 sin ωt' (matching the Russian 'v0 sin ωt'), whereas the OLD version incorrectly stated the velocity itself was 'v0 sin ω(t - x/c)'."
+ },
+ "13.2.5": {
+  "text": "a. Determine the total internal reflection angle for a diamond ($n_a = 2.4$), for water ($n_b = 1.33$), and for a diamond submerged in water. b. Why are small air bubbles in water silvery?",
+  "issues": [
+   {
+    "where": "for water ($n_a = 1.33$)",
+    "russian": "для воды (nв = 1,33)",
+    "problem": "Wrong subscript: English uses 'n_a' (diamond) instead of 'n_w' or 'n_b' (water), incorrectly assigning the diamond's refractive index variable to water."
+   }
+  ],
+  "judge": "The NEW version corrects the subscript typo in the water refractive index from '$n_a$' to '$n_b$', aligning it with the Russian original's distinction between diamond ($n_a$) and water ($n_в$)."
+ },
+ "13.2.12": {
+  "text": "The refractive index of the planet's atmosphere decreases with the height $h$ above its surface according to the law $n = n_0 - \\alpha h$ at $h < n/\\alpha$. Radius of planet $R$. Find at what height above the surface of the planet the ray emitted horizontally will go around the planet, remaining at this height all the time.",
+  "issues": [
+   {
+    "where": "at $h \\ll \\frac{n}{\\alpha}$",
+    "russian": "при h n/α",
+    "problem": "The English text introduces a 'much less than' condition ($h \\ll$) and a fraction bar that are not present in the Russian text, which appears to state a limit or condition 'at h n/α' (likely a typo in the source for $h < n/\\alpha$ or similar, but definitely not $\\ll$)."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian condition 'h < n/α' as an inequality, whereas the OLD version incorrectly used the approximation symbol '≪'."
+ },
+ "13.5.9": {
+  "text": "Large masses of matter in the universe can focus light from distant objects, forming a \"gravitational lens\". Estimate the focal length of a spherical galaxy of radius $R \\approx 20,000$ pc and mass $M \\approx 3 \\cdot 10^{11} M_\\odot$ (where $M_\\odot$ is the mass of the Sun), assuming that the mass in the galaxy is evenly distributed.",
+  "issues": [
+   {
+    "where": "globular galaxy",
+    "russian": "шаровой галактики",
+    "problem": "Translation error: 'шаровой галактики' means 'spherical galaxy', whereas 'globular galaxy' typically refers to a 'globular cluster' (шаровое скопление), changing the physical object described."
+   },
+   {
+    "where": "3 \\cdot 10^{11} MS",
+    "russian": "3 · 1011 MС",
+    "problem": "Notation error: 'MS' in English implies M times S, whereas the Russian 'MС' (with Cyrillic С) denotes Solar Mass ($M_\\odot$); the English text fails to correctly represent the unit symbol for Solar Mass."
+   }
+  ],
+  "judge": "The NEW version correctly translates 'шаровой' as 'spherical' instead of the inaccurate 'globular' and uses the standard solar mass symbol matching the Russian context."
+ },
+ "14.2.3": {
+  "text": "Although the lifetime of a stationary $\\mu$-meson is short — about $2 \\cdot 10^{-6}$ s, $\\mu$-mesons generated by cosmic rays at an altitude of $30$ km reach the Earth's surface. Determine the upper limit of the difference between the speed of light and the speed of $\\pi$ mesons.",
+  "issues": [
+   {
+    "where": "$m$-meson",
+    "russian": "µ-мезона",
+    "problem": "Wrong particle symbol: English uses 'm' (mass) instead of 'µ' (muon)."
+   },
+   {
+    "where": "$m$-mesons",
+    "russian": "µ-мезоны",
+    "problem": "Wrong particle symbol: English uses 'm' (mass) instead of 'µ' (muon)."
+   },
+   {
+    "where": "speed of $\\pi$ mesons",
+    "russian": "скоростью π-мезонов",
+    "problem": "Logical inconsistency: The premise describes muons (µ), but the question asks about pions (π), whereas the Russian text consistently refers to muons (likely a typo in the Russian original's question part, but the English translation introduces a conflict by correctly translating the symbol 'π' while the context implies 'µ', or the Russian text itself has a typo 'π' instead of 'µ'. However, strictly comparing the text provided: Russian says 'π-мезонов' in the question. Wait, re-reading Russian: 'скоростью π-мезонов'. The Russian text *itself* switches from µ to π. The English translates this switch faithfully. Is this an error in translation or a faithful translation of a flawed original? The prompt says 'Russian is authoritative'. If the Russian says π, the English must say π. The error is in the 'm' vs 'µ'. The switch from µ to π in the Russian text is likely a typo in the source book, but as an OCR checker, I must treat the Russian as truth. The English correctly translates 'π' as '$\\pi$'. The error is ONLY the 'm' vs 'µ'."
+   }
+  ],
+  "judge": "The NEW version correctly translates the Russian symbol 'µ' (mu) as '$\\mu$', whereas the OLD version incorrectly used '$m$'; however, both English versions retain the original Russian text's inconsistency of switching from µ-mesons to π-mesons in the final sentence."
+ },
+ "14.3.5": {
+  "text": "Solve problem 14.3.4 if the conductor moves at a speed of $\\tilde{\\beta}_1 c$, $\\beta_1 = k \\tilde{\\beta}$.",
+  "issues": [
+   {
+    "where": "$\\overrightarrow{\\beta}_1 c$",
+    "russian": "β~1c",
+    "problem": "English adds a vector arrow to beta_1 which is absent in the Russian text; Russian uses tilde (~) likely denoting approximation or specific notation, not vectorization."
+   },
+   {
+    "where": "$\\beta_1 = k \\overrightarrow{\\beta}$",
+    "russian": "β1 = k ~β",
+    "problem": "English adds a vector arrow to beta on the RHS which is absent in the Russian text; Russian uses tilde (~) instead."
+   }
+  ],
+  "judge": "The NEW version correctly translates the tilde notation (~) from the Russian original, whereas the OLD version incorrectly changed it to vector arrows."
+ },
+ "14.2.14": {
+  "text": "The Lorentz transformation makes it possible to know what will happen if we observe a phenomenon moving relative to the object, the carrier of the phenomenon, at a speed $v$, or if the object moves relative to us at a speed $v$, provided that we know how the phenomenon occurs when the object is stationary. Therefore, the following statement of the question will often be used in the future. In a stationary system, the phenomenon is described. How will this phenomenon occur if the object that carries the phenomenon is moving at speed $v$? The answer assumes a description of this phenomenon in the system a reference point that moves at a speed of $-v$ relative to the system in which the phenomenon is described. This is equivalent to describing this phenomenon in the case of the movement of an object, the carrier of the phenomenon, with a velocity $v$ relative to a stationary observer. The second option is interesting because it can be extended to several isolated objects moving at different speeds. Use this to solve the following problem. The observation station recorded light signals from two rockets moving in a straight line towards the station. The frequencies of signals registered by the station are $\\nu_1$ and $\\nu_2$. The signal frequency of stationary rockets is equal to $\\nu_0$. How fast do rockets approach each other?",
+  "issues": [
+   {
+    "where": "$v_1$ and $v_2$",
+    "russian": "ν1 и ν2",
+    "problem": "Symbol error: English uses Latin 'v' (velocity) instead of Greek 'ν' (nu, frequency), conflicting with the variable 'v' used for speed in the same text."
+   },
+   {
+    "where": "$v_0$",
+    "russian": "ν0",
+    "problem": "Symbol error: English uses Latin 'v' (velocity) instead of Greek 'ν' (nu, frequency)."
+   }
+  ],
+  "judge": "The NEW version correctly uses the Greek letter nu (ν) for frequency, matching the Russian original, whereas the OLD version incorrectly used the Latin letter v."
+ },
+ "14.3.28": {
+  "text": "A charged capacitor suspended on a thread, it would seem, cannot move translationally together with the thread and the suspension, if the angle $\\alpha$ is not straight, since the magnetic force of interaction of two jointly moving charges creates a rotational moment. This rotational moment could be detected experimentally if we assume that the capacitor moves with the Earth at a speed of $\\beta c$. Is it so?",
+  "issues": [
+   {
+    "where": "speed ofcc",
+    "russian": "скоростью βc",
+    "problem": "The symbol 'β' (beta) representing the velocity fraction is missing or corrupted to 'of', changing the physical condition from a variable speed βc to a nonsensical string."
+   }
+  ],
+  "judge": "The NEW version correctly translates the speed as '$\\beta c$' matching the Russian '$\\beta c$', whereas the OLD version contains a typo ('ofcc')."
+ },
+ "14.5.18": {
+  "text": "Determine the minimum energy of an electron and positron, which, having the same velocities directed at an angle $\\alpha$ to each other, can give birth to a proton-antiproton pair: $e^+ + e^- \\to p + \\overline{p}$.",
+  "issues": [
+   {
+    "where": "$e^+ - e^- \\to p + \\overline{p}$",
+    "russian": "e+ − e− → p + ¯p",
+    "problem": "The reaction equation uses a minus sign '-' instead of a plus sign '+' between the electron and positron ($e^+ + e^-$), incorrectly implying subtraction rather than collision."
+   }
+  ],
+  "judge": "The NEW version corrects the reaction equation symbol from '-' to '+', matching the Russian original's physical meaning while preserving all other text and numbers."
+ }
+}

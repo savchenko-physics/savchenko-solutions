@@ -27,29 +27,31 @@
         body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
         body > footer { flex-shrink: 0; margin-top: auto; }
 
-        .pf-wrap { width: 100%; max-width: 1500px; margin: 0 auto; padding: 20px 24px 40px; flex: 1 0 auto; }
-        .pf-crumb { font-size: 13px; color: #6c757d; margin-bottom: 6px; }
+        /* Edge to edge: the problem text is the point of the page, so the chrome around it is
+           kept to a few pixels. */
+        .pf-wrap { width: 100%; margin: 0; padding: 6px 6px 24px; flex: 1 0 auto; box-sizing: border-box; }
+        .pf-crumb { font-size: 13px; color: #6c757d; margin-bottom: 2px; }
         .pf-crumb a { color: #1a5276; text-decoration: none; }
-        .pf-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
-        .pf-tabs { display: flex; gap: 0.5rem; margin: 10px 0 6px; border-bottom: 1px solid #dee2e6; }
-        .pf-tab { padding: 8px 4px; font-size: 13.5px; color: #6c757d; text-decoration: none; border-bottom: 2px solid transparent; }
+        .pf-h1 { font-family: Inter, sans-serif; font-size: 20px; font-weight: 600; color: #1a1a2e; margin: 0; }
+        .pf-tabs { display: flex; gap: 0.5rem; margin: 2px 0 4px; border-bottom: 1px solid #dee2e6; }
+        .pf-tab { padding: 5px 4px; font-size: 13.5px; color: #6c757d; text-decoration: none; border-bottom: 2px solid transparent; }
         .pf-tab.on { color: #1a1a2e; font-weight: 600; border-bottom-color: #1a1a2e; }
         .pf-stat-line { font-size: 12.5px; color: #6c757d; margin: 10px 0 14px; }
 
-        .pf-records { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .pf-records { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
         .pf-record-chip {
-            font-size: 12.5px; padding: 5px 11px; border-radius: 6px;
+            font-size: 12.5px; padding: 4px 10px; border-radius: 6px;
             border: 1px solid #dee2e6; background: #f8f9fa; color: #1a5276; text-decoration: none; cursor: pointer;
         }
         .pf-record-chip:hover { background: #eef1f4; color: #0d3b54; }
         .pf-record-chip.pf-clear { color: #c0392b; border-color: #eccfcb; }
 
-        .pf-layout { display: flex; gap: 22px; align-items: flex-start; }
+        .pf-layout { display: flex; gap: 10px; align-items: flex-start; }
         .pf-filters {
-            flex: 0 0 270px; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa;
-            padding: 14px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto;
+            flex: 0 0 236px; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa;
+            padding: 10px; position: sticky; top: 6px; max-height: calc(100vh - 12px); overflow-y: auto;
         }
-        .pf-filter-group { margin-bottom: 16px; }
+        .pf-filter-group { margin-bottom: 12px; }
         .pf-filter-group:last-child { margin-bottom: 0; }
         .pf-filter-label { font-size: 11px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #6c757d; margin-bottom: 6px; }
         .pf-search-input {
@@ -116,7 +118,7 @@
         .pf-clear-btn:hover { background: #f1f3f5; }
 
         .pf-results { flex: 1 1 auto; min-width: 0; }
-        .pf-result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12.5px; color: #6c757d; gap: 10px; flex-wrap: wrap; }
+        .pf-result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12.5px; color: #6c757d; gap: 10px; flex-wrap: wrap; }
         .pf-sort-label { color: #6c757d; }
         .pf-sort-select {
             height: 34px; border: 1px solid #dee2e6; border-radius: 6px; padding: 0 8px; font-size: 12.5px;
@@ -127,19 +129,23 @@
            buttons — active tags render green), then the actual rendered problem statement.
            No section/time badges: the chapter.section is already the leading two segments
            of the problem number, and the AI's minute estimate reads as more precise than it
-           is once you're looking at the actual problem instead of a table cell. ── */
+           is once you're looking at the actual problem instead of a table cell.
+           The whole card is the link to the problem (data-href, wired in
+           problems-finder.js); the tags and the number stay real controls inside it. ── */
         .pf-card {
             border: 1px solid #dee2e6; border-left-width: 5px; border-radius: 8px; background: #fff;
-            padding: 16px 18px; margin-bottom: 14px;
+            padding: 8px 10px; margin-bottom: 6px; cursor: pointer;
         }
-        .pf-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .pf-card:hover { border-color: #1a5276; background: #fbfcfd; }
+        .pf-card:focus-visible { outline: 2px solid #1a5276; outline-offset: 1px; }
+        .pf-card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
         .pf-card-tag {
-            font-size: 11px; padding: 3px 9px; border-radius: 12px; border: 1px solid #dee2e6;
+            font-size: 11px; padding: 2px 7px; border-radius: 12px; border: 1px solid #dee2e6;
             background: #f8f9fa; color: #6c757d; cursor: pointer; white-space: nowrap;
         }
         .pf-card-tag:hover { border-color: #1a5276; color: #1a5276; }
         .pf-card-tag.active { background: #27ae60; color: #fff; border-color: #27ae60; }
-        .pf-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .pf-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
         .pf-card-name { font-family: Inter, sans-serif; font-weight: 700; font-size: 16px; color: #1a5276; text-decoration: none; }
         .pf-card-name:hover { color: #0d3b54; text-decoration: underline; }
         /* Raised like a footnote marker (LaTeX's $^*$), not sitting on the baseline — a
@@ -150,23 +156,25 @@
             border-radius: 4px; color: #fff;
         }
         .pf-card-status { display: flex; gap: 3px; margin-left: auto; font-size: 10px; }
+        .pf-card-vote { font-size: 11.5px; color: #6c757d; }
+        .pf-card-go { color: #1a5276; font-weight: 700; font-size: 15px; }
         .pf-card-status span { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: 3px; }
         .pf-card-status .en { background: #e8f0fe; color: #1a5276; }
         .pf-card-status .ru { background: #fef3e6; color: #b5651d; }
         .pf-card-statement {
-            font-family: "Latin Modern Roman", "STIX Two Math", Georgia, serif; font-size: 14.5px; line-height: 1.65; color: #2d2d2d;
+            font-family: "Latin Modern Roman", "STIX Two Math", Georgia, serif; font-size: 14.5px; line-height: 1.5; color: #2d2d2d;
             min-height: 1.4em;
         }
         .pf-card-statement img { max-width: 100%; height: auto; }
+        /* Book figures come in through statementRender.js as <figure>; the UA default
+           margin (1em 40px) would indent them like a blockquote. Centred under the text. */
+        .pf-card-statement figure { margin: 6px 0 0; text-align: center; }
+        .pf-card-statement figure img { display: inline-block; }
         .pf-card-statement p:last-child { margin-bottom: 0; }
         .pf-card-statement.is-loading { color: #adb5bd; font-family: inherit; font-style: italic; font-size: 13px; }
-        .pf-card-foot { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f3f5; font-size: 12px; color: #6c757d; }
-        .pf-card-vote { }
-        .pf-card-open { margin-left: auto; color: #1a5276; text-decoration: none; }
-        .pf-card-open:hover { color: #0d3b54; text-decoration: underline; }
         .pf-none { color: #adb5bd; font-size: 12px; }
 
-        .pf-load-more { display: block; width: 100%; margin-top: 6px; height: 42px; border-radius: 8px; border: 1px solid #dee2e6; background: #f8f9fa; color: #1a1a2e; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+        .pf-load-more { display: block; width: 100%; margin-top: 4px; height: 42px; border-radius: 8px; border: 1px solid #dee2e6; background: #f8f9fa; color: #1a1a2e; font-size: 13.5px; font-weight: 500; cursor: pointer; }
         .pf-load-more:hover { background: #eef1f4; }
         .pf-load-more[hidden] { display: none; }
 
@@ -188,9 +196,19 @@
         .pf-heat-bg-5, .pf-heat-bg-6, .pf-heat-bg-7, .pf-heat-bg-8, .pf-heat-bg-9 { color: #fff; }
         .pf-heat-none { background: #adb5bd; color: #fff; }
 
+        /* Long formulas and unbreakable tokens must wrap or scroll inside the card, never
+           push the card past the viewport. */
+        .pf-card-statement { overflow-wrap: anywhere; }
+        .pf-card-statement mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+
         @media (max-width: 900px) {
-            .pf-layout { flex-direction: column; }
+            /* Column layout: align-items must be stretch here, or the results column
+               shrink-wraps to its widest line and the cards overflow the screen. */
+            .pf-layout { flex-direction: column; align-items: stretch; }
             .pf-filters { position: static; flex: 1 1 auto; max-height: none; width: 100%; box-sizing: border-box; }
+            .pf-results { width: 100%; }
+            .pf-wrap { padding: 4px 4px 20px; }
+            .pf-card { padding: 6px 6px; border-left-width: 4px; }
         }
     </style>
 </head>
@@ -235,14 +253,6 @@
                 </div>
             </div>
 
-            <div class="pf-filter-group">
-                <div class="pf-range-head"><span><%= lang === 'ru' ? 'Время решения, мин' : 'Solve time, min' %></span><span class="pf-range-val" id="pfMinutesVal">0–180+</span></div>
-                <div class="pf-range-track">
-                    <div class="pf-range-fill"></div>
-                    <input type="range" min="0" max="180" value="0" step="5" class="pf-range-input" id="pfMinutesLo" />
-                    <input type="range" min="0" max="180" value="180" step="5" class="pf-range-input" id="pfMinutesHi" />
-                </div>
-            </div>
 
             <div class="pf-filter-group">
                 <label class="pf-check-row"><input type="checkbox" id="pfStarred" /> <%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></label>
@@ -343,7 +353,7 @@
                     const isCanonical = r[8].length > 0;
                     const tagSource = isCanonical ? r[8] : r[7];
                 %>
-                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>">
+                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>" data-href="/<%= lang %>/<%= r[0] %>" role="link" tabindex="0">
                     <% if (tagSource.length) { %>
                     <div class="pf-card-tags">
                         <% tagSource.forEach(function(t) { %><button type="button" class="pf-card-tag" data-tag="<%= t %>"><%= isCanonical ? (tagLabelMap[t] || t) : t %></button><% }); %>
@@ -357,12 +367,10 @@
                             <% if (r[11]) { %><span class="en" title="English solution">EN</span><% } %>
                             <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
                         </span>
+                        <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
+                        <span class="pf-card-go" aria-hidden="true">&rarr;</span>
                     </div>
                     <div class="pf-card-statement is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
-                    <div class="pf-card-foot">
-                        <span class="pf-card-vote"><% if (r[10]) { %><%= r[9] %>/10 (<%= r[10] %> <%= lang === 'ru' ? 'оценок' : 'ratings' %>)<% } else { %><span class="pf-none"><%= lang === 'ru' ? 'Нет оценок читателей' : 'No reader ratings yet' %></span><% } %></span>
-                        <a class="pf-card-open" href="/<%= lang %>/<%= r[0] %>"><%= lang === 'ru' ? 'Открыть решение' : 'Open solution' %> &rarr;</a>
-                    </div>
                 </div>
                 <% }); %>
             </div>

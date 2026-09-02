@@ -1856,6 +1856,12 @@ a.drafts-btn.drafts-btn-primary:focus { background: #2a2a44; color: #ffffff; }
   line-height: 1.55;
 }
 
+/* Problem-statement figures (lib/statementRender.js): the book's own drawings, sized by
+   the renderer from their pixel width. No UA blockquote-style indent. */
+.ss-statement figure.statement-figure,
+.pf-card-statement figure.statement-figure { margin: 10px 0 0; }
+.statement-figure img { max-width: 100%; height: auto; }
+
 
 /* === main_page.css === */
 /* Base resets and font — colors from /css/design-system.css */

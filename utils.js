@@ -672,9 +672,18 @@ function linkifyBlogHtml(html, lang = 'en') {
  */
 function buildMetaDescription(rawText, name, sectionTitle, lang) {
     let t = String(rawText || '').replace(/\r/g, '');
-    // Isolate the statement: everything before the first Solution/Решение heading.
-    const sol = t.search(/^#{2,6}[^\n]*(Решение|Решения|Solution)/im);
-    if (sol > 0) t = t.slice(0, sol);
+    // Isolate the statement: from the Условие/Statement heading to the NEXT heading of any
+    // kind. Cutting only at "Решение" let "### Геометрическое Решение:" (1.5.10) and
+    // "### 1 способ" (6.3.38) pull a whole solution into the description.
+    const st = t.search(/^#{1,6}[^\n]*(Условие|Statement)[^\n]*$/im);
+    if (st >= 0) {
+        const after = t.slice(st).replace(/^[^\n]*\n?/, '');
+        const next = after.search(/^#{1,6}[ \t]*\S/m);
+        t = next >= 0 ? after.slice(0, next) : after;
+    } else {
+        const sol = t.search(/^#{2,6}[^\n]*(Решение|Решения|Solution)/im);
+        if (sol > 0) t = t.slice(0, sol);
+    }
     // Drop the statement heading line(s) (Условие / Statement, any decoration).
     t = t.replace(/^#{1,6}[^\n]*(Условие|Statement)[^\n]*$/gim, ' ');
     // Markdown -> text.

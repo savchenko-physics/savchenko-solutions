@@ -312,6 +312,62 @@ function impossibleChromeVersion(ua) {
     return build > 3800 || major <= 60;
 }
 
+// ── Rule 6: a browser that sends no Accept-Language at all ──────────────────────────
+// Every real browser sends Accept-Language on every request — Chrome, Safari, Firefox,
+// Edge, Opera, Yandex Browser, the Android and iOS WebViews — because the header comes
+// from the OS/browser locale, not from the page. Its complete absence on a request whose
+// User-Agent claims one of those browsers is the same species of self-contradiction as
+// rule 5, and it is the tell the farm has NOT fixed. On 2026-09-01 it sent
+// `gzip, deflate, br, zstd` (rule 5 silent) under a current Chrome UA from 16,047
+// addresses, and 99,082 of its 99,860 requests carried no Accept-Language. Rendering
+// those in full is what took the site down for 14 hours.
+//
+// Measured BEFORE enforcing, against 14 days of request_log (2026-08-19 → 09-02): this
+// rule would have blocked 50,483 requests from 30,381 addresses. Of those, 0 reached a
+// signed-in page, 0 signed in (the four "login POSTs" were credential stuffers: 429,
+// then 302 "Invalid credentials"), 88% of addresses made exactly one request, 97% sent
+// no Referer, the twelve heaviest were a 9,943-page site-walker, five vulnerability
+// scanners and six scrapers on 2012-era UAs, and the seven that carried a search-engine
+// Referer were four Alibaba Cloud exits, a homepage prober and two single-request
+// unknowns. The 50,590 human addresses in the same window all sent the header —
+// including the 273 real Mac Chrome/145 visitors sharing the farm's exact UA string.
+//
+// Who legitimately omits the header, and how each stays out of this rule:
+//   - search engines (bingbot, Googlebot): rules 1/4 above run first — that ordering is
+//     load-bearing;
+//   - anything naming itself a bot/preview/"compatible;" client, even with a borrowed
+//     engine token: never *claims* to be a browser, so it takes the demotion path below
+//     exactly as before;
+//   - Chrome's private prefetch proxy and other speculative loads: carry a purpose
+//     header;
+//   - a person arriving from a search result: a real user-initiated cross-site
+//     navigation carries Sec-Fetch-Site: cross-site + Sec-Fetch-User: ?1, which a
+//     headless navigation does not produce without actually performing one. Recorded as
+//     its own reason so any abuse of this exemption shows up in bot_defence_hourly;
+//   - a signed-in person behind a header-stripping proxy: botgate() defers this one
+//     rule past session() and waves any userId through (see botgateAfterSession);
+//   - the login/register/password paths are on NEVER_BLOCK, so an anonymous person can
+//     always sign in and become exempt. The block page says so, in both languages.
+const BROWSER_CLAIM = /\b(Chrome|CriOS|Firefox|FxiOS|Safari|Edg|EdgA|EdgiOS|OPR|YaBrowser|SamsungBrowser|UCBrowser)\/\d/;
+// Deliberately looser than GENERIC_BOT_UA (a trailing boundary only, so "Discordbot"
+// and "TelegramBot" count): erring here means NOT blocking, which is the safe direction.
+const SELF_IDENTIFIED = /bot\b|crawler|spider|scraper|fetcher|monitoring|preview|\(\+https?:\/\/|compatible;/i;
+const PREFETCH_HEADERS = ['sec-purpose', 'purpose', 'x-purpose', 'x-moz'];
+
+function claimsBrowser(ua) {
+    return BROWSER_CLAIM.test(ua) && !SELF_IDENTIFIED.test(ua) && !/Trident\//.test(ua);
+}
+
+function isSpeculativeLoad(headers) {
+    return PREFETCH_HEADERS.some((h) => headers[h] !== undefined);
+}
+
+function isCrossSiteUserNavigation(headers) {
+    return headers['sec-fetch-site'] === 'cross-site'
+        && headers['sec-fetch-mode'] === 'navigate'
+        && headers['sec-fetch-user'] === '?1';
+}
+
 // ── The classifier ──────────────────────────────────────────────────────────────────
 // Rules in order; first match wins. Ordering is load-bearing: verified-crawler checks
 // MUST precede the Accept-Language rule, because bingbot and Amazonbot omit that header.
@@ -376,6 +432,19 @@ function classify(req) {
         return { cls: CLASS.BLOCK, rule: 5, reasons: ['ua-encoding-contradiction'] };
     }
 
+    // Rule 6 — it claims to be a browser and sends no Accept-Language. See the header
+    // above this function's helpers for the measurement and the exemptions.
+    const noAcceptLanguage = req.headers['accept-language'] === undefined;
+    if (noAcceptLanguage && claimsBrowser(ua)) {
+        if (isSpeculativeLoad(req.headers)) {
+            reasons.push('no-accept-language', 'speculative-load');
+        } else if (isCrossSiteUserNavigation(req.headers)) {
+            reasons.push('no-accept-language', 'cross-site-navigation');
+        } else {
+            return { cls: CLASS.BLOCK, rule: 6, reasons: ['no-accept-language'] };
+        }
+    }
+
     // ── Below here, nothing blocks. Only visibility is affected. ──
     if (GENERIC_BOT_UA.test(ua)) reasons.push('self-declared-bot');
     // Chrome has sent Sec-CH-UA on every secure origin since v89, so a UA claiming a
@@ -386,7 +455,9 @@ function classify(req) {
     // ones seen here pair impossible build numbers (Chrome/43.0.9291.1758) with an
     // Android release that postdates the browser by two years.
     if (impossibleChromeVersion(ua)) reasons.push('implausible-chrome-version');
-    if (req.headers['accept-language'] === undefined) reasons.push('no-accept-language');
+    // Non-browser clients that omit the header (self-named bots, link previewers) are
+    // demoted, not blocked — they never claimed to be a browser.
+    if (noAcceptLanguage && !reasons.includes('no-accept-language')) reasons.push('no-accept-language');
     if (inCidrs(ipInt, TOR)) reasons.push('tor-exit');
     if (inCidrs(ipInt, DATACENTER)) reasons.push('datacenter');
     if (!ua) reasons.push('no-user-agent');
@@ -435,26 +506,70 @@ the page you were trying to open.</p>
 // route back in, and the crawl-control files must always be readable.
 const NEVER_BLOCK = /^\/(robots\.txt|sitemap[^/]*\.xml|favicon\.ico)$|^\/(en|ru)\/(login|register)$|^\/(login|register|forgot-password|reset-password|recover-account)$/;
 
+function shouldEnforce(req) {
+    return MODE === 'enforce'
+        && req.bot.cls === CLASS.BLOCK
+        && (ENFORCED_RULES.has(String(req.bot.rule)) || req.bot.rule === 'admin')
+        && !NEVER_BLOCK.test(req.path);
+}
+
+function sendBlockPage(res) {
+    res.status(403)
+        .set('Cache-Control', 'no-store')
+        .type('html')
+        .send(BLOCK_PAGE);
+}
+
+// Only a request carrying our own session cookie can possibly belong to a signed-in
+// person. The farm never receives one: a session row is only ever written for a request
+// classified human (see the lang middleware in index.js).
+const SESSION_COOKIE = /(?:^|;\s*)connect\.sid=/;
+function hasSessionCookie(req) {
+    return SESSION_COOKIE.test(req.headers.cookie || '');
+}
+
 function botgate(req, res, next) {
     try {
         if (MODE === 'off') return next();
 
         req.bot = classify(req);
 
-        if (
-            MODE === 'enforce'
-            && req.bot.cls === CLASS.BLOCK
-            && (ENFORCED_RULES.has(String(req.bot.rule)) || req.bot.rule === 'admin')
-            && !NEVER_BLOCK.test(req.path)
-        ) {
-            res.status(403)
-                .set('Cache-Control', 'no-store')
-                .type('html')
-                .send(BLOCK_PAGE);
-            return undefined;
+        if (shouldEnforce(req)) {
+            // Rule 6 fires on an ABSENT header, so it alone gets a second look after
+            // session(): a signed-in person is never turned away by it, whatever their
+            // proxy strips. Everything without our cookie cannot be signed in and is
+            // refused here, before the session store is touched — which keeps the farm
+            // at zero database cost.
+            if (req.bot.rule === 6 && hasSessionCookie(req)) {
+                req.bot.deferred = true;
+            } else {
+                sendBlockPage(res);
+                return undefined;
+            }
         }
     } catch (err) {
         // A classifier bug must never take the site down.
+        console.error('botgate error:', err.message);
+    }
+    return next();
+}
+
+// Mounted immediately after session(). Settles the rule-6 verdicts botgate() deferred:
+// a userId in the session overrides the block outright and is recorded as such, so
+// "how many signed-in people lack Accept-Language" stays a direct query on
+// bot_defence_hourly. Anyone else gets the same page they would have got before.
+function botgateAfterSession(req, res, next) {
+    try {
+        const bot = req.bot;
+        if (!bot || !bot.deferred) return next();
+        bot.deferred = false;
+        if (req.session && req.session.userId) {
+            req.bot = { cls: CLASS.HUMAN, rule: 0, reasons: ['logged-in', ...bot.reasons] };
+            return next();
+        }
+        sendBlockPage(res);
+        return undefined;
+    } catch (err) {
         console.error('botgate error:', err.message);
     }
     return next();
@@ -468,4 +583,4 @@ function init(pool) {
     if (timer.unref) timer.unref();
 }
 
-module.exports = { botgate, classify, init, isCountable, isTaggable, CLASS, MODE };
+module.exports = { botgate, botgateAfterSession, classify, init, isCountable, isTaggable, CLASS, MODE };

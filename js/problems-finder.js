@@ -200,8 +200,6 @@
         q: Q.q || '',
         min: Q.min != null ? Number(Q.min) : 0,
         max: Q.max != null ? Number(Q.max) : 100,
-        minMin: 0,
-        maxMin: 180,
         starred: !!Q.starred,
         bookmarked: false,
         lang: 'any',
@@ -262,12 +260,6 @@
         if (r[COL.CALIBRATED] != null) {
             if (r[COL.CALIBRATED] < state.min || r[COL.CALIBRATED] > state.max) return false;
         } else if (state.min > 0) return false;
-
-        if (r[COL.EST_MINUTES] != null) {
-            var em = r[COL.EST_MINUTES];
-            if (em < state.minMin) return false;
-            if (state.maxMin < 180 && em > state.maxMin) return false;
-        } else if (state.minMin > 0) return false;
 
         if (state.starred && r[COL.STARRED] !== 1) return false;
         if (state.bookmarked && !BOOKMARKED.has(r[COL.NAME])) return false;
@@ -350,23 +342,22 @@
         var statusHtml = (r[COL.SOLVED_EN] ? '<span class="en" title="English solution">EN</span>' : '')
             + (r[COL.SOLVED_RU] ? '<span class="ru" title="Russian solution">RU</span>' : '');
         var voteHtml = r[COL.VOTE_COUNT]
-            ? esc(r[COL.VOTE_AVG]) + '/10 (' + r[COL.VOTE_COUNT] + (LANG === 'ru' ? ' оценок)' : ' ratings)')
-            : '<span class="pf-none">' + (LANG === 'ru' ? 'Нет оценок читателей' : 'No reader ratings yet') + '</span>';
+            ? '<span class="pf-card-vote">' + esc(r[COL.VOTE_AVG]) + '/10 (' + r[COL.VOTE_COUNT] + ')</span>' : '';
 
         var loadingText = LANG === 'ru' ? 'Загрузка условия…' : 'Loading statement…';
-        return '<div class="pf-card ' + heatClass + '" data-name="' + esc(r[COL.NAME]) + '">'
+        var href = '/' + LANG + '/' + esc(r[COL.NAME]);
+        return '<div class="pf-card ' + heatClass + '" data-name="' + esc(r[COL.NAME]) + '" data-href="' + href + '" role="link" tabindex="0">'
             + tagsHtml
             + '<div class="pf-card-head">'
-            + '<a class="pf-card-name" href="/' + LANG + '/' + esc(r[COL.NAME]) + '">' + esc(r[COL.NAME]) + '</a>'
+            + '<a class="pf-card-name" href="' + href + '">' + esc(r[COL.NAME]) + '</a>'
             + (r[COL.STARRED] === 1 ? '<span class="pf-star" title="Asterisked by Savchenko">∗</span>' : '')
             + ratingHtml
             + '<span class="pf-card-status">' + statusHtml + '</span>'
+            + voteHtml
+            + '<span class="pf-card-go" aria-hidden="true">→</span>'
             + '</div>'
             + '<div class="pf-card-statement is-loading" data-statement-for="' + esc(r[COL.NAME]) + '">' + loadingText + '</div>'
-            + '<div class="pf-card-foot">'
-            + '<span class="pf-card-vote">' + voteHtml + '</span>'
-            + '<a class="pf-card-open" href="/' + LANG + '/' + esc(r[COL.NAME]) + '">' + (LANG === 'ru' ? 'Открыть решение' : 'Open solution') + ' →</a>'
-            + '</div></div>';
+            + '</div>';
     }
 
     // Event delegation, wired once on the stable container rather than per-button: Load
@@ -375,7 +366,26 @@
     // listeners on old cards and fire toggleTag() multiple times per click.
     cardsEl.addEventListener('click', function (e) {
         var btn = e.target.closest('.pf-card-tag');
-        if (btn) toggleTag(btn.getAttribute('data-tag'));
+        if (btn) { toggleTag(btn.getAttribute('data-tag')); return; }
+        // The card itself is the link to the problem. Real controls inside it (the number
+        // link, tag buttons, anything in the statement) keep their own behaviour, and a
+        // click that merely ends a text selection is not a navigation.
+        if (e.target.closest('a, button, input, select, textarea, label')) return;
+        var card = e.target.closest('.pf-card[data-href]');
+        if (!card) return;
+        var sel = window.getSelection ? String(window.getSelection()) : '';
+        if (sel) return;
+        var href = card.getAttribute('data-href');
+        if (e.ctrlKey || e.metaKey || e.shiftKey) window.open(href, '_blank'); else window.location.href = href;
+    });
+    cardsEl.addEventListener('auxclick', function (e) {
+        if (e.button !== 1 || e.target.closest('a, button')) return;
+        var card = e.target.closest('.pf-card[data-href]');
+        if (card) { e.preventDefault(); window.open(card.getAttribute('data-href'), '_blank'); }
+    });
+    cardsEl.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('pf-card')) return;
+        window.location.href = e.target.getAttribute('data-href');
     });
 
     function renderPage(rows, append) {
@@ -498,11 +508,6 @@
         },
         document.getElementById('pfCalibVal'), function (lo, hi) { return lo + '–' + hi; });
 
-    wireRange(document.getElementById('pfMinutesLo').closest('.pf-range-track'),
-        document.getElementById('pfMinutesLo'), document.getElementById('pfMinutesHi'),
-        function (lo, hi) { state.minMin = lo; state.maxMin = hi; },
-        document.getElementById('pfMinutesVal'), function (lo, hi) { return lo + '–' + (hi >= 180 ? '180+' : hi); });
-
     Array.prototype.forEach.call(document.querySelectorAll('.pf-axis-lo'), function (loEl) {
         var key = loEl.getAttribute('data-axis');
         var hiEl = document.querySelector('.pf-axis-hi[data-axis="' + key + '"]');
@@ -591,7 +596,6 @@
     function resetAll(doApply) {
         state.q = ''; searchEl.value = '';
         state.min = 0; state.max = 100;
-        state.minMin = 0; state.maxMin = 180;
         state.axisRanges = {};
         rangeRegistry.forEach(function (r) {
             r.loEl.value = r.loEl.min; r.hiEl.value = r.hiEl.max; r.render(false);

@@ -100,11 +100,75 @@ test('rule 5 does not fire on proxies that downgrade Accept-Encoding wholesale',
     assert.notStrictEqual(v.cls, CLASS.BLOCK);
 });
 
-test('missing Accept-Language is never a block, only invisibility', () => {
-    // bingbot and Chrome's prefetch proxy both omit it legitimately.
-    const v = classify(req({ ua: REAL_CHROME, lang: null }));
-    assert.strictEqual(v.cls, CLASS.COUNT_NOTHING);
-    assert.ok(v.reasons.includes('no-accept-language'));
+test('rule 6: a client that claims to be a browser and sends no Accept-Language is blocked', () => {
+    // The farm's 2026-09-01 shape: correct zstd encoding (rule 5 silent), a current Chrome
+    // UA, 99,082 of 99,860 requests without Accept-Language. Verified against 14 days of
+    // request_log before this became a block — see the comment above rule 6 in botgate.js.
+    for (const [ua, hints] of [
+        [FARM_UA, undefined],
+        [FARM_UA, null],             // the 7.5% of the farm that forges no Sec-CH-UA either
+        [REAL_CHROME, undefined],
+        [REAL_FIREFOX, undefined],
+        // Real Safari never omits it; this UA without it was a 2012-era scraper.
+        ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15', undefined],
+    ]) {
+        const v = classify(req({ ua, lang: null, hints }));
+        assert.strictEqual(v.cls, CLASS.BLOCK, `expected block for ${ua}`);
+        assert.strictEqual(v.rule, 6);
+        assert.strictEqual(v.reasons[0], 'no-accept-language');
+    }
+});
+
+test('rule 6 never fires on anything that omits Accept-Language legitimately', () => {
+    // A verified search engine claim is settled by rule 1 before rule 6 is consulted.
+    assert.strictEqual(classify(req({ ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', lang: null, ip: '40.77.167.1' })).rule, 1);
+    // Self-identified clients keep the old demotion, even with a borrowed engine token.
+    for (const ua of [
+        'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Amzn-SearchBot/0.1) Chrome/119.0.6045.214 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko; Google-PageRenderer Google (+https://developers.google.com/+/web/snippet/)) Chrome/120.0 Safari/537.36',
+        'Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)',
+        'TelegramBot (like TwitterBot)',
+        'WhatsApp/2.23.20.0 A',
+        'Mozilla/5.0 (Windows NT 6.1; WOW64) SkypeUriPreview Preview/0.5 skype-url-preview@microsoft.com',
+        'Mozilla/5.0 (compatible; vkShare; +http://vk.com/dev/Share)',
+        '',
+    ]) {
+        const v = classify(req({ ua, lang: null }));
+        assert.notStrictEqual(v.cls, CLASS.BLOCK, `must not block ${JSON.stringify(ua)}`);
+    }
+    // Chrome's private prefetch proxy and other speculative loads carry a purpose header.
+    for (const extra of [
+        { 'sec-purpose': 'prefetch;anonymous-client-ip' },
+        { purpose: 'prefetch' },
+        { 'x-moz': 'prefetch' },
+    ]) {
+        const r = req({ ua: REAL_CHROME, lang: null });
+        Object.assign(r.headers, extra);
+        const v = classify(r);
+        assert.notStrictEqual(v.cls, CLASS.BLOCK, `must not block a speculative load ${JSON.stringify(extra)}`);
+        assert.ok(v.reasons.includes('speculative-load'));
+    }
+    // A person clicking a search result: a real user-initiated cross-site navigation.
+    const nav = req({ ua: REAL_CHROME, lang: null });
+    Object.assign(nav.headers, { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'navigate', 'sec-fetch-user': '?1' });
+    const v = classify(nav);
+    assert.notStrictEqual(v.cls, CLASS.BLOCK);
+    assert.ok(v.reasons.includes('cross-site-navigation'));
+    // ...but a headless navigation (Sec-Fetch-Site: none, which is what the farm sends)
+    // is not that.
+    const direct = req({ ua: REAL_CHROME, lang: null });
+    Object.assign(direct.headers, { 'sec-fetch-site': 'none', 'sec-fetch-mode': 'navigate', 'sec-fetch-user': '?1' });
+    assert.strictEqual(classify(direct).cls, CLASS.BLOCK);
+});
+
+test('MUST NEVER BLOCK: rule 6 does not touch a real browser that sends the header', () => {
+    // The farm's exact UA string is also that of 273 real Mac Chrome/145 visitors in the
+    // measured fortnight — every one of whom sent Accept-Language.
+    assert.strictEqual(classify(req({ ua: FARM_UA })).cls, CLASS.HUMAN);
+    // Present-but-empty is present. Only complete absence is the signal.
+    assert.notStrictEqual(classify(req({ ua: REAL_CHROME, lang: '' })).cls, CLASS.BLOCK);
+    // The allowlists still outrank it.
+    assert.strictEqual(classify(req({ ua: FARM_UA, lang: null, ip: '162.120.188.230' })).cls, CLASS.HUMAN);
 });
 
 test('datacenter and Tor addresses are never blocked, only uncounted', () => {

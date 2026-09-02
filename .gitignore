@@ -23,3 +23,8 @@ data/.build/
 
 # Self-hosted video files (large binaries; see video/README.md)
 /video/*.mp4
+
+# Derived artifacts of scripts/book3/extract.py — rebuilt from pdf/savchenko-3rd-ed.pdf
+/src/database/book3/images/
+/src/database/book3/_raw/
+/src/database/book3/preview/
