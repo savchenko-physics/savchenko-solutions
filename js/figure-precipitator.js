@@ -1013,7 +1013,7 @@
         plot(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B, 1.9, null, 1);
 
         /* Slope triangles: the −3 and −1 the problem asks for, read straight off. */
-        function slopeMark(rhoAt, fn, slope, color, label) {
+        function slopeMark(rhoAt, fn, slope, color, label, below) {
             var v = fn(rhoAt);
             if (!(v > 0)) return;
             var dec = Math.log10(v);
@@ -1029,7 +1029,9 @@
             g.moveTo(xA, yA); g.lineTo(xB, yA); g.lineTo(xB, yC2);
             g.stroke();
             g.restore();
-            drawRuns(g, (xA + xB) / 2, yA - 15 * TXT, label, "center");   // clear of the curve it labels
+            /* Above the leg for the force curves, below it for E — E is the lowest curve,
+               so its label would otherwise land on F1. */
+            drawRuns(g, (xA + xB) / 2, yA + (below ? 20 : -15) * TXT, label, "center");
         }
         /* Read straight off the triangle: across that stretch the curve falls three
            decades for one decade of x — which is what F ∝ x⁻³ means. The bare number
@@ -1037,7 +1039,7 @@
         slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A,
             [sym("F", 12, COL_A), word(" ∝ ", 12, COL_A), sym("x", 12, COL_A), sup("−3", 12, COL_A)]);
         slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC,
-            [sym("E", 12, FIELDC), word(" ∝ ", 12, FIELDC), sym("x", 12, FIELDC), sup("−1", 12, FIELDC)]);
+            [sym("E", 12, FIELDC), word(" ∝ ", 12, FIELDC), sym("x", 12, FIELDC), sup("−1", 12, FIELDC)], true);
 
         function seriesLabel(fn, color, runs) {
             var v = fn(C_XMIN * 1.08);
