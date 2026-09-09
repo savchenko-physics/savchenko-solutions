@@ -50,9 +50,10 @@
 
     var INK = "#1a1a2e";
     var MUTED = "#6c757d";
-    var HOT = "#a93226";
-    var COL_A = "#1a5276";                   // fine fraction
-    var COL_B = "#b8791f";                   // coarse fraction
+    var HOT = "#d7301f";                     // the live electrode, vermillion
+    var COL_A = "#1b7fbd";                   // small grains, azure
+    var COL_B = "#e08214";                   // large grains, amber
+    var FIELDC = "#7b52ab";                  // the E reference curve, violet
     var DEPOSIT = "#2d2d2d";
     var RULE = "#dee2e6";
     var PAPER = "#ffffff";
@@ -268,7 +269,7 @@
     function word(t, px, color, weight) { return { t: t, f: (weight || 400) + " " + px + "px " + SANS, c: color }; }
 
     function panelLetter(ctx, letter) {
-        ctx.font = "700 13px " + SANS;
+        ctx.font = "700 15px " + SANS;
         ctx.fillStyle = INK;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -475,7 +476,7 @@
             if (b === wireBin && drawWire) drawWire();
             if (binHead[b] === -1) continue;
             var t = 1 - b / (BINS - 1);                      // 0 = far, 1 = near
-            ctx.globalAlpha = 0.26 + 0.40 * t;
+            ctx.globalAlpha = 0.34 + 0.44 * t;   // the brighter palette carries less weight per dot
             for (var sp = 0; sp < 2; sp++) {
                 ctx.beginPath();
                 var any = false;
@@ -494,24 +495,24 @@
     }
 
     function legendA(ctx, w, h) {
-        var y = h - 32, x = 2;
+        var y = h - 38, x = 2;
         ctx.globalAlpha = 1;
         ctx.fillStyle = COL_A;
         ctx.beginPath(); ctx.arc(x + 3, y, 2.4, 0, Math.PI * 2); ctx.fill();
-        drawRuns(ctx, x + 11, y, [word(S.fine || "fine", 11, MUTED)], "left");
-        y += 14;
+        drawRuns(ctx, x + 11, y, [word(S.fine || "fine", 12.5, MUTED)], "left");
+        y += 17;
         ctx.fillStyle = COL_B;
         ctx.beginPath(); ctx.arc(x + 3, y, 3.6, 0, Math.PI * 2); ctx.fill();
-        drawRuns(ctx, x + 11, y, [word(S.coarse || "coarse", 11, MUTED)], "left");
+        drawRuns(ctx, x + 11, y, [word(S.coarse || "coarse", 12.5, MUTED)], "left");
 
         /* Capture efficiency, decayed on the same clock as the deposit, so it reads the
            current settings rather than the whole history. */
         var effA = seenA > 4 ? caughtA / seenA : 0;
         var effB = seenB > 4 ? caughtB / seenB : 0;
-        var rt = [word((S.caught || "captured") + "  ", 11, MUTED)];
-        rt.push(word(Math.round(effA * 100) + "%", 11, COL_A, 600));
-        rt.push(word(" / ", 11, MUTED));
-        rt.push(word(Math.round(effB * 100) + "%", 11, COL_B, 600));
+        var rt = [word((S.caught || "captured") + "  ", 12.5, MUTED)];
+        rt.push(word(Math.round(effA * 100) + "%", 12.5, COL_A, 700));
+        rt.push(word(" / ", 12.5, MUTED));
+        rt.push(word(Math.round(effB * 100) + "%", 12.5, COL_B, 700));
         drawRuns(ctx, x, h - 4, rt, "left");
     }
 
@@ -531,7 +532,7 @@
         ctx.save();
         ctx.translate(x - 6, (y0 + y1) / 2);
         ctx.rotate(-Math.PI / 2);
-        drawRuns(ctx, 0, 0, [word(S.airflow || "air", 10.5, MUTED)], "center");
+        drawRuns(ctx, 0, 0, [word(S.airflow || "air", 12, MUTED)], "center");
         ctx.restore();
         ctx.restore();
     }
@@ -601,7 +602,7 @@
         ctxB.clearRect(0, 0, w, h);
         panelLetter(ctxB, "b");
 
-        var padL = 16, padR = 12, padT = 30, padB = 30;
+        var padL = 16, padR = 14, padT = 36, padB = 38;
         var yMid = padT + (h - padT - padB) / 2;
         var wx = padL + 4;                                  // the wire, seen end-on
         var reach = w - padR - wx;
@@ -658,7 +659,7 @@
         ctxB.arc(wx, yMid, 4.2, 0, Math.PI * 2);
         ctxB.fillStyle = HOT;
         ctxB.fill();
-        drawRuns(ctxB, wx, yMid - 15, [sym("+V", 12, HOT)], "center");
+        drawRuns(ctxB, wx, yMid - 15, [sym("+V", 14, HOT)], "center");
 
         /* The grain. */
         ctxB.beginPath();
@@ -676,7 +677,7 @@
         /* Induced bound charge: − drawn on the face toward the wire, + on the far face. */
         ctxB.textAlign = "center";
         ctxB.textBaseline = "middle";
-        ctxB.font = "600 12px " + SANS;
+        ctxB.font = "700 14px " + SANS;
         ctxB.fillStyle = INK;
         for (var k = -1; k <= 1; k++) {
             var ang = k * 0.66;
@@ -693,7 +694,7 @@
         ctxB.lineTo(gx + gR * 0.40, yMid);
         ctxB.stroke();
         arrowHead(ctxB, gx + gR * 0.40, yMid, 1, 0, 4);
-        drawRuns(ctxB, gx, yMid - gR - 9, [sym("p", 12, INK)], "center");
+        drawRuns(ctxB, gx, yMid - gR - 9, [sym("p", 14, INK)], "center");
 
         /* The two Coulomb forces, drawn to the true ratio E(x−a) : E(x+a) at this grain,
            anchored on the faces they act on. The near one is longer because the field is
@@ -724,13 +725,13 @@
         arrowHead(ctxB, xFar + lFar, yF, 1, 0, 5);
 
         drawRuns(ctxB, xNear - unit / 2, yF + 11,
-            [sym("qE", 11, COL_A), sub("near", 11, COL_A)], "center");
+            [sym("qE", 13, COL_A), sub("near", 13, COL_A)], "center");
         drawRuns(ctxB, xFar + lFar / 2, yF + 11,
-            [sym("qE", 11, MUTED), sub("far", 11, MUTED)], "center");
+            [sym("qE", 13, MUTED), sub("far", 13, MUTED)], "center");
 
         /* Which side of the picture is which. */
-        drawRuns(ctxB, wx + 9, padT - 6, [word(S.stronger || "stronger field", 10.5, MUTED)], "left");
-        drawRuns(ctxB, w - padR, padT - 6, [word(S.weaker || "weaker field", 10.5, MUTED)], "right");
+        drawRuns(ctxB, wx + 9, padT - 6, [word(S.stronger || "stronger field", 12, MUTED)], "left");
+        drawRuns(ctxB, w - padR, padT - 6, [word(S.weaker || "weaker field", 12, MUTED)], "right");
 
         /* The resultant and the statement it proves. */
         var yN = h - padB + 12;
@@ -744,9 +745,9 @@
         ctxB.stroke();
         arrowHead(ctxB, gx - nl, yN, -1, 0, 5.5);
         drawRuns(ctxB, gx + 9, yN,
-            [sym("F", 11.5, INK), word(" = ", 11.5, INK), sym("p", 11.5, INK),
-             word(" ∂", 11.5, INK), sym("E", 11.5, INK), word("/∂", 11.5, INK),
-             sym("x", 11.5, INK), word(" < 0", 11.5, INK)], "left");
+            [sym("F", 13.5, INK), word(" = ", 13.5, INK), sym("p", 13.5, INK),
+             word(" ∂", 13.5, INK), sym("E", 13.5, INK), word("/∂", 13.5, INK),
+             sym("x", 13.5, INK), word(" < 0", 13.5, INK)], "left");
     }
 
     /* ------------------------------------------------- panel c: the scaling laws */
@@ -757,7 +758,7 @@
         ctxC.clearRect(0, 0, w, h);
         panelLetter(ctxC, "c");
 
-        var padL = 40, padR = 12, padT = 22, padB = 42;
+        var padL = 48, padR = 14, padT = 26, padB = 50;
         var pw = w - padL - padR, ph = h - padT - padB;
         if (pw < 40 || ph < 40) return;
 
@@ -777,20 +778,20 @@
         for (var i = 0; i < xTicks.length; i++) {
             var xx = X(xTicks[i]);
             ctxC.beginPath(); ctxC.moveTo(xx, padT + ph); ctxC.lineTo(xx, padT + ph + 4); ctxC.stroke();
-            drawRuns(ctxC, xx, padT + ph + 13, [word(String(xTicks[i]), 10.5, MUTED)], "center");
+            drawRuns(ctxC, xx, padT + ph + 15, [word(String(xTicks[i]), 12, MUTED)], "center");
         }
         for (var d = 0; d <= 6; d += 2) {
             var yy = Y(d);
             ctxC.beginPath(); ctxC.moveTo(padL - 4, yy); ctxC.lineTo(padL, yy); ctxC.stroke();
-            drawRuns(ctxC, padL - 7, yy, [word("10", 10.5, MUTED), { t: String(d), f: "8px " + SANS, c: MUTED, dy: -4 }], "right");
+            drawRuns(ctxC, padL - 7, yy, [word("10", 12, MUTED), { t: String(d), f: "9px " + SANS, c: MUTED, dy: -4.5 }], "right");
         }
 
-        drawRuns(ctxC, padL + pw / 2, padT + ph + 27,
-            [sym("x", 11, INK), word("/", 11, INK), sym("R", 11, INK), sub("0", 11, INK)], "center");
+        drawRuns(ctxC, padL + pw / 2, padT + ph + 32,
+            [sym("x", 13, INK), word("/", 13, INK), sym("R", 13, INK), sub("0", 13, INK)], "center");
         ctxC.save();
-        ctxC.translate(11, padT + ph / 2);
+        ctxC.translate(13, padT + ph / 2);
         ctxC.rotate(-Math.PI / 2);
-        drawRuns(ctxC, 0, 0, [word(S.axisY || "arb. units", 10.5, MUTED)], "center");
+        drawRuns(ctxC, 0, 0, [word(S.axisY || "arb. units", 12, MUTED)], "center");
         ctxC.restore();
 
         function plot(fn, color, width, dash, alpha) {
@@ -815,7 +816,7 @@
         }
 
         /* E ∝ 1/x for reference, then |F| ∝ 1/x³ for each fraction. */
-        plot(function (r) { return 1 / r; }, MUTED, 1, [4, 3], 0.85);
+        plot(function (r) { return 1 / r; }, FIELDC, 1.3, [5, 3.5], 0.95);
         plot(function (r) { return forceOf(1, EPS1, r); }, COL_A, 1.6, null, 1);
         plot(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B, 1.6, null, 1);
 
@@ -837,10 +838,10 @@
             ctxC.moveTo(xA, yA); ctxC.lineTo(xB, yA); ctxC.lineTo(xB, yC2);
             ctxC.stroke();
             ctxC.restore();
-            drawRuns(ctxC, (xA + xB) / 2, yA - 7, [word(label, 10, color, 600)], "center");
+            drawRuns(ctxC, (xA + xB) / 2, yA - 7, [word(label, 12, color, 700)], "center");
         }
         slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A, "−3");
-        slopeMark(0.34, function (r) { return 1 / r; }, -1, MUTED, "−1");
+        slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC, "−1");
 
         /* Where the grains actually are, as two thin histograms on the baseline. */
         var nb = 46, hA = new Float32Array(nb), hB = new Float32Array(nb), mx = 1;
@@ -874,10 +875,10 @@
             drawRuns(ctxC, X(C_XMIN * 1.08) + 3, Y(dec) - 8, runs, "left");
         }
         seriesLabel(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B,
-            [sym("F", 10.5, COL_B), sub("2", 10.5, COL_B)]);
+            [sym("F", 12.5, COL_B), sub("2", 12.5, COL_B)]);
         seriesLabel(function (r) { return forceOf(1, EPS1, r); }, COL_A,
-            [sym("F", 10.5, COL_A), sub("1", 10.5, COL_A)]);
-        seriesLabel(function (r) { return 1 / r; }, MUTED, [sym("E", 10.5, MUTED)]);
+            [sym("F", 12.5, COL_A), sub("1", 12.5, COL_A)]);
+        seriesLabel(function (r) { return 1 / r; }, FIELDC, [sym("E", 12.5, FIELDC)]);
     }
 
     /* -------------------------------------------------------------------- export */
@@ -946,10 +947,10 @@
             g.textAlign = "left";
             g.textBaseline = "alphabetic";
             g.fillStyle = INK;
-            g.font = "600 " + 12 * scale + "px " + SANS;
+            g.font = "700 " + 13.5 * scale + "px " + SANS;
             g.fillText(S.figTitle || "", pad * scale, (totalH - foot + 18) * scale);
             g.fillStyle = MUTED;
-            g.font = 400 + " " + 10.5 * scale + "px " + SANS;
+            g.font = 400 + " " + 11.5 * scale + "px " + SANS;
             g.fillText(S.creditLine || "", pad * scale, (totalH - foot + 34) * scale);
 
             out.toBlob(function (blob) {

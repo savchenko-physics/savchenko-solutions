@@ -15,9 +15,10 @@
     /* Figure palette. Six values, all drawn from the site's design tokens. */
     --fig-ink: #1a1a2e;          /* structure: axes, tube wireframe, rules            */
     --fig-muted: #6c757d;        /* ticks, minor labels, hints                        */
-    --fig-hot: #a93226;          /* the +V electrode and high-field annotations       */
-    --fig-a: #1a5276;            /* dust fraction A (fine, permittivity e1)           */
-    --fig-b: #b8791f;            /* dust fraction B (coarse, permittivity e2)         */
+    --fig-hot: #d7301f;          /* the +V electrode and high-field annotations       */
+    --fig-a: #1b7fbd;            /* small grains, permittivity e1                     */
+    --fig-b: #e08214;            /* large grains, permittivity e2                     */
+    --fig-field: #7b52ab;        /* the E reference curve in panel c                  */
     --fig-deposit: #2d2d2d;      /* what has already been collected on the wire       */
     --fig-rule: #dee2e6;
     --fig-paper: #ffffff;
@@ -25,7 +26,7 @@
     /* The solution body is justified 1.35rem serif with an indent on every paragraph
        (solution_post.ejs:198-222). None of that should reach the figure. */
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
     text-align: left;
     text-indent: 0;
@@ -88,7 +89,7 @@
     z-index: 2;
     padding: 0 3px;
     background: rgba(255, 255, 255, 0.86);   /* knockout, so a label stays readable over the wireframe */
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.2;
     white-space: nowrap;
     pointer-events: none;
@@ -116,7 +117,7 @@
     right: 0;
     bottom: 0;
     z-index: 2;
-    font-size: 11.5px;
+    font-size: 12.5px;
     color: var(--fig-muted);
     pointer-events: none;
     transition: opacity 0.25s linear;
@@ -143,14 +144,14 @@
 }
 
 .ss-fig-control > label {
-    font-size: 12.5px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--fig-ink);
     margin: 0;
 }
 
 .ss-fig-control .ss-fig-value {
-    font-size: 12.5px;
+    font-size: 14px;
     color: var(--fig-muted);
     font-variant-numeric: tabular-nums;
     justify-self: start;
@@ -181,17 +182,17 @@
 .ss-fig-control input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 13px;
-    height: 13px;
-    margin-top: -5.5px;
+    width: 15px;
+    height: 15px;
+    margin-top: -6.5px;
     border: none;
     border-radius: 50%;
     background: var(--fig-ink);
 }
 
 .ss-fig-control input[type="range"]::-moz-range-thumb {
-    width: 13px;
-    height: 13px;
+    width: 15px;
+    height: 15px;
     border: none;
     border-radius: 50%;
     background: var(--fig-ink);
@@ -223,14 +224,14 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 32px;
-    padding: 0 11px;
+    height: 36px;
+    padding: 0 13px;
     border: 1px solid var(--fig-rule);
     border-radius: 6px;
     background: var(--fig-paper);
     color: var(--fig-deposit);
     font: inherit;
-    font-size: 12.5px;
+    font-size: 13.5px;
     cursor: pointer;
 }
 
@@ -251,7 +252,7 @@
 
 /* The live answer to parts b and d, kept next to the sliders that produce it. */
 .ss-fig-readout {
-    font-size: 12.5px;
+    font-size: 14px;
     color: var(--fig-muted);
     font-variant-numeric: tabular-nums;
     align-self: end;
@@ -267,7 +268,7 @@
 .ss-fig-caption {
     grid-area: caption;
     margin: 2px 0 0;
-    font-size: 13px;
+    font-size: 14.5px;
     line-height: 1.55;
     color: var(--fig-deposit);
     text-align: left;
@@ -284,7 +285,7 @@
 
 .ss-fig-credit {
     grid-area: credit;
-    font-size: 12.5px;
+    font-size: 13.5px;
     color: var(--fig-muted);
 }
 
@@ -363,8 +364,8 @@
 
     /* Four buttons have to make one row on a 360px screen. */
     .ss-fig-btn {
-        padding: 0 9px;
-        font-size: 12px;
+        padding: 0 10px;
+        font-size: 13px;
     }
 
     .ss-fig-buttons { gap: 6px; }
