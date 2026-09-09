@@ -1,5 +1,53 @@
 /* === design-system.css === */
 /* Savchenko Solutions — global design tokens (academic, no bright accents, no gradients) */
+
+/* Latin Modern Roman — the Computer Modern the solution pages have always asked for.
+   Every solution template names "Latin Modern Roman" in its stack (solution_post.ejs:211),
+   but nothing declared the faces, so the whole site silently fell through to Times New
+   Roman for anyone who did not happen to have LMR installed locally. The WOFF2s have been
+   sitting unused in public/fonts/ (served at /fonts/ by the express.static on "public").
+
+   LMR carries no Cyrillic, which is exactly right here: Russian glyphs fall through, one
+   glyph at a time, to 'CMU Serif' — Computer Modern Unicode, declared by /css/mathjax.css
+   over a Cyrillic-only unicode-range. Latin from Latin Modern, Cyrillic from its own
+   Computer Modern companion, and both matching the server-rendered TeX. Keep 'CMU Serif'
+   after 'Latin Modern Roman' in any stack that uses this.
+   The bold-italic ships as WOFF only; there is no WOFF2 of it in public/fonts/. */
+@font-face {
+  font-family: 'Latin Modern Roman';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/lmroman10-regular.woff2) format('woff2'),
+       url(/fonts/lmroman10-regular.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'Latin Modern Roman';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/fonts/lmroman10-bold.woff2) format('woff2'),
+       url(/fonts/lmroman10-bold.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'Latin Modern Roman';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(/fonts/lmroman10-italic.woff2) format('woff2'),
+       url(/fonts/lmroman10-italic.woff) format('woff');
+}
+
+@font-face {
+  font-family: 'Latin Modern Roman';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url(/fonts/lmroman10-bolditalic.woff) format('woff');
+}
+
 :root {
   --ss-navy: #1a1a2e;
   --ss-white: #ffffff;

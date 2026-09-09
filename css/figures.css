@@ -1,0 +1,396 @@
+/* figures.css — styles for the interactive figures registered in lib/solutionFigures.js.
+ *
+ * Linked only on solution pages that register a figure, not site-wide: this is ~7 KB that
+ * exactly one problem needs today, and the solution page is the most-visited page type on
+ * the site. (css/design-system.css is the home for shared tokens; this file consumes them
+ * and adds nothing global.)
+ *
+ * House rules for anything in here — the figure is meant to read as a journal figure, not
+ * as a web widget: no gradients, no glows, no drop shadows, no rounded cards, flat ink on
+ * white paper, hairline rules. Every colour below is also separated in luminance, so the
+ * figure survives greyscale printing and red-green colour blindness.
+ */
+
+.ss-fig {
+    /* Figure palette. Six values, all drawn from the site's design tokens. */
+    --fig-ink: #1a1a2e;          /* structure: axes, tube wireframe, rules            */
+    --fig-muted: #6c757d;        /* ticks, minor labels, hints                        */
+    --fig-hot: #a93226;          /* the +V electrode and high-field annotations       */
+    --fig-a: #1a5276;            /* dust fraction A (fine, permittivity e1)           */
+    --fig-b: #b8791f;            /* dust fraction B (coarse, permittivity e2)         */
+    --fig-deposit: #2d2d2d;      /* what has already been collected on the wire       */
+    --fig-rule: #dee2e6;
+    --fig-paper: #ffffff;
+
+    /* The solution body is justified 1.35rem serif with an indent on every paragraph
+       (solution_post.ejs:198-222). None of that should reach the figure. */
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+    text-indent: 0;
+    hyphens: none;
+    -webkit-hyphens: none;
+    color: var(--fig-ink);
+    background: var(--fig-paper);
+
+    display: grid;
+    gap: 14px 18px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+        "panel-a"
+        "controls"
+        "panel-b"
+        "panel-c"
+        "caption"
+        "credit";
+
+    max-width: 1100px;
+    margin: 1.6rem auto;
+    padding: 18px 0 16px;
+    border-top: 1px solid var(--fig-rule);
+    border-bottom: 1px solid var(--fig-rule);
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.ss-fig-panel {
+    position: relative;
+    min-width: 0;
+    background: var(--fig-paper);
+}
+
+.ss-fig-panel--a { grid-area: panel-a; aspect-ratio: 1 / 1; }
+.ss-fig-panel--b { grid-area: panel-b; aspect-ratio: 4 / 3; }
+.ss-fig-panel--c { grid-area: panel-c; aspect-ratio: 4 / 3; }
+
+.ss-fig-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+}
+
+.ss-fig-panel--a .ss-fig-canvas { cursor: grab; }
+.ss-fig-panel--a.is-dragging .ss-fig-canvas { cursor: grabbing; }
+
+.ss-fig-canvas:focus-visible {
+    outline: 2px solid var(--fig-a);
+    outline-offset: 2px;
+}
+
+/* Labels that ride on the 3-D scene. Real DOM, so the maths in them is the same
+   server-rendered MathJax as the rest of the page rather than canvas text. */
+.ss-fig-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    padding: 0 3px;
+    background: rgba(255, 255, 255, 0.86);   /* knockout, so a label stays readable over the wireframe */
+    font-size: 13px;
+    line-height: 1.2;
+    white-space: nowrap;
+    pointer-events: none;
+    will-change: transform;
+}
+
+.ss-fig-label--hot { color: var(--fig-hot); }
+.ss-fig-label--muted { color: var(--fig-muted); }
+.ss-fig-label[hidden] { display: none; }
+
+/* The poster carries the figure before hydration and forever if JS never runs. */
+.ss-fig-poster {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.ss-fig.is-live .ss-fig-poster { display: none; }
+
+/* Bottom-right: the panel letter owns the top-left, the legend the bottom-left, and
+   the +V label the top-centre. */
+.ss-fig-hint {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    font-size: 11.5px;
+    color: var(--fig-muted);
+    pointer-events: none;
+    transition: opacity 0.25s linear;
+}
+
+.ss-fig-hint.is-gone { opacity: 0; }
+
+/* ------------------------------------------------------------- controls */
+
+.ss-fig-controls {
+    grid-area: controls;
+    display: grid;
+    gap: 10px 20px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: end;
+}
+
+.ss-fig-control {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: baseline;
+    gap: 2px 10px;
+}
+
+.ss-fig-control > label {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--fig-ink);
+    margin: 0;
+}
+
+.ss-fig-control .ss-fig-value {
+    font-size: 12.5px;
+    color: var(--fig-muted);
+    font-variant-numeric: tabular-nums;
+    justify-self: start;
+}
+
+.ss-fig-control input[type="range"] {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: 260px;
+    height: 20px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.ss-fig-control input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--fig-rule);
+}
+
+.ss-fig-control input[type="range"]::-moz-range-track {
+    height: 2px;
+    background: var(--fig-rule);
+}
+
+.ss-fig-control input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    margin-top: -5.5px;
+    border: none;
+    border-radius: 50%;
+    background: var(--fig-ink);
+}
+
+.ss-fig-control input[type="range"]::-moz-range-thumb {
+    width: 13px;
+    height: 13px;
+    border: none;
+    border-radius: 50%;
+    background: var(--fig-ink);
+}
+
+.ss-fig-control input[type="range"]:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--fig-a);
+    outline-offset: 2px;
+}
+
+.ss-fig-control input[type="range"]:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--fig-a);
+    outline-offset: 2px;
+}
+
+/* Fraction B's two sliders carry its colour in the thumb, so the control and the
+   grains it governs are tied together without a legend lookup. */
+.ss-fig-control--b input[type="range"]::-webkit-slider-thumb { background: var(--fig-b); }
+.ss-fig-control--b input[type="range"]::-moz-range-thumb { background: var(--fig-b); }
+
+.ss-fig-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.ss-fig-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 11px;
+    border: 1px solid var(--fig-rule);
+    border-radius: 6px;
+    background: var(--fig-paper);
+    color: var(--fig-deposit);
+    font: inherit;
+    font-size: 12.5px;
+    cursor: pointer;
+}
+
+.ss-fig-btn:hover { background: #f8f9fa; }
+
+.ss-fig-btn:focus-visible {
+    outline: 2px solid var(--fig-a);
+    outline-offset: 2px;
+}
+
+.ss-fig-btn[aria-pressed="true"] {
+    background: var(--fig-ink);
+    border-color: var(--fig-ink);
+    color: var(--fig-paper);
+}
+
+.ss-fig-btn svg { display: block; }
+
+/* The live answer to parts b and d, kept next to the sliders that produce it. */
+.ss-fig-readout {
+    font-size: 12.5px;
+    color: var(--fig-muted);
+    font-variant-numeric: tabular-nums;
+    align-self: end;
+}
+
+.ss-fig-readout b {
+    color: var(--fig-ink);
+    font-weight: 600;
+}
+
+/* -------------------------------------------------- caption and credit */
+
+.ss-fig-caption {
+    grid-area: caption;
+    margin: 2px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--fig-deposit);
+    text-align: left;
+    text-indent: 0;
+}
+
+.ss-fig-caption b { color: var(--fig-ink); font-weight: 600; }
+
+/* Panel letters inside the caption, matching the ones drawn on the panels. */
+.ss-fig-caption .pl {
+    font-weight: 700;
+    color: var(--fig-ink);
+}
+
+.ss-fig-credit {
+    grid-area: credit;
+    font-size: 12.5px;
+    color: var(--fig-muted);
+}
+
+.ss-fig-credit a {
+    color: #1a5276;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.ss-fig-credit a:hover { text-decoration: underline; }
+
+.ss-fig-credit-sep { margin: 0 0.35rem; }
+
+/* With JS off — or before the script has run — the figure is the poster, the caption and
+   the credit: a complete static figure rather than two blank boxes and dead controls. */
+.ss-fig:not(.is-live) .ss-fig-panel--b,
+.ss-fig:not(.is-live) .ss-fig-panel--c,
+.ss-fig:not(.is-live) .ss-fig-controls,
+.ss-fig:not(.is-live) .ss-fig-hint {
+    display: none;
+}
+
+/* …and the half of the caption that describes those panels goes with them. */
+.ss-fig:not(.is-live) .ss-fig-live-only {
+    display: none;
+}
+
+.ss-fig:not(.is-live) .ss-fig-panel--a {
+    aspect-ratio: 1 / 1;
+    height: auto;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* ---------------------------------------------------------------- desktop */
+
+@media (min-width: 900px) {
+    .ss-fig {
+        grid-template-columns: minmax(0, 58fr) minmax(0, 42fr);
+        grid-template-areas:
+            "panel-a panel-b"
+            "panel-a panel-c"
+            "controls controls"
+            "caption caption"
+            "credit credit";
+    }
+
+    /* Panel a spans both right-hand rows instead of setting its own ratio, so the
+       three panels always share one baseline and one total height. */
+    .ss-fig-panel--a { aspect-ratio: auto; height: 100%; }
+
+    /* Two rows: the three sliders share the full width, the buttons and the live ratio
+       sit beneath them. One row could not hold "Проницаемость ε₂" without wrapping it. */
+    .ss-fig-controls {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px 26px;
+    }
+
+    .ss-fig-buttons {
+        grid-column: 1 / 3;
+        justify-self: start;
+        align-self: center;
+    }
+
+    .ss-fig-readout {
+        grid-column: 3 / -1;
+        justify-self: end;
+        align-self: center;
+    }
+}
+
+@media (max-width: 899px) {
+    .ss-fig-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* Four buttons have to make one row on a 360px screen. */
+    .ss-fig-btn {
+        padding: 0 9px;
+        font-size: 12px;
+    }
+
+    .ss-fig-buttons { gap: 6px; }
+
+    .ss-fig-buttons,
+    .ss-fig-readout {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Someone who asked not to be moved gets the figure paused on arrival; the play
+   button still works, so the animation stays available, just never uninvited. */
+@media (prefers-reduced-motion: reduce) {
+    .ss-fig-hint { transition: none; }
+}
+
+/* The solution page styles <figure> and <figcaption> itself, in an inline <style> that
+   the browser sees after this file (solution_post.ejs:257-264). Those rules are one
+   type-selector more specific than a bare class, so the figure's own box has to say it
+   twice to keep its margins. Scoped, not !important. */
+.content-body .ss-fig {
+    margin: 1.6rem auto;
+    padding: 18px 0 16px;
+}
+
+.content-body .ss-fig-caption {
+    margin: 2px 0 0;
+    text-align: left;
+}

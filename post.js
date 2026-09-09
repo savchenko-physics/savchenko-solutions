@@ -17,6 +17,7 @@ const { isCountable } = require("./botgate");
 const { label: axisLabel, explain: axisExplain, bucketWord, WIDGET_COST_KEYS, WIDGET_REWARD_KEYS } = require("./lib/difficultyAxes");
 const { toRating } = require("./lib/difficultyRating");
 const { ruVotes } = require("./lib/ruPlural");
+const { getFigure, splitAtSolutionHeading } = require("./lib/solutionFigures");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -109,6 +110,12 @@ async function renderPost(req, res) {
         let html = parseMarkdown(fileContents);
         html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
         html = html.replace(/\\\*/g, "*");
+
+        // An interactive figure registered for this problem (lib/solutionFigures.js) is
+        // injected into the body rather than written into posts/, which is the
+        // contributors' copy. The seam is computed here so the template stays logic-free.
+        const figure = getFigure(name);
+        const figureSplit = figure ? splitAtSolutionHeading(html) : null;
 
         const pageRef = name.split(".").slice(0, 2).join(".");
 
@@ -506,6 +513,9 @@ async function renderPost(req, res) {
             userId: req.session.userId || null,
             title: seoTitle,
             content: html,
+            figure,
+            contentBefore: figureSplit ? figureSplit.before : html,
+            contentAfter: figureSplit ? figureSplit.after : "",
             totalViews,
             creationDate,
             alternateFileExists,

@@ -1,0 +1,344 @@
+<%
+/*
+ * partials/figures/precipitator.ejs — the interactive figure for problem 6.6.15,
+ * the electrostatic precipitator. Registered in lib/solutionFigures.js and injected
+ * by post.js immediately after the "Решение" / "Solution" heading.
+ *
+ * Everything mathematical below is written as plain $…$ text: renderMathInHtml runs
+ * over the whole rendered page (post.js:543) and turns it into the same server-side
+ * MathJax SVG as the rest of the solution, so the figure's labels are real TeX at no
+ * cost to the client. Two rules follow from how that pass works (mathRender.js:142):
+ *   - inline math must not cross a line break — renderInlineDollar stops at "\n";
+ *   - never write a bare "<" or ">" outside a tag, in maths or in prose. protect()
+ *     swallows /<[^>]+>/ wholesale, so a stray "<" eats the text up to the next ">"
+ *     along with the tag it lands in. Use &lt; / &gt;; decodeEntities gives TeX the
+ *     raw character back.
+ */
+const isRu = lang === 'ru';
+const t = function (ru, en) { return isRu ? ru : en; };
+const figCfg = {
+    lang: isRu ? 'ru' : 'en',
+    strings: {
+        play: t('Пуск', 'Play'),
+        pause: t('Пауза', 'Pause'),
+        fine: t('тонкая фракция', 'fine fraction'),
+        coarse: t('крупная фракция', 'coarse fraction'),
+        collected: t('осело на нити', 'collected on the wire'),
+        wire: t('нить', 'wire'),
+        tube: t('труба', 'tube'),
+        stronger: t('поле сильнее', 'stronger field'),
+        weaker: t('поле слабее', 'weaker field'),
+        net: t('равнодействующая', 'net force'),
+        axisX: t('радиус', 'radius'),
+        axisY: t('произв. ед.', 'arb. units'),
+        slope: t('наклон', 'slope'),
+        force: t('сила', 'force'),
+        field: t('поле', 'field'),
+        airflow: t('воздух', 'air'),
+        caught: t('уловлено', 'captured'),
+        downloadName: 'savchenko-6.6.15-precipitator.png',
+        creditLine: 'Visualisation: A. Melnichenka & V. Msryan · savchenkosolutions.com · CC BY-SA 4.0',
+        figTitle: t('Рис. 1 | Диэлектрофоретический захват пыли в цилиндрическом электрофильтре',
+                    'Fig. 1 | Dielectrophoretic collection of dust in a cylindrical precipitator')
+    }
+};
+%>
+<figure class="ss-fig" data-ss-figure="precipitator">
+
+    <!-- a — the precipitator itself, orbitable -->
+    <div class="ss-fig-panel ss-fig-panel--a" data-fig-panel="a">
+        <canvas class="ss-fig-canvas" data-fig-canvas="a" tabindex="0" role="img"
+                aria-label="<%= t('Трёхмерная модель электрофильтра: заряженная нить на оси заземлённой трубы, пылинки дрейфуют к нити. Потяните мышью или стрелками, чтобы повернуть.', 'Three-dimensional model of the precipitator: a charged wire on the axis of a grounded tube, with dust grains drifting toward it. Drag, or use the arrow keys, to rotate.') %>"></canvas>
+        <svg class="ss-fig-poster" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" focusable="false">
+          <path d="M 116.0 78.0 L 116.0 322.0 A 84.0 24.0 0 0 0 284.0 322.0 Z" fill="#1a1a2e" fill-opacity="0.035"/>
+          <ellipse cx="200.0" cy="78.0" rx="84.0" ry="24.0" fill="#1a1a2e" fill-opacity="0.035"/>
+          <g fill="none" stroke="#1a1a2e" stroke-width="1">
+            <ellipse cx="200.0" cy="78.0" rx="84.0" ry="24.0" stroke-opacity="0.55"/>
+            <path d="M 116.0 322.0 A 84.0 24.0 0 0 0 284.0 322.0" stroke-opacity="0.55"/>
+            <path d="M 116.0 322.0 A 84.0 24.0 0 0 1 284.0 322.0" stroke-opacity="0.2"/>
+            <path d="M 116.0 78.0 L 116.0 322.0 M 284.0 78.0 L 284.0 322.0" stroke-opacity="0.55"/>
+          </g>
+          <circle cx="222.7" cy="284.0" r="1.45" fill="#1a5276" fill-opacity="0.58"/>
+          <circle cx="230.5" cy="181.6" r="1.45" fill="#1a5276" fill-opacity="0.69"/>
+          <circle cx="161.4" cy="96.1" r="2.30" fill="#b8791f" fill-opacity="0.58"/>
+          <circle cx="169.8" cy="191.9" r="2.30" fill="#b8791f" fill-opacity="0.71"/>
+          <circle cx="198.4" cy="250.3" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="177.0" cy="190.9" r="1.45" fill="#1a5276" fill-opacity="0.75"/>
+          <circle cx="253.7" cy="74.3" r="1.45" fill="#1a5276" fill-opacity="0.60"/>
+          <circle cx="186.4" cy="202.3" r="1.45" fill="#1a5276" fill-opacity="0.59"/>
+          <circle cx="244.1" cy="297.8" r="2.30" fill="#b8791f" fill-opacity="0.59"/>
+          <circle cx="197.9" cy="213.4" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="199.6" cy="250.4" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="158.3" cy="274.8" r="1.45" fill="#1a5276" fill-opacity="0.58"/>
+          <circle cx="219.0" cy="292.8" r="1.45" fill="#1a5276" fill-opacity="0.56"/>
+          <circle cx="156.4" cy="182.3" r="2.30" fill="#b8791f" fill-opacity="0.59"/>
+          <circle cx="264.2" cy="82.1" r="2.30" fill="#b8791f" fill-opacity="0.62"/>
+          <circle cx="143.7" cy="217.6" r="1.45" fill="#1a5276" fill-opacity="0.72"/>
+          <circle cx="195.5" cy="304.1" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="259.6" cy="166.4" r="1.45" fill="#1a5276" fill-opacity="0.67"/>
+          <circle cx="158.8" cy="214.4" r="1.45" fill="#1a5276" fill-opacity="0.63"/>
+          <circle cx="133.2" cy="262.1" r="1.45" fill="#1a5276" fill-opacity="0.64"/>
+          <circle cx="208.7" cy="83.6" r="2.30" fill="#b8791f" fill-opacity="0.56"/>
+          <circle cx="216.7" cy="89.7" r="1.45" fill="#1a5276" fill-opacity="0.60"/>
+          <circle cx="156.8" cy="144.1" r="1.45" fill="#1a5276" fill-opacity="0.71"/>
+          <circle cx="143.1" cy="139.0" r="2.30" fill="#b8791f" fill-opacity="0.61"/>
+          <circle cx="215.9" cy="153.8" r="1.45" fill="#1a5276" fill-opacity="0.67"/>
+          <circle cx="246.2" cy="193.6" r="1.45" fill="#1a5276" fill-opacity="0.64"/>
+          <circle cx="198.0" cy="136.1" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="172.9" cy="201.7" r="2.30" fill="#b8791f" fill-opacity="0.57"/>
+          <circle cx="139.7" cy="120.8" r="1.45" fill="#1a5276" fill-opacity="0.67"/>
+          <circle cx="244.2" cy="278.9" r="2.30" fill="#b8791f" fill-opacity="0.72"/>
+          <circle cx="215.5" cy="76.0" r="2.30" fill="#b8791f" fill-opacity="0.55"/>
+          <circle cx="225.7" cy="214.7" r="2.30" fill="#b8791f" fill-opacity="0.58"/>
+          <circle cx="193.0" cy="270.8" r="2.30" fill="#b8791f" fill-opacity="0.55"/>
+          <circle cx="193.0" cy="279.9" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="247.2" cy="110.3" r="1.45" fill="#1a5276" fill-opacity="0.75"/>
+          <circle cx="182.9" cy="264.7" r="1.45" fill="#1a5276" fill-opacity="0.56"/>
+          <circle cx="152.0" cy="190.3" r="1.45" fill="#1a5276" fill-opacity="0.61"/>
+          <circle cx="173.6" cy="151.3" r="2.30" fill="#b8791f" fill-opacity="0.57"/>
+          <circle cx="137.8" cy="269.2" r="2.30" fill="#b8791f" fill-opacity="0.62"/>
+          <circle cx="159.3" cy="252.6" r="2.30" fill="#b8791f" fill-opacity="0.61"/>
+          <circle cx="165.7" cy="310.0" r="1.45" fill="#1a5276" fill-opacity="0.68"/>
+          <circle cx="207.5" cy="115.8" r="2.30" fill="#b8791f" fill-opacity="0.56"/>
+          <circle cx="142.6" cy="237.7" r="1.45" fill="#1a5276" fill-opacity="0.73"/>
+          <circle cx="232.2" cy="90.1" r="1.45" fill="#1a5276" fill-opacity="0.60"/>
+          <circle cx="214.3" cy="97.7" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="259.9" cy="186.4" r="2.30" fill="#b8791f" fill-opacity="0.71"/>
+          <circle cx="195.8" cy="63.0" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="199.5" cy="204.3" r="2.30" fill="#b8791f" fill-opacity="0.55"/>
+          <circle cx="282.4" cy="319.2" r="1.45" fill="#1a5276" fill-opacity="0.73"/>
+          <circle cx="193.2" cy="276.9" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="192.6" cy="105.9" r="1.45" fill="#1a5276" fill-opacity="0.55"/>
+          <circle cx="209.7" cy="250.8" r="2.30" fill="#b8791f" fill-opacity="0.56"/>
+          <circle cx="121.5" cy="179.6" r="1.45" fill="#1a5276" fill-opacity="0.70"/>
+          <circle cx="235.2" cy="98.9" r="1.45" fill="#1a5276" fill-opacity="0.57"/>
+          <circle cx="155.3" cy="311.4" r="1.45" fill="#1a5276" fill-opacity="0.64"/>
+          <circle cx="176.7" cy="208.5" r="2.30" fill="#b8791f" fill-opacity="0.68"/>
+          <circle cx="228.6" cy="137.8" r="2.30" fill="#b8791f" fill-opacity="0.59"/>
+          <circle cx="217.2" cy="273.1" r="1.45" fill="#1a5276" fill-opacity="0.56"/>
+          <circle cx="193.0" cy="212.6" r="2.30" fill="#b8791f" fill-opacity="0.55"/>
+          <circle cx="269.5" cy="288.6" r="1.45" fill="#1a5276" fill-opacity="0.68"/>
+          <circle cx="248.7" cy="304.9" r="1.45" fill="#1a5276" fill-opacity="0.65"/>
+          <circle cx="217.6" cy="98.7" r="1.45" fill="#1a5276" fill-opacity="0.56"/>
+          <circle cx="207.3" cy="198.9" r="2.30" fill="#b8791f" fill-opacity="0.55"/>
+          <circle cx="260.8" cy="261.8" r="1.45" fill="#1a5276" fill-opacity="0.71"/>
+          <circle cx="225.5" cy="278.4" r="2.30" fill="#b8791f" fill-opacity="0.59"/>
+          <circle cx="159.9" cy="190.8" r="2.30" fill="#b8791f" fill-opacity="0.63"/>
+          <circle cx="254.5" cy="72.9" r="1.45" fill="#1a5276" fill-opacity="0.67"/>
+          <circle cx="267.0" cy="282.1" r="1.45" fill="#1a5276" fill-opacity="0.67"/>
+          <circle cx="124.2" cy="181.3" r="1.45" fill="#1a5276" fill-opacity="0.75"/>
+          <circle cx="184.4" cy="163.2" r="1.45" fill="#1a5276" fill-opacity="0.70"/>
+          <circle cx="138.1" cy="271.0" r="1.45" fill="#1a5276" fill-opacity="0.64"/>
+          <circle cx="279.8" cy="244.8" r="1.45" fill="#1a5276" fill-opacity="0.71"/>
+          <circle cx="214.4" cy="113.7" r="1.45" fill="#1a5276" fill-opacity="0.72"/>
+          <circle cx="219.8" cy="234.0" r="1.45" fill="#1a5276" fill-opacity="0.61"/>
+          <circle cx="155.2" cy="97.4" r="1.45" fill="#1a5276" fill-opacity="0.59"/>
+          <circle cx="234.6" cy="185.5" r="1.45" fill="#1a5276" fill-opacity="0.61"/>
+          <circle cx="193.3" cy="264.8" r="2.30" fill="#b8791f" fill-opacity="0.57"/>
+          <circle cx="130.0" cy="289.9" r="2.30" fill="#b8791f" fill-opacity="0.70"/>
+          <circle cx="265.1" cy="309.0" r="1.45" fill="#1a5276" fill-opacity="0.86"/>
+          <circle cx="226.4" cy="213.7" r="1.45" fill="#1a5276" fill-opacity="0.82"/>
+          <circle cx="194.3" cy="278.7" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="229.9" cy="187.5" r="1.45" fill="#1a5276" fill-opacity="0.93"/>
+          <circle cx="155.9" cy="115.4" r="2.30" fill="#b8791f" fill-opacity="0.80"/>
+          <circle cx="163.9" cy="242.9" r="1.45" fill="#1a5276" fill-opacity="0.91"/>
+          <circle cx="199.2" cy="119.3" r="1.45" fill="#1a5276" fill-opacity="0.95"/>
+          <circle cx="274.5" cy="116.1" r="1.45" fill="#1a5276" fill-opacity="0.84"/>
+          <circle cx="232.0" cy="305.0" r="1.45" fill="#1a5276" fill-opacity="0.93"/>
+          <circle cx="260.2" cy="118.4" r="2.30" fill="#b8791f" fill-opacity="0.87"/>
+          <circle cx="131.9" cy="178.2" r="2.30" fill="#b8791f" fill-opacity="0.84"/>
+          <circle cx="254.7" cy="262.4" r="2.30" fill="#b8791f" fill-opacity="0.82"/>
+          <circle cx="129.6" cy="165.1" r="1.45" fill="#1a5276" fill-opacity="0.82"/>
+          <circle cx="131.3" cy="160.2" r="1.45" fill="#1a5276" fill-opacity="0.80"/>
+          <circle cx="175.8" cy="268.1" r="2.30" fill="#b8791f" fill-opacity="0.89"/>
+          <circle cx="186.0" cy="160.1" r="1.45" fill="#1a5276" fill-opacity="0.92"/>
+          <circle cx="172.6" cy="321.5" r="1.45" fill="#1a5276" fill-opacity="0.91"/>
+          <circle cx="195.1" cy="271.0" r="1.45" fill="#1a5276" fill-opacity="0.86"/>
+          <circle cx="195.8" cy="101.4" r="1.45" fill="#1a5276" fill-opacity="0.95"/>
+          <circle cx="173.1" cy="256.9" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <circle cx="251.9" cy="119.5" r="1.45" fill="#1a5276" fill-opacity="0.90"/>
+          <circle cx="192.2" cy="216.9" r="1.45" fill="#1a5276" fill-opacity="0.95"/>
+          <circle cx="272.6" cy="255.1" r="1.45" fill="#1a5276" fill-opacity="0.78"/>
+          <circle cx="221.6" cy="309.5" r="2.30" fill="#b8791f" fill-opacity="0.87"/>
+          <circle cx="255.4" cy="179.4" r="1.45" fill="#1a5276" fill-opacity="0.79"/>
+          <circle cx="201.0" cy="89.2" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="250.3" cy="99.8" r="1.45" fill="#1a5276" fill-opacity="0.87"/>
+          <circle cx="167.0" cy="195.1" r="1.45" fill="#1a5276" fill-opacity="0.75"/>
+          <circle cx="163.0" cy="336.5" r="1.45" fill="#1a5276" fill-opacity="0.92"/>
+          <circle cx="173.9" cy="215.1" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <circle cx="135.8" cy="190.3" r="2.30" fill="#b8791f" fill-opacity="0.81"/>
+          <circle cx="148.6" cy="304.0" r="1.45" fill="#1a5276" fill-opacity="0.88"/>
+          <circle cx="206.9" cy="89.4" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <circle cx="191.6" cy="264.8" r="1.45" fill="#1a5276" fill-opacity="0.92"/>
+          <circle cx="137.0" cy="134.6" r="2.30" fill="#b8791f" fill-opacity="0.76"/>
+          <circle cx="167.7" cy="238.2" r="1.45" fill="#1a5276" fill-opacity="0.93"/>
+          <circle cx="261.6" cy="226.1" r="1.45" fill="#1a5276" fill-opacity="0.86"/>
+          <circle cx="245.0" cy="291.9" r="1.45" fill="#1a5276" fill-opacity="0.91"/>
+          <circle cx="246.8" cy="108.5" r="1.45" fill="#1a5276" fill-opacity="0.89"/>
+          <circle cx="192.8" cy="259.3" r="1.45" fill="#1a5276" fill-opacity="0.95"/>
+          <circle cx="276.4" cy="104.8" r="2.30" fill="#b8791f" fill-opacity="0.76"/>
+          <circle cx="193.8" cy="165.2" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="171.0" cy="218.4" r="2.30" fill="#b8791f" fill-opacity="0.85"/>
+          <circle cx="184.3" cy="212.2" r="2.30" fill="#b8791f" fill-opacity="0.92"/>
+          <circle cx="199.4" cy="222.9" r="1.45" fill="#1a5276" fill-opacity="0.95"/>
+          <circle cx="196.4" cy="165.1" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="146.4" cy="255.5" r="1.45" fill="#1a5276" fill-opacity="0.84"/>
+          <circle cx="182.4" cy="119.1" r="2.30" fill="#b8791f" fill-opacity="0.81"/>
+          <circle cx="168.4" cy="262.2" r="2.30" fill="#b8791f" fill-opacity="0.93"/>
+          <circle cx="179.6" cy="147.8" r="1.45" fill="#1a5276" fill-opacity="0.84"/>
+          <circle cx="200.0" cy="202.3" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="231.7" cy="242.7" r="2.30" fill="#b8791f" fill-opacity="0.89"/>
+          <circle cx="175.8" cy="325.5" r="2.30" fill="#b8791f" fill-opacity="0.89"/>
+          <circle cx="211.5" cy="237.7" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <circle cx="154.0" cy="237.6" r="1.45" fill="#1a5276" fill-opacity="0.90"/>
+          <circle cx="179.8" cy="144.6" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <circle cx="221.8" cy="174.6" r="1.45" fill="#1a5276" fill-opacity="0.90"/>
+          <circle cx="247.9" cy="308.1" r="1.45" fill="#1a5276" fill-opacity="0.83"/>
+          <circle cx="213.5" cy="155.1" r="2.30" fill="#b8791f" fill-opacity="0.92"/>
+          <circle cx="197.3" cy="208.7" r="2.30" fill="#b8791f" fill-opacity="0.95"/>
+          <circle cx="211.6" cy="221.1" r="1.45" fill="#1a5276" fill-opacity="0.93"/>
+          <circle cx="261.7" cy="185.8" r="2.30" fill="#b8791f" fill-opacity="0.86"/>
+          <circle cx="130.5" cy="136.4" r="1.45" fill="#1a5276" fill-opacity="0.84"/>
+          <circle cx="141.4" cy="179.7" r="2.30" fill="#b8791f" fill-opacity="0.89"/>
+          <circle cx="216.3" cy="280.0" r="1.45" fill="#1a5276" fill-opacity="0.77"/>
+          <circle cx="255.0" cy="131.1" r="1.45" fill="#1a5276" fill-opacity="0.82"/>
+          <circle cx="158.0" cy="249.9" r="1.45" fill="#1a5276" fill-opacity="0.86"/>
+          <circle cx="138.9" cy="103.8" r="1.45" fill="#1a5276" fill-opacity="0.85"/>
+          <circle cx="166.7" cy="307.6" r="2.30" fill="#b8791f" fill-opacity="0.86"/>
+          <circle cx="137.3" cy="222.1" r="1.45" fill="#1a5276" fill-opacity="0.88"/>
+          <circle cx="221.9" cy="112.0" r="1.45" fill="#1a5276" fill-opacity="0.93"/>
+          <circle cx="190.5" cy="168.6" r="1.45" fill="#1a5276" fill-opacity="0.94"/>
+          <g fill="#2d2d2d" fill-opacity="0.55">
+            <circle cx="199.9" cy="313.1" r="1.5"/>
+            <circle cx="206.0" cy="116.7" r="1.5"/>
+            <circle cx="202.9" cy="291.6" r="1.5"/>
+            <circle cx="198.7" cy="322.6" r="1.5"/>
+            <circle cx="199.8" cy="251.6" r="1.5"/>
+            <circle cx="203.8" cy="132.7" r="1.5"/>
+            <circle cx="202.2" cy="272.3" r="1.5"/>
+            <circle cx="197.6" cy="203.0" r="1.5"/>
+            <circle cx="198.4" cy="180.2" r="1.5"/>
+            <circle cx="203.7" cy="165.3" r="1.5"/>
+            <circle cx="202.2" cy="234.8" r="1.5"/>
+            <circle cx="203.5" cy="320.5" r="1.5"/>
+            <circle cx="201.0" cy="83.1" r="1.5"/>
+            <circle cx="199.1" cy="305.6" r="1.5"/>
+            <circle cx="202.8" cy="147.2" r="1.5"/>
+            <circle cx="201.9" cy="102.5" r="1.5"/>
+            <circle cx="195.0" cy="191.8" r="1.5"/>
+            <circle cx="201.6" cy="176.9" r="1.5"/>
+            <circle cx="200.3" cy="310.2" r="1.5"/>
+            <circle cx="197.8" cy="155.3" r="1.5"/>
+            <circle cx="197.2" cy="299.1" r="1.5"/>
+            <circle cx="201.6" cy="94.5" r="1.5"/>
+            <circle cx="198.0" cy="193.8" r="1.5"/>
+            <circle cx="204.8" cy="169.1" r="1.5"/>
+            <circle cx="202.7" cy="259.0" r="1.5"/>
+            <circle cx="203.2" cy="297.5" r="1.5"/>
+            <circle cx="203.6" cy="199.8" r="1.5"/>
+            <circle cx="200.9" cy="88.1" r="1.5"/>
+            <circle cx="200.6" cy="216.0" r="1.5"/>
+            <circle cx="199.8" cy="224.1" r="1.5"/>
+            <circle cx="199.3" cy="99.1" r="1.5"/>
+            <circle cx="198.2" cy="237.0" r="1.5"/>
+            <circle cx="196.1" cy="228.2" r="1.5"/>
+            <circle cx="201.7" cy="152.6" r="1.5"/>
+            <circle cx="205.6" cy="296.2" r="1.5"/>
+            <circle cx="197.7" cy="241.8" r="1.5"/>
+            <circle cx="200.0" cy="205.0" r="1.5"/>
+            <circle cx="202.5" cy="318.2" r="1.5"/>
+            <circle cx="198.8" cy="245.7" r="1.5"/>
+            <circle cx="197.5" cy="226.7" r="1.5"/>
+            <circle cx="201.4" cy="91.9" r="1.5"/>
+            <circle cx="201.0" cy="255.4" r="1.5"/>
+            <circle cx="202.3" cy="218.0" r="1.5"/>
+            <circle cx="199.0" cy="109.9" r="1.5"/>
+            <circle cx="196.0" cy="258.1" r="1.5"/>
+            <circle cx="200.8" cy="298.3" r="1.5"/>
+          </g>
+          <line x1="200.0" y1="38.0" x2="200.0" y2="362.0" stroke="#a93226" stroke-width="2.1"/>
+          <g stroke="#1a1a2e" stroke-opacity="0.6" stroke-width="0.9" fill="none">
+            <path d="M 200.0 78.0 L 268.4 64.1" stroke-dasharray="3 2.5"/>
+          </g>
+          <g font-family="Inter, sans-serif" font-size="13" font-weight="600">
+            <text x="200.0" y="32.0" text-anchor="middle" fill="#a93226">+V</text>
+            <text x="236.2" y="57.1" text-anchor="middle" fill="#1a1a2e" font-weight="500">R<tspan font-size="9.5" dy="3">0</tspan></text>
+            <text x="110.0" y="200.0" text-anchor="end" fill="#1a1a2e" font-weight="500">V<tspan font-weight="400"> = 0</tspan></text>
+          </g>
+        </svg>
+        <span class="ss-fig-label ss-fig-label--hot" data-fig-label="wire" hidden>$+V$</span>
+        <span class="ss-fig-label ss-fig-label--muted" data-fig-label="tube" hidden>$V = 0$</span>
+        <span class="ss-fig-label" data-fig-label="radius" hidden>$R_0$</span>
+        <span class="ss-fig-hint" data-fig-hint><%= t('потяните, чтобы повернуть', 'drag to rotate') %></span>
+    </div>
+
+    <!-- b — why a neutral grain is pulled inward -->
+    <div class="ss-fig-panel ss-fig-panel--b" data-fig-panel="b">
+        <canvas class="ss-fig-canvas" data-fig-canvas="b" role="img"
+                aria-label="<%= t('Поляризованная пылинка в неоднородном поле: у ближней к нити грани поле сильнее, поэтому равнодействующая направлена внутрь.', 'A polarized grain in a non-uniform field: the field is stronger on the face nearer the wire, so the net force points inward.') %>"></canvas>
+    </div>
+
+    <!-- c — the scaling laws, live -->
+    <div class="ss-fig-panel ss-fig-panel--c" data-fig-panel="c">
+        <canvas class="ss-fig-canvas" data-fig-canvas="c" role="img"
+                aria-label="<%= t('Логарифмический график: сила спадает как куб расстояния, поле — как первая степень.', 'Logarithmic plot: the force falls off as the cube of the distance, the field as the first power.') %>"></canvas>
+    </div>
+
+    <div class="ss-fig-controls">
+        <div class="ss-fig-control">
+            <label for="ssfig-v"><%= t('Напряжение', 'Voltage') %> $V$</label>
+            <span class="ss-fig-value" data-fig-value="V">1.00</span>
+            <input type="range" id="ssfig-v" data-fig-input="V" min="0" max="3" step="0.02" value="1">
+        </div>
+
+        <div class="ss-fig-control ss-fig-control--b">
+            <label for="ssfig-eps"><%= t('Проницаемость', 'Permittivity') %> $\varepsilon_2$</label>
+            <span class="ss-fig-value" data-fig-value="eps">6.0</span>
+            <input type="range" id="ssfig-eps" data-fig-input="eps" min="1" max="12" step="0.1" value="6">
+        </div>
+
+        <div class="ss-fig-control ss-fig-control--b">
+            <label for="ssfig-rad"><%= t('Радиусы', 'Radii') %> $R/r$</label>
+            <span class="ss-fig-value" data-fig-value="rad">1.60</span>
+            <input type="range" id="ssfig-rad" data-fig-input="rad" min="1" max="3" step="0.02" value="1.6">
+        </div>
+
+        <div class="ss-fig-buttons">
+            <button type="button" class="ss-fig-btn" data-fig-btn="play" aria-pressed="true">
+                <svg width="9" height="10" viewBox="0 0 9 10" aria-hidden="true" data-fig-glyph="play"><rect x="0" y="0" width="3" height="10" fill="currentColor"/><rect x="6" y="0" width="3" height="10" fill="currentColor"/></svg>
+                <span data-fig-btn-text><%= t('Пауза', 'Pause') %></span>
+            </button>
+            <button type="button" class="ss-fig-btn" data-fig-btn="field" aria-pressed="true"><%= t('Траектории', 'Paths') %></button>
+            <button type="button" class="ss-fig-btn" data-fig-btn="reset"><%= t('Сброс', 'Reset') %></button>
+            <button type="button" class="ss-fig-btn" data-fig-btn="png"><%= t('PNG', 'PNG') %></button>
+        </div>
+
+        <div class="ss-fig-readout">
+            $\varepsilon_1 = 2$, &nbsp;$F_2/F_1 = \frac{(\varepsilon_2-1)(\varepsilon_1+2)}{(\varepsilon_1-1)(\varepsilon_2+2)}\,(R/r)^3 =$
+            <b data-fig-ratio>—</b>
+        </div>
+    </div>
+
+    <figcaption class="ss-fig-caption">
+        <% if (isRu) { %>
+        <b>Рис. 1 | Диэлектрофоретический захват пыли в цилиндрическом электрофильтре.</b>
+        <span class="pl">a</span>, Нить радиуса $r_0$ под потенциалом $+V$ на оси заземлённой трубы радиуса $R_0$; запылённый воздух идёт сверху вниз. Поле $E = V/(x\ln(R_0/r_0))$ спадает как $1/x$, наведённый диполь втягивается туда, где поле сильнее, и пылинка идёт к нити при любом знаке $V$. Показаны две фракции — тонкая ($\varepsilon_1 = 2$, синяя) и крупная ($\varepsilon_2$, радиус $R$, охра). Осевой снос принят пробковым, радиальный дрейф — стоксовым, $\dot{x} = -k/x^3$, что интегрируется точно: $x^4 = x_0^4 - 4kt$<span class="ss-fig-live-only">; четыре сплошные кривые — проинтегрированные по этому закону траектории, по две на фракцию</span>.
+        <span class="ss-fig-live-only"><span class="pl">b</span>, Механизм. У ближней к нити грани поле сильнее, поэтому притяжение наведённого заряда $-q$ пересиливает отталкивание $+q$: равнодействующая $F = p\,\partial E/\partial x &lt; 0$ направлена внутрь.
+        <span class="pl">c</span>, $|F| \propto x^{-3}$ для обеих фракций и $E \propto x^{-1}$ в логарифмических осях; штрихи внизу — текущие радиальные положения пылинок.
+        Ползунки $V$, $\varepsilon_2$ и $R/r$ отвечают пунктам <b>в</b>, <b>б</b> и <b>г</b> условия.</span>
+        <% } else { %>
+        <b>Fig. 1 | Dielectrophoretic collection of dust in a cylindrical precipitator.</b>
+        <span class="pl">a</span>, A wire of radius $r_0$ held at $+V$ on the axis of a grounded tube of radius $R_0$; dust-laden air flows from top to bottom. The field $E = V/(x\ln(R_0/r_0))$ falls off as $1/x$, so the induced dipole is drawn into the stronger field and the grain moves toward the wire whatever the sign of $V$. Two fractions are shown, fine ($\varepsilon_1 = 2$, blue) and coarse ($\varepsilon_2$, radius $R$, ochre). Axial transport is taken as plug flow and the radial drift as Stokes-limited, $\dot{x} = -k/x^3$, which integrates exactly to $x^4 = x_0^4 - 4kt$<span class="ss-fig-live-only">; the four solid curves are trajectories integrated from that law, two per fraction</span>.
+        <span class="ss-fig-live-only"><span class="pl">b</span>, The mechanism. The field is stronger on the face nearer the wire, so the pull on the induced $-q$ beats the push on $+q$: the resultant $F = p\,\partial E/\partial x &lt; 0$ points inward.
+        <span class="pl">c</span>, $|F| \propto x^{-3}$ for both fractions and $E \propto x^{-1}$, on logarithmic axes; the ticks below mark the grains' current radial positions.
+        The $V$, $\varepsilon_2$ and $R/r$ sliders answer parts <b>c</b>, <b>b</b> and <b>d</b> of the problem.</span>
+        <% } %>
+    </figcaption>
+
+    <div class="ss-fig-credit">
+        <%= t('Визуализация', 'Visualisation') %>:
+        <a href="/user/astrosander">@astrosander</a> (Aliaksandr Melnichenka)<span class="ss-fig-credit-sep">&middot;</span><a href="/user/Valter">@Valter</a> (Valter Msryan)
+    </div>
+
+    <script type="application/json" data-fig-config="precipitator"><%- JSON.stringify(figCfg).replace(/</g, '\\u003c') %></script>
+</figure>

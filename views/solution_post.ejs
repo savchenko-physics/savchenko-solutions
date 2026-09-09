@@ -52,6 +52,13 @@
          formulas arrive final, work with JS disabled, and MathJax is NOT downloaded
          here. MathJax loads lazily only if a user comment contains LaTeX. -->
     <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
+
+    <!-- Interactive figure for this problem, if one is registered (lib/solutionFigures.js).
+         Both the stylesheet and the script below are gated on it, so the 1,500 solution
+         pages without a figure are byte-identical to what they were. -->
+    <% if (typeof figure !== 'undefined' && figure) { %>
+    <link rel="stylesheet" href="<%= av(figure.css) %>" />
+    <% } %>
     <script>
     window.MathJax = {
       tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
@@ -1564,7 +1571,13 @@
 
             <!-- Content Body -->
             <div class="content-body">
+                <% if (typeof figure !== 'undefined' && figure) { %>
+                <%- contentBefore %>
+                <%- include('partials/figures/' + figure.id) %>
+                <%- contentAfter %>
+                <% } else { %>
                 <%- content %>
+                <% } %>
             </div>
 
             <!-- Contest quality-judging widget (organizers only, blind evaluation) -->
@@ -3260,6 +3273,9 @@
     </script>
     <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
     <script src="<%= asset('/js/difficulty-vote.js') %>" defer></script>
+    <% if (typeof figure !== 'undefined' && figure) { %>
+    <script src="<%= asset(figure.script) %>" defer></script>
+    <% } %>
     <%- include('default/main_site_search_script') %>
 </body>
 </html>
