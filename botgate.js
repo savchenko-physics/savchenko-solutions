@@ -351,7 +351,17 @@ function impossibleChromeVersion(ua) {
 const BROWSER_CLAIM = /\b(Chrome|CriOS|Firefox|FxiOS|Safari|Edg|EdgA|EdgiOS|OPR|YaBrowser|SamsungBrowser|UCBrowser)\/\d/;
 // Deliberately looser than GENERIC_BOT_UA (a trailing boundary only, so "Discordbot"
 // and "TelegramBot" count): erring here means NOT blocking, which is the safe direction.
-const SELF_IDENTIFIED = /bot\b|crawler|spider|scraper|fetcher|monitoring|preview|\(\+https?:\/\/|compatible;/i;
+// The search engines' helper fetchers (AdsBot, Google-Read-Aloud, Mediapartners,
+// YandexTurbo, MicrosoftPreview) and the page-speed tools (Chrome-Lighthouse, PageSpeed,
+// WebPageTest, GTmetrix) borrow a real Chrome engine token and may omit Accept-Language,
+// so anything that names its maker is treated as self-identified too. A URL or a
+// contact address inside the UA is the crawler convention and counts the same way.
+const SELF_IDENTIFIED = new RegExp([
+    'bot\\b', 'crawler', 'spider', 'scraper', 'fetcher', 'monitoring', 'preview',
+    'Google[- ]', 'Yandex', 'Bing', 'Baidu', 'DuckDuck', 'Applebot', 'Mail\\.RU',
+    'Lighthouse', 'PageSpeed', 'PTST/', 'GTmetrix',
+    '\\(\\+?https?://', 'mailto:', '\\+[\\w.-]+@[\\w.-]+', 'compatible;',
+].join('|'), 'i');
 const PREFETCH_HEADERS = ['sec-purpose', 'purpose', 'x-purpose', 'x-moz'];
 
 function claimsBrowser(ua) {
@@ -423,7 +433,10 @@ function classify(req) {
     }
 
     // Rule 3 — it named itself as something other than a browser.
-    if (AUTOMATION_UA.test(ua)) {
+    // LinkedIn's link previewer announces both "LinkedInBot" and its Apache-HttpClient
+    // engine in one string; the crawler name wins, so a share on LinkedIn still gets its
+    // card. Anything else that ships an HTTP-library name is exactly what this is for.
+    if (AUTOMATION_UA.test(ua) && !/LinkedInBot/i.test(ua)) {
         return { cls: CLASS.BLOCK, rule: 3, reasons: ['automation-client'] };
     }
 
