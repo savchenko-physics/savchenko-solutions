@@ -82,11 +82,6 @@
 
     var params = { V: 1, eps2: 6, rad: 1.6 };
 
-    /* Force ratio between the two fractions: the answer to parts (b) and (d). */
-    function forceRatio() {
-        return (K(params.eps2) / K(EPS1)) * Math.pow(params.rad, 3);
-    }
-
     /* Radial drift constant. The grain is overdamped in air, so Stokes drag balances
        the dielectrophoretic force and ρ̇ = −k/ρ³ with k ∝ a²·K(ε)·V². Note a² here and
        a³ in the force itself — drag also scales with the radius. */
@@ -185,11 +180,16 @@
        offscreen canvases: the variety is free at draw time, and blitting a sprite is
        cheaper than tessellating a path per grain. */
     var SHAPES = 7;
-    var RAMP = 9;                            // colour steps from the tube wall to the wire
+    var RAMP = 14;                           // colour steps from the tube wall to the wire
+    var RAMP_GAMMA = 0.85;                   /* Grains are seeded uniformly over the
+       cross-section, so their density runs as ρ and most of them sit in the outer half of
+       the tube. Straight 1 − ρ therefore spent the whole population in the blue end of the
+       scale; this leans it warm just enough that the wall is blue, mid-tube magenta and
+       the last third properly red. */
     var SPRITE_PX = 26;
-    var COLD = "#2b6cd4";                    // at the wall, where E is weakest
-    var WARM = "#a03bb8";
-    var HOTC = "#e8232f";                    // at the wire, where E blows up
+    var COLD = "#0a3fd6";                    // at the wall, where E is weakest
+    var WARM = "#b41cbe";                    // a narrow magenta so blue→red keeps its chroma
+    var HOTC = "#f5170c";                    // at the wire, where E blows up
     var sprites = null;
     var rampLut = new Uint8Array(256);
 
@@ -203,15 +203,17 @@
                         Math.round(A[2] + (B[2] - A[2]) * t) + ")";
     }
 
-    /* Cold to hot through violet: a straight blue-to-red interpolation goes through a
-       muddy grey in the middle and loses the ordering. */
+    /* Cold to hot. A straight blue-to-red interpolation runs through a muddy grey in the
+       middle and loses the ordering, so it goes by way of magenta — placed early, at t =
+       0.4, so the second half of the scale is spent getting properly red rather than
+       lingering in purple. */
     function rampColor(t) {
-        return t < 0.5 ? mixHex(COLD, WARM, t * 2) : mixHex(WARM, HOTC, (t - 0.5) * 2);
+        return t < 0.4 ? mixHex(COLD, WARM, t / 0.4) : mixHex(WARM, HOTC, (t - 0.4) / 0.6);
     }
 
     function buildRampLut() {
         for (var i = 0; i < 256; i++) {
-            var t = 1 - i / 255;                       // 0 at the tube wall, 1 at the wire
+            var t = Math.pow(1 - i / 255, RAMP_GAMMA);   // 0 at the tube wall, 1 at the wire
             rampLut[i] = Math.min(RAMP - 1, (t * RAMP) | 0);
         }
     }
@@ -543,7 +545,7 @@
                 if (prev) {
                     /* One short stroke per step, coloured by where the grain is: the path
                        reddens as it closes on the wire, exactly as the grains do. */
-                    ctx.strokeStyle = rampColor(1 - (rho + lastRho) / 2);
+                    ctx.strokeStyle = rampColor(Math.pow(1 - (rho + lastRho) / 2, RAMP_GAMMA));
                     ctx.beginPath();
                     ctx.moveTo(prev.x, prev.y);
                     ctx.lineTo(pt.x, pt.y);
@@ -553,7 +555,7 @@
                 lastRho = rho;
             }
             if (prev) {
-                ctx.fillStyle = rampColor(1 - lastRho);
+                ctx.fillStyle = rampColor(Math.pow(1 - lastRho, RAMP_GAMMA));
                 ctx.beginPath();
                 ctx.arc(prev.x, prev.y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -1185,7 +1187,6 @@
     var outV = root.querySelector('[data-fig-value="V"]');
     var outE = root.querySelector('[data-fig-value="eps"]');
     var outR = root.querySelector('[data-fig-value="rad"]');
-    var outRatio = root.querySelector("[data-fig-ratio]");
     var btnPlay = root.querySelector('[data-fig-btn="play"]');
     var btnField = root.querySelector('[data-fig-btn="field"]');
     var btnReset = root.querySelector('[data-fig-btn="reset"]');
@@ -1200,8 +1201,6 @@
         if (outV) outV.textContent = params.V.toFixed(2);
         if (outE) outE.textContent = params.eps2.toFixed(1);
         if (outR) outR.textContent = params.rad.toFixed(2);
-        var r = forceRatio();
-        if (outRatio) outRatio.textContent = r >= 100 ? r.toFixed(0) : r.toFixed(1);
         dirtyB = true;
         dirtyC = true;
         needsDraw = true;
