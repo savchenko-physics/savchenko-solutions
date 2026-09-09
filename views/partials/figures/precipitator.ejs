@@ -31,8 +31,9 @@ const figCfg = {
         axisX: t('радиус', 'radius'),
         axisX: t('расстояние до нити', 'distance from the wire'),
         axisY: t('сила и поле, у стенки = 1', 'force and field, wall = 1'),
-        cTitle: t('чем ближе к нити, тем сильнее поле и больше сила',
-                  'closer to the wire: stronger field, larger force'),
+        /* Named so the tie to panel a is explicit: these bars are a live census of the
+           very grains falling in the tube, counted by how far out they are. */
+        hist: t('пылинки из a) прямо сейчас', 'the grains in a), right now'),
         slope: t('наклон', 'slope'),
         force: t('сила', 'force'),
         field: t('поле', 'field'),
@@ -284,7 +285,8 @@ const figCfg = {
     <!-- c — the scaling laws, live -->
     <div class="ss-fig-panel ss-fig-panel--c" data-fig-panel="c">
         <canvas class="ss-fig-canvas" data-fig-canvas="c" role="img"
-                aria-label="<%= t('Логарифмический график: сила спадает как куб расстояния, поле — как первая степень.', 'Logarithmic plot: the force falls off as the cube of the distance, the field as the first power.') %>"></canvas>
+                aria-label="<%= t('Логарифмический график: сила спадает как куб расстояния, поле как первая степень.', 'Logarithmic plot: the force falls off as the cube of the distance, the field as the first power.') %>"></canvas>
+        <div class="ss-fig-ptitle"><%= t('сила растёт как', 'the force grows as') %> $1/x^3$, <%= t('поле как', 'the field as') %> $1/x$</div>
     </div>
 
     <div class="ss-fig-controls">
@@ -323,13 +325,13 @@ const figCfg = {
         <b>Рис. 1. Диэлектрофоретический захват пыли в цилиндрическом электрофильтре.</b>
         <span class="pl">a</span>, Нить под потенциалом $+V$ на оси заземлённой трубы радиуса $R_0$, запылённый воздух идёт сверху вниз. Поле $E \propto 1/x$ у нити сильнее, поэтому наведённый диполь втягивается к ней при любом знаке $V$. Размером точки показан размер пылинки, цветом сила поля в её месте; сплошные кривые показывают расчётные траектории.
         <span class="ss-fig-live-only"><span class="pl">b</span>, У ближней к нити грани поле сильнее, поэтому притяжение наведённого заряда $-q$ пересиливает отталкивание $+q$, и равнодействующая $F = p\,\partial E/\partial x &lt; 0$ направлена внутрь.
-        <span class="pl">c</span>, Сила спадает как $x^{-3}$, поле как $x^{-1}$; вертикальный разрыв между $F_1$ и $F_2$ и есть ответ пунктов б и г.
+        <span class="pl">c</span>, Сила и поле в долях от своего значения у стенки. Обе силы уходят вверх за край задолго до нити: $F \propto x^{-3}$ против $E \propto x^{-1}$. Отношение $F_2/F_1$ постоянно и есть ответ пунктов б и г.
         Ползунки $V$, $\varepsilon_2$ и $R/r$ отвечают пунктам в, б и г.</span>
         <% } else { %>
         <b>Fig. 1. Dielectrophoretic collection of dust in a cylindrical precipitator.</b>
         <span class="pl">a</span>, A wire at $+V$ on the axis of a grounded tube of radius $R_0$, with dust-laden air flowing downward. The field $E \propto 1/x$ is strongest at the wire, so the induced dipole is drawn to it whatever the sign of $V$. Dot size shows grain size, colour shows the field strength where the grain sits; the solid curves are computed trajectories.
         <span class="ss-fig-live-only"><span class="pl">b</span>, The field is stronger on the face nearer the wire, so the pull on the induced $-q$ beats the push on $+q$ and the resultant $F = p\,\partial E/\partial x &lt; 0$ points inward.
-        <span class="pl">c</span>, The force falls as $x^{-3}$, the field as $x^{-1}$; the vertical gap between $F_1$ and $F_2$ is the answer to parts b and d.
+        <span class="pl">c</span>, Force and field as multiples of their value at the wall. Both forces leave the top of the panel well before the wire: $F \propto x^{-3}$ against $E \propto x^{-1}$. The ratio $F_2/F_1$ is constant and is the answer to parts b and d.
         The $V$, $\varepsilon_2$ and $R/r$ sliders answer parts c, b and d.</span>
         <% } %>
     </figcaption>
