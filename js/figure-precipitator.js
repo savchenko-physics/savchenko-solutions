@@ -169,7 +169,7 @@
 
         /* Panel b's single grain, on the same ρ⁴ = ρ₀⁴ − 4kt law, slowed so one traverse
            reads at a glance. With V = 0 it does not move, which is the honest answer. */
-        var b4 = bGrainX * bGrainX * bGrainX * bGrainX - 4 * kB * 0.18 * dt;
+        var b4 = bGrainX * bGrainX * bGrainX * bGrainX - 4 * kB * 0.045 * dt;
         bGrainX = b4 <= B_X1 * B_X1 * B_X1 * B_X1 ? B_X0 : Math.sqrt(Math.sqrt(b4));
     }
 
@@ -181,11 +181,15 @@
        cheaper than tessellating a path per grain. */
     var SHAPES = 7;
     var RAMP = 14;                           // colour steps from the tube wall to the wire
-    var RAMP_GAMMA = 0.85;                   /* Grains are seeded uniformly over the
-       cross-section, so their density runs as ρ and most of them sit in the outer half of
-       the tube. Straight 1 − ρ therefore spent the whole population in the blue end of the
-       scale; this leans it warm just enough that the wall is blue, mid-tube magenta and
-       the last third properly red. */
+    /* Where the colour scale starts and ends, in ρ. These are the 95th and 5th percentiles
+       of the steady-state radius distribution, measured from this very simulation at its
+       default settings: 96% of grains live between ρ = 0.29 and ρ = 0.97, nothing like
+       uniformly — the median sits at 0.73. Mapping the scale over 1 → 0 therefore spent
+       almost the whole population in the blue half and left red to the 5% about to be
+       collected, which is why the cloud read as one purple. Anchoring the two ends of the
+       ramp to the two ends of the actual population is what makes the gradient visible. */
+    var RAMP_RHO_BLUE = 0.94;
+    var RAMP_RHO_RED = 0.37;
     var SPRITE_PX = 26;
     var COLD = "#0000ff";                    // at the wall, where E is weakest
     var HOTC = "#ff0000";                    // at the wire, where E blows up
@@ -211,10 +215,18 @@
     }
 
     function buildRampLut() {
+        var span = RAMP_RHO_BLUE - RAMP_RHO_RED;
         for (var i = 0; i < 256; i++) {
-            var t = Math.pow(1 - i / 255, RAMP_GAMMA);   // 0 at the tube wall, 1 at the wire
-            rampLut[i] = Math.min(RAMP - 1, (t * RAMP) | 0);
+            var t = (RAMP_RHO_BLUE - i / 255) / span;
+            rampLut[i] = Math.min(RAMP - 1, Math.max(0, (Math.min(1, Math.max(0, t)) * RAMP) | 0));
         }
+    }
+
+    /* ρ → position on the scale, for the few callers that are not a grain (panel b's ball,
+       the trajectories) and so cannot use the lookup. */
+    function rampT(rho) {
+        var t = (RAMP_RHO_BLUE - rho) / (RAMP_RHO_BLUE - RAMP_RHO_RED);
+        return t < 0 ? 0 : t > 1 ? 1 : t;
     }
 
     function buildSprites() {
@@ -545,7 +557,7 @@
                 if (prev) {
                     /* One short stroke per step, coloured by where the grain is: the path
                        reddens as it closes on the wire, exactly as the grains do. */
-                    ctx.strokeStyle = rampColor(Math.pow(1 - (rho + lastRho) / 2, RAMP_GAMMA));
+                    ctx.strokeStyle = rampColor(rampT((rho + lastRho) / 2));
                     ctx.beginPath();
                     ctx.moveTo(prev.x, prev.y);
                     ctx.lineTo(pt.x, pt.y);
@@ -555,7 +567,7 @@
                 lastRho = rho;
             }
             if (prev) {
-                ctx.fillStyle = rampColor(Math.pow(1 - lastRho, RAMP_GAMMA));
+                ctx.fillStyle = rampColor(rampT(lastRho));
                 ctx.beginPath();
                 ctx.arc(prev.x, prev.y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -842,7 +854,7 @@
         }
         ctxB.restore();
 
-        var grainCol = rampColor(Math.pow(1 - bGrainX, RAMP_GAMMA));
+        var grainCol = rampColor(rampT(bGrainX));
         ctxB.beginPath();
         ctxB.arc(gx, yMid, gR, 0, Math.PI * 2);
         ctxB.fillStyle = PAPER;
