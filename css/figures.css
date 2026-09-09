@@ -147,7 +147,7 @@
 
 .ss-fig-control > label {
     font-size: 1em;
-    font-weight: 600;
+    font-weight: 400;
     color: var(--fig-ink);
     margin: 0;
 }
@@ -264,11 +264,13 @@
     text-indent: 0;
 }
 
-.ss-fig-caption b { color: var(--fig-ink); font-weight: 600; }
+/* The caption is set in one weight throughout; <b> in the markup marks the lead-in
+   and the panel letters structurally, and is left to the colour to carry. */
+.ss-fig-caption b { color: var(--fig-ink); font-weight: 400; }
 
 /* Panel letters inside the caption, matching the ones drawn on the panels. */
 .ss-fig-caption .pl {
-    font-weight: 700;
+    font-weight: 400;
     color: var(--fig-ink);
 }
 
@@ -281,7 +283,6 @@
 .ss-fig-credit a {
     color: #1a5276;
     text-decoration: none;
-    font-weight: 500;
 }
 
 .ss-fig-credit a:hover { text-decoration: underline; }

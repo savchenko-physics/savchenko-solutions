@@ -29,13 +29,16 @@ const figCfg = {
         weaker: t('поле слабее', 'weaker field'),
         net: t('равнодействующая', 'net force'),
         axisX: t('радиус', 'radius'),
-        axisY: t('во сколько раз больше, чем у стенки', 'times its value at the wall'),
+        axisX: t('расстояние до нити', 'distance from the wire'),
+        axisY: t('сила и поле, у стенки = 1', 'force and field, wall = 1'),
+        cTitle: t('чем ближе к нити, тем сильнее поле и больше сила',
+                  'closer to the wire: stronger field, larger force'),
         slope: t('наклон', 'slope'),
         force: t('сила', 'force'),
         field: t('поле', 'field'),
         airflow: t('воздух', 'air'),
         settled: t('осело', 'settled'),
-        ramp: t('слабое поле → сильное', 'weak field → strong'),
+        ramp: t('поле от слабого к сильному', 'field from weak to strong'),
         downloadName: 'savchenko-6.6.15-precipitator.png',
         creditLine: 'Visualisation: A. Melnichenka & V. Msryan · savchenkosolutions.com · CC BY-SA 4.0',
         figTitle: t('Рис. 1 | Диэлектрофоретический захват пыли в цилиндрическом электрофильтре',
@@ -260,7 +263,7 @@ const figCfg = {
           <g stroke="#1a1a2e" stroke-opacity="0.6" stroke-width="0.9" fill="none">
             <path d="M 200.0 78.0 L 268.4 64.1" stroke-dasharray="3 2.5"/>
           </g>
-          <g font-family="Latin Modern Roman, CMU Serif, serif" font-size="18" font-weight="600">
+          <g font-family="Latin Modern Roman, CMU Serif, serif" font-size="18" font-weight="400">
             <text x="200.0" y="32.0" text-anchor="middle" fill="#e5194b">+V</text>
             <text x="236.2" y="57.1" text-anchor="middle" fill="#1a1a2e" font-weight="500">R<tspan font-size="11" dy="3.5">0</tspan></text>
             <text x="110.0" y="200.0" text-anchor="end" fill="#1a1a2e" font-weight="500">V<tspan font-weight="400"> = 0</tspan></text>
@@ -320,13 +323,13 @@ const figCfg = {
         <b>Рис. 1 | Диэлектрофоретический захват пыли в цилиндрическом электрофильтре.</b>
         <span class="pl">a</span>, Нить радиуса $r_0$ под потенциалом $+V$ на оси заземлённой трубы радиуса $R_0$; запылённый воздух идёт сверху вниз. Поле $E = V/(x\ln(R_0/r_0))$ спадает как $1/x$, наведённый диполь втягивается туда, где поле сильнее, и пылинка идёт к нити при любом знаке $V$. Показаны пылинки двух размеров — мелкие ($\varepsilon_1 = 2$) и крупные ($\varepsilon_2$, радиус $R$); в <span class="pl">a</span> размер точки — это размер пылинки, а цвет — сила поля в том месте, где она сейчас: холодный синий у стенки, горячий красный у нити. Осевой снос принят пробковым, радиальный дрейф — стоксовым, $\dot{x} = -k/x^3$, что интегрируется точно: $x^4 = x_0^4 - 4kt$<span class="ss-fig-live-only">; четыре сплошные кривые — проинтегрированные по этому закону траектории, по две на каждый размер</span>.
         <span class="ss-fig-live-only"><span class="pl">b</span>, Механизм. У ближней к нити грани поле сильнее, поэтому притяжение наведённого заряда $-q$ пересиливает отталкивание $+q$: равнодействующая $F = p\,\partial E/\partial x &lt; 0$ направлена внутрь.
-        <span class="pl">c</span>, $|F| \propto x^{-3}$ для тех и других и $E \propto x^{-1}$ в логарифмических осях; штрихи внизу — текущие радиальные положения пылинок.
+        <span class="pl">c</span>, То же в числах, в логарифмических осях: сила растёт как $x^{-3}$ для пылинок обоих размеров (наклон $-3$), поле — как $x^{-1}$ (наклон $-1$). Обе величины отложены в долях от своего значения у стенки трубы, так что вертикальный разрыв между $F_1$ и $F_2$ и есть ответ пунктов б и г.
         Ползунки $V$, $\varepsilon_2$ и $R/r$ отвечают пунктам <b>в</b>, <b>б</b> и <b>г</b> условия.</span>
         <% } else { %>
         <b>Fig. 1 | Dielectrophoretic collection of dust in a cylindrical precipitator.</b>
         <span class="pl">a</span>, A wire of radius $r_0$ held at $+V$ on the axis of a grounded tube of radius $R_0$; dust-laden air flows from top to bottom. The field $E = V/(x\ln(R_0/r_0))$ falls off as $1/x$, so the induced dipole is drawn into the stronger field and the grain moves toward the wire whatever the sign of $V$. Grains of two sizes are shown: small ($\varepsilon_1 = 2$) and large ($\varepsilon_2$, radius $R$); in <span class="pl">a</span> the dot size is the grain size and the colour is the field strength where it currently sits — cold blue at the wall, hot red at the wire. Axial transport is taken as plug flow and the radial drift as Stokes-limited, $\dot{x} = -k/x^3$, which integrates exactly to $x^4 = x_0^4 - 4kt$<span class="ss-fig-live-only">; the four solid curves are trajectories integrated from that law, two per size</span>.
         <span class="ss-fig-live-only"><span class="pl">b</span>, The mechanism. The field is stronger on the face nearer the wire, so the pull on the induced $-q$ beats the push on $+q$: the resultant $F = p\,\partial E/\partial x &lt; 0$ points inward.
-        <span class="pl">c</span>, $|F| \propto x^{-3}$ for both sizes and $E \propto x^{-1}$, on logarithmic axes; the ticks below mark the grains' current radial positions.
+        <span class="pl">c</span>, The same in numbers, on logarithmic axes: the force grows as $x^{-3}$ for grains of both sizes (slope $-3$), the field as $x^{-1}$ (slope $-1$). Both are plotted as multiples of their own value at the tube wall, so the vertical gap between $F_1$ and $F_2$ is the answer to parts b and d.
         The $V$, $\varepsilon_2$ and $R/r$ sliders answer parts <b>c</b>, <b>b</b> and <b>d</b> of the problem.</span>
         <% } %>
     </figcaption>

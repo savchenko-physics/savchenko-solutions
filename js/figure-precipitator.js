@@ -380,7 +380,7 @@
     function word(t, px, color, weight) { return { t: t, f: (weight || 400) + " " + (px * TXT) + "px " + BODY, c: color }; }
 
     function panelLetter(ctx, letter) {
-        ctx.font = "700 " + 15 * TXT + "px " + BODY;
+        ctx.font = "400 " + 15 * TXT + "px " + BODY;
         ctx.fillStyle = INK;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -635,7 +635,7 @@
             ctx.fill();
             drawRuns(ctx, x + 14 * TXT, y, [
                 word(rows[i].label + " · ", 12, MUTED),
-                word((S.settled || "settled") + " " + Math.round(rows[i].eff * 100) + "%", 12, INK, 700)
+                word((S.settled || "settled") + " " + Math.round(rows[i].eff * 100) + "%", 12, INK)
             ], "left");
             y += 17 * TXT;
         }
@@ -842,22 +842,23 @@
         }
         ctxB.restore();
 
+        var grainCol = rampColor(Math.pow(1 - bGrainX, RAMP_GAMMA));
         ctxB.beginPath();
         ctxB.arc(gx, yMid, gR, 0, Math.PI * 2);
         ctxB.fillStyle = PAPER;
         ctxB.fill();
-        ctxB.fillStyle = COL_B;
-        ctxB.globalAlpha = 0.10;
+        ctxB.fillStyle = grainCol;
+        ctxB.globalAlpha = 0.13;
         ctxB.fill();
         ctxB.globalAlpha = 1;
-        ctxB.strokeStyle = COL_B;
-        ctxB.lineWidth = 1.4;
+        ctxB.strokeStyle = grainCol;
+        ctxB.lineWidth = 1.6;
         ctxB.stroke();
 
         /* Induced bound charge: − on the face toward the wire, + on the far face. */
         ctxB.textAlign = "center";
         ctxB.textBaseline = "middle";
-        ctxB.font = "700 " + 14 * TXT + "px " + BODY;
+        ctxB.font = "400 " + 14 * TXT + "px " + BODY;
         ctxB.fillStyle = INK;
         for (var k = -1; k <= 1; k++) {
             var ang = k * 0.66;
@@ -931,14 +932,13 @@
     var C_XMIN = 0.05, C_XMAX = 1, C_YMIN = -1, C_YMAX = 7;
     var cCv = null, cStatic = null, dirtyC = true;
     var cGeom = { padL: 0, padT: 0, pw: 0, ph: 0, lx0: 0, lx1: 0 };
-    var cHistA = new Float32Array(46), cHistB = new Float32Array(46), cHistMax = 1;
 
     function buildPanelC(w, h) {
         if (!cCv) cCv = document.createElement("canvas");
         var g = layerFor(cCv, w, h);
         panelLetter(g, "c");
 
-        var padL = 52 * TXT, padR = 14 * TXT, padT = 26 * TXT, padB = 52 * TXT;
+        var padL = 52 * TXT, padR = 14 * TXT, padT = 48 * TXT, padB = 52 * TXT;
         var pw = w - padL - padR, ph = h - padT - padB;
         var lx0 = Math.log10(C_XMIN), lx1 = Math.log10(C_XMAX);
         cGeom.padL = padL; cGeom.padT = padT; cGeom.pw = pw; cGeom.ph = ph;
@@ -969,12 +969,22 @@
                 [word("10", 12, MUTED), { t: String(d), f: 9 * TXT + "px " + BODY, c: MUTED, dy: -4.5 * TXT }], "right");
         }
 
+        /* A one-line statement of what the panel is for. The slope triangles below
+           quantify it; this says in words what they are quantifying. Its length depends on
+           the translation, so it is fitted to the panel rather than trusted to fit. */
+        var title = S.cTitle || "closer to the wire: stronger field, larger force";
+        var avail = w - 20 * TXT - padR;
+        var ts = 12;
+        while (ts > 8.5 && measure(g, 400 + " " + ts * TXT + "px " + BODY, title) > avail) ts -= 0.5;
+        drawRuns(g, 20 * TXT, 15 * TXT, [word(title, ts, MUTED)], "left");
+
         drawRuns(g, padL + pw / 2, padT + ph + 32 * TXT,
-            [sym("x", 13, INK), word("/", 13, INK), sym("R", 13, INK), sub("0", 13, INK)], "center");
+            [word((S.axisX || "distance from the wire") + ",  ", 12.5, INK),
+             sym("x", 13, INK), word("/", 13, INK), sym("R", 13, INK), sub("0", 13, INK)], "center");
         g.save();
         g.translate(13 * TXT, padT + ph / 2);
         g.rotate(-Math.PI / 2);
-        drawRuns(g, 0, 0, [word(S.axisY || "relative to the wall", 12, MUTED)], "center");
+        drawRuns(g, 0, 0, [word(S.axisY || "force and field, wall = 1", 12, MUTED)], "center");
         g.restore();
 
         function plot(fn, color, width, dash, alpha) {
@@ -1019,7 +1029,7 @@
             g.moveTo(xA, yA); g.lineTo(xB, yA); g.lineTo(xB, yC2);
             g.stroke();
             g.restore();
-            drawRuns(g, (xA + xB) / 2, yA - 7 * TXT, [word(label, 12, color, 700)], "center");
+            drawRuns(g, (xA + xB) / 2, yA - 7 * TXT, [word(label, 12, color)], "center");
         }
         slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A, "−3");
         slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC, "−1");
@@ -1041,43 +1051,11 @@
         dirtyC = false;
     }
 
-    /* Where the grains actually are. Recounting 2400 of them is the only per-frame cost in
-       this panel, and the distribution is a slow statistic, so it is refreshed a few times
-       a second rather than every frame. */
-    function recountHistogram() {
-        var nb = cHistA.length, lx0 = cGeom.lx0, lx1 = cGeom.lx1, k = nb / (lx1 - lx0);
-        cHistA.fill(0); cHistB.fill(0);
-        var mx = 1;
-        for (var q = 0; q < nActive; q++) {
-            var rr = pr[q];
-            if (rr < C_XMIN) continue;
-            var bi = ((Math.log(rr) * Math.LOG10E - lx0) * k) | 0;
-            if (bi < 0) bi = 0; else if (bi >= nb) bi = nb - 1;
-            if (psp[q]) { if (++cHistB[bi] > mx) mx = cHistB[bi]; }
-            else { if (++cHistA[bi] > mx) mx = cHistA[bi]; }
-        }
-        cHistMax = mx;
-    }
-
     function drawC(w, h) {
         if (dirtyC || !cCv) buildPanelC(w, h);
         ctxC.clearRect(0, 0, w, h);
         if (!cStatic) return;
         ctxC.drawImage(cCv, 0, 0, w, h);
-
-        var nb = cHistA.length, padL = cGeom.padL, pw = cGeom.pw;
-        var base = cGeom.padT + cGeom.ph, hMax = 16 * TXT, bw = pw / nb;
-        for (var sp = 0; sp < 2; sp++) {
-            var arr = sp ? cHistB : cHistA;
-            ctxC.fillStyle = sp ? COL_B : COL_A;
-            ctxC.globalAlpha = 0.45;
-            for (var q = 0; q < nb; q++) {
-                if (!arr[q]) continue;
-                var bh = (arr[q] / cHistMax) * hMax;
-                ctxC.fillRect(padL + q * bw, base - bh, Math.max(1, bw - 0.6), bh);
-            }
-        }
-        ctxC.globalAlpha = 1;
     }
 
     /* -------------------------------------------------------------------- export */
@@ -1146,7 +1124,7 @@
             g.textAlign = "left";
             g.textBaseline = "alphabetic";
             g.fillStyle = INK;
-            g.font = "700 " + 13.5 * TXT * scale + "px " + BODY;
+            g.font = "400 " + 13.5 * TXT * scale + "px " + BODY;
             g.fillText(S.figTitle || "", pad * scale, (totalH - foot + 18) * scale);
             g.fillStyle = MUTED;
             g.font = 400 + " " + 11.5 * TXT * scale + "px " + BODY;
@@ -1360,7 +1338,7 @@
        rather than a stuttering figure; it climbs back when there is headroom. Measured on
        a median of recent frames so one slow frame — a webfont landing, a GC — cannot
        ratchet the count down. */
-    var costs = [8, 8, 8, 8, 8, 8, 8], costAt = 0, adaptAt = 0, lastHist = 0;
+    var costs = [8, 8, 8, 8, 8, 8, 8], costAt = 0, adaptAt = 0;
 
     function adapt(cost, ts) {
         costs[costAt = (costAt + 1) % costs.length] = cost;
@@ -1387,10 +1365,7 @@
         if (playing && dt > 0) step(dt);
         drawA(sizeA.w, sizeA.h);
         drawB(sizeB.w, sizeB.h);
-        /* The radial distribution is a slow statistic; recounting every grain 50 times a
-           second bought nothing a reader could see. */
-        if (dirtyC || ts - lastHist > 130) { recountHistogram(); lastHist = ts; }
-        drawC(sizeC.w, sizeC.h);
+        if (dirtyC) drawC(sizeC.w, sizeC.h);   // nothing in panel c moves on its own
         adapt(performance.now() - t0, ts);
     }
 
@@ -1414,7 +1389,6 @@
         buildSprites();
         layout();
         syncReadout();
-        recountHistogram();
         root.classList.add("is-live");
         drawA(sizeA.w, sizeA.h);
         drawB(sizeB.w, sizeB.h);
@@ -1428,7 +1402,6 @@
         Promise.all([
             document.fonts.load('16px "Latin Modern Roman"', "Fx0"),
             document.fonts.load('italic 16px "Latin Modern Roman"', "Fx0"),
-            document.fonts.load('700 16px "Latin Modern Roman"', "Fx0"),
             document.fonts.load('16px "CMU Serif"', "пылинки")
         ]).catch(function () { /* a missing face just means the fallback stack */ })
           .then(function () { textCache.clear(); layout(); });
