@@ -29,6 +29,8 @@
   <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
   <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+  <!-- Server-rendered statement maths: MathJax's SVG rules + the Cyrillic fallback font -->
+  <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
   <link
     rel="stylesheet"
     href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css"

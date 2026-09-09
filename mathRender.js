@@ -19,15 +19,85 @@ const { liteAdaptor } = require('mathjax-full/js/adaptors/liteAdaptor.js');
 const { RegisterHTMLHandler } = require('mathjax-full/js/handlers/html.js');
 const { AllPackages } = require('mathjax-full/js/input/tex/AllPackages.js');
 
+// ── Glyphs the TeX font lacks ──────────────────────────────────────────────────
+// MathJax's TeX font has no Cyrillic, and units and subscripts sit inside the maths in
+// nearly every Russian solution ($10\,кОм$, $v_{ср}$), so those letters become SVG <text>
+// in a fallback font. In a browser MathJax measures that text; here the lite adaptor can
+// only guess 0.6 em per character, in whatever serif the visitor has. Wide fonts overflowed
+// the guessed box and, on a page without /css/mathjax.css (overflow: visible), the overflow
+// was clipped: 8.3.3's "10 кОм" lost half of its "м" on /ru/upload (2026-09-02).
+// So the fallback is pinned to a self-hosted Computer Modern Unicode — the same design as
+// the TeX font, Latin widths identical to the unit — sized 1:1 with the TeX glyphs and laid
+// out from its own advance widths. scripts/build-math-fallback-font.py builds the fonts and
+// the table; getMathCss() ships the @font-face rules, so every page that shows
+// server-rendered maths must link /css/mathjax.css (bump its ?v= when this file changes —
+// the route serves it with a week of max-age and assetUrl() cannot hash a virtual file).
+const fallbackFont = require('./lib/mathFallbackFont.json');
+const FALLBACK_FAMILY = fallbackFont.family;
+
 const adaptor = liteAdaptor();
 RegisterHTMLHandler(adaptor);
 const texInput = new TeX({ packages: AllPackages, processEscapes: true });
-const svgOutput = new SVG({ fontCache: 'local' });
+const svgOutput = new SVG({
+    fontCache: 'local',
+    // Becomes the font-family attribute of every fallback <text>. The stack behind the
+    // pinned family only shows while the woff2 is still loading or the CSS is missing.
+    unknownFamily: `${FALLBACK_FAMILY}, Times New Roman, Times, serif`,
+});
 const mathDoc = mathjax.document('', { InputJax: texInput, OutputJax: svgOutput });
 
-/** Constant SVG-container stylesheet — include once per page that has math. */
+function usesFallbackFont(node) {
+    const family = adaptor.getAttribute(node, 'font-family');
+    return typeof family === 'string' && family.startsWith(FALLBACK_FAMILY);
+}
+function fallbackWidths(node) {
+    const italic = adaptor.getAttribute(node, 'font-style') === 'italic';
+    const bold = adaptor.getAttribute(node, 'font-weight') === 'bold';
+    const variant = bold ? (italic ? 'bold-italic' : 'bold') : (italic ? 'italic' : 'normal');
+    return fallbackFont.styles[variant].widths;
+}
+
+// MathJax sizes unknown text to match an assumed x-height (0.884 of the em here). At 1:1
+// the CMU glyphs *are* the TeX glyphs, so a Cyrillic "с" is exactly as big as a Latin "c".
+const svgUnknownText = svgOutput.unknownText;
+svgOutput.unknownText = function (text, variant) {
+    const node = svgUnknownText.call(this, text, variant);
+    if (usesFallbackFont(node)) this.adaptor.setAttribute(node, 'font-size', `${fallbackFont.size}px`);
+    return node;
+};
+
+// The width MathJax lays the next glyph out from: the table instead of the 0.6 em guess.
+// Same contract as the adaptor's own version — em units, so advance × font-size / em. A
+// character outside the subset is drawn by the next font in the stack and keeps the guess.
+const liteNodeSize = adaptor.nodeSize;
+adaptor.nodeSize = function (node, em = 1, local = null) {
+    if (!usesFallbackFont(node)) return liteNodeSize.call(this, node, em, local);
+    const widths = fallbackWidths(node);
+    const size = parseFloat(this.getAttribute(node, 'font-size')) || fallbackFont.size;
+    let w = 0;
+    for (const ch of this.textContent(node)) {
+        const adv = widths[ch.codePointAt(0)];
+        if (adv === undefined) return liteNodeSize.call(this, node, em, local);
+        w += adv;
+    }
+    return [w * size / em, this.options.unknownCharHeight];
+};
+
+/**
+ * Constant stylesheet for pages with server-rendered maths — MathJax's SVG rules (the
+ * `overflow: visible` that lets a glyph show past its box) plus the @font-face for the
+ * fallback glyphs. Served as /css/mathjax.css; link it once per page that has maths.
+ */
 function getMathCss() {
-    return adaptor.textContent(svgOutput.styleSheet(mathDoc));
+    const { family, unicodeRange, styles } = fallbackFont;
+    const faces = Object.values(styles).map((s) =>
+        `@font-face {\n  font-family: '${family}';\n  font-style: ${s.style};\n  font-weight: ${s.weight};\n` +
+        `  font-display: swap;\n  src: url(/css/vendor/fonts/files/${s.file}) format('woff2');\n` +
+        `  unicode-range: ${unicodeRange};\n}`).join('\n\n');
+    return adaptor.textContent(svgOutput.styleSheet(mathDoc)) +
+        '\n\n/* Glyphs the TeX font lacks (Cyrillic, µ, ², …): Computer Modern Unicode, laid out\n' +
+        '   server-side from lib/mathFallbackFont.json (scripts/build-math-fallback-font.py). */\n' +
+        faces + '\n';
 }
 
 // marked escapes <, >, & inside text (incl. inside math), but TeX needs the raw

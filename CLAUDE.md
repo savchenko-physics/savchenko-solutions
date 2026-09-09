@@ -13,6 +13,16 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   CodeMirror JS + modes/addons.
 - MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`
   (mounted in `index.js` and `sandbox/sandbox-app.js`); keep that dependency installed.
+- Server-rendered maths (`mathRender.js`) sets the glyphs MathJax's TeX font lacks — the
+  Cyrillic units and subscripts inside `$…$` in nearly every Russian solution — in a
+  self-hosted Computer Modern Unicode (`css/vendor/fonts/files/cmun*-math.woff2`, OFL) and
+  lays them out from that font's advance widths (`lib/mathFallbackFont.json`, built by
+  `scripts/build-math-fallback-font.py` from TeX Live's cm-unicode). Before that the server
+  guessed 0.6 em per letter in whatever serif the visitor had, and "10 кОм" lost half its "м"
+  on `/ru/upload` (2026-09-02). **Every page that shows server-rendered maths must link
+  `/css/mathjax.css?v=…`** — it carries MathJax's `overflow: visible` and the `@font-face`
+  rules; bump the `?v=` in the templates when `getMathCss()` changes (the route is served
+  with a week of max-age and `asset()` cannot hash a virtual file). `tests/math-fallback.test.js`.
 - The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
   separate Express app on its own subdomain and would otherwise 404 on shared assets.
 
