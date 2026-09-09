@@ -45,8 +45,7 @@
         "controls"
         "panel-b"
         "panel-c"
-        "caption"
-        "credit";
+        "caption";
 
     max-width: 1100px;
     margin: 1.6rem auto;
@@ -257,7 +256,7 @@
 .ss-fig-caption {
     grid-area: caption;
     margin: 2px 0 0;
-    font-size: 1em;
+    font-size: 0.8em;
     line-height: 1.5;
     color: var(--fig-deposit);
     text-align: left;
@@ -273,21 +272,6 @@
     font-weight: 400;
     color: var(--fig-ink);
 }
-
-.ss-fig-credit {
-    grid-area: credit;
-    font-size: 0.86em;
-    color: var(--fig-muted);
-}
-
-.ss-fig-credit a {
-    color: #1a5276;
-    text-decoration: none;
-}
-
-.ss-fig-credit a:hover { text-decoration: underline; }
-
-.ss-fig-credit-sep { margin: 0 0.35rem; }
 
 /* With JS off — or before the script has run — the figure is the poster, the caption and
    the credit: a complete static figure rather than two blank boxes and dead controls. */
@@ -319,8 +303,7 @@
             "panel-a panel-b"
             "panel-a panel-c"
             "controls controls"
-            "caption caption"
-            "credit credit";
+            "caption caption";
     }
 
     /* Panel a spans both right-hand rows instead of setting its own ratio, so the

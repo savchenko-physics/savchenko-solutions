@@ -187,9 +187,8 @@
        scale; this leans it warm just enough that the wall is blue, mid-tube magenta and
        the last third properly red. */
     var SPRITE_PX = 26;
-    var COLD = "#0a3fd6";                    // at the wall, where E is weakest
-    var WARM = "#b41cbe";                    // a narrow magenta so blue→red keeps its chroma
-    var HOTC = "#f5170c";                    // at the wire, where E blows up
+    var COLD = "#0000ff";                    // at the wall, where E is weakest
+    var HOTC = "#ff0000";                    // at the wire, where E blows up
     var sprites = null;
     var rampLut = new Uint8Array(256);
 
@@ -203,12 +202,12 @@
                         Math.round(A[2] + (B[2] - A[2]) * t) + ")";
     }
 
-    /* Cold to hot. A straight blue-to-red interpolation runs through a muddy grey in the
-       middle and loses the ordering, so it goes by way of magenta — placed early, at t =
-       0.4, so the second half of the scale is spent getting properly red rather than
-       lingering in purple. */
+    /* Blue to red, straight between the two primaries. Any two-endpoint ramp has to pass
+       through purple at the halfway mark; the smoothstep keeps the run close to one end or
+       the other for most of its length so that crossing is brief, and both ends read as
+       what they are. */
     function rampColor(t) {
-        return t < 0.4 ? mixHex(COLD, WARM, t / 0.4) : mixHex(WARM, HOTC, (t - 0.4) / 0.6);
+        return mixHex(COLD, HOTC, t * t * (3 - 2 * t));
     }
 
     function buildRampLut() {
@@ -377,6 +376,7 @@
 
     function sym(t, px, color) { return { t: t, f: "italic " + (px * TXT) + 'px ' + MATHF, c: color }; }
     function sub(t, px, color) { return { t: t, f: ((px - 3) * TXT) + "px " + MATHF, c: color, dy: (px * TXT * 0.22) }; }
+    function sup(t, px, color) { return { t: t, f: ((px - 3) * TXT) + "px " + MATHF, c: color, dy: -(px * TXT * 0.34) }; }
     function word(t, px, color, weight) { return { t: t, f: (weight || 400) + " " + (px * TXT) + "px " + BODY, c: color }; }
 
     function panelLetter(ctx, letter) {
@@ -634,7 +634,7 @@
             ctx.arc(x + 5 * TXT, y, rows[i].r, 0, Math.PI * 2);
             ctx.fill();
             drawRuns(ctx, x + 14 * TXT, y, [
-                word(rows[i].label + " · ", 12, MUTED),
+                word(rows[i].label + "   ", 12, MUTED),
                 word((S.settled || "settled") + " " + Math.round(rows[i].eff * 100) + "%", 12, INK)
             ], "left");
             y += 17 * TXT;
@@ -1029,10 +1029,15 @@
             g.moveTo(xA, yA); g.lineTo(xB, yA); g.lineTo(xB, yC2);
             g.stroke();
             g.restore();
-            drawRuns(g, (xA + xB) / 2, yA - 7 * TXT, [word(label, 12, color)], "center");
+            drawRuns(g, (xA + xB) / 2, yA - 15 * TXT, label, "center");   // clear of the curve it labels
         }
-        slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A, "−3");
-        slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC, "−1");
+        /* Read straight off the triangle: across that stretch the curve falls three
+           decades for one decade of x — which is what F ∝ x⁻³ means. The bare number
+           said nothing to anyone who had not already met a log-log slope. */
+        slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A,
+            [sym("F", 12, COL_A), word(" ∝ ", 12, COL_A), sym("x", 12, COL_A), sup("−3", 12, COL_A)]);
+        slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC,
+            [sym("E", 12, FIELDC), word(" ∝ ", 12, FIELDC), sym("x", 12, FIELDC), sup("−1", 12, FIELDC)]);
 
         function seriesLabel(fn, color, runs) {
             var v = fn(C_XMIN * 1.08);
@@ -1173,6 +1178,7 @@
     var btnPlayGlyph = btnPlay && btnPlay.querySelector("[data-fig-glyph]");
     var hint = root.querySelector("[data-fig-hint]");
 
+    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var dirtyB = true, needsDraw = true;
 
     function syncReadout() {
@@ -1196,7 +1202,6 @@
     bindRange(elE, "eps2", parseFloat);
     bindRange(elR, "rad", parseFloat);
 
-    var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     var playing = !reduced;
 
     function setPlaying(on) {
@@ -1243,6 +1248,28 @@
         if (hint) { hint.classList.add("is-gone"); setTimeout(function () { if (hint) hint.hidden = true; }, 400); }
     }
 
+    /* A one-off nudge the first time the pointer crosses the panel: the scene swings a few
+       degrees and settles back. Nothing says "this turns" as quickly as seeing it turn, and
+       it happens once, never on its own, and not at all for anyone who asked not to be
+       moved. The grab cursor on the canvas says the same thing for anyone already there. */
+    var nudged = false;
+    function nudge() {
+        if (nudged || touched || reduced) return;
+        nudged = true;
+        var az0 = cam.az, t0 = 0, DUR = 850;
+        function stepNudge(ts) {
+            if (!t0) t0 = ts;
+            var u = Math.min(1, (ts - t0) / DUR);
+            cam.az = az0 + 0.17 * Math.sin(u * Math.PI);
+            updateTrig();
+            sceneDirty = true;
+            needsDraw = true;
+            if (u < 1 && !dragging) requestAnimationFrame(stepNudge);
+            else { cam.az = az0; updateTrig(); sceneDirty = true; needsDraw = true; }
+        }
+        requestAnimationFrame(stepNudge);
+    }
+
     function orbit(dx, dy) {
         cam.az -= dx * 0.008;
         cam.el = Math.max(-1.2, Math.min(1.25, cam.el + dy * 0.006));
@@ -1250,6 +1277,8 @@
         needsDraw = true;
         sceneDirty = true;
     }
+
+    canvasA.addEventListener("pointerenter", nudge);
 
     canvasA.addEventListener("pointerdown", function (e) {
         dragging = true; lastX = e.clientX; lastY = e.clientY;
