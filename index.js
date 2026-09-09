@@ -37,7 +37,7 @@ const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 const { getOnlineUsernames } = require("./lib/presence");
 const { sendEmail } = require("./email");
-const { processAvatar } = require("./avatar");
+const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
 
 const rateLimit = require('express-rate-limit');
 const { botgate, botgateAfterSession, isCountable, isTaggable, init: initBotgate } = require('./botgate');
@@ -210,6 +210,18 @@ app.set("view engine", "ejs");
 app.use('/api/', apiLimiter);
 
 app.use(express.static(path.join(__dirname, "posts")));
+// Avatars are mounted ahead of /img so they can have their own cache policy. Their URL is
+// derived from the user id, so it stays the same when the picture changes, and under /img's
+// flat 30-day max-age a user who uploaded a new photo kept seeing the old one for weeks —
+// their browser never re-asked (reported 2026-08-28; a signed-out browser saw the new one
+// at once). Now a URL carrying ?v=<content hash>, which is what processAvatar returns and
+// what the users row stores, is cached for a year, and a bare /img/profile_images/<id>.webp
+// is revalidated instead of trusted. See avatarCacheControl.
+app.use("/img/profile_images", express.static(AVATAR_DIR, {
+    setHeaders: (res, filePath) => {
+        res.setHeader("Cache-Control", avatarCacheControl(path.basename(filePath), Boolean(res.req.query.v)));
+    },
+}));
 app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: '30d' }));
 app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d' }));
 app.use("/en", express.static(path.join(__dirname, "en")));
@@ -735,7 +747,7 @@ app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("pr
                 }
             } catch (e) {
                 console.error("Avatar optimization failed, keeping raw upload:", e);
-                profilePictureValue = `/img/profile_images/${req.file.filename}`;
+                profilePictureValue = versionedAvatarUrl(req.file.filename);
             }
         } else if (removeProfilePicture === "1" || removeProfilePicture === "on") {
             profilePictureValue = DEFAULT_PROFILE_AVATAR;

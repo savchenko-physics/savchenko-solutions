@@ -28,17 +28,19 @@ const pool = new Pool({
     if (!DRY) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
     const { rows } = await pool.query(
+        // profile_picture carries a ?v=<hash> cache-busting token since 2026-09-09,
+        // so the extension is not at the end of the string — match on the path only.
         `SELECT id, profile_picture FROM users
          WHERE profile_picture LIKE '%profile_images%'
-           AND profile_picture NOT LIKE '%.svg'
-           AND profile_picture NOT LIKE '%.webp'
+           AND split_part(profile_picture, '?', 1) NOT LIKE '%.svg'
+           AND split_part(profile_picture, '?', 1) NOT LIKE '%.webp'
          ORDER BY id`
     );
 
     let done = 0, skipped = 0, failed = 0, before = 0, after = 0;
     for (const u of rows) {
         // Some legacy paths use Windows backslashes (\img\profile_images\..).
-        const file = path.basename(u.profile_picture.replace(/\\/g, '/'));
+        const file = path.basename(u.profile_picture.split('?')[0].replace(/\\/g, '/'));
         if (!RASTER_RE.test(file)) { skipped++; continue; }
         if (/^\d+\.webp$/.test(file)) { skipped++; continue; } // already optimized
         const src = path.join(AVATAR_DIR, file);

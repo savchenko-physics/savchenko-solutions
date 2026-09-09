@@ -1667,9 +1667,12 @@
     <script>
         // Small contexts (collaborator/contribution grids) use the 96px thumbnail
         // instead of the 320px main avatar. Passes non-optimized URLs through.
+        // Mirrors thumbUrl() in avatar.js: the ?v= cache-busting token an avatar URL
+        // now carries names a picture, not a size, so both files answer to it.
         function avatarThumb(u) {
-            return (typeof u === 'string' && /^\/img\/profile_images\/\d+\.webp$/.test(u))
-                ? u.replace(/\.webp$/, '_thumb.webp') : u;
+            if (typeof u !== 'string' || !/^\/img\/profile_images\/\d+\.webp(\?|$)/.test(u)) return u;
+            const [file, query] = u.split('?');
+            return file.replace(/\.webp$/, '_thumb.webp') + (query ? '?' + query : '');
         }
         const username = "<%= username %>";
         const lang = "<%= lang %>";
