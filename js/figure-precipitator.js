@@ -50,15 +50,19 @@
 
     var INK = "#1a1a2e";
     var MUTED = "#6c757d";
-    var HOT = "#d7301f";                     // the live electrode, vermillion
-    var COL_A = "#1b7fbd";                   // small grains, azure
-    var COL_B = "#e08214";                   // large grains, amber
-    var FIELDC = "#7b52ab";                  // the E reference curve, violet
+    var HOT = "#e5194b";                     // the live electrode, crimson
+    var COL_A = "#00857a";                   // panel c: the small-grain force curve, teal
+    var COL_B = "#b8560f";                   // panel c: the large-grain force curve, umber
+    var FIELDC = "#8b5cf6";                  // the E reference curve, violet
     var DEPOSIT = "#2d2d2d";
     var RULE = "#dee2e6";
     var PAPER = "#ffffff";
 
-    var SANS = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+    /* The same stack the statement and the solution are set in (solution_post.ejs:211):
+       Latin from Latin Modern, Cyrillic falling through per-glyph to CMU Serif. Canvas does
+       not itself trigger a webfont download, so start() asks for these explicitly. */
+    var BODY = '"Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif';
+    var TXT = 1;                             // css font-size / 15, refreshed on every layout
     var MATHF = '"Latin Modern Roman", "CMU Serif", "STIX Two Math", "Times New Roman", serif';
 
     /* ------------------------------------------------------------------ physics */
@@ -98,13 +102,16 @@
     /* ----------------------------------------------------------------- particles */
 
     var small = window.matchMedia && window.matchMedia("(max-width: 899px)").matches;
-    var weak = (navigator.hardwareConcurrency || 8) <= 4;
-    var N = small || weak ? 700 : 2100;
+    var cores = navigator.hardwareConcurrency || 8;
+    var N = small ? 900 : cores <= 4 ? 1200 : 2400;
+    var nActive = N;                         // trimmed at runtime if frames get expensive
 
     var pr = new Float32Array(N);            // radius fraction ρ
-    var pth = new Float32Array(N);           // angle θ
+    var pct = new Float32Array(N);           // cos θ and sin θ, cached: θ never changes for a
+    var pst = new Float32Array(N);           //   grain, and recomputing them was 2N trig calls a frame
     var pz = new Float32Array(N);            // height fraction, 0 = inlet (top)
     var psp = new Uint8Array(N);             // 0 = fine, 1 = coarse
+    var pshape = new Uint8Array(N);          // which mote outline this grain wears
     var deposit = new Float32Array(DEP_BINS);
     var caughtA = 0, caughtB = 0, seenA = 0, seenB = 0;   // capture efficiency, decayed
 
@@ -116,7 +123,9 @@
 
     function seedGrain(i, freshZ) {
         pr[i] = Math.sqrt(rnd()) * (1 - RHO_CATCH) + RHO_CATCH;   // uniform over the cross-section
-        pth[i] = rnd() * Math.PI * 2;
+        var th = rnd() * Math.PI * 2;
+        pct[i] = Math.cos(th);
+        pst[i] = Math.sin(th);
         pz[i] = freshZ ? rnd() * 0.03 : rnd();   // spread the inlet, or it piles onto the rim
         if (psp[i]) seenB++; else seenA++;
     }
@@ -125,6 +134,7 @@
         seed = 6615;
         for (var i = 0; i < N; i++) {
             psp[i] = rnd() < 0.35 ? 1 : 0;    // coarse dust is the minority, as in real air
+            pshape[i] = (rnd() * SHAPES) | 0;
             seedGrain(i, false);
         }
         deposit.fill(0);
@@ -135,28 +145,118 @@
         var kA = driftK(1, EPS1);
         var kB = driftK(params.rad, params.eps2);
         var decay = Math.exp(-dt / DEP_TAU);
-        var i, k, r4, rho, catch4 = Math.pow(RHO_CATCH, 4);
+        var i, k, r4, rho, catch4 = RHO_CATCH * RHO_CATCH * RHO_CATCH * RHO_CATCH;
+        var dz = U_AXIAL * dt, k4A = 4 * kA * dt, k4B = 4 * kB * dt;
 
         for (i = 0; i < DEP_BINS; i++) deposit[i] *= decay;
         caughtA *= decay; caughtB *= decay; seenA *= decay; seenB *= decay;
 
-        for (i = 0; i < N; i++) {
-            k = psp[i] ? kB : kA;
+        for (i = 0; i < nActive; i++) {
+            k = psp[i] ? k4B : k4A;
             rho = pr[i];
             /* Closed-form step of ρ̇ = −k/ρ³. Euler blows up as ρ → 0, where 1/ρ³ is
-               unbounded; ρ⁴ − 4k·dt is exact and unconditionally stable. */
-            r4 = rho * rho * rho * rho - 4 * k * dt;
-            pz[i] += U_AXIAL * dt;
+               unbounded; ρ⁴ − 4k·dt is exact and unconditionally stable. Two sqrts beat
+               Math.pow(r4, 0.25) by a wide margin at this call count. */
+            r4 = rho * rho * rho * rho - k;
+            pz[i] += dz;
 
             if (r4 <= catch4) {
-                var bin = Math.min(DEP_BINS - 1, Math.max(0, (pz[i] * DEP_BINS) | 0));
+                var bin = (pz[i] * DEP_BINS) | 0;
+                if (bin < 0) bin = 0; else if (bin >= DEP_BINS) bin = DEP_BINS - 1;
                 deposit[bin] += 1;
                 if (psp[i]) caughtB++; else caughtA++;
                 seedGrain(i, true);
                 continue;
             }
-            pr[i] = Math.pow(r4, 0.25);
+            pr[i] = Math.sqrt(Math.sqrt(r4));
             if (pz[i] > 1) seedGrain(i, true);
+        }
+
+        /* Panel b's single grain, on the same ρ⁴ = ρ₀⁴ − 4kt law, slowed so one traverse
+           reads at a glance. With V = 0 it does not move, which is the honest answer. */
+        var b4 = bGrainX * bGrainX * bGrainX * bGrainX - 4 * kB * 0.18 * dt;
+        bGrainX = b4 <= B_X1 * B_X1 * B_X1 * B_X1 ? B_X0 : Math.sqrt(Math.sqrt(b4));
+    }
+
+    /* ------------------------------------------------------------ grain sprites */
+
+    /* Real dust is not spherical, and a field of identical discs looks like a screensaver.
+       Each grain wears one of a few irregular outlines, pre-rendered once into small
+       offscreen canvases: the variety is free at draw time, and blitting a sprite is
+       cheaper than tessellating a path per grain. */
+    var SHAPES = 7;
+    var RAMP = 9;                            // colour steps from the tube wall to the wire
+    var SPRITE_PX = 26;
+    var COLD = "#2b6cd4";                    // at the wall, where E is weakest
+    var WARM = "#a03bb8";
+    var HOTC = "#e8232f";                    // at the wire, where E blows up
+    var sprites = null;
+    var rampLut = new Uint8Array(256);
+
+    function hexToRgb(h) {
+        return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    }
+    function mixHex(a, b, t) {
+        var A = hexToRgb(a), B = hexToRgb(b);
+        return "rgb(" + Math.round(A[0] + (B[0] - A[0]) * t) + "," +
+                        Math.round(A[1] + (B[1] - A[1]) * t) + "," +
+                        Math.round(A[2] + (B[2] - A[2]) * t) + ")";
+    }
+
+    /* Cold to hot through violet: a straight blue-to-red interpolation goes through a
+       muddy grey in the middle and loses the ordering. */
+    function rampColor(t) {
+        return t < 0.5 ? mixHex(COLD, WARM, t * 2) : mixHex(WARM, HOTC, (t - 0.5) * 2);
+    }
+
+    function buildRampLut() {
+        for (var i = 0; i < 256; i++) {
+            var t = 1 - i / 255;                       // 0 at the tube wall, 1 at the wire
+            rampLut[i] = Math.min(RAMP - 1, (t * RAMP) | 0);
+        }
+    }
+
+    function buildSprites() {
+        sprites = [];
+        buildRampLut();
+        var outline = [];
+        var srnd = 20260909;
+        function r01() { srnd = (srnd * 1664525 + 1013904223) & 0x7fffffff; return srnd / 0x7fffffff; }
+        for (var q = 0; q < SHAPES; q++) {
+            var n = 6 + ((r01() * 3) | 0), spin = r01() * Math.PI * 2, rs = [];
+            for (var v = 0; v < n; v++) rs.push(0.72 + 0.28 * r01());
+            outline.push({ n: n, spin: spin, rs: rs });
+        }
+        for (var lv = 0; lv < RAMP; lv++) {
+            var fill = rampColor(lv / (RAMP - 1));
+            for (var k = 0; k < SHAPES; k++) {
+                var cv = document.createElement("canvas");
+                cv.width = cv.height = SPRITE_PX;
+                var g = cv.getContext("2d");
+                var c = SPRITE_PX / 2, rad = SPRITE_PX * 0.40, o = outline[k];
+                g.beginPath();
+                for (var v = 0; v < o.n; v++) {
+                    var a = o.spin + (v / o.n) * Math.PI * 2;
+                    var rr = rad * o.rs[v];
+                    var x = c + Math.cos(a) * rr, y = c + Math.sin(a) * rr;
+                    if (v === 0) g.moveTo(x, y); else g.lineTo(x, y);
+                }
+                g.closePath();
+                g.fillStyle = fill;
+                g.fill();
+                /* A darker facet on one side reads as a lit grain rather than a flat blob,
+                   and survives being scaled down to three pixels. */
+                g.globalCompositeOperation = "source-atop";
+                g.globalAlpha = 0.28;
+                g.fillStyle = "#000";
+                g.beginPath();
+                g.moveTo(c, 0);
+                g.lineTo(SPRITE_PX, SPRITE_PX);
+                g.lineTo(0, SPRITE_PX);
+                g.closePath();
+                g.fill();
+                sprites.push(cv);
+            }
         }
     }
 
@@ -241,35 +341,44 @@
     /* Words are set in Inter (a Nature figure is sans-labelled); single symbols are set
        in Latin Modern italic so they match the server-rendered TeX elsewhere on the page.
        A label is therefore a list of runs, laid out here rather than in one fillText. */
-    function runsWidth(ctx, runs) {
-        var w = 0;
-        for (var i = 0; i < runs.length; i++) {
-            ctx.font = runs[i].f;
-            w += ctx.measureText(runs[i].t).width;
+    /* measureText is one of the more expensive things a 2-D context does, and drawRuns
+       used to call it twice per run. Widths are memoised on (font, text) and the cache is
+       dropped whenever the type scale or the webfonts change. */
+    var textCache = new Map();
+    var _wbuf = [];
+
+    function measure(ctx, font, text) {
+        var key = font + "\u0000" + text;
+        var w = textCache.get(key);
+        if (w === undefined) {
+            ctx.font = font;
+            w = ctx.measureText(text).width;
+            textCache.set(key, w);
         }
         return w;
     }
 
     function drawRuns(ctx, x, y, runs, align) {
-        var w = runsWidth(ctx, runs);
+        var i, n = runs.length, w = 0;
+        for (i = 0; i < n; i++) { _wbuf[i] = measure(ctx, runs[i].f, runs[i].t); w += _wbuf[i]; }
         var cx = align === "center" ? x - w / 2 : align === "right" ? x - w : x;
         ctx.textAlign = "left";
         ctx.textBaseline = "middle";
-        for (var i = 0; i < runs.length; i++) {
+        for (i = 0; i < n; i++) {
             ctx.font = runs[i].f;
             ctx.fillStyle = runs[i].c || INK;
             ctx.fillText(runs[i].t, cx, y + (runs[i].dy || 0));
-            cx += ctx.measureText(runs[i].t).width;
+            cx += _wbuf[i];
         }
         return w;
     }
 
-    function sym(t, px, color) { return { t: t, f: "italic " + px + 'px ' + MATHF, c: color }; }
-    function sub(t, px, color) { return { t: t, f: (px - 3) + "px " + MATHF, c: color, dy: (px * 0.22) }; }
-    function word(t, px, color, weight) { return { t: t, f: (weight || 400) + " " + px + "px " + SANS, c: color }; }
+    function sym(t, px, color) { return { t: t, f: "italic " + (px * TXT) + 'px ' + MATHF, c: color }; }
+    function sub(t, px, color) { return { t: t, f: ((px - 3) * TXT) + "px " + MATHF, c: color, dy: (px * TXT * 0.22) }; }
+    function word(t, px, color, weight) { return { t: t, f: (weight || 400) + " " + (px * TXT) + "px " + BODY, c: color }; }
 
     function panelLetter(ctx, letter) {
-        ctx.font = "700 15px " + SANS;
+        ctx.font = "700 " + 15 * TXT + "px " + BODY;
         ctx.fillStyle = INK;
         ctx.textAlign = "left";
         ctx.textBaseline = "top";
@@ -291,15 +400,15 @@
     var showPaths = true;
     var RING_N = 6, RING_SEG = 72, GEN_N = 12;
 
-    function tubeLines(ctx) {
+    function tubeLines(ctx, nearPass) {
         var thC = camAngle(), hw = nearHalfWidth();
         var i, j, th, p, y, first;
 
-        /* Rings and generatrices are each stroked twice — once for everything on the
-           far side of the silhouette, once for the near side — so a whole wireframe
-           costs four stroke calls instead of one per segment. */
-        for (var pass = 0; pass < 2; pass++) {
-            var nearPass = pass === 1;
+        /* Rings and generatrices are stroked as two batched paths — everything on the far
+           side of the silhouette, then everything on the near side — so a whole wireframe
+           costs two stroke calls instead of one per segment. The two halves go on
+           different cached layers, with the grains sandwiched between them. */
+        for (var pass = 0; pass < 1; pass++) {
             ctx.beginPath();
             for (i = 0; i < RING_N; i++) {
                 y = -HH + (2 * HH * i) / (RING_N - 1);
@@ -414,32 +523,40 @@
         ];
         var thC = camAngle();
         ctx.save();
-        ctx.lineWidth = 1.05;
+        ctx.lineCap = "round";
         for (var i = 0; i < specs.length; i++) {
             var sp = specs[i];
             var k = driftK(sp.sp ? params.rad : 1, sp.sp ? params.eps2 : EPS1);
-            var th = thC + sp.dth;
+            var th = thC + sp.dth, cth = Math.cos(th), sth = Math.sin(th);
             var r04 = Math.pow(sp.r0, 4), catch4 = Math.pow(RHO_CATCH, 4);
-            var lastX = 0, lastY = 0, prevX = 0, prevY = 0, started = false, n = 0;
-            ctx.beginPath();
+            ctx.lineWidth = sp.sp ? 2.2 : 1.1;
+            ctx.globalAlpha = 0.9;
+
+            var prev = null, lastRho = sp.r0;
             for (var q = 0; q <= 90; q++) {
                 var t = (q / 90) * (1 / U_AXIAL);
                 var r4 = r04 - 4 * k * t;
                 if (r4 <= catch4) break;
-                var rho = Math.pow(r4, 0.25);
-                var pt = projectFast(rho * Math.cos(th), HH - 2 * HH * (U_AXIAL * t), rho * Math.sin(th));
-                if (!pt) { started = false; continue; }
-                if (!started) { ctx.moveTo(pt.x, pt.y); started = true; }
-                else { prevX = lastX; prevY = lastY; ctx.lineTo(pt.x, pt.y); }
-                lastX = pt.x; lastY = pt.y; n++;
+                var rho = Math.sqrt(Math.sqrt(r4));
+                var pt = projectFast(rho * cth, HH - 2 * HH * (U_AXIAL * t), rho * sth);
+                if (!pt) { prev = null; continue; }
+                if (prev) {
+                    /* One short stroke per step, coloured by where the grain is: the path
+                       reddens as it closes on the wire, exactly as the grains do. */
+                    ctx.strokeStyle = rampColor(1 - (rho + lastRho) / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(prev.x, prev.y);
+                    ctx.lineTo(pt.x, pt.y);
+                    ctx.stroke();
+                }
+                prev = { x: pt.x, y: pt.y };
+                lastRho = rho;
             }
-            ctx.strokeStyle = sp.sp ? COL_B : COL_A;
-            ctx.globalAlpha = 0.85;
-            ctx.stroke();
-            if (n > 2) {
-                var dx = lastX - prevX, dy = lastY - prevY, L = Math.hypot(dx, dy) || 1;
-                ctx.fillStyle = sp.sp ? COL_B : COL_A;
-                arrowHead(ctx, lastX, lastY, dx / L, dy / L, 4.4);
+            if (prev) {
+                ctx.fillStyle = rampColor(1 - lastRho);
+                ctx.beginPath();
+                ctx.arc(prev.x, prev.y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
         ctx.restore();
@@ -455,65 +572,81 @@
         var i, b, p;
         binHead.fill(-1);
         var span = Math.max(0.001, dMax - dMin);
+        var binK = BINS / span;
+        var yTop = HH, yK = 2 * HH;
 
-        /* One projection pass, cached — the draw pass below walks the same grains again
+        /* One projection pass, cached — the draw pass below walks the same grains again,
            and reprojecting them cost as much as drawing them. */
-        for (i = 0; i < N; i++) {
-            p = projectFast(pr[i] * Math.cos(pth[i]), HH - 2 * HH * pz[i], pr[i] * Math.sin(pth[i]));
+        for (i = 0; i < nActive; i++) {
+            var rho = pr[i];
+            p = projectFast(rho * pct[i], yTop - yK * pz[i], rho * pst[i]);
             if (!p) { binNext[i] = -2; _pd[i] = -1; continue; }
             _px[i] = p.x; _py[i] = p.y; _pd[i] = p.d;
-            b = Math.min(BINS - 1, Math.max(0, (((p.d - dMin) / span) * BINS) | 0));
+            b = ((p.d - dMin) * binK) | 0;
+            if (b < 0) b = 0; else if (b >= BINS) b = BINS - 1;
             binNext[i] = binHead[b];
             binHead[b] = i;
         }
 
-        var wireBin = Math.min(BINS - 1, Math.max(0, (((wireDepth - dMin) / span) * BINS) | 0));
-        var TAU = Math.PI * 2;
-        var FINE_R = 1.15;                               // radius in CSS px at the default camera
-        var COARSE_R = 1.15 * Math.min(2.2, params.rad); // part (d), drawn to scale
+        var wireBin = ((wireDepth - dMin) * binK) | 0;
+        if (wireBin < 0) wireBin = 0; else if (wireBin >= BINS) wireBin = BINS - 1;
+
+        var FINE_R = 1.5;                                 // radius in CSS px at the default camera
+        var COARSE_R = 1.5 * Math.min(2.4, params.rad);   // part (d), drawn to scale
+        var dist = cam.dist;
+        var prevAlpha = -1;
 
         for (b = BINS - 1; b >= 0; b--) {                    // far to near
             if (b === wireBin && drawWire) drawWire();
-            if (binHead[b] === -1) continue;
+            var head = binHead[b];
+            if (head === -1) continue;
             var t = 1 - b / (BINS - 1);                      // 0 = far, 1 = near
-            ctx.globalAlpha = 0.34 + 0.44 * t;   // the brighter palette carries less weight per dot
-            for (var sp = 0; sp < 2; sp++) {
-                ctx.beginPath();
-                var any = false;
-                for (i = binHead[b]; i !== -1; i = binNext[i]) {
-                    if (psp[i] !== sp || _pd[i] < 0) continue;
-                    var d = (sp ? COARSE_R : FINE_R) * (cam.dist / _pd[i]);
-                    d = Math.max(0.5, Math.min(3.4, d));
-                    ctx.moveTo(_px[i] + d, _py[i]);
-                    ctx.arc(_px[i], _py[i], d, 0, TAU);
-                    any = true;
-                }
-                if (any) { ctx.fillStyle = sp ? COL_B : COL_A; ctx.fill(); }
+            var a = 0.42 + 0.48 * t;
+            if (a !== prevAlpha) { ctx.globalAlpha = a; prevAlpha = a; }
+            for (i = head; i !== -1; i = binNext[i]) {
+                if (_pd[i] < 0) continue;
+                var sp = psp[i];
+                var d = (sp ? COARSE_R : FINE_R) * (dist / _pd[i]);
+                if (d < 0.7) d = 0.7; else if (d > 4.6) d = 4.6;
+                var spr = sprites[rampLut[(pr[i] * 255) | 0] * SHAPES + pshape[i]];
+                ctx.drawImage(spr, _px[i] - d, _py[i] - d, d + d, d + d);
             }
         }
         ctx.globalAlpha = 1;
     }
 
     function legendA(ctx, w, h) {
-        var y = h - 38, x = 2;
+        var x = 2, y = h - 52 * TXT, mid = rampColor(0.42);
         ctx.globalAlpha = 1;
-        ctx.fillStyle = COL_A;
-        ctx.beginPath(); ctx.arc(x + 3, y, 2.4, 0, Math.PI * 2); ctx.fill();
-        drawRuns(ctx, x + 11, y, [word(S.fine || "fine", 12.5, MUTED)], "left");
-        y += 17;
-        ctx.fillStyle = COL_B;
-        ctx.beginPath(); ctx.arc(x + 3, y, 3.6, 0, Math.PI * 2); ctx.fill();
-        drawRuns(ctx, x + 11, y, [word(S.coarse || "coarse", 12.5, MUTED)], "left");
 
-        /* Capture efficiency, decayed on the same clock as the deposit, so it reads the
-           current settings rather than the whole history. */
+        /* Two sizes, one neutral colour: in this panel hue is the field, not the size. */
         var effA = seenA > 4 ? caughtA / seenA : 0;
         var effB = seenB > 4 ? caughtB / seenB : 0;
-        var rt = [word((S.caught || "captured") + "  ", 12.5, MUTED)];
-        rt.push(word(Math.round(effA * 100) + "%", 12.5, COL_A, 700));
-        rt.push(word(" / ", 12.5, MUTED));
-        rt.push(word(Math.round(effB * 100) + "%", 12.5, COL_B, 700));
-        drawRuns(ctx, x, h - 4, rt, "left");
+        var rows = [
+            { r: 2.1 * TXT, label: S.fine || "small grains", eff: effA },
+            { r: 5.0 * TXT, label: S.coarse || "large grains", eff: effB }
+        ];
+        for (var i = 0; i < rows.length; i++) {
+            ctx.fillStyle = mid;
+            ctx.beginPath();
+            ctx.arc(x + 5 * TXT, y, rows[i].r, 0, Math.PI * 2);
+            ctx.fill();
+            drawRuns(ctx, x + 14 * TXT, y, [
+                word(rows[i].label + " · ", 12, MUTED),
+                word((S.settled || "settled") + " " + Math.round(rows[i].eff * 100) + "%", 12, INK, 700)
+            ], "left");
+            y += 17 * TXT;
+        }
+
+        /* The colour scale, as discrete swatches — the ramp really is quantised, and a
+           painted gradient would be the one gradient in the whole figure. */
+        var sw = 9 * TXT, sh = 7 * TXT;
+        for (i = 0; i < RAMP; i++) {
+            ctx.fillStyle = rampColor(i / (RAMP - 1));
+            ctx.fillRect(x + i * sw, y - sh / 2, sw - 1, sh);
+        }
+        drawRuns(ctx, x + RAMP * sw + 7 * TXT, y,
+            [word(S.ramp || "weak field → strong", 12, MUTED)], "left");
     }
 
     function flowArrow(ctx, w, h) {
@@ -549,47 +682,71 @@
         el.style.transform = "translate(" + (p.x + dx) + "px," + (p.y + dy) + "px) translate(-50%,-50%)";
     }
 
-    function drawA(w, h) {
-        ctxA.clearRect(0, 0, w, h);
+    var backCv = null, backCtx = null, frontCv = null, frontCtx = null, sceneDirty = true;
+
+    function layerFor(cv, w, h) {
+        var ctx = cv.getContext("2d");
+        var pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+        if (cv.width !== pw || cv.height !== ph) { cv.width = pw; cv.height = ph; }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, w, h);
+        return ctx;
+    }
+
+    /* The tube, its wireframe, the trajectories and the annotations are ~2000 projections
+       and a dozen strokes, and none of it changes while the grains fall. Drawing it into
+       two offscreen layers — one behind the grains, one in front — and blitting those each
+       frame is the single biggest thing keeping the frame rate up. */
+    function buildScene(w, h) {
+        if (!backCv) { backCv = document.createElement("canvas"); frontCv = document.createElement("canvas"); }
         fitCamera(w, h);
+        backCtx = layerFor(backCv, w, h);
+        frontCtx = layerFor(frontCv, w, h);
 
-        tubeShell(ctxA);
+        tubeShell(backCtx);
+        tubeLines(backCtx, false);
+        if (showPaths) streamlines(backCtx);
+
+        tubeLines(frontCtx, true);
+        flowArrow(frontCtx, w, h);
+
+        /* R0 leader, drawn into the near half of the top rim where it stays clear. */
         var thC = camAngle(), hw = nearHalfWidth();
+        var pC = project(0, HH, 0);
+        var pR = project(Math.cos(thC - 0.85), HH, Math.sin(thC - 0.85));
+        if (pC && pR) {
+            frontCtx.save();
+            frontCtx.setLineDash([3, 2.5]);
+            frontCtx.strokeStyle = INK; frontCtx.globalAlpha = 0.7; frontCtx.lineWidth = 0.9;
+            frontCtx.beginPath(); frontCtx.moveTo(pC.x, pC.y); frontCtx.lineTo(pR.x, pR.y); frontCtx.stroke();
+            frontCtx.restore();
+            placeLabel(labRad, { x: (pC.x + pR.x) / 2, y: (pC.y + pR.y) / 2 }, 0, -12 * TXT);
+        } else if (labRad) {
+            labRad.hidden = true;
+        }
 
-        /* Far wireframe, then the cut-plane field, then grains with the wire slotted in
-           at its own depth, then the near wireframe on top. */
-        tubeLines(ctxA);
-        if (showPaths) streamlines(ctxA);
+        panelLetter(frontCtx, "a");
+        placeLabel(labWire, project(0, HH + 0.20, 0), 0, -11 * TXT);
+        placeLabel(labTube, project(Math.cos(thC + hw), -HH * 0.62, Math.sin(thC + hw)), 0, 0);
+
+        sceneDirty = false;
+    }
+
+    function drawA(w, h) {
+        if (sceneDirty) buildScene(w, h);
+
+        ctxA.clearRect(0, 0, w, h);
+        ctxA.drawImage(backCv, 0, 0, w, h);
 
         var dCentre = cam.dist;
-        var dMin = dCentre - (HH * Math.abs(se) + 1.05);
-        var dMax = dCentre + (HH * Math.abs(se) + 1.05);
-        drawParticles(ctxA, dMin, dMax, dCentre, function () { wireAndDeposit(ctxA); });
+        var reach = HH * Math.abs(se) + 1.05;
+        drawParticles(ctxA, dCentre - reach, dCentre + reach, dCentre, wireOnA);
 
-        flowArrow(ctxA, w, h);
-
-        /* R0 leader on the top rim, drawn into the far half where it stays clear. */
-        var thR = thC - 0.85;
-        var pC = project(0, HH, 0);
-        var pR = project(Math.cos(thR), HH, Math.sin(thR));
-        if (pC && pR) {
-            var mx = (pC.x + pR.x) / 2, my = (pC.y + pR.y) / 2;
-            ctxA.save();
-            ctxA.setLineDash([3, 2.5]);
-            ctxA.strokeStyle = INK; ctxA.globalAlpha = 0.7; ctxA.lineWidth = 0.9;
-            ctxA.beginPath(); ctxA.moveTo(pC.x, pC.y); ctxA.lineTo(pR.x, pR.y); ctxA.stroke();
-            ctxA.restore();
-            placeLabel(labRad, { x: mx, y: my }, 0, -12);
-        } else { if (labRad) labRad.hidden = true; }
-
-        panelLetter(ctxA, "a");
+        ctxA.drawImage(frontCv, 0, 0, w, h);
         legendA(ctxA, w, h);
-
-        placeLabel(labWire, project(0, HH + 0.20, 0), 0, -11);
-        /* V = 0 names the wall, so it sits astride the left silhouette; the knockout
-           behind it keeps both the label and the line underneath readable. */
-        placeLabel(labTube, project(Math.cos(thC + hw), -HH * 0.62, Math.sin(thC + hw)), 0, 0);
     }
+
+    function wireOnA() { wireAndDeposit(ctxA); }
 
     /* ------------------------------------------------------- panel b: one grain */
 
@@ -597,95 +754,115 @@
        of rays out of the wire — rather than as parallel arrows — is what makes the 1/x
        visible: the rays are evenly spaced in angle, so their linear density falls off as
        1/x on its own, with nothing to fake. The two faces of the grain then sit in
-       measurably different fields, which is the whole of part (a). */
-    function drawB(w, h) {
-        ctxB.clearRect(0, 0, w, h);
-        panelLetter(ctxB, "b");
+       measurably different fields, which is the whole of part (a).
 
-        var padL = 16, padR = 14, padT = 36, padB = 38;
+       The grain drifts inward under the same law the grains in panel a obey, so the two
+       arrows visibly grow as it closes on the wire. Only that half is redrawn each frame;
+       the ray fan and the labels live on a cached layer. */
+
+    var FAN = 0.46;                          // half-angle of the drawn fan
+    var B_RAYS = 11;
+    var B_X0 = 0.60, B_X1 = 0.22;            // the stretch of the fan the grain crosses
+    var bGrainX = B_X0;
+    var bCv = null, bStatic = null;
+    var bGeom = { wx: 0, yMid: 0, reach: 0, halfH: 0 };
+
+    function buildPanelB(w, h) {
+        if (!bCv) bCv = document.createElement("canvas");
+        var g = layerFor(bCv, w, h);
+        panelLetter(g, "b");
+
+        var padL = 16 * TXT, padR = 14 * TXT, padT = 36 * TXT, padB = 38 * TXT;
         var yMid = padT + (h - padT - padB) / 2;
-        var wx = padL + 4;                                  // the wire, seen end-on
+        var wx = padL + 4;
         var reach = w - padR - wx;
-        if (reach < 60 || h < 90) return;
-
-        var FAN = 0.46;                                      // half-angle of the drawn fan
-        var nRays = 11;
-
-        /* Field rays. */
-        ctxB.save();
-        ctxB.strokeStyle = HOT;
-        ctxB.fillStyle = HOT;
-        ctxB.lineWidth = 0.8;
-        ctxB.globalAlpha = 0.38;
         var halfH = (h - padT - padB) / 2;
-        for (var i = 0; i < nRays; i++) {
-            var a = -FAN + (2 * FAN * i) / (nRays - 1);
+        bGeom.wx = wx; bGeom.yMid = yMid; bGeom.reach = reach; bGeom.halfH = halfH;
+        bGeom.padT = padT; bGeom.padB = padB; bGeom.padR = padR;
+        if (reach < 60 || h < 90) { bStatic = null; return; }
+
+        g.strokeStyle = HOT;
+        g.fillStyle = HOT;
+        g.lineWidth = 0.8;
+        g.globalAlpha = 0.38;
+        for (var i = 0; i < B_RAYS; i++) {
+            var a = -FAN + (2 * FAN * i) / (B_RAYS - 1);
             var ca2 = Math.cos(a), sa2 = Math.sin(a);
             /* The outer rays would leave the panel through the top and bottom edges, so
                each is cut where it first meets the frame rather than at a fixed length. */
             var len = Math.min(reach, Math.abs(sa2) > 1e-3 ? halfH / Math.abs(sa2) : reach);
             var ex = wx + ca2 * len, ey = yMid + sa2 * len;
-            ctxB.beginPath();
-            ctxB.moveTo(wx + ca2 * 8, yMid + sa2 * 8);
-            ctxB.lineTo(ex - ca2 * 7, ey - sa2 * 7);
-            ctxB.stroke();
-            arrowHead(ctxB, ex - ca2 * 7, ey - sa2 * 7, ca2, sa2, 4.2);
+            g.beginPath();
+            g.moveTo(wx + ca2 * 8, yMid + sa2 * 8);
+            g.lineTo(ex - ca2 * 7, ey - sa2 * 7);
+            g.stroke();
+            arrowHead(g, ex - ca2 * 7, ey - sa2 * 7, ca2, sa2, 4.2);
         }
-        ctxB.restore();
+        g.globalAlpha = 1;
 
-        /* The grain, on the central ray. Its drawn radius follows the R/r slider, so the
-           part (d) control is visible here as well as in the numbers. */
-        var gx = wx + reach * 0.56;
-        var gR = Math.min((h - padT - padB) * 0.26, reach * 0.115 * params.rad);
+        g.beginPath();
+        g.arc(wx, yMid, 4.6, 0, Math.PI * 2);
+        g.fillStyle = HOT;
+        g.fill();
+        drawRuns(g, wx, yMid - 15 * TXT, [sym("+V", 14, HOT)], "center");
+
+        drawRuns(g, wx + 9, padT - 8 * TXT, [word(S.stronger || "stronger field", 12, MUTED)], "left");
+        drawRuns(g, w - padR, padT - 8 * TXT, [word(S.weaker || "weaker field", 12, MUTED)], "right");
+
+        bStatic = g;
+        dirtyB = false;
+    }
+
+    function drawB(w, h) {
+        if (dirtyB || !bCv) buildPanelB(w, h);
+        ctxB.clearRect(0, 0, w, h);
+        if (!bStatic) return;
+        ctxB.drawImage(bCv, 0, 0, w, h);
+
+        var wx = bGeom.wx, yMid = bGeom.yMid, reach = bGeom.reach;
+        if (reach < 60) return;
+
+        var gx = wx + reach * bGrainX;
+        var gR = Math.min(bGeom.halfH * 0.44, reach * 0.10 * params.rad);
         var xNear = gx - gR, xFar = gx + gR;
 
         /* Equipotential arcs through the two faces: equal potential steps crowd toward the
-           wire, so the near arc is drawn where the field is measurably stronger. */
+           wire, so the near arc is where the field is measurably stronger. */
         ctxB.save();
         ctxB.strokeStyle = INK;
         ctxB.globalAlpha = 0.30;
         ctxB.lineWidth = 0.8;
         ctxB.setLineDash([3.5, 3]);
         for (var f = 0; f < 2; f++) {
-            var rr = (f ? xFar : xNear) - wx;
             ctxB.beginPath();
-            ctxB.arc(wx, yMid, rr, -FAN, FAN);
+            ctxB.arc(wx, yMid, (f ? xFar : xNear) - wx, -FAN, FAN);
             ctxB.stroke();
         }
         ctxB.restore();
 
-        /* The wire itself, end-on. */
-        ctxB.beginPath();
-        ctxB.arc(wx, yMid, 4.2, 0, Math.PI * 2);
-        ctxB.fillStyle = HOT;
-        ctxB.fill();
-        drawRuns(ctxB, wx, yMid - 15, [sym("+V", 14, HOT)], "center");
-
-        /* The grain. */
         ctxB.beginPath();
         ctxB.arc(gx, yMid, gR, 0, Math.PI * 2);
         ctxB.fillStyle = PAPER;
         ctxB.fill();
         ctxB.fillStyle = COL_B;
-        ctxB.globalAlpha = 0.06;
+        ctxB.globalAlpha = 0.10;
         ctxB.fill();
         ctxB.globalAlpha = 1;
         ctxB.strokeStyle = COL_B;
-        ctxB.lineWidth = 1.3;
+        ctxB.lineWidth = 1.4;
         ctxB.stroke();
 
-        /* Induced bound charge: − drawn on the face toward the wire, + on the far face. */
+        /* Induced bound charge: − on the face toward the wire, + on the far face. */
         ctxB.textAlign = "center";
         ctxB.textBaseline = "middle";
-        ctxB.font = "700 14px " + SANS;
+        ctxB.font = "700 " + 14 * TXT + "px " + BODY;
         ctxB.fillStyle = INK;
         for (var k = -1; k <= 1; k++) {
             var ang = k * 0.66;
-            ctxB.fillText("−", gx - Math.cos(ang) * (gR - 5.5), yMid + Math.sin(ang) * (gR - 5.5));
-            ctxB.fillText("+", gx + Math.cos(ang) * (gR - 5.5), yMid + Math.sin(ang) * (gR - 5.5));
+            ctxB.fillText("−", gx - Math.cos(ang) * (gR - 6 * TXT), yMid + Math.sin(ang) * (gR - 6 * TXT));
+            ctxB.fillText("+", gx + Math.cos(ang) * (gR - 6 * TXT), yMid + Math.sin(ang) * (gR - 6 * TXT));
         }
 
-        /* Induced dipole moment. */
         ctxB.strokeStyle = INK;
         ctxB.fillStyle = INK;
         ctxB.lineWidth = 1.1;
@@ -694,27 +871,27 @@
         ctxB.lineTo(gx + gR * 0.40, yMid);
         ctxB.stroke();
         arrowHead(ctxB, gx + gR * 0.40, yMid, 1, 0, 4);
-        drawRuns(ctxB, gx, yMid - gR - 9, [sym("p", 14, INK)], "center");
+        drawRuns(ctxB, gx, yMid - gR - 9 * TXT, [sym("p", 14, INK)], "center");
 
-        /* The two Coulomb forces, drawn to the true ratio E(x−a) : E(x+a) at this grain,
-           anchored on the faces they act on. The near one is longer because the field is
-           stronger there — which is the argument, not an illustration of it. */
-        var xg = (gx - wx) / reach;                          // grain centre, in tube radii
-        var ag = gR / reach;
+        /* The two Coulomb forces, drawn to the true ratio E(x−a) : E(x+a) at wherever the
+           grain has got to, anchored on the faces they act on. Both grow as it closes in;
+           the near one grows faster, which is why the resultant points inward at all. */
+        var xg = bGrainX, ag = gR / reach;
         var eNear = 1 / Math.max(0.02, xg - ag);
         var eFar = 1 / (xg + ag);
-        var unit = Math.min(reach * 0.30, 60);
+        var unit = Math.min(reach * 0.22, 58 * TXT) * Math.min(1.7, 0.55 / Math.max(0.12, xg));
         var lFar = unit * (eFar / eNear);
-        var yF = yMid + gR + 17;
+        lFar = Math.min(lFar, (w - bGeom.padR) - xFar - 8);   // never leave the panel
+        var yF = yMid + gR + 17 * TXT;
 
-        ctxB.lineWidth = 1.6;
+        ctxB.lineWidth = 1.8;
         ctxB.strokeStyle = COL_A;
         ctxB.fillStyle = COL_A;
         ctxB.beginPath();
         ctxB.moveTo(xNear, yF);
-        ctxB.lineTo(xNear - unit, yF);
+        ctxB.lineTo(Math.max(wx + 4, xNear - unit), yF);
         ctxB.stroke();
-        arrowHead(ctxB, xNear - unit, yF, -1, 0, 5);
+        arrowHead(ctxB, Math.max(wx + 4, xNear - unit), yF, -1, 0, 5.5);
 
         ctxB.strokeStyle = MUTED;
         ctxB.fillStyle = MUTED;
@@ -722,103 +899,106 @@
         ctxB.moveTo(xFar, yF);
         ctxB.lineTo(xFar + lFar, yF);
         ctxB.stroke();
-        arrowHead(ctxB, xFar + lFar, yF, 1, 0, 5);
+        arrowHead(ctxB, xFar + lFar, yF, 1, 0, 5.5);
 
-        drawRuns(ctxB, xNear - unit / 2, yF + 11,
+        drawRuns(ctxB, (xNear + Math.max(wx + 4, xNear - unit)) / 2, yF + 11 * TXT,
             [sym("qE", 13, COL_A), sub("near", 13, COL_A)], "center");
-        drawRuns(ctxB, xFar + lFar / 2, yF + 11,
+        drawRuns(ctxB, xFar + lFar / 2, yF + 11 * TXT,
             [sym("qE", 13, MUTED), sub("far", 13, MUTED)], "center");
 
-        /* Which side of the picture is which. */
-        drawRuns(ctxB, wx + 9, padT - 6, [word(S.stronger || "stronger field", 12, MUTED)], "left");
-        drawRuns(ctxB, w - padR, padT - 6, [word(S.weaker || "weaker field", 12, MUTED)], "right");
-
-        /* The resultant and the statement it proves. */
-        var yN = h - padB + 12;
+        /* The resultant, and the statement it proves. */
+        var yN = h - bGeom.padB + 12 * TXT;
         ctxB.strokeStyle = INK;
         ctxB.fillStyle = INK;
-        ctxB.lineWidth = 2;
+        ctxB.lineWidth = 2.2;
         var nl = Math.max(16, unit - lFar);
+        var nx = wx + reach * 0.30;
         ctxB.beginPath();
-        ctxB.moveTo(gx, yN);
-        ctxB.lineTo(gx - nl, yN);
+        ctxB.moveTo(nx, yN);
+        ctxB.lineTo(nx - nl, yN);
         ctxB.stroke();
-        arrowHead(ctxB, gx - nl, yN, -1, 0, 5.5);
-        drawRuns(ctxB, gx + 9, yN,
+        arrowHead(ctxB, nx - nl, yN, -1, 0, 6);
+        drawRuns(ctxB, nx + 9 * TXT, yN,
             [sym("F", 13.5, INK), word(" = ", 13.5, INK), sym("p", 13.5, INK),
-             word(" ∂", 13.5, INK), sym("E", 13.5, INK), word("/∂", 13.5, INK),
-             sym("x", 13.5, INK), word(" < 0", 13.5, INK)], "left");
+             word(" ∂", 13.5, INK), sym("E", 13.5, INK), word("/∂", 13.5, INK),
+             sym("x", 13.5, INK), word(" < 0", 13.5, INK)], "left");
     }
 
     /* ------------------------------------------------- panel c: the scaling laws */
 
     var C_XMIN = 0.05, C_XMAX = 1, C_YMIN = -1, C_YMAX = 7;
+    var cCv = null, cStatic = null, dirtyC = true;
+    var cGeom = { padL: 0, padT: 0, pw: 0, ph: 0, lx0: 0, lx1: 0 };
+    var cHistA = new Float32Array(46), cHistB = new Float32Array(46), cHistMax = 1;
 
-    function drawC(w, h) {
-        ctxC.clearRect(0, 0, w, h);
-        panelLetter(ctxC, "c");
+    function buildPanelC(w, h) {
+        if (!cCv) cCv = document.createElement("canvas");
+        var g = layerFor(cCv, w, h);
+        panelLetter(g, "c");
 
-        var padL = 48, padR = 14, padT = 26, padB = 50;
+        var padL = 52 * TXT, padR = 14 * TXT, padT = 26 * TXT, padB = 52 * TXT;
         var pw = w - padL - padR, ph = h - padT - padB;
-        if (pw < 40 || ph < 40) return;
-
         var lx0 = Math.log10(C_XMIN), lx1 = Math.log10(C_XMAX);
+        cGeom.padL = padL; cGeom.padT = padT; cGeom.pw = pw; cGeom.ph = ph;
+        cGeom.lx0 = lx0; cGeom.lx1 = lx1;
+        if (pw < 40 || ph < 40) { cStatic = null; return; }
+
         function X(rho) { return padL + ((Math.log10(rho) - lx0) / (lx1 - lx0)) * pw; }
         function Y(dec) { return padT + ph - ((dec - C_YMIN) / (C_YMAX - C_YMIN)) * ph; }
 
-        /* Frame: two axes, no box, no grid — a Nature panel, not a spreadsheet. */
-        ctxC.strokeStyle = INK; ctxC.lineWidth = 0.9; ctxC.globalAlpha = 0.75;
-        ctxC.beginPath();
-        ctxC.moveTo(padL, padT); ctxC.lineTo(padL, padT + ph); ctxC.lineTo(padL + pw, padT + ph);
-        ctxC.stroke();
-        ctxC.globalAlpha = 1;
+        /* Frame: two axes, no box, no grid — a figure panel, not a spreadsheet. */
+        g.strokeStyle = INK; g.lineWidth = 0.9; g.globalAlpha = 0.75;
+        g.beginPath();
+        g.moveTo(padL, padT); g.lineTo(padL, padT + ph); g.lineTo(padL + pw, padT + ph);
+        g.stroke();
+        g.globalAlpha = 1;
 
         var xTicks = [0.05, 0.1, 0.2, 0.5, 1];
-        ctxC.strokeStyle = MUTED; ctxC.lineWidth = 0.8;
+        g.strokeStyle = MUTED; g.lineWidth = 0.8;
         for (var i = 0; i < xTicks.length; i++) {
             var xx = X(xTicks[i]);
-            ctxC.beginPath(); ctxC.moveTo(xx, padT + ph); ctxC.lineTo(xx, padT + ph + 4); ctxC.stroke();
-            drawRuns(ctxC, xx, padT + ph + 15, [word(String(xTicks[i]), 12, MUTED)], "center");
+            g.beginPath(); g.moveTo(xx, padT + ph); g.lineTo(xx, padT + ph + 4); g.stroke();
+            drawRuns(g, xx, padT + ph + 15 * TXT, [word(String(xTicks[i]), 12, MUTED)], "center");
         }
         for (var d = 0; d <= 6; d += 2) {
             var yy = Y(d);
-            ctxC.beginPath(); ctxC.moveTo(padL - 4, yy); ctxC.lineTo(padL, yy); ctxC.stroke();
-            drawRuns(ctxC, padL - 7, yy, [word("10", 12, MUTED), { t: String(d), f: "9px " + SANS, c: MUTED, dy: -4.5 }], "right");
+            g.beginPath(); g.moveTo(padL - 4, yy); g.lineTo(padL, yy); g.stroke();
+            drawRuns(g, padL - 7 * TXT, yy,
+                [word("10", 12, MUTED), { t: String(d), f: 9 * TXT + "px " + BODY, c: MUTED, dy: -4.5 * TXT }], "right");
         }
 
-        drawRuns(ctxC, padL + pw / 2, padT + ph + 32,
+        drawRuns(g, padL + pw / 2, padT + ph + 32 * TXT,
             [sym("x", 13, INK), word("/", 13, INK), sym("R", 13, INK), sub("0", 13, INK)], "center");
-        ctxC.save();
-        ctxC.translate(13, padT + ph / 2);
-        ctxC.rotate(-Math.PI / 2);
-        drawRuns(ctxC, 0, 0, [word(S.axisY || "arb. units", 12, MUTED)], "center");
-        ctxC.restore();
+        g.save();
+        g.translate(13 * TXT, padT + ph / 2);
+        g.rotate(-Math.PI / 2);
+        drawRuns(g, 0, 0, [word(S.axisY || "relative to the wall", 12, MUTED)], "center");
+        g.restore();
 
         function plot(fn, color, width, dash, alpha) {
-            ctxC.save();
-            ctxC.beginPath();
+            g.save();
+            g.beginPath();
             var started = false;
-            for (var k = 0; k <= 120; k++) {
-                var rho = Math.pow(10, lx0 + ((lx1 - lx0) * k) / 120);
+            for (var k = 0; k <= 90; k++) {
+                var rho = Math.pow(10, lx0 + ((lx1 - lx0) * k) / 90);
                 var v = fn(rho);
                 if (!(v > 0)) { started = false; continue; }
                 var dec = Math.log10(v);
                 if (dec < C_YMIN - 1 || dec > C_YMAX + 1) { started = false; continue; }
                 var px = X(rho), py = Y(Math.max(C_YMIN, Math.min(C_YMAX, dec)));
-                if (!started) { ctxC.moveTo(px, py); started = true; } else ctxC.lineTo(px, py);
+                if (!started) { g.moveTo(px, py); started = true; } else g.lineTo(px, py);
             }
-            ctxC.strokeStyle = color;
-            ctxC.lineWidth = width;
-            ctxC.globalAlpha = alpha || 1;
-            if (dash) ctxC.setLineDash(dash);
-            ctxC.stroke();
-            ctxC.restore();
+            g.strokeStyle = color;
+            g.lineWidth = width;
+            g.globalAlpha = alpha || 1;
+            if (dash) g.setLineDash(dash);
+            g.stroke();
+            g.restore();
         }
 
-        /* E ∝ 1/x for reference, then |F| ∝ 1/x³ for each fraction. */
-        plot(function (r) { return 1 / r; }, FIELDC, 1.3, [5, 3.5], 0.95);
-        plot(function (r) { return forceOf(1, EPS1, r); }, COL_A, 1.6, null, 1);
-        plot(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B, 1.6, null, 1);
+        plot(function (r) { return 1 / r; }, FIELDC, 1.5, [5, 3.5], 0.95);
+        plot(function (r) { return forceOf(1, EPS1, r); }, COL_A, 1.9, null, 1);
+        plot(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B, 1.9, null, 1);
 
         /* Slope triangles: the −3 and −1 the problem asks for, read straight off. */
         function slopeMark(rhoAt, fn, slope, color, label) {
@@ -828,57 +1008,74 @@
             if (dec < C_YMIN || dec > C_YMAX - 0.4) return;
             var r2 = rhoAt * 1.9;
             if (r2 > C_XMAX) return;
-            var xA = X(rhoAt), yA = Y(dec);
-            var xB = X(r2), yB = Y(dec);
+            var xA = X(rhoAt), yA = Y(dec), xB = X(r2);
             var yC2 = Y(dec + slope * (Math.log10(r2) - Math.log10(rhoAt)));
             if (yC2 > padT + ph || yC2 < padT) return;
-            ctxC.save();
-            ctxC.strokeStyle = color; ctxC.globalAlpha = 0.75; ctxC.lineWidth = 0.9;
-            ctxC.beginPath();
-            ctxC.moveTo(xA, yA); ctxC.lineTo(xB, yA); ctxC.lineTo(xB, yC2);
-            ctxC.stroke();
-            ctxC.restore();
-            drawRuns(ctxC, (xA + xB) / 2, yA - 7, [word(label, 12, color, 700)], "center");
+            g.save();
+            g.strokeStyle = color; g.globalAlpha = 0.75; g.lineWidth = 0.9;
+            g.beginPath();
+            g.moveTo(xA, yA); g.lineTo(xB, yA); g.lineTo(xB, yC2);
+            g.stroke();
+            g.restore();
+            drawRuns(g, (xA + xB) / 2, yA - 7 * TXT, [word(label, 12, color, 700)], "center");
         }
         slopeMark(0.14, function (r) { return forceOf(1, EPS1, r); }, -3, COL_A, "−3");
         slopeMark(0.34, function (r) { return 1 / r; }, -1, FIELDC, "−1");
 
-        /* Where the grains actually are, as two thin histograms on the baseline. */
-        var nb = 46, hA = new Float32Array(nb), hB = new Float32Array(nb), mx = 1;
-        for (var q = 0; q < N; q++) {
-            var rr = pr[q];
-            if (rr < C_XMIN) continue;
-            var bi = Math.min(nb - 1, Math.max(0, (((Math.log10(rr) - lx0) / (lx1 - lx0)) * nb) | 0));
-            if (psp[q]) hB[bi]++; else hA[bi]++;
-        }
-        for (q = 0; q < nb; q++) { if (hA[q] > mx) mx = hA[q]; if (hB[q] > mx) mx = hB[q]; }
-        var base = padT + ph, hMax = 16;
-        for (var sp2 = 0; sp2 < 2; sp2++) {
-            var arr = sp2 ? hB : hA;
-            ctxC.fillStyle = sp2 ? COL_B : COL_A;
-            ctxC.globalAlpha = 0.42;
-            for (q = 0; q < nb; q++) {
-                if (!arr[q]) continue;
-                var bx = padL + (q / nb) * pw, bw = pw / nb;
-                var bh = (arr[q] / mx) * hMax;
-                ctxC.fillRect(bx, base - bh, Math.max(1, bw - 0.6), bh);
-            }
-        }
-        ctxC.globalAlpha = 1;
-
-        /* Series labels, placed at the left edge of each curve. */
         function seriesLabel(fn, color, runs) {
             var v = fn(C_XMIN * 1.08);
             if (!(v > 0)) return;
             var dec = Math.log10(v);
             if (dec < C_YMIN || dec > C_YMAX) return;
-            drawRuns(ctxC, X(C_XMIN * 1.08) + 3, Y(dec) - 8, runs, "left");
+            drawRuns(g, X(C_XMIN * 1.08) + 3, Y(dec) - 8 * TXT, runs, "left");
         }
         seriesLabel(function (r) { return forceOf(params.rad, params.eps2, r); }, COL_B,
             [sym("F", 12.5, COL_B), sub("2", 12.5, COL_B)]);
         seriesLabel(function (r) { return forceOf(1, EPS1, r); }, COL_A,
             [sym("F", 12.5, COL_A), sub("1", 12.5, COL_A)]);
         seriesLabel(function (r) { return 1 / r; }, FIELDC, [sym("E", 12.5, FIELDC)]);
+
+        cStatic = g;
+        dirtyC = false;
+    }
+
+    /* Where the grains actually are. Recounting 2400 of them is the only per-frame cost in
+       this panel, and the distribution is a slow statistic, so it is refreshed a few times
+       a second rather than every frame. */
+    function recountHistogram() {
+        var nb = cHistA.length, lx0 = cGeom.lx0, lx1 = cGeom.lx1, k = nb / (lx1 - lx0);
+        cHistA.fill(0); cHistB.fill(0);
+        var mx = 1;
+        for (var q = 0; q < nActive; q++) {
+            var rr = pr[q];
+            if (rr < C_XMIN) continue;
+            var bi = ((Math.log(rr) * Math.LOG10E - lx0) * k) | 0;
+            if (bi < 0) bi = 0; else if (bi >= nb) bi = nb - 1;
+            if (psp[q]) { if (++cHistB[bi] > mx) mx = cHistB[bi]; }
+            else { if (++cHistA[bi] > mx) mx = cHistA[bi]; }
+        }
+        cHistMax = mx;
+    }
+
+    function drawC(w, h) {
+        if (dirtyC || !cCv) buildPanelC(w, h);
+        ctxC.clearRect(0, 0, w, h);
+        if (!cStatic) return;
+        ctxC.drawImage(cCv, 0, 0, w, h);
+
+        var nb = cHistA.length, padL = cGeom.padL, pw = cGeom.pw;
+        var base = cGeom.padT + cGeom.ph, hMax = 16 * TXT, bw = pw / nb;
+        for (var sp = 0; sp < 2; sp++) {
+            var arr = sp ? cHistB : cHistA;
+            ctxC.fillStyle = sp ? COL_B : COL_A;
+            ctxC.globalAlpha = 0.45;
+            for (var q = 0; q < nb; q++) {
+                if (!arr[q]) continue;
+                var bh = (arr[q] / cHistMax) * hMax;
+                ctxC.fillRect(padL + q * bw, base - bh, Math.max(1, bw - 0.6), bh);
+            }
+        }
+        ctxC.globalAlpha = 1;
     }
 
     /* -------------------------------------------------------------------- export */
@@ -947,10 +1144,10 @@
             g.textAlign = "left";
             g.textBaseline = "alphabetic";
             g.fillStyle = INK;
-            g.font = "700 " + 13.5 * scale + "px " + SANS;
+            g.font = "700 " + 13.5 * TXT * scale + "px " + BODY;
             g.fillText(S.figTitle || "", pad * scale, (totalH - foot + 18) * scale);
             g.fillStyle = MUTED;
-            g.font = 400 + " " + 11.5 * scale + "px " + SANS;
+            g.font = 400 + " " + 11.5 * TXT * scale + "px " + BODY;
             g.fillText(S.creditLine || "", pad * scale, (totalH - foot + 34) * scale);
 
             out.toBlob(function (blob) {
@@ -1006,7 +1203,9 @@
         var r = forceRatio();
         if (outRatio) outRatio.textContent = r >= 100 ? r.toFixed(0) : r.toFixed(1);
         dirtyB = true;
+        dirtyC = true;
         needsDraw = true;
+        sceneDirty = true;   // the trajectories are drawn from these numbers
     }
 
     function bindRange(el, key, parse) {
@@ -1041,6 +1240,7 @@
         showPaths = !showPaths;
         btnField.setAttribute("aria-pressed", showPaths ? "true" : "false");
         needsDraw = true;
+        sceneDirty = true;
     });
     if (btnReset) btnReset.addEventListener("click", function () {
         params.V = 1; params.eps2 = 6; params.rad = 1.6;
@@ -1049,6 +1249,7 @@
         if (elR) elR.value = "1.6";
         cam.az = 0.62; cam.el = 0.24; cam.dist = 4.4;
         updateTrig();
+        nActive = N;
         resetParticles();
         syncReadout();
     });
@@ -1070,6 +1271,7 @@
         cam.el = Math.max(-1.2, Math.min(1.25, cam.el + dy * 0.006));
         updateTrig();
         needsDraw = true;
+        sceneDirty = true;
     }
 
     canvasA.addEventListener("pointerdown", function (e) {
@@ -1096,6 +1298,7 @@
         e.preventDefault();
         cam.dist = Math.max(2.6, Math.min(8, cam.dist + e.deltaY * 0.0035));
         needsDraw = true;
+        sceneDirty = true;
     }, { passive: false });
 
     canvasA.addEventListener("touchmove", function (e) {
@@ -1105,6 +1308,7 @@
         if (pinch) cam.dist = Math.max(2.6, Math.min(8, cam.dist * (pinch / d)));
         pinch = d;
         needsDraw = true;
+        sceneDirty = true;
         e.preventDefault();
     }, { passive: false });
     canvasA.addEventListener("touchend", function () { pinch = 0; });
@@ -1119,6 +1323,7 @@
         else if (k === "-") cam.dist = Math.min(8, cam.dist + 0.25);
         else return;
         needsDraw = true;
+        sceneDirty = true;
         markTouched();
         e.preventDefault();
     });
@@ -1139,8 +1344,33 @@
         sizeCanvas(canvasA, ctxA, sizeA);
         sizeCanvas(canvasB, ctxB, sizeB);
         sizeCanvas(canvasC, ctxC, sizeC);
+        /* Canvas text follows the page's type scale, but a label also has to fit the panel
+           it is drawn in: on a phone the panels are half the width while the body text is
+           only a third smaller, so the panel width gets a vote. */
+        var cssFs = (parseFloat(getComputedStyle(root).fontSize) || 15) / 15;
+        var newTxt = Math.max(0.75, Math.min(cssFs, sizeA.w / 430));
+        if (newTxt !== TXT) { TXT = newTxt; textCache.clear(); }
         dirtyB = true;
+        dirtyC = true;
+        sceneDirty = true;
         needsDraw = true;
+        textCache.clear();
+    }
+
+    /* Frame budget. A laptop that cannot hold 50 fps with 2400 grains gets fewer grains
+       rather than a stuttering figure; it climbs back when there is headroom. Measured on
+       a median of recent frames so one slow frame — a webfont landing, a GC — cannot
+       ratchet the count down. */
+    var costs = [8, 8, 8, 8, 8, 8, 8], costAt = 0, adaptAt = 0, lastHist = 0;
+
+    function adapt(cost, ts) {
+        costs[costAt = (costAt + 1) % costs.length] = cost;
+        if (ts - adaptAt < 700) return;
+        adaptAt = ts;
+        var sorted = costs.slice().sort(function (a, b) { return a - b; });
+        var med = sorted[sorted.length >> 1];
+        if (med > 15 && nActive > 260) nActive = Math.max(260, (nActive * 0.75) | 0);
+        else if (med < 8 && nActive < N) nActive = Math.min(N, (nActive * 1.25 + 40) | 0);
     }
 
     function frame(ts) {
@@ -1154,10 +1384,15 @@
         last = ts;
         needsDraw = false;
 
+        var t0 = performance.now();
         if (playing && dt > 0) step(dt);
         drawA(sizeA.w, sizeA.h);
-        if (dirtyB) { drawB(sizeB.w, sizeB.h); dirtyB = false; }
+        drawB(sizeB.w, sizeB.h);
+        /* The radial distribution is a slow statistic; recounting every grain 50 times a
+           second bought nothing a reader could see. */
+        if (dirtyC || ts - lastHist > 130) { recountHistogram(); lastHist = ts; }
         drawC(sizeC.w, sizeC.h);
+        adapt(performance.now() - t0, ts);
     }
 
     var ro = null;
@@ -1177,8 +1412,10 @@
     window.addEventListener("pagehide", teardown);
 
     function start() {
+        buildSprites();
         layout();
         syncReadout();
+        recountHistogram();
         root.classList.add("is-live");
         drawA(sizeA.w, sizeA.h);
         drawB(sizeB.w, sizeB.h);
@@ -1188,7 +1425,15 @@
 
     /* Metrics are wrong until the webfonts land, so lay out once now and once after. */
     start();
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function () { layout(); dirtyB = true; });
+    if (document.fonts && document.fonts.load) {
+        Promise.all([
+            document.fonts.load('16px "Latin Modern Roman"', "Fx0"),
+            document.fonts.load('italic 16px "Latin Modern Roman"', "Fx0"),
+            document.fonts.load('700 16px "Latin Modern Roman"', "Fx0"),
+            document.fonts.load('16px "CMU Serif"', "пылинки")
+        ]).catch(function () { /* a missing face just means the fallback stack */ })
+          .then(function () { textCache.clear(); layout(); });
+    } else if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { textCache.clear(); layout(); });
     }
 })();

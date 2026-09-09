@@ -15,18 +15,20 @@
     /* Figure palette. Six values, all drawn from the site's design tokens. */
     --fig-ink: #1a1a2e;          /* structure: axes, tube wireframe, rules            */
     --fig-muted: #6c757d;        /* ticks, minor labels, hints                        */
-    --fig-hot: #d7301f;          /* the +V electrode and high-field annotations       */
-    --fig-a: #1b7fbd;            /* small grains, permittivity e1                     */
-    --fig-b: #e08214;            /* large grains, permittivity e2                     */
-    --fig-field: #7b52ab;        /* the E reference curve in panel c                  */
+    --fig-hot: #e5194b;          /* the +V electrode and high-field annotations       */
+    --fig-a: #00857a;            /* panel c: small-grain force curve                  */
+    --fig-b: #b8560f;            /* panel c: large-grain force curve                  */
+    --fig-field: #8b5cf6;        /* the E reference curve in panel c                  */
     --fig-deposit: #2d2d2d;      /* what has already been collected on the wire       */
     --fig-rule: #dee2e6;
     --fig-paper: #ffffff;
 
     /* The solution body is justified 1.35rem serif with an indent on every paragraph
        (solution_post.ejs:198-222). None of that should reach the figure. */
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 15px;
+    /* The same face and size as the statement and the solution around it, so the figure
+       reads as part of the page rather than as a widget dropped into it. */
+    font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
+    font-size: 1.35rem;
     line-height: 1.5;
     text-align: left;
     text-indent: 0;
@@ -36,7 +38,7 @@
     background: var(--fig-paper);
 
     display: grid;
-    gap: 14px 18px;
+    gap: 18px 22px;
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
         "panel-a"
@@ -61,7 +63,7 @@
     background: var(--fig-paper);
 }
 
-.ss-fig-panel--a { grid-area: panel-a; aspect-ratio: 1 / 1; }
+.ss-fig-panel--a { grid-area: panel-a; aspect-ratio: 4 / 5; }
 .ss-fig-panel--b { grid-area: panel-b; aspect-ratio: 4 / 3; }
 .ss-fig-panel--c { grid-area: panel-c; aspect-ratio: 4 / 3; }
 
@@ -89,7 +91,7 @@
     z-index: 2;
     padding: 0 3px;
     background: rgba(255, 255, 255, 0.86);   /* knockout, so a label stays readable over the wireframe */
-    font-size: 15px;
+    font-size: 1em;
     line-height: 1.2;
     white-space: nowrap;
     pointer-events: none;
@@ -117,7 +119,7 @@
     right: 0;
     bottom: 0;
     z-index: 2;
-    font-size: 12.5px;
+    font-size: 0.62em;
     color: var(--fig-muted);
     pointer-events: none;
     transition: opacity 0.25s linear;
@@ -144,14 +146,14 @@
 }
 
 .ss-fig-control > label {
-    font-size: 14px;
+    font-size: 1em;
     font-weight: 600;
     color: var(--fig-ink);
     margin: 0;
 }
 
 .ss-fig-control .ss-fig-value {
-    font-size: 14px;
+    font-size: 1em;
     color: var(--fig-muted);
     font-variant-numeric: tabular-nums;
     justify-self: start;
@@ -160,7 +162,7 @@
 .ss-fig-control input[type="range"] {
     grid-column: 1 / -1;
     width: 100%;
-    max-width: 260px;
+    max-width: 300px;
     height: 20px;
     margin: 0;
     padding: 0;
@@ -182,17 +184,17 @@
 .ss-fig-control input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 15px;
-    height: 15px;
-    margin-top: -6.5px;
+    width: 17px;
+    height: 17px;
+    margin-top: -7.5px;
     border: none;
     border-radius: 50%;
     background: var(--fig-ink);
 }
 
 .ss-fig-control input[type="range"]::-moz-range-thumb {
-    width: 15px;
-    height: 15px;
+    width: 17px;
+    height: 17px;
     border: none;
     border-radius: 50%;
     background: var(--fig-ink);
@@ -224,14 +226,14 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 36px;
-    padding: 0 13px;
+    height: 2.2em;
+    padding: 0 0.7em;
     border: 1px solid var(--fig-rule);
     border-radius: 6px;
     background: var(--fig-paper);
     color: var(--fig-deposit);
     font: inherit;
-    font-size: 13.5px;
+    font-size: 0.92em;
     cursor: pointer;
 }
 
@@ -252,7 +254,7 @@
 
 /* The live answer to parts b and d, kept next to the sliders that produce it. */
 .ss-fig-readout {
-    font-size: 14px;
+    font-size: 1em;
     color: var(--fig-muted);
     font-variant-numeric: tabular-nums;
     align-self: end;
@@ -268,8 +270,8 @@
 .ss-fig-caption {
     grid-area: caption;
     margin: 2px 0 0;
-    font-size: 14.5px;
-    line-height: 1.55;
+    font-size: 1em;
+    line-height: 1.5;
     color: var(--fig-deposit);
     text-align: left;
     text-indent: 0;
@@ -285,7 +287,7 @@
 
 .ss-fig-credit {
     grid-area: credit;
-    font-size: 13.5px;
+    font-size: 0.86em;
     color: var(--fig-muted);
 }
 
@@ -358,14 +360,16 @@
 }
 
 @media (max-width: 899px) {
+    /* One slider per row: at this width a label and its value cannot share a half-column
+       without wrapping into each other. */
     .ss-fig-controls {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 1fr);
     }
 
     /* Four buttons have to make one row on a 360px screen. */
     .ss-fig-btn {
-        padding: 0 10px;
-        font-size: 13px;
+        padding: 0 0.55em;
+        font-size: 0.86em;
     }
 
     .ss-fig-buttons { gap: 6px; }
@@ -394,4 +398,13 @@
 .content-body .ss-fig-caption {
     margin: 2px 0 0;
     text-align: left;
+}
+
+/* The solution body itself drops to 1rem below 768px (solution_post.ejs:1261), and the
+   figure follows it down — the whole point of tying the two together. */
+@media (max-width: 768px) {
+    .ss-fig {
+        font-size: 1rem;
+        gap: 14px 16px;
+    }
 }
