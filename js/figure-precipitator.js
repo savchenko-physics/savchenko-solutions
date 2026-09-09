@@ -51,8 +51,10 @@
     var INK = "#1a1a2e";
     var MUTED = "#6c757d";
     var HOT = "#e5194b";                     // the live electrode, crimson
-    var COL_A = "#00857a";                   // panel c: the small-grain force curve, teal
-    var COL_B = "#b8560f";                   // panel c: the large-grain force curve, umber
+    var COL_A = "#0000ff";                   // panel c: the small-grain force curve
+    var COL_B = "#ff0000";                   /* panel c: the large-grain force curve. The
+       same two ends as the field ramp, and it does not fight it: F2 is the larger force
+       everywhere, so red still means "more" in both panels. */
     var FIELDC = "#8b5cf6";                  // the E reference curve, violet
     var DEPOSIT = "#2d2d2d";
     var RULE = "#dee2e6";
@@ -532,8 +534,8 @@
         var specs = [
             { r0: 0.97, dth: 0.95, sp: 1 },
             { r0: 0.88, dth: -1.25, sp: 1 },
-            { r0: 0.97, dth: 2.35, sp: 0 },
-            { r0: 0.74, dth: -2.45, sp: 0 }
+            { r0: 0.78, dth: 2.35, sp: 0 },
+            { r0: 0.62, dth: -2.45, sp: 0 }
         ];
         var thC = camAngle();
         ctx.save();
@@ -630,7 +632,7 @@
     }
 
     function legendA(ctx, w, h) {
-        var x = 2, y = h - 52 * TXT, mid = rampColor(0.42);
+        var x = 2, y = h - 52 * TXT;
         ctx.globalAlpha = 1;
 
         /* Two sizes, one neutral colour: in this panel hue is the field, not the size. */
@@ -641,7 +643,9 @@
             { r: 5.0 * TXT, label: S.coarse || "large grains", eff: effB }
         ];
         for (var i = 0; i < rows.length; i++) {
-            ctx.fillStyle = mid;
+            /* Black, deliberately: these two mark the two grain sizes, and a colour here
+               would be read as part of the field scale sitting right below them. */
+            ctx.fillStyle = "#000000";
             ctx.beginPath();
             ctx.arc(x + 5 * TXT, y, rows[i].r, 0, Math.PI * 2);
             ctx.fill();
@@ -854,7 +858,11 @@
         }
         ctxB.restore();
 
-        var grainCol = rampColor(rampT(bGrainX));
+        /* Panel b is a schematic zoom, and the ball only crosses part of the drawn fan —
+           so its colour tracks how far along the journey it is, not where it sits in the
+           panel. It leaves the wall pure blue and reaches the wire pure red, which is the
+           same trip the grains in panel a make. */
+        var grainCol = rampColor(Math.min(1, Math.max(0, (B_X0 - bGrainX) / (B_X0 - B_X1))));
         ctxB.beginPath();
         ctxB.arc(gx, yMid, gR, 0, Math.PI * 2);
         ctxB.fillStyle = PAPER;
