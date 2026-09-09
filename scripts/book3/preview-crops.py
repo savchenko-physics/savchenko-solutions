@@ -20,7 +20,7 @@ from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 W = os.path.join(ROOT, 'src', 'database', 'book3')
-PDF = os.path.join(ROOT, 'pdf', 'savchenko-3rd-ed.pdf')
+PDF = os.path.join(ROOT, 'pdf', 'savchenko.pdf')
 OUT = os.path.join(W, 'preview', 'crops')
 FIRST, LAST = 9, 279
 DPI = 108

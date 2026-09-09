@@ -20,7 +20,7 @@
  *
  *   3rd edition (src/database/book3/, built by scripts/book3/*) — when present it wins:
  *            statements_ru.json is the Russian text checked word for word against
- *            pdf/savchenko-3rd-ed.pdf (see scripts/book3/assemble.py for how the site's
+ *            pdf/savchenko.pdf (see scripts/book3/assemble.py for how the site's
  *            markdown, the model's typesetting and the raw book text rank), figures.json
  *            attributes every figure by the caption drawn inside it, and problems.json
  *            carries the ∗ read from the bold headers. The older sources above stay as the

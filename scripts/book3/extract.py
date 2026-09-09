@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract every problem statement and every figure from the 3rd edition (pdf/savchenko-3rd-ed.pdf).
+"""Extract every problem statement and every figure from the 3rd edition (pdf/savchenko.pdf).
 
     python3 scripts/book3/extract.py [--work DIR]
 
@@ -31,7 +31,7 @@ import sys
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-PDF = os.path.join(ROOT, 'pdf', 'savchenko-3rd-ed.pdf')
+PDF = os.path.join(ROOT, 'pdf', 'savchenko.pdf')
 FIRST, LAST = 9, 279          # the problems part; answers begin on 280
 
 NUM = re.compile(r'^(\d{1,2})\.(\d{1,2})\.(\d{1,3})\.?$')

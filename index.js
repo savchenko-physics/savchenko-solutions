@@ -219,12 +219,14 @@ app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
 // The src directory contains Python scripts and CSV data — must not be publicly served.
 app.use("/en/savchenko_en.pdf", express.static(path.join(__dirname, "pdf/savchenko_en.pdf")));
 app.use("/physics-telegram-catalog.pdf", express.static(path.join(__dirname, "pdf/physics-telegram-catalog.pdf")));
+// /savchenko.pdf is the 3rd edition again: the typeset pdfTeX copy with an exact text
+// layer, 5.4 MB. The 4th edition held this URL from 2026-08-09 to 2026-09-02, but it is a
+// 21 MB scan with an OCR text layer — the worse download and the worse source for exact
+// text — so it moved to its own URL. /savchenko-3rd-ed.pdf is the URL the 3rd edition
+// had in between; kept so links to it keep working.
 app.use("/savchenko.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
-// The 3rd edition, which /savchenko.pdf served until the 4th replaced it. Kept
-// reachable because it is the typeset copy: the 4th edition is a scan with an OCR text
-// layer, so this one is still the better source for exact text and the smaller download
-// (5.4 MB against 21 MB).
-app.use("/savchenko-3rd-ed.pdf", express.static(path.join(__dirname, "pdf/savchenko-3rd-ed.pdf")));
+app.use("/savchenko-3rd-ed.pdf", express.static(path.join(__dirname, "pdf/savchenko.pdf")));
+app.use("/savchenko-4th-ed.pdf", express.static(path.join(__dirname, "pdf/savchenko-4th-ed.pdf")));
 // Contributor CVs, uploaded from settings. Served read-only; the filename is derived
 // from the user id, never from what the browser sent.
 app.use("/cv", express.static(path.join(__dirname, "uploads", "cv"), { maxAge: '1d' }));

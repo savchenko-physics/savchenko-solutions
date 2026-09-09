@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Extract Russian problem statements and Savchenko's ∗ markers from the printed book.
+"""Extract Russian problem statements and Savchenko's ∗ markers from the printed book
+(pdf/savchenko.pdf, the 3rd edition).
 
 Run this LOCALLY (it needs poppler's pdftotext, which is not installed on the server) and
 commit the JSON it produces. scripts/build-statements.js then reads that file, so the

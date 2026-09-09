@@ -200,8 +200,10 @@ All new UI must follow these rules:
   marker is the `starred` column, 565 of 2,023, and is the only independent difficulty
   ground truth the project has: never feed it to a scoring model.
 - **The 3rd edition is the reference for Russian statements and for every figure.**
-  `pdf/savchenko-3rd-ed.pdf` is a pdfTeX file (exact text layer, figures as 300 dpi bitmaps
-  with "К задаче N" drawn inside them), not a scan. `scripts/book3/` turns it into
+  `pdf/savchenko.pdf` is a pdfTeX file (exact text layer, figures as 300 dpi bitmaps
+  with "К задаче N" drawn inside them), not a scan — the scan is the 4th edition,
+  `pdf/savchenko-4th-ed.pdf`, served at `/savchenko-4th-ed.pdf` and used for nothing else.
+  `scripts/book3/` turns the 3rd edition into
   `src/database/book3/`: `extract.py` (text, ∗, ♦ = has-figure, from fonts and positions),
   `figures.py` (attributes every bitmap by OCR-reading its caption, writes
   `img/<problem>/statement.png` and `figures.json`), `vectorize.py` (traces those bitmaps
