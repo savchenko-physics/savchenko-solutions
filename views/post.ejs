@@ -16,8 +16,7 @@
     <title><%= titleText(title) %></title>
 
     <!-- Fonts -->
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <%- include('default/site_styles') %>
     
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
@@ -29,11 +28,9 @@
     <script src="/js/vendor/chartjs-adapter-date-fns.min.js"></script>
     
     <!-- Bootstrap -->
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
     
     <!-- MathJax 3, served locally from the mathjax-full package (no third-party CDN). -->

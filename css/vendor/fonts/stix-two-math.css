@@ -1,0 +1,9 @@
+/* STIX Two Math — only for the equation editor's symbol palette (edit_post, tools/latex).
+   Split out of the retired fonts.css; the rest of the site's fonts are in site-fonts.css. */
+@font-face {
+  font-family: 'STIX Two Math';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(files/stixtwomath-pONg1hwwL_6M9EkZySr_yteUi18.woff2) format('woff2');
+}

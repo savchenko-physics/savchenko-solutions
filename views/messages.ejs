@@ -8,13 +8,12 @@
   <title><%= docTitle(lang === 'ru' ? 'Сообщения' : 'Messages', 'Savchenko Solutions') %></title>
   <%# The service worker is retired: in Firefox it made every avatar here reload on each chat switch (public/sw.js). This removes it from browsers that still have it. %>
   <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
-  <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
-  <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+  <%- include('default/site_styles') %>
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
   <%# Reaction glyphs (js/reactions.js): community emoji are SVGs in img/emoji, the six Unicode ones are text. Guarded, so a process that has not restarted yet still renders this template. %>
   <% var rxUrls = (typeof reactionUrls === 'function') ? reactionUrls() : {}; var rxGlyph = (typeof reactionGlyph === 'function') ? function (v) { return reactionGlyph(v, lang, rxUrls); } : null; %>
-  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
   <!-- MathJax: render $…$ / $$…$$ in messages. We typeset manually as bubbles arrive. -->
   <script>
     window.MathJax = {

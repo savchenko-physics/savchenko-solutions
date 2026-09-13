@@ -6,17 +6,15 @@
     <title><%= docTitle(lang === 'ru' ? 'Добавить задачу' : 'Submit a Problem', 'Physics Problem Bank', 'Savchenko Solutions') %></title>
     <meta name="description" content="Submit a physics problem to the Problem Bank at Savchenko Solutions." />
 
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <%- include('../default/site_styles', { ssStyles: { codemirror: true } }) %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
     <!-- CodeMirror for statement/solution editing -->
-    <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css" />
     <script src="/js/vendor/codemirror/codemirror.min.js"></script>
     <script src="/js/vendor/codemirror/mode/stex/stex.min.js"></script>
 

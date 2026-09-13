@@ -7,11 +7,10 @@
     <meta name="description" content="<%= lang === 'ru' ? 'Таблица 100 фундаментальных физических констант со значениями CODATA 2018. Переключение между СИ и СГС. Нажмите для копирования.' : 'Comprehensive table of 100 fundamental physical constants with CODATA 2018 values. Toggle between SI and CGS units. Click any constant to copy its value. Includes speed of light, Planck constant, gravitational constant, and more.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/constants" />
 
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <%- include('../default/site_styles') %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>

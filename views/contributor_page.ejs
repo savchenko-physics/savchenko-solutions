@@ -8,7 +8,7 @@
 <title><%= docTitle(displayName, 'Contributor record', 'Savchenko Solutions') %></title>
 <link rel="canonical" href="<%= canonicalUrl %>" />
 <meta name="description" content="<%= displayName %> has written or reviewed solutions to <%= summary.problems %> problems from Savchenko's Problems in Physics on Savchenko Solutions." />
-<link rel="stylesheet" href="/css/vendor/fonts/fonts.css" />
+<%- include('default/site_styles', { ssStyles: { bootstrap: false } }) %>
 <script type="application/ld+json">
 <%- JSON.stringify({
   "@context": "https://schema.org",

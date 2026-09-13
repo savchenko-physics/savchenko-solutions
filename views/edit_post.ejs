@@ -20,7 +20,7 @@
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
-    <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
+    <%- include('default/site_styles', { ssStyles: { icons: 'fa4', codemirror: true, stix: true, bootstrap: false } }) %>
 
     <%# All render-blocking before: the editor could not appear until every one of these
         had downloaded and parsed. `defer` keeps their relative order and runs them just
@@ -735,7 +735,7 @@
             border-radius: 3px;
             color: #fff;
             display: inline-flex;
-            font-family: Stix Two Math, serif;
+            font-family: "STIX Two Math", serif;
             font-size: 24px;
             height: 42px;
             justify-content: center;
@@ -1061,8 +1061,6 @@
         }
     </style>
 
-    <link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet">
     <script src="/js/analytics.js"></script>
 </head>
 

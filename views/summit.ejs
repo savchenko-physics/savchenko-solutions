@@ -15,17 +15,15 @@
   
   
   <!-- Bootstrap 5 -->
-  <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+  <%- include('default/site_styles') %>
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   
   <!-- Google Fonts -->
-  <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-  <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
   
   <!-- Custom CSS -->
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
   
   <title><%= titleText(__('summit.title')) %></title>
   

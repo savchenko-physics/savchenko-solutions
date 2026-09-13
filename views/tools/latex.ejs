@@ -7,12 +7,10 @@
     <meta name="description" content="<%= lang === 'ru' ? 'Бесплатный онлайн-редактор формул LaTeX с предпросмотром MathJax. Шаблоны для распространённых физических уравнений: законы Ньютона, уравнения Максвелла, уравнение Шрёдингера и другие.' : 'Free online LaTeX equation editor with live MathJax preview. Includes templates for common physics equations: Newton\'s laws, Maxwell\'s equations, Schrodinger equation, and more.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/latex" />
 
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <%- include('../default/site_styles', { ssStyles: { stix: true } }) %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>

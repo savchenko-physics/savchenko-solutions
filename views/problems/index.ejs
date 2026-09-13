@@ -9,17 +9,15 @@
         : 'Filter and sort all 2,023 Savchenko problems by difficulty, topic and individual skill axes — insight, mathematics, computation, elegance and more.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems" />
 
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= asset('/css/main_page.css') %>" />
+    <%- include('../default/site_styles', { ssStyles: { math: true, prose: true } }) %>
+" />
+" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <!-- Card statement previews arrive pre-rendered as SVG math from
          GET /api/problem/:name/statement (index.js — the same endpoint the upload page
          uses), fetched per card after it renders. This stylesheet styles that SVG output;
          no client-side MathJax is loaded on this page. -->
-    <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
     <style>

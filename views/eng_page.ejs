@@ -33,18 +33,16 @@
   <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
 
   <!-- Bootstrap 5 (via CDN) -->
-  <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+  <%- include('default/site_styles', { ssStyles: { math: true } }) %>
   
   <!-- Google Fonts: Roboto -->
-  <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
 
   
   <!-- Design system + page CSS -->
-  <link rel="stylesheet" href="<%= asset('/css/design-system.css') %>" />
+" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
   <!-- Server-rendered statement maths (problem popup): MathJax's SVG rules + the Cyrillic fallback font -->
-  <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
   <title><%= titleText(__('title')) %></title>

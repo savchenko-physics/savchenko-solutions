@@ -227,6 +227,12 @@ app.use("/img/profile_images", express.static(AVATAR_DIR, {
     },
 }));
 app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: '30d' }));
+// Site fonts are content-hashed (scripts/build-fonts.py), so a file name never changes meaning:
+// a year, immutable. Mounted before /css so its week-long max-age never applies to them, and
+// fallthrough:false so a stale hash 404s here instead of wandering into the routes below.
+app.use("/css/vendor/fonts/h", express.static(path.join(__dirname, "css", "vendor", "fonts", "h"), {
+    immutable: true, maxAge: '365d', index: false, fallthrough: false,
+}));
 app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d' }));
 app.use("/en", express.static(path.join(__dirname, "en")));
 app.use("/theory", express.static(path.join(__dirname, "theory")));
@@ -290,6 +296,11 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get('/css/mathjax.css', (req, res) => {
     res.type('css').set('Cache-Control', 'public, max-age=604800').send(require('./mathRender').getMathCss());
 });
+// Content version of that stylesheet for its ?v= (views/default/site_styles.ejs). It used to be a
+// hand-bumped date in four templates; now any change to getMathCss() busts the week-long cache.
+app.locals.mathCssVersion = crypto.createHash('md5').update(require('./mathRender').getMathCss()).digest('hex').slice(0, 10);
+// Font preload lists and face inventory (scripts/build-fonts.py → lib/siteFonts.json).
+app.locals.siteFonts = require('./lib/siteFonts.json');
 app.use(express.static(path.join(__dirname, "public")));
 
 // ── Static-asset cache busting ───────────────────────────────────────────────

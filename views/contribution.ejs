@@ -22,21 +22,10 @@
   <script src="/diff_match_patch.js"></script>
 
   <!-- Google Fonts & Bootstrap 5 -->
-  <link
-    href="/css/vendor/fonts/fonts.css"
-    rel="stylesheet"
-  />
-  <link
-    rel="stylesheet"
-    href="/css/vendor/bootstrap.min.css"
-  />
-  <link
-    rel="stylesheet"
-    href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css"
-  />
+  <%- include('default/site_styles', { ssStyles: { icons: 'bi' } }) %>
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-  <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-  <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
 
   <style>
     :root {

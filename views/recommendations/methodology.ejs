@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
 <head>
+    <%- include('../default/site_styles') %>
     <title><%= docTitle(lang === 'ru' ? 'Как построен каталог' : 'How this catalog was built', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru' ? 'Методика: обход, отбор, ранжирование и что было исключено.' : 'Methodology: crawl, selection, ranking, and what was excluded.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/recommendations/methodology" />

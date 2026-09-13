@@ -1,3 +1,4 @@
+const Palettes = require('./js/palettes');
 const express = require('express');
 const router = express.Router();
 const { Pool } = require('pg');
@@ -61,19 +62,11 @@ async function getUserReputation(userId) {
     return parseInt(rows[0].score, 10) || 0;
 }
 
-// Codeforces-style rating tiers adapted to contribution scores
+// Codeforces-style rating tiers adapted to contribution scores (tiers and colours: js/palettes.js)
 function getReputationBadge(score, lang) {
     const __ = (key) => i18n.__({ phrase: key, locale: lang || 'en' });
-    if (score >= 200) return { label: __('badges.legendaryGrandmaster'), color: '#FF0000' };
-    if (score >= 160) return { label: __('badges.internationalGrandmaster'), color: '#FF0000' };
-    if (score >= 130) return { label: __('badges.grandmaster'), color: '#CC0000' };
-    if (score >= 110) return { label: __('badges.internationalMaster'), color: '#FF8C00' };
-    if (score >= 90)  return { label: __('badges.master'), color: '#FF8C00' };
-    if (score >= 70)  return { label: __('badges.candidateMaster'), color: '#AA00AA' };
-    if (score >= 50)  return { label: __('badges.expert'), color: '#0000FF' };
-    if (score >= 30)  return { label: __('badges.specialist'), color: '#03A89E' };
-    if (score >= 10)  return { label: __('badges.pupil'), color: '#008000' };
-    return { label: __('badges.newbie'), color: '#808080' };
+    const tier = Palettes.rankFor(score);
+    return { label: __(`badges.${tier.key}`), color: tier.color };
 }
 
 // Helper: relative time string

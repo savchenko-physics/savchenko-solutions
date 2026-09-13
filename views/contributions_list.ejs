@@ -7,11 +7,10 @@
     <title><%= docTitle(problemName === 'all' ? (lang === 'ru' ? 'Все изменения' : 'All Contributions') : ['History', problemName], __('title')) %></title>
     <meta name="description" content="<%= problemName === 'all' ? (lang === 'ru' ? 'История всех изменений решений задач Савченко' : 'Complete history of all contributions to Savchenko Solutions') : 'Contribution history for problem ' + problemName %>" />
 
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
+    <%- include('default/site_styles') %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
 
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />

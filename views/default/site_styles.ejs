@@ -1,0 +1,47 @@
+<%#
+  site_styles — the only place that emits the site's stylesheets. Every full page includes it
+  once in <head>, before its own <style>, so every page gets the same fonts, tokens and
+  components (tests/site-styles.test.js):
+
+    include('default/site_styles', { ssStyles: { math: true, prose: true, icons: 'fa6' } })
+    (from a subfolder: include('../default/site_styles', …), with the raw-output tag)
+
+  ssStyles (all optional):
+    bootstrap   false only for pages whose own .card/.btn would collide with Bootstrap 5
+    math        true on pages with server-rendered formulas → /css/mathjax.css (content-versioned)
+    prose       true when SS Text is in the first screen → preload its latin (+cyrillic) subsets
+    icons       'fa6' | 'fa4' | 'bi', or an array of them
+    codemirror  true → CodeMirror's stylesheet
+    stix        true → STIX Two Math for the editor's symbol palette
+
+  Local helpers come from app.locals: asset(), siteFonts (lib/siteFonts.json), mathCssVersion.
+%><%
+  const _ss = (typeof ssStyles !== 'undefined' && ssStyles) ? ssStyles : {};
+  const _asset = (typeof asset === 'function') ? asset : function (p) { return p; };
+  const _lang = (typeof lang !== 'undefined' && lang) ? lang : ((typeof pageLang !== 'undefined' && pageLang) ? pageLang : 'en');
+  const _fonts = (typeof siteFonts !== 'undefined' && siteFonts && siteFonts.preload) ? siteFonts.preload : null;
+  let _preload = [];
+  if (_fonts) {
+    _preload = (_lang === 'ru' ? _fonts.ru : _fonts.en) || [];
+    if (_ss.prose) _preload = _preload.concat((_lang === 'ru' ? _fonts.proseRu : _fonts.proseEn) || []);
+  }
+  const _icons = [].concat(_ss.icons || []);
+%><% _preload.forEach(function (href) { %>
+<link rel="preload" href="<%= href %>" as="font" type="font/woff2" crossorigin>
+<% }); %><% if (_ss.bootstrap !== false) { %>
+<link rel="stylesheet" href="/css/vendor/bootstrap.min.css">
+<% } %>
+<link rel="stylesheet" href="<%= _asset('/css/bundle.css') %>">
+<% if (_ss.math) { %>
+<link rel="stylesheet" href="/css/mathjax.css?v=<%= (typeof mathCssVersion !== 'undefined' && mathCssVersion) ? mathCssVersion : '1' %>">
+<% } %><% if (_ss.codemirror) { %>
+<link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
+<% } %><% if (_ss.stix) { %>
+<link rel="stylesheet" href="<%= _asset('/css/vendor/fonts/stix-two-math.css') %>">
+<% } %><% if (_icons.indexOf('fa6') !== -1) { %>
+<link rel="stylesheet" href="/css/vendor/fontawesome6/css/all.min.css">
+<% } %><% if (_icons.indexOf('fa4') !== -1) { %>
+<link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
+<% } %><% if (_icons.indexOf('bi') !== -1) { %>
+<link rel="stylesheet" href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css">
+<% } %>

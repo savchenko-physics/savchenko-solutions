@@ -9,11 +9,10 @@
         : totalProblems + ' problems from ' + sources.length + ' sources: IPhO, APhO, EuPhO, USAPhO, BPhO, Irodov, and more.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/bank" />
 
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <%- include('../default/site_styles') %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>

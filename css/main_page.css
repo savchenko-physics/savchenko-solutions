@@ -187,46 +187,12 @@ a:visited:where(:not(.btn)) {
 }
 
 /* ----------------------------
-   GLOBAL CARD STYLES
----------------------------- */
-.content-card {
-  background-color: #fff;
-  border-radius: 10px;
-}
-
-/* Spacing helpers for readability */
-.mb-5 {
-  margin-bottom: 3rem !important;
-}
-
-/* ----------------------------
    TEAM & CORE TEAM LINKS
 ---------------------------- */
-.core-team {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-}
-.core-team a {
-  text-decoration: none;
-  color: var(--ss-link);
-  font-weight: 500;
-}
-.core-team a:hover {
-  text-decoration: underline;
-  color: var(--ss-link-hover);
-}
 
 /* ----------------------------
    CHAPTERS & PROBLEMS
 ---------------------------- */
-.chapter-block {
-  background-color: var(--ss-card-bg);
-  border-radius: 10px;
-  padding: 1rem 1.2rem;
-  border: 1px solid var(--ss-border-card);
-}
 
 .chapter-title {
   margin: 0;
@@ -364,17 +330,6 @@ a:visited:where(:not(.btn)) {
 /* ----------------------------
    TABLES (Top Authors, etc.)
 ---------------------------- */
-.top-authors {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 12px 14px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.top-authors h3 {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
 
 .table {
   margin: 0 auto;
@@ -610,51 +565,6 @@ footer:not(.site-footer) p {
 }
 
 /* PDF Download Button */
-.pdf-download-btn {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: white;
-  padding: 1rem;
-  text-decoration: none;
-  border-radius: 12px;
-  color: #333;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  transition: all 0.2s ease;
-}
-
-.pdf-download-btn:hover {
-  /* transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); */
-  color: #333;
-  text-decoration: none;
-}
-
-.pdf-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ss-white);
-  padding: 0.75rem;
-  border-radius: 10px;
-  color: var(--ss-navy);
-}
-
-.pdf-text {
-  display: flex;
-  flex-direction: column;
-}
-
-.pdf-label {
-  font-weight: 500;
-  font-size: 0.9rem;
-  color: var(--ss-text-secondary);
-}
-
-.pdf-action {
-  font-weight: 600;
-  color: var(--ss-link);
-}
 
 /* Problem-page links (e.g. 3.5.32) keep a distinct "visited" color so you can
    tell which problems you already opened; other links never turn purple. */

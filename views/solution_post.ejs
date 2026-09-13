@@ -38,12 +38,10 @@
     <% } %>
 
     <!-- Fonts & Icons -->
-    <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
-    <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />
-    <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
+    <%- include('default/site_styles', { ssStyles: { math: true, prose: true, icons: 'fa6' } }) %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-    <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
-    <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
+" />
+" />
 
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
@@ -52,7 +50,6 @@
     <!-- Solution-body math is pre-rendered to SVG on the server (mathRender.js):
          formulas arrive final, work with JS disabled, and MathJax is NOT downloaded
          here. MathJax loads lazily only if a user comment contains LaTeX. -->
-    <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
 
     <!-- Interactive figure for this problem, if one is registered (lib/solutionFigures.js).
          Both the stylesheet and the script below are gated on it, so the 1,500 solution
