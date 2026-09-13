@@ -463,6 +463,8 @@
       background: var(--msg-sent);
       color: var(--msg-sent-text);
       border-bottom-right-radius: 4px;
+      /* URLs, @mentions and #refs in the text carry an inline #1a5276 unless this is set. */
+      --auto-link-color: #9fc9ef;
     }
 
     .msg-bubble.received {
@@ -1114,8 +1116,13 @@
     /* "Forwarded from" label inside a bubble */
     .msg-forwarded { font-size: 11.5px; margin-bottom: 3px; }
     .msg-forwarded span, .msg-forwarded a { font-weight: 600; }
-    .msg-forwarded a { color: inherit; text-decoration: none; }
+    .msg-forwarded a { text-decoration: none; }
     .msg-forwarded a:hover { text-decoration: underline; }
+    /* design-system.css colours a:link:not(.btn) and a:hover:not(.btn), both (0,2,1); a
+       plain `.msg-forwarded a` lost to them and the name stayed #1a5276 on the navy bubble. */
+    .msg-bubble .msg-forwarded a:link,
+    .msg-bubble .msg-forwarded a:visited,
+    .msg-bubble .msg-forwarded a:hover { color: inherit; }
     .msg-bubble.received .msg-forwarded { color: #1a5276; }
     .msg-bubble.sent .msg-forwarded { color: #cfe0ef; }
 
@@ -1159,7 +1166,8 @@
       padding: 1px 5px;
       border-radius: 4px;
     }
-    .msg-bubble.sent .msg-code-inline { background: rgba(255, 255, 255, 0.18); }
+    /* Bootstrap's pink code colour is 2.2:1 on the navy bubble. */
+    .msg-bubble.sent .msg-code-inline { background: rgba(255, 255, 255, 0.18); color: inherit; }
 
     .msg-code {
       font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1171,7 +1179,8 @@
       overflow-x: auto;
       white-space: pre;
     }
-    .msg-bubble.sent .msg-code { background: rgba(255, 255, 255, 0.14); }
+    /* design-system.css gives every <pre> color #2d2d2d: 1.2:1 on the navy bubble. */
+    .msg-bubble.sent .msg-code { background: rgba(255, 255, 255, 0.14); color: inherit; }
     .msg-code code { background: none; padding: 0; font: inherit; }
 
     /* "New messages" divider */
@@ -3003,15 +3012,16 @@
       codes.push('<code class="msg-code-inline">' + c + '</code>');
       return ph(codes.length - 1);
     });
+    // Link colour via --auto-link-color, as on the server (AUTO_LINK_COLOR in utils.js).
     html = html.replace(/(?:https?:\/\/)[^\s<>"']+/g, function(url) {
       var clean = url.replace(/[.,;:!?)]+$/, '');
       var trailing = url.slice(clean.length);
-      return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer" style="color:#1a5276;text-decoration:underline;">' + clean + '</a>' + trailing;
+      return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer" style="color:var(--auto-link-color,#1a5276);text-decoration:underline;">' + clean + '</a>' + trailing;
     });
     html = html.replace(/(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
-      '<a href="/user/$1" class="user-mention" style="color:#1a5276;font-weight:500;text-decoration:none;">@$1</a>');
+      '<a href="/user/$1" class="user-mention" style="color:var(--auto-link-color,#1a5276);font-weight:500;text-decoration:none;">@$1</a>');
     html = html.replace(/(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
-      '<a href="/' + LANG + '/$1" class="problem-ref" style="color:#1a5276;font-weight:500;text-decoration:none;">#$1</a>');
+      '<a href="/' + LANG + '/$1" class="problem-ref" style="color:var(--auto-link-color,#1a5276);font-weight:500;text-decoration:none;">#$1</a>');
     html = html.replace(/\*\*([^\n*][^*]*?)\*\*/g, '<strong>$1</strong>');
     html = html.replace(/zXcodeXz(\d+)zXcodeXz/g, function(m, i) { return codes[parseInt(i, 10)]; });
     return html;

@@ -173,9 +173,10 @@ a:not([class]) {
   text-decoration-skip-ink: auto;
 }
 
-/* Make links red */
+/* Make links red. Not visited buttons: a:visited (0,1,1) beat .btn's own colour and left
+   the header's "Log in" (.btn-dark) red on #212529. */
 a,
-a:visited {
+a:visited:where(:not(.btn)) {
   color: var(--link-visited);
 }
 

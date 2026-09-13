@@ -11,8 +11,11 @@ body {
 }
 
 /* Visited links look like normal links (no browser-default purple). Component
-   rules below override per-section; problem-page links keep the visited color. */
-a:visited {
+   rules below override per-section; problem-page links keep the visited color.
+   Buttons are left out, as in design-system.css: a bare a:visited (0,1,1) beat .btn's
+   colour, so the mobile menu's "Log in" (.btn-dark) went #1a5276 on #212529 once the
+   login page had been visited. :where() keeps the specificity unchanged for every other link. */
+a:visited:where(:not(.btn)) {
   color: #1a5276;
 }
 

@@ -192,6 +192,11 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
       background-color: rgba(255, 255, 255, 0.95);
     }
+
+    /* Bootstrap's .text-warning (#ffc107) and .text-info (#0dcaf0) are 1.6:1 and 2.0:1 on
+       white. The classes stay, because the status check below reads them. */
+    #problemStatus .text-warning { color: var(--bs-warning-text-emphasis) !important; }
+    #problemStatus .text-info { color: var(--bs-info-text-emphasis) !important; }
   </style>
   <script src="/js/upload-validation.js"></script>
   <script src="/js/analytics.js"></script>

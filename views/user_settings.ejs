@@ -234,7 +234,8 @@
             color: var(--text-muted);
             cursor: not-allowed;
         }
-        .btn-primary.flash-success { background: var(--success); }
+        /* The button is still disabled while "Saved" shows, and :disabled's #999 was 1.0:1 on green. */
+        .btn-primary.flash-success { background: var(--success); color: #fff; }
 
         .toggle-row {
             display: flex;

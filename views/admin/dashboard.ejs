@@ -140,7 +140,11 @@
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
-    .admin-table th a {
+    /* States spelled out: design-system.css's a:link:not(.btn) / a:hover:not(.btn) are
+       (0,2,1) and beat a plain `.admin-table th a`, leaving the sort links #1a5276 on navy. */
+    .admin-table th a:link,
+    .admin-table th a:visited,
+    .admin-table th a:hover {
       color: #fff;
       text-decoration: none;
     }

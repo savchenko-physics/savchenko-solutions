@@ -83,11 +83,17 @@
         }
 
         .footer-link {
-            color: #cbd5e0;
             transition: color 0.3s;
         }
 
-        .footer-link:hover {
+        /* Qualified with .footer and the link states: bundle.css's a:link:not(.btn) and
+           a:hover:not(.btn) are (0,2,1) and painted a bare .footer-link #1a5276 on #1a202c. */
+        .footer a.footer-link:link,
+        .footer a.footer-link:visited {
+            color: #cbd5e0;
+        }
+
+        .footer a.footer-link:hover {
             color: #3182ce;
         }
     </style>

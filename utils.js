@@ -522,6 +522,14 @@ const transformImageMarkdown = (htmlContent) => {
 };
 
 /**
+ * Colour of every auto-link below. It is inline, so no stylesheet can override it; the
+ * custom property is the one way in. A page that puts these links on a dark ground sets
+ * --auto-link-color there — the navy bubble of your own messages does (views/messages.ejs),
+ * where a fixed #1a5276 was invisible (2026-09-13). Everywhere else the fallback applies.
+ */
+const AUTO_LINK_COLOR = 'color:var(--auto-link-color,#1a5276);';
+
+/**
  * Auto-link #X.X.X patterns to Savchenko solution pages (in rendered HTML).
  * Skips patterns already inside <a> tags or <code> blocks.
  * lang defaults to 'en'.
@@ -530,7 +538,7 @@ function autoLinkProblemRefs(html, lang = 'en') {
     // Match #X.X.X where X are digits, not inside existing tags
     return html.replace(
         /(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
-        `<a href="/${lang}/$1" class="problem-ref" style="color:#1a5276;font-weight:500;text-decoration:none;">#$1</a>`
+        `<a href="/${lang}/$1" class="problem-ref" style="${AUTO_LINK_COLOR}font-weight:500;text-decoration:none;">#$1</a>`
     );
 }
 
@@ -541,7 +549,7 @@ function autoLinkProblemRefs(html, lang = 'en') {
 function autoLinkUserMentions(html) {
     return html.replace(
         /(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
-        '<a href="/user/$1" class="user-mention" style="color:#1a5276;font-weight:500;text-decoration:none;">@$1</a>'
+        `<a href="/user/$1" class="user-mention" style="${AUTO_LINK_COLOR}font-weight:500;text-decoration:none;">@$1</a>`
     );
 }
 
@@ -551,7 +559,7 @@ function autoLinkUrls(html) {
         (url) => {
             const clean = url.replace(/[.,;:!?)]+$/, '');
             const trailing = url.slice(clean.length);
-            return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="color:#1a5276;text-decoration:underline;">${clean}</a>${trailing}`;
+            return `<a href="${clean}" target="_blank" rel="noopener noreferrer" style="${AUTO_LINK_COLOR}text-decoration:underline;">${clean}</a>${trailing}`;
         }
     );
 }
@@ -621,7 +629,7 @@ function autoLinkBareProblemRefs(html, lang = 'en') {
         h.replace(
             /(?<![\d.\w])(\d{1,2}\.\d{1,2}\.\d{1,3})(?![\d.\w])(?![^<]*<\/a>)/g,
             (_, ref) =>
-                `<a href="/${lang}/${ref}" class="problem-ref" style="color:#1a5276;text-decoration:none;">${ref}</a>`
+                `<a href="/${lang}/${ref}" class="problem-ref" style="${AUTO_LINK_COLOR}text-decoration:none;">${ref}</a>`
         )
     );
 }
@@ -652,12 +660,12 @@ function autoLinkBlogUsernames(html) {
         );
         let result = h.replace(userRe, (match) => {
             const lower = match.toLowerCase();
-            return `<a href="/user/${lower}" class="user-mention" style="color:#1a5276;text-decoration:none;">${match}</a>`;
+            return `<a href="/user/${lower}" class="user-mention" style="${AUTO_LINK_COLOR}text-decoration:none;">${match}</a>`;
         });
         // Russian name aliases
         for (const { pattern, username } of BLOG_RUSSIAN_NAME_TO_USERNAME) {
             result = result.replace(pattern, (match) =>
-                `<a href="/user/${username}" class="user-mention" style="color:#1a5276;text-decoration:none;">${match}</a>`
+                `<a href="/user/${username}" class="user-mention" style="${AUTO_LINK_COLOR}text-decoration:none;">${match}</a>`
             );
         }
         return result;
