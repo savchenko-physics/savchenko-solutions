@@ -1677,6 +1677,34 @@
           <% }); %>
         <% } %>
       </div>
+      <%# Every chat is its own page, so the list reopened at the top and a chat far down had to
+          be scrolled to again after each click. Keep the list's scroll position across the
+          navigation (per tab) and bring the open chat into view. This runs as soon as the list
+          is parsed, before the first paint, so it never visibly jumps. On a phone the list is
+          hidden while a chat is open; saving then would record 0, so only a visible list saves. %>
+      <script>
+        (function () {
+          const list = document.getElementById('convList');
+          const KEY = 'msgConvListScroll';
+          try {
+            const saved = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+            if (saved && Date.now() - saved.at < 30 * 60 * 1000) list.scrollTop = saved.top;
+          } catch (e) { /* storage unavailable: start at the top as before */ }
+          const active = list.querySelector('.msg-conv-item.active');
+          if (active && list.clientHeight > 0) {
+            const box = list.getBoundingClientRect();
+            const item = active.getBoundingClientRect();
+            if (item.top < box.top) list.scrollTop += item.top - box.top;
+            else if (item.bottom > box.bottom) list.scrollTop += item.bottom - box.bottom;
+          }
+          window.addEventListener('pagehide', function () {
+            if (list.clientHeight === 0) return;
+            try {
+              sessionStorage.setItem(KEY, JSON.stringify({ top: list.scrollTop, at: Date.now() }));
+            } catch (e) { /* storage unavailable */ }
+          });
+        })();
+      </script>
     </div>
 
     <!-- Chat pane -->
