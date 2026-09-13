@@ -1050,4 +1050,4 @@ async function isIpBlocked(ip) {
     }
 }
 
-module.exports = { router, isIpBlocked };
+module.exports = { router, isIpBlocked, checkAdmin };

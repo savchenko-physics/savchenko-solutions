@@ -45,7 +45,7 @@ const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = re
 const rateLimit = require('express-rate-limit');
 const { botgate, botgateAfterSession, isCountable, isTaggable, init: initBotgate } = require('./botgate');
 const tracker = require('./tracker');
-const { router: adminRouter, isIpBlocked } = require('./admin');
+const { router: adminRouter, isIpBlocked, checkAdmin } = require('./admin');
 const searchIndex = require('./searchIndex');
 const blogRouter = require('./blog');
 const toolsRouter = require('./tools');
@@ -3592,7 +3592,9 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
     }
 });
 
-app.get("/file-list", renderFileList);
+// Admin only: every posts-old backup is named after the editor's IP address, and the page
+// printed ~900 of them to anyone (2026-09-13).
+app.get("/file-list", checkAdmin, renderFileList);
 
 // GET /find — the homepage's one action: "get me to my problem".
 //
