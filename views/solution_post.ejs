@@ -609,20 +609,41 @@
         .comment-react:hover,
         .comment-react:focus-within { color: #1a5276; }
 
+        /* The six Unicode reactions on the first row, the community emoji below
+           (js/reactions.js). Filled by JS when it first opens; JS also moves it left so a
+           deep reply on a phone does not push it past .content-section's overflow:hidden,
+           and below the trigger when there is no room above. */
         .comment-react-picker {
             display: none;
             position: absolute;
             bottom: calc(100% + 8px);
             left: -8px;
             z-index: 1000;
+            grid-template-columns: repeat(6, 34px);
             align-items: center;
+            justify-items: center;
             gap: 2px;
-            padding: 4px 6px;
+            padding: 4px;
             background: #fff;
             border: 1px solid #dee2e6;
-            border-radius: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            white-space: nowrap;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            white-space: normal;
+            cursor: default;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+        .comment-react.is-below .comment-react-picker {
+            top: calc(100% + 8px);
+            bottom: auto;
+        }
+        .comment-react-sep {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+            height: 1px;
+            margin: 1px 4px;
+            background: #dee2e6;
         }
         /* A padded halo so the pointer can cross the gap to the picker without it
            closing underneath them. */
@@ -633,16 +654,17 @@
             z-index: -1;
         }
         .comment-react:hover .comment-react-picker,
-        .comment-react:focus-within .comment-react-picker { display: flex; }
-        /* Stays shut after a pick until the pointer leaves and comes back. */
-        .comment-react.is-dismissed .comment-react-picker { display: none; }
+        .comment-react:focus-within .comment-react-picker { display: grid; }
+        /* Stays shut after a pick until the pointer leaves and comes back, and while empty. */
+        .comment-react.is-dismissed .comment-react-picker,
+        .comment-react .comment-react-picker:empty { display: none; }
 
         .comment-react-pick {
             width: 34px;
             height: 34px;
             border: none;
             background: none;
-            border-radius: 50%;
+            border-radius: 6px;
             font-size: 19px;
             line-height: 1;
             display: flex;
@@ -654,7 +676,31 @@
         }
         .comment-react-pick:hover {
             background: #f1f3f5;
-            transform: scale(1.25);
+        }
+        @media (hover: hover) {
+            .comment-react-pick:hover { transform: scale(1.25); }
+        }
+        @media (pointer: coarse) {
+            .comment-react-picker { grid-template-columns: repeat(6, 40px); }
+            .comment-react-pick { width: 40px; height: 40px; }
+        }
+
+        /* A community emoji (img/emoji/*.svg) stands where a Unicode glyph would. */
+        .rx-img {
+            display: block;
+            -webkit-touch-callout: none;
+        }
+        /* 20px with a negative margin: the drawings keep a margin inside their square, so
+           at 18 they looked smaller than the Unicode emoji beside them. */
+        .comment-reaction .rx-img {
+            width: 20px;
+            height: 20px;
+            margin: -1px 0;
+        }
+        .comment-react-pick .rx-img {
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
         }
         /* The one you already left, so the picker shows your current choice rather
            than six identical options. Clicking a different one swaps it. */
@@ -2196,6 +2242,7 @@
         </div>
     </div>
 
+    <script src="<%= av('/js/reactions.js') %>"></script>
     <script>
         const problemName = '<%- name %>';
         const language = '<%- lang %>';
@@ -2430,19 +2477,25 @@
            button — that cost every comment a line of vertical space whether or not
            anyone had reacted. The trigger sits in the row the reply/edit links
            already occupy, and the chips only exist once there is something to show. */
-        const REACTION_EMOJI = <%- JSON.stringify(typeof brainstormReactions !== 'undefined' ? brainstormReactions : []) %>;
+        /* One vocabulary for the site (js/reactions.js): the six Unicode emoji and the
+           community's :shortcode: set, drawn in img/emoji. If that script failed to load
+           (RX is null), the chips still show as text; only the picker stays empty. */
+        const RX = window.Reactions || null;
+        const REACTION_URLS = <%- JSON.stringify(typeof reactionUrls === 'function' ? reactionUrls() : {}).replace(/</g, '\\u003c') %>;
         const canReact = <%- (typeof userId !== 'undefined' && userId) ? 'true' : 'false' %>;
+
+        function reactionGlyph(value) {
+            return RX ? RX.glyphHTML(value, REACTION_URLS, language) : escapeHtml(value);
+        }
+
+        /* escapeHtml leaves double quotes alone, so attribute values need this. */
+        function escapeAttr(value) {
+            return escapeHtml(value).replace(/"/g, '&quot;');
+        }
 
         const SMILEY_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">' +
             '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/>' +
             '<line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
-
-        /* Which emoji this viewer left on a comment, if any. There is at most one:
-           picking a different emoji replaces it rather than adding a second. */
-        function myReaction(comment) {
-            const mine = (comment.reactions || []).find(function (r) { return r.me; });
-            return mine ? mine.emoji : null;
-        }
 
         /* Chips only — returns nothing at all when no one has reacted yet. */
         function renderReactionChips(comment) {
@@ -2451,27 +2504,77 @@
             return '<div class="comment-reactions" data-reactions-for="' + comment.id + '">' +
                 list.map(function (r) {
                     return '<button type="button" class="comment-reaction' + (r.me ? ' me' : '') + '"' +
-                        ' data-comment-id="' + comment.id + '" data-emoji="' + escapeHtml(r.emoji) + '"' +
-                        (canReact ? '' : ' disabled') + '>' + escapeHtml(r.emoji) +
+                        ' data-comment-id="' + comment.id + '" data-emoji="' + escapeAttr(r.emoji) + '"' +
+                        (canReact ? '' : ' disabled') + '>' + reactionGlyph(r.emoji) +
                         '<span class="comment-reaction-count">' + r.count + '</span></button>';
                 }).join('') + '</div>';
         }
 
-        /* The hover trigger, which lives inline with Ответить / Изменить. */
+        /* The hover trigger, which lives inline with Ответить / Изменить. Its picker ships
+           empty: eighteen buttons on every comment would be wasted on the ones nobody opens. */
         function renderReactionTrigger(comment) {
             if (!canReact) return '';
             const label = language === 'ru' ? 'Добавить реакцию' : 'Add a reaction';
-            const mine = myReaction(comment);
             return '<span class="comment-react" data-comment-id="' + comment.id + '"' +
                 ' role="button" tabindex="0" aria-label="' + label + '">' + SMILEY_SVG +
-                '<span class="comment-react-picker">' +
-                    REACTION_EMOJI.map(function (e) {
-                        const isMine = e === mine;
-                        return '<button type="button" class="comment-react-pick' + (isMine ? ' is-mine' : '') +
-                            '" data-comment-id="' + comment.id + '" data-emoji="' + escapeHtml(e) + '"' +
-                            ' aria-pressed="' + (isMine ? 'true' : 'false') + '">' + escapeHtml(e) + '</button>';
-                    }).join('') +
-                '</span></span>';
+                '<span class="comment-react-picker"></span></span>';
+        }
+
+        /* Fill the picker on first open, and mark the one this viewer already left, read
+           from the comment's own chips (not a nested reply's). */
+        function fillCommentPicker(react) {
+            const picker = react.querySelector('.comment-react-picker');
+            if (!picker || !RX) return;
+            const commentId = react.dataset.commentId;
+            if (!picker.childElementCount) {
+                picker.innerHTML = RX.pickerIds().map(function (e, i) {
+                    const title = RX.reactionTitle(e, language);
+                    return (i === RX.STANDARD.length ? '<span class="comment-react-sep"></span>' : '') +
+                        '<button type="button" class="comment-react-pick" data-comment-id="' + escapeAttr(commentId) + '"' +
+                        ' data-emoji="' + escapeAttr(e) + '"' + (title ? ' title="' + escapeAttr(title) + '"' : '') +
+                        ' aria-pressed="false">' + reactionGlyph(e) + '</button>';
+                }).join('');
+            }
+            const item = document.getElementById('comment-' + commentId);
+            const chips = item ? item.querySelector('.comment-reactions[data-reactions-for="' + commentId + '"]') : null;
+            const mineChip = chips ? chips.querySelector('.comment-reaction.me') : null;
+            const mine = mineChip ? mineChip.dataset.emoji : null;
+            picker.querySelectorAll('.comment-react-pick').forEach(function (btn) {
+                const isMine = btn.dataset.emoji === mine;
+                btn.classList.toggle('is-mine', isMine);
+                btn.setAttribute('aria-pressed', isMine ? 'true' : 'false');
+            });
+        }
+
+        /* Keep the grid inside .content-section, which clips (overflow:hidden): shift it
+           left when a deep reply leaves too little room on the right, and open it below
+           the trigger when there is no room above. */
+        function placeCommentPicker(react) {
+            const picker = react.querySelector('.comment-react-picker');
+            if (!picker) return;
+            fillCommentPicker(react);
+            picker.style.left = '';
+            react.classList.remove('is-below');
+            let pw = picker.offsetWidth;
+            let ph = picker.offsetHeight;
+            if (!pw || !ph) {
+                picker.style.visibility = 'hidden';
+                picker.style.display = 'grid';
+                pw = picker.offsetWidth;
+                ph = picker.offsetHeight;
+                picker.style.display = '';
+                picker.style.visibility = '';
+            }
+            const r = react.getBoundingClientRect();
+            const section = react.closest('.content-section');
+            const box = section ? section.getBoundingClientRect() : { left: 0, right: window.innerWidth, top: 0 };
+            const minLeft = Math.max(box.left, 0) + 8;
+            const maxRight = Math.min(box.right, window.innerWidth) - 8;
+            let left = r.left - 8;
+            if (left + pw > maxRight) left = maxRight - pw;
+            if (left < minLeft) left = minLeft;
+            picker.style.left = (left - r.left) + 'px';
+            if (r.top - 8 - ph < Math.max(box.top, 0) + 8) react.classList.add('is-below');
         }
 
         async function toggleReaction(commentId, emoji) {
@@ -2520,6 +2623,29 @@
             if (!react || react.contains(e.relatedTarget)) return;
             react.classList.remove('is-dismissed');
         });
+
+        /* Fill and place the picker as it opens: pointer entering, keyboard focus, or a tap. */
+        document.addEventListener('mouseover', function (e) {
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const react = target.closest('.comment-react');
+            if (!react || react.contains(e.relatedTarget)) return;
+            placeCommentPicker(react);
+        });
+        document.addEventListener('focusin', function (e) {
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const react = target.closest('.comment-react');
+            if (react && !react.contains(e.relatedTarget)) placeCommentPicker(react);
+        });
+        document.addEventListener('touchstart', function (e) {
+            const target = e.target;
+            if (!target || typeof target.closest !== 'function') return;
+            const react = target.closest('.comment-react');
+            if (!react) return;
+            if (!target.closest('.comment-react-picker')) react.classList.remove('is-dismissed');
+            placeCommentPicker(react);
+        }, { passive: true });
 
         /* Delegated, so it covers comments rendered now and after a reply is posted. */
         document.addEventListener('click', function (e) {

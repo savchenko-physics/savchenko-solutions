@@ -7,7 +7,7 @@ const { format: formatDate } = require("date-fns");
 const i18n = require('i18n');
 const { Pool } = require("pg");
 const { getPathsForProblem } = require("./paths");
-const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate, ALLOWED_REACTIONS } = require("./brainstorm");
+const { getRelatedBrainstormLinks, getUserDisplayMode, canCurate } = require("./brainstorm");
 const { getOnlineUsernames } = require("./lib/presence");
 
 const DEFAULT_PROFILE_AVATAR = "/img/profile_images/Default_placeholder.svg";
@@ -538,7 +538,6 @@ async function renderPost(req, res) {
             brainstormMode,
             brainstormRelated,
             brainstormIsCurator,
-            brainstormReactions: ALLOWED_REACTIONS,
             judging,
         }, (renderErr, pageHtml) => {
             if (renderErr) {

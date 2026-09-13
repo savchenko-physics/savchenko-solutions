@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
   <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+  <%# Reaction glyphs (js/reactions.js): community emoji are SVGs in img/emoji, the six Unicode ones are text. Guarded, so a process that has not restarted yet still renders this template. %>
+  <% var rxUrls = (typeof reactionUrls === 'function') ? reactionUrls() : {}; var rxGlyph = (typeof reactionGlyph === 'function') ? function (v) { return reactionGlyph(v, lang, rxUrls); } : null; %>
   <link rel="stylesheet" href="<%= av('/css/design-system.css') %>" />
   <link rel="stylesheet" href="<%= av('/css/main_page.css') %>" />
   <!-- MathJax: render $…$ / $$…$$ in messages. We typeset manually as bubbles arrive. -->
@@ -641,19 +643,38 @@
       display: flex;
     }
 
+    /* The six Unicode reactions on the first row, the community emoji below (js/reactions.js).
+       Filled by JS on first open, so the thirty server-rendered rows carry an empty div.
+       It sits inside the bubble, so it resets what a sent bubble would hand down: pre-wrap
+       and white text. */
     .msg-reaction-picker {
       display: none;
-      position: fixed; /* JS positions it, clamped to the viewport (never off-screen) */
-      flex-direction: row;
+      position: fixed; /* JS positions it inside the message list (never under the header) */
+      grid-template-columns: repeat(6, 36px);
+      gap: 2px;
       align-items: center;
+      justify-items: center;
       background: var(--msg-bg);
       border: 1px solid var(--msg-border);
-      border-radius: 20px;
-      padding: 4px 6px;
-      gap: 2px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
       z-index: 1000;
-      white-space: nowrap;
+      white-space: normal;
+      line-height: 1;
+      color: var(--msg-text);
+      cursor: default;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .msg-reaction-sep {
+      grid-column: 1 / -1;
+      justify-self: stretch;
+      height: 1px;
+      margin: 1px 4px;
+      background: var(--msg-border);
     }
 
     .msg-reaction-picker::after {
@@ -667,7 +688,13 @@
     }
 
     .msg-reaction-add:hover .msg-reaction-picker {
-      display: flex;
+      display: grid;
+    }
+
+    /* Closed on a pick (until the pointer leaves), on scroll, and while still empty. */
+    .msg-reaction-add.is-dismissed .msg-reaction-picker,
+    .msg-reaction-add:hover .msg-reaction-picker:empty {
+      display: none;
     }
 
     .msg-reaction-pick {
@@ -675,7 +702,7 @@
       height: 36px;
       border: none;
       background: none;
-      border-radius: 50%;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 20px;
       display: flex;
@@ -687,7 +714,44 @@
 
     .msg-reaction-pick:hover {
       background: var(--msg-bg-alt);
-      transform: scale(1.25);
+    }
+
+    @media (hover: hover) {
+      .msg-reaction-pick:hover {
+        transform: scale(1.25);
+      }
+    }
+
+    @media (pointer: coarse) {
+      .msg-reaction-picker {
+        grid-template-columns: repeat(6, 40px);
+      }
+
+      .msg-reaction-pick {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    /* A community emoji (img/emoji/*.svg) stands where a Unicode glyph would. */
+    .rx-img {
+      display: block;
+      -webkit-touch-callout: none;
+    }
+
+    /* 20px, not 18: the drawings keep a margin inside their square, and at 18 they looked
+       a size smaller than the Unicode emoji beside them. The negative margin keeps the pill
+       as tall as a text one. */
+    .msg-reaction .rx-img {
+      width: 20px;
+      height: 20px;
+      margin: -1px 0;
+    }
+
+    .msg-reaction-pick .rx-img {
+      width: 26px;
+      height: 26px;
+      pointer-events: none;
     }
 
     .msg-edit-bar {
@@ -1769,9 +1833,9 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"><span class="msg-reaction-pick" data-emoji="&#x1F44D;">&#x1F44D;</span><span class="msg-reaction-pick" data-emoji="&#x1F44E;">&#x1F44E;</span><span class="msg-reaction-pick" data-emoji="&#x2764;&#xFE0F;">&#x2764;&#xFE0F;</span><span class="msg-reaction-pick" data-emoji="&#x1F602;">&#x1F602;</span><span class="msg-reaction-pick" data-emoji="&#x1F622;">&#x1F622;</span><span class="msg-reaction-pick" data-emoji="&#x1F914;">&#x1F914;</span></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
-                <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><%= r.emoji %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
+                <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><% if (rxGlyph) { %><%- rxGlyph(r.emoji) %><% } else { %><%= r.emoji %><% } %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
                 <div class="msg-bubble-time" data-iso="<%= new Date(m.created_at).toISOString() %>"><%= formatMessageTime(m.created_at) %><% if (showReceipts && isSent) { %><%- checkHTML(!!readCutoff && new Date(m.created_at) <= new Date(readCutoff)) %><% } %></div>
               </div>
@@ -2022,10 +2086,14 @@
 </div>
 
 <script src="<%= av('/js/chat-language.js') %>"></script>
+<script src="<%= av('/js/reactions.js') %>"></script>
 <script>
 (function() {
   const CONV_ID = <%= activeConversation ? activeConversation.id : 'null' %>;
   const COMMUNITY_LANG = <%- JSON.stringify(activeConversation && activeConversation.communityLang ? activeConversation.communityLang : null) %>;
+  // Versioned URLs of the community emoji, keyed by :shortcode: (js/reactions.js).
+  const REACTION_URLS = <%- JSON.stringify(rxUrls || {}).replace(/</g, '\\u003c') %>;
+  const RX = window.Reactions || null;
   const USER_ID = <%= userId %>;
   const IS_GROUP = <%= activeConversation ? activeConversation.is_group : false %>;
   const IS_ADMIN = <%= typeof isAdmin !== 'undefined' ? isAdmin : false %>;
@@ -2703,7 +2771,10 @@
     chatEl.addEventListener('click', function(e) {
       const pickBtn = e.target.closest('.msg-reaction-pick');
       if (pickBtn) {
-        var msgId = parseInt(pickBtn.closest('.msg-reaction-add').dataset.msgId);
+        var addEl = pickBtn.closest('.msg-reaction-add');
+        var msgId = parseInt(addEl.dataset.msgId);
+        // Close on choosing, the way a menu does; leaving the button re-arms it.
+        addEl.classList.add('is-dismissed');
         toggleReaction(msgId, pickBtn.dataset.emoji);
         return;
       }
@@ -3209,16 +3280,34 @@
     if (im) markImageLoaded(im);
   }
 
-  var REACTION_EMOJIS = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F622}', '\u{1F914}'];
+  /* ── Reactions ─────────────────────────────────────────────────────
+     One vocabulary for the site (js/reactions.js): the six Unicode emoji and the
+     community's :shortcode: set, drawn in img/emoji. If that script failed to load (RX is
+     null), stored reactions still show as text and messages still send; only the picker
+     stays empty. */
+  function reactionGlyph(value) {
+    return RX ? RX.glyphHTML(value, REACTION_URLS, LANG) : esc(value);
+  }
+
+  // The picker ships empty and is filled the first time it opens.
+  function fillReactionPicker(picker) {
+    if (!picker || !RX || picker.childElementCount) return;
+    var html = '';
+    RX.pickerIds().forEach(function(id, i) {
+      if (i === RX.STANDARD.length) html += '<span class="msg-reaction-sep"></span>';
+      var title = RX.reactionTitle(id, LANG);
+      html += '<span class="msg-reaction-pick" data-emoji="' + escAttr(id) + '"' +
+        (title ? ' title="' + escAttr(title) + '"' : '') + '>' + reactionGlyph(id) + '</span>';
+    });
+    picker.innerHTML = html;
+  }
 
   function renderReactionAddHTML(msgId) {
+    // A bubble that is not saved yet has nothing to react to; the next poll replaces it.
+    if (!msgId) return '';
     var html = '<div class="msg-reaction-add" data-msg-id="' + msgId + '">';
     html += '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>';
-    html += '<div class="msg-reaction-picker">';
-    REACTION_EMOJIS.forEach(function(e) {
-      html += '<span class="msg-reaction-pick" data-emoji="' + e + '">' + e + '</span>';
-    });
-    html += '</div></div>';
+    html += '<div class="msg-reaction-picker"></div></div>';
     return html;
   }
 
@@ -3226,7 +3315,7 @@
     if (!reactions || !reactions.length) return '';
     var html = '<div class="msg-reactions" data-msg-id="' + msgId + '">';
     reactions.forEach(function(r) {
-      html += '<span class="msg-reaction' + (r.me ? ' me' : '') + '" data-emoji="' + r.emoji + '" data-msg-id="' + msgId + '">' + r.emoji + '<span class="msg-reaction-count">' + r.count + '</span></span>';
+      html += '<span class="msg-reaction' + (r.me ? ' me' : '') + '" data-emoji="' + escAttr(r.emoji) + '" data-msg-id="' + msgId + '">' + reactionGlyph(r.emoji) + '<span class="msg-reaction-count">' + r.count + '</span></span>';
     });
     html += '</div>';
     return html;
@@ -3720,31 +3809,68 @@
   // ── Keep the reaction emoji picker inside the viewport ──────────────
   // It is centered over the reaction button, so near a screen edge (mobile) it
   // would overflow. Reposition its left edge to stay within [8, width-8].
+  // The grid is three rows tall, and it lives inside the bubble's stacking context, so
+  // it must also stay inside the message list: above the top message it would slide
+  // under the chat header and the pinned bar.
+  let openReactionAdd = null;
   function positionReactionPicker(addBtn) {
     const picker = addBtn.querySelector('.msg-reaction-picker');
     if (!picker) return;
-    const pw = picker.offsetWidth || 240;
-    const ph = picker.offsetHeight || 44;
+    fillReactionPicker(picker);
+    openReactionAdd = addBtn;
+    let pw = picker.offsetWidth;
+    let ph = picker.offsetHeight;
+    if (!pw || !ph) {
+      // Hover has not shown it yet: lay it out unseen for the measurement.
+      picker.style.visibility = 'hidden';
+      picker.style.display = 'grid';
+      pw = picker.offsetWidth;
+      ph = picker.offsetHeight;
+      picker.style.display = '';
+      picker.style.visibility = '';
+    }
     const r = addBtn.getBoundingClientRect();
     // Horizontal: centered on the button, clamped to the viewport.
     let left = r.left + r.width / 2 - pw / 2;
     left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
-    // Vertical: above the button, or below if there's no room.
+    // Vertical: above the button if it fits inside the list, else below, else on the
+    // roomier side.
+    const list = chatEl.getBoundingClientRect();
+    const minTop = Math.max(8, list.top + 4);
+    const maxBottom = Math.min(window.innerHeight - 8, list.bottom - 4);
     let top = r.top - ph - 4;
-    if (top < 8) top = r.bottom + 4;
+    if (top < minTop) {
+      if (r.bottom + 4 + ph <= maxBottom) top = r.bottom + 4;
+      else if (r.top - minTop > maxBottom - r.bottom) top = minTop;
+      else top = Math.max(minTop, maxBottom - ph);
+    }
     picker.style.left = left + 'px';
     picker.style.top = top + 'px';
     picker.style.bottom = 'auto';
     picker.style.transform = 'none';
   }
+  // A fixed picker does not follow its message, so scrolling closes it.
+  function dismissOpenReactionPicker() {
+    if (openReactionAdd && openReactionAdd.matches(':hover')) openReactionAdd.classList.add('is-dismissed');
+  }
   if (chatEl) {
     chatEl.addEventListener('mouseover', function(e) {
       const addBtn = e.target.closest('.msg-reaction-add');
-      if (addBtn) positionReactionPicker(addBtn);
+      if (!addBtn || addBtn.contains(e.relatedTarget)) return;
+      // Coming back from outside re-arms a picker that a pick or a scroll had closed.
+      addBtn.classList.remove('is-dismissed');
+      positionReactionPicker(addBtn);
     });
     chatEl.addEventListener('touchstart', function(e) {
       const addBtn = e.target.closest('.msg-reaction-add');
-      if (addBtn) positionReactionPicker(addBtn);
+      if (!addBtn) return;
+      // A tap on the smiley reopens a picker that a pick had closed.
+      if (!e.target.closest('.msg-reaction-picker')) addBtn.classList.remove('is-dismissed');
+      positionReactionPicker(addBtn);
+    }, { passive: true });
+    chatEl.addEventListener('wheel', dismissOpenReactionPicker, { passive: true });
+    chatEl.addEventListener('touchmove', function(e) {
+      if (!e.target.closest('.msg-reaction-picker')) dismissOpenReactionPicker();
     }, { passive: true });
   }
 

@@ -10,6 +10,7 @@ const notifications = require('./notifications');
 const { linkifyMessageContent, normalizeLang } = require('./utils');
 const { getOnlineUsernames } = require('./lib/presence');
 const { communityAvatarSVG, otherLang } = require('./lib/communityChats');
+const { isKnownReaction, reactionAction } = require('./js/reactions');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -1225,8 +1226,9 @@ router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, re
         const msgId = parseInt(req.params.msgId);
         const { emoji } = req.body;
 
-        const ALLOWED_REACTIONS = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F622}', '\u{1F914}'];
-        if (!emoji || !ALLOWED_REACTIONS.includes(emoji)) {
+        // One vocabulary for the whole site (js/reactions.js): the six Unicode emoji and the
+        // community's :shortcode: set. Anything else never reaches the database.
+        if (!isKnownReaction(emoji)) {
             return res.status(400).json({ error: 'Invalid reaction' });
         }
 
@@ -1245,11 +1247,19 @@ router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, re
             [msgId, userId, emoji]
         );
 
-        if (existing.rows.length > 0) {
+        // Taking a reaction back always works; adding a retired emoji does not.
+        const action = reactionAction(emoji, existing.rows.length > 0);
+        if (action === 'reject') {
+            return res.status(400).json({ error: 'Invalid reaction' });
+        }
+        if (action === 'remove') {
             await pool.query(`DELETE FROM message_reactions WHERE id = $1`, [existing.rows[0].id]);
         } else {
+            // A double click sends two adds; without ON CONFLICT the second hit the UNIQUE
+            // constraint and answered 500.
             await pool.query(
-                `INSERT INTO message_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3)`,
+                `INSERT INTO message_reactions (message_id, user_id, emoji) VALUES ($1, $2, $3)
+                 ON CONFLICT (message_id, user_id, emoji) DO NOTHING`,
                 [msgId, userId, emoji]
             );
         }

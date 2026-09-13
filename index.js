@@ -65,9 +65,10 @@ const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
 const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
 const { pingIndexNow } = require('./indexnow');
-// ALLOWED_REACTIONS is shared with the chat and the brainstorm threads, so a reaction
-// means the same thing everywhere on the site.
-const { router: brainstormRouter, renderRoom: renderBrainstormRoom, ALLOWED_REACTIONS } = require('./brainstorm');
+const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
+// One reaction vocabulary for the chat and the solution comments: the six Unicode emoji and
+// the community's own :shortcode: set (img/emoji). See js/reactions.js.
+const Reactions = require('./js/reactions');
 
 const app = express();
 const PORT = 3000;
@@ -316,6 +317,14 @@ function assetUrl(p) {
     }
 }
 app.locals.asset = assetUrl;   // available in every res.render (incl. partials)
+
+// Reaction glyphs for the chat and comment templates: versioned URLs of the community emoji,
+// keyed by :shortcode:, and the markup for one stored reaction (an <img> for a shortcode,
+// escaped text for a Unicode emoji). Templates guard both with typeof, so a process that has
+// not restarted yet still renders a freshly copied template.
+app.locals.reactionUrls = () => Reactions.emojiUrls(assetUrl);
+app.locals.reactionGlyph = (value, lang, urls) =>
+    Reactions.glyphHTML(value, urls || Reactions.emojiUrls(assetUrl), lang);
 
 // Versioned URL for a file that may or may not exist yet, or null if it does not.
 // Lets a template offer a self-hosted video the moment the file is copied onto the
@@ -1502,19 +1511,19 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
 
 // Toggle a reaction on a solution comment.
 //
-// Same six emoji as the chat and the brainstorm threads (ALLOWED_REACTIONS), and the
-// same toggle semantics: pressing the one you already left removes it. The emoji is
-// checked against that list rather than stored as sent — the column is VARCHAR(8) and
-// this is a public write path.
+// Same vocabulary as the chat (js/reactions.js: the six Unicode emoji and the community's
+// :shortcode: set) and the same toggle semantics: pressing the one you already left removes
+// it. The value is checked against that vocabulary rather than stored as sent, because this
+// is a public write path; the column is VARCHAR(32) since migration 052.
 app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, async (req, res) => {
     const commentId = parseInt(req.params.commentId, 10);
-    const emoji = String(req.body?.emoji || "");
+    const emoji = req.body?.emoji;
     const userId = req.session.userId;
 
     if (!Number.isFinite(commentId)) {
         return res.status(400).json({ error: "Invalid comment id" });
     }
-    if (!ALLOWED_REACTIONS.includes(emoji)) {
+    if (!Reactions.isKnownReaction(emoji)) {
         return res.status(400).json({ error: "Unsupported reaction" });
     }
 
@@ -1537,7 +1546,14 @@ app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, asy
         );
         const current = existing.rows[0]?.emoji || null;
 
-        if (current === emoji) {
+        // 'remove' for the one you already left, 'add' swaps yours for this one. A retired
+        // emoji (👎, 😢, or a retired community one) can still be taken back, but not newly left.
+        const action = Reactions.reactionAction(emoji, current === emoji);
+        if (action === "reject") {
+            return res.status(400).json({ error: "Unsupported reaction" });
+        }
+
+        if (action === "remove") {
             // Pressing the one you already left takes it back.
             await pool.query(
                 "DELETE FROM solution_comment_reactions WHERE comment_id = $1 AND user_id = $2",

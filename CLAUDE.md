@@ -25,6 +25,17 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   with a week of max-age and `asset()` cannot hash a virtual file). `tests/math-fallback.test.js`.
 - The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
   separate Express app on its own subdomain and would otherwise 404 on shared assets.
+- **Reactions** (chat and solution comments) have one vocabulary, `js/reactions.js`: six
+  Unicode emoji (👍 ❤️ 🙏 🔥 😂 🤔) plus the community's own emoji, hand-drawn SVGs in
+  `img/emoji/` (the in-jokes of the two community chats and the comments: "юный джедай",
+  "Печеньки!!!", "подгон под ответ"…), both ordered most used first. 👎 (never used in four
+  months) and 😢 (three uses) were retired for 🙏 and 🔥 on 2026-09-13. A custom one is stored
+  as its `:shortcode:` in the same `emoji` column (VARCHAR(32) since migration 052;
+  `brainstorm_reactions` stays 8 and keeps its old six). **Never delete a registry entry** —
+  retire it (`retired: true`, or `RETIRED_STANDARD` for Unicode), or the reactions people left
+  can no longer be taken back. `/img` is gitignored, so new emoji need `git add -f img/emoji/<name>.svg`. The art
+  rules (64-unit viewBox, palette, no text/gradients/scripts, ≤ 4 KB) are enforced by
+  `tests/reactions.test.js`.
 
 ## Tech Stack
 - **Runtime:** Node.js
@@ -169,7 +180,9 @@ All new UI must follow these rules:
 - No gradients anywhere
 - No shadows heavier than `0 1px 3px rgba(0,0,0,0.08)`
 - No border-radius larger than 8px
-- No emojis in the UI
+- No emojis in the UI. The one exception is reactions: the pickers and chips under chat
+  messages and solution comments show the vocabulary in `js/reactions.js` (six Unicode emoji
+  and the community set in `img/emoji/`), and nothing else may borrow it
 - No "Built with love" or similar filler copy
 - **Page titles** (`<title>`, og:title, twitter:title) contain no em dash, en dash, colon or
   semicolon; parts are joined with ` | `. Build them with `docTitle(...parts)` and pass any
@@ -270,7 +283,7 @@ All new UI must follow these rules:
   `tests/brainstorm.test.js:1-10`.
 - Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
   `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`,
-  `page-titles.test.js`, `service-worker.test.js`.
+  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`.
 - There is **no test database**, so route handlers are not integration-tested. The house
   pattern is to export the pure decision logic from a module and test that
   (`parseProblemLinks`, `validateFeedback`), then say plainly in the file header what is left

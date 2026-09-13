@@ -29,8 +29,10 @@ const pool = new Pool({
 
 const DEFAULT_PROFILE_AVATAR = '/img/profile_images/Default_placeholder.svg';
 
-// Same six reactions the chat allows (messages.js). Reused verbatim so users see
-// one consistent reaction vocabulary across the platform.
+// The six reactions the room offered when it was retired, kept as they were: its rows hold
+// 👎 and 😢, and its column is still VARCHAR(8). The site's vocabulary, which the chat and the
+// solution comments use and which has since moved on to 🔥 and 🙏 and the community emoji,
+// lives in js/reactions.js; every value here is still known there.
 const ALLOWED_REACTIONS = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}', '\u{1F622}', '\u{1F914}'];
 
 const MAX_CONTENT_LENGTH = 4000;   // brainstorm messages are short; chat caps at 5000
