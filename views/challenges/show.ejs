@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= (challenge.title ? (challenge.title.includes('|') ? (lang === 'ru' ? challenge.title.split('|')[1] : challenge.title.split('|')[0]) : challenge.title) : (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id) %> — <%= __('title') %></title>
+  <title><%= docTitle(challenge.title ? (challenge.title.includes('|') ? (lang === 'ru' ? challenge.title.split('|')[1] : challenge.title.split('|')[0]) : challenge.title) : (lang === 'ru' ? 'Задача #' : 'Challenge #') + challenge.id, __('title')) %></title>
 
   <script type="application/ld+json">
   {

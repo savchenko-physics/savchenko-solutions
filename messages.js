@@ -5,9 +5,11 @@ const fs = require('fs');
 const multer = require('multer');
 const sharp = require('sharp');
 const { Pool } = require('pg');
+const i18n = require('i18n');
 const notifications = require('./notifications');
-const { linkifyMessageContent } = require('./utils');
+const { linkifyMessageContent, normalizeLang } = require('./utils');
 const { getOnlineUsernames } = require('./lib/presence');
+const { communityAvatarSVG, otherLang } = require('./lib/communityChats');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -170,7 +172,9 @@ const GROUP_PALETTES = [
     ['#34495e', '#2c3e50', '#3498db', '#2980b9'],
 ];
 
-function groupAvatarSVG(convId, name, size) {
+function groupAvatarSVG(convId, name, size, communityLang) {
+    // The two community chats share a name, so their avatars carry the language instead.
+    if (communityLang === 'en' || communityLang === 'ru') return communityAvatarSVG(communityLang, size);
     const s = size || 44;
     const seed = convId % 7;
     const pal = GROUP_PALETTES[seed];
@@ -351,7 +355,7 @@ async function getReactionsForMessages(messageIds, userId) {
 
 function checkAuth(req, res, next) {
     if (!req.session.userId) {
-        return res.redirect(`/${req.session.lang || 'en'}/login`);
+        return res.redirect(`/${normalizeLang(req.session.lang)}/login`);
     }
     next();
 }
@@ -463,13 +467,13 @@ async function findOrCreateSavedMessages(userId) {
 // auto-update endpoint so all three stay in sync.
 async function buildConversationList(userId, lang = 'en') {
     const conversations = await pool.query(
-        `SELECT c.id, c.title, c.is_group, c.last_message_at, c.saved_for_user_id,
+        `SELECT c.id, c.title, c.is_group, c.last_message_at, c.saved_for_user_id, c.community_lang,
                 m.content AS last_message_content,
                 m.image_url AS last_message_image,
                 m.file_name AS last_message_file,
                 m.sender_id AS last_message_sender_id,
                 sender.username AS last_message_sender,
-                cm.last_read_at,
+                cm.last_read_at, cm.muted,
                 (SELECT COUNT(*) FROM messages mx
                  WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
                 )::int AS unread_count
@@ -543,7 +547,11 @@ async function buildConversationList(userId, lang = 'en') {
 router.get('/', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
+        // The shared site header translates through __(), which otherwise follows the
+        // browser's Accept-Language while this page follows the session: a Russian chat
+        // under an English menu. Same fix as feedback.js.
+        i18n.setLocale(req, lang);
 
         const { convList } = await buildConversationList(userId, lang);
 
@@ -569,6 +577,8 @@ router.get('/', async (req, res) => {
             isAdmin: false,
             membersList: [],
             groupAvatarSVG,
+            muted: false,
+            otherCommunity: null,
         });
     } catch (err) {
         console.error('Messages inbox error:', err);
@@ -618,7 +628,8 @@ router.get('/stream', (req, res) => {
 router.get('/:id(\\d+)', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
+        i18n.setLocale(req, lang); // header in the chat's language, see GET /
         const convId = parseInt(req.params.id);
 
         // Check membership (and capture read/mute state before marking read)
@@ -652,7 +663,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         // If the active conversation is new (no messages), it won't be in the sidebar list — fetch it separately
         if (!activeConvRow) {
             const convResult = await pool.query(
-                `SELECT id, title, is_group, last_message_at, saved_for_user_id FROM conversations WHERE id = $1`,
+                `SELECT id, title, is_group, last_message_at, saved_for_user_id, community_lang FROM conversations WHERE id = $1`,
                 [convId]
             );
             if (convResult.rows.length > 0) {
@@ -707,7 +718,21 @@ router.get('/:id(\\d+)', async (req, res) => {
             displayPicture: (activeIsSaved || activeConvRow.is_group) ? null : (activeOther ? activeOther.profile_picture : null),
             otherUser: activeIsSaved ? null : activeOther,
             memberCount: activeMemberCount,
+            communityLang: activeConvRow.community_lang || null,
         } : null;
+
+        // In a community chat, the chat in the other language: the composer's language hint
+        // links to it.
+        let otherCommunity = null;
+        if (activeConversation && activeConversation.communityLang) {
+            const other = await pool.query(
+                `SELECT c.id, c.title FROM conversations c
+                 JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $2
+                 WHERE c.community_lang = $1`,
+                [otherLang(activeConversation.communityLang), userId]
+            );
+            otherCommunity = other.rows[0] || null;
+        }
 
         // Load only the most recent page; older messages load on scroll-up.
         // Fetch one extra row to detect whether older history exists.
@@ -775,6 +800,8 @@ router.get('/:id(\\d+)', async (req, res) => {
                 memberCount: activeMemberCount,
                 displayName: activeConversation.displayName,
                 displayPicture: activeConversation.displayPicture,
+                community_lang: activeConversation.communityLang,
+                muted: activeMuted,
             });
         }
 
@@ -826,6 +853,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             pinnedMessage,
             firstUnreadId,
             muted: activeMuted,
+            otherCommunity,
         });
     } catch (err) {
         console.error('Messages conversation error:', err);
@@ -837,7 +865,7 @@ router.get('/:id(\\d+)', async (req, res) => {
 router.get('/:id(\\d+)/history', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
         const convId = parseInt(req.params.id);
         const beforeId = parseInt(req.query.before) || 0;
         if (!beforeId) return res.json({ messages: [], hasMore: false });
@@ -850,10 +878,15 @@ router.get('/:id(\\d+)/history', async (req, res) => {
             return res.status(403).json({ error: 'Not a member' });
         }
 
+        // Page by (created_at, id), the order the chat is drawn in, not by id alone. Ids
+        // and timestamps disagree for messages inserted after the fact: the English halves
+        // of the split bilingual announcements got new ids but keep their original time,
+        // and `id < before` would never return them on scroll-up.
         const result = await pool.query(
             `SELECT * FROM (
                  SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
-                 WHERE m.conversation_id = $1 AND m.id < $2
+                 WHERE m.conversation_id = $1
+                   AND (m.created_at, m.id) < (SELECT cur.created_at, cur.id FROM messages cur WHERE cur.id = $2)
                    AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $4)
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $3
              ) sub ORDER BY created_at ASC, id ASC`,
@@ -940,7 +973,7 @@ router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
 router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware, async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
         const convId = parseInt(req.params.id);
         const content = (req.body.content || '').trim().substring(0, 5000);
 
@@ -1241,7 +1274,7 @@ router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, re
 router.post('/:msgId(\\d+)/pin', rateLimit('pin', 30, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
         const msgId = parseInt(req.params.msgId);
 
         const msg = await pool.query(
@@ -1351,7 +1384,7 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
 
         // Live-push into the target conversation (the forwarder gets it on nav).
         try {
-            const lang = req.session.lang || 'en';
+            const lang = normalizeLang(req.session.lang);
             const full = await pool.query(
                 `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.id = $1`,
                 [fwd.rows[0].id]
@@ -1483,13 +1516,16 @@ router.post('/:id(\\d+)/group/leave', rateLimit('group', 20, 60000), async (req,
         const convId = parseInt(req.params.id);
         const userId = req.session.userId;
         const r = await pool.query(
-            `SELECT c.is_group FROM conversations c
+            `SELECT c.is_group, c.community_lang FROM conversations c
              JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $2
              WHERE c.id = $1`,
             [convId, userId]
         );
         if (r.rows.length === 0) return res.status(403).json({ error: 'Not a member' });
         if (!r.rows[0].is_group) return res.status(400).json({ error: 'Not a group' });
+        // Nothing can add a person back to a community chat once they leave, so the way to
+        // quiet one is the mute button, which is reversible.
+        if (r.rows[0].community_lang) return res.status(400).json({ error: 'Mute this chat instead of leaving it' });
         await pool.query(`DELETE FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`, [convId, userId]);
         // If the group lost its last admin, promote the earliest remaining member.
         const admins = await pool.query(`SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND role = 'admin' LIMIT 1`, [convId]);
@@ -1613,7 +1649,7 @@ router.post('/:id(\\d+)/read', async (req, res) => {
 router.get('/list-data', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
         const { convList } = await buildConversationList(userId, lang);
         const presenceNames = convList
             .filter(c => !c.is_group && c.otherUser && c.otherUser.username)
@@ -1628,7 +1664,9 @@ router.get('/list-data', async (req, res) => {
             isOnline: !c.is_group && c.otherUser && c.otherUser.username
                 ? online.has(c.otherUser.username)
                 : false,
-            groupAvatarSvg: c.is_group ? groupAvatarSVG(c.id, c.displayName, 44) : null,
+            groupAvatarSvg: c.is_group ? groupAvatarSVG(c.id, c.displayName, 44, c.community_lang) : null,
+            community_lang: c.community_lang || null,
+            muted: !!c.muted,
             last_message_content: c.last_message_content,
             last_message_image: !!c.last_message_image,
             last_message_file: c.last_message_file || null,
@@ -1647,7 +1685,7 @@ router.get('/list-data', async (req, res) => {
 router.get('/:id(\\d+)/poll', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = req.session.lang || 'en';
+        const lang = normalizeLang(req.session.lang);
         const convId = parseInt(req.params.id);
         const afterId = parseInt(req.query.after) || 0;
 
@@ -1811,6 +1849,9 @@ router.post('/new-group', rateLimit('new', 15, 60000), async (req, res) => {
     }
 });
 
+// The number on the header's Messages icon. Muted conversations don't add to it, as in any
+// messenger: the community chat in a person's other language starts muted, and a Russian
+// chat nobody asked to follow must not keep an English reader's badge at 99+.
 async function getUnreadMessageCount(userId) {
     try {
         const result = await pool.query(
@@ -1821,7 +1862,8 @@ async function getUnreadMessageCount(userId) {
                    AND mx.sender_id != $1)
              ), 0)::int AS total
              FROM conversations c
-             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1`,
+             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
+             WHERE cm.muted = FALSE`,
             [userId]
         );
         return result.rows[0]?.total || 0;

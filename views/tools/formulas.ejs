@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= lang === 'ru' ? 'Формулы для МФО — Полный справочник формул по физике' : 'Formulas for IPhO — Complete Physics Formula Sheet' %> | Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? ['Формулы для МФО', 'Полный справочник формул по физике'] : ['Formulas for IPhO', 'Complete Physics Formula Sheet'], 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru' ? 'Полный справочник формул для МФО с поиском: математика, кинематика, механика, колебания, оптика, цепи, электромагнетизм, термодинамика, квантовая механика, законы Кеплера и теория относительности.' : 'Complete searchable IPhO formula sheet: mathematics, kinematics, mechanics, oscillations, optics, circuits, electromagnetism, thermodynamics, quantum mechanics, Kepler laws, and relativity.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/formulas" />
-    <meta property="og:title" content="<%= lang === 'ru' ? 'Формулы для МФО — Savchenko Solutions' : 'Formulas for IPhO — Savchenko Solutions' %>" />
+    <meta property="og:title" content="<%= docTitle(lang === 'ru' ? 'Формулы для МФО' : 'Formulas for IPhO', 'Savchenko Solutions') %>" />
     <meta property="og:description" content="<%= lang === 'ru' ? 'Интерактивный справочник формул по физике. Более 200 формул в 13 разделах.' : 'Complete interactive IPhO physics formula reference. 200+ formulas across 13 sections.' %>" />
     <meta property="og:url" content="https://savchenkosolutions.com/<%= lang %>/tools/formulas" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />

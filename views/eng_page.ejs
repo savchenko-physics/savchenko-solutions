@@ -17,7 +17,7 @@
   <meta name="description" content="<%= __('meta.description') %>" />
   <meta name="author" content="<%= __('meta.author') %>" />
   <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
-  <meta property="og:title" content="<%= __('title') %>" />
+  <meta property="og:title" content="<%= titleText(__('title')) %>" />
   <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
   <meta property="og:description" content="<%= __('meta.ogDescription') %>" />
   <meta name="yandex-verification" content="6cfda41f74038368" />
@@ -29,7 +29,8 @@
   <meta name="theme-color" content="#1a1a2e" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-title" content="Savchenko" />
-  <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
+  <%# The service worker is retired: in Firefox it made every image reload on each navigation (public/sw.js). This removes it from browsers that still have it. %>
+  <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
 
   <!-- Bootstrap 5 (via CDN) -->
   <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />
@@ -46,7 +47,7 @@
   <link rel="stylesheet" href="/css/mathjax.css?v=20260902" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
-  <title><%= __('title') %></title>
+  <title><%= titleText(__('title')) %></title>
 
   <!-- JSON-LD Structured Data -->
   <script type="application/ld+json">

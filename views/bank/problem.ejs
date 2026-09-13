@@ -10,7 +10,7 @@
             (problem.difficulty ? ' ' + (lang === 'ru' ? 'Сложность' : 'Difficulty') + ': ' + problem.difficulty + '/10.' : '') +
             (topicStr ? ' ' + (lang === 'ru' ? 'Темы' : 'Topics') + ': ' + topicStr + '.' : '');
     %>
-    <title><%= pTitle %> — Physics Problem Bank | Savchenko Solutions</title>
+    <title><%= docTitle(pTitle, 'Physics Problem Bank', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= metaDesc %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/bank/problem/<%= problem.id %>" />
 

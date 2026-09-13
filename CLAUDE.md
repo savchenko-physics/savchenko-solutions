@@ -79,9 +79,14 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   `/admin/reports`; also surfaced on `/admin/feedback`
 - `feedback_items` / `feedback_votes` / `poll_answers` — the suggestion box, the public
   board and the one-question poll (migration 042). All three accept anonymous writes
-- `messages` / `conversations` — user-to-user DMs and the site-wide announcement channel
-  (conversation 5, all users). Above 25 members a conversation is treated as an announcement
-  channel and does not fan out one notification per member (`notifications.js:75`)
+- `messages` / `conversations` — user-to-user DMs, groups, and the two **community chats**
+  (`conversations.community_lang` = `'ru'` / `'en'`, migration 051; the Russian one is the
+  old site-wide conversation 5). Every account is in both; registration joins both and mutes
+  the one not in the signup page's language (`lib/communityChats.js`). **Muted conversations
+  don't count toward the header's unread badge.** Leaving a community chat is refused (mute
+  instead). The split itself was a one-off, `scripts/split-community-chat.js` (`--undo` with
+  the backup in `deploy-backups/`). Above 25 members a conversation does not fan out one
+  notification per member, only to members who have posted there (`notifications.js:84`)
 - `page_views` / `recent_views` — view tracking
 - `user_preferences` — privacy and notification settings (**only 19 rows for 964 users**)
 - `user_activities` — activity log (follows, likes, stars, comments)
@@ -166,6 +171,10 @@ All new UI must follow these rules:
 - No border-radius larger than 8px
 - No emojis in the UI
 - No "Built with love" or similar filler copy
+- **Page titles** (`<title>`, og:title, twitter:title) contain no em dash, en dash, colon or
+  semicolon; parts are joined with ` | `. Build them with `docTitle(...parts)` and pass any
+  database or user text through `titleText()` (`lib/pageTitle.js`, both `app.locals`).
+  `tests/page-titles.test.js` checks every template's source
 - Inputs: 40px height, border 1px solid #dee2e6, border-radius 6px
 - Buttons primary: background #1a1a2e, text #ffffff, border-radius 6px
 - The site should feel like arXiv meets GitHub. Academic, clean, no-nonsense.
@@ -253,13 +262,15 @@ All new UI must follow these rules:
   Neither writes physics. Anything that would author or complete a solution is still out.
 - Do NOT load stylesheets, fonts, or scripts from any third-party origin (jsdelivr, cdnjs, unpkg, Google Fonts, code.jquery.com, …). Every such origin is a single point of failure: a corporate or ISP web filter that blocks that one hostname leaves the site unstyled or broken for everyone behind it. This actually happened — `cdn.jsdelivr.net` is blocked by filters that classify it as a malware-distribution host, and Bootstrap was loaded from it on every page. Vendor new libraries into `css/vendor/` or `js/vendor/` and reference them with an absolute local path. `npm test` enforces this (`tests/external-assets.test.js`).
 - Analytics (`googletagmanager`, `mc.yandex.ru`) is the one allowed exception: it is injected asynchronously and the page is fully usable without it.
+- Do NOT register a service worker. Firefox bypasses its image cache on any page a worker controls, so every avatar and figure reloaded on each navigation (measured 2026-09-12: 33–166 ms of blank avatars per chat switch). `public/sw.js` is now a self-unregistering kill switch and must stay (a 404 would strand old workers); pages call `unregister()`. `tests/service-worker.test.js`.
 
 ## Testing
 - `npm test` runs `node --test tests/` — Node's built-in runner. **No Jest, no test
   dependency**, and adding one is not wanted; the rationale is written down at
   `tests/brainstorm.test.js:1-10`.
-- Suites: `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
-  `brainstorm.test.js`, `feedback.test.js`.
+- Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
+  `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`,
+  `page-titles.test.js`, `service-worker.test.js`.
 - There is **no test database**, so route handlers are not integration-tested. The house
   pattern is to export the pure decision logic from a module and test that
   (`parseProblemLinks`, `validateFeedback`), then say plainly in the file header what is left

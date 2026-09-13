@@ -1910,6 +1910,71 @@ a.drafts-btn.drafts-btn-primary:focus { background: #2a2a44; color: #ffffff; }
 .pf-card-statement figure.statement-figure { margin: 10px 0 0; }
 .statement-figure img { max-width: 100%; height: auto; }
 
+/* ── Community chats (views/messages.ejs) ────────────────────────────────────────────
+   A muted conversation still shows how much is unread, but in grey: it no longer counts
+   toward the header badge, and the red would claim otherwise. */
+.msg-conv-badge.muted {
+  background: #6c757d;
+}
+
+/* The composer's pointer to the other-language community chat. Advice, not an error, so
+   it is quiet: card background, secondary text, a plain link. Phones: text and the close
+   button share the first row, the link sits under them. Wider screens: one row. */
+.msg-lang-hint {
+  border-top: 1px solid #dee2e6;
+  padding: 8px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "text close" "link link";
+  gap: 2px 10px;
+  align-items: center;
+  background: #f8f9fa;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.msg-lang-hint[hidden] {
+  display: none;
+}
+
+.msg-lang-hint-text {
+  grid-area: text;
+  min-width: 0;
+}
+
+.msg-lang-hint-link {
+  grid-area: link;
+  justify-self: start;
+  color: #1a5276;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.msg-lang-hint-link:hover {
+  color: #0d3b54;
+  text-decoration: underline;
+}
+
+.msg-lang-hint-close {
+  grid-area: close;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+@media (min-width: 768px) {
+  .msg-lang-hint {
+    grid-template-columns: 1fr auto auto;
+    grid-template-areas: "text link close";
+  }
+}
+
 
 /* === main_page.css === */
 /* Base resets and font — colors from /css/design-system.css */

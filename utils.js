@@ -11,6 +11,17 @@ function isValidSolutionLang(lang) {
     return lang === "en" || lang === "ru";
 }
 
+/**
+ * The site speaks two languages, so any `lang` that arrives from a form, a query string
+ * or the session collapses to one of them. Raw values used to flow straight into
+ * `/${lang}/profile` redirects (a protocol-relative open redirect for "/evil.example") and
+ * into email HTML, and the session table holds scanner probes like "en'||DBMS_PIPE…" as
+ * `lang`. Anything that is not exactly "ru" is English, the site default.
+ */
+function normalizeLang(value) {
+    return value === "ru" ? "ru" : "en";
+}
+
 function isValidSolutionProblemName(name) {
     return typeof name === "string" && SOLUTION_PROBLEM_NAME_RE.test(name);
 }
@@ -746,6 +757,7 @@ module.exports = {
     convertLatexToPlainText,
     validateSolutionMarkdownContent,
     isValidSolutionLang,
+    normalizeLang,
     isValidSolutionProblemName,
     sanitizeParsedMarkdownHtml,
     autoLinkProblemRefs,

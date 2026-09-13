@@ -13,7 +13,7 @@
     const fullyJudged = rows.filter(r => r.combined != null).length;
     function langBadge(l) { return l === 'en' ? 'EN' : 'RU'; }
   %>
-  <title>Оценка качества — <%= contestTitle %></title>
+  <title><%= docTitle('Оценка качества', contestTitle) %></title>
   <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
   <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />
   <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />

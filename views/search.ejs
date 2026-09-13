@@ -7,7 +7,7 @@
     <meta http-equiv="content-language" content="<%= lang %>" />
     <meta name="description" content="Search Savchenko Solutions" />
     <meta name="author" content="Aliaksandr Melnichenka" />
-    <meta property="og:title" content="Global Search - Savchenko Solutions" />
+    <meta property="og:title" content="Global Search | Savchenko Solutions" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
     <meta property="og:description" content="Search Savchenko Solutions" />
     <%- include('default/main_site_header_head') %>
@@ -15,7 +15,7 @@
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <link rel="apple-touch-icon" href="/img/logo.png" />
-    <title><%= lang === 'ru' ? 'Поиск' : 'Search' %> - Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? 'Поиск' : 'Search', 'Savchenko Solutions') %></title>
     <style>
         .search-page-container {
             max-width: 780px;

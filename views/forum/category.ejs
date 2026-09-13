@@ -7,7 +7,7 @@
         const catName = __('forumPage.cat_' + category.slug + '_name') !== 'forumPage.cat_' + category.slug + '_name' ? __('forumPage.cat_' + category.slug + '_name') : category.name;
         const catDesc = __('forumPage.cat_' + category.slug + '_desc') !== 'forumPage.cat_' + category.slug + '_desc' ? __('forumPage.cat_' + category.slug + '_desc') : category.description;
     %>
-    <title><%= catName %> — <%= __('forumPage.discussion') %> | <%= __('title') %></title>
+    <title><%= docTitle(catName, __('forumPage.discussion'), __('title')) %></title>
     <meta name="description" content="<%= catDesc %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/discuss/<%= category.slug %>" />
 

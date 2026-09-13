@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
-  <title><%= lang === 'ru' ? 'Сообщения' : 'Messages' %> — Savchenko Solutions</title>
+  <title><%= docTitle(lang === 'ru' ? 'Сообщения' : 'Messages', 'Savchenko Solutions') %></title>
+  <%# The service worker is retired: in Firefox it made every avatar here reload on each chat switch (public/sw.js). This removes it from browsers that still have it. %>
+  <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
   <link rel="stylesheet" href="/css/vendor/bootstrap.min.css" />
   <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
@@ -1517,7 +1519,10 @@
   <!-- Shared site header (same as the rest of the site) -->
   <%# The messenger has its own composer pinned to the bottom-right; a floating tab
       would sit on top of it. %>
-  <%- include('default/main_site_header', { hideFeedbackTab: true }) %>
+  <%# /en/messages/… and /ru/messages/… set the language and come straight back here, so the
+      switch changes this page's language instead of dropping the reader on the home page. %>
+  <% const _msgPath = activeConversation ? '/messages/' + activeConversation.id : '/messages'; %>
+  <%- include('default/main_site_header', { hideFeedbackTab: true, langSwitchEnUrl: '/en' + _msgPath, langSwitchRuUrl: '/ru' + _msgPath }) %>
 
   <!-- Main body -->
   <div class="msg-body<%= activeConversation ? ' has-active' : '' %>">
@@ -1565,7 +1570,7 @@
                class="msg-conv-item<%= activeConversation && activeConversation.id === c.id ? ' active' : '' %>"
                data-name="<%= c.displayName.toLowerCase() %>">
               <% if (c.is_group) { %>
-                <div class="msg-conv-avatar-group"><%- groupAvatarSVG(c.id, c.displayName, 44) %></div>
+                <div class="msg-conv-avatar-group"><%- groupAvatarSVG(c.id, c.displayName, 44, c.community_lang) %></div>
               <% } else { %>
                 <span class="avatar-presence">
                   <img class="msg-conv-avatar"
@@ -1592,7 +1597,7 @@
               <div class="msg-conv-meta">
                 <span class="msg-conv-time" data-iso="<%= c.last_message_at ? new Date(c.last_message_at).toISOString() : '' %>"><%= formatTime(c.last_message_at) %></span>
                 <% if (c.unread_count > 0) { %>
-                  <span class="msg-conv-badge"><%= c.unread_count > 99 ? '99+' : c.unread_count %></span>
+                  <span class="msg-conv-badge<%= c.muted ? ' muted' : '' %>"><%= c.unread_count > 99 ? '99+' : c.unread_count %></span>
                 <% } %>
               </div>
             </a>
@@ -1613,7 +1618,7 @@
               </svg>
             </button>
             <% if (activeConversation.is_group) { %>
-              <div class="msg-conv-avatar-group" style="width:36px;height:36px;"><%- groupAvatarSVG(activeConversation.id, activeConversation.displayName, 36) %></div>
+              <div class="msg-conv-avatar-group" style="width:36px;height:36px;"><%- groupAvatarSVG(activeConversation.id, activeConversation.displayName, 36, activeConversation.communityLang) %></div>
             <% } else if (activeConversation.isSaved) { %>
               <div class="msg-saved-avatar sm">
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -1638,7 +1643,7 @@
               </div>
               <% if (activeConversation.is_group && activeConversation.memberCount > 0) { %>
                 <div class="msg-chat-header-members" id="toggleMembers">
-                  <%= activeConversation.memberCount %> <%= lang === 'ru' ? 'участников' : 'members' %>
+                  <%= activeConversation.memberCount %> <%= lang === 'ru' ? 'участников' : 'members' %><% if (activeConversation.communityLang) { %> · <%= activeConversation.communityLang === 'ru' ? (lang === 'ru' ? 'на русском' : 'in Russian') : (lang === 'ru' ? 'на английском' : 'in English') %><% } %>
                 </div>
               <% } %>
             </div>
@@ -1653,11 +1658,16 @@
           </div>
           <% if (activeConversation.is_group && typeof membersList !== 'undefined' && membersList.length > 0) { %>
           <div class="msg-members-panel" id="membersPanel">
+            <%# Community chats already hold every account, and leaving one has no way back
+                (the bell mutes it instead), so they get neither Add nor Leave. %>
+            <% const _isCommunity = !!activeConversation.communityLang; %>
             <% if (isAdmin) { %>
             <div class="msg-group-admin-row">
               <button class="msg-group-btn" id="groupRenameBtn"><%= lang === 'ru' ? 'Переименовать' : 'Rename' %></button>
+              <% if (!_isCommunity) { %>
               <button class="msg-group-btn" id="groupAddBtn"><%= lang === 'ru' ? 'Добавить' : 'Add members' %></button>
               <button class="msg-group-btn danger" id="groupLeaveBtn"><%= lang === 'ru' ? 'Выйти' : 'Leave' %></button>
+              <% } %>
             </div>
             <% } %>
             <% const initialShow = 20; %>
@@ -1676,7 +1686,7 @@
                 <% } %>
               </div>
             <% }); %>
-            <% if (!isAdmin) { %>
+            <% if (!isAdmin && !_isCommunity) { %>
             <div class="msg-group-admin-row">
               <button class="msg-group-btn danger" id="groupLeaveBtn"><%= lang === 'ru' ? 'Выйти из группы' : 'Leave group' %></button>
             </div>
@@ -1785,6 +1795,20 @@
           <button class="msg-reply-cancel" id="replyCancel" title="<%= lang === 'ru' ? 'Отменить' : 'Cancel' %>">&times;</button>
         </div>
 
+        <%# Community chats: a draft in the other chat's language gets a pointer to the chat
+            that speaks it, written in the language of the draft. Advice only, never a gate:
+            js/chat-language.js decides, and sendMessage() never asks. %>
+        <% if (activeConversation.communityLang) { %>
+        <% const _hintInRussian = activeConversation.communityLang === 'en'; %>
+        <div class="msg-lang-hint" id="langHintBar" hidden>
+          <span class="msg-lang-hint-text"><%= _hintInRussian ? 'Это чат на английском. Для сообщений на русском есть отдельный чат.' : 'This chat is in Russian. English messages have their own chat.' %></span>
+          <% if (typeof otherCommunity !== 'undefined' && otherCommunity) { %>
+          <a class="msg-lang-hint-link" id="langHintLink" href="/messages/<%= otherCommunity.id %>" data-conv-id="<%= otherCommunity.id %>"><%= _hintInRussian ? 'Открыть русский чат' : 'Open the English chat' %></a>
+          <% } %>
+          <button type="button" class="msg-lang-hint-close" id="langHintClose" title="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>" aria-label="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>">&times;</button>
+        </div>
+        <% } %>
+
         <!-- Attachment preview bar (image thumbnail or file card) -->
         <div class="msg-image-preview" id="imagePreview">
           <img id="imagePreviewImg" src="" alt="" />
@@ -1803,8 +1827,16 @@
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
             </svg>
           </button>
+          <%
+            // A community chat's composer says which language the chat is in.
+            const _placeholder = activeConversation.communityLang === 'en'
+              ? (lang === 'ru' ? 'Сообщение на английском...' : 'Message in English...')
+              : activeConversation.communityLang === 'ru'
+                ? (lang === 'ru' ? 'Сообщение на русском...' : 'Message in Russian...')
+                : (lang === 'ru' ? 'Написать сообщение...' : 'Type a message...');
+          %>
           <textarea class="msg-input" id="msgInput" rows="1"
-                    placeholder="<%= lang === 'ru' ? 'Написать сообщение...' : 'Type a message...' %>"
+                    placeholder="<%= _placeholder %>"
                     maxlength="5000"></textarea>
           <button class="msg-send-btn" id="sendBtn" disabled>
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -1882,7 +1914,7 @@
         <% conversations.forEach(function(c) { if (c.isSaved) return; %>
           <a class="msg-user-result" data-conv-id="<%= c.id %>" style="cursor:pointer">
             <% if (c.is_group) { %>
-              <span style="width:36px;height:36px;border-radius:50%;overflow:hidden;display:inline-block;flex-shrink:0;"><%- groupAvatarSVG(c.id, c.displayName, 36) %></span>
+              <span style="width:36px;height:36px;border-radius:50%;overflow:hidden;display:inline-block;flex-shrink:0;"><%- groupAvatarSVG(c.id, c.displayName, 36, c.community_lang) %></span>
             <% } else { %>
               <img src="<%= c.displayPicture || '/img/profile_images/Default_placeholder.svg' %>" alt="" />
             <% } %>
@@ -1980,9 +2012,11 @@
   </button>
 </div>
 
+<script src="<%= av('/js/chat-language.js') %>"></script>
 <script>
 (function() {
   const CONV_ID = <%= activeConversation ? activeConversation.id : 'null' %>;
+  const COMMUNITY_LANG = <%- JSON.stringify(activeConversation && activeConversation.communityLang ? activeConversation.communityLang : null) %>;
   const USER_ID = <%= userId %>;
   const IS_GROUP = <%= activeConversation ? activeConversation.is_group : false %>;
   const IS_ADMIN = <%= typeof isAdmin !== 'undefined' ? isAdmin : false %>;
@@ -2024,7 +2058,10 @@
   const chatEl = document.getElementById('chatMessages');
   const rowEls = chatEl ? chatEl.querySelectorAll('.msg-bubble-row[data-msg-id]') : [];
   if (rowEls.length > 0) {
-    lastMsgId = parseInt(rowEls[rowEls.length - 1].dataset.msgId) || 0;
+    // The largest id, not the last row's: a message inserted after the fact (the English
+    // halves of the split announcements) sorts by its original time but has a newer id, and
+    // /poll?after= would otherwise hand it back on every reconnect.
+    rowEls.forEach(function(el) { lastMsgId = Math.max(lastMsgId, parseInt(el.dataset.msgId) || 0); });
     bottomDayKey = clientDayKey(rowEls[rowEls.length - 1].dataset.created);
     oldestMsgId = parseInt(rowEls[0].dataset.msgId) || 0;
   }
@@ -2132,6 +2169,53 @@
         }
       }
     });
+  }
+
+  // ── Community chat language hint ────────────────────────────────────
+  // While a draft is clearly in the other community chat's language, show a pointer to
+  // that chat. Advice only: nothing here touches sending, and a missing or failed
+  // js/chat-language.js just means no hint.
+  const langHintBar = document.getElementById('langHintBar');
+  if (langHintBar && msgInput && COMMUNITY_LANG) {
+    const langHintClose = document.getElementById('langHintClose');
+    const langHintLink = document.getElementById('langHintLink');
+    const hintDismissKey = 'msgLangHintDismissed:' + CONV_ID;
+    let hintTimer = null;
+    const hintDismissed = function() {
+      try { return localStorage.getItem(hintDismissKey) === '1'; } catch (e) { return false; }
+    };
+    const updateLangHint = function() {
+      const api = window.ChatLanguage;
+      langHintBar.hidden = !(api && !editingMsgId && !hintDismissed() &&
+        api.languageHint(msgInput.value, COMMUNITY_LANG));
+    };
+    const scheduleLangHint = function() {
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(updateLangHint, 400);
+    };
+    msgInput.addEventListener('input', scheduleLangHint);
+    msgInput.addEventListener('keyup', scheduleLangHint); // Enter sends and clears without an input event
+    if (sendBtn) sendBtn.addEventListener('click', scheduleLangHint);
+    if (langHintClose) {
+      langHintClose.addEventListener('click', function() {
+        try { localStorage.setItem(hintDismissKey, '1'); } catch (e) {}
+        langHintBar.hidden = true;
+      });
+    }
+    if (langHintLink) {
+      // Take the draft along, so the message typed in the wrong chat is waiting in the right one.
+      langHintLink.addEventListener('click', function() {
+        if (!msgInput.value.trim()) return;
+        try {
+          const target = 'msgDraft:' + langHintLink.dataset.convId;
+          if (!localStorage.getItem(target)) {
+            localStorage.setItem(target, msgInput.value);
+            clearDraft();
+          }
+        } catch (e) {}
+      });
+    }
+    updateLangHint(); // a restored draft may already be in the other language
   }
 
   if (editCancel) {
@@ -3691,7 +3775,7 @@
       }
     }
     const badge = unread > 0
-      ? '<span class="msg-conv-badge">' + (unread > 99 ? '99+' : unread) + '</span>'
+      ? '<span class="msg-conv-badge' + (c.muted ? ' muted' : '') + '">' + (unread > 99 ? '99+' : unread) + '</span>'
       : '';
     return '<a href="/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
       '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
@@ -3714,7 +3798,7 @@
           const unread = (CONV_ID && c.id === CONV_ID) ? 0 : (c.unread_count || 0);
           return c.id + ':' + (c.last_message_at || '') + ':' + unread + ':' +
             (c.last_message_content || '') + ':' + (c.last_message_image ? 1 : 0) + ':' +
-            (c.isOnline ? 1 : 0);
+            (c.isOnline ? 1 : 0) + ':' + (c.muted ? 1 : 0);
         }).join('|');
         if (sig === lastConvSig) return;
         lastConvSig = sig;

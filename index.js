@@ -11,7 +11,10 @@ const {
     validateSolutionMarkdownContent,
     isValidSolutionLang,
     isValidSolutionProblemName,
+    normalizeLang,
 } = require("./utils"); // Importing functions from utils.js
+const { docTitle, titleText } = require("./lib/pageTitle");
+const { COMMUNITY_LANGS, mutedByDefault } = require("./lib/communityChats");
 // Shared with the browser (views/edit_post.ejs loads the same file) so that "did this
 // text actually change?" has exactly one answer on both sides. See js/draft-state.js.
 const { isSameContent } = require("./js/draft-state");
@@ -280,7 +283,7 @@ app.use("/video", express.static(path.join(__dirname, "video"), { maxAge: '30d' 
 // cdn.jsdelivr.net is blocked on some networks (notably several post-Soviet ISPs),
 // which left every page without its scripts and stylesheets. See css/vendor, js/vendor.
 app.use("/vendor/mathjax", express.static(path.join(__dirname, "node_modules", "mathjax-full", "es5"), { maxAge: '30d' }));
-// PWA assets (manifest.webmanifest, sw.js, offline.html) served at web root
+// manifest.webmanifest and the retired sw.js (it now only unregisters itself) at web root
 app.use(express.static(path.join(__dirname, "public")));
 // Stylesheet for server-rendered math SVG (constant; generated from mathRender)
 app.get('/css/mathjax.css', (req, res) => {
@@ -327,6 +330,10 @@ function assetIfPresent(p) {
     }
 }
 app.locals.assetIfPresent = assetIfPresent;
+// Page titles: no em dash, en dash, colon or semicolon, parts joined with " | ".
+// tests/page-titles.test.js rejects a <title> built any other way. See lib/pageTitle.js.
+app.locals.docTitle = docTitle;
+app.locals.titleText = titleText;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
@@ -493,7 +500,9 @@ app.get("/api/online-users", async (req, res) => {
 
 // Authentication middleware
 function checkAuthenticated(req, res, next) {
-    const lang = req.params.lang || req.query.lang || req.body.lang || 'en';
+    // Normalised: this value goes into a redirect, and "/evil.example" would make it
+    // protocol-relative. See normalizeLang in utils.js.
+    const lang = normalizeLang(req.params.lang || req.query.lang || req.body.lang);
     i18n.setLocale(res, lang);
 
     if (req.session.userId) {
@@ -504,7 +513,7 @@ function checkAuthenticated(req, res, next) {
 }
 
 function checkNotAuthenticated(req, res, next) {
-    const lang = req.params.lang || req.query.lang || req.body.lang || 'en';
+    const lang = normalizeLang(req.params.lang || req.query.lang || req.body.lang);
     i18n.setLocale(res, lang);
 
     if (!req.session.userId) {
@@ -1812,7 +1821,9 @@ app.get("/api/notifications", checkAuthenticated, async (req, res) => {
         const limit = Math.min(parseInt(req.query.limit) || 20, 50);
         const offset = parseInt(req.query.offset) || 0;
         const items = await notifications.getNotifications(req.session.userId, limit, offset);
-        res.json({ notifications: items });
+        // Chat notifications are stored in English; the bell shows them in the page's language.
+        const lang = normalizeLang(req.query.lang || req.session.lang);
+        res.json({ notifications: items.map((n) => notifications.localizeNotification(n, lang)) });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Failed to get notifications" });
@@ -1843,7 +1854,7 @@ app.post("/api/notifications/read-all", checkAuthenticated, async (req, res) => 
 
 // Full notifications page
 app.get("/notifications", checkAuthenticated, async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = normalizeLang(req.session.lang);
     i18n.setLocale(res, lang);
     try {
         const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -1878,7 +1889,7 @@ app.get("/notifications", checkAuthenticated, async (req, res) => {
         res.render("notifications", {
             __: i18n.__,
             lang,
-            notifications: items,
+            notifications: items.map((n) => notifications.localizeNotification(n, lang)),
             page,
             totalPages,
             total,
@@ -1907,7 +1918,9 @@ app.get(["/user/:username", "/:lang(en|ru)/user/:username"], getUserProfile);
 app.get("/contributor/:username", renderContributorPage);
 
 app.post("/create-problem", checkAuthenticated, async (req, res) => {
-    const { problemName, chapter, lang = 'en' } = req.body;
+    const { problemName, chapter } = req.body;
+    // Becomes a directory under posts/, so only "en" or "ru" may pass.
+    const lang = normalizeLang(req.body.lang);
 
     const { chapters } = await getLanguageData(lang);
 
@@ -2114,7 +2127,7 @@ app.get("/en/login", checkNotAuthenticated, (req, res) => {
 
 // Forgot password
 app.get("/forgot-password", (req, res) => {
-    const lang = req.query.lang || 'en';
+    const lang = normalizeLang(req.query.lang);
     i18n.setLocale(res, lang);
     res.render("forgot_password", {
         __: i18n.__,
@@ -2125,7 +2138,9 @@ app.get("/forgot-password", (req, res) => {
 });
 
 app.post("/forgot-password", async (req, res) => {
-    const { email, lang = 'en' } = req.body;
+    const { email } = req.body;
+    // Goes into the emailed HTML and into redirects: only "en" or "ru" may pass.
+    const lang = normalizeLang(req.body.lang);
     i18n.setLocale(res, lang);
 
     try {
@@ -2198,8 +2213,8 @@ app.post("/forgot-password", async (req, res) => {
 
 // Reset password
 app.get("/reset-password", async (req, res) => {
-    const { token, lang: queryLang } = req.query;
-    const lang = queryLang || 'en';
+    const { token } = req.query;
+    const lang = normalizeLang(req.query.lang);
     i18n.setLocale(res, lang);
 
     if (!token) {
@@ -2236,7 +2251,8 @@ app.get("/reset-password", async (req, res) => {
 });
 
 app.post("/reset-password", async (req, res) => {
-    const { token, password, confirmPassword, lang = 'en' } = req.body;
+    const { token, password, confirmPassword } = req.body;
+    const lang = normalizeLang(req.body.lang);
     i18n.setLocale(res, lang);
 
     if (!token || !password || !confirmPassword) {
@@ -2288,7 +2304,7 @@ app.post("/reset-password", async (req, res) => {
 
 // Email verification (soft): mark the account verified when the emailed link is opened
 app.get("/verify-email", async (req, res) => {
-    const lang = req.query.lang || 'en';
+    const lang = normalizeLang(req.query.lang);
     const token = req.query.token;
     if (!token) return res.redirect(`/${lang}/login`);
     try {
@@ -2320,7 +2336,7 @@ app.get("/verify-email", async (req, res) => {
 // Account recovery appeal (middle-ground: never reveals whether an email exists;
 // files an appeal into the /admin/password-resets "needs review" queue)
 app.get("/recover-account", (req, res) => {
-    const lang = req.query.lang || 'en';
+    const lang = normalizeLang(req.query.lang);
     i18n.setLocale(res, lang);
     res.render("recover_account", {
         __: i18n.__,
@@ -2331,7 +2347,7 @@ app.get("/recover-account", (req, res) => {
 });
 
 app.post("/recover-account", async (req, res) => {
-    const lang = req.body.lang || 'en';
+    const lang = normalizeLang(req.body.lang);
     const email = String(req.body.email || "").trim();
     const message = String(req.body.message || "").trim().slice(0, 2000);
     const ip = req.ip || '';
@@ -2413,7 +2429,10 @@ app.get("/en/register", checkNotAuthenticated, (req, res) => {
 
 // Registration Route
 app.post("/register", registerLimiter, async (req, res) => {
-    const { username, email, fullname, password, password2, lang = 'en' } = req.body;
+    const { username, email, fullname, password, password2 } = req.body;
+    // Picks the verification email's language, the redirect target and which community
+    // chat starts unmuted, so only "en" or "ru" may pass (see normalizeLang in utils.js).
+    const lang = normalizeLang(req.body.lang);
 
     // Validate required fields
     if (!username || !email || !fullname || !password || !password2) {
@@ -2438,19 +2457,22 @@ app.post("/register", registerLimiter, async (req, res) => {
             [username, email, fullname, hashedPassword]
         );
 
-        // Auto-add to global group chat
+        // Join both community chats (conversations.community_lang). The one in the language
+        // of the page they signed up on is live; the other starts muted, so it doesn't add
+        // to their unread count until they unmute it. See lib/communityChats.js.
         try {
-            const globalChat = await pool.query(
-                `SELECT id FROM conversations WHERE title = 'Savchenko Solutions' AND is_group = TRUE ORDER BY created_at ASC LIMIT 1`
+            const communityChats = await pool.query(
+                `SELECT id, community_lang FROM conversations WHERE community_lang = ANY($1)`,
+                [COMMUNITY_LANGS]
             );
-            if (globalChat.rows.length > 0) {
+            for (const chat of communityChats.rows) {
                 await pool.query(
-                    `INSERT INTO conversation_members (conversation_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-                    [globalChat.rows[0].id, newUser.rows[0].id]
+                    `INSERT INTO conversation_members (conversation_id, user_id, muted) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
+                    [chat.id, newUser.rows[0].id, !!mutedByDefault({ chatLang: chat.community_lang, userLang: lang })]
                 );
             }
         } catch (e) {
-            console.error('Failed to add user to global chat:', e);
+            console.error('Failed to add user to the community chats:', e);
         }
 
         // Send a verification email (soft: the account works right away; the user
@@ -2499,7 +2521,8 @@ app.post("/register", registerLimiter, async (req, res) => {
 
 // Login Route
 app.post("/login", loginLimiter, loginAccountLimiter, async (req, res) => {
-    const { username, password, lang = 'en' } = req.body;
+    const { username, password } = req.body;
+    const lang = normalizeLang(req.body.lang);
 
     // bcrypt.compare is the expensive part of this route and it is otherwise a free
     // CPU-exhaustion vector on a 2-vCPU box, so refuse automated clients before hashing.
@@ -2533,7 +2556,7 @@ app.post("/login", loginLimiter, loginAccountLimiter, async (req, res) => {
 
 // Profile routes
 app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => {
-    const lang = req.params.lang || req.query.lang || 'en';
+    const lang = normalizeLang(req.params.lang || req.query.lang);
     i18n.setLocale(res, lang);
 
     try {
@@ -2553,7 +2576,7 @@ app.get(["/profile", "/:lang/profile"], checkAuthenticated, async (req, res) => 
 // Profile update routes
 app.post(["/profile/update", "/:lang/profile/update"], checkAuthenticated, async (req, res) => {
     const { fullname, email, lang } = req.body;
-    const language = req.params.lang || lang || 'en';
+    const language = normalizeLang(req.params.lang || lang);
 
     try {
         await pool.query(
@@ -2571,7 +2594,7 @@ app.post(["/profile/update", "/:lang/profile/update"], checkAuthenticated, async
 // Password update routes
 app.post(["/profile/password", "/:lang/profile/password"], checkAuthenticated, async (req, res) => {
     const { currentPassword, newPassword, lang } = req.body;
-    const language = req.params.lang || lang || 'en';
+    const language = normalizeLang(req.params.lang || lang);
 
     try {
         const result = await pool.query(
@@ -3157,6 +3180,19 @@ app.get(["/drafts", "/:lang(en|ru)/drafts"], checkAuthenticated, async (req, res
     }
 });
 
+// The messenger lives at /messages with no language in its path, so the header's EN/RU
+// switch on that page points here: record the choice and go straight back to the same
+// conversation, instead of dropping the reader on the home page as it used to. Must precede
+// the /:lang/:name catch-all. The lang middleware near the top already saves the choice for
+// most visitors, but it skips requests botgate rates as not countable (a VPN or datacenter
+// address), and a signed-in person switching languages is never a crawler.
+app.get(["/:lang(en|ru)/messages", "/:lang(en|ru)/messages/:id(\\d+)"], (req, res) => {
+    if (req.session.userId && req.session.lang !== req.params.lang) {
+        req.session.lang = req.params.lang;
+    }
+    res.redirect(req.params.id ? `/messages/${req.params.id}` : "/messages");
+});
+
 app.get("/:lang(en|ru)/:name/brainstorm", (req, res) => {
     return res.redirect(301, `/${req.params.lang}/${req.params.name}`);
 });
@@ -3203,7 +3239,7 @@ app.get("/:lang/edit/:name", (req, res) => {
             name,
             content: fileContents,
             fileModifiedAt: Math.round(fileModifiedAt),
-            title: lang === 'ru' ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
+            title: docTitle(lang === 'ru' ? 'Изменить решение' : 'Edit Solution', name),
             userId: req.session.userId || null,
         });
     } else {
@@ -3380,7 +3416,7 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
             lang,
             name,
             content: editorContent,
-            title: lang === "ru" ? `Изменить решение - ${name}` : `Edit Solution - ${name}`,
+            title: docTitle(lang === "ru" ? "Изменить решение" : "Edit Solution", name),
             saveError: contentValidation.message,
             userId: req.session.userId || null,
         });
@@ -3601,7 +3637,7 @@ app.get("/search", searchLimiter, (req, res) => {
 
 app.get("/global-search", (req, res) => {
     const query = req.query.search?.trim() || "";
-    const lang = req.query.lang || 'en';
+    const lang = normalizeLang(req.query.lang);
 
     i18n.setLocale(res, lang);
 

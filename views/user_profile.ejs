@@ -57,7 +57,7 @@
     <script defer src="/js/vendor/chart.umd.min.js"></script>
     <script defer src="/js/vendor/d3.min.js"></script>
     <script defer src="/js/vendor/d3-sankey.min.js"></script>
-    <title>@<%= username %> - <%= lang === 'ru' ? 'Профиль участника' : 'Contributor Profile' %></title>
+    <title><%= docTitle('@' + username, lang === 'ru' ? 'Профиль участника' : 'Contributor Profile') %></title>
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/user/<%= encodeURIComponent(username) %>">
     <link rel="alternate" hreflang="en" href="https://savchenkosolutions.com/en/user/<%= encodeURIComponent(username) %>">
     <link rel="alternate" hreflang="ru" href="https://savchenkosolutions.com/ru/user/<%= encodeURIComponent(username) %>">

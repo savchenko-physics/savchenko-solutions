@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= lang === 'ru' ? tagMeta.labelRu : tagMeta.labelEn %> <%= lang === 'ru' ? '— задачи Савченко' : 'problems' %> — Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? [tagMeta.labelRu, 'Задачи Савченко'] : tagMeta.labelEn + ' problems', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru' ? tagMeta.description : tagMeta.description %> <%= total %> <%= lang === 'ru' ? 'задач.' : 'problems.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems/topic/<%= tagMeta.key %>" />
 

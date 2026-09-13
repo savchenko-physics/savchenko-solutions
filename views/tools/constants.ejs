@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= lang === 'ru' ? 'Таблица физических констант — Значения CODATA' : 'Physical Constants Table — CODATA Values with Copy to Clipboard' %> | Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? ['Таблица физических констант', 'Значения CODATA'] : ['Physical Constants Table', 'CODATA Values with Copy to Clipboard'], 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru' ? 'Таблица 100 фундаментальных физических констант со значениями CODATA 2018. Переключение между СИ и СГС. Нажмите для копирования.' : 'Comprehensive table of 100 fundamental physical constants with CODATA 2018 values. Toggle between SI and CGS units. Click any constant to copy its value. Includes speed of light, Planck constant, gravitational constant, and more.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/tools/constants" />
 

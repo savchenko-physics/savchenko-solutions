@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= translateTopicTitle(topic.title, lang) %> - <%= __('forumPage.discussion') %> | <%= __('title') %></title>
+    <title><%= docTitle(translateTopicTitle(topic.title, lang), __('forumPage.discussion'), __('title')) %></title>
     <meta name="description" content="<%= translateTopicTitle(topic.title, lang) %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/discuss/<%= category.slug %>/<%= topic.id %>-<%= topic.slug %>" />
 

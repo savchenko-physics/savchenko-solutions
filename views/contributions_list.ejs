@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= problemName === 'all' ? (lang === 'ru' ? 'Все изменения' : 'All Contributions') : 'History - ' + problemName %> | <%= __('title') %></title>
+    <title><%= docTitle(problemName === 'all' ? (lang === 'ru' ? 'Все изменения' : 'All Contributions') : ['History', problemName], __('title')) %></title>
     <meta name="description" content="<%= problemName === 'all' ? (lang === 'ru' ? 'История всех изменений решений задач Савченко' : 'Complete history of all contributions to Savchenko Solutions') : 'Contribution history for problem ' + problemName %>" />
 
     <link href="/css/vendor/bootstrap.min.css" rel="stylesheet" />

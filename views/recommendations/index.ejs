@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
 <head>
-    <title><%= lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources' %> | Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru'
         ? 'Каталог Telegram-каналов и сайтов по олимпиадной физике: задачи, подготовка к экзаменам, теория, астрономия. Порядок — по числу ссылок от других участников каталога.'
         : 'A catalog of physics Telegram channels and websites for olympiad preparation, ordered by how often other catalog members cite them.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/recommendations<%= tab === 'websites' ? '/sites' : '' %>" />
-    <meta property="og:title" content="<%= lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources' %> — Savchenko Solutions" />
+    <meta property="og:title" content="<%= docTitle(lang === 'ru' ? 'Обширный каталог ресурсов по физике' : 'A comprehensive catalog of physics resources', 'Savchenko Solutions') %>" />
     <meta property="og:url" content="https://savchenkosolutions.com/recommendations" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
     <%- include('_head') %>

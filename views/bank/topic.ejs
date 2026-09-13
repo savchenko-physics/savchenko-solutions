@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <% const topicDisplay = topic.charAt(0).toUpperCase() + topic.slice(1).replace(/-/g, ' '); %>
-    <title><%= topicDisplay %> — Physics Problem Bank | Savchenko Solutions</title>
+    <title><%= docTitle(topicDisplay, 'Physics Problem Bank', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= totalProblems %> <%= topicDisplay.toLowerCase() %> problems. Physics Problem Bank at Savchenko Solutions." />
     <link rel="canonical" href="https://savchenkosolutions.com/bank/topic/<%= topic %>" />
 

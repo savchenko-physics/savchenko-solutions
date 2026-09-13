@@ -3,16 +3,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= title %></title>
+    <title><%= titleText(title) %></title>
     <meta name="description" content="<%= metaDescription %>" />
     <meta property="og:site_name" content="Savchenko Solutions" />
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:title" content="<%= titleText(title) %>" />
     <meta property="og:description" content="<%= metaDescription %>" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
     <% if (typeof ogUrl !== 'undefined' && ogUrl) { %><meta property="og:url" content="<%= ogUrl %>" />
     <% } %><meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="<%= title %>" />
+    <meta name="twitter:title" content="<%= titleText(title) %>" />
     <meta name="twitter:description" content="<%= metaDescription %>" />
     <meta name="twitter:image" content="https://savchenkosolutions.com/img/logo.png" />
     <!-- PWA -->
@@ -20,7 +20,8 @@
     <meta name="theme-color" content="#1a1a2e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Savchenko" />
-    <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
+    <%# The service worker is retired: in Firefox it made every image reload on each navigation (public/sw.js). This removes it from browsers that still have it. %>
+    <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/<%= name %>" />
     <link rel="alternate" hreflang="<%= lang %>" href="https://savchenkosolutions.com/<%= lang %>/<%= name %>" />
     <% if (alternateFileExists) { %>

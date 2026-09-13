@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= lang === 'ru' ? 'Банк задач по физике' : 'Physics Problem Bank' %> — Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? 'Банк задач по физике' : 'Physics Problem Bank', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru'
         ? totalProblems + ' задач из ' + sources.length + ' источников: МФО, АФО, ЕФО, USAPhO, BPhO, Иродов и другие.'
         : totalProblems + ' problems from ' + sources.length + ' sources: IPhO, APhO, EuPhO, USAPhO, BPhO, Irodov, and more.' %>" />

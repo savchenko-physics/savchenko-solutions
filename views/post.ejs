@@ -9,11 +9,11 @@
     <meta name="description" content="<%= title %>" />
     <meta name="author" content="<%= __('meta.author') %>" />
     <meta name="date" content="<%= __('meta.date') %>" scheme="YYYY-MM" />
-    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:title" content="<%= titleText(title) %>" />
     <meta property="og:image" content="https://savchenkosolutions.com/img/logo.png" />
     <meta property="og:description" content="<%= title %>" />
     <meta name="yandex-verification" content="6cfda41f74038368" />
-    <title><%= title %></title>
+    <title><%= titleText(title) %></title>
 
     <!-- Fonts -->
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />

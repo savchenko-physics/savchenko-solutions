@@ -3,13 +3,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= post.title %> — Savchenko Solutions Blog</title>
+    <title><%= docTitle(post.title, 'Savchenko Solutions Blog') %></title>
     <meta name="description" content="<%= post.excerpt %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/blog/<%= post.slug %>" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="<%= post.title %>" />
+    <meta property="og:title" content="<%= titleText(post.title) %>" />
     <meta property="og:description" content="<%= (post.excerpt || '').substring(0, 200) %>" />
     <meta property="og:url" content="https://savchenkosolutions.com/<%= lang %>/blog/<%= post.slug %>" />
     <meta property="og:site_name" content="Savchenko Solutions" />
@@ -23,7 +23,7 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="<%= post.title %>" />
+    <meta name="twitter:title" content="<%= titleText(post.title) %>" />
     <meta name="twitter:description" content="<%= (post.excerpt || '').substring(0, 200) %>" />
 
     <!-- JSON-LD BlogPosting schema -->

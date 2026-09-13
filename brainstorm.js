@@ -16,6 +16,7 @@ const i18n = require('i18n');
 const notifications = require('./notifications');
 const { getProblemBreadcrumbParts } = require('./parents');
 const { getOnlineUsernames } = require('./lib/presence');
+const { docTitle } = require('./lib/pageTitle');
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -880,7 +881,7 @@ async function renderRoom(req, res) {
         username: req.session.username || null,
         isCurator,
         reactions: ALLOWED_REACTIONS,
-        title: (lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room') + ' · ' + name,
+        title: docTitle(lang === 'ru' ? 'Комната мозгового штурма' : 'Brainstorm Room', name),
     });
 }
 

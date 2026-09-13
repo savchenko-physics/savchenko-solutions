@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= post ? (lang === 'ru' ? 'Редактировать' : 'Edit') + ': ' + post.title : (lang === 'ru' ? 'Новая запись' : 'New Post') %> — Savchenko Solutions Blog</title>
+    <title><%= docTitle(post ? (lang === 'ru' ? 'Редактировать' : 'Edit') : (lang === 'ru' ? 'Новая запись' : 'New Post'), post ? post.title : '', 'Savchenko Solutions Blog') %></title>
 
     <link href="/css/vendor/fonts/fonts.css" rel="stylesheet" />
     <link href="/css/vendor/fontawesome6/css/all.min.css" rel="stylesheet" />

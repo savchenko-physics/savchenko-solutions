@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title><%= lang === 'ru' ? 'Блог' : 'Blog' %> — Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? 'Блог' : 'Blog', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= lang === 'ru' ? 'Блог Savchenko Solutions: руководства, разборы задач, новости платформы.' : 'Savchenko Solutions blog: study guides, problem deep dives, and platform updates.' %>" />
     <link rel="canonical" href="https://savchenkosolutions.com/blog<%= activeTag ? '/tag/' + activeTag : '' %>" />
 

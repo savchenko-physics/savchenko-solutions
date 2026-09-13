@@ -19,6 +19,9 @@ module.exports = function(mainPool) {
 
     // Add i18n configuration
     const i18n = require('i18n');
+    // Page titles: no em dash, en dash, colon or semicolon (lib/pageTitle.js). Templates here get
+    // pageTitle as a string, so only titleText is exposed to them.
+    const { docTitle, titleText } = require('../lib/pageTitle');
     i18n.configure({
         locales: ['en', 'ru'],
         directory: path.join(__dirname, '../locales'),
@@ -36,6 +39,7 @@ module.exports = function(mainPool) {
     app.use(expressLayouts);
 
     app.set('layout', 'layout'); 
+    app.locals.titleText = titleText;
 
     // Set the views directory (could also leave as default 'views')
     app.set('views', path.join(__dirname, 'views'));
@@ -217,7 +221,7 @@ module.exports = function(mainPool) {
         }
 
         res.render('sandbox/sandbox-show', {
-          pageTitle: `Viewing: ${solutionResult.rows[0].title}`,
+          pageTitle: docTitle('Viewing', solutionResult.rows[0].title),
           solution: solutionResult.rows[0],
           comments: commentsResult.rows,
           userVote,

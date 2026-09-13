@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="<%= lang %>">
 <head>
-    <title><%= lang === 'ru' ? rubric.ru : rubric.en %> — <%= lang === 'ru' ? 'Каталог ресурсов' : 'Resource catalog' %> | Savchenko Solutions</title>
+    <title><%= docTitle(lang === 'ru' ? rubric.ru : rubric.en, lang === 'ru' ? 'Каталог ресурсов' : 'Resource catalog', 'Savchenko Solutions') %></title>
     <meta name="description" content="<%= totalInRubric %> <%= lang === 'ru' ? 'источников по теме' : 'sources for' %> <%= lang === 'ru' ? rubric.ru : rubric.en %>." />
     <link rel="canonical" href="https://savchenkosolutions.com/recommendations/<%= rubric.id %>" />
     <%- include('_head') %>

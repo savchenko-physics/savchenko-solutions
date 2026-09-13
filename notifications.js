@@ -227,6 +227,25 @@ async function markAllAsRead(userId) {
 }
 
 /**
+ * A notification in the reader's language. Chat notifications are stored with an English
+ * title ("New message from emixter", written at send time for every recipient at once, see
+ * createMessageNotifications), so a Russian reader's bell used to be English. Translating
+ * on the way out fixes the 2,800 rows already stored as well as new ones. Other types are
+ * returned untouched. Pure: returns a new object.
+ */
+const MESSAGE_TITLE_EN = /^New message from (.+)$/;
+const MESSAGE_PREVIEW_RU = { '[Image]': '[Фото]', '[File]': '[Файл]' };
+
+function localizeNotification(n, lang) {
+    if (!n || lang !== 'ru' || n.type !== 'new_message') return n;
+    const out = { ...n };
+    const m = typeof n.title === 'string' ? n.title.match(MESSAGE_TITLE_EN) : null;
+    if (m) out.title = `Новое сообщение от ${m[1]}`;
+    if (Object.prototype.hasOwnProperty.call(MESSAGE_PREVIEW_RU, n.message)) out.message = MESSAGE_PREVIEW_RU[n.message];
+    return out;
+}
+
+/**
  * Check if a like notification was already sent for this problem within the last hour.
  * Used to debounce like notifications (max 1 per problem per hour).
  */
@@ -255,5 +274,6 @@ module.exports = {
     markAsRead,
     markAllAsRead,
     hasRecentLikeNotification,
+    localizeNotification,
     DEFAULT_NOTIFICATION_SETTINGS,
 };

@@ -641,7 +641,7 @@
 
     // Resolves true when the list rendered, false when it could not be loaded.
     function loadNotifs() {
-      return fetch('/api/notifications').then(function(r) { return r.json(); }).then(function(data) {
+      return fetch('/api/notifications?lang=<%= navLang === 'ru' ? 'ru' : 'en' %>').then(function(r) { return r.json(); }).then(function(data) {
         renderNotifs(data.notifications || []);
         loaded = true;
         return true;

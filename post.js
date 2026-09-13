@@ -18,6 +18,7 @@ const { label: axisLabel, explain: axisExplain, bucketWord, WIDGET_COST_KEYS, WI
 const { toRating } = require("./lib/difficultyRating");
 const { ruVotes } = require("./lib/ruPlural");
 const { getFigure, splitAtSolutionHeading } = require("./lib/solutionFigures");
+const { solutionTitle } = require("./lib/pageTitle");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -169,12 +170,9 @@ async function renderPost(req, res) {
             lang
         );
 
-        // Build improved title using section name
-        const seoTitle = problemBreadcrumb
-            ? (lang === 'ru'
-                ? `Задача ${name} Решение — ${problemBreadcrumb.sectionTitle} | Решения Савченко`
-                : `Problem ${name} Solution — ${problemBreadcrumb.sectionTitle} | Savchenko Solutions`)
-            : `${name} | ${i18n.__('title')}`;
+        // "Problem 1.1.1 Solution | Kinematics | Savchenko Solutions": no em dashes, colons or
+        // semicolons in titles, and section 14.2's own name has a semicolon (lib/pageTitle.js).
+        const seoTitle = solutionTitle(name, problemBreadcrumb ? problemBreadcrumb.sectionTitle : '', lang);
 
         // Prev/next navigation
         const prevNext = getPrevNextProblems(name, lang);
