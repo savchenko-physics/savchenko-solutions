@@ -34,6 +34,9 @@
 <link rel="stylesheet" href="/css/vendor/bootstrap.min.css">
 <% } %><% if (_ss.codemirror) { %>
 <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
+<%# CodeMirror measures character widths once; when SS Mono arrives after that, the cursor sits
+    between letters. Re-measure every editor on the page whenever a font finishes loading. %>
+<script>if(document.fonts&&document.fonts.addEventListener){document.fonts.addEventListener('loadingdone',function(){document.querySelectorAll('.CodeMirror').forEach(function(el){if(el.CodeMirror)el.CodeMirror.refresh();});});}</script>
 <% } %><% if (_ss.stix) { %>
 <link rel="stylesheet" href="<%= _asset('/css/vendor/fonts/stix-two-math.css') %>">
 <% } %><% if (_icons.indexOf('fa6') !== -1) { %>
