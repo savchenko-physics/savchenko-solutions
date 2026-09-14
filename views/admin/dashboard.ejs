@@ -20,9 +20,9 @@
       --admin-muted: #6c757d;
     }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: var(--ss-font-ui);
       color: var(--admin-text);
-      background: #fff;
+      background: var(--ss-surface);
       margin: 0;
     }
     .admin-layout {
@@ -32,9 +32,9 @@
     .admin-sidebar {
       width: 200px;
       background: var(--admin-nav);
-      color: #fff;
+      color: var(--ss-on-navy);
       flex-shrink: 0;
-      padding: 20px 0;
+      padding: var(--ss-space-5) 0;
       position: fixed;
       top: 0;
       left: 0;
@@ -42,12 +42,12 @@
       overflow-y: auto;
     }
     .admin-sidebar h2 {
-      font-size: 14px;
-      font-weight: 600;
+      font-size: var(--ss-fs-14);
+      font-weight: var(--ss-fw-strong);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      padding: 0 16px;
-      margin-bottom: 20px;
+      padding: 0 var(--ss-space-4);
+      margin-bottom: var(--ss-space-5);
       color: rgba(255,255,255,0.7);
     }
     .admin-sidebar a,
@@ -56,87 +56,87 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 16px;
-      color: #ffffff;
+      padding: var(--ss-space-3) var(--ss-space-4);
+      color: var(--ss-on-navy);
       text-decoration: none;
-      font-size: 14px;
+      font-size: var(--ss-fs-14);
       border-left: 3px solid transparent;
     }
     .admin-sidebar a:hover,
     .admin-sidebar a:focus {
       background: rgba(255,255,255,0.08);
-      color: #ffffff;
+      color: var(--ss-on-navy);
     }
     .admin-sidebar a.active {
       background: rgba(255,255,255,0.12);
-      color: #ffffff;
+      color: var(--ss-on-navy);
       border-left-color: #ffffff;
     }
     .admin-sidebar .back-link {
       margin-top: auto;
       border-top: 1px solid rgba(255,255,255,0.15);
-      padding-top: 10px;
-      margin-top: 30px;
+      padding-top: var(--ss-space-3);
+      margin-top: var(--ss-space-7);
     }
     .badge-count {
       background: var(--admin-danger);
-      color: #fff;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 10px;
+      color: var(--ss-on-navy);
+      font-size: var(--ss-fs-12);
+      font-weight: var(--ss-fw-strong);
+      padding: 2px var(--ss-space-2);
+      border-radius: var(--ss-radius);
       min-width: 20px;
       text-align: center;
     }
     .admin-content {
       margin-left: 200px;
       flex: 1;
-      padding: 30px;
+      padding: var(--ss-space-7);
       max-width: 1200px;
     }
     .admin-content h1 {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 24px;
+      font-size: var(--ss-fs-20);
+      font-weight: var(--ss-fw-strong);
+      margin-bottom: var(--ss-space-6);
       color: var(--admin-nav);
     }
     /* Stat cards */
     .stat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 30px;
+      gap: var(--ss-space-4);
+      margin-bottom: var(--ss-space-7);
     }
     .stat-card {
       border: 1px solid var(--admin-border);
-      border-radius: 8px;
-      padding: 16px;
-      background: #fff;
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-4);
+      background: var(--ss-surface);
     }
     .stat-card .stat-value {
-      font-size: 28px;
-      font-weight: 600;
+      font-size: var(--ss-fs-28);
+      font-weight: var(--ss-fw-strong);
       color: var(--admin-nav);
       line-height: 1.2;
     }
     .stat-card .stat-label {
-      font-size: 13px;
+      font-size: var(--ss-fs-13);
       color: var(--admin-muted);
-      margin-top: 4px;
+      margin-top: var(--ss-space-1);
     }
     /* Tables */
     .admin-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: var(--ss-fs-14);
     }
     .admin-table th {
       background: var(--admin-nav);
-      color: #fff;
-      padding: 10px 12px;
+      color: var(--ss-on-navy);
+      padding: var(--ss-space-3) var(--ss-space-3);
       text-align: left;
-      font-weight: 600;
-      font-size: 12px;
+      font-weight: var(--ss-fw-strong);
+      font-size: var(--ss-fs-12);
       text-transform: uppercase;
       letter-spacing: 0.03em;
     }
@@ -145,14 +145,14 @@
     .admin-table th a:link,
     .admin-table th a:visited,
     .admin-table th a:hover {
-      color: #fff;
+      color: var(--ss-on-navy);
       text-decoration: none;
     }
     .admin-table th a:hover {
       text-decoration: underline;
     }
     .admin-table td {
-      padding: 10px 12px;
+      padding: var(--ss-space-3) var(--ss-space-3);
       border-bottom: 1px solid var(--admin-border);
       vertical-align: middle;
     }
@@ -160,50 +160,50 @@
       background: var(--admin-bg-alt);
     }
     .admin-table tr:nth-child(odd) td {
-      background: #fff;
+      background: var(--ss-surface);
     }
     /* Buttons */
     .btn-admin-success {
       background: var(--admin-success);
-      color: #fff;
+      color: var(--ss-on-navy);
       border: none;
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 13px;
+      border-radius: var(--ss-radius);
+      padding: var(--ss-space-1) var(--ss-space-3);
+      font-size: var(--ss-fs-13);
       cursor: pointer;
     }
-    .btn-admin-success:hover { background: #219a52; color: #fff; }
+    .btn-admin-success:hover { background: #219a52; color: var(--ss-on-navy); }
     .btn-admin-danger {
       background: var(--admin-danger);
-      color: #fff;
+      color: var(--ss-on-navy);
       border: none;
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 13px;
+      border-radius: var(--ss-radius);
+      padding: var(--ss-space-1) var(--ss-space-3);
+      font-size: var(--ss-fs-13);
       cursor: pointer;
     }
-    .btn-admin-danger:hover { background: #a93226; color: #fff; }
+    .btn-admin-danger:hover { background: #a93226; color: var(--ss-on-navy); }
     .btn-admin-outline {
-      background: #fff;
+      background: var(--ss-surface);
       color: var(--admin-nav);
       border: 1px solid var(--admin-border);
-      border-radius: 6px;
-      padding: 5px 12px;
-      font-size: 13px;
+      border-radius: var(--ss-radius);
+      padding: var(--ss-space-1) var(--ss-space-3);
+      font-size: var(--ss-fs-13);
       cursor: pointer;
     }
     .btn-admin-outline:hover { background: var(--admin-bg-alt); }
     /* Status badges */
     .status-badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 2px var(--ss-space-2);
+      border-radius: var(--ss-radius-sm);
+      font-size: var(--ss-fs-12);
+      font-weight: var(--ss-fw-strong);
     }
-    .status-pending { background: #fff3cd; color: #856404; }
-    .status-resolved { background: #d4edda; color: #155724; }
-    .status-dismissed { background: #f8d7da; color: #721c24; }
+    .status-pending { background: var(--ss-warning-soft); color: var(--ss-warning); }
+    .status-resolved { background: var(--ss-success-soft); color: var(--ss-success-strong); }
+    .status-dismissed { background: var(--ss-error-soft); color: var(--ss-error); }
     /* Activity log */
     .activity-log {
       list-style: none;
@@ -211,17 +211,17 @@
       margin: 0;
     }
     .activity-log li {
-      padding: 10px 0;
+      padding: var(--ss-space-3) 0;
       border-bottom: 1px solid var(--admin-border);
-      font-size: 13px;
+      font-size: var(--ss-fs-13);
       display: flex;
       justify-content: space-between;
     }
     .activity-log .activity-time {
       color: var(--admin-muted);
-      font-size: 12px;
+      font-size: var(--ss-fs-12);
       white-space: nowrap;
-      margin-left: 12px;
+      margin-left: var(--ss-space-3);
     }
     /* Diff view */
     .diff-modal-backdrop {
@@ -235,21 +235,21 @@
     }
     .diff-modal-backdrop.show { display: flex; }
     .diff-modal {
-      background: #fff;
-      border-radius: 8px;
+      background: var(--ss-surface);
+      border-radius: var(--ss-radius-lg);
       width: 90%;
       max-width: 1000px;
       max-height: 80vh;
       overflow: auto;
-      padding: 24px;
+      padding: var(--ss-space-6);
     }
-    .diff-modal h3 { margin-top: 0; font-size: 16px; }
+    .diff-modal h3 { margin-top: 0; font-size: var(--ss-fs-16); }
     .diff-pane {
       border: 1px solid var(--admin-border);
-      border-radius: 6px;
+      border-radius: var(--ss-radius);
       overflow: auto;
-      font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
-      font-size: 12px;
+      font-family: var(--ss-font-mono);
+      font-size: var(--ss-fs-12);
       line-height: 1.5;
     }
     .diff-pane table {
@@ -257,119 +257,119 @@
       border-collapse: collapse;
     }
     .diff-pane td {
-      padding: 0 12px;
+      padding: 0 var(--ss-space-3);
       white-space: pre-wrap;
       word-break: break-word;
       vertical-align: top;
     }
     .diff-pane .diff-ln {
       width: 1px;
-      padding: 0 8px;
+      padding: 0 var(--ss-space-2);
       text-align: right;
       color: rgba(0,0,0,0.3);
       user-select: none;
       border-right: 1px solid var(--admin-border);
-      font-size: 11px;
+      font-size: var(--ss-fs-12);
     }
     .diff-pane .diff-marker {
       width: 1px;
-      padding: 0 6px;
+      padding: 0 var(--ss-space-2);
       user-select: none;
-      font-weight: 600;
+      font-weight: var(--ss-fw-strong);
     }
     .diff-line-del { background: #ffeef0; }
-    .diff-line-del .diff-marker { color: #cb2431; }
+    .diff-line-del .diff-marker { color: var(--ss-error); }
     .diff-line-add { background: #e6ffec; }
-    .diff-line-add .diff-marker { color: #22863a; }
-    .diff-line-ctx { background: #fff; }
+    .diff-line-add .diff-marker { color: var(--ss-success-strong); }
+    .diff-line-ctx { background: var(--ss-surface); }
     .diff-line-ctx .diff-marker { color: transparent; }
     .diff-hunk {
       background: #f1f8ff;
       color: rgba(0,0,0,0.4);
-      font-size: 11px;
-      padding: 4px 12px;
+      font-size: var(--ss-fs-12);
+      padding: var(--ss-space-1) var(--ss-space-3);
       border-top: 1px solid var(--admin-border);
       border-bottom: 1px solid var(--admin-border);
     }
-    .diff-char-del { background: #fdb8c0; border-radius: 2px; }
-    .diff-char-add { background: #acf2bd; border-radius: 2px; }
+    .diff-char-del { background: #fdb8c0; border-radius: var(--ss-radius-sm); }
+    .diff-char-add { background: #acf2bd; border-radius: var(--ss-radius-sm); }
     /* Pagination */
     .admin-pagination {
       display: flex;
-      gap: 6px;
-      margin-top: 16px;
+      gap: var(--ss-space-2);
+      margin-top: var(--ss-space-4);
       align-items: center;
     }
     .admin-pagination a, .admin-pagination span {
-      padding: 5px 10px;
+      padding: var(--ss-space-1) var(--ss-space-3);
       border: 1px solid var(--admin-border);
-      border-radius: 4px;
+      border-radius: var(--ss-radius-sm);
       text-decoration: none;
-      font-size: 13px;
+      font-size: var(--ss-fs-13);
       color: var(--admin-text);
     }
     .admin-pagination .current {
       background: var(--admin-nav);
-      color: #fff;
+      color: var(--ss-on-navy);
       border-color: var(--admin-nav);
     }
     /* Search input */
     .admin-search {
       display: flex;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: var(--ss-space-2);
+      margin-bottom: var(--ss-space-4);
     }
     .admin-search input {
       height: 40px;
       border: 1px solid var(--admin-border);
-      border-radius: 6px;
-      padding: 0 12px;
-      font-size: 14px;
+      border-radius: var(--ss-radius);
+      padding: 0 var(--ss-space-3);
+      font-size: var(--ss-fs-16);
       width: 280px;
     }
     /* IP form */
     .ip-add-form {
       display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
+      gap: var(--ss-space-2);
+      margin-bottom: var(--ss-space-5);
       align-items: flex-end;
     }
     .ip-add-form label {
-      font-size: 12px;
+      font-size: var(--ss-fs-12);
       color: var(--admin-muted);
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: var(--ss-space-1);
     }
     .ip-add-form input {
       height: 40px;
       border: 1px solid var(--admin-border);
-      border-radius: 6px;
-      padding: 0 12px;
-      font-size: 14px;
+      border-radius: var(--ss-radius);
+      padding: 0 var(--ss-space-3);
+      font-size: var(--ss-fs-16);
     }
     /* Chart containers */
     .chart-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 24px;
+      gap: var(--ss-space-6);
+      margin-bottom: var(--ss-space-6);
     }
     .chart-box {
       border: 1px solid var(--admin-border);
-      border-radius: 8px;
-      padding: 16px;
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-4);
     }
     .chart-box h3 {
-      font-size: 14px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
+      font-size: var(--ss-fs-14);
+      font-weight: var(--ss-fw-strong);
+      margin: 0 0 var(--ss-space-3) 0;
       color: var(--admin-nav);
     }
     @media (max-width: 768px) {
       .admin-sidebar { display: none; }
       .admin-content { margin-left: 0; }
       .chart-grid { grid-template-columns: 1fr; }
-      .diff-pane { font-size: 11px; }
+      .diff-pane { font-size: var(--ss-fs-12); }
     }
   </style>
 </head>
@@ -456,9 +456,9 @@
       <% } %>
     </div>
 
-    <h2 style="font-size:16px; font-weight:600; margin-bottom:12px;">Recent Admin Activity</h2>
+    <h2 style="font-size:var(--ss-fs-16); font-weight:var(--ss-fw-strong); margin-bottom:var(--ss-space-3);">Recent Admin Activity</h2>
     <% if (recentActions.length === 0) { %>
-      <p style="color: var(--admin-muted); font-size: 14px;">No admin actions recorded yet.</p>
+      <p style="color: var(--admin-muted); font-size: var(--ss-fs-14);">No admin actions recorded yet.</p>
     <% } else { %>
       <ul class="activity-log">
         <% recentActions.forEach(function(a) { %>
@@ -492,7 +492,7 @@
 <% } else if (tab === 'reports') { %>
     <!-- ═══ REPORTS ═══ -->
     <h1>Solution Reports</h1>
-    <div style="margin-bottom: 16px;">
+    <div style="margin-bottom: var(--ss-space-4);">
       <% if (showAll) { %>
         <a href="/admin/reports" class="btn-admin-outline" style="text-decoration:none;">Show pending only</a>
       <% } else { %>
@@ -530,7 +530,7 @@
               <form method="POST" action="/admin/reports/<%= r.id %>/resolve" style="display:inline;">
                 <button type="submit" class="btn-admin-success">Resolve</button>
               </form>
-              <form method="POST" action="/admin/reports/<%= r.id %>/dismiss" style="display:inline; margin-left:4px;">
+              <form method="POST" action="/admin/reports/<%= r.id %>/dismiss" style="display:inline; margin-left:var(--ss-space-1);">
                 <button type="submit" class="btn-admin-danger">Dismiss</button>
               </form>
             <% } else { %>
@@ -552,7 +552,7 @@
       everyone who asked to be told — once.
     </p>
 
-    <div style="margin: 16px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <div style="margin: var(--ss-space-4) 0; display: flex; gap: var(--ss-space-2); align-items: center; flex-wrap: wrap;">
       <% if (showAll) { %>
         <a href="/admin/feedback" class="btn-admin-outline" style="text-decoration:none;">Show new only</a>
       <% } else { %>
@@ -565,7 +565,7 @@
         <%# Surfaced here on purpose. 62 of these have been pending for an average of 245
             days, and the single biggest reason is that nothing ever put them in front of
             anyone. %>
-        <a href="/admin/reports" class="status-badge" style="text-decoration:none; border-color:#c0392b; color:#c0392b;">
+        <a href="/admin/reports" class="status-badge" style="text-decoration:none; border-color:var(--ss-error); color:var(--ss-error);">
           <%= legacyReportCount %> legacy solution reports unread
         </a>
       <% } %>
@@ -575,8 +575,8 @@
       <p style="color: var(--admin-muted);">Nothing to triage.</p>
     <% } else { %>
       <% items.forEach(function (f) { %>
-        <div class="content-card" style="border:1px solid var(--admin-border,#dee2e6); border-radius:8px; padding:14px; margin-bottom:12px;">
-          <div style="display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; margin-bottom:8px;">
+        <div class="content-card" style="border:1px solid var(--admin-border,#dee2e6); border-radius:var(--ss-radius-lg); padding:var(--ss-space-4); margin-bottom:var(--ss-space-3);">
+          <div style="display:flex; gap:var(--ss-space-2); align-items:baseline; flex-wrap:wrap; margin-bottom:var(--ss-space-2);">
             <span class="status-badge status-<%= f.status %>"><%= f.status %></span>
             <span class="status-badge"><%= f.category %></span>
             <span class="status-badge"><%= (f.lang || '').toUpperCase() %></span>
@@ -589,11 +589,11 @@
             <% if (f.notified_at) { %><span class="status-badge">notified</span><% } %>
           </div>
 
-          <div style="white-space:pre-wrap; font-size:14px; line-height:1.55; margin-bottom:10px;"><%= f.body %></div>
+          <div style="white-space:pre-wrap; font-size:var(--ss-fs-14); line-height:1.55; margin-bottom:var(--ss-space-3);"><%= f.body %></div>
 
           <%# The context nobody had to be asked for. A one-line "it's broken" is only
               actionable because of this row. %>
-          <div style="font-size:12px; color: var(--admin-muted); margin-bottom:10px; word-break:break-word;">
+          <div style="font-size:var(--ss-fs-12); color: var(--admin-muted); margin-bottom:var(--ss-space-3); word-break:break-word;">
             <% if (f.problem_name) { %>
               <a href="/<%= f.problem_lang || 'ru' %>/<%= f.problem_name %>" target="_blank">problem <%= f.problem_name %></a> &middot;
             <% } %>
@@ -613,14 +613,14 @@
           </div>
 
           <form method="POST" action="/admin/feedback/<%= f.id %>/update<%= showAll ? '?all=1' : '' %>"
-                style="display:grid; gap:8px; grid-template-columns: 1fr; max-width: 720px;">
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <select name="status" style="height:34px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px;">
+                style="display:grid; gap:var(--ss-space-2); grid-template-columns: 1fr; max-width: 720px;">
+            <div style="display:flex; gap:var(--ss-space-2); align-items:center; flex-wrap:wrap;">
+              <select name="status" style="height:34px; border:1px solid var(--ss-rule); border-radius:var(--ss-radius); padding:0 var(--ss-space-2);">
                 <% ['new','planned','in_progress','done','declined','duplicate'].forEach(function (s) { %>
                   <option value="<%= s %>" <%= f.status === s ? 'selected' : '' %>><%= s %></option>
                 <% }); %>
               </select>
-              <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+              <label style="display:flex; align-items:center; gap:var(--ss-space-2); font-size:var(--ss-fs-13);">
                 <input type="checkbox" name="is_public" <%= f.is_public ? 'checked' : '' %> />
                 show on the public board
               </label>
@@ -628,17 +628,17 @@
             </div>
             <input type="text" name="public_title" maxlength="160" value="<%= f.public_title || '' %>"
                    placeholder="Public title (shown on the board instead of the raw message)"
-                   style="height:34px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px;" />
+                   style="height:34px; border:1px solid var(--ss-rule); border-radius:var(--ss-radius); padding:0 var(--ss-space-2);" />
             <textarea name="public_reply" rows="2"
                       placeholder="Public reply — the submitter sees this at their receipt URL"
-                      style="border:1px solid #dee2e6; border-radius:6px; padding:6px 8px; font-family:inherit;"><%= f.public_reply || '' %></textarea>
+                      style="border:1px solid var(--ss-rule); border-radius:var(--ss-radius); padding:var(--ss-space-2) var(--ss-space-2); font-family:inherit;"><%= f.public_reply || '' %></textarea>
           </form>
         </div>
       <% }); %>
     <% } %>
 
     <!-- ═══ POLL ═══ -->
-    <h2 style="margin-top: 32px;">Poll</h2>
+    <h2 style="margin-top: var(--ss-space-7);">Poll</h2>
     <p style="color: var(--admin-muted); max-width: 62ch;">
       One question per visitor, ever. These are the segmentation answers no channel on this
       site has ever been able to collect, because they come from people with no account.
@@ -657,7 +657,7 @@
     <% } %>
 
     <% if (pollTexts && pollTexts.length) { %>
-      <h3 style="margin-top: 20px;">Written answers</h3>
+      <h3 style="margin-top: var(--ss-space-5);">Written answers</h3>
       <table class="admin-table">
         <thead><tr><th>Question</th><th>Answer</th><th>Date</th></tr></thead>
         <tbody>
@@ -696,15 +696,15 @@
           <td><%= (f.language || '').toUpperCase() %></td>
           <td><%= f.editor_name || f.ip_address || 'Unknown' %></td>
           <td style="white-space:nowrap;"><%= new Date(f.edited_at).toLocaleDateString() %></td>
-          <td style="max-width:300px; word-break:break-word; font-size:12px; color:var(--admin-muted);">
+          <td style="max-width:300px; word-break:break-word; font-size:var(--ss-fs-12); color:var(--admin-muted);">
             <%= (f.new_content || '').substring(0, 200) %><% if ((f.new_content || '').length > 200) { %>...<% } %>
           </td>
           <td style="white-space:nowrap;">
             <button class="btn-admin-outline" onclick="showDiff(<%= f.id %>)">Diff</button>
-            <form method="POST" action="/admin/flagged/<%= f.id %>/approve" style="display:inline; margin-left:4px;">
+            <form method="POST" action="/admin/flagged/<%= f.id %>/approve" style="display:inline; margin-left:var(--ss-space-1);">
               <button type="submit" class="btn-admin-success">Approve</button>
             </form>
-            <form method="POST" action="/admin/flagged/<%= f.id %>/reject" style="display:inline; margin-left:4px;">
+            <form method="POST" action="/admin/flagged/<%= f.id %>/reject" style="display:inline; margin-left:var(--ss-space-1);">
               <button type="submit" class="btn-admin-danger">Reject</button>
             </form>
           </td>
@@ -717,7 +717,7 @@
     <!-- Diff modal -->
     <div class="diff-modal-backdrop" id="diffModal">
       <div class="diff-modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--ss-space-3);">
           <h3 id="diffTitle">Diff View</h3>
           <button class="btn-admin-outline" onclick="closeDiff()">&times; Close</button>
         </div>
@@ -780,11 +780,11 @@
           <td style="white-space:nowrap;"><%= u.created_at ? new Date(u.created_at).toLocaleDateString() : '' %></td>
           <td style="white-space:nowrap;">
             <form method="POST" action="/admin/users/<%= u.id %>/verify?page=<%= page %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" style="display:inline;">
-              <button type="submit" class="<%= u.is_verified_user ? 'btn-admin-danger' : 'btn-admin-success' %>" style="font-size:12px;">
+              <button type="submit" class="<%= u.is_verified_user ? 'btn-admin-danger' : 'btn-admin-success' %>" style="font-size:var(--ss-fs-12);">
                 <%= u.is_verified_user ? 'Unverify' : 'Verify' %>
               </button>
             </form>
-            <a href="/user/<%= u.username %>" target="_blank" class="btn-admin-outline" style="text-decoration:none; margin-left:4px; font-size:12px;">Profile</a>
+            <a href="/user/<%= u.username %>" target="_blank" class="btn-admin-outline" style="text-decoration:none; margin-left:var(--ss-space-1); font-size:var(--ss-fs-12);">Profile</a>
           </td>
         </tr>
         <% }); %>
@@ -858,10 +858,10 @@
 <% } else if (tab === 'password-resets') { %>
     <!-- ═══ PASSWORD RESETS ═══ -->
     <h1>Password Reset Requests</h1>
-    <p style="font-size: 13px; color: var(--admin-muted); margin-bottom: 16px;">
+    <p style="font-size: var(--ss-fs-13); color: var(--admin-muted); margin-bottom: var(--ss-space-4);">
       Password reset requests and account-recovery appeals (flagged "recovery appeal"). Reset emails now send automatically; recovery appeals need manual review.
     </p>
-    <div style="margin-bottom: 16px;">
+    <div style="margin-bottom: var(--ss-space-4);">
       <% if (showAll) { %>
         <a href="/admin/password-resets" class="btn-admin-outline" style="text-decoration:none;">Show pending only</a>
       <% } else { %>
@@ -889,26 +889,26 @@
           <td>
             <%= r.email %>
             <% if (r.request_type === 'recovery_appeal') { %>
-              <span class="status-badge status-pending" style="margin-left:6px;">recovery appeal</span>
+              <span class="status-badge status-pending" style="margin-left:var(--ss-space-2);">recovery appeal</span>
               <% if (r.note) { %>
-                <div style="margin-top:4px; font-size:12px; color:var(--admin-muted); max-width:320px; white-space:pre-wrap;"><%= r.note %></div>
+                <div style="margin-top:var(--ss-space-1); font-size:var(--ss-fs-12); color:var(--admin-muted); max-width:320px; white-space:pre-wrap;"><%= r.note %></div>
               <% } %>
             <% } %>
           </td>
           <td><% if (r.username) { %><%= r.username %><% } else { %><span style="color:var(--admin-muted);">No account</span><% } %></td>
           <td style="white-space:nowrap;"><%= new Date(r.created_at).toLocaleString() %></td>
-          <td><code style="font-size:12px;"><%= r.ip_address || '—' %></code></td>
+          <td><code style="font-size:var(--ss-fs-12);"><%= r.ip_address || '—' %></code></td>
           <td>
             <span class="status-badge status-<%= r.status === 'handled' ? 'resolved' : r.status === 'dismissed' ? 'dismissed' : 'pending' %>"><%= r.status %></span>
           </td>
           <td>
             <% if (r.reset_token) { %>
               <input type="text" readonly value="/reset-password?token=<%= r.reset_token %>"
-                     style="width:180px; font-size:11px; padding:4px 6px; border:1px solid var(--admin-border); border-radius:4px; background:#f8f9fa;"
+                     style="width:180px; font-size:var(--ss-fs-16); padding:var(--ss-space-1) var(--ss-space-2); border:1px solid var(--admin-border); border-radius:var(--ss-radius-sm); background:var(--ss-surface-alt);"
                      id="token-<%= r.id %>" />
-              <button class="btn-admin-outline" style="font-size:11px; padding:4px 8px; margin-left:4px;" onclick="copyToken(<%= r.id %>)">Copy</button>
+              <button class="btn-admin-outline" style="font-size:var(--ss-fs-12); padding:var(--ss-space-1) var(--ss-space-2); margin-left:var(--ss-space-1);" onclick="copyToken(<%= r.id %>)">Copy</button>
             <% } else { %>
-              <span style="color:var(--admin-muted); font-size:12px;">No account found</span>
+              <span style="color:var(--admin-muted); font-size:var(--ss-fs-12);">No account found</span>
             <% } %>
           </td>
           <td style="white-space:nowrap;">
@@ -916,11 +916,11 @@
               <form method="POST" action="/admin/password-resets/<%= r.id %>/handled" style="display:inline;">
                 <button type="submit" class="btn-admin-success">Handled</button>
               </form>
-              <form method="POST" action="/admin/password-resets/<%= r.id %>/dismiss" style="display:inline; margin-left:4px;">
+              <form method="POST" action="/admin/password-resets/<%= r.id %>/dismiss" style="display:inline; margin-left:var(--ss-space-1);">
                 <button type="submit" class="btn-admin-danger">Dismiss</button>
               </form>
             <% } else { %>
-              <span style="font-size:12px; color:var(--admin-muted);"><%= r.handled_at ? new Date(r.handled_at).toLocaleDateString() : '' %></span>
+              <span style="font-size:var(--ss-fs-12); color:var(--admin-muted);"><%= r.handled_at ? new Date(r.handled_at).toLocaleDateString() : '' %></span>
             <% } %>
           </td>
         </tr>
@@ -978,79 +978,79 @@
     <h1>Challenge Management</h1>
 
     <% if (typeof challengesList !== 'undefined' && challengesList.length > 0) { %>
-    <table class="report-table" style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+    <table class="report-table" style="width: 100%; border-collapse: collapse; margin-bottom: var(--ss-space-7);">
       <thead>
         <tr>
-          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6; text-align: left;">Challenge</th>
-          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Dates</th>
-          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Submissions</th>
-          <th style="padding: 0.5rem; border-bottom: 2px solid #dee2e6;">Actions</th>
+          <th style="padding: var(--ss-space-2); border-bottom: 2px solid var(--ss-rule); text-align: left;">Challenge</th>
+          <th style="padding: var(--ss-space-2); border-bottom: 2px solid var(--ss-rule);">Dates</th>
+          <th style="padding: var(--ss-space-2); border-bottom: 2px solid var(--ss-rule);">Submissions</th>
+          <th style="padding: var(--ss-space-2); border-bottom: 2px solid var(--ss-rule);">Actions</th>
         </tr>
       </thead>
       <tbody>
         <% challengesList.forEach(function(ch) { %>
         <tr>
-          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0;">
+          <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft);">
             <strong><%= ch.title || 'Challenge #' + ch.id %></strong>
-            <% if (ch.is_active) { %><span style="color: #27ae60; font-size: 12px; margin-left: 4px;">(active)</span><% } %>
+            <% if (ch.is_active) { %><span style="color: var(--ss-success-strong); font-size: var(--ss-fs-12); margin-left: var(--ss-space-1);">(active)</span><% } %>
           </td>
-          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center; font-size: 13px;">
+          <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center; font-size: var(--ss-fs-13);">
             <%= new Date(ch.week_start).toLocaleDateString() %> &ndash; <%= new Date(ch.week_end).toLocaleDateString() %>
           </td>
-          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center;"><%= ch.submission_count %></td>
-          <td style="padding: 0.5rem; border-bottom: 1px solid #f0f0f0; text-align: center;">
-            <a href="/admin/challenges/<%= ch.id %>" style="color: #1a5276; font-size: 13px;">Review</a>
+          <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center;"><%= ch.submission_count %></td>
+          <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center;">
+            <a href="/admin/challenges/<%= ch.id %>" style="color: var(--ss-link); font-size: var(--ss-fs-13);">Review</a>
           </td>
         </tr>
         <% }); %>
       </tbody>
     </table>
     <% } else { %>
-    <p style="color: #6c757d;">No challenges yet.</p>
+    <p style="color: var(--ss-text-secondary);">No challenges yet.</p>
     <% } %>
 
     <!-- Review individual challenge submissions -->
     <% if (typeof reviewChallenge !== 'undefined' && reviewChallenge) { %>
-    <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #dee2e6;">
-      <h2 style="font-size: 18px;">Submissions for: <%= reviewChallenge.title || 'Challenge #' + reviewChallenge.id %></h2>
+    <div style="margin-top: var(--ss-space-7); padding-top: var(--ss-space-6); border-top: 1px solid var(--ss-rule);">
+      <h2 style="font-size: var(--ss-fs-18);">Submissions for: <%= reviewChallenge.title || 'Challenge #' + reviewChallenge.id %></h2>
       <% if (typeof challengeSubmissions !== 'undefined' && challengeSubmissions.length > 0) { %>
         <% challengeSubmissions.forEach(function(sub) { %>
-        <div style="padding: 1rem; margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 6px; background: <%= sub.is_correct === true ? '#f8fff8' : sub.is_correct === false ? '#fff5f5' : '#fff' %>;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="padding: var(--ss-space-4); margin-bottom: var(--ss-space-4); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); background: <%= sub.is_correct === true ? '#f8fff8' : sub.is_correct === false ? '#fff5f5' : '#fff' %>;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ss-space-2);">
             <div>
               <img src="<%= sub.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" style="width: 20px; height: 20px; border-radius: 50%; vertical-align: middle;" />
-              <strong><a href="/user/<%= sub.username %>" style="color: #1a5276;"><%= sub.username %></a></strong>
-              <span style="font-size: 12px; color: #6c757d; margin-left: 4px;"><%= new Date(sub.submitted_at).toLocaleString() %></span>
+              <strong><a href="/user/<%= sub.username %>" style="color: var(--ss-link);"><%= sub.username %></a></strong>
+              <span style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-left: var(--ss-space-1);"><%= new Date(sub.submitted_at).toLocaleString() %></span>
             </div>
             <div>
               <% if (sub.is_correct === null) { %>
                 <form method="POST" action="/admin/challenges/<%= reviewChallenge.id %>/review/<%= sub.id %>" style="display: inline;">
                   <input type="hidden" name="verdict" value="correct" />
-                  <button type="submit" style="padding: 4px 12px; background: #27ae60; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Correct</button>
+                  <button type="submit" style="padding: var(--ss-space-1) var(--ss-space-3); background: var(--ss-success); color: var(--ss-on-navy); border: none; border-radius: var(--ss-radius-sm); font-size: var(--ss-fs-12); cursor: pointer;">Correct</button>
                 </form>
-                <form method="POST" action="/admin/challenges/<%= reviewChallenge.id %>/review/<%= sub.id %>" style="display: inline; margin-left: 4px;">
+                <form method="POST" action="/admin/challenges/<%= reviewChallenge.id %>/review/<%= sub.id %>" style="display: inline; margin-left: var(--ss-space-1);">
                   <input type="hidden" name="verdict" value="incorrect" />
-                  <button type="submit" style="padding: 4px 12px; background: #c0392b; color: #fff; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">Incorrect</button>
+                  <button type="submit" style="padding: var(--ss-space-1) var(--ss-space-3); background: var(--ss-error); color: var(--ss-on-navy); border: none; border-radius: var(--ss-radius-sm); font-size: var(--ss-fs-12); cursor: pointer;">Incorrect</button>
                 </form>
               <% } else { %>
-                <span style="font-size: 13px; font-weight: 600; color: <%= sub.is_correct ? '#27ae60' : '#c0392b' %>;"><%= sub.is_correct ? 'Correct' : 'Incorrect' %></span>
+                <span style="font-size: var(--ss-fs-13); font-weight: var(--ss-fw-strong); color: <%= sub.is_correct ? '#27ae60' : '#c0392b' %>;"><%= sub.is_correct ? 'Correct' : 'Incorrect' %></span>
               <% } %>
             </div>
           </div>
           <% if (sub.image_path) { %>
-          <div style="margin-bottom: 0.5rem;">
+          <div style="margin-bottom: var(--ss-space-2);">
             <a href="<%= sub.image_path %>" target="_blank" rel="noopener">
-              <img src="<%= sub.image_path %>" alt="Handwritten solution" style="max-width: 100%; max-height: 500px; border: 1px solid #dee2e6; border-radius: 4px; background: #fff;" />
+              <img src="<%= sub.image_path %>" alt="Handwritten solution" style="max-width: 100%; max-height: 500px; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-sm); background: var(--ss-surface);" />
             </a>
           </div>
           <% } %>
           <% if (sub.content && sub.content.trim()) { %>
-          <div style="font-size: 14px; line-height: 1.6; padding: 0.5rem; background: #f8f9fa; border-radius: 4px;"><%- sub.content %></div>
+          <div style="font-size: var(--ss-fs-14); line-height: 1.6; padding: var(--ss-space-2); background: var(--ss-surface-alt); border-radius: var(--ss-radius-sm);"><%- sub.content %></div>
           <% } %>
         </div>
         <% }); %>
       <% } else { %>
-      <p style="color: #6c757d;">No submissions yet.</p>
+      <p style="color: var(--ss-text-secondary);">No submissions yet.</p>
       <% } %>
     </div>
     <% } %>
@@ -1324,7 +1324,7 @@
 <% } else if (tab === 'contest-review') { %>
     <!-- ═══ CONTEST REVIEW ═══ -->
     <h1>Contest Review — June 2026</h1>
-    <p style="color: var(--admin-muted); font-size: 14px; margin-bottom: 20px; max-width: 700px;">
+    <p style="color: var(--admin-muted); font-size: var(--ss-fs-14); margin-bottom: var(--ss-space-5); max-width: 700px;">
       These problems were solved by the same user in both EN and RU during the contest window (June 2026).
       Decide whether the second language version is a self-translation (+0.5 flat, Rule 4)
       or an independent solution (full multipliers), or exclude both from scoring.
@@ -1351,16 +1351,16 @@
           <td>
             <strong><%= c.problem_name %></strong>
             &nbsp;
-            <a href="/en/<%= c.problem_name %>" target="_blank" style="font-size:12px;">EN</a>
+            <a href="/en/<%= c.problem_name %>" target="_blank" style="font-size:var(--ss-fs-12);">EN</a>
             /
-            <a href="/ru/<%= c.problem_name %>" target="_blank" style="font-size:12px;">RU</a>
+            <a href="/ru/<%= c.problem_name %>" target="_blank" style="font-size:var(--ss-fs-12);">RU</a>
           </td>
           <td>
             <a href="/en/profile/<%= c.username %>" target="_blank"><%= c.username %></a>
-            <% if (c.full_name) { %><br><span style="font-size:12px; color:var(--admin-muted);"><%= c.full_name %></span><% } %>
+            <% if (c.full_name) { %><br><span style="font-size:var(--ss-fs-12); color:var(--admin-muted);"><%= c.full_name %></span><% } %>
           </td>
-          <td style="white-space:nowrap; font-size:12px;"><%= new Date(c.en_at).toLocaleDateString('en-GB') %></td>
-          <td style="white-space:nowrap; font-size:12px;"><%= new Date(c.ru_at).toLocaleDateString('en-GB') %></td>
+          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%= new Date(c.en_at).toLocaleDateString('en-GB') %></td>
+          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%= new Date(c.ru_at).toLocaleDateString('en-GB') %></td>
           <td>
             <span class="status-badge <%=
               c.current_decision === 'pending'          ? 'status-pending'   :
@@ -1375,27 +1375,27 @@
               <input type="hidden" name="user_id"      value="<%= c.user_id %>">
               <button type="submit" name="decision" value="independent"
                       class="btn-admin-success"
-                      style="font-size:12px; padding:4px 10px;"
+                      style="font-size:var(--ss-fs-12); padding:var(--ss-space-1) var(--ss-space-3);"
                       title="Both languages count as independent solutions with full multipliers">
                 Independent
               </button>
             </form>
-            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:4px;">
+            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:var(--ss-space-1);">
               <input type="hidden" name="problem_name" value="<%= c.problem_name %>">
               <input type="hidden" name="user_id"      value="<%= c.user_id %>">
               <button type="submit" name="decision" value="self_translation"
                       class="btn-admin-outline"
-                      style="font-size:12px; padding:4px 10px;"
+                      style="font-size:var(--ss-fs-12); padding:var(--ss-space-1) var(--ss-space-3);"
                       title="First language: full multipliers. Second language: +0.5 flat (Rule 4)">
                 Self-translation (+0.5)
               </button>
             </form>
-            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:4px;">
+            <form method="POST" action="/admin/contest-review/decide" style="display:inline; margin-left:var(--ss-space-1);">
               <input type="hidden" name="problem_name" value="<%= c.problem_name %>">
               <input type="hidden" name="user_id"      value="<%= c.user_id %>">
               <button type="submit" name="decision" value="exclude"
                       class="btn-admin-danger"
-                      style="font-size:12px; padding:4px 10px;"
+                      style="font-size:var(--ss-fs-12); padding:var(--ss-space-1) var(--ss-space-3);"
                       title="Exclude both versions from contest scoring">
                 Exclude
               </button>
@@ -1408,7 +1408,7 @@
     <% } %>
 
     <% if (typeof contestReviewOverrides !== 'undefined' && contestReviewOverrides.length > 0) { %>
-    <h2 style="font-size:16px; font-weight:600; margin:30px 0 12px;">Overrides Applied (<%= contestReviewOverrides.length %>)</h2>
+    <h2 style="font-size:var(--ss-fs-16); font-weight:var(--ss-fw-strong); margin:var(--ss-space-7) 0 var(--ss-space-3);">Overrides Applied (<%= contestReviewOverrides.length %>)</h2>
     <table class="admin-table">
       <thead>
         <tr>
@@ -1430,7 +1430,7 @@
               'status-resolved'
             %>"><%= o.decision %></span>
           </td>
-          <td style="font-size:12px; white-space:nowrap;"><%= new Date(o.decided_at).toLocaleString('en-GB') %></td>
+          <td style="font-size:var(--ss-fs-12); white-space:nowrap;"><%= new Date(o.decided_at).toLocaleString('en-GB') %></td>
         </tr>
         <% }); %>
       </tbody>

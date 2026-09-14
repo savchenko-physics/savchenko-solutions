@@ -17,46 +17,46 @@
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
     <style>
-        .bank-list-container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
-        .bank-list-header { margin-bottom: 1.5rem; }
+        .bank-list-container { max-width: 900px; margin: 0 auto; padding: var(--ss-space-7) var(--ss-space-4); }
+        .bank-list-header { margin-bottom: var(--ss-space-6); }
         .bank-list-header h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 28px; font-weight: 600; color: #2d2d2d; margin: 0 0 0.25rem 0;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-28); font-weight: var(--ss-fw-strong); color: var(--ss-text); margin: 0 0 var(--ss-space-1) 0;
         }
         .bank-list-breadcrumb {
-            font-size: 13px; color: #6c757d; margin-bottom: 1rem;
+            font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-4);
         }
-        .bank-list-breadcrumb a { color: #1a5276; text-decoration: none; }
+        .bank-list-breadcrumb a { color: var(--ss-link); text-decoration: none; }
         .bank-list-breadcrumb a:hover { text-decoration: underline; }
-        .bank-list-meta { font-size: 13px; color: #6c757d; }
+        .bank-list-meta { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
 
         .problem-table { width: 100%; border-collapse: collapse; }
         .problem-table th {
-            text-align: left; font-size: 12px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.3px; color: #6c757d; padding: 0.75rem 0.5rem;
-            border-bottom: 2px solid #dee2e6;
+            text-align: left; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase;
+            letter-spacing: 0.3px; color: var(--ss-text-secondary); padding: var(--ss-space-3) var(--ss-space-2);
+            border-bottom: 2px solid var(--ss-rule);
         }
-        .problem-table td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-        .problem-table tr:hover td { background: #f8f9fa; }
-        .problem-table a { color: #1a5276; text-decoration: none; font-weight: 500; }
+        .problem-table td { padding: var(--ss-space-3) var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); font-size: var(--ss-fs-14); }
+        .problem-table tr:hover td { background: var(--ss-surface-alt); }
+        .problem-table a { color: var(--ss-link); text-decoration: none; font-weight: var(--ss-fw-strong); }
         .problem-table a:hover { text-decoration: underline; }
         .diff-badge {
-            display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px;
-            font-size: 12px; font-weight: 600; color: #fff;
+            display: inline-block; padding: 0.15rem var(--ss-space-2); border-radius: var(--ss-radius-sm);
+            font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); color: var(--ss-on-navy);
         }
-        .diff-easy { background: #27ae60; }
+        .diff-easy { background: var(--ss-success); }
         .diff-medium { background: #f39c12; }
-        .diff-hard { background: #c0392b; }
+        .diff-hard { background: var(--ss-error); }
 
-        .bank-pagination { display: flex; justify-content: center; gap: 0.5rem; margin-top: 2rem; }
+        .bank-pagination { display: flex; justify-content: center; gap: var(--ss-space-2); margin-top: var(--ss-space-7); }
         .bank-page-link {
-            display: inline-block; padding: 0.4rem 0.85rem; border: 1px solid #dee2e6;
-            border-radius: 6px; font-size: 14px; text-decoration: none; color: #2d2d2d;
+            display: inline-block; padding: var(--ss-space-2) var(--ss-space-3); border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius); font-size: var(--ss-fs-14); text-decoration: none; color: var(--ss-text);
         }
-        .bank-page-link:hover { background: #f8f9fa; }
-        .bank-page-link.active { background: #1a1a2e; color: #fff; border-color: #1a1a2e; }
+        .bank-page-link:hover { background: var(--ss-surface-alt); }
+        .bank-page-link.active { background: var(--ss-navy); color: var(--ss-on-navy); border-color: var(--ss-navy); }
 
-        .empty-state { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+        .empty-state { text-align: center; padding: var(--ss-space-9) var(--ss-space-4); color: var(--ss-text-secondary); }
     </style>
     <script src="/js/analytics.js"></script>
 </head>
@@ -79,7 +79,7 @@
         <% if (problems.length === 0) { %>
         <div class="empty-state">
             <p><%= lang === 'ru' ? 'Задач по этой теме пока нет.' : 'No problems on this topic yet.' %></p>
-            <a href="/bank/submit" style="color: #1a5276;"><%= lang === 'ru' ? 'Добавить первую задачу' : 'Submit the first problem' %></a>
+            <a href="/bank/submit" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Добавить первую задачу' : 'Submit the first problem' %></a>
         </div>
         <% } else { %>
         <table class="problem-table">

@@ -32,46 +32,46 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
-    .path-container { max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .back-link { font-size: 13px; color: #1a5276; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 1.5rem; }
-    .back-link:hover { color: #0d3b54; }
-    .path-title { font-size: 26px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.5rem; }
-    .path-desc { font-size: 15px; color: #6c757d; line-height: 1.6; margin-bottom: 1rem; }
-    .path-meta { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: 14px; color: #6c757d; margin-bottom: 1.5rem; }
-    .path-meta-item { display: inline-flex; align-items: center; gap: 4px; }
-    .difficulty-range { font-weight: 600; color: #1a1a2e; }
+    body { font-family: var(--ss-font-ui); background: var(--ss-surface); color: var(--ss-text); }
+    .path-container { max-width: 800px; margin: 0 auto; padding: var(--ss-space-7) var(--ss-space-6); }
+    .back-link { font-size: var(--ss-fs-13); color: var(--ss-link); text-decoration: none; display: inline-flex; align-items: center; gap: var(--ss-space-1); margin-bottom: var(--ss-space-6); }
+    .back-link:hover { color: var(--ss-link-hover); }
+    .path-title { font-size: var(--ss-fs-24); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); margin-bottom: var(--ss-space-2); }
+    .path-desc { font-size: var(--ss-fs-16); color: var(--ss-text-secondary); line-height: 1.6; margin-bottom: var(--ss-space-4); }
+    .path-meta { display: flex; gap: var(--ss-space-5); flex-wrap: wrap; font-size: var(--ss-fs-14); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-6); }
+    .path-meta-item { display: inline-flex; align-items: center; gap: var(--ss-space-1); }
+    .difficulty-range { font-weight: var(--ss-fw-strong); color: var(--ss-navy); }
 
     /* Progress bar */
-    .path-progress-section { margin-bottom: 2rem; }
-    .progress-bar-outer { height: 10px; background: #ebedf0; border-radius: 5px; overflow: hidden; margin-bottom: 6px; }
-    .progress-bar-fill { height: 100%; background: #27ae60; border-radius: 5px; transition: width 0.4s; }
-    .progress-text { font-size: 13px; color: #6c757d; }
+    .path-progress-section { margin-bottom: var(--ss-space-7); }
+    .progress-bar-outer { height: 10px; background: var(--ss-surface-hover); border-radius: var(--ss-radius-sm); overflow: hidden; margin-bottom: var(--ss-space-2); }
+    .progress-bar-fill { height: 100%; background: var(--ss-success); border-radius: var(--ss-radius-sm); transition: width 0.4s; }
+    .progress-text { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
 
     /* Problem list */
     .problem-list { list-style: none; padding: 0; margin: 0; }
-    .problem-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid #f0f0f0; }
+    .problem-item { display: flex; align-items: flex-start; gap: var(--ss-space-3); padding: var(--ss-space-3) 0; border-bottom: 1px solid var(--ss-rule-soft); }
     .problem-item:last-child { border-bottom: none; }
-    .problem-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-    .problem-num--not_started { background: #ebedf0; color: #6c757d; }
-    .problem-num--attempted { background: #fff3cd; color: #856404; }
-    .problem-num--solved { background: #d4edda; color: #155724; }
+    .problem-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); flex-shrink: 0; }
+    .problem-num--not_started { background: var(--ss-surface-hover); color: var(--ss-text-secondary); }
+    .problem-num--attempted { background: var(--ss-warning-soft); color: var(--ss-warning); }
+    .problem-num--solved { background: var(--ss-success-soft); color: var(--ss-success-strong); }
     .problem-body { flex: 1; min-width: 0; }
-    .problem-ref { font-size: 15px; font-weight: 500; }
-    .problem-ref a { color: #1a5276; text-decoration: none; }
-    .problem-ref a:hover { color: #0d3b54; }
-    .problem-source { font-size: 12px; color: #6c757d; margin-left: 0.5rem; }
-    .problem-notes { font-size: 13px; color: #6c757d; margin-top: 2px; font-style: italic; }
+    .problem-ref { font-size: var(--ss-fs-16); font-weight: var(--ss-fw-regular); }
+    .problem-ref a { color: var(--ss-link); text-decoration: none; }
+    .problem-ref a:hover { color: var(--ss-link-hover); }
+    .problem-source { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-left: var(--ss-space-2); }
+    .problem-notes { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-top: 2px; font-style: italic; }
     .problem-status { flex-shrink: 0; }
 
     /* Status toggle button */
-    .status-btn { background: none; border: 1px solid #dee2e6; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: #6c757d; }
-    .status-btn:hover { background: #f8f9fa; }
-    .status-btn--solved { border-color: #27ae60; color: #27ae60; }
-    .status-btn--attempted { border-color: #ffc107; color: #856404; }
+    .status-btn { background: none; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); padding: var(--ss-space-1) var(--ss-space-3); font-size: var(--ss-fs-12); cursor: pointer; color: var(--ss-text-secondary); }
+    .status-btn:hover { background: var(--ss-surface-alt); }
+    .status-btn--solved { border-color: var(--ss-success); color: var(--ss-success-strong); }
+    .status-btn--attempted { border-color: var(--ss-warning-rule); color: var(--ss-warning); }
 
-    .login-prompt { text-align: center; font-size: 14px; color: #6c757d; padding: 1rem; background: #f8f9fa; border-radius: 6px; margin-bottom: 1.5rem; }
-    .login-prompt a { color: #1a5276; }
+    .login-prompt { text-align: center; font-size: var(--ss-fs-14); color: var(--ss-text-secondary); padding: var(--ss-space-4); background: var(--ss-surface-alt); border-radius: var(--ss-radius); margin-bottom: var(--ss-space-6); }
+    .login-prompt a { color: var(--ss-link); }
   </style>
 </head>
 <body>
@@ -99,7 +99,7 @@
       <span class="path-meta-item">~<%= studyPath.estimated_hours %> <%= __('pathsPage.hours') %></span>
       <% } %>
       <% if (studyPath.author_name) { %>
-      <span class="path-meta-item"><%= __('pathsPage.by') %> <a href="/user/<%= studyPath.author_name %>" style="color: #1a5276;"><%= studyPath.author_name %></a></span>
+      <span class="path-meta-item"><%= __('pathsPage.by') %> <a href="/user/<%= studyPath.author_name %>" style="color: var(--ss-link);"><%= studyPath.author_name %></a></span>
       <% } %>
     </div>
 

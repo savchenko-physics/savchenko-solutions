@@ -35,14 +35,14 @@
                     </button>
                 </div>
             </div>
-            <p style="margin: 8px 0 16px; font-size: 13px; text-align: right;">
-                <a href="/forgot-password" style="color: #1a5276;"><%= lang === 'ru' ? 'Забыли пароль?' : 'Forgot password?' %></a>
+            <p style="margin: var(--ss-space-2) 0 var(--ss-space-4); font-size: var(--ss-fs-13); text-align: right;">
+                <a href="/forgot-password" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Забыли пароль?' : 'Forgot password?' %></a>
             </p>
             <button type="submit" class="submit-button"><%= __('auth.login.submit') %></button>
         </form>
         <p><%= __('auth.login.noAccount') %> <a href="/<%= lang %>/register"><%= __('auth.login.registerHere') %></a></p>
-        <p style="font-size: 12px; color: #6c757d; margin-top: 12px;">
-            <a href="/<%= lang %>/community-guidelines" style="color: #6c757d; text-decoration: underline;">
+        <p style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-top: var(--ss-space-3);">
+            <a href="/<%= lang %>/community-guidelines" style="color: var(--ss-text-secondary); text-decoration: underline;">
                 <%= lang === 'ru' ? 'Правила сообщества' : 'Community Guidelines' %>
             </a>
         </p>

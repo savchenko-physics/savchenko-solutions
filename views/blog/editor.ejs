@@ -36,55 +36,55 @@
         .editor-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 1.5rem 1rem;
+            padding: var(--ss-space-6) var(--ss-space-4);
         }
         .editor-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: var(--ss-space-4);
             flex-wrap: wrap;
-            gap: 0.75rem;
+            gap: var(--ss-space-3);
         }
         .editor-header h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 22px;
-            font-weight: 600;
-            color: #2d2d2d;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
             margin: 0;
         }
         .editor-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: var(--ss-space-2);
             align-items: center;
         }
         .editor-fields {
             display: grid;
             grid-template-columns: 1fr auto auto;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: var(--ss-space-3);
+            margin-bottom: var(--ss-space-4);
             align-items: end;
         }
         .editor-field label {
             display: block;
-            font-size: 13px;
-            font-weight: 500;
-            color: #6c757d;
-            margin-bottom: 0.25rem;
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
+            margin-bottom: var(--ss-space-1);
         }
         .editor-field input,
         .editor-field select {
             width: 100%;
             height: 40px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 0 0.75rem;
-            font-size: 14px;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: 0 var(--ss-space-3);
+            font-size: var(--ss-fs-16);
             font-family: inherit;
         }
         .editor-field input:focus,
         .editor-field select:focus {
-            border-color: #1a5276;
+            border-color: var(--ss-link);
             outline: none;
         }
 
@@ -94,11 +94,11 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 2px;
-            padding: 6px 8px;
-            border: 1px solid #dee2e6;
+            padding: var(--ss-space-2) var(--ss-space-2);
+            border: 1px solid var(--ss-rule);
             border-bottom: none;
-            border-radius: 6px 6px 0 0;
-            background: #f8f9fa;
+            border-radius: var(--ss-radius) var(--ss-radius) 0 0;
+            background: var(--ss-surface-alt);
         }
         .toolbar-btn {
             display: inline-flex;
@@ -107,17 +107,17 @@
             width: 32px;
             height: 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--ss-radius-sm);
             background: transparent;
-            color: #495057;
-            font-size: 14px;
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-14);
             cursor: pointer;
             transition: all 0.12s;
             padding: 0;
         }
         .toolbar-btn:hover {
-            background: #e9ecef;
-            color: #2d2d2d;
+            background: var(--ss-surface-hover);
+            color: var(--ss-text);
         }
         .toolbar-btn:active {
             background: #dee2e6;
@@ -129,89 +129,89 @@
             width: 1px;
             height: 20px;
             background: #dee2e6;
-            margin: 0 4px;
+            margin: 0 var(--ss-space-1);
         }
         .toolbar-btn .fa-heading {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
         }
         .toolbar-btn-text {
-            font-size: 11px;
-            font-weight: 700;
-            font-family: 'Inter', sans-serif;
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            font-family: var(--ss-font-ui);
         }
 
         .editor-split {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+            gap: var(--ss-space-4);
             min-height: 500px;
         }
         .editor-pane-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6c757d;
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--ss-space-2);
         }
         .CodeMirror {
-            border: 1px solid #dee2e6;
-            border-radius: 0 0 6px 6px;
+            border: 1px solid var(--ss-rule);
+            border-radius: 0 0 var(--ss-radius) var(--ss-radius);
             height: 500px;
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
         .preview-pane {
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 1.25rem;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-5);
             height: calc(500px + 43px);
             overflow-y: auto;
-            font-size: 15px;
+            font-size: var(--ss-fs-16);
             line-height: 1.7;
-            color: #2d2d2d;
-            background: #fff;
+            color: var(--ss-text);
+            background: var(--ss-surface);
         }
         .preview-pane h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 24px;
-            font-weight: 700;
-            margin: 1.5rem 0 0.75rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-24);
+            font-weight: var(--ss-fw-strong);
+            margin: var(--ss-space-6) 0 var(--ss-space-3);
         }
         .preview-pane h2 {
-            font-family: 'Inter', sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 1.5rem 0 0.75rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
+            margin: var(--ss-space-6) 0 var(--ss-space-3);
         }
         .preview-pane h3 {
-            font-family: 'Inter', sans-serif;
-            font-size: 17px;
-            font-weight: 600;
-            margin: 1rem 0 0.5rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
+            margin: var(--ss-space-4) 0 var(--ss-space-2);
         }
         .preview-pane ul, .preview-pane ol {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
+            padding-left: var(--ss-space-6);
+            margin-bottom: var(--ss-space-4);
         }
         .preview-pane blockquote {
-            border-left: 3px solid #dee2e6;
-            padding-left: 1rem;
-            color: #6c757d;
-            margin: 1rem 0;
+            border-left: 3px solid var(--ss-rule);
+            padding-left: var(--ss-space-4);
+            color: var(--ss-text-secondary);
+            margin: var(--ss-space-4) 0;
         }
         .preview-pane code {
-            background: #f8f9fa;
-            padding: 0.15rem 0.35rem;
-            border-radius: 3px;
-            font-size: 13px;
+            background: var(--ss-surface-alt);
+            padding: 0.15rem var(--ss-space-1);
+            border-radius: var(--ss-radius-sm);
+            font-size: var(--ss-fs-13);
         }
         .preview-pane pre {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 1rem;
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-4);
             overflow-x: auto;
-            margin: 1rem 0;
+            margin: var(--ss-space-4) 0;
         }
         .preview-pane pre code {
             background: none;
@@ -219,52 +219,52 @@
         }
         .preview-pane hr {
             border: none;
-            border-top: 1px solid #dee2e6;
-            margin: 1.5rem 0;
+            border-top: 1px solid var(--ss-rule);
+            margin: var(--ss-space-6) 0;
         }
         .preview-pane img {
             max-width: 100%;
-            border-radius: 4px;
+            border-radius: var(--ss-radius-sm);
         }
         .preview-pane a {
-            color: #1a5276;
+            color: var(--ss-link);
         }
         .preview-pane del {
             text-decoration: line-through;
-            color: #6c757d;
+            color: var(--ss-text-secondary);
         }
 
         .btn-draft {
-            background: #f8f9fa;
-            color: #2d2d2d;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 0.5rem 1.25rem;
-            font-size: 14px;
-            font-weight: 500;
+            background: var(--ss-surface-alt);
+            color: var(--ss-text);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-2) var(--ss-space-5);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             cursor: pointer;
             transition: background 0.15s;
         }
         .btn-draft:hover {
-            background: #e9ecef;
+            background: var(--ss-surface-hover);
         }
         .btn-publish {
-            background: #1a1a2e;
-            color: #fff;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
             border: none;
-            border-radius: 6px;
-            padding: 0.5rem 1.25rem;
-            font-size: 14px;
-            font-weight: 500;
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-2) var(--ss-space-5);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             cursor: pointer;
             transition: background 0.15s;
         }
         .btn-publish:hover {
-            background: #2c2c4a;
+            background: var(--ss-navy-hover);
         }
         .autosave-status {
-            font-size: 12px;
-            color: #6c757d;
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
             align-self: center;
         }
 
@@ -277,14 +277,14 @@
             position: absolute;
             inset: 0;
             background: rgba(26, 26, 46, 0.08);
-            border: 2px dashed #1a5276;
-            border-radius: 6px;
+            border: 2px dashed var(--ss-link);
+            border-radius: var(--ss-radius);
             z-index: 10;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
-            font-weight: 500;
-            color: #1a5276;
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-regular);
+            color: var(--ss-link);
             pointer-events: none;
         }
         .drop-overlay.active {
@@ -295,11 +295,11 @@
             bottom: 8px;
             left: 8px;
             right: 8px;
-            background: #1a1a2e;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            padding: var(--ss-space-2) var(--ss-space-3);
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-13);
             z-index: 11;
             display: none;
         }
@@ -310,7 +310,7 @@
         }
 
         @media (max-width: 768px) {
-            .editor-container { padding: 1rem 0.5rem; }
+            .editor-container { padding: var(--ss-space-4) var(--ss-space-2); }
             .editor-fields { grid-template-columns: 1fr; }
             .editor-split { grid-template-columns: 1fr; }
             .CodeMirror { height: 300px; }

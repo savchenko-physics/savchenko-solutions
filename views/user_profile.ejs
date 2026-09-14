@@ -87,42 +87,42 @@
             margin: 0;
             background: var(--sv-bg);
             color: var(--sv-text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--ss-font-ui);
         }
 
         .profile-page {
             max-width: 1320px;
             margin: 0 auto;
-            padding: 20px 16px 32px;
+            padding: var(--ss-space-5) var(--ss-space-4) var(--ss-space-7);
             width: 100%;
             box-sizing: border-box;
         }
 
         .card {
             border: 1px solid var(--sv-border);
-            border-radius: 8px;
+            border-radius: var(--ss-radius-lg);
             background: var(--sv-bg);
-            padding: 14px;
-            margin-bottom: 16px;
+            padding: var(--ss-space-4);
+            margin-bottom: var(--ss-space-4);
         }
 
         .section-title {
             color: var(--sv-primary);
-            margin: 0 0 12px;
-            font-size: 17px;
-            font-weight: 600;
+            margin: 0 0 var(--ss-space-3);
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
         }
 
         /* ── Profile Header ── */
 
         .profile-header-card {
-            margin-bottom: 16px;
+            margin-bottom: var(--ss-space-4);
         }
 
         .profile-head {
             display: flex;
             justify-content: space-between;
-            gap: 16px;
+            gap: var(--ss-space-4);
             align-items: flex-start;
             flex-wrap: wrap;
         }
@@ -132,7 +132,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 16px;
+            gap: var(--ss-space-4);
             min-width: 0;
             flex: 1 1 300px;
         }
@@ -146,10 +146,10 @@
         .profile-avatar {
             width: 200px;
             height: 200px;
-            border-radius: 12px;
+            border-radius: var(--ss-radius-lg);
             object-fit: cover;
             border: 1px solid var(--sv-border);
-            background: #fff;
+            background: var(--ss-surface);
             flex-shrink: 0;
         }
         /* Corner online dot on the large avatar; scales with the avatar size. */
@@ -160,7 +160,7 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background: #27ae60;
+            background: var(--ss-success);
             border: 3px solid #fff;
             box-sizing: content-box;
             pointer-events: none;
@@ -176,9 +176,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            font-size: 30px;
-            font-weight: 600;
+            gap: var(--ss-space-2);
+            font-size: var(--ss-fs-28);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-primary);
             line-height: 1.15;
             margin: 0;
@@ -189,7 +189,7 @@
                 flex-direction: row;
                 align-items: center;
                 text-align: left;
-                gap: 28px;
+                gap: var(--ss-space-7);
             }
             .profile-avatar {
                 width: 260px;
@@ -197,7 +197,7 @@
             }
             .name-line {
                 justify-content: flex-start;
-                font-size: 38px;
+                font-size: var(--ss-fs-40);
             }
         }
 
@@ -208,30 +208,30 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: var(--ss-space-2);
+            margin-bottom: var(--ss-space-3);
         }
 
         .rating-badges {
             display: flex;
-            gap: 8px;
+            gap: var(--ss-space-2);
         }
 
         .rating-badge {
             display: inline-flex;
             align-items: baseline;
-            gap: 6px;
-            background: #f6f8fa;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            padding: 4px 10px;
-            font-size: 13px;
+            gap: var(--ss-space-2);
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-1) var(--ss-space-3);
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
         .rating-badge-value {
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: var(--ss-fw-strong);
+            font-size: var(--ss-fs-16);
             color: var(--sv-primary);
         }
 
@@ -242,21 +242,21 @@
 
         .rating-empty {
             color: var(--sv-secondary);
-            font-size: 13px;
-            margin: 8px 0 0;
+            font-size: var(--ss-fs-13);
+            margin: var(--ss-space-2) 0 0;
         }
 
         .username-line {
-            margin: 4px 0 0;
-            font-size: 14px;
+            margin: var(--ss-space-1) 0 0;
+            font-size: var(--ss-fs-14);
             color: var(--sv-secondary);
         }
 
         /* Codeforces-style rank title; color is set inline per tier. */
         .rank-title-line {
-            margin: 4px 0 0;
-            font-size: 14px;
-            font-weight: 600;
+            margin: var(--ss-space-1) 0 0;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             line-height: 1.2;
         }
 
@@ -264,9 +264,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            margin: 6px 0 0;
-            font-size: 13px;
+            gap: var(--ss-space-2);
+            margin: var(--ss-space-2) 0 0;
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
@@ -282,18 +282,18 @@
             flex-shrink: 0;
         }
 
-        .presence-line.is-online { color: #27ae60; }
-        .presence-line.is-online .presence-dot { background: #27ae60; }
+        .presence-line.is-online { color: var(--ss-success-strong); }
+        .presence-line.is-online .presence-dot { background: var(--ss-success); }
 
         .institution-line {
-            margin: 4px 0 0;
-            font-size: 14px;
+            margin: var(--ss-space-1) 0 0;
+            font-size: var(--ss-fs-14);
             color: var(--sv-secondary);
         }
 
         .bio {
-            margin: 8px 0 0;
-            font-size: 14px;
+            margin: var(--ss-space-2) 0 0;
+            font-size: var(--ss-fs-14);
             color: var(--sv-text);
             line-height: 1.45;
             max-width: 760px;
@@ -315,7 +315,7 @@
             background: none;
             border: none;
             color: var(--sv-primary);
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             cursor: pointer;
             padding: 2px 0 0;
         }
@@ -341,23 +341,23 @@
         .social-link-cv {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: var(--ss-space-1);
             width: auto;
-            padding: 0 10px;
-            font-size: 13px;
-            font-weight: 500;
+            padding: 0 var(--ss-space-3);
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-regular);
         }
 
         .social-row {
-            margin-top: 10px;
+            margin-top: var(--ss-space-3);
             display: flex;
-            gap: 10px;
+            gap: var(--ss-space-3);
             align-items: center;
         }
 
         .social-link {
             color: var(--sv-secondary);
-            font-size: 20px;
+            font-size: var(--ss-fs-20);
             text-decoration: none;
         }
 
@@ -368,13 +368,13 @@
         .profile-actions {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
+            gap: var(--ss-space-2);
             flex-shrink: 0;
         }
 
         .edit-link {
             color: var(--sv-primary);
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             text-decoration: none;
             white-space: nowrap;
         }
@@ -384,10 +384,10 @@
         }
 
         .follow-btn {
-            padding: 6px 16px;
-            font-size: 13px;
-            font-weight: 500;
-            border-radius: 6px;
+            padding: var(--ss-space-2) var(--ss-space-4);
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
+            border-radius: var(--ss-radius);
             cursor: pointer;
             white-space: nowrap;
             border: 1px solid var(--sv-primary);
@@ -396,11 +396,11 @@
 
         .follow-btn--follow {
             background: var(--sv-primary);
-            color: #fff;
+            color: var(--ss-on-navy);
         }
 
         .follow-btn--follow:hover {
-            background: #0d0d1a;
+            background: var(--ss-navy);
         }
 
         .follow-btn--following {
@@ -409,8 +409,8 @@
         }
 
         .follow-btn--following:hover {
-            border-color: #c0392b;
-            color: #c0392b;
+            border-color: var(--ss-error);
+            color: var(--ss-error);
         }
 
         /* ── Stats Row ── */
@@ -419,36 +419,36 @@
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin: 16px 0 0;
+            gap: var(--ss-space-3);
+            margin: var(--ss-space-4) 0 0;
             width: 100%;
         }
 
         .stat-tile {
             border: 1px solid var(--sv-border);
-            border-radius: 8px;
-            padding: 10px 8px;
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-3) var(--ss-space-2);
             text-align: center;
             background: var(--sv-bg);
         }
 
         .stat-value {
-            font-size: 26px;
+            font-size: var(--ss-fs-24);
             line-height: 1.05;
             color: var(--sv-primary);
-            font-weight: 700;
+            font-weight: var(--ss-fw-strong);
         }
 
         .stat-label {
-            margin-top: 6px;
-            font-size: 13px;
+            margin-top: var(--ss-space-2);
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
         /* ── Heatmap ── */
 
         .heatmap-card-head {
-            margin-bottom: 8px;
+            margin-bottom: var(--ss-space-2);
         }
 
         .heatmap-card-head .section-title {
@@ -456,7 +456,7 @@
         }
 
         .heatmap-summary-row {
-            margin-bottom: 12px;
+            margin-bottom: var(--ss-space-3);
         }
 
         .heatmap-summary-row .heatmap-contrib-summary {
@@ -467,7 +467,7 @@
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            gap: 12px;
+            gap: var(--ss-space-3);
         }
 
         .heatmap-graph-row .heatmap-graph-border {
@@ -480,7 +480,7 @@
             flex-direction: column;
             align-items: stretch;
             justify-content: flex-start;
-            gap: 8px;
+            gap: var(--ss-space-2);
             list-style: none;
             margin: 0;
             padding: 0;
@@ -541,16 +541,16 @@
 
             .heatmap-y {
                 width: 22px;
-                font-size: 10px;
+                font-size: var(--ss-fs-12);
             }
         }
 
         .heatmap-year-nav button {
             border: 1px solid #d0d7de;
             background: #f6f8fa;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 14px;
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            font-size: var(--ss-fs-14);
             color: #24292f;
             cursor: pointer;
             line-height: 1.3;
@@ -570,7 +570,7 @@
         }
 
         .heatmap-contrib-summary {
-            font-size: 16px;
+            font-size: var(--ss-fs-16);
             font-weight: 400;
             color: #1a1a2e;
             margin: 0;
@@ -578,14 +578,14 @@
         }
 
         .heatmap-contrib-summary strong {
-            font-weight: 600;
+            font-weight: var(--ss-fw-strong);
             font-variant-numeric: tabular-nums;
         }
 
         .heatmap-graph-border {
             border: 1px solid #d0d7de;
-            border-radius: 6px;
-            padding: 10px 8px 8px;
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-3) var(--ss-space-2) var(--ss-space-2);
             background: #fff;
         }
 
@@ -594,23 +594,23 @@
             align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 10px;
-            padding-top: 8px;
-            font-size: 11px;
+            gap: var(--ss-space-1);
+            margin-top: var(--ss-space-3);
+            padding-top: var(--ss-space-2);
+            font-size: var(--ss-fs-12);
             color: #656d76;
         }
 
         .heatmap-legend-scale {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--ss-space-1);
         }
 
         .heatmap-legend-cell {
             width: 10px;
             height: 10px;
-            border-radius: 2px;
+            border-radius: var(--ss-radius-sm);
         }
 
         .heatmap-shell {
@@ -622,7 +622,7 @@
         .heatmap-wrap {
             display: flex;
             align-items: stretch;
-            gap: 8px;
+            gap: var(--ss-space-2);
             width: 100%;
             min-width: 791px;
         }
@@ -631,8 +631,8 @@
             width: 30px;
             flex-shrink: 0;
             color: var(--sv-secondary);
-            font-size: 11px;
-            padding-top: 20px;
+            font-size: var(--ss-fs-12);
+            padding-top: var(--ss-space-5);
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -658,12 +658,12 @@
         .heatmap-months {
             display: grid;
             grid-template-columns: repeat(53, minmax(11px, 1fr));
-            gap: 4px;
+            gap: var(--ss-space-1);
             width: 100%;
             height: 16px;
-            margin-bottom: 4px;
+            margin-bottom: var(--ss-space-1);
             color: var(--sv-secondary);
-            font-size: 10px;
+            font-size: var(--ss-fs-12);
         }
 
         .heatmap-grid {
@@ -672,7 +672,7 @@
             min-width: 0;
             grid-template-columns: repeat(53, minmax(11px, 1fr));
             grid-template-rows: repeat(7, minmax(0, 1fr));
-            gap: 4px;
+            gap: var(--ss-space-1);
             aspect-ratio: 53 / 7;
         }
 
@@ -681,7 +681,7 @@
             height: 100%;
             min-width: 0;
             min-height: 0;
-            border-radius: 2px;
+            border-radius: var(--ss-radius-sm);
             background: var(--sv-heat-0);
             cursor: default;
         }
@@ -692,14 +692,14 @@
             left: 0;
             top: 0;
             max-width: min(280px, calc(100vw - 16px));
-            padding: 8px 10px;
-            font-size: 12px;
+            padding: var(--ss-space-2) var(--ss-space-3);
+            font-size: var(--ss-fs-12);
             line-height: 1.35;
             color: #24292f;
             background: #fff;
             border: 1px solid #d0d7de;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: var(--ss-radius);
+            box-shadow: var(--ss-shadow);
             pointer-events: none;
             opacity: 0;
             visibility: hidden;
@@ -712,27 +712,27 @@
         }
 
         .streak-line {
-            margin-top: 8px;
-            font-size: 13px;
+            margin-top: var(--ss-space-2);
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
         /* ── Timeline + Radar ── */
 
         .timeline-radar-card {
-            padding: 6px 12px;
-            margin-bottom: 12px;
+            padding: var(--ss-space-2) var(--ss-space-3);
+            margin-bottom: var(--ss-space-3);
         }
 
         .timeline-radar-card .section-title {
-            margin: 0 0 4px;
-            font-size: 16px;
+            margin: 0 0 var(--ss-space-1);
+            font-size: var(--ss-fs-16);
         }
 
         .timeline-radar-grid {
             display: grid;
             grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-            gap: 12px;
+            gap: var(--ss-space-3);
             align-items: stretch;
         }
 
@@ -744,7 +744,7 @@
 
         .timeline-radar-col.radar-col {
             border-left: 1px solid var(--sv-border);
-            padding-left: 14px;
+            padding-left: var(--ss-space-4);
             justify-content: flex-start;
         }
 
@@ -775,8 +775,8 @@
 
         .radar-empty {
             text-align: center;
-            padding: 20px 10px;
-            font-size: 13px;
+            padding: var(--ss-space-5) var(--ss-space-3);
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
@@ -785,22 +785,22 @@
         .recent-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: var(--ss-space-2);
         }
 
         /* A "window" groups consecutive contributions on the same problem. */
         .contrib-group {
-            background: #f6f8fa;
-            border: 1px solid #d0d7de;
-            border-radius: 6px;
-            padding: 2px 12px;
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: 2px var(--ss-space-3);
         }
 
         /* Dashed separator between problem groups, with the time gap labelled. */
         .contrib-group-sep {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--ss-space-2);
             border: none;
             margin: 0;
         }
@@ -814,15 +814,15 @@
 
         .contrib-gap-label {
             flex: 0 0 auto;
-            font-size: 11px;
-            color: #6c757d;
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
             white-space: nowrap;
         }
 
 
         .contrib-latest {
-            padding: 7px 0;
-            font-size: 12px;
+            padding: var(--ss-space-2) 0;
+            font-size: var(--ss-fs-12);
             line-height: 1.45;
         }
 
@@ -836,13 +836,13 @@
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: 8px 16px;
+            gap: var(--ss-space-2) var(--ss-space-4);
         }
 
         .contrib-latest-author {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: var(--ss-space-2);
             min-width: 0;
             flex: 1;
         }
@@ -858,20 +858,20 @@
             border-radius: 50%;
             object-fit: cover;
             vertical-align: middle;
-            border: 1px solid #d0d7de;
-            background: #fff;
+            border: 1px solid var(--ss-rule);
+            background: var(--ss-surface);
         }
 
         .contrib-author-link {
-            color: #57606a;
-            font-weight: 600;
+            color: var(--ss-text-secondary);
+            font-weight: var(--ss-fw-strong);
             text-decoration: none;
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
             flex-shrink: 0;
         }
 
         .contrib-author-link:hover {
-            color: #1a1a2e;
+            color: var(--ss-navy);
             text-decoration: underline;
         }
 
@@ -880,14 +880,14 @@
             display: inline-flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: var(--ss-space-2);
         }
 
         .contrib-title-link {
-            color: #1a1a2e;
-            font-weight: 700;
+            color: var(--ss-navy);
+            font-weight: var(--ss-fw-strong);
             text-decoration: none;
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
         }
 
         .contrib-title-link:hover {
@@ -895,25 +895,25 @@
         }
 
         .contrib-problem-link {
-            color: #1a1a2e;
-            font-weight: 700;
+            color: var(--ss-navy);
+            font-weight: var(--ss-fw-strong);
             text-decoration: none;
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
         }
 
         .contrib-problem-link:hover {
-            color: #1a1a2e;
+            color: var(--ss-navy);
             text-decoration: underline;
         }
 
         .contrib-lang {
             display: inline-block;
-            padding: 0 6px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #57606a;
-            border: 1px solid #d0d7de;
-            border-radius: 999px;
+            padding: 0 var(--ss-space-2);
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-regular);
+            color: var(--ss-text-secondary);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
             text-transform: uppercase;
             line-height: 1.35;
         }
@@ -921,26 +921,26 @@
         .contrib-meta-right {
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: #57606a;
-            font-size: 12px;
+            gap: var(--ss-space-2);
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-12);
             flex-shrink: 0;
         }
 
         .contrib-hash {
-            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-            font-size: 12px;
-            color: #57606a;
+            font-family: var(--ss-font-mono);
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
             text-decoration: none;
         }
 
         .contrib-hash:hover {
-            color: #1a1a2e;
+            color: var(--ss-navy);
             text-decoration: underline;
         }
 
         .contrib-time {
-            color: #57606a;
+            color: var(--ss-text-secondary);
             white-space: nowrap;
         }
 
@@ -958,7 +958,7 @@
 
         .tiny-link {
             color: var(--sv-primary);
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             text-decoration: none;
         }
 
@@ -971,27 +971,27 @@
         .chapter-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
         }
 
         .chapter-table th,
         .chapter-table td {
             border-bottom: 1px solid var(--sv-border);
-            padding: 8px 6px;
+            padding: var(--ss-space-2) var(--ss-space-2);
             text-align: left;
         }
 
         .chapter-table th {
             color: var(--sv-secondary);
-            font-weight: 600;
-            font-size: 12px;
+            font-weight: var(--ss-fw-strong);
+            font-size: var(--ss-fs-12);
         }
 
         .progress-track {
             width: 120px;
             height: 6px;
-            background: #ebedf0;
-            border-radius: 10px;
+            background: var(--ss-surface-hover);
+            border-radius: var(--ss-radius-lg);
             overflow: hidden;
         }
 
@@ -1007,8 +1007,8 @@
         .collab-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px 10px;
-            padding-bottom: 4px;
+            gap: var(--ss-space-3) var(--ss-space-3);
+            padding-bottom: var(--ss-space-1);
         }
 
         .collab-item {
@@ -1038,17 +1038,17 @@
             width: 11px;
             height: 11px;
             border-radius: 50%;
-            background: #27ae60;
+            background: var(--ss-success);
             border: 2px solid #fff;
             box-sizing: content-box;
             pointer-events: none;
         }
 
         .collab-name {
-            margin-top: 6px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #1a1a2e;
+            margin-top: var(--ss-space-2);
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-navy);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1057,8 +1057,8 @@
 
         .collab-count {
             margin-top: 2px;
-            font-size: 11px;
-            color: #6c757d;
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
             font-variant-numeric: tabular-nums;
         }
 
@@ -1070,45 +1070,45 @@
             gap: 1px;
             background: var(--sv-border);
             border: 1px solid var(--sv-border);
-            border-radius: 8px;
+            border-radius: var(--ss-radius-lg);
             overflow: hidden;
         }
 
         .impact-tile {
             background: var(--sv-card);
-            padding: 12px 14px 13px;
+            padding: var(--ss-space-3) var(--ss-space-4) var(--ss-space-3);
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
         .impact-value {
-            font-size: 22px;
-            font-weight: 600;
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-primary);
             font-variant-numeric: tabular-nums;
             line-height: 1.2;
         }
 
-        .impact-label { font-size: 12px; color: var(--sv-secondary); line-height: 1.35; }
-        .impact-note { font-size: 13px; color: var(--sv-secondary); margin: 0 0 10px; }
-        .impact-sub { margin-top: 12px; font-size: 13px; }
-        .impact-sub-title { font-size: 12px; color: var(--sv-secondary); margin: 0 0 6px; }
+        .impact-label { font-size: var(--ss-fs-12); color: var(--sv-secondary); line-height: 1.35; }
+        .impact-note { font-size: var(--ss-fs-13); color: var(--sv-secondary); margin: 0 0 var(--ss-space-3); }
+        .impact-sub { margin-top: var(--ss-space-3); font-size: var(--ss-fs-13); }
+        .impact-sub-title { font-size: var(--ss-fs-12); color: var(--sv-secondary); margin: 0 0 var(--ss-space-2); }
 
-        .queue-list { display: flex; flex-direction: column; gap: 6px; }
+        .queue-list { display: flex; flex-direction: column; gap: var(--ss-space-2); }
 
         .queue-item {
             display: flex;
             align-items: baseline;
-            gap: 10px;
-            padding: 7px 10px;
+            gap: var(--ss-space-3);
+            padding: var(--ss-space-2) var(--ss-space-3);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
-            font-size: 13px;
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-13);
         }
 
         .queue-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .queue-remaining { color: #c0392b; font-weight: 600; white-space: nowrap; }
+        .queue-remaining { color: var(--ss-error); font-weight: var(--ss-fw-strong); white-space: nowrap; }
         .queue-progress { color: var(--sv-secondary); font-variant-numeric: tabular-nums; white-space: nowrap; }
 
         /* ── Community ── */
@@ -1116,7 +1116,7 @@
         .people-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 18px;
+            gap: var(--ss-space-5);
         }
 
         @media (min-width: 768px) {
@@ -1126,10 +1126,10 @@
         }
 
         .people-col-title {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-primary);
-            margin: 0 0 8px;
+            margin: 0 0 var(--ss-space-2);
         }
 
         .people-list {
@@ -1141,12 +1141,12 @@
         .people-item {
             display: flex;
             align-items: center;
-            gap: 9px;
-            padding: 6px 6px;
-            border-radius: 6px;
+            gap: var(--ss-space-2);
+            padding: var(--ss-space-2) var(--ss-space-2);
+            border-radius: var(--ss-radius);
             text-decoration: none;
             color: var(--sv-text);
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
 
         .people-item:hover {
@@ -1175,18 +1175,18 @@
 
         .people-count {
             margin-right: auto;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-secondary);
             font-variant-numeric: tabular-nums;
             flex-shrink: 0;
         }
 
         .people-empty {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
             margin: 0;
-            padding: 5px 6px;
+            padding: var(--ss-space-1) var(--ss-space-2);
         }
 
         /* ── Comments & likes ── */
@@ -1194,14 +1194,14 @@
         .comment-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: var(--ss-space-2);
         }
 
         .comment-item {
             display: block;
-            padding: 9px 11px;
+            padding: var(--ss-space-2) var(--ss-space-3);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             text-decoration: none;
             color: var(--sv-text);
         }
@@ -1213,19 +1213,19 @@
         .comment-head {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
-            font-size: 12px;
+            gap: var(--ss-space-3);
+            font-size: var(--ss-fs-12);
             color: var(--sv-secondary);
-            margin-bottom: 4px;
+            margin-bottom: var(--ss-space-1);
         }
 
         .comment-problem {
-            font-weight: 600;
-            color: #1a5276;
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-link);
         }
 
         .comment-text {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             line-height: 1.45;
             word-break: break-word;
         }
@@ -1233,16 +1233,16 @@
         .problem-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: var(--ss-space-2);
         }
 
         .problem-chip {
             display: inline-block;
-            padding: 4px 10px;
+            padding: var(--ss-space-1) var(--ss-space-3);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
-            font-size: 13px;
-            color: #1a5276;
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-link);
             text-decoration: none;
         }
 
@@ -1255,9 +1255,9 @@
         .footer-stats {
             display: flex;
             justify-content: space-between;
-            gap: 10px;
+            gap: var(--ss-space-3);
             color: var(--sv-secondary);
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
         }
 
         /* ── Skeleton ── */
@@ -1266,7 +1266,7 @@
             background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
             background-size: 200% 100%;
             animation: pulse 1.2s linear infinite;
-            border-radius: 4px;
+            border-radius: var(--ss-radius-sm);
             color: transparent;
         }
 
@@ -1290,20 +1290,20 @@
                 border-left: none;
                 padding-left: 0;
                 border-top: 1px solid var(--sv-border);
-                padding-top: 14px;
+                padding-top: var(--ss-space-4);
             }
         }
 
         @media (max-width: 768px) {
             .profile-page {
-                padding: 16px 12px 24px;
+                padding: var(--ss-space-4) var(--ss-space-3) var(--ss-space-6);
                 /* Safety net: clip any stray child width that would
                    otherwise force a horizontal page scroll. */
                 overflow-x: hidden;
             }
 
             .name-line {
-                font-size: 20px;
+                font-size: var(--ss-fs-20);
             }
 
             /* Hash already shown in the title row — drop the duplicate
@@ -1319,7 +1319,7 @@
         .platform-overview-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            gap: var(--ss-space-3);
         }
     </style>
 </head>
@@ -1378,7 +1378,7 @@
                     <button id="follow-btn" class="follow-btn" style="display:none;" data-user-id="<%= profileUserId %>"></button>
                     <form id="message-form" action="/messages/new" method="POST" style="display:none;margin:0;">
                         <input type="hidden" name="recipientId" value="<%= profileUserId %>">
-                        <button type="submit" class="follow-btn" style="background:#1a1a2e;color:#fff;border:1px solid #1a1a2e;"><%= lang === 'ru' ? 'Написать' : 'Message' %></button>
+                        <button type="submit" class="follow-btn" style="background:var(--ss-navy);color:var(--ss-on-navy);border:1px solid var(--ss-navy);"><%= lang === 'ru' ? 'Написать' : 'Message' %></button>
                     </form>
                 </div>
             </div>
@@ -1474,7 +1474,7 @@
             <h2 class="section-title"><%= lang === 'ru' ? 'Недавние вклады' : 'Recent Contributions' %></h2>
             <p class="sr-only"><%= lang === 'ru' ? 'Последние вклады: id, задача, язык и ссылка.' : 'Latest contributions: id, problem, language, and link to the diff.' %></p>
             <div id="recent-list" class="recent-list"></div>
-            <a id="show-all-link" class="tiny-link" href="#" style="display:none;margin-top:10px;"><%= lang === 'ru' ? 'Показать ещё' : 'Show more' %></a>
+            <a id="show-all-link" class="tiny-link" href="#" style="display:none;margin-top:var(--ss-space-3);"><%= lang === 'ru' ? 'Показать ещё' : 'Show more' %></a>
         </section>
 
         <!-- Chapter Breakdown -->
@@ -1522,7 +1522,7 @@
                 ? 'Видно только вам. Продолжить можно с того места, где остановились.'
                 : 'Visible only to you. Pick up where you left off.' %></p>
             <div id="drafts-chips" class="problem-chips"></div>
-            <p class="impact-note" style="margin-top:10px;">
+            <p class="impact-note" style="margin-top:var(--ss-space-3);">
                 <a href="/<%= lang %>/drafts"><%= lang === 'ru' ? 'Все черновики' : 'All drafts' %> &rarr;</a>
             </p>
         </section>
@@ -1573,8 +1573,8 @@
         <!-- Sankey -->
         <section id="sankey-card" class="card" style="display:none;">
             <h2 class="section-title"><%= lang === 'ru' ? 'Глава / Раздел / Статус' : 'Chapter / Section / Status' %></h2>
-            <label for="sankey-chapter" style="font-size:13px;color:#6c757d;"><%= lang === 'ru' ? 'Глава' : 'Chapter' %></label>
-            <select id="sankey-chapter" style="margin-left:8px;"></select>
+            <label for="sankey-chapter" style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);"><%= lang === 'ru' ? 'Глава' : 'Chapter' %></label>
+            <select id="sankey-chapter" style="margin-left:var(--ss-space-2);"></select>
             <svg id="sankey-svg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:360px;display:block;"></svg>
         </section>
 
@@ -1594,66 +1594,66 @@
 
         <% if (typeof isOwner !== 'undefined' && isOwner) { %>
         <!-- My Activity (owner only) -->
-        <section class="card" style="margin-top:16px;">
+        <section class="card" style="margin-top:var(--ss-space-4);">
             <h2 class="section-title"><%= lang === 'ru' ? 'Моя активность' : 'My Activity' %></h2>
 
             <!-- Starred Problems -->
-            <div style="margin-bottom:20px;">
-                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Избранные задачи' : 'Starred Problems' %></h3>
+            <div style="margin-bottom:var(--ss-space-5);">
+                <h3 style="font-size:var(--ss-fs-14);font-weight:var(--ss-fw-strong);color:var(--ss-navy);margin:0 0 var(--ss-space-2);"><%= lang === 'ru' ? 'Избранные задачи' : 'Starred Problems' %></h3>
                 <% if (starredSolutions && starredSolutions.length > 0) { %>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <div style="display:flex;flex-wrap:wrap;gap:var(--ss-space-2);">
                     <% starredSolutions.forEach(function(s) { %>
-                    <a href="/<%= s.language %>/<%= s.problem_name %>" style="display:inline-block;padding:4px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;color:#1a5276;text-decoration:none;transition:background 0.15s;">
+                    <a href="/<%= s.language %>/<%= s.problem_name %>" style="display:inline-block;padding:var(--ss-space-1) var(--ss-space-3);border:1px solid var(--ss-rule);border-radius:var(--ss-radius);font-size:var(--ss-fs-13);color:var(--ss-link);text-decoration:none;transition:background 0.15s;">
                         <%= s.problem_name %> (<%= s.language %>)
                     </a>
                     <% }); %>
                 </div>
                 <% } else { %>
-                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет избранных задач. Добавляйте задачи в избранное для быстрого доступа.' : 'No starred problems yet. Star problems to bookmark them for later.' %></p>
+                <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);margin:0;"><%= lang === 'ru' ? 'Нет избранных задач. Добавляйте задачи в избранное для быстрого доступа.' : 'No starred problems yet. Star problems to bookmark them for later.' %></p>
                 <% } %>
             </div>
 
             <!-- Recent Forum Activity -->
-            <div style="margin-bottom:20px;">
-                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Активность на форуме' : 'Recent Forum Activity' %></h3>
+            <div style="margin-bottom:var(--ss-space-5);">
+                <h3 style="font-size:var(--ss-fs-14);font-weight:var(--ss-fw-strong);color:var(--ss-navy);margin:0 0 var(--ss-space-2);"><%= lang === 'ru' ? 'Активность на форуме' : 'Recent Forum Activity' %></h3>
                 <% if (recentForumActivity && recentForumActivity.length > 0) { %>
-                <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;flex-direction:column;gap:var(--ss-space-2);">
                     <% recentForumActivity.forEach(function(f) { %>
-                    <a href="/discuss/<%= f.category_slug %>/<%= f.topic_id %>-<%= f.slug %>" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;text-decoration:none;color:#2d2d2d;font-size:13px;transition:background 0.15s;">
-                        <span style="color:#6c757d;font-size:12px;flex-shrink:0;width:40px;"><%= f.type === 'topic' ? (lang === 'ru' ? 'Тема' : 'Topic') : (lang === 'ru' ? 'Ответ' : 'Reply') %></span>
+                    <a href="/discuss/<%= f.category_slug %>/<%= f.topic_id %>-<%= f.slug %>" style="display:flex;align-items:center;gap:var(--ss-space-2);padding:var(--ss-space-2) var(--ss-space-3);border:1px solid var(--ss-rule);border-radius:var(--ss-radius);text-decoration:none;color:var(--ss-text);font-size:var(--ss-fs-13);transition:background 0.15s;">
+                        <span style="color:var(--ss-text-secondary);font-size:var(--ss-fs-12);flex-shrink:0;width:40px;"><%= f.type === 'topic' ? (lang === 'ru' ? 'Тема' : 'Topic') : (lang === 'ru' ? 'Ответ' : 'Reply') %></span>
                         <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= f.title %></span>
                     </a>
                     <% }); %>
                 </div>
                 <% } else { %>
-                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет активности на форуме.' : 'No forum activity yet.' %></p>
+                <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);margin:0;"><%= lang === 'ru' ? 'Нет активности на форуме.' : 'No forum activity yet.' %></p>
                 <% } %>
             </div>
 
             <!-- Challenge Submissions -->
-            <div style="margin-bottom:20px;">
-                <h3 style="font-size:14px;font-weight:600;color:#1a1a2e;margin:0 0 8px;"><%= lang === 'ru' ? 'Участие в челленджах' : 'Challenge Submissions' %></h3>
+            <div style="margin-bottom:var(--ss-space-5);">
+                <h3 style="font-size:var(--ss-fs-14);font-weight:var(--ss-fw-strong);color:var(--ss-navy);margin:0 0 var(--ss-space-2);"><%= lang === 'ru' ? 'Участие в челленджах' : 'Challenge Submissions' %></h3>
                 <% if (challengeHistory && challengeHistory.length > 0) { %>
-                <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="display:flex;flex-direction:column;gap:var(--ss-space-2);">
                     <% challengeHistory.forEach(function(c) { %>
-                    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
+                    <div style="display:flex;align-items:center;gap:var(--ss-space-2);padding:var(--ss-space-2) var(--ss-space-3);border:1px solid var(--ss-rule);border-radius:var(--ss-radius);font-size:var(--ss-fs-13);">
                         <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= c.challenge_title %></span>
-                        <span style="flex-shrink:0;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;background:<%= c.status === 'reviewed' ? '#e8f8ef' : '#f0f0f0' %>;color:<%= c.status === 'reviewed' ? '#1e6b3a' : '#6c757d' %>;"><%= c.status %></span>
+                        <span style="flex-shrink:0;padding:2px var(--ss-space-2);border-radius:var(--ss-radius-sm);font-size:var(--ss-fs-12);font-weight:var(--ss-fw-regular);background:<%= c.status === 'reviewed' ? '#e8f8ef' : '#f0f0f0' %>;color:<%= c.status === 'reviewed' ? '#1e6b3a' : '#6c757d' %>;"><%= c.status %></span>
                         <% if (c.score !== null && c.score !== undefined) { %>
-                        <span style="font-weight:600;color:#1a1a2e;"><%= c.score %>/100</span>
+                        <span style="font-weight:var(--ss-fw-strong);color:var(--ss-navy);"><%= c.score %>/100</span>
                         <% } %>
                     </div>
                     <% }); %>
                 </div>
                 <% } else { %>
-                <p style="font-size:13px;color:#6c757d;margin:0;"><%= lang === 'ru' ? 'Нет участия в челленджах.' : 'No challenge submissions yet.' %></p>
+                <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);margin:0;"><%= lang === 'ru' ? 'Нет участия в челленджах.' : 'No challenge submissions yet.' %></p>
                 <% } %>
             </div>
 
             <!-- Quick Links -->
-            <div style="display:flex;gap:12px;flex-wrap:wrap;padding-top:8px;border-top:1px solid #dee2e6;">
-                <a href="/settings?tab=privacy" style="font-size:13px;color:#1a5276;text-decoration:none;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></a>
-                <a href="/notifications" style="font-size:13px;color:#1a5276;text-decoration:none;"><%= lang === 'ru' ? 'Все уведомления' : 'View All Notifications' %></a>
+            <div style="display:flex;gap:var(--ss-space-3);flex-wrap:wrap;padding-top:var(--ss-space-2);border-top:1px solid var(--ss-rule);">
+                <a href="/settings?tab=privacy" style="font-size:var(--ss-fs-13);color:var(--ss-link);text-decoration:none;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></a>
+                <a href="/notifications" style="font-size:var(--ss-fs-13);color:var(--ss-link);text-decoration:none;"><%= lang === 'ru' ? 'Все уведомления' : 'View All Notifications' %></a>
             </div>
         </section>
         <% } %>
@@ -2332,7 +2332,7 @@
                     const cell = document.createElement("article");
                     cell.className = "stat-tile";
                     cell.innerHTML = `
-                        <div class="stat-value" style="font-size:24px;">${Number(value || 0).toLocaleString()}</div>
+                        <div class="stat-value" style="font-size:var(--ss-fs-24);">${Number(value || 0).toLocaleString()}</div>
                         <div class="stat-label">${label}</div>
                     `;
                     grid.appendChild(cell);
@@ -2592,7 +2592,7 @@
                     <td>${row.solved}</td>
                     <td>${row.total}</td>
                     <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="display:flex;align-items:center;gap:var(--ss-space-2);">
                             <div class="progress-track"><div class="progress-fill" style="width:${Math.min(100, row.percentage)}%;"></div></div>
                             <span>${row.percentage.toFixed(1)}%</span>
                         </div>
@@ -2729,7 +2729,7 @@
                             <a class="contrib-author-link" href="/user/${authorUser}">${authorUser}</a>
                             <span class="contrib-title-wrap">
                                 <a class="contrib-title-link" href="${diffHref}">#${id}</a>
-                                <span class="contrib-sep" aria-hidden="true" style="color:#57606a;">\u00b7</span>
+                                <span class="contrib-sep" aria-hidden="true" style="color:var(--ss-text-secondary);">\u00b7</span>
                                 <a class="contrib-problem-link" href="${problemHref}">${pn}</a>
                                 <span class="contrib-lang">${lng}</span>
                             </span>
@@ -2761,7 +2761,7 @@
             if (data.hasNext) {
                 link.style.display = "inline";
             } else if (contribPage === 1 && (!data.rows || data.rows.length === 0)) {
-                document.getElementById("recent-list").innerHTML = `<div class="contrib-time" style="padding:4px 0;">${lang === "ru" ? "\u041d\u0435\u0442 \u043d\u0435\u0434\u0430\u0432\u043d\u0438\u0445 \u0432\u043a\u043b\u0430\u0434\u043e\u0432." : "No recent contributions."}</div>`;
+                document.getElementById("recent-list").innerHTML = `<div class="contrib-time" style="padding:var(--ss-space-1) 0;">${lang === "ru" ? "\u041d\u0435\u0442 \u043d\u0435\u0434\u0430\u0432\u043d\u0438\u0445 \u0432\u043a\u043b\u0430\u0434\u043e\u0432." : "No recent contributions."}</div>`;
                 link.style.display = "none";
             } else {
                 link.style.display = "none";

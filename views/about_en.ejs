@@ -8,43 +8,43 @@
         <style>
             /* css-latex/style.css sets body max-width: 80ch — breaks full-width .hero-section; unscoped a{} overrides nav links */
             body.about-page {
-                font-family: 'Roboto', sans-serif;
+                font-family: var(--ss-font-ui);
                 max-width: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                background-color: #f9f9f9;
-                color: #333;
+                background-color: var(--ss-surface-alt);
+                color: var(--ss-text);
             }
 
             .about-page-inner {
                 max-width: 1200px;
                 margin: 0 auto;
-                padding: 20px;
+                padding: var(--ss-space-5);
             }
 
             .about-page-inner h3 {
-                color: #333;
+                color: var(--ss-text);
                 margin-top: 1em;
             }
 
             .back-link {
                 display: inline-flex;
                 align-items: center;
-                gap: 5px;
+                gap: var(--ss-space-1);
                 text-decoration: none;
-                color: #36c;
+                color: var(--ss-link);
                 font-size: 0.95em;
                 font-weight: normal;
-                padding: 0.4rem 0.8rem;
+                padding: var(--ss-space-2) var(--ss-space-3);
                 background: #f2f4f8;
-                border-radius: 6px;
+                border-radius: var(--ss-radius);
                 border: 1px solid transparent;
                 transition: all 0.3s ease;
             }
 
             .back-link:hover {
                 background: #edf0f7;
-                border-color: #36c;
+                border-color: var(--ss-link);
                 transform: translateX(-1px);
                 text-decoration: none;
                 color: inherit;
@@ -59,7 +59,7 @@
             }
 
             .about-page-inner a {
-                color: #36c;
+                color: var(--ss-link);
                 text-decoration: none;
             }
 
@@ -73,11 +73,11 @@
             }
 
             .content_contributors li {
-                margin-bottom: 10px;
-                padding: 10px;
-                background: #fff;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                margin-bottom: var(--ss-space-3);
+                padding: var(--ss-space-3);
+                background: var(--ss-surface);
+                border-radius: var(--ss-radius-lg);
+                box-shadow: var(--ss-shadow);
             }
         </style>
     <script src="/js/analytics.js"></script>

@@ -54,7 +54,7 @@
 
   <main class="flex-grow-1">
     <div class="fb-board">
-      <p style="margin-bottom: 0.9rem;">
+      <p style="margin-bottom: var(--ss-space-4);">
         <a class="fb-back" href="/<%= pageLang %>/feedback">&larr; <%= ru ? 'Все предложения' : 'All suggestions' %></a>
       </p>
 
@@ -64,7 +64,7 @@
       %>
       <article class="<%= solved ? 'is-resolved' : '' %>" style="<%= solved ? 'border-left:3px solid #27ae60; padding-left:1rem; margin-left:-1rem;' : '' %>">
         <% if (solved) { %>
-          <p class="fb-solved" style="font-size:13px; padding:0.3rem 0.8rem 0.3rem 0.45rem;">
+          <p class="fb-solved" style="font-size:var(--ss-fs-13); padding:var(--ss-space-1) var(--ss-space-3) var(--ss-space-1) var(--ss-space-2);">
             <%- CHECK %>
             <span><%= copy.resolvedTitle %></span>
             <% if (item.resolved_at) { %><span class="fb-solved-when"><%= ago(item.resolved_at) %></span><% } %>
@@ -85,7 +85,7 @@
           <% } %>
         </p>
 
-        <h1 class="fb-item-title" style="font-size: 1.35rem; margin-bottom: 0.6rem;">
+        <h1 class="fb-item-title" style="font-size: var(--ss-fs-20); margin-bottom: var(--ss-space-2);">
           <%= item.public_title || (ru ? 'Ваше сообщение' : 'Your message') %>
         </h1>
 
@@ -115,12 +115,12 @@
         </div>
 
         <% if (item.public_reply && solved) { %>
-          <div class="fb-resolution" style="margin-top: 1.1rem;">
+          <div class="fb-resolution" style="margin-top: var(--ss-space-4);">
             <div class="fb-resolution-head"><%- CHECK %><span><%= copy.resolutionLabel %></span></div>
             <div class="fb-resolution-body" style="white-space: pre-wrap;"><%= item.public_reply %></div>
           </div>
         <% } else if (item.public_reply) { %>
-          <div class="fb-reply" style="margin-top: 1.1rem;">
+          <div class="fb-reply" style="margin-top: var(--ss-space-4);">
             <div class="fb-reply-head">
               <span class="fb-reply-who">astrosander</span>
               <span class="fb-reply-tag"><%= ru ? 'автор сайта' : 'maintainer' %></span>

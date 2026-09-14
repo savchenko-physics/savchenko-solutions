@@ -25,7 +25,7 @@
         * { box-sizing: border-box; }
         body {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            font-family: var(--ss-font-ui);
             background: var(--bg);
             color: var(--text-primary);
             line-height: 1.5;
@@ -33,12 +33,12 @@
         a { color: var(--text-secondary); transition: color 150ms ease, opacity 150ms ease; }
         a:hover { color: var(--heading); }
 
-        .settings-page { min-height: 100vh; padding-bottom: 3rem; }
+        .settings-page { min-height: 100vh; padding-bottom: var(--ss-space-9); }
         .settings-topbar {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 16px 20px;
+            gap: var(--ss-space-3);
+            padding: var(--ss-space-4) var(--ss-space-5);
             border-bottom: 1px solid var(--border);
             max-width: 920px;
             margin: 0 auto;
@@ -51,14 +51,14 @@
             height: 36px;
             color: var(--heading);
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             transition: background 150ms ease;
         }
         .settings-back:hover { background: #f4f4f4; color: var(--heading); }
         .settings-topbar h1 {
             margin: 0;
-            font-size: 20px;
-            font-weight: 600;
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
             color: var(--heading);
         }
 
@@ -66,8 +66,8 @@
             display: flex;
             max-width: 920px;
             margin: 0 auto;
-            padding: 24px 20px 0;
-            gap: 32px;
+            padding: var(--ss-space-6) var(--ss-space-5) 0;
+            gap: var(--ss-space-7);
             align-items: flex-start;
         }
         .settings-sidebar {
@@ -78,12 +78,12 @@
             display: block;
             width: 100%;
             text-align: left;
-            padding: 10px 12px;
-            margin-bottom: 4px;
+            padding: var(--ss-space-3) var(--ss-space-3);
+            margin-bottom: var(--ss-space-1);
             border: none;
             border-left: 4px solid transparent;
             background: none;
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
             color: var(--text-secondary);
             cursor: pointer;
             transition: color 150ms ease, border-color 150ms ease, font-weight 150ms ease;
@@ -92,7 +92,7 @@
         .settings-nav-btn:hover { color: var(--heading); }
         .settings-nav-btn.is-active {
             color: var(--heading);
-            font-weight: 700;
+            font-weight: var(--ss-fw-strong);
             border-left-color: var(--heading);
         }
 
@@ -102,47 +102,47 @@
         .tab-panel.is-active { display: block; }
 
         .alert {
-            padding: 12px 14px;
-            margin-bottom: 20px;
-            border-radius: 6px;
-            font-size: 14px;
+            padding: var(--ss-space-3) var(--ss-space-4);
+            margin-bottom: var(--ss-space-5);
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-14);
         }
-        .alert-success { background: #e8f8ef; color: #1e6b3a; border: 1px solid #b8e6c8; }
-        .alert-error { background: #fdecea; color: #8b2e22; border: 1px solid #f5c4c0; }
+        .alert-success { background: var(--ss-success-soft); color: var(--ss-success-strong); border: 1px solid #b8e6c8; }
+        .alert-error { background: var(--ss-error-soft); color: var(--ss-error); border: 1px solid #f5c4c0; }
 
         .section-heading {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             color: var(--heading);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin: 32px 0 16px;
+            margin: var(--ss-space-7) 0 var(--ss-space-4);
         }
         .section-heading:first-child { margin-top: 0; }
 
-        .field { margin-bottom: 16px; }
+        .field { margin-bottom: var(--ss-space-4); }
         .field-label {
             display: block;
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             color: var(--text-secondary);
-            margin-bottom: 6px;
+            margin-bottom: var(--ss-space-2);
         }
-        .field-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-        .field-error { font-size: 12px; color: var(--error); margin-top: 6px; display: none; }
+        .field-hint { font-size: var(--ss-fs-12); color: var(--text-muted); margin-top: var(--ss-space-2); }
+        .field-error { font-size: var(--ss-fs-12); color: var(--error); margin-top: var(--ss-space-2); display: none; }
         .field-error.is-visible { display: block; }
 
         .input, .textarea, .select {
             width: 100%;
             height: 40px;
-            padding: 0 12px;
+            padding: 0 var(--ss-space-3);
             border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-14);
             color: var(--text-primary);
             font-family: inherit;
             transition: border-color 150ms ease, box-shadow 150ms ease;
         }
-        .textarea { height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+        .textarea { height: auto; min-height: 96px; padding: var(--ss-space-3) var(--ss-space-3); resize: vertical; }
         .input:focus, .textarea:focus, .select:focus {
             outline: none;
             border-color: var(--focus);
@@ -151,26 +151,26 @@
         .input.input-invalid, .textarea.input-invalid { border-color: var(--error); }
 
         .input-with-icon { position: relative; }
-        .input-with-icon .input { padding-left: 40px; padding-right: 40px; }
+        .input-with-icon .input { padding-left: var(--ss-space-8); padding-right: var(--ss-space-8); }
         .input-with-icon .icon-left {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            font-size: 16px; color: var(--text-muted); pointer-events: none;
+            font-size: var(--ss-fs-16); color: var(--text-muted); pointer-events: none;
         }
         .pw-toggle {
             position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
             background: none; border: none; color: var(--text-muted); cursor: pointer;
-            padding: 4px; font-size: 16px;
+            padding: var(--ss-space-1); font-size: var(--ss-fs-16);
         }
-        .pw-toggle:focus { outline: none; box-shadow: 0 0 0 2px var(--focus); border-radius: 4px; }
+        .pw-toggle:focus { outline: none; box-shadow: 0 0 0 2px var(--focus); border-radius: var(--ss-radius-sm); }
 
         .bio-wrap { position: relative; }
         .bio-counter {
             position: absolute; bottom: 8px; right: 10px;
-            font-size: 12px; color: var(--text-muted);
+            font-size: var(--ss-fs-12); color: var(--text-muted);
             pointer-events: none;
         }
 
-        .avatar-block { text-align: center; margin-bottom: 24px; }
+        .avatar-block { text-align: center; margin-bottom: var(--ss-space-6); }
         .avatar-wrap {
             position: relative;
             width: 96px; height: 96px;
@@ -186,22 +186,22 @@
         .avatar-overlay {
             position: absolute; inset: 0;
             background: rgba(0,0,0,0.55);
-            color: #fff;
+            color: var(--ss-on-navy);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            font-weight: 500;
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-regular);
             opacity: 0;
             transition: opacity 150ms ease;
         }
         .avatar-wrap:hover .avatar-overlay { opacity: 1; }
-        .avatar-overlay i { font-size: 20px; margin-bottom: 4px; }
+        .avatar-overlay i { font-size: var(--ss-fs-20); margin-bottom: var(--ss-space-1); }
         .remove-photo {
             display: inline-block;
-            margin-top: 4px;
-            font-size: 13px;
+            margin-top: var(--ss-space-1);
+            font-size: var(--ss-fs-13);
             color: var(--text-secondary);
             background: none; border: none; cursor: pointer;
             font-family: inherit;
@@ -210,20 +210,20 @@
         }
         .remove-photo:hover { color: var(--heading); }
 
-        .username-status { font-size: 12px; margin-top: 6px; min-height: 18px; }
+        .username-status { font-size: var(--ss-fs-12); margin-top: var(--ss-space-2); min-height: 18px; }
         .username-status.ok { color: var(--success); }
         .username-status.bad { color: var(--error); }
 
         .btn-primary {
             width: 100%;
             height: 44px;
-            margin-top: 8px;
+            margin-top: var(--ss-space-2);
             border: none;
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             background: var(--btn);
-            color: #fff;
-            font-size: 14px;
-            font-weight: 500;
+            color: var(--ss-on-navy);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             font-family: inherit;
             cursor: pointer;
             transition: background 150ms ease, color 150ms ease;
@@ -235,20 +235,20 @@
             cursor: not-allowed;
         }
         /* The button is still disabled while "Saved" shows, and :disabled's #999 was 1.0:1 on green. */
-        .btn-primary.flash-success { background: var(--success); color: #fff; }
+        .btn-primary.flash-success { background: var(--success); color: var(--ss-on-navy); }
 
         .toggle-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 24px;
+            gap: var(--ss-space-4);
+            margin-bottom: var(--ss-space-6);
         }
         .toggle-text {
             flex: 1;
         }
-        .toggle-text strong { display: block; font-size: 14px; color: var(--text-primary); font-weight: 500; }
-        .toggle-text span { font-size: 12px; color: var(--text-muted); }
+        .toggle-text strong { display: block; font-size: var(--ss-fs-14); color: var(--text-primary); font-weight: var(--ss-fw-regular); }
+        .toggle-text span { font-size: var(--ss-fs-12); color: var(--text-muted); }
 
         .toggle {
             position: relative;
@@ -278,9 +278,9 @@
             left: 2px;
             width: 20px;
             height: 20px;
-            background: #fff;
+            background: var(--ss-surface);
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: var(--ss-shadow);
             transition: transform 150ms ease;
             z-index: 2;
             pointer-events: none;
@@ -293,7 +293,7 @@
 
         .danger-link {
             color: var(--error);
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
             background: none;
             border: none;
             cursor: pointer;
@@ -310,38 +310,38 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: var(--ss-space-4);
         }
         .modal-backdrop.is-open { display: flex; }
         .modal-box {
-            background: #fff;
+            background: var(--ss-surface);
             max-width: 400px;
             width: 100%;
-            padding: 24px;
-            border-radius: 6px;
+            padding: var(--ss-space-6);
+            border-radius: var(--ss-radius);
             border: 1px solid var(--border);
         }
-        .modal-box h2 { margin: 0 0 12px; font-size: 18px; color: var(--heading); }
-        .modal-box p { margin: 0 0 16px; font-size: 14px; color: var(--text-secondary); }
-        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px; }
+        .modal-box h2 { margin: 0 0 var(--ss-space-3); font-size: var(--ss-fs-18); color: var(--heading); }
+        .modal-box p { margin: 0 0 var(--ss-space-4); font-size: var(--ss-fs-14); color: var(--text-secondary); }
+        .modal-actions { display: flex; gap: var(--ss-space-3); justify-content: flex-end; margin-top: var(--ss-space-4); }
         .btn-secondary {
-            padding: 8px 16px;
+            padding: var(--ss-space-2) var(--ss-space-4);
             border: 1px solid var(--border);
-            background: #fff;
-            border-radius: 6px;
+            background: var(--ss-surface);
+            border-radius: var(--ss-radius);
             cursor: pointer;
             font-family: inherit;
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
         .btn-danger {
-            padding: 8px 16px;
+            padding: var(--ss-space-2) var(--ss-space-4);
             border: none;
             background: var(--error);
-            color: #fff;
-            border-radius: 6px;
+            color: var(--ss-on-navy);
+            border-radius: var(--ss-radius);
             cursor: pointer;
             font-family: inherit;
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
 
         @media (max-width: 768px) {
@@ -350,7 +350,7 @@
                 width: 100%;
                 display: flex;
                 flex-wrap: wrap;
-                gap: 4px;
+                gap: var(--ss-space-1);
             }
             .settings-nav-btn {
                 flex: 1 1 auto;
@@ -425,9 +425,9 @@
                         <div class="field">
                             <label class="field-label" for="emailDisplay">
                                 <%= __('settings.profile.email') %>
-                                <i class="fas fa-lock" style="font-size:12px;color:var(--text-muted);" aria-hidden="true"></i>
+                                <i class="fas fa-lock" style="font-size:var(--ss-fs-12);color:var(--text-muted);" aria-hidden="true"></i>
                             </label>
-                            <input class="input" type="email" id="emailDisplay" value="<%= email || '' %>" readonly disabled style="background:#f8f9fa;color:var(--text-secondary);">
+                            <input class="input" type="email" id="emailDisplay" value="<%= email || '' %>" readonly disabled style="background:var(--ss-surface-alt);color:var(--text-secondary);">
                             <p class="field-hint"><%= __('settings.profile.emailPrivate') %></p>
                         </div>
 
@@ -489,25 +489,25 @@
                     </form>
 
                     <h2 class="section-heading"><%= lang === 'ru' ? 'Резюме (CV)' : 'CV' %></h2>
-                    <p style="font-size:14px;color:var(--text-secondary);margin:0 0 12px;">
+                    <p style="font-size:var(--ss-fs-14);color:var(--text-secondary);margin:0 0 var(--ss-space-3);">
                         <%= lang === 'ru'
                             ? 'PDF до 5 МБ. Появится на вашей странице участника рядом со ссылками — рядом с записью о том, что вы здесь сделали.'
                             : 'PDF, up to 5 MB. It appears on your contributor page beside your links — next to the record of what you have done here.' %>
                     </p>
                     <% if (typeof cvUrl !== 'undefined' && cvUrl) { %>
-                        <p style="font-size:14px;margin:0 0 12px;">
+                        <p style="font-size:var(--ss-fs-14);margin:0 0 var(--ss-space-3);">
                             <a href="<%= cvUrl %>" target="_blank" rel="noopener"><%= lang === 'ru' ? 'Открыть загруженное резюме' : 'Open your uploaded CV' %></a>
                         </p>
                     <% } %>
                     <form action="/<%= lang %>/settings/cv" method="POST" enctype="multipart/form-data"
-                          style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:8px;">
+                          style="display:flex;flex-wrap:wrap;align-items:center;gap:var(--ss-space-3);margin-bottom:var(--ss-space-2);">
                         <input type="file" name="cv" accept="application/pdf,.pdf" required
-                               style="font-size:14px;max-width:100%;">
+                               style="font-size:var(--ss-fs-16);max-width:100%;">
                         <button type="submit" class="btn-primary"><%= lang === 'ru' ? 'Загрузить' : 'Upload' %></button>
                     </form>
                     <% if (typeof cvUrl !== 'undefined' && cvUrl) { %>
                         <form action="/<%= lang %>/settings/cv/delete" method="POST">
-                            <button type="submit" class="btn-secondary" style="font-size:13px;"><%= lang === 'ru' ? 'Удалить резюме' : 'Remove CV' %></button>
+                            <button type="submit" class="btn-secondary" style="font-size:var(--ss-fs-13);"><%= lang === 'ru' ? 'Удалить резюме' : 'Remove CV' %></button>
                         </form>
                     <% } %>
                 </div>
@@ -515,7 +515,7 @@
                 <!-- Account -->
                 <div id="panel-account" class="tab-panel">
                     <h2 class="section-heading" style="margin-top:0;"><%= __('settings.account.title') %></h2>
-                    <p style="font-size:14px;color:var(--text-secondary);margin:0 0 16px;"><%= __('settings.account.currentEmail') %>: <strong style="color:var(--text-primary);"><%= email || '' %></strong></p>
+                    <p style="font-size:var(--ss-fs-14);color:var(--text-secondary);margin:0 0 var(--ss-space-4);"><%= __('settings.account.currentEmail') %>: <strong style="color:var(--text-primary);"><%= email || '' %></strong></p>
 
                     <form action="/<%= lang %>/settings/account/email" method="POST" autocomplete="off">
                         <div class="field">
@@ -525,11 +525,11 @@
                         <div class="field">
                             <label class="field-label" for="currentPasswordEmail"><%= __('settings.account.passwordForEmail') %></label>
                             <div class="input-with-icon">
-                                <input class="input" type="password" id="currentPasswordEmail" name="currentPassword" required style="padding-right:40px;">
+                                <input class="input" type="password" id="currentPasswordEmail" name="currentPassword" required style="padding-right:var(--ss-space-8);">
                                 <button type="button" class="pw-toggle" data-target="currentPasswordEmail" aria-label="show password"><i class="far fa-eye"></i></button>
                             </div>
                         </div>
-                        <button type="submit" class="btn-primary" style="margin-top:16px;"><%= __('settings.account.requestChange') %></button>
+                        <button type="submit" class="btn-primary" style="margin-top:var(--ss-space-4);"><%= __('settings.account.requestChange') %></button>
                     </form>
 
                     <h2 class="section-heading"><%= __('settings.account.deleteTitle') %></h2>
@@ -585,7 +585,7 @@
                             </label>
                         </div>
 
-                        <h2 class="section-heading" style="margin-top:32px;"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></h2>
+                        <h2 class="section-heading" style="margin-top:var(--ss-space-7);"><%= lang === 'ru' ? 'Настройки уведомлений' : 'Notification Preferences' %></h2>
 
                         <% const ns = typeof notificationSettings !== 'undefined' ? notificationSettings : {}; %>
 
@@ -683,14 +683,14 @@
                         <div class="field">
                             <label class="field-label" for="currentPassword"><%= __('settings.password.current') %></label>
                             <div class="input-with-icon">
-                                <input class="input" type="password" id="currentPassword" name="currentPassword" required style="padding-right:40px;">
+                                <input class="input" type="password" id="currentPassword" name="currentPassword" required style="padding-right:var(--ss-space-8);">
                                 <button type="button" class="pw-toggle" data-target="currentPassword" aria-label="show password"><i class="far fa-eye"></i></button>
                             </div>
                         </div>
                         <div class="field">
                             <label class="field-label" for="newPassword"><%= __('settings.password.new') %></label>
                             <div class="input-with-icon">
-                                <input class="input" type="password" id="newPassword" name="newPassword" required minlength="8" style="padding-right:40px;">
+                                <input class="input" type="password" id="newPassword" name="newPassword" required minlength="8" style="padding-right:var(--ss-space-8);">
                                 <button type="button" class="pw-toggle" data-target="newPassword" aria-label="show password"><i class="far fa-eye"></i></button>
                             </div>
                             <p class="field-hint"><%= __('settings.password.requirements') %></p>
@@ -698,7 +698,7 @@
                         <div class="field">
                             <label class="field-label" for="confirmPassword"><%= __('settings.password.confirm') %></label>
                             <div class="input-with-icon">
-                                <input class="input" type="password" id="confirmPassword" name="confirmPassword" required minlength="8" style="padding-right:40px;">
+                                <input class="input" type="password" id="confirmPassword" name="confirmPassword" required minlength="8" style="padding-right:var(--ss-space-8);">
                                 <button type="button" class="pw-toggle" data-target="confirmPassword" aria-label="show password"><i class="far fa-eye"></i></button>
                             </div>
                         </div>

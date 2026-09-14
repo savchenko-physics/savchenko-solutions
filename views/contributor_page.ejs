@@ -25,40 +25,40 @@
 <style>
   :root { --text:#2d2d2d; --muted:#6c757d; --border:#dee2e6; --link:#1a5276; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--ss-font-ui);
     color: var(--text); line-height: 1.6; margin: 0;
-    background: #fff;
+    background: var(--ss-surface);
   }
-  .cp-wrap { max-width: 46rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-  .cp-back { font-size: .8125rem; color: var(--muted); text-decoration: none; }
+  .cp-wrap { max-width: 46rem; margin: 0 auto; padding: var(--ss-space-7) var(--ss-space-5) var(--ss-space-10); }
+  .cp-back { font-size: var(--ss-fs-13); color: var(--muted); text-decoration: none; }
   .cp-back:hover { text-decoration: underline; }
-  .cp-head { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0 .25rem; }
+  .cp-head { display: flex; align-items: center; gap: var(--ss-space-4); margin: var(--ss-space-6) 0 var(--ss-space-1); }
   .cp-avatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
-  h1 { font-family: Inter, sans-serif; font-weight: 600; font-size: 1.75rem; margin: 0; line-height: 1.2; }
-  .cp-handle { color: var(--muted); font-size: .9375rem; }
-  .cp-lede { font-size: 1.0625rem; margin: 1rem 0 2rem; }
-  .cp-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem 1.5rem; margin-bottom: 2rem; }
+  h1 { font-family: var(--ss-font-ui); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-28); margin: 0; line-height: 1.2; }
+  .cp-handle { color: var(--muted); font-size: var(--ss-fs-16); }
+  .cp-lede { font-size: var(--ss-fs-16); margin: var(--ss-space-4) 0 var(--ss-space-7); }
+  .cp-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--ss-space-4) var(--ss-space-6); margin-bottom: var(--ss-space-7); }
   @media (min-width: 640px) { .cp-stats { grid-template-columns: repeat(4, 1fr); } }
-  .cp-stat-value { font-family: Inter, sans-serif; font-size: 1.75rem; font-weight: 600; line-height: 1.1; display: block; }
-  .cp-stat-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
-  h2 { font-family: Inter, sans-serif; font-weight: 600; font-size: 1rem; margin: 2rem 0 .75rem; }
-  .cp-note { font-size: .8125rem; color: var(--muted); margin-top: -.5rem; margin-bottom: .75rem; }
-  table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
-  th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--border); }
-  th { font-size: .75rem; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); font-weight: 600; }
+  .cp-stat-value { font-family: var(--ss-font-ui); font-size: var(--ss-fs-28); font-weight: var(--ss-fw-strong); line-height: 1.1; display: block; }
+  .cp-stat-label { font-size: var(--ss-fs-12); text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+  h2 { font-family: var(--ss-font-ui); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-16); margin: var(--ss-space-7) 0 var(--ss-space-3); }
+  .cp-note { font-size: var(--ss-fs-13); color: var(--muted); margin-top: calc(-1 * var(--ss-space-2)); margin-bottom: var(--ss-space-3); }
+  table { width: 100%; border-collapse: collapse; font-size: var(--ss-fs-14); }
+  th, td { text-align: left; padding: var(--ss-space-2) var(--ss-space-2); border-bottom: 1px solid var(--border); }
+  th { font-size: var(--ss-fs-12); text-transform: uppercase; letter-spacing: .02em; color: var(--muted); font-weight: var(--ss-fw-strong); }
   td.num, th.num { text-align: right; }
-  .cp-problems { display: flex; flex-wrap: wrap; gap: 4px; }
+  .cp-problems { display: flex; flex-wrap: wrap; gap: var(--ss-space-1); }
   .cp-problems a {
-    display: inline-block; padding: 2px 6px; font-size: 12px; border-radius: 4px;
+    display: inline-block; padding: 2px var(--ss-space-2); font-size: var(--ss-fs-12); border-radius: var(--ss-radius-sm);
     border: 1px solid var(--border); color: var(--text); text-decoration: none;
   }
-  .cp-problems a:hover { border-color: #1a1a2e; background: #f8f9fa; }
-  .cp-foot { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: .8125rem; color: var(--muted); }
+  .cp-problems a:hover { border-color: var(--ss-navy); background: var(--ss-surface-alt); }
+  .cp-foot { margin-top: var(--ss-space-8); padding-top: var(--ss-space-4); border-top: 1px solid var(--border); font-size: var(--ss-fs-13); color: var(--muted); }
   .cp-foot a { color: var(--link); }
   @media print {
     .cp-back { display: none; }
     body { font-size: 11pt; }
-    .cp-problems a { border: none; padding: 0 4px 0 0; }
+    .cp-problems a { border: none; padding: 0 var(--ss-space-1) 0 0; }
   }
 </style>
 

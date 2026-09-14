@@ -46,54 +46,54 @@
         body {
             margin: 0;
             color: var(--sv-text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: var(--ss-font-ui);
             background: var(--sv-bg);
         }
 
         .contributors-page {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px 16px 32px;
+            padding: var(--ss-space-5) var(--ss-space-4) var(--ss-space-7);
         }
 
         .page-title {
-            font-size: 28px;
-            font-weight: 600;
+            font-size: var(--ss-fs-28);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-primary);
             margin: 0;
         }
 
         .page-subtitle {
-            margin: 8px 0 24px;
+            margin: var(--ss-space-2) 0 var(--ss-space-6);
             color: var(--sv-secondary);
-            font-size: 15px;
+            font-size: var(--ss-fs-16);
         }
 
         .stats-row {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 18px;
+            gap: var(--ss-space-3);
+            margin-bottom: var(--ss-space-5);
         }
 
         .stat-tile {
             border: 1px solid var(--sv-border);
             background: var(--sv-bg);
-            border-radius: 8px;
-            padding: 14px;
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-4);
             text-align: center;
         }
 
         .stat-value {
-            font-size: 32px;
-            font-weight: 700;
+            font-size: var(--ss-fs-32);
+            font-weight: var(--ss-fw-strong);
             color: var(--sv-primary);
             line-height: 1.1;
         }
 
         .stat-label {
-            margin-top: 6px;
-            font-size: 13px;
+            margin-top: var(--ss-space-2);
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
@@ -112,8 +112,8 @@
         .contrib-list-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 4px 0;
+            gap: var(--ss-space-3);
+            padding: var(--ss-space-1) 0;
         }
 
         .contrib-list-item img {
@@ -126,8 +126,8 @@
         .contrib-list-item a {
             color: var(--sv-primary);
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-regular);
         }
 
         .contrib-list-item a:hover {
@@ -135,7 +135,7 @@
         }
 
         .contrib-list-meta {
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
             color: var(--sv-secondary);
             margin-left: auto;
         }
@@ -143,28 +143,28 @@
         .card {
             border: 1px solid var(--sv-border);
             background: var(--sv-bg);
-            border-radius: 8px;
-            padding: 14px;
-            margin-bottom: 18px;
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-4);
+            margin-bottom: var(--ss-space-5);
         }
 
         .section-title {
-            margin: 0 0 12px;
+            margin: 0 0 var(--ss-space-3);
             color: var(--sv-primary);
-            font-size: 17px;
-            font-weight: 600;
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
         }
 
-        .online-now-count { font-size: 13px; font-weight: 600; color: #27ae60; }
-        .online-now-list { display: flex; flex-wrap: wrap; gap: 10px; }
+        .online-now-count { font-size: var(--ss-fs-13); font-weight: var(--ss-fw-strong); color: var(--ss-success-strong); }
+        .online-now-list { display: flex; flex-wrap: wrap; gap: var(--ss-space-3); }
         .online-now-item { position: relative; display: inline-block; width: 40px; height: 40px; }
         .online-now-item img {
             width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
-            border: 1px solid #dee2e6; background: #fff;
+            border: 1px solid var(--ss-rule); background: var(--ss-surface);
         }
         .online-now-item .online-dot {
             position: absolute; right: -1px; bottom: -1px; width: 11px; height: 11px;
-            border-radius: 50%; background: #27ae60; border: 2px solid #fff;
+            border-radius: 50%; background: var(--ss-success); border: 2px solid #fff;
         }
         /* Recency, not status: green is the five-minute window, amber the hour, red the
            day. Someone who read a solution this morning is not "away" or "busy" — the
@@ -177,23 +177,23 @@
            was the first attempt and left the legend's own swatches green, since those live
            somewhere else. */
         .online-dot--recent.online-dot--recent { background: #d68910; }
-        .online-dot--today.online-dot--today   { background: #c0392b; }
+        .online-dot--today.online-dot--today   { background: var(--ss-error); }
         .online-now-item--recent img { opacity: 0.82; }
         .online-now-item--today img  { opacity: 0.62; }
         .online-now-legend {
-            display: flex; flex-wrap: wrap; gap: 4px 14px;
-            margin: -2px 0 10px; font-size: 12.5px; color: #6c757d;
+            display: flex; flex-wrap: wrap; gap: var(--ss-space-1) var(--ss-space-4);
+            margin: -2px 0 var(--ss-space-3); font-size: var(--ss-fs-13); color: var(--ss-text-secondary);
         }
-        .online-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+        .online-legend-item { display: inline-flex; align-items: center; gap: var(--ss-space-1); }
         .online-now-legend .online-dot {
             position: static; width: 8px; height: 8px; border-width: 0; flex: none;
         }
-        .online-now-empty { font-size: 13px; color: #6c757d; margin: 0; }
+        .online-now-empty { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: 0; }
 
         /* ── Geographic distribution: interactive 3D globe ── */
         .geo-globe-wrap {
             position: relative;
-            border-radius: 10px;
+            border-radius: var(--ss-radius-lg);
             overflow: hidden;
             background: #f8f9fa;
             border: 1px solid #eef1f4;
@@ -225,19 +225,19 @@
             left: 0; right: 0; bottom: 12px;
             text-align: center;
             color: #6c757d;
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             letter-spacing: 0.02em;
             pointer-events: none;
         }
-        .geo-caption strong { color: #1a1a2e; font-weight: 600; }
+        .geo-caption strong { color: #1a1a2e; font-weight: var(--ss-fw-strong); }
         .geo-legend {
             position: absolute; top: 12px; left: 14px;
-            display: flex; align-items: center; gap: 7px;
-            color: #6c757d; font-size: 11px;
+            display: flex; align-items: center; gap: var(--ss-space-2);
+            color: #6c757d; font-size: var(--ss-fs-12);
             pointer-events: none;
         }
         .geo-legend .bar {
-            width: 84px; height: 7px; border-radius: 4px;
+            width: 84px; height: 7px; border-radius: var(--ss-radius-sm);
             background: linear-gradient(90deg, #d2e3fc, #1a3f8f);
         }
         @media (prefers-reduced-motion: reduce) {
@@ -250,10 +250,10 @@
             pointer-events: none;
             background: var(--sv-bg);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
-            padding: 6px 8px;
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-2) var(--ss-space-2);
             color: var(--sv-text);
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
             opacity: 0;
             transition: opacity 120ms linear;
         }
@@ -267,12 +267,12 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: var(--ss-space-2);
+            margin-bottom: var(--ss-space-3);
         }
 
         .filter-label {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
@@ -280,23 +280,23 @@
             height: 40px;
             min-width: 220px;
             max-width: 100%;
-            padding: 0 10px;
+            padding: 0 var(--ss-space-3);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             background: var(--sv-bg);
             color: var(--sv-text);
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
             font-family: inherit;
         }
 
         .filter-clear {
             height: 40px;
-            padding: 0 12px;
+            padding: 0 var(--ss-space-3);
             border: 1px solid var(--sv-border);
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             background: var(--sv-bg);
             color: var(--sv-link, #1a5276);
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             font-family: inherit;
             cursor: pointer;
         }
@@ -306,22 +306,22 @@
         }
 
         .filter-count {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
         }
 
         .leaderboard-empty {
-            padding: 18px 8px;
-            font-size: 14px;
+            padding: var(--ss-space-5) var(--ss-space-2);
+            font-size: var(--ss-fs-14);
             color: var(--sv-secondary);
         }
 
         .leaderboard-table thead th {
-            font-size: 13px;
+            font-size: var(--ss-fs-13);
             color: var(--sv-secondary);
             text-align: left;
             border-bottom: 1px solid var(--sv-border);
-            padding: 10px 8px;
+            padding: var(--ss-space-3) var(--ss-space-2);
             cursor: pointer;
             user-select: none;
             white-space: nowrap;
@@ -329,8 +329,8 @@
 
         .leaderboard-table tbody td {
             border-bottom: 1px solid var(--sv-border);
-            padding: 9px 8px;
-            font-size: 14px;
+            padding: var(--ss-space-2) var(--ss-space-2);
+            font-size: var(--ss-fs-14);
             vertical-align: middle;
         }
 
@@ -347,13 +347,13 @@
         }
 
         .top-rank {
-            font-weight: 700;
+            font-weight: var(--ss-fw-strong);
         }
 
         .contributor-cell {
             display: flex;
             align-items: center;
-            gap: 9px;
+            gap: var(--ss-space-2);
             min-width: 220px;
         }
 
@@ -363,7 +363,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--sv-border);
-            background: #fff;
+            background: var(--ss-surface);
         }
 
         .avatar-presence { position: relative; display: inline-flex; flex-shrink: 0; }
@@ -374,7 +374,7 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #27ae60;
+            background: var(--ss-success);
             border: 2px solid #fff;
             box-sizing: content-box;
             pointer-events: none;
@@ -387,34 +387,34 @@
 
         .contributor-name {
             color: var(--sv-text);
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
 
         .contributor-username {
             color: var(--sv-secondary);
-            font-size: 12px;
+            font-size: var(--ss-fs-12);
         }
 
         .contributor-badge {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
             margin-top: 1px;
         }
 
         .pagination-row {
-            margin-top: 12px;
+            margin-top: var(--ss-space-3);
             display: flex;
             justify-content: space-between;
-            gap: 8px;
+            gap: var(--ss-space-2);
         }
 
         .btn-nav {
             border: 1px solid var(--sv-border);
             background: var(--sv-bg);
             color: var(--sv-primary);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 13px;
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-2) var(--ss-space-3);
+            font-size: var(--ss-fs-13);
         }
 
         .btn-nav:disabled {
@@ -423,18 +423,18 @@
         }
 
         .heatmap-summary-row {
-            margin-bottom: 12px;
+            margin-bottom: var(--ss-space-3);
         }
 
         .heatmap-summary {
             margin: 0;
-            font-size: 16px;
+            font-size: var(--ss-fs-16);
             line-height: 1.35;
             color: var(--sv-primary);
         }
 
         .heatmap-summary strong {
-            font-weight: 600;
+            font-weight: var(--ss-fw-strong);
             font-variant-numeric: tabular-nums;
         }
 
@@ -442,7 +442,7 @@
             display: flex;
             flex-direction: row;
             align-items: flex-start;
-            gap: 12px;
+            gap: var(--ss-space-3);
         }
 
         .heatmap-graph-row .heatmap-graph-border {
@@ -455,7 +455,7 @@
             flex-direction: column;
             align-items: stretch;
             justify-content: flex-start;
-            gap: 8px;
+            gap: var(--ss-space-2);
             list-style: none;
             margin: 0;
             padding: 0;
@@ -468,9 +468,9 @@
         .heatmap-year-nav button {
             border: 1px solid #d0d7de;
             background: #f6f8fa;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 14px;
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            font-size: var(--ss-fs-14);
             color: #24292f;
             cursor: pointer;
             line-height: 1.3;
@@ -491,26 +491,26 @@
 
         .heatmap-graph-border {
             border: 1px solid #d0d7de;
-            border-radius: 6px;
-            padding: 10px 8px 8px;
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-3) var(--ss-space-2) var(--ss-space-2);
             background: #fff;
         }
 
         .heatmap-shell {
             overflow-x: auto;
-            padding-bottom: 8px;
+            padding-bottom: var(--ss-space-2);
         }
 
         .heatmap-wrap {
             display: flex;
-            gap: 8px;
+            gap: var(--ss-space-2);
         }
 
         .heatmap-y {
             width: 30px;
             color: var(--sv-secondary);
-            font-size: 11px;
-            padding-top: 18px;
+            font-size: var(--ss-fs-12);
+            padding-top: var(--ss-space-5);
         }
 
         .heatmap-y div {
@@ -530,7 +530,7 @@
             height: 16px;
             margin-bottom: 2px;
             color: var(--sv-secondary);
-            font-size: 10px;
+            font-size: var(--ss-fs-12);
         }
 
         .heatmap-grid {
@@ -542,7 +542,7 @@
 
         .heat-cell {
             aspect-ratio: 1;
-            border-radius: 2px;
+            border-radius: var(--ss-radius-sm);
             background: var(--sv-heat-0);
             cursor: default;
         }
@@ -552,23 +552,23 @@
             align-items: center;
             justify-content: flex-end;
             flex-wrap: wrap;
-            gap: 4px;
-            margin-top: 10px;
-            padding-top: 8px;
-            font-size: 11px;
+            gap: var(--ss-space-1);
+            margin-top: var(--ss-space-3);
+            padding-top: var(--ss-space-2);
+            font-size: var(--ss-fs-12);
             color: #656d76;
         }
 
         .heatmap-legend-scale {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: var(--ss-space-1);
         }
 
         .heatmap-legend-cell {
             width: 10px;
             height: 10px;
-            border-radius: 2px;
+            border-radius: var(--ss-radius-sm);
         }
 
         .heatmap-cell-tooltip {
@@ -577,14 +577,14 @@
             left: 0;
             top: 0;
             max-width: min(280px, calc(100vw - 16px));
-            padding: 8px 10px;
-            font-size: 12px;
+            padding: var(--ss-space-2) var(--ss-space-3);
+            font-size: var(--ss-fs-12);
             line-height: 1.35;
             color: #24292f;
             background: #fff;
             border: 1px solid #d0d7de;
-            border-radius: 6px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: var(--ss-radius);
+            box-shadow: var(--ss-shadow);
             pointer-events: none;
             opacity: 0;
             visibility: hidden;
@@ -600,7 +600,7 @@
             background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
             background-size: 200% 100%;
             animation: pulse 1.2s linear infinite;
-            border-radius: 4px;
+            border-radius: var(--ss-radius-sm);
             color: transparent;
         }
 
@@ -617,7 +617,7 @@
 
         @media (max-width: 768px) {
             .contributors-page {
-                padding: 16px 12px 24px;
+                padding: var(--ss-space-4) var(--ss-space-3) var(--ss-space-6);
             }
             .heatmap-graph-row {
                 flex-direction: column;
@@ -635,8 +635,8 @@
             }
             .leaderboard-table thead th,
             .leaderboard-table tbody td {
-                font-size: 12px;
-                padding: 8px 6px;
+                font-size: var(--ss-fs-12);
+                padding: var(--ss-space-2) var(--ss-space-2);
             }
             .contributor-cell {
                 min-width: 170px;
@@ -665,7 +665,7 @@
                 <div class="stat-label"><%= __('contributorsPage.statCountries') %></div>
             </article>
             <article class="stat-tile">
-                <div id="stat-languages" class="stat-value" style="font-size: 20px;"><%= __('contributorsPage.languagesValue') %></div>
+                <div id="stat-languages" class="stat-value" style="font-size: var(--ss-fs-20);"><%= __('contributorsPage.languagesValue') %></div>
                 <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
             </article>
         </section>
@@ -678,8 +678,8 @@
 
         <section class="card" id="contributorsListPanel" style="display:none;">
             <h2 class="section-title"><%= __('contributorsPage.statContributors') %></h2>
-            <div id="contributorsListBody" style="display:flex; flex-direction:column; gap:6px;"></div>
-            <button id="contributorsShowMore" style="display:none; width:100%; padding:8px; margin-top:8px; background:none; border:1px solid var(--sv-border); border-radius:6px; color:var(--sv-link, #1a5276); font-size:13px; cursor:pointer;">
+            <div id="contributorsListBody" style="display:flex; flex-direction:column; gap:var(--ss-space-2);"></div>
+            <button id="contributorsShowMore" style="display:none; width:100%; padding:var(--ss-space-2); margin-top:var(--ss-space-2); background:none; border:1px solid var(--sv-border); border-radius:var(--ss-radius); color:var(--sv-link, #1a5276); font-size:var(--ss-fs-13); cursor:pointer;">
                 <%= lang === 'ru' ? 'Показать ещё' : 'Show more' %>
             </button>
         </section>
@@ -725,7 +725,7 @@
             </div>
             <div class="pagination-row">
                 <button id="prev-page" class="btn-nav" type="button"><%= __('contributorsPage.previous') %></button>
-                <span id="page-info" style="font-size:13px;color:#6c757d;align-self:center;"></span>
+                <span id="page-info" style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);align-self:center;"></span>
                 <button id="next-page" class="btn-nav" type="button"><%= __('contributorsPage.next') %></button>
             </div>
         </section>

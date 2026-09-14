@@ -53,21 +53,21 @@
         .constants-container {
             max-width: 1140px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: var(--ss-space-7) var(--ss-space-4);
         }
         .constants-header {
-            margin-bottom: 1.5rem;
+            margin-bottom: var(--ss-space-6);
         }
         .constants-header h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: #2d2d2d;
-            margin: 0 0 0.5rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-28);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
+            margin: 0 0 var(--ss-space-2);
         }
         .constants-header p {
-            color: #6c757d;
-            font-size: 15px;
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-16);
             margin: 0;
         }
 
@@ -75,85 +75,85 @@
         .constants-toolbar {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
+            gap: var(--ss-space-3);
+            margin-bottom: var(--ss-space-4);
             flex-wrap: wrap;
         }
         .constants-search {
             flex: 1;
             min-width: 200px;
             height: 40px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 0 12px;
-            font-size: 14px;
-            color: #2d2d2d;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: 0 var(--ss-space-3);
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text);
             outline: none;
             transition: border-color 0.2s;
         }
         .constants-search:focus {
-            border-color: #1a1a2e;
+            border-color: var(--ss-navy);
         }
         .constants-search::placeholder {
-            color: #adb5bd;
+            color: var(--ss-text-tertiary);
         }
         .unit-toggle {
             display: flex;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
             overflow: hidden;
             height: 40px;
         }
         .unit-toggle-btn {
-            background: #fff;
+            background: var(--ss-surface);
             border: none;
-            padding: 0 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            color: #6c757d;
+            padding: 0 var(--ss-space-4);
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
             cursor: pointer;
             transition: background 0.15s, color 0.15s;
         }
         .unit-toggle-btn.active {
-            background: #1a1a2e;
-            color: #fff;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
         }
         .unit-toggle-btn:not(.active):hover {
-            background: #f8f9fa;
+            background: var(--ss-surface-alt);
         }
 
         /* Category label */
         .category-row td {
-            background: #f8f9fa;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 13px;
-            color: #1a1a2e;
+            background: var(--ss-surface-alt);
+            font-family: var(--ss-font-ui);
+            font-weight: var(--ss-fw-strong);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-navy);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 10px 12px;
-            border-bottom: 1px solid #dee2e6;
+            padding: var(--ss-space-3) var(--ss-space-3);
+            border-bottom: 1px solid var(--ss-rule);
         }
 
         /* Table */
         .constants-table-wrapper {
             overflow-x: auto;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
         }
         .constants-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 14px;
+            font-size: var(--ss-fs-14);
         }
         .constants-table thead th {
-            background: #1a1a2e;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 10px 12px;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            font-family: var(--ss-font-ui);
+            font-weight: var(--ss-fw-strong);
+            font-size: var(--ss-fs-13);
+            padding: var(--ss-space-3) var(--ss-space-3);
             white-space: nowrap;
             border: none;
             position: sticky;
@@ -161,63 +161,63 @@
             z-index: 2;
         }
         .constants-table thead th:first-child {
-            border-radius: 7px 0 0 0;
+            border-radius: var(--ss-radius) 0 0 0;
         }
         .constants-table thead th:last-child {
-            border-radius: 0 7px 0 0;
+            border-radius: 0 var(--ss-radius) 0 0;
         }
         .constants-table tbody tr {
             cursor: pointer;
             transition: background 0.1s;
         }
         .constants-table tbody tr:not(.category-row):hover {
-            background: #eef1f5;
+            background: var(--ss-surface-hover);
         }
         .constants-table tbody tr:nth-child(even):not(.category-row):not(:hover) {
-            background: #fafbfc;
+            background: var(--ss-surface-alt);
         }
         .constants-table tbody td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #f0f0f0;
-            color: #2d2d2d;
+            padding: var(--ss-space-2) var(--ss-space-3);
+            border-bottom: 1px solid var(--ss-rule-soft);
+            color: var(--ss-text);
             vertical-align: middle;
         }
         .constants-table .col-name {
             min-width: 180px;
-            font-weight: 500;
+            font-weight: var(--ss-fw-strong);
         }
         .constants-table .col-symbol {
             min-width: 80px;
             text-align: center;
         }
         .constants-table .col-value {
-            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-family: var(--ss-font-mono);
             min-width: 220px;
             white-space: nowrap;
         }
         .constants-table .col-value .val-unit {
-            color: #6c757d;
-            margin-left: 6px;
+            color: var(--ss-text-secondary);
+            margin-left: var(--ss-space-2);
         }
         .constants-table .col-value .val-uncert {
-            color: #999;
-            margin-left: 6px;
-            font-size: 12px;
+            color: var(--ss-text-secondary);
+            margin-left: var(--ss-space-2);
+            font-size: var(--ss-fs-12);
         }
 
         /* Count */
         .constants-count {
-            font-size: 13px;
-            color: #6c757d;
-            margin-top: 0.75rem;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
+            margin-top: var(--ss-space-3);
         }
 
         /* No results */
         .no-results {
             text-align: center;
-            padding: 2.5rem 1rem;
-            color: #6c757d;
-            font-size: 15px;
+            padding: var(--ss-space-8) var(--ss-space-4);
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-16);
             display: none;
         }
 
@@ -226,14 +226,14 @@
             position: fixed;
             bottom: 24px;
             right: 24px;
-            background: #1a1a2e;
-            color: #fff;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            padding: 10px 20px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-regular);
+            padding: var(--ss-space-3) var(--ss-space-5);
+            border-radius: var(--ss-radius);
+            box-shadow: var(--ss-shadow);
             z-index: 9999;
             opacity: 0;
             transform: translateY(8px);
@@ -247,26 +247,26 @@
 
         /* Breadcrumb */
         .constants-breadcrumb {
-            font-size: 13px;
-            margin-bottom: 0.5rem;
+            font-size: var(--ss-fs-13);
+            margin-bottom: var(--ss-space-2);
         }
         .constants-breadcrumb a {
-            color: #1a5276;
+            color: var(--ss-link);
             text-decoration: none;
         }
         .constants-breadcrumb a:hover {
-            color: #0d3b54;
+            color: var(--ss-link-hover);
             text-decoration: underline;
         }
         .constants-breadcrumb span {
-            color: #6c757d;
+            color: var(--ss-text-secondary);
         }
 
         /* Mobile adjustments */
         @media (max-width: 767px) {
-            .constants-container { padding: 1rem 0.5rem; }
-            .constants-header h1 { font-size: 22px; }
-            .constants-table { font-size: 13px; }
+            .constants-container { padding: var(--ss-space-4) var(--ss-space-2); }
+            .constants-header h1 { font-size: var(--ss-fs-20); }
+            .constants-table { font-size: var(--ss-fs-13); }
             .constants-table .col-name { min-width: 140px; }
             .constants-table .col-value { min-width: 180px; }
         }
@@ -283,7 +283,7 @@
 
         <div class="constants-header">
             <h1><%= lang === 'ru' ? 'Физические константы' : 'Physical Constants' %></h1>
-            <p><%= lang === 'ru' ? 'Рекомендованные значения CODATA 2018' : 'CODATA 2018 recommended values' %> (<a href="https://physics.nist.gov/cuu/pdf/wall_2018.pdf" target="_blank" style="color: #1a5276;">NIST SP 961</a>). <%= lang === 'ru' ? 'Нажмите на строку для копирования.' : 'Click any row to copy.' %></p>
+            <p><%= lang === 'ru' ? 'Рекомендованные значения CODATA 2018' : 'CODATA 2018 recommended values' %> (<a href="https://physics.nist.gov/cuu/pdf/wall_2018.pdf" target="_blank" style="color: var(--ss-link);">NIST SP 961</a>). <%= lang === 'ru' ? 'Нажмите на строку для копирования.' : 'Click any row to copy.' %></p>
         </div>
 
         <div class="constants-toolbar">

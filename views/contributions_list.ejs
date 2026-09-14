@@ -20,9 +20,9 @@
 
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #fff;
-            color: #2d2d2d;
+            font-family: var(--ss-font-ui);
+            background: var(--ss-surface);
+            color: var(--ss-text);
             margin: 0;
             min-height: 100vh;
             display: flex;
@@ -32,98 +32,98 @@
         .cl-container {
             max-width: 960px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 0 var(--ss-space-6);
             flex: 1;
         }
 
         /* Breadcrumb */
         .cl-breadcrumb {
-            padding: 16px 0 0;
-            font-size: 13px;
-            color: #6c757d;
+            padding: var(--ss-space-4) 0 0;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
         }
         .cl-breadcrumb a {
-            color: #1a5276;
+            color: var(--ss-link);
             text-decoration: none;
         }
         .cl-breadcrumb a:hover {
             text-decoration: underline;
         }
         .cl-breadcrumb-sep {
-            margin: 0 6px;
-            color: #adb5bd;
+            margin: 0 var(--ss-space-2);
+            color: var(--ss-text-tertiary);
         }
 
         /* Page header */
         .cl-header {
-            padding: 24px 0 20px;
-            border-bottom: 1px solid #dee2e6;
+            padding: var(--ss-space-6) 0 var(--ss-space-5);
+            border-bottom: 1px solid var(--ss-rule);
         }
         .cl-header-row {
             display: flex;
             align-items: flex-start;
             justify-content: space-between;
-            gap: 16px;
+            gap: var(--ss-space-4);
             flex-wrap: wrap;
         }
         .cl-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin: 0 0 4px;
+            font-size: var(--ss-fs-24);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-navy);
+            margin: 0 0 var(--ss-space-1);
         }
         .cl-subtitle {
-            font-size: 14px;
-            color: #6c757d;
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text-secondary);
             margin: 0;
         }
         .cl-cta {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: #1a1a2e;
-            color: #fff !important;
-            border-radius: 6px;
+            gap: var(--ss-space-2);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            background: var(--ss-navy);
+            color: var(--ss-on-navy) !important;
+            border-radius: var(--ss-radius);
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-regular);
             transition: background 0.15s ease;
             flex-shrink: 0;
         }
         .cl-cta:hover {
-            background: #2d2d4e;
-            color: #fff !important;
+            background: var(--ss-navy-hover);
+            color: var(--ss-on-navy) !important;
         }
 
         /* Stats bar */
         .cl-stats {
             display: flex;
-            gap: 24px;
-            padding: 16px 0;
-            border-bottom: 1px solid #dee2e6;
-            font-size: 14px;
+            gap: var(--ss-space-6);
+            padding: var(--ss-space-4) 0;
+            border-bottom: 1px solid var(--ss-rule);
+            font-size: var(--ss-fs-14);
         }
         .cl-stat {
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: #6c757d;
+            gap: var(--ss-space-2);
+            color: var(--ss-text-secondary);
         }
         .cl-stat-num {
-            font-weight: 600;
-            color: #2d2d2d;
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
         }
 
         /* Date group */
         .cl-date-group {
-            margin-top: 24px;
+            margin-top: var(--ss-space-6);
         }
         .cl-date-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 0;
+            gap: var(--ss-space-3);
+            padding: var(--ss-space-2) 0;
             margin-bottom: 0;
         }
         .cl-date-icon {
@@ -132,12 +132,12 @@
             justify-content: center;
             width: 32px;
             height: 32px;
-            color: #6c757d;
+            color: var(--ss-text-secondary);
         }
         .cl-date-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #2d2d2d;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
         }
 
         /* Problem group (consecutive edits to one problem) */
@@ -152,20 +152,20 @@
         .cl-group-header {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 6px 16px;
-            font-size: 12px;
-            color: #6c757d;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            gap: var(--ss-space-2);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
+            background: var(--ss-surface-alt);
+            border-bottom: 1px solid var(--ss-rule);
         }
         .cl-group-header a {
-            color: #1a5276;
+            color: var(--ss-link);
             text-decoration: none;
-            font-weight: 600;
+            font-weight: var(--ss-fw-strong);
         }
         .cl-group-header a:hover {
-            color: #0d3b54;
+            color: var(--ss-link-hover);
             text-decoration: underline;
         }
 
@@ -173,8 +173,8 @@
         .cl-group-sep {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin: 16px 0;
+            gap: var(--ss-space-3);
+            margin: var(--ss-space-4) 0;
         }
         .cl-group-sep::before,
         .cl-group-sep::after {
@@ -184,8 +184,8 @@
         }
         .cl-group-sep-label {
             flex: 0 0 auto;
-            font-size: 11px;
-            color: #6c757d;
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
             white-space: nowrap;
         }
 
@@ -193,42 +193,42 @@
         .cl-date-divider {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin: 22px 0;
+            gap: var(--ss-space-3);
+            margin: var(--ss-space-6) 0;
         }
         .cl-date-divider::before,
         .cl-date-divider::after {
             content: "";
             flex: 1 1 auto;
-            border-top: 3px solid #1a1a2e;
+            border-top: 3px solid var(--ss-navy);
         }
         .cl-date-divider-label {
             flex: 0 0 auto;
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a2e;
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-navy);
             white-space: nowrap;
         }
 
         /* Commit list (GitHub style) */
         .cl-commit-list {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
             overflow: hidden;
         }
         .cl-commit-row {
             display: flex;
             align-items: center;
-            padding: 10px 16px;
-            border-bottom: 1px solid #dee2e6;
-            gap: 12px;
+            padding: var(--ss-space-3) var(--ss-space-4);
+            border-bottom: 1px solid var(--ss-rule);
+            gap: var(--ss-space-3);
             transition: background 0.1s ease;
         }
         .cl-commit-row:last-child {
             border-bottom: none;
         }
         .cl-commit-row:hover {
-            background: #f8f9fa;
+            background: var(--ss-surface-alt);
         }
 
         /* Dot badge (git-commit icon style) */
@@ -264,7 +264,7 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: #1a1a2e;
+            background: var(--ss-navy);
             border: 2px solid #fff;
             box-sizing: content-box;
             position: relative;
@@ -272,7 +272,7 @@
         }
         /* Hollow marker for a comment, matching the homepage feed. */
         .cl-commit-row.is-comment .cl-commit-dot {
-            background: #ffffff;
+            background: var(--ss-surface);
             box-shadow: inset 0 0 0 2px #1a5276;
         }
         .cl-commit-dot::before,
@@ -292,7 +292,7 @@
             left: 100%;
         }
         .cl-commit-row.is-new .cl-commit-dot {
-            background: #27ae60;
+            background: var(--ss-success);
         }
 
         /* Main content area */
@@ -303,48 +303,48 @@
         .cl-commit-title {
             display: flex;
             align-items: baseline;
-            gap: 6px;
+            gap: var(--ss-space-2);
             flex-wrap: wrap;
         }
         .cl-commit-problem {
-            font-weight: 600;
-            font-size: 14px;
-            color: #1a5276;
+            font-weight: var(--ss-fw-strong);
+            font-size: var(--ss-fs-14);
+            color: var(--ss-link);
             text-decoration: none;
         }
         .cl-commit-problem:hover {
-            color: #0d3b54;
+            color: var(--ss-link-hover);
             text-decoration: underline;
         }
         .cl-commit-label {
-            font-size: 12px;
-            font-weight: 500;
-            padding: 1px 8px;
-            border-radius: 12px;
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            padding: 1px var(--ss-space-2);
+            border-radius: var(--ss-radius);
             white-space: nowrap;
         }
         .cl-label-new {
-            background: #dcffe4;
-            color: #1a7f37;
+            background: var(--ss-success-soft);
+            color: var(--ss-success-strong);
         }
         .cl-label-edit {
-            background: #f0f3f6;
-            color: #6c757d;
+            background: var(--ss-surface-hover);
+            color: var(--ss-text-secondary);
         }
         /* A comment is a different kind of event from an edit; the link tint keeps it
            legible against the green "new solution" and the grey "edit". */
         .cl-label-comment {
             background: #e8eff5;
-            color: #1a5276;
+            color: var(--ss-link);
         }
 
         .cl-commit-meta {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: var(--ss-space-1);
             margin-top: 2px;
-            font-size: 13px;
-            color: #6c757d;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
         }
         .cl-commit-avatar {
             width: 20px;
@@ -353,16 +353,16 @@
             flex-shrink: 0;
         }
         .cl-commit-user {
-            color: #2d2d2d;
+            color: var(--ss-text);
             text-decoration: none;
-            font-weight: 500;
+            font-weight: var(--ss-fw-regular);
         }
         .cl-commit-user:hover {
             text-decoration: underline;
-            color: #1a5276;
+            color: var(--ss-link);
         }
         .cl-commit-anon {
-            color: #6c757d;
+            color: var(--ss-text-secondary);
             font-style: italic;
         }
 
@@ -370,18 +370,18 @@
         .cl-commit-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: var(--ss-space-3);
             flex-shrink: 0;
         }
         .cl-commit-hash {
-            font-size: 12px;
-            font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-            color: #1a5276;
+            font-size: var(--ss-fs-12);
+            font-family: var(--ss-font-mono);
+            color: var(--ss-link);
             text-decoration: none;
-            background: #f0f3f6;
-            padding: 2px 8px;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
+            background: var(--ss-surface-hover);
+            padding: 2px var(--ss-space-2);
+            border-radius: var(--ss-radius-sm);
+            border: 1px solid var(--ss-rule);
             white-space: nowrap;
         }
         .cl-commit-hash:hover {
@@ -389,45 +389,45 @@
             text-decoration: none;
         }
         .cl-commit-time {
-            font-size: 13px;
-            color: #8c959f;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
             white-space: nowrap;
         }
 
         /* Empty state */
         .cl-empty {
             text-align: center;
-            padding: 64px 24px;
+            padding: var(--ss-space-10) var(--ss-space-6);
         }
         .cl-empty-icon {
             width: 48px;
             height: 48px;
             margin: 0 auto 16px;
-            color: #adb5bd;
+            color: var(--ss-text-tertiary);
         }
         .cl-empty h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #2d2d2d;
-            margin: 0 0 8px;
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
+            margin: 0 0 var(--ss-space-2);
         }
         .cl-empty p {
-            font-size: 14px;
-            color: #6c757d;
-            margin: 0 0 20px;
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text-secondary);
+            margin: 0 0 var(--ss-space-5);
         }
 
         /* CTA banner */
         .cl-contribute-banner {
-            margin: 32px 0;
-            padding: 20px 24px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            margin: var(--ss-space-7) 0;
+            padding: var(--ss-space-5) var(--ss-space-6);
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 16px;
+            gap: var(--ss-space-4);
             flex-wrap: wrap;
         }
         .cl-banner-text {
@@ -435,35 +435,35 @@
             min-width: 200px;
         }
         .cl-banner-text h4 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin: 0 0 4px;
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-navy);
+            margin: 0 0 var(--ss-space-1);
         }
         .cl-banner-text p {
-            font-size: 14px;
-            color: #6c757d;
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text-secondary);
             margin: 0;
         }
 
         .cl-show-more-wrap {
             display: flex;
             justify-content: center;
-            margin: 18px 0 8px;
+            margin: var(--ss-space-5) 0 var(--ss-space-2);
         }
         .cl-show-more-btn {
-            border: 1px solid #dee2e6;
-            background: #fff;
-            color: #1a5276;
-            border-radius: 6px;
-            padding: 8px 14px;
-            font-size: 14px;
-            font-weight: 500;
+            border: 1px solid var(--ss-rule);
+            background: var(--ss-surface);
+            color: var(--ss-link);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
             cursor: pointer;
         }
         .cl-show-more-btn:hover {
-            background: #f8f9fa;
-            color: #0d3b54;
+            background: var(--ss-surface-alt);
+            color: var(--ss-link-hover);
         }
 
         /* Responsive */
@@ -473,16 +473,16 @@
             }
             .cl-stats {
                 flex-wrap: wrap;
-                gap: 12px;
+                gap: var(--ss-space-3);
             }
             .cl-commit-row {
-                padding: 10px 12px;
+                padding: var(--ss-space-3) var(--ss-space-3);
                 flex-wrap: wrap;
             }
             .cl-commit-right {
                 width: 100%;
                 justify-content: flex-end;
-                margin-top: 4px;
+                margin-top: var(--ss-space-1);
             }
             .cl-commit-badge {
                 display: none;
@@ -543,17 +543,17 @@
         <!-- Stats -->
         <div class="cl-stats">
             <div class="cl-stat">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: var(--ss-text-secondary);"><path d="M11.93 8.5a4.002 4.002 0 01-7.86 0H.75a.75.75 0 010-1.5h3.32a4.002 4.002 0 017.86 0h3.32a.75.75 0 010 1.5zM10.5 7.75a2.5 2.5 0 10-5 0 2.5 2.5 0 005 0z"/></svg>
                 <span class="cl-stat-num"><%= stats.total %></span>
                 <%= lang === 'ru' ? 'изменений' : 'contributions' %>
             </div>
             <div class="cl-stat">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5zm10.5-1h-8a1 1 0 00-1 1v6.708A2.486 2.486 0 014.5 9h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: var(--ss-text-secondary);"><path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5zm10.5-1h-8a1 1 0 00-1 1v6.708A2.486 2.486 0 014.5 9h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/></svg>
                 <span class="cl-stat-num"><%= stats.uniqueProblems %></span>
                 <%= lang === 'ru' ? 'задач' : 'problems' %>
             </div>
             <div class="cl-stat">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: #6c757d;"><path d="M2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.001 4.001 0 00-7.9 0 .75.75 0 01-1.482-.236A5.507 5.507 0 013.102 8.05 3.49 3.49 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4zM5.5 3a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="color: var(--ss-text-secondary);"><path d="M2 5.5a3.5 3.5 0 115.898 2.549 5.507 5.507 0 013.034 4.084.75.75 0 11-1.482.235 4.001 4.001 0 00-7.9 0 .75.75 0 01-1.482-.236A5.507 5.507 0 013.102 8.05 3.49 3.49 0 012 5.5zM11 4a.75.75 0 100 1.5 1.5 1.5 0 01.666 2.844.75.75 0 00-.416.672v.352a.75.75 0 00.574.73c1.2.289 2.162 1.2 2.522 2.372a.75.75 0 101.434-.44 5.01 5.01 0 00-2.56-3.012A3 3 0 0011 4zM5.5 3a2 2 0 100 4 2 2 0 000-4z"/></svg>
                 <span class="cl-stat-num"><%= stats.uniqueContributors %></span>
                 <%= lang === 'ru' ? 'авторов' : 'contributors' %>
             </div>

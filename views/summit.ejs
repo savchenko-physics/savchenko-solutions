@@ -41,7 +41,7 @@
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--ss-font-ui);
       line-height: 1.6;
       color: var(--summit-text);
       overflow-x: hidden;
@@ -63,7 +63,7 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.8" fill="white" opacity="0.08"/><circle cx="90" cy="30" r="0.6" fill="white" opacity="0.06"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="var(--ss-surface)" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="var(--ss-surface)" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="var(--ss-surface)" opacity="0.1"/><circle cx="10" cy="60" r="0.8" fill="var(--ss-surface)" opacity="0.08"/><circle cx="90" cy="30" r="0.6" fill="var(--ss-surface)" opacity="0.06"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
       animation: grain 20s infinite linear;
     }
 
@@ -78,18 +78,18 @@
     }
 
     .summit-title {
-      font-size: 3.5rem;
-      font-weight: 800;
-      color: white;
+      font-size: var(--ss-fs-40);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-on-navy);
       text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      margin-bottom: 1rem;
+      margin-bottom: var(--ss-space-4);
       animation: slideInUp 1s ease-out;
     }
 
     .summit-subtitle {
-      font-size: 1.4rem;
+      font-size: var(--ss-fs-20);
       color: rgba(255, 255, 255, 0.9);
-      margin-bottom: 2rem;
+      margin-bottom: var(--ss-space-7);
       animation: slideInUp 1s ease-out 0.2s both;
     }
 
@@ -97,25 +97,25 @@
       background: rgba(255, 255, 255, 0.2);
       backdrop-filter: blur(10px);
       border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50px;
-      padding: 1rem 2rem;
-      margin: 2rem 0;
+      border-radius: var(--ss-radius);
+      padding: var(--ss-space-4) var(--ss-space-7);
+      margin: var(--ss-space-7) 0;
       display: inline-block;
       animation: slideInUp 1s ease-out 0.4s both;
     }
 
     .summit-success-badge h3 {
-      color: white;
+      color: var(--ss-on-navy);
       margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
+      font-size: var(--ss-fs-18);
+      font-weight: var(--ss-fw-strong);
     }
 
     .summit-stats {
       display: flex;
-      gap: 2rem;
+      gap: var(--ss-space-7);
       justify-content: center;
-      margin-top: 2rem;
+      margin-top: var(--ss-space-7);
       animation: slideInUp 1s ease-out 0.6s both;
       flex-wrap: wrap;
     }
@@ -123,24 +123,24 @@
     .stat-item {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 1.5rem;
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-6);
       text-align: center;
       border: 1px solid rgba(255, 255, 255, 0.2);
       min-width: 150px;
     }
 
     .stat-number {
-      font-size: 2rem;
-      font-weight: 800;
-      color: white;
+      font-size: var(--ss-fs-32);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-on-navy);
       display: block;
     }
 
     .stat-label {
-      font-size: 0.9rem;
+      font-size: var(--ss-fs-14);
       color: rgba(255, 255, 255, 0.8);
-      margin-top: 0.5rem;
+      margin-top: var(--ss-space-2);
     }
 
     @keyframes slideInUp {
@@ -155,7 +155,7 @@
     }
 
     .summit-section {
-      padding: 5rem 0;
+      padding: var(--ss-space-10) 0;
       position: relative;
     }
 
@@ -164,19 +164,19 @@
     }
 
     .section-title {
-      font-size: 2.5rem;
-      font-weight: 700;
+      font-size: var(--ss-fs-40);
+      font-weight: var(--ss-fw-strong);
       text-align: center;
-      margin-bottom: 3rem;
+      margin-bottom: var(--ss-space-9);
       color: var(--summit-secondary);
     }
 
     .feature-card {
-      background: white;
-      border-radius: 20px;
-      padding: 2.5rem;
-      box-shadow: var(--summit-shadow);
-      margin-bottom: 2rem;
+      background: var(--ss-surface);
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-8);
+      box-shadow: var(--ss-shadow);
+      margin-bottom: var(--ss-space-7);
       transition: transform 0.3s ease;
     }
 
@@ -185,23 +185,23 @@
     }
 
     .feature-icon {
-      font-size: 3rem;
+      font-size: var(--ss-fs-40);
       text-align: center;
-      margin-bottom: 1.5rem;
+      margin-bottom: var(--ss-space-6);
     }
 
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-top: 3rem;
+      gap: var(--ss-space-6);
+      margin-top: var(--ss-space-9);
     }
 
     .gallery-item {
       position: relative;
-      border-radius: 15px;
+      border-radius: var(--ss-radius-lg);
       overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      box-shadow: var(--ss-shadow);
       transition: transform 0.3s ease;
     }
 
@@ -221,17 +221,17 @@
       left: 0;
       right: 0;
       background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: white;
-      padding: 2rem 1.5rem 1.5rem;
-      font-size: 0.9rem;
+      color: var(--ss-on-navy);
+      padding: var(--ss-space-7) var(--ss-space-6) var(--ss-space-6);
+      font-size: var(--ss-fs-14);
     }
 
     .testimonial-card {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 20px;
-      padding: 2rem;
-      margin: 1rem 0;
+      color: var(--ss-on-navy);
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-7);
+      margin: var(--ss-space-4) 0;
       position: relative;
       overflow: hidden;
     }
@@ -241,37 +241,37 @@
       position: absolute;
       top: -10px;
       left: 20px;
-      font-size: 4rem;
+      font-size: var(--ss-fs-40);
       opacity: 0.3;
-      font-family: serif;
+      font-family: var(--ss-font-text);
     }
 
     .impact-metrics {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
+      gap: var(--ss-space-7);
+      margin-top: var(--ss-space-9);
     }
 
     .metric-card {
-      background: white;
-      border-radius: 15px;
-      padding: 2rem;
+      background: var(--ss-surface);
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-7);
       text-align: center;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      box-shadow: var(--ss-shadow);
       border-left: 4px solid var(--summit-success);
     }
 
     .metric-number {
-      font-size: 2.5rem;
-      font-weight: 800;
+      font-size: var(--ss-fs-40);
+      font-weight: var(--ss-fw-strong);
       color: var(--summit-success);
-      margin-bottom: 0.5rem;
+      margin-bottom: var(--ss-space-2);
     }
 
     .metric-label {
       color: var(--summit-text);
-      font-weight: 500;
+      font-weight: var(--ss-fw-strong);
     }
 
     .back-to-main {
@@ -281,17 +281,17 @@
       background: rgba(255,255,255,0.9);
       color: var(--summit-secondary);
       border: none;
-      padding: 1rem 1.5rem;
-      border-radius: 50px;
+      padding: var(--ss-space-4) var(--ss-space-6);
+      border-radius: var(--ss-radius-lg);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: var(--ss-fw-strong);
       z-index: 1000;
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
     }
 
     .back-to-main:hover {
-      background: white;
+      background: var(--ss-surface);
       color: var(--summit-secondary);
       text-decoration: none;
       transform: translateY(-2px);
@@ -299,26 +299,26 @@
 
     @media (max-width: 768px) {
       .summit-title {
-        font-size: 2.5rem;
+        font-size: var(--ss-fs-40);
       }
       
       .summit-stats {
-        gap: 1rem;
+        gap: var(--ss-space-4);
       }
       
       .stat-item {
         min-width: 120px;
-        padding: 1rem;
+        padding: var(--ss-space-4);
       }
       
       .stat-number {
-        font-size: 1.5rem;
+        font-size: var(--ss-fs-24);
       }
 
       .back-to-main {
         top: 1rem;
         left: 1rem;
-        padding: 0.8rem 1.2rem;
+        padding: var(--ss-space-3) var(--ss-space-5);
       }
     }
   </style>
@@ -369,10 +369,10 @@
       <div class="row justify-content-center">
         <div class="col-lg-10">
           <div class="feature-card text-center">
-            <p class="lead" style="font-size: 1.3rem; color: var(--summit-text); margin-bottom: 2rem;">
+            <p class="lead" style="font-size: var(--ss-fs-20); color: var(--summit-text); margin-bottom: var(--ss-space-7);">
               <%= __('summit.completed.duration') %>
             </p>
-            <p style="font-size: 1.1rem; color: var(--summit-text);">
+            <p style="font-size: var(--ss-fs-18); color: var(--summit-text);">
               <%= __('summit.completed.attendance') %>
             </p>
           </div>
@@ -392,7 +392,7 @@
             <h4>Технологические Инновации</h4>
             <ul class="list-unstyled">
               <% __('summit.completed.topics').slice(0, 4).forEach(topic => { %>
-                <li style="margin: 0.8rem 0; padding-left: 1.5rem; position: relative;">
+                <li style="margin: var(--ss-space-3) 0; padding-left: var(--ss-space-6); position: relative;">
                   <span style="position: absolute; left: 0; color: var(--summit-success);">•</span>
                   <%= topic %>
                 </li>
@@ -406,7 +406,7 @@
             <h4>Образовательные Инициативы</h4>
             <ul class="list-unstyled">
               <% __('summit.completed.topics').slice(4).forEach(topic => { %>
-                <li style="margin: 0.8rem 0; padding-left: 1.5rem; position: relative;">
+                <li style="margin: var(--ss-space-3) 0; padding-left: var(--ss-space-6); position: relative;">
                   <span style="position: absolute; left: 0; color: var(--summit-success);">•</span>
                   <%= topic %>
                 </li>
@@ -433,7 +433,7 @@
                 <% } else { %>⭐
                 <% } %>
               </div>
-              <h5 style="color: var(--summit-secondary); margin-bottom: 1rem;"><%= guest %></h5>
+              <h5 style="color: var(--summit-secondary); margin-bottom: var(--ss-space-4);"><%= guest %></h5>
             </div>
           </div>
         <% }); %>
@@ -487,7 +487,7 @@
                 <% const icons = ['👥', '💡', '🌊', '💻', '🤝', '📸']; %>
                 <%= icons[index % icons.length] %>
               </div>
-              <p style="font-size: 1rem; color: var(--summit-text);"><%= activity %></p>
+              <p style="font-size: var(--ss-fs-16); color: var(--summit-text);"><%= activity %></p>
             </div>
           </div>
         <% }); %>
@@ -518,7 +518,7 @@
       <div class="row justify-content-center">
         <div class="col-lg-8">
           <div class="feature-card text-center">
-            <p class="lead" style="font-size: 1.2rem; color: var(--summit-text); margin-bottom: 2rem;">
+            <p class="lead" style="font-size: var(--ss-fs-18); color: var(--summit-text); margin-bottom: var(--ss-space-7);">
               <%= __('summit.impact.description') %>
             </p>
           </div>
@@ -537,17 +537,17 @@
   </section>
 
   <!-- Future Plans Section -->
-  <section class="summit-section" style="background: var(--summit-gradient); color: white;">
+  <section class="summit-section" style="background: var(--summit-gradient); color: var(--ss-on-navy);">
     <div class="container text-center">
-      <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; color: white;">
+      <h2 style="font-size: var(--ss-fs-40); margin-bottom: var(--ss-space-6); color: var(--ss-on-navy);">
         <%= __('summit.completed.futureEvents') %>
       </h2>
       
       <div class="row">
         <% __('summit.completed.futurePlans').forEach(plan => { %>
           <div class="col-md-4 mb-4">
-            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.2);">
-              <p style="margin: 0; font-size: 1.1rem;"><%= plan %></p>
+            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: var(--ss-radius-lg); padding: var(--ss-space-7); border: 1px solid rgba(255, 255, 255, 0.2);">
+              <p style="margin: 0; font-size: var(--ss-fs-18);"><%= plan %></p>
             </div>
           </div>
         <% }); %>
@@ -555,7 +555,7 @@
 
       <div class="row justify-content-center mt-4">
         <div class="col-auto">
-          <a href="https://t.me/savchenko_summit_2025" target="_blank" class="btn btn-light btn-lg px-4 py-3" style="color: var(--summit-success); font-weight: 600;">
+          <a href="https://t.me/savchenko_summit_2025" target="_blank" class="btn btn-light btn-lg px-4 py-3" style="color: var(--summit-success); font-weight: var(--ss-fw-strong);">
             Присоединиться к сообществу
           </a>
         </div>

@@ -34,7 +34,7 @@
     <%- include('_tabs') %>
 
     <% if (!core.length && !exam.length && !adjacent.length) { %>
-        <p class="rec-sub" style="margin-top:20px;">
+        <p class="rec-sub" style="margin-top:var(--ss-space-5);">
             <%= lang === 'ru' ? 'Этот раздел каталога пока готовится.' : 'This half of the catalog is still being built.' %>
         </p>
     <% } %>

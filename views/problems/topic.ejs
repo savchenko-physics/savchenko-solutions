@@ -18,26 +18,26 @@
         html, body { height: auto; }
         body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
         body > footer { flex-shrink: 0; margin-top: auto; }
-        .pft-wrap { width: 100%; max-width: 900px; margin: 0 auto; padding: 20px 24px 40px; flex: 1 0 auto; }
-        .pft-crumb { font-size: 13px; color: #6c757d; margin-bottom: 6px; }
-        .pft-crumb a { color: #1a5276; text-decoration: none; }
-        .pft-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
-        .pft-desc { font-size: 14px; color: #6c757d; margin: 6px 0 4px; max-width: 640px; }
-        .pft-count { font-size: 12.5px; color: #6c757d; margin-bottom: 16px; }
-        .pft-count a { color: #1a5276; text-decoration: none; }
-        .pft-table { width: 100%; border-collapse: collapse; font-size: 13px; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
-        .pft-table th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em; color: #6c757d; background: #f8f9fa; padding: 9px 10px; border-bottom: 1px solid #dee2e6; }
-        .pft-table td { padding: 8px 10px; border-bottom: 1px solid #f1f3f5; }
+        .pft-wrap { width: 100%; max-width: 900px; margin: 0 auto; padding: var(--ss-space-5) var(--ss-space-6) var(--ss-space-8); flex: 1 0 auto; }
+        .pft-crumb { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-2); }
+        .pft-crumb a { color: var(--ss-link); text-decoration: none; }
+        .pft-h1 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-24); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: 0 0 var(--ss-space-1); }
+        .pft-desc { font-size: var(--ss-fs-14); color: var(--ss-text-secondary); margin: var(--ss-space-2) 0 var(--ss-space-1); max-width: 640px; }
+        .pft-count { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-4); }
+        .pft-count a { color: var(--ss-link); text-decoration: none; }
+        .pft-table { width: 100%; border-collapse: collapse; font-size: var(--ss-fs-13); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); overflow: hidden; }
+        .pft-table th { text-align: left; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.02em; color: var(--ss-text-secondary); background: var(--ss-surface-alt); padding: var(--ss-space-2) var(--ss-space-3); border-bottom: 1px solid var(--ss-rule); }
+        .pft-table td { padding: var(--ss-space-2) var(--ss-space-3); border-bottom: 1px solid var(--ss-rule-soft); }
         .pft-table tr:last-child td { border-bottom: none; }
-        .pft-pname { font-weight: 600; color: #1a5276; text-decoration: none; }
-        .pft-pname:hover { color: #0d3b54; text-decoration: underline; }
-        .pft-star { font-weight: 700; color: #1a1a2e; vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
-        .pft-badge { display: inline-block; min-width: 28px; text-align: center; font-weight: 700; font-size: 12px; padding: 2px 6px; border-radius: 4px; background: #eceff1; color: #2d2d2d; }
-        .pft-none { color: #adb5bd; }
-        .pft-pager { display: flex; gap: 8px; margin-top: 16px; }
-        .pft-pager a { font-size: 13px; padding: 6px 12px; border: 1px solid #dee2e6; border-radius: 6px; color: #1a5276; text-decoration: none; }
-        .pft-pager a:hover { background: #f8f9fa; }
-        .pft-empty { padding: 30px 0; text-align: center; color: #6c757d; }
+        .pft-pname { font-weight: var(--ss-fw-strong); color: var(--ss-link); text-decoration: none; }
+        .pft-pname:hover { color: var(--ss-link-hover); text-decoration: underline; }
+        .pft-star { font-weight: var(--ss-fw-strong); color: var(--ss-navy); vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
+        .pft-badge { display: inline-block; min-width: 28px; text-align: center; font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-12); padding: 2px var(--ss-space-2); border-radius: var(--ss-radius-sm); background: #eceff1; color: var(--ss-text); }
+        .pft-none { color: var(--ss-text-secondary); }
+        .pft-pager { display: flex; gap: var(--ss-space-2); margin-top: var(--ss-space-4); }
+        .pft-pager a { font-size: var(--ss-fs-13); padding: var(--ss-space-2) var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); color: var(--ss-link); text-decoration: none; }
+        .pft-pager a:hover { background: var(--ss-surface-alt); }
+        .pft-empty { padding: var(--ss-space-7) 0; text-align: center; color: var(--ss-text-secondary); }
     </style>
 </head>
 <body>
@@ -75,7 +75,7 @@
     <% if (totalPages > 1) { %>
     <div class="pft-pager">
         <% if (page > 1) { %><a href="?page=<%= page - 1 %>">&larr; <%= lang === 'ru' ? 'Назад' : 'Previous' %></a><% } %>
-        <span style="font-size:13px;color:#6c757d;padding:6px 0;"><%= page %> / <%= totalPages %></span>
+        <span style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);padding:var(--ss-space-2) 0;"><%= page %> / <%= totalPages %></span>
         <% if (page < totalPages) { %><a href="?page=<%= page + 1 %>"><%= lang === 'ru' ? 'Далее' : 'Next' %> &rarr;</a><% } %>
     </div>
     <% } %>

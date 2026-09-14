@@ -24,52 +24,50 @@
    <style>
       /* Add font-family to body */
       body {
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
+         font-family: var(--ss-font-ui);
          line-height: 1.6;
       }
 
       /* Update headings font */
       h2 {
-         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-            "Helvetica Neue", Arial, sans-serif;
-         font-weight: 600;
+         font-family: var(--ss-font-ui);
+         font-weight: var(--ss-fw-strong);
       }
 
       .container1 {
          max-width: 1200px;
          margin: 0 auto;
-         padding: 2rem;
+         padding: var(--ss-space-7);
       }
 
       .profile-grid {
          display: grid;
          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-         gap: 2rem;
-         margin-top: 2rem;
+         gap: var(--ss-space-7);
+         margin-top: var(--ss-space-7);
       }
 
       .profile-section {
-         background: #fff;
-         border-radius: 8px;
-         padding: 1.5rem;
-         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+         background: var(--ss-surface);
+         border-radius: var(--ss-radius-lg);
+         padding: var(--ss-space-6);
+         box-shadow: var(--ss-shadow);
          display: flex;
          flex-direction: column;
       }
 
       .profile-section h2 {
-         color: #2c3e50;
-         margin-top: 1rem;
-         padding-bottom: 0.5rem;
-         border-bottom: 2px solid #eee;
-         font-weight: 600;
+         color: var(--ss-text);
+         margin-top: var(--ss-space-4);
+         padding-bottom: var(--ss-space-2);
+         border-bottom: 2px solid var(--ss-rule-soft);
+         font-weight: var(--ss-fw-strong);
       }
 
       .contributions-list {
          list-style: none;
          padding: 0;
-         padding-right: 10px;
+         padding-right: var(--ss-space-3);
          max-height: 500px;
          overflow-y: auto;
          scrollbar-width: thin;
@@ -78,17 +76,17 @@
 
       .contributions-list::-webkit-scrollbar {
          width: 8px;
-         margin-left: 10px;
+         margin-left: var(--ss-space-3);
       }
 
       .contributions-list::-webkit-scrollbar-track {
          background: #eef0f2;
-         border-radius: 4px;
+         border-radius: var(--ss-radius-sm);
       }
 
       .contributions-list::-webkit-scrollbar-thumb {
          background: #c0c4c9;
-         border-radius: 4px;
+         border-radius: var(--ss-radius-sm);
       }
 
       .contributions-list::-webkit-scrollbar-thumb:hover {
@@ -96,14 +94,14 @@
       }
 
       .contribution-item {
-         background: #f8f9fa;
-         border-radius: 6px;
-         padding: 1rem;
-         margin-bottom: 0.8rem;
+         background: var(--ss-surface-alt);
+         border-radius: var(--ss-radius);
+         padding: var(--ss-space-4);
+         margin-bottom: var(--ss-space-3);
          transition: transform 0.2s;
          display: flex;
          flex-direction: column;
-         gap: 0.5rem;
+         gap: var(--ss-space-2);
       }
 
       .contribution-item:hover {
@@ -112,15 +110,15 @@
 
       .view-button {
          display: inline-block;
-         padding: 0.5rem 1rem;
-         background: #3366cc;
-         color: white;
-         border-radius: 4px;
+         padding: var(--ss-space-2) var(--ss-space-4);
+         background: var(--ss-link);
+         color: var(--ss-on-navy);
+         border-radius: var(--ss-radius-sm);
          text-decoration: none;
-         margin-top: 0.5rem;
+         margin-top: var(--ss-space-2);
          transition: background 0.2s;
          font-family: inherit;
-         font-weight: 500;
+         font-weight: var(--ss-fw-strong);
       }
 
       .view-button:hover {
@@ -128,24 +126,24 @@
       }
 
       .form-group {
-         margin-bottom: 1.5rem;
+         margin-bottom: var(--ss-space-6);
       }
 
       .form-group label {
          display: block;
-         margin-bottom: 0.5rem;
-         color: #2c3e50;
-         font-weight: 500;
+         margin-bottom: var(--ss-space-2);
+         color: var(--ss-text);
+         font-weight: var(--ss-fw-strong);
       }
 
       .form-group input {
          width: 100%;
-         padding: 0.8rem 0rem 0.8rem 0.8rem;
-         border: 1px solid #ddd;
-         border-radius: 4px;
+         padding: var(--ss-space-3) 0rem var(--ss-space-3) var(--ss-space-3);
+         border: 1px solid var(--ss-rule);
+         border-radius: var(--ss-radius-sm);
          transition: border-color 0.2s;
          font-family: inherit;
-         font-size: 1rem;
+         font-size: var(--ss-fs-16);
       }
 
       .form-group input:focus {
@@ -154,15 +152,15 @@
       }
 
       .submit-button {
-         background: #3366cc;
-         color: white;
-         padding: 0.8rem 1.5rem;
+         background: var(--ss-link);
+         color: var(--ss-on-navy);
+         padding: var(--ss-space-3) var(--ss-space-6);
          border: none;
-         border-radius: 4px;
+         border-radius: var(--ss-radius-sm);
          cursor: pointer;
          transition: background 0.2s;
          font-family: inherit;
-         font-weight: 500;
+         font-weight: var(--ss-fw-strong);
          margin-top: auto;
       }
 
@@ -172,20 +170,20 @@
 
       .error,
       .success {
-         padding: 1rem;
-         border-radius: 4px;
-         margin: 1rem 0;
+         padding: var(--ss-space-4);
+         border-radius: var(--ss-radius-sm);
+         margin: var(--ss-space-4) 0;
          text-align: center;
       }
 
       .error {
-         background: #fee2e2;
-         color: #dc2626;
+         background: var(--ss-error-soft);
+         color: var(--ss-error);
       }
 
       .success {
          background: #dcfce7;
-         color: #16a34a;
+         color: var(--ss-success-strong);
       }
 
       .vector-header-container {
@@ -198,31 +196,31 @@
 
       /* Update footer styles */
       .footer {
-         background-color: #f8f9fa;
-         padding: 1rem 0;
-         margin-top: 3rem;
-         border-top: 1px solid #dee2e6;
+         background-color: var(--ss-surface-alt);
+         padding: var(--ss-space-4) 0;
+         margin-top: var(--ss-space-9);
+         border-top: 1px solid var(--ss-rule);
       }
 
       .footer .container {
          max-width: 1200px;
          margin: 0 auto;
-         padding: 0 2rem;
+         padding: 0 var(--ss-space-7);
          text-align: center;
       }
 
       .footer p {
-         margin: 0.5rem 0;
-         color: #6c757d;
+         margin: var(--ss-space-2) 0;
+         color: var(--ss-text-secondary);
       }
 
       .footer small {
-         font-size: 0.9rem;
+         font-size: var(--ss-fs-14);
          line-height: 1.4;
       }
 
       .footer strong {
-         color: #2c3e50;
+         color: var(--ss-text);
       }
 
       .contribution-header {
@@ -232,7 +230,7 @@
       }
 
       .contribution-meta {
-         color: #666;
+         color: var(--ss-text-secondary);
          font-size: 0.9em;
       }
 
@@ -256,11 +254,11 @@
          border: none;
          cursor: pointer;
          padding: 0;
-         color: #666;
+         color: var(--ss-text-secondary);
       }
 
       .password-toggle:hover {
-         color: #333;
+         color: var(--ss-text);
       }
 
       .eye-icon {
@@ -270,8 +268,8 @@
 
       .view-changes {
          display: inline-block;
-         margin-left: 10px;
-         color: #3366cc;
+         margin-left: var(--ss-space-3);
+         color: var(--ss-link);
          text-decoration: none;
          font-size: 0.9em;
       }
@@ -287,7 +285,7 @@
    <%- include('default/header.ejs') %>
 
    <div class="container1">
-      <h2 style="text-align: center; font-weight: bold; color: #2c3e50; margin-bottom: 2rem;">
+      <h2 style="text-align: center; font-weight: var(--ss-fw-strong); color: var(--ss-text); margin-bottom: var(--ss-space-7);">
          <%= __('profile.welcome') %>, <%= username %>! 👋
       </h2>
 
@@ -306,8 +304,8 @@
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.yourContributions') %>
-                              <span style="display: flex; align-items: center; font-size: 0.9em; color: #666;">
-                                 <img src="/img/contributions.svg" width="18" height="18" style="margin-right: 4px;"
+                              <span style="display: flex; align-items: center; font-size: 0.9em; color: var(--ss-text-secondary);">
+                                 <img src="/img/contributions.svg" width="18" height="18" style="margin-right: var(--ss-space-1);"
                                     alt="Edit icon">
                                  <%= totalContributions %>
                               </span>
@@ -359,7 +357,7 @@
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.settings') %>
-                              <img src="/img/settings.svg" width="18" height="18" style="margin-left: 4px;"
+                              <img src="/img/settings.svg" width="18" height="18" style="margin-left: var(--ss-space-1);"
                                  alt="Settings icon">
                         </h2>
                         <form action="/profile/update" method="POST" class="settings-form">
@@ -395,7 +393,7 @@
                      <div class="profile-section">
                         <h2 style="display: flex; justify-content: space-between; align-items: center;">
                            <%= __('profile.changePassword') %>
-                              <img src="/img/lock.svg" width="18" height="18" style="margin-left: 4px;"
+                              <img src="/img/lock.svg" width="18" height="18" style="margin-left: var(--ss-space-1);"
                                  alt="Password icon">
                         </h2>
                         <form action="/profile/password" method="POST" class="password-form">

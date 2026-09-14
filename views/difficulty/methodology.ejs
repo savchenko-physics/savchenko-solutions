@@ -21,46 +21,46 @@
         body { display: flex; flex-direction: column; min-height: 100vh; margin: 0; }
         body > footer { flex-shrink: 0; margin-top: auto; }
 
-        .diffm-wrap { width: 100%; max-width: 780px; margin: 0 auto; padding: 24px 24px 40px; flex: 1 0 auto; }
-        .diffm-crumb { font-size: 13px; color: #6c757d; margin-bottom: 8px; }
-        .diffm-crumb a { color: #1a5276; text-decoration: none; }
-        .diffm-crumb a:hover { color: #0d3b54; text-decoration: underline; }
-        .diffm-h1 { font-family: Inter, sans-serif; font-size: 24px; font-weight: 600; color: #1a1a2e; margin: 0 0 4px; }
-        .diffm-tabs { display: flex; gap: 0.5rem; margin: 14px 0 20px; border-bottom: 1px solid #dee2e6; }
-        .diffm-tab { padding: 8px 4px; font-size: 13.5px; color: #6c757d; text-decoration: none; border-bottom: 2px solid transparent; }
-        .diffm-tab.on { color: #1a1a2e; font-weight: 600; border-bottom-color: #1a1a2e; }
-        .diffm-tab:hover { color: #1a1a2e; }
+        .diffm-wrap { width: 100%; max-width: 780px; margin: 0 auto; padding: var(--ss-space-6) var(--ss-space-6) var(--ss-space-8); flex: 1 0 auto; }
+        .diffm-crumb { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-2); }
+        .diffm-crumb a { color: var(--ss-link); text-decoration: none; }
+        .diffm-crumb a:hover { color: var(--ss-link-hover); text-decoration: underline; }
+        .diffm-h1 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-24); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: 0 0 var(--ss-space-1); }
+        .diffm-tabs { display: flex; gap: var(--ss-space-2); margin: var(--ss-space-4) 0 var(--ss-space-5); border-bottom: 1px solid var(--ss-rule); }
+        .diffm-tab { padding: var(--ss-space-2) var(--ss-space-1); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); text-decoration: none; border-bottom: 2px solid transparent; }
+        .diffm-tab.on { color: var(--ss-navy); font-weight: var(--ss-fw-strong); border-bottom-color: var(--ss-navy); }
+        .diffm-tab:hover { color: var(--ss-navy); }
 
-        .diffm-body { font-size: 14.5px; line-height: 1.72; color: #2d2d2d; }
-        .diffm-body h2 { font-family: Inter, sans-serif; font-size: 17px; font-weight: 600; color: #1a1a2e; margin: 30px 0 8px; }
-        .diffm-body h3 { font-family: Inter, sans-serif; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: #6c757d; margin: 20px 0 6px; }
-        .diffm-body p { margin: 0 0 12px; }
-        .diffm-body a { color: #1a5276; }
-        .diffm-body a:hover { color: #0d3b54; }
+        .diffm-body { font-size: var(--ss-fs-14); line-height: 1.72; color: var(--ss-text); }
+        .diffm-body h2 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-16); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: var(--ss-space-7) 0 var(--ss-space-2); }
+        .diffm-body h3 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-13); font-weight: var(--ss-fw-strong); letter-spacing: 0.03em; text-transform: uppercase; color: var(--ss-text-secondary); margin: var(--ss-space-5) 0 var(--ss-space-2); }
+        .diffm-body p { margin: 0 0 var(--ss-space-3); }
+        .diffm-body a { color: var(--ss-link); }
+        .diffm-body a:hover { color: var(--ss-link-hover); }
 
-        .diffm-axis-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 10px; }
-        .diffm-axis-table td { border-bottom: 1px solid #f1f3f5; padding: 6px 10px 6px 0; vertical-align: top; }
-        .diffm-axis-table td.label { white-space: nowrap; font-weight: 600; color: #2d2d2d; width: 1%; }
-        .diffm-axis-table td.explain { color: #2d2d2d; }
+        .diffm-axis-table { width: 100%; border-collapse: collapse; font-size: var(--ss-fs-13); margin: var(--ss-space-1) 0 var(--ss-space-3); }
+        .diffm-axis-table td { border-bottom: 1px solid var(--ss-rule-soft); padding: var(--ss-space-2) var(--ss-space-3) var(--ss-space-2) 0; vertical-align: top; }
+        .diffm-axis-table td.label { white-space: nowrap; font-weight: var(--ss-fw-strong); color: var(--ss-text); width: 1%; }
+        .diffm-axis-table td.explain { color: var(--ss-text); }
         .diffm-axis-badge {
-            display: inline-block; margin-left: 6px; font-size: 9.5px; font-weight: 600;
-            text-transform: uppercase; letter-spacing: 0.02em; color: #6c757d;
-            border: 1px solid #dee2e6; border-radius: 4px; padding: 1px 4px; vertical-align: middle;
+            display: inline-block; margin-left: var(--ss-space-2); font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong);
+            text-transform: uppercase; letter-spacing: 0.02em; color: var(--ss-text-secondary);
+            border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-sm); padding: 1px var(--ss-space-1); vertical-align: middle;
         }
 
-        .diffm-stat-row { display: flex; flex-wrap: wrap; gap: 20px; margin: 6px 0 16px; }
+        .diffm-stat-row { display: flex; flex-wrap: wrap; gap: var(--ss-space-5); margin: var(--ss-space-2) 0 var(--ss-space-4); }
         .diffm-stat { min-width: 120px; }
-        .diffm-stat-n { font-family: Inter, sans-serif; font-size: 22px; font-weight: 700; color: #1a1a2e; line-height: 1; }
-        .diffm-stat-label { font-size: 12px; color: #6c757d; margin-top: 2px; }
+        .diffm-stat-n { font-family: var(--ss-font-ui); font-size: var(--ss-fs-20); font-weight: var(--ss-fw-strong); color: var(--ss-navy); line-height: 1; }
+        .diffm-stat-label { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-top: 2px; }
 
-        .diffm-records { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+        .diffm-records { display: flex; flex-wrap: wrap; gap: var(--ss-space-2); margin: var(--ss-space-1) 0 var(--ss-space-4); }
         .diffm-record-link {
-            font-size: 12.5px; padding: 5px 11px; border-radius: 6px;
-            border: 1px solid #dee2e6; background: #f8f9fa; color: #1a5276; text-decoration: none;
+            font-size: var(--ss-fs-13); padding: var(--ss-space-1) var(--ss-space-3); border-radius: var(--ss-radius);
+            border: 1px solid var(--ss-rule); background: var(--ss-surface-alt); color: var(--ss-link); text-decoration: none;
         }
-        .diffm-record-link:hover { background: #eef1f4; color: #0d3b54; }
+        .diffm-record-link:hover { background: var(--ss-surface-hover); color: var(--ss-link-hover); }
 
-        .diffm-100-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 16px; }
+        .diffm-100-list { display: flex; flex-wrap: wrap; gap: var(--ss-space-2); margin: var(--ss-space-2) 0 var(--ss-space-4); }
         /* Specificity, not source order, decides CSS conflicts: `.diffm-body a` (a class
            plus an element selector) outranks a single-class rule like `.diffm-100-item`
            even though this one is declared later — that's exactly what made this badge's
@@ -78,14 +78,14 @@
            flat color, since every entry here is already in the top bucket by definition —
            interpolating on the raw score instead gives each problem its own shade. */
         a.diffm-100-item {
-            font-size: 12.5px; padding: 3px 9px; border-radius: 5px;
+            font-size: var(--ss-fs-13); padding: var(--ss-space-1) var(--ss-space-2); border-radius: var(--ss-radius-sm);
             text-decoration: none; display: inline-block;
         }
         a.diffm-100-item:hover { filter: brightness(0.85); }
         .diffm-100-item .star { opacity: 0.75; }
 
         @media (max-width: 640px) {
-            .diffm-wrap { padding: 16px 14px 32px; }
+            .diffm-wrap { padding: var(--ss-space-4) var(--ss-space-4) var(--ss-space-7); }
             .diffm-axis-table td.label { white-space: normal; }
         }
     </style>

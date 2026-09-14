@@ -31,119 +31,119 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
-    .contest-container { max-width: 1080px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+    body { font-family: var(--ss-font-ui); background: var(--ss-surface); color: var(--ss-text); }
+    .contest-container { max-width: 1080px; margin: 0 auto; padding: var(--ss-space-5) var(--ss-space-4) var(--ss-space-9); }
 
-    .contest-eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: #1a5276; }
-    .contest-title { font-size: 30px; font-weight: 700; font-family: Inter, sans-serif; color: #1a1a2e; margin: 0.25rem 0 0.4rem; }
-    .contest-sub { font-size: 15px; color: #6c757d; max-width: 680px; line-height: 1.6; }
-    .contest-dates { font-size: 13px; color: #6c757d; margin-top: 0.6rem; }
-    .contest-dates strong { color: #2d2d2d; }
+    .contest-eyebrow { font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.6px; color: var(--ss-link); }
+    .contest-title { font-size: var(--ss-fs-28); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); color: var(--ss-navy); margin: var(--ss-space-1) 0 var(--ss-space-2); }
+    .contest-sub { font-size: var(--ss-fs-16); color: var(--ss-text-secondary); max-width: 680px; line-height: 1.6; }
+    .contest-dates { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-top: var(--ss-space-2); }
+    .contest-dates strong { color: var(--ss-text); }
 
     /* Live counter */
-    .counter-card { background: #1a1a2e; color: #fff; border-radius: 8px; padding: 1.5rem 1.5rem 1.25rem; margin: 1.5rem 0; }
-    .counter-top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-    .counter-number { font-size: 44px; font-weight: 800; font-family: Inter, sans-serif; line-height: 1; }
-    .counter-label { font-size: 14px; color: #c9c9d4; }
-    .counter-goal { font-size: 13px; color: #c9c9d4; }
-    .progress-track { height: 8px; background: rgba(255,255,255,0.16); border-radius: 6px; margin-top: 1rem; overflow: hidden; }
-    .progress-fill { height: 100%; background: #27ae60; border-radius: 6px; width: 0; transition: width 0.6s ease; }
-    .counter-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; font-size: 13px; color: #c9c9d4; }
-    .counter-foot .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #27ae60; margin-right: 6px; vertical-align: middle; }
+    .counter-card { background: var(--ss-navy); color: var(--ss-on-navy); border-radius: var(--ss-radius-lg); padding: var(--ss-space-6) var(--ss-space-6) var(--ss-space-5); margin: var(--ss-space-6) 0; }
+    .counter-top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: var(--ss-space-2); }
+    .counter-number { font-size: var(--ss-fs-40); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); line-height: 1; }
+    .counter-label { font-size: var(--ss-fs-14); color: #c9c9d4; }
+    .counter-goal { font-size: var(--ss-fs-13); color: #c9c9d4; }
+    .progress-track { height: 8px; background: rgba(255,255,255,0.16); border-radius: var(--ss-radius); margin-top: var(--ss-space-4); overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--ss-success); border-radius: var(--ss-radius); width: 0; transition: width 0.6s ease; }
+    .counter-foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--ss-space-2); margin-top: var(--ss-space-3); font-size: var(--ss-fs-13); color: #c9c9d4; }
+    .counter-foot .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ss-success); margin-right: var(--ss-space-2); vertical-align: middle; }
 
-    .section { margin-top: 2rem; }
-    .section-title { font-size: 19px; font-weight: 600; font-family: Inter, sans-serif; color: #1a1a2e; margin-bottom: 0.85rem; }
+    .section { margin-top: var(--ss-space-7); }
+    .section-title { font-size: var(--ss-fs-18); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); color: var(--ss-navy); margin-bottom: var(--ss-space-3); }
 
-    .contest-layout { display: grid; grid-template-columns: 1fr 320px; gap: 1.75rem; align-items: start; }
+    .contest-layout { display: grid; grid-template-columns: 1fr 320px; gap: var(--ss-space-7); align-items: start; }
     @media (max-width: 860px) { .contest-layout { grid-template-columns: 1fr; } }
 
     /* Prizes */
-    .prizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; }
-    .prizes-community { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.85rem; margin-top: 0.85rem; }
+    .prizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ss-space-3); }
+    .prizes-community { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--ss-space-3); margin-top: var(--ss-space-3); }
     @media (max-width: 620px) { .prizes { grid-template-columns: 1fr; } .prizes-community { grid-template-columns: 1fr; } }
-    .prize { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; background: #f8f9fa; }
+    .prize { border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); padding: var(--ss-space-4); background: var(--ss-surface-alt); }
     .prize-locked { opacity: 0.6; }
-    .prize-badge { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 9px; border-radius: 12px; margin-bottom: 0.55rem; }
-    .badge-grand { background: #1a1a2e; color: #fff; }
+    .prize-badge { display: inline-block; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.5px; padding: 2px var(--ss-space-2); border-radius: var(--ss-radius); margin-bottom: var(--ss-space-2); }
+    .badge-grand { background: var(--ss-navy); color: var(--ss-on-navy); }
     .badge-silver { background: #6c757d; color: #fff; }
     .badge-bronze { background: #fff; color: #2d2d2d; border: 1px solid #dee2e6; }
-    .badge-org { background: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
-    .badge-raffle { background: #1a5276; color: #fff; }
-    .badge-spotlight { background: #7d6608; color: #fff; }
-    .prize-h { font-size: 15px; font-weight: 600; color: #2d2d2d; margin-bottom: 0.2rem; }
-    .prize-p { font-size: 13px; color: #6c757d; line-height: 1.5; margin: 0; }
-    .prize-lock-note { font-size: 12px; color: #c0392b; margin-top: 0.5rem; font-weight: 500; }
-    .prizes-section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; margin: 1.25rem 0 0.5rem; }
+    .badge-org { background: var(--ss-surface-alt); color: var(--ss-text-secondary); border: 1px solid var(--ss-rule); }
+    .badge-raffle { background: var(--ss-link); color: var(--ss-on-navy); }
+    .badge-spotlight { background: #7d6608; color: var(--ss-on-navy); }
+    .prize-h { font-size: var(--ss-fs-16); font-weight: var(--ss-fw-strong); color: var(--ss-text); margin-bottom: var(--ss-space-1); }
+    .prize-p { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); line-height: 1.5; margin: 0; }
+    .prize-lock-note { font-size: var(--ss-fs-12); color: var(--ss-error); margin-top: var(--ss-space-2); font-weight: var(--ss-fw-regular); }
+    .prizes-section-label { font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.5px; color: var(--ss-text-secondary); margin: var(--ss-space-5) 0 var(--ss-space-2); }
 
     /* Merch */
-    .merch-note { font-size: 13px; color: #6c757d; margin-bottom: 0.75rem; }
-    .merch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+    .merch-note { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-3); }
+    .merch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ss-space-2); }
     @media (max-width: 620px) { .merch-grid { grid-template-columns: 1fr 1fr; } }
-    .merch-grid img { width: 100%; height: 260px; object-fit: contain; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa; padding: 4px; }
-    .exclusive-tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #c0392b; border: 1px solid #c0392b; border-radius: 12px; padding: 2px 9px; margin-left: 0.5rem; vertical-align: middle; }
+    .merch-grid img { width: 100%; height: 260px; object-fit: contain; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); background: var(--ss-surface-alt); padding: var(--ss-space-1); }
+    .exclusive-tag { display: inline-block; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.5px; color: var(--ss-error); border: 1px solid var(--ss-error); border-radius: var(--ss-radius); padding: 2px var(--ss-space-2); margin-left: var(--ss-space-2); vertical-align: middle; }
 
     /* Rules + multipliers */
-    .rules-list { font-size: 14px; line-height: 1.7; color: #2d2d2d; padding-left: 1.1rem; margin: 0; }
-    .mult-table { width: 100%; border-collapse: collapse; margin-top: 0.85rem; font-size: 14px; }
-    .mult-table th, .mult-table td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid #f0f0f0; }
-    .mult-table th { font-weight: 600; color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .rules-list { font-size: var(--ss-fs-14); line-height: 1.7; color: var(--ss-text); padding-left: var(--ss-space-4); margin: 0; }
+    .mult-table { width: 100%; border-collapse: collapse; margin-top: var(--ss-space-3); font-size: var(--ss-fs-14); }
+    .mult-table th, .mult-table td { text-align: left; padding: var(--ss-space-2) var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); }
+    .mult-table th { font-weight: var(--ss-fw-strong); color: var(--ss-text-secondary); font-size: var(--ss-fs-12); text-transform: uppercase; letter-spacing: 0.4px; }
     .mult-table td:last-child, .mult-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 
     /* Leaderboard */
-    .lb-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    .lb-table th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; color: #6c757d; font-weight: 600; text-align: left; padding: 0.4rem 0.5rem; border-bottom: 1px solid #dee2e6; }
-    .lb-table td { padding: 0.55rem 0.5rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-    .lb-rank { width: 30px; text-align: center; font-weight: 700; color: #6c757d; }
-    .lb-user { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-    .lb-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: #e9ecef; flex-shrink: 0; }
-    .lb-user a { color: #1a5276; text-decoration: none; font-weight: 500; }
-    .lb-user a:hover { color: #0d3b54; }
-    .lb-country { font-size: 12px; color: #6c757d; }
+    .lb-table { width: 100%; border-collapse: collapse; font-size: var(--ss-fs-14); }
+    .lb-table th { font-size: var(--ss-fs-12); text-transform: uppercase; letter-spacing: 0.4px; color: var(--ss-text-secondary); font-weight: var(--ss-fw-strong); text-align: left; padding: var(--ss-space-2) var(--ss-space-2); border-bottom: 1px solid var(--ss-rule); }
+    .lb-table td { padding: var(--ss-space-2) var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); vertical-align: middle; }
+    .lb-rank { width: 30px; text-align: center; font-weight: var(--ss-fw-strong); color: var(--ss-text-secondary); }
+    .lb-user { display: flex; align-items: center; gap: var(--ss-space-2); min-width: 0; }
+    .lb-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--ss-surface-hover); flex-shrink: 0; }
+    .lb-user a { color: var(--ss-link); text-decoration: none; font-weight: var(--ss-fw-regular); }
+    .lb-user a:hover { color: var(--ss-link-hover); }
+    .lb-country { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
     .lb-num { text-align: right; font-variant-numeric: tabular-nums; }
-    .lb-points { font-weight: 600; }
-    .tier-pill { display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; padding: 1px 7px; border-radius: 10px; }
-    .lb-empty { text-align: center; color: #6c757d; padding: 1.5rem 0; font-size: 14px; }
+    .lb-points { font-weight: var(--ss-fw-strong); }
+    .tier-pill { display: inline-block; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.4px; padding: 1px var(--ss-space-2); border-radius: var(--ss-radius); }
+    .lb-empty { text-align: center; color: var(--ss-text-secondary); padding: var(--ss-space-6) 0; font-size: var(--ss-fs-14); }
 
     /* Feed sidebar */
-    .side-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1rem; background: #f8f9fa; margin-bottom: 1.25rem; }
-    .side-title { font-size: 14px; font-weight: 600; color: #1a1a2e; margin-bottom: 0.6rem; }
+    .side-card { border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); padding: var(--ss-space-4); background: var(--ss-surface-alt); margin-bottom: var(--ss-space-5); }
+    .side-title { font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin-bottom: var(--ss-space-2); }
     .feed-list { list-style: none; padding: 0; margin: 0; }
-    .feed-item { padding: 0.45rem 0; border-bottom: 1px solid #ececec; font-size: 13px; }
+    .feed-item { padding: var(--ss-space-2) 0; border-bottom: 1px solid #ececec; font-size: var(--ss-fs-13); }
     .feed-item:last-child { border-bottom: none; }
-    .feed-item a { color: #1a5276; text-decoration: none; font-weight: 500; }
-    .feed-meta { color: #6c757d; font-size: 12px; margin-top: 1px; }
-    .feed-lang { font-size: 10px; font-weight: 600; text-transform: uppercase; color: #6c757d; border: 1px solid #dee2e6; border-radius: 4px; padding: 0 4px; margin-left: 4px; }
+    .feed-item a { color: var(--ss-link); text-decoration: none; font-weight: var(--ss-fw-regular); }
+    .feed-meta { color: var(--ss-text-secondary); font-size: var(--ss-fs-12); margin-top: 1px; }
+    .feed-lang { font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; color: var(--ss-text-secondary); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-sm); padding: 0 var(--ss-space-1); margin-left: var(--ss-space-1); }
 
-    .cta-card { border: 1px solid #dee2e6; border-radius: 8px; padding: 1.1rem; background: #fff; }
-    .btn-primary-navy, .btn-primary-navy:link, .btn-primary-navy:visited { display: inline-block; background: #1a1a2e; color: #fff !important; border: none; border-radius: 6px; padding: 0.55rem 1.2rem; font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; }
-    .btn-primary-navy:hover, .btn-primary-navy:focus { background: #0d0d1a; color: #fff !important; }
-    .btn-outline-navy, .btn-outline-navy:link, .btn-outline-navy:visited { display: inline-block; background: transparent; color: #2d2d2d !important; border: 1px solid #dee2e6; border-radius: 6px; padding: 0.55rem 1.2rem; font-size: 14px; font-weight: 500; text-decoration: none; text-align: center; }
-    .btn-outline-navy:hover, .btn-outline-navy:focus { background: #f8f9fa; color: #2d2d2d !important; }
+    .cta-card { border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); padding: var(--ss-space-4); background: var(--ss-surface); }
+    .btn-primary-navy, .btn-primary-navy:link, .btn-primary-navy:visited { display: inline-block; background: var(--ss-navy); color: var(--ss-on-navy) !important; border: none; border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-5); font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); text-decoration: none; text-align: center; }
+    .btn-primary-navy:hover, .btn-primary-navy:focus { background: var(--ss-navy); color: var(--ss-on-navy) !important; }
+    .btn-outline-navy, .btn-outline-navy:link, .btn-outline-navy:visited { display: inline-block; background: transparent; color: var(--ss-text) !important; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-5); font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); text-decoration: none; text-align: center; }
+    .btn-outline-navy:hover, .btn-outline-navy:focus { background: var(--ss-surface-alt); color: var(--ss-text) !important; }
 
-    .countdown-line { font-size: 13px; color: #6c757d; margin-top: 0.4rem; }
-    .countdown-line strong { color: #1a1a2e; }
+    .countdown-line { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-top: var(--ss-space-2); }
+    .countdown-line strong { color: var(--ss-navy); }
 
     .contest-review-banner {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      background: #f8f9fa;
-      border: 1px solid #dee2e6;
-      border-left: 3px solid #27ae60;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 18px;
+      gap: var(--ss-space-3);
+      background: var(--ss-surface-alt);
+      border: 1px solid var(--ss-rule);
+      border-left: 3px solid var(--ss-success);
+      border-radius: var(--ss-radius-lg);
+      padding: var(--ss-space-3) var(--ss-space-4);
+      margin-bottom: var(--ss-space-5);
     }
     .contest-review-dot {
       width: 9px;
       height: 9px;
       border-radius: 50%;
-      background: #27ae60;
+      background: var(--ss-success);
       flex-shrink: 0;
-      margin-top: 5px;
+      margin-top: var(--ss-space-1);
     }
-    .contest-review-banner strong { display: block; font-size: 14px; color: #1a1a2e; margin-bottom: 2px; }
-    .contest-review-banner span { font-size: 13px; color: #6c757d; line-height: 1.5; }
+    .contest-review-banner strong { display: block; font-size: var(--ss-fs-14); color: var(--ss-navy); margin-bottom: 2px; }
+    .contest-review-banner span { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -193,22 +193,22 @@
         <div style="text-align:right;">
           <div class="counter-goal">
             <%= isRu ? 'Цель сообщества' : 'Community goal' %>
-            <strong style="color:#fff;"><%= contest.goalSolutions %></strong>
+            <strong style="color:var(--ss-on-navy);"><%= contest.goalSolutions %></strong>
           </div>
           <% if (contest.stretchUnlocked) { %>
-            <div style="font-size:12px;color:#27ae60;margin-top:3px;font-weight:600;"><%= isRu ? 'Цель достигнута — жеребьёвка открыта' : 'Goal reached — raffle unlocked' %></div>
+            <div style="font-size:var(--ss-fs-12);color:var(--ss-success-strong);margin-top:var(--ss-space-1);font-weight:var(--ss-fw-strong);"><%= isRu ? 'Цель достигнута — жеребьёвка открыта' : 'Goal reached — raffle unlocked' %></div>
           <% } %>
         </div>
       </div>
-      <div style="position:relative;margin-top:1rem;">
+      <div style="position:relative;margin-top:var(--ss-space-4);">
         <div class="progress-track" style="margin-top:0;"><div class="progress-fill" id="progressFill"></div></div>
-        <div id="milestoneTick" style="position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,0.35);border-radius:1px;pointer-events:none;"></div>
+        <div id="milestoneTick" style="position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,0.35);border-radius:var(--ss-radius-sm);pointer-events:none;"></div>
       </div>
-      <div class="counter-foot" style="margin-top:0.5rem;">
+      <div class="counter-foot" style="margin-top:var(--ss-space-2);">
         <span><span class="live-dot"></span><span id="participantsCount"><%= contest.participants %></span> <%= isRu ? 'участников' : 'participants' %></span>
         <span id="remainingGoal"></span>
       </div>
-      <div style="margin-top:0.85rem;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.12);font-size:13px;color:#c9c9d4;line-height:1.6;" id="communityMsg">
+      <div style="margin-top:var(--ss-space-3);padding-top:var(--ss-space-3);border-top:1px solid rgba(255,255,255,0.12);font-size:var(--ss-fs-13);color:#c9c9d4;line-height:1.6;" id="communityMsg">
         <% const toStretch = Math.max(0, contest.goalSolutions - contest.totalSolutions); %>
         <% if (!contest.stretchUnlocked) { %>
           <%= isRu
@@ -320,7 +320,7 @@
           </div>
 
           <!-- Merch photos -->
-          <div style="margin-top:1rem;">
+          <div style="margin-top:var(--ss-space-4);">
             <p class="merch-note">
               <%= isRu
                 ? 'Мерч выпущен ограниченным тиражом производителем Creative Depo. Этот тираж эксклюзивный, повторного выпуска не будет.'
@@ -337,68 +337,68 @@
         <!-- Rules -->
         <div class="section">
           <div class="section-title"><%= isRu ? 'Правила начисления баллов' : 'Scoring rules' %></div>
-          <p style="font-size:13px;color:#6c757d;margin:0 0 0.9rem;line-height:1.6;">
+          <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);margin:0 0 var(--ss-space-4);line-height:1.6;">
             <%= isRu
               ? 'Полная версия от 8 июня. Балл начисляется за решённую задачу, а не за правку и не за языковую версию. Одна задача Савченко — одна единица, сколько бы раз вы её ни редактировали и на скольких бы языках ни оформляли.'
               : 'Full version, June 8. A point is awarded for a solved problem — not for an edit, not for a language version. One Savchenko problem is one unit, regardless of how many times you edit it or in how many languages.' %>
           </p>
 
-          <ol style="font-size:14px;line-height:1.75;color:#2d2d2d;padding-left:1.4rem;margin:0 0 0.25rem;">
-            <li style="margin-bottom:0.6rem;">
+          <ol style="font-size:var(--ss-fs-14);line-height:1.75;color:var(--ss-text);padding-left:var(--ss-space-6);margin:0 0 var(--ss-space-1);">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Единица зачёта' : 'Credit unit' %></strong><br>
               <%= isRu
                 ? 'Зачётная единица — пара (номер задачи, автор). Первая публикация полного решения задачи приносит баллы один раз. Все последующие правки той же задачи тем же автором баллов не добавляют.'
                 : 'The credit unit is the (problem, author) pair. The first publication of a complete solution earns points once. All subsequent edits to the same problem by the same author add no further points.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Базовый балл' : 'Base point' %></strong><br>
               <%= isRu
                 ? 'Первое полное решение задачи, содержащее вывод и рассуждение в LaTeX, даёт 1.0 балл.'
                 : 'The first complete solution to a problem — derivation and reasoning in LaTeX — earns 1.0 point.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Множители' : 'Multipliers' %></strong><br>
               <%= isRu
                 ? 'Стакаются мультипликативно (см. таблицу ниже). Пример: английское первое решение ранее нерешённой задачи из главы 12 даёт 1.0 × 1.5 × 1.5 × 1.5 = 3.375 балла. Начисляется один раз, при первой публикации этой задачи этим автором.'
                 : 'Stack multiplicatively (see table below). Example: an English-language first solution for a previously unsolved problem in chapter 12 gives 1.0 × 1.5 × 1.5 × 1.5 = 3.375 points. Awarded once, at first publication by this author.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Перевод своего решения' : 'Translating your own solution' %></strong><br>
               <%= isRu
                 ? 'Если вы уже опубликовали решение задачи на одном языке и получили за него баллы, перевод на другой язык даёт +0.5 балла. Множители не применяются. Один перевод своего решения — 0.5 балла, один раз за задачу.'
                 : 'If you already published a solution for a problem and earned points, translating it to another language earns +0.5 points. No multipliers apply. One self-translation per problem — 0.5 points, once.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Почему перевод 0.5, а не 1.5' : 'Why translation is 0.5, not 1.5' %></strong><br>
               <%= isRu
                 ? 'Решая задачу на английском с нуля, вы создаёте новый контент и получаете ×1.5. Переводя своё же готовое решение, вы добавляете языковую версию, но не новый вывод. Это реальная работа — поэтому 0.5, но не равная оригинальному выводу — поэтому не 1.5.'
                 : 'Solving a problem in English from scratch creates new content — that earns ×1.5. Translating your own existing solution adds a language version, not a new derivation. It is real work — hence 0.5 — but not equal to the original derivation — hence not 1.5.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Перевод чужого решения' : "Translating someone else's solution" %></strong><br>
               <%= isRu
                 ? 'Не засчитывается. Ноль баллов.'
                 : 'Not credited. Zero points.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Задача с уже существующим чужим решением' : 'Problem already solved by another author' %></strong><br>
               <%= isRu
                 ? 'Ваше альтернативное решение засчитывается с базовым баллом 1.0, без множителя за нерешённую задачу — задача уже была покрыта. Альтернативные решения приветствуются.'
                 : 'Your alternative solution earns the base 1.0 points, without the unsolved-problem multiplier — the problem was already covered. Alternative solutions are welcome.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Решения, опубликованные до конкурса' : 'Solutions published before the contest' %></strong><br>
               <%= isRu
                 ? 'Задачи, решённые до 1 июня, не входят в зачёт. Но если вы переводите своё дореконкурсное решение на другой язык в ходе конкурса — перевод даёт 0.5 балла по правилу 4.'
                 : 'Problems solved before June 1 are not counted. However, if you translate your own pre-contest solution to another language during the contest, that earns 0.5 points under rule 4.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Неполные решения' : 'Incomplete solutions' %></strong><br>
               <%= isRu
                 ? 'Решение без вывода, без рассуждения или состоящее только из ответа не засчитывается. Опубликуйте заготовку, допишите вывод — и при следующей проверке решение зачтётся.'
                 : 'A solution without derivation or reasoning, or consisting only of a final answer, is not credited. Publish a draft and complete the derivation — it will be credited on the next review.' %>
             </li>
-            <li style="margin-bottom:0.6rem;">
+            <li style="margin-bottom:var(--ss-space-2);">
               <strong><%= isRu ? 'Проверка' : 'Review' %></strong><br>
               <%= isRu
                 ? 'Решения выборочно проверяются на соответствие правилам — особенно переводы (правило 4) и наличие реального вывода (правило 9). Если решение не проходит проверку, баллы снимаются.'
@@ -406,8 +406,8 @@
             </li>
           </ol>
 
-          <div class="section-title" style="font-size:15px;margin-top:1.5rem;"><%= isRu ? 'Множители (таблица)' : 'Multiplier table' %></div>
-          <p style="font-size:13px;color:#6c757d;margin:0 0 0.25rem;">
+          <div class="section-title" style="font-size:var(--ss-fs-16);margin-top:var(--ss-space-6);"><%= isRu ? 'Множители (таблица)' : 'Multiplier table' %></div>
+          <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);margin:0 0 var(--ss-space-1);">
             <%= isRu
               ? 'Применяются к базовому баллу, стакаются мультипликативно. Учитываются только при первой публикации задачи этим автором.'
               : 'Applied to the base point, stack multiplicatively. Only apply at the first publication of a problem by this author.' %>
@@ -421,12 +421,12 @@
               <tr><td><%= isRu ? 'Ранее нерешённая задача' : 'Previously unsolved problem' %></td><td>×1.5</td></tr>
               <tr><td><%= isRu ? 'Главы 9, 10, 12, 14 (покрытие < 50%)' : 'Chapters 9, 10, 12, 14 (under 50% coverage)' %></td><td>×1.5</td></tr>
               <tr><td><%= isRu ? 'Решение на английском языке' : 'Solution in English' %></td><td>×1.5</td></tr>
-              <tr style="border-top:2px solid #dee2e6;"><td><%= isRu ? 'Перевод своего уже засчитанного решения' : 'Self-translation of an already-credited solution' %></td><td>+0.5</td></tr>
+              <tr style="border-top:2px solid var(--ss-rule);"><td><%= isRu ? 'Перевод своего уже засчитанного решения' : 'Self-translation of an already-credited solution' %></td><td>+0.5</td></tr>
             </tbody>
           </table>
 
-          <div style="margin-top:1.25rem;padding:0.85rem 1rem;background:#f8f9fa;border-radius:6px;border:1px solid #dee2e6;font-size:13px;color:#6c757d;line-height:1.6;">
-            <strong style="color:#2d2d2d;"><%= isRu ? 'О предстоящем перерасчёте' : 'Upcoming recalculation' %></strong><br>
+          <div style="margin-top:var(--ss-space-5);padding:var(--ss-space-3) var(--ss-space-4);background:var(--ss-surface-alt);border-radius:var(--ss-radius);border:1px solid var(--ss-rule);font-size:var(--ss-fs-13);color:var(--ss-text-secondary);line-height:1.6;">
+            <strong style="color:var(--ss-text);"><%= isRu ? 'О предстоящем перерасчёте' : 'Upcoming recalculation' %></strong><br>
             <%= isRu
               ? 'Текущая система начисляет баллы за каждую правку и за каждую языковую версию отдельно. Это ошибка подсчёта. После исправления таблица результатов будет пересчитана по правилам выше. Если у кого-то баллы изменятся — это приведение к честному значению, а не наказание.'
               : 'The current system awards points for every edit and every language version separately. This is a scoring bug. After the fix, the leaderboard will be recalculated per the rules above. If anyone\'s score changes, it is a correction to the fair value, not a penalty.' %>
@@ -439,12 +439,12 @@
       <div>
         <div class="cta-card">
           <div class="side-title"><%= isRu ? 'Как участвовать' : 'How to take part' %></div>
-          <p style="font-size:13px;color:#6c757d;line-height:1.6;margin-bottom:0.85rem;">
+          <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);line-height:1.6;margin-bottom:var(--ss-space-3);">
             <%= isRu
               ? 'Дополнительных кнопок нет. Опубликуй новое решение в LaTeX, и ты в таблице. Не знаешь, с чего начать? Открой список нерешённых задач.'
               : 'No extra buttons. Publish a new LaTeX solution and you are on the board. Not sure where to start? Open the list of unsolved problems.' %>
           </p>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;">
+          <div style="display:flex;flex-direction:column;gap:var(--ss-space-2);">
             <a class="btn-primary-navy" href="/<%= lang %>/upload"><%= isRu ? 'Опубликовать решение' : 'Publish a solution' %></a>
             <a class="btn-outline-navy" href="/<%= lang %>/unsolved"><%= isRu ? 'Нерешённые задачи' : 'Unsolved problems' %></a>
           </div>
@@ -454,7 +454,7 @@
           <div class="side-title"><%= isRu ? 'Последние решения' : 'Latest solutions' %></div>
           <ul class="feed-list" id="feedList">
             <% if (!contest.feed.length) { %>
-              <li class="feed-item" style="color:#6c757d;"><%= isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.' %></li>
+              <li class="feed-item" style="color:var(--ss-text-secondary);"><%= isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.' %></li>
             <% } else { contest.feed.forEach(function(f) { %>
               <li class="feed-item">
                 <a href="/<%= f.language %>/<%= f.problem %>"><%= f.problem %></a>
@@ -467,7 +467,7 @@
 
         <div class="side-card">
           <div class="side-title"><%= isRu ? 'Откуда идея' : 'Where the idea came from' %></div>
-          <p style="font-size:13px;color:#6c757d;line-height:1.6;margin:0;">
+          <p style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);line-height:1.6;margin:0;">
             <%= isRu
               ? 'Конкурс предложил emixter в общем чате платформы. Мы доработали формат так, чтобы шанс на приз был у каждого активного автора.'
               : 'The contest was proposed by emixter in the platform chat. We shaped the format so every active author has a real shot at a prize.' %>
@@ -541,7 +541,7 @@
       const list = document.getElementById('feedList');
       if (!list) return;
       if (!feed.length) {
-        list.innerHTML = '<li class="feed-item" style="color:#6c757d;">' + (isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.') + '</li>';
+        list.innerHTML = '<li class="feed-item" style="color:var(--ss-text-secondary);">' + (isRu ? 'Здесь появятся новые решения.' : 'New solutions will appear here.') + '</li>';
         return;
       }
       list.innerHTML = feed.map(function(f) {

@@ -15,23 +15,23 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
   <!-- Minimal self-contained header so the error page never depends on request/session state -->
-  <header style="border-bottom: 1px solid #dee2e6; padding: 16px 24px;">
-    <a href="/<%= pageLang %>/" style="display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #1a1a2e;">
+  <header style="border-bottom: 1px solid var(--ss-rule); padding: var(--ss-space-4) var(--ss-space-6);">
+    <a href="/<%= pageLang %>/" style="display: inline-flex; align-items: center; gap: var(--ss-space-3); text-decoration: none; color: var(--ss-navy);">
       <img src="/img/logo.svg" alt="" style="height: 32px;" />
-      <span style="font-weight: 600; font-size: 1.1rem;">Savchenko Solutions</span>
+      <span style="font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-18);">Savchenko Solutions</span>
     </a>
   </header>
 
   <main class="flex-grow-1 d-flex align-items-center">
-    <div style="max-width: 480px; margin: 80px auto; text-align: center; padding: 0 20px;">
-      <h1 style="font-size: 72px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px;">500</h1>
-      <p style="font-size: 18px; color: #2d2d2d; margin-bottom: 24px;">
+    <div style="max-width: 480px; margin: 80px auto; text-align: center; padding: 0 var(--ss-space-5);">
+      <h1 style="font-size: var(--ss-fs-40); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin-bottom: var(--ss-space-2);">500</h1>
+      <p style="font-size: var(--ss-fs-18); color: var(--ss-text); margin-bottom: var(--ss-space-6);">
         <%= pageLang === 'ru'
             ? 'Что-то пошло не так на нашей стороне. Мы уже разбираемся.'
             : "Something went wrong on our end — we're looking into it." %>
       </p>
-      <p style="font-size: 14px; color: #6c757d;">
-        <a href="/<%= pageLang %>/" style="color: #1a5276;"><%= pageLang === 'ru' ? 'На главную' : 'Go to homepage' %></a>
+      <p style="font-size: var(--ss-fs-14); color: var(--ss-text-secondary);">
+        <a href="/<%= pageLang %>/" style="color: var(--ss-link);"><%= pageLang === 'ru' ? 'На главную' : 'Go to homepage' %></a>
       </p>
     </div>
   </main>

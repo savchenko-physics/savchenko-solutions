@@ -11,36 +11,36 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
-    .form-container { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .back-link { font-size: 13px; color: #1a5276; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 1.5rem; }
-    .back-link:hover { color: #0d3b54; }
-    .page-title { font-size: 24px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 1.5rem; }
-    .form-group { margin-bottom: 1.25rem; }
-    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 0.35rem; }
+    body { font-family: var(--ss-font-ui); background: var(--ss-surface); color: var(--ss-text); }
+    .form-container { max-width: 700px; margin: 0 auto; padding: var(--ss-space-7) var(--ss-space-6); }
+    .back-link { font-size: var(--ss-fs-13); color: var(--ss-link); text-decoration: none; display: inline-flex; align-items: center; gap: var(--ss-space-1); margin-bottom: var(--ss-space-6); }
+    .back-link:hover { color: var(--ss-link-hover); }
+    .page-title { font-size: var(--ss-fs-24); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); margin-bottom: var(--ss-space-6); }
+    .form-group { margin-bottom: var(--ss-space-5); }
+    .form-group label { display: block; font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); margin-bottom: var(--ss-space-1); }
     .form-group input, .form-group textarea, .form-group select {
-      width: 100%; height: 40px; padding: 0 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 14px;
+      width: 100%; height: 40px; padding: 0 var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); font-size: var(--ss-fs-16);
     }
-    .form-group textarea { height: auto; min-height: 100px; padding: 0.75rem; resize: vertical; }
-    .form-group .hint { font-size: 12px; color: #6c757d; margin-top: 4px; }
-    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .form-group textarea { height: auto; min-height: 100px; padding: var(--ss-space-3); resize: vertical; }
+    .form-group .hint { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-top: var(--ss-space-1); }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ss-space-4); }
+    .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--ss-space-4); }
 
-    .problems-section { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #dee2e6; }
-    .problems-section h3 { font-size: 16px; font-weight: 600; margin-bottom: 0.75rem; }
-    .problem-entry { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .problems-section { margin-top: var(--ss-space-6); padding-top: var(--ss-space-6); border-top: 1px solid var(--ss-rule); }
+    .problems-section h3 { font-size: var(--ss-fs-16); font-weight: var(--ss-fw-strong); margin-bottom: var(--ss-space-3); }
+    .problem-entry { display: flex; gap: var(--ss-space-2); align-items: center; margin-bottom: var(--ss-space-2); }
     .problem-entry input { flex: 1; }
     .problem-entry select { width: 130px; }
-    .problem-entry .remove-btn { background: none; border: none; color: #c0392b; cursor: pointer; font-size: 18px; padding: 0 4px; }
-    .add-problem-btn { display: inline-block; padding: 0.4rem 1rem; border: 1px dashed #dee2e6; border-radius: 6px; font-size: 13px; color: #6c757d; cursor: pointer; background: none; margin-top: 0.5rem; }
-    .add-problem-btn:hover { border-color: #1a1a2e; color: #1a1a2e; }
+    .problem-entry .remove-btn { background: none; border: none; color: var(--ss-error); cursor: pointer; font-size: var(--ss-fs-18); padding: 0 var(--ss-space-1); }
+    .add-problem-btn { display: inline-block; padding: var(--ss-space-2) var(--ss-space-4); border: 1px dashed var(--ss-rule); border-radius: var(--ss-radius); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); cursor: pointer; background: none; margin-top: var(--ss-space-2); }
+    .add-problem-btn:hover { border-color: var(--ss-navy); color: var(--ss-navy); }
 
-    .submit-btn { display: inline-block; padding: 0.5rem 1.5rem; background: #1a1a2e; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 1.5rem; }
-    .submit-btn:hover { background: #0d0d1a; }
+    .submit-btn { display: inline-block; padding: var(--ss-space-2) var(--ss-space-6); background: var(--ss-navy); color: var(--ss-on-navy); border: none; border-radius: var(--ss-radius); font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); cursor: pointer; margin-top: var(--ss-space-6); }
+    .submit-btn:hover { background: var(--ss-navy); }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .form-msg { font-size: 13px; margin-top: 0.5rem; }
-    .form-msg.error { color: #c0392b; }
-    .form-msg.success { color: #27ae60; }
+    .form-msg { font-size: var(--ss-fs-13); margin-top: var(--ss-space-2); }
+    .form-msg.error { color: var(--ss-error); }
+    .form-msg.success { color: var(--ss-success-strong); }
   </style>
 </head>
 <body>
@@ -87,7 +87,7 @@
 
     <div class="problems-section">
       <h3><%= __('pathsPage.problemsSection') %></h3>
-      <p style="font-size: 13px; color: #6c757d; margin-bottom: 1rem;"><%= __('pathsPage.addInOrder') %></p>
+      <p style="font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-4);"><%= __('pathsPage.addInOrder') %></p>
       <div id="problemList"></div>
       <button class="add-problem-btn" onclick="addProblem()"><%= __('pathsPage.addProblem') %></button>
     </div>

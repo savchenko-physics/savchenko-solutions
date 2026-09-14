@@ -42,10 +42,10 @@
         /* ---- Layout ---- */
         .formulas-wrapper {
             display: flex;
-            gap: 2rem;
+            gap: var(--ss-space-7);
             max-width: 1160px;
             margin: 0 auto;
-            padding: 1.5rem 1rem 3rem;
+            padding: var(--ss-space-6) var(--ss-space-4) var(--ss-space-9);
         }
         .chapter-sidebar {
             position: sticky;
@@ -55,13 +55,13 @@
             min-width: 220px;
             max-height: calc(100vh - 100px);
             overflow-y: auto;
-            padding: 0.75rem 0;
+            padding: var(--ss-space-3) 0;
         }
         .chapter-sidebar a {
             display: block;
-            padding: 6px 12px;
-            font-size: 13px;
-            color: #6c757d;
+            padding: var(--ss-space-2) var(--ss-space-3);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
             text-decoration: none;
             border-left: 2px solid transparent;
             line-height: 1.4;
@@ -69,8 +69,8 @@
         }
         .chapter-sidebar a:hover,
         .chapter-sidebar a.active {
-            color: #1a1a2e;
-            border-left-color: #1a1a2e;
+            color: var(--ss-navy);
+            border-left-color: var(--ss-navy);
         }
         .formulas-main {
             flex: 1;
@@ -83,74 +83,74 @@
             position: sticky;
             top: 70px;
             z-index: 10;
-            background: #fff;
-            padding: 0.75rem 0 1rem;
+            background: var(--ss-surface);
+            padding: var(--ss-space-3) 0 var(--ss-space-4);
         }
         .formula-search input {
             width: 100%;
             height: 44px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 0 14px 0 42px;
-            font-size: 15px;
-            color: #2d2d2d;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: 0 var(--ss-space-4) 0 var(--ss-space-8);
+            font-size: var(--ss-fs-16);
+            color: var(--ss-text);
             outline: none;
             transition: border-color 0.2s;
-            background: #f8f9fa url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center / 18px no-repeat;
+            background: var(--ss-surface-alt) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E") 14px center / 18px no-repeat;
         }
         .formula-search input:focus {
-            border-color: #1a1a2e;
-            background-color: #fff;
+            border-color: var(--ss-navy);
+            background-color: var(--ss-surface);
         }
         .search-count {
-            font-size: 13px;
-            color: #6c757d;
-            margin-top: 6px;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
+            margin-top: var(--ss-space-2);
             display: none;
         }
 
         /* ---- Chapter sections ---- */
         .chapter-section {
-            margin-bottom: 2.5rem;
+            margin-bottom: var(--ss-space-8);
         }
         .chapter-section h2 {
-            font-family: 'Inter', sans-serif;
-            font-size: 22px;
-            font-weight: 600;
-            color: #1a1a2e;
-            margin: 0 0 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #dee2e6;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-navy);
+            margin: 0 0 var(--ss-space-4);
+            padding-bottom: var(--ss-space-2);
+            border-bottom: 1px solid var(--ss-rule);
         }
 
         /* ---- Formula cards ---- */
         .formula-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1.1rem 1.25rem;
-            margin-bottom: 0.75rem;
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-4) var(--ss-space-5);
+            margin-bottom: var(--ss-space-3);
             transition: box-shadow 0.15s;
         }
         .formula-card:hover {
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            box-shadow: var(--ss-shadow);
         }
         .formula-card h3 {
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
-            font-weight: 600;
-            color: #2d2d2d;
-            margin: 0 0 0.5rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
+            margin: 0 0 var(--ss-space-2);
         }
         .formula-display {
-            font-size: 17px;
-            margin: 0.4rem 0;
+            font-size: var(--ss-fs-16);
+            margin: var(--ss-space-2) 0;
             overflow-x: auto;
         }
         .formula-vars {
-            font-size: 13px;
-            color: #6c757d;
-            margin: 0.35rem 0 0;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
+            margin: var(--ss-space-1) 0 0;
             line-height: 1.55;
         }
 
@@ -161,29 +161,29 @@
         .chapter-dropdown-mobile select {
             width: 100%;
             height: 40px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 0 12px;
-            font-size: 14px;
-            color: #2d2d2d;
-            background: #f8f9fa;
-            margin-bottom: 1rem;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: 0 var(--ss-space-3);
+            font-size: var(--ss-fs-16);
+            color: var(--ss-text);
+            background: var(--ss-surface-alt);
+            margin-bottom: var(--ss-space-4);
         }
 
         /* ---- No results ---- */
         .no-results {
             display: none;
             text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
-            font-size: 15px;
+            padding: var(--ss-space-9) var(--ss-space-4);
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-16);
         }
 
         /* ---- Responsive ---- */
         @media (max-width: 991px) {
             .chapter-sidebar { display: none; }
             .chapter-dropdown-mobile { display: block; }
-            .formulas-wrapper { padding: 1rem; }
+            .formulas-wrapper { padding: var(--ss-space-4); }
         }
 
         /* ---- Print ---- */
@@ -219,12 +219,12 @@
     <!-- ========== MAIN CONTENT ========== -->
     <main class="formulas-main">
 
-        <div style="margin-bottom:1rem;">
-            <a href="/<%= lang %>/tools" style="font-size:13px;color:#6c757d;text-decoration:none;">&larr; <%= lang === 'ru' ? 'Назад к инструментам' : 'Back to Tools' %></a>
+        <div style="margin-bottom:var(--ss-space-4);">
+            <a href="/<%= lang %>/tools" style="font-size:var(--ss-fs-13);color:var(--ss-text-secondary);text-decoration:none;">&larr; <%= lang === 'ru' ? 'Назад к инструментам' : 'Back to Tools' %></a>
         </div>
 
-        <h1 style="font-family:'Inter',sans-serif;font-size:26px;font-weight:600;color:#2d2d2d;margin:0 0 0.25rem;"><%= lang === 'ru' ? 'Формулы для МФО' : 'Formulas for IPhO' %></h1>
-        <p style="font-size:14px;color:#6c757d;margin:0 0 1rem;"><%= lang === 'ru' ? 'На основе справочника формул МФО Яана Калды (версия от 4 июля 2018 г.). Используйте строку поиска для быстрого нахождения любой формулы.' : 'Based on the IPhO formula sheet by Jaan Kalda (v. July 4, 2018). Use the search bar to find any formula instantly.' %></p>
+        <h1 style="font-family:var(--ss-font-ui);font-size:var(--ss-fs-24);font-weight:var(--ss-fw-strong);color:var(--ss-text);margin:0 0 var(--ss-space-1);"><%= lang === 'ru' ? 'Формулы для МФО' : 'Formulas for IPhO' %></h1>
+        <p style="font-size:var(--ss-fs-14);color:var(--ss-text-secondary);margin:0 0 var(--ss-space-4);"><%= lang === 'ru' ? 'На основе справочника формул МФО Яана Калды (версия от 4 июля 2018 г.). Используйте строку поиска для быстрого нахождения любой формулы.' : 'Based on the IPhO formula sheet by Jaan Kalda (v. July 4, 2018). Use the search bar to find any formula instantly.' %></p>
 
         <!-- Mobile chapter dropdown -->
         <div class="chapter-dropdown-mobile no-print">

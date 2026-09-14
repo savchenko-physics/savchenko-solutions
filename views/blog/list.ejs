@@ -19,60 +19,60 @@
         .blog-container {
             max-width: 820px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: var(--ss-space-7) var(--ss-space-4);
         }
         .blog-header {
-            margin-bottom: 2rem;
+            margin-bottom: var(--ss-space-7);
         }
         .blog-header h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: #2d2d2d;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-28);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
             margin: 0;
         }
         .tag-filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: var(--ss-space-2);
+            margin-top: var(--ss-space-4);
         }
         .tag-pill {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
+            padding: var(--ss-space-1) var(--ss-space-3);
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
             text-decoration: none;
-            border: 1px solid #dee2e6;
-            color: #6c757d;
-            background: #f8f9fa;
+            border: 1px solid var(--ss-rule);
+            color: var(--ss-text-secondary);
+            background: var(--ss-surface-alt);
             transition: all 0.15s;
         }
         /* Need `a.tag-pill` (not bare `.tag-pill`) to outrank the global
            `a:hover:not(.btn)` rule in design-system.css. */
         a.tag-pill:hover,
         a.tag-pill:focus {
-            background: #1a1a2e;
-            color: #fff;
-            border-color: #1a1a2e;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            border-color: var(--ss-navy);
         }
         .tag-pill--active {
-            background: #1a1a2e;
-            color: #fff;
-            border-color: #1a1a2e;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            border-color: var(--ss-navy);
         }
         .tag-pill--active,
         .tag-pill--active:visited,
         .tag-pill--active:hover,
         .tag-pill--active:focus,
         .tag-pill--active:active {
-            color: #fff !important;
+            color: var(--ss-on-navy) !important;
             text-decoration: none;
         }
         .blog-post-card {
-            padding: 1.5rem 0;
-            border-bottom: 1px solid #dee2e6;
+            padding: var(--ss-space-6) 0;
+            border-bottom: 1px solid var(--ss-rule);
         }
         .blog-post-card:first-child {
             padding-top: 0;
@@ -81,34 +81,34 @@
             border-bottom: none;
         }
         .blog-post-title {
-            font-family: 'Inter', sans-serif;
-            font-size: 20px;
-            font-weight: 600;
-            margin: 0 0 0.5rem 0;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-20);
+            font-weight: var(--ss-fw-strong);
+            margin: 0 0 var(--ss-space-2) 0;
         }
         .blog-post-title a {
-            color: #2d2d2d;
+            color: var(--ss-text);
             text-decoration: none;
         }
         .blog-post-title a:hover {
-            color: #1a5276;
+            color: var(--ss-link);
         }
         .blog-post-excerpt {
-            color: #6c757d;
-            font-size: 15px;
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-16);
             line-height: 1.6;
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--ss-space-3);
         }
         .blog-post-meta {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
-            gap: 0.75rem;
-            font-size: 13px;
-            color: #6c757d;
+            gap: var(--ss-space-3);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
         }
         .blog-post-meta a {
-            color: #1a5276;
+            color: var(--ss-link);
             text-decoration: none;
         }
         .blog-post-meta a:hover {
@@ -116,53 +116,53 @@
         }
         .blog-post-tags {
             display: flex;
-            gap: 0.35rem;
+            gap: var(--ss-space-1);
             flex-wrap: wrap;
-            margin-top: 0.5rem;
+            margin-top: var(--ss-space-2);
         }
         .blog-post-tags .tag-pill {
-            font-size: 12px;
-            padding: 0.15rem 0.5rem;
+            font-size: var(--ss-fs-12);
+            padding: 0.15rem var(--ss-space-2);
         }
         .blog-view-count {
-            color: #6c757d;
+            color: var(--ss-text-secondary);
         }
         .blog-pagination {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 0 0;
-            border-top: 1px solid #dee2e6;
-            margin-top: 1rem;
+            padding: var(--ss-space-6) 0 0;
+            border-top: 1px solid var(--ss-rule);
+            margin-top: var(--ss-space-4);
         }
         .blog-pagination a {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            padding: 0.5rem 1rem;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            color: #2d2d2d;
+            gap: var(--ss-space-1);
+            padding: var(--ss-space-2) var(--ss-space-4);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            color: var(--ss-text);
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-regular);
             transition: all 0.15s;
         }
         .blog-pagination a:hover {
-            background: #f8f9fa;
+            background: var(--ss-surface-alt);
         }
         .blog-pagination-disabled {
             visibility: hidden;
         }
         .blog-empty {
             text-align: center;
-            padding: 3rem 1rem;
-            color: #6c757d;
+            padding: var(--ss-space-9) var(--ss-space-4);
+            color: var(--ss-text-secondary);
         }
         @media (max-width: 768px) {
-            .blog-container { padding: 1rem 0.75rem; }
-            .blog-header h1 { font-size: 24px; }
-            .blog-post-title { font-size: 18px; }
+            .blog-container { padding: var(--ss-space-4) var(--ss-space-3); }
+            .blog-header h1 { font-size: var(--ss-fs-24); }
+            .blog-post-title { font-size: var(--ss-fs-18); }
         }
     </style>
 </head>
@@ -196,11 +196,11 @@
     <%- include('../default/main_site_header', { showViewsButton: false }) %>
 
     <div class="blog-container">
-        <div class="blog-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem;">
+        <div class="blog-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: var(--ss-space-3);">
             <h1><%= lang === 'ru' ? 'Блог' : 'Blog' %></h1>
             <% if (canPost) { %>
-            <a href="/blog/new" style="display: inline-flex; align-items: center; gap: 0.4rem; background: #1a1a2e; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1.25rem; font-size: 14px; font-weight: 500; text-decoration: none; transition: background 0.15s;">
-                <i class="fas fa-plus" style="font-size: 12px;"></i> <%= lang === 'ru' ? 'Новая запись' : 'New Post' %>
+            <a href="/blog/new" style="display: inline-flex; align-items: center; gap: var(--ss-space-2); background: var(--ss-navy); color: var(--ss-on-navy); border: none; border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-5); font-size: var(--ss-fs-14); font-weight: var(--ss-fw-regular); text-decoration: none; transition: background 0.15s;">
+                <i class="fas fa-plus" style="font-size: var(--ss-fs-12);"></i> <%= lang === 'ru' ? 'Новая запись' : 'New Post' %>
             </a>
             <% } %>
             <% if (allTags.length > 0) { %>
@@ -253,7 +253,7 @@
                 <span class="blog-pagination-disabled"></span>
             <% } %>
 
-            <span style="font-size: 14px; color: #6c757d;"><%= page %> / <%= totalPages %></span>
+            <span style="font-size: var(--ss-fs-14); color: var(--ss-text-secondary);"><%= page %> / <%= totalPages %></span>
 
             <% if (page < totalPages) { %>
                 <a href="/blog<%= activeTag ? '/tag/' + activeTag : '' %>?page=<%= page + 1 %>">

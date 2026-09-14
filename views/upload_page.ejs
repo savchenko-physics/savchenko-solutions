@@ -26,7 +26,7 @@
 
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: var(--ss-font-ui);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -37,27 +37,27 @@
     }
     .modern-search {
       background-color: rgba(255, 255, 255, 0.1);
-      color: #fff;
+      color: var(--ss-on-navy);
       border: 1px solid rgba(255, 255, 255, 0.2);
       transition: all 0.3s ease;
-      padding-left: 2.5rem !important;
+      padding-left: var(--ss-space-8) !important;
     }
     .modern-search:focus {
       background-color: rgba(255, 255, 255, 0.15);
       border-color: rgba(255, 255, 255, 0.3);
       box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.1);
-      color: #fff;
+      color: var(--ss-on-navy);
     }
     .modern-search::placeholder {
       color: rgba(255, 255, 255, 0.6);
     }
     .content-card {
-      background-color: #fff;
-      border-radius: 0.5rem;
+      background-color: var(--ss-surface);
+      border-radius: var(--ss-radius-lg);
     }
     .step-label {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
+      font-weight: var(--ss-fw-strong);
+      margin-bottom: var(--ss-space-1);
     }
     /* Hide or show sections based on solution method */
     #latexSection, #scansSection {
@@ -81,13 +81,13 @@
     }
 
     .upload-container {
-      border: 2px dashed #dee2e6 !important;
+      border: 2px dashed var(--ss-rule) !important;
       transition: all 0.3s ease;
     }
 
     .upload-container.dragover {
-      border-color: #0d6efd !important;
-      background: #f8f9fa;
+      border-color: var(--ss-link) !important;
+      background: var(--ss-surface-alt);
     }
 
     .drop-zone {
@@ -109,7 +109,7 @@
       z-index: 1060;
       width: 40px;
       height: 40px;
-      padding: 8px;
+      padding: var(--ss-space-2);
       opacity: 0.8;
       transition: opacity 0.2s;
     }
@@ -139,10 +139,10 @@
 
     /* Search Results Styling */
     .cdx-menu-item {
-      padding: 0.75rem 1rem;
+      padding: var(--ss-space-3) var(--ss-space-4);
       transition: all 0.2s ease;
-      border-radius: 0.5rem;
-      margin: 0 0.5rem;
+      border-radius: var(--ss-radius-lg);
+      margin: 0 var(--ss-space-2);
     }
 
     .cdx-menu-item:hover {
@@ -154,14 +154,14 @@
     }
 
     .cdx-search-result-title {
-      font-weight: 500;
-      color: #1a1a1a;
-      margin-bottom: 0.25rem;
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-text);
+      margin-bottom: var(--ss-space-1);
     }
 
     .cdx-menu-item__text__description {
-      font-size: 0.875rem;
-      color: #6c757d;
+      font-size: var(--ss-fs-14);
+      color: var(--ss-text-secondary);
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -169,10 +169,10 @@
     }
 
     .upload-video-heading {
-      font-size: 14px;
-      font-weight: 600;
-      color: #1a1a2e;
-      margin: 0 0 0.6rem;
+      font-size: var(--ss-fs-14);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-navy);
+      margin: 0 0 var(--ss-space-2);
     }
 
     #searchResults {
@@ -311,7 +311,7 @@
 
               <!-- Modern Drag & Drop Zone -->
               <div class="drop-zone mb-4 py-5 rounded-4" 
-                   style="background: rgba(255,255,255,0.7); border: 1px dashed #dee2e6;"
+                   style="background: rgba(255,255,255,0.7); border: 1px dashed var(--ss-rule);"
                    onclick="document.getElementById('fileUpload').click()">
                 <div class="mb-3">
                   <i class="bi bi-cloud-upload fs-1 text-primary"></i>

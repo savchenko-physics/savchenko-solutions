@@ -57,50 +57,50 @@
         .latex-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 1rem 1rem 2rem;
+            padding: var(--ss-space-4) var(--ss-space-4) var(--ss-space-7);
         }
         .latex-header {
-            margin-bottom: 0.75rem;
+            margin-bottom: var(--ss-space-3);
         }
         .latex-header h1 {
-            font-family: 'Inter', sans-serif;
-            font-size: 28px;
-            font-weight: 600;
-            color: #2d2d2d;
-            margin: 0 0 0.25rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-28);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text);
+            margin: 0 0 var(--ss-space-1);
         }
         .latex-header p {
-            color: #6c757d;
-            font-size: 15px;
+            color: var(--ss-text-secondary);
+            font-size: var(--ss-fs-16);
             margin: 0;
         }
 
         /* Template button rows */
         .template-section {
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--ss-space-2);
         }
         .template-section-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6c757d;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 0.3rem;
+            margin-bottom: var(--ss-space-1);
         }
         .template-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: var(--ss-space-1);
         }
         .template-btn {
             font-family: 'STIX Two Math', 'Cambria Math', serif;
-            font-size: 15px;
-            padding: 3px 10px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            color: #2d2d2d;
+            font-size: var(--ss-fs-14);
+            padding: var(--ss-space-1) var(--ss-space-3);
+            background: var(--ss-surface-alt);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            color: var(--ss-text);
             cursor: pointer;
             transition: border-color 0.15s;
             white-space: nowrap;
@@ -110,14 +110,14 @@
             vertical-align: middle;
         }
         .template-btn:hover {
-            border-color: #1a1a2e;
-            background: #eef1f5;
+            border-color: var(--ss-navy);
+            background: var(--ss-surface-hover);
         }
         .template-btn.physics-btn {
             background: #eef2ff;
         }
         .template-btn.physics-btn:hover {
-            border-color: #1a1a2e;
+            border-color: var(--ss-navy);
             background: #dde5ff;
         }
 
@@ -125,8 +125,8 @@
         .editor-panels {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
+            gap: var(--ss-space-3);
+            margin-bottom: var(--ss-space-3);
         }
         @media (max-width: 767px) {
             .editor-panels {
@@ -135,39 +135,39 @@
         }
 
         .panel-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            color: #6c757d;
-            margin-bottom: 0.3rem;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
+            margin-bottom: var(--ss-space-1);
         }
 
         #latexInput {
             width: 100%;
             min-height: 200px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            padding: 1rem;
+            font-family: var(--ss-font-mono);
+            font-size: var(--ss-fs-14);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            padding: var(--ss-space-4);
             resize: vertical;
             outline: none;
-            color: #2d2d2d;
-            background: #fff;
+            color: var(--ss-text);
+            background: var(--ss-surface);
             line-height: 1.6;
         }
         #latexInput:focus {
-            border-color: #1a1a2e;
+            border-color: var(--ss-navy);
         }
         #latexInput::placeholder {
-            color: #adb5bd;
+            color: var(--ss-text-tertiary);
         }
 
         .preview-panel {
-            background: #fff;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            padding: 1rem;
+            background: var(--ss-surface);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
+            padding: var(--ss-space-4);
             min-height: 200px;
             display: flex;
             align-items: center;
@@ -180,36 +180,36 @@
         #previewContent {
             width: 100%;
             text-align: center;
-            font-size: 18px;
-            color: #2d2d2d;
+            font-size: var(--ss-fs-18);
+            color: var(--ss-text);
             word-break: break-word;
         }
         .preview-placeholder {
-            color: #adb5bd;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
+            color: var(--ss-text-tertiary);
+            font-size: var(--ss-fs-14);
+            font-family: var(--ss-font-ui);
         }
 
         /* Action buttons */
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: var(--ss-space-2);
             flex-wrap: wrap;
         }
         .action-btn {
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 500;
-            padding: 0 16px;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-13);
+            font-weight: var(--ss-fw-strong);
+            padding: 0 var(--ss-space-4);
             height: 36px;
-            background: #1a1a2e;
-            color: #fff;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
             border: none;
-            border-radius: 6px;
+            border-radius: var(--ss-radius);
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: var(--ss-space-2);
             transition: opacity 0.15s;
         }
         .action-btn:hover {
@@ -230,10 +230,10 @@
         }
 
         .copy-feedback {
-            font-size: 12px;
-            color: #27ae60;
-            font-family: 'Inter', sans-serif;
-            margin-left: 4px;
+            font-size: var(--ss-fs-12);
+            color: var(--ss-success-strong);
+            font-family: var(--ss-font-ui);
+            margin-left: var(--ss-space-1);
             opacity: 0;
             transition: opacity 0.2s;
         }
@@ -245,18 +245,18 @@
         .template-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 4px;
+            gap: var(--ss-space-1);
             align-items: stretch;
         }
         .template-group + .template-group {
-            padding-left: 10px;
-            border-left: 1px solid #e9ecef;
+            padding-left: var(--ss-space-3);
+            border-left: 1px solid var(--ss-rule-soft);
         }
         .template-group-label {
-            font-family: 'Inter', sans-serif;
-            font-size: 10px;
-            font-weight: 600;
-            color: #adb5bd;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            color: var(--ss-text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.3px;
             align-self: center;
@@ -272,16 +272,16 @@
 
         /* Symbols section (full-width inline) */
         .symbols-section {
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            background: #fff;
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius-lg);
+            background: var(--ss-surface);
             overflow: hidden;
         }
         .symbols-header {
             display: flex;
             align-items: center;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
+            background: var(--ss-surface-alt);
+            border-bottom: 1px solid var(--ss-rule);
         }
         .symbols-tabs {
             display: flex;
@@ -289,23 +289,23 @@
             overflow-x: auto;
         }
         .symbols-tab {
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 6px 10px;
+            font-family: var(--ss-font-ui);
+            font-size: var(--ss-fs-12);
+            font-weight: var(--ss-fw-strong);
+            padding: var(--ss-space-2) var(--ss-space-3);
             background: none;
             border: none;
             border-bottom: 2px solid transparent;
-            color: #6c757d;
+            color: var(--ss-text-secondary);
             cursor: pointer;
             white-space: nowrap;
         }
         .symbols-tab:hover {
-            color: #2d2d2d;
+            color: var(--ss-text);
         }
         .symbols-tab.active {
-            color: #1a1a2e;
-            border-bottom-color: #1a1a2e;
+            color: var(--ss-navy);
+            border-bottom-color: var(--ss-navy);
         }
         .symbols-collapse-btn {
             display: flex;
@@ -315,14 +315,14 @@
             height: 32px;
             background: none;
             border: none;
-            border-left: 1px solid #dee2e6;
-            color: #6c757d;
+            border-left: 1px solid var(--ss-rule);
+            color: var(--ss-text-secondary);
             cursor: pointer;
             flex-shrink: 0;
             transition: color 0.15s;
         }
         .symbols-collapse-btn:hover {
-            color: #1a1a2e;
+            color: var(--ss-navy);
         }
         .symbols-collapse-btn svg {
             transition: transform 0.2s;
@@ -339,8 +339,8 @@
         .symbols-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
-            gap: 3px;
-            padding: 6px;
+            gap: var(--ss-space-1);
+            padding: var(--ss-space-2);
             max-height: 132px;
             overflow-y: auto;
         }
@@ -351,31 +351,31 @@
             width: 38px;
             height: 38px;
             font-family: 'STIX Two Math', serif;
-            font-size: 19px;
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 4px;
-            color: #2d2d2d;
+            font-size: var(--ss-fs-18);
+            background: var(--ss-surface);
+            border: 1px solid var(--ss-rule-soft);
+            border-radius: var(--ss-radius-sm);
+            color: var(--ss-text);
             cursor: pointer;
             transition: background 0.1s, border-color 0.1s;
         }
         .symbol-btn:hover {
-            background: #eef1f5;
-            border-color: #1a1a2e;
+            background: var(--ss-surface-hover);
+            border-color: var(--ss-navy);
         }
 
         /* Back link */
         .back-link {
             display: inline-flex;
             align-items: center;
-            gap: 4px;
-            font-size: 13px;
-            color: #6c757d;
+            gap: var(--ss-space-1);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
             text-decoration: none;
-            margin-bottom: 0.5rem;
+            margin-bottom: var(--ss-space-2);
         }
         .back-link:hover {
-            color: #1a1a2e;
+            color: var(--ss-navy);
         }
         .back-link svg {
             width: 14px;
@@ -743,18 +743,18 @@
                             <button class="symbol-btn" data-insert="\\breve{}" data-mode="insert">x&#x0306;</button>
                             <button class="symbol-btn" data-insert="\\check{}" data-mode="insert">x&#x030C;</button>
                             <button class="symbol-btn" data-insert="\\mathring{}" data-mode="insert">x&#x030A;</button>
-                            <button class="symbol-btn" data-insert="\\widehat{}" data-mode="insert" style="font-size:16px">x&#x0302;y</button>
-                            <button class="symbol-btn" data-insert="\\widetilde{}" data-mode="insert" style="font-size:16px">x&#x0303;y</button>
-                            <button class="symbol-btn" data-insert="\\overline{}" data-mode="insert" style="font-size:16px">x&#x0305;</button>
-                            <button class="symbol-btn" data-insert="\\underline{}" data-mode="insert" style="font-size:16px">x&#x0332;</button>
+                            <button class="symbol-btn" data-insert="\\widehat{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x0302;y</button>
+                            <button class="symbol-btn" data-insert="\\widetilde{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x0303;y</button>
+                            <button class="symbol-btn" data-insert="\\overline{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x0305;</button>
+                            <button class="symbol-btn" data-insert="\\underline{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x0332;</button>
                             <button class="symbol-btn" data-insert="\\overbrace{}" data-mode="insert">&#x23DE;</button>
                             <button class="symbol-btn" data-insert="\\underbrace{}" data-mode="insert">&#x23DF;</button>
-                            <button class="symbol-btn" data-insert="\\overrightarrow{}" data-mode="insert" style="font-size:16px">x&#x20D7;</button>
-                            <button class="symbol-btn" data-insert="\\overleftarrow{}" data-mode="insert" style="font-size:16px">x&#x20D6;</button>
-                            <button class="symbol-btn" data-insert="\\mathbb{}" data-mode="insert" style="font-size:16px">&#x211D;</button>
-                            <button class="symbol-btn" data-insert="\\mathcal{}" data-mode="insert" style="font-size:16px">&#x1D49C;</button>
-                            <button class="symbol-btn" data-insert="\\mathfrak{}" data-mode="insert" style="font-size:16px">&#x1D504;</button>
-                            <button class="symbol-btn" data-insert="\\mathscr{}" data-mode="insert" style="font-size:16px">&#x1D49E;</button>
+                            <button class="symbol-btn" data-insert="\\overrightarrow{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x20D7;</button>
+                            <button class="symbol-btn" data-insert="\\overleftarrow{}" data-mode="insert" style="font-size:var(--ss-fs-16)">x&#x20D6;</button>
+                            <button class="symbol-btn" data-insert="\\mathbb{}" data-mode="insert" style="font-size:var(--ss-fs-16)">&#x211D;</button>
+                            <button class="symbol-btn" data-insert="\\mathcal{}" data-mode="insert" style="font-size:var(--ss-fs-16)">&#x1D49C;</button>
+                            <button class="symbol-btn" data-insert="\\mathfrak{}" data-mode="insert" style="font-size:var(--ss-fs-16)">&#x1D504;</button>
+                            <button class="symbol-btn" data-insert="\\mathscr{}" data-mode="insert" style="font-size:var(--ss-fs-16)">&#x1D49E;</button>
                         </div>
                 </div>
             </div>

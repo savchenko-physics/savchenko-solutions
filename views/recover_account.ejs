@@ -18,7 +18,7 @@
             <p class="success"><%= success %></p>
         <% } %>
         <% if (!success) { %>
-        <p style="font-size: 14px; color: #6c757d; margin-bottom: 16px;">
+        <p style="font-size: var(--ss-fs-14); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-4);">
             <%= lang === 'ru'
                 ? 'Не можете войти или сбросить пароль? Отправьте запрос — наша команда рассмотрит его вручную в течение 5 рабочих дней.'
                 : "Can't log in or reset your password? Submit an appeal and our team will review it manually within 5 business days." %>
@@ -32,12 +32,12 @@
             <div class="form-group">
                 <label for="message"><%= lang === 'ru' ? 'Опишите проблему (необязательно)' : 'Describe the problem (optional)' %></label>
                 <textarea id="message" name="message" rows="4" maxlength="2000"
-                          style="width:100%; padding:8px; font-size:16px; margin-top:5px; border:1px solid #ccc; border-radius:4px; font-family:'Arial','Roboto',sans-serif; resize:vertical;"></textarea>
+                          style="width:100%; padding:var(--ss-space-2); font-size:var(--ss-fs-16); margin-top:var(--ss-space-1); border:1px solid var(--ss-rule); border-radius:var(--ss-radius-sm); font-family:var(--ss-font-ui); resize:vertical;"></textarea>
             </div>
             <button type="submit" class="submit-button"><%= lang === 'ru' ? 'Отправить запрос' : 'Submit appeal' %></button>
         </form>
         <% } %>
-        <p style="margin-top: 16px;">
+        <p style="margin-top: var(--ss-space-4);">
             <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Вернуться к входу' : 'Back to login' %></a>
         </p>
     </div>

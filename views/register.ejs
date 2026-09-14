@@ -53,9 +53,9 @@
                     </button>
                 </div>
             </div>
-            <p style="font-size: 12px; color: #6c757d; margin: 12px 0 16px;">
+            <p style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin: var(--ss-space-3) 0 var(--ss-space-4);">
                 <%= lang === 'ru' ? 'Регистрируясь, вы соглашаетесь с' : 'By registering, you agree to the' %>
-                <a href="/<%= lang %>/community-guidelines" style="color: #6c757d; text-decoration: underline;">
+                <a href="/<%= lang %>/community-guidelines" style="color: var(--ss-text-secondary); text-decoration: underline;">
                     <%= lang === 'ru' ? 'правилами сообщества' : 'Community Guidelines' %></a>.
             </p>
             <button type="submit" class="submit-button"><%= __('auth.register.submit') %></button>

@@ -19,129 +19,129 @@
         .search-page-container {
             max-width: 780px;
             margin: 0 auto;
-            padding: 32px 16px;
+            padding: var(--ss-space-7) var(--ss-space-4);
         }
         .search-page-form {
             display: flex;
             gap: 0;
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: var(--ss-space-5);
         }
         .search-page-form input[type="text"] {
             flex: 1;
-            padding: 10px 14px;
-            font-size: 1rem;
-            border: 1px solid #dee2e6;
+            padding: var(--ss-space-3) var(--ss-space-4);
+            font-size: var(--ss-fs-16);
+            border: 1px solid var(--ss-rule);
             border-right: none;
-            border-radius: 6px 0 0 6px;
+            border-radius: var(--ss-radius) 0 0 var(--ss-radius);
             outline: none;
             height: 40px;
             box-sizing: border-box;
         }
         .search-page-form input[type="text"]:focus {
-            border-color: #1a5276;
+            border-color: var(--ss-link);
         }
         .search-page-form button {
-            padding: 0 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            background: #1a1a2e;
-            color: #fff;
-            border: 1px solid #1a1a2e;
-            border-radius: 0 6px 6px 0;
+            padding: 0 var(--ss-space-5);
+            font-size: var(--ss-fs-14);
+            font-weight: var(--ss-fw-strong);
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            border: 1px solid var(--ss-navy);
+            border-radius: 0 var(--ss-radius) var(--ss-radius) 0;
             cursor: pointer;
             height: 40px;
             box-sizing: border-box;
         }
         .search-page-form button:hover {
-            background: #2c2c4a;
+            background: var(--ss-navy-hover);
         }
         .search-results-count {
-            font-size: 14px;
-            color: #6c757d;
-            margin-bottom: 16px;
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text-secondary);
+            margin-bottom: var(--ss-space-4);
         }
         .search-filters {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 24px;
+            gap: var(--ss-space-2);
+            margin-bottom: var(--ss-space-6);
         }
         .search-filter-pill {
             display: inline-block;
-            padding: 4px 12px;
-            font-size: 13px;
-            border: 1px solid #dee2e6;
-            border-radius: 16px;
-            background: #fff;
-            color: #2d2d2d;
+            padding: var(--ss-space-1) var(--ss-space-3);
+            font-size: var(--ss-fs-13);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            background: var(--ss-surface);
+            color: var(--ss-text);
             cursor: pointer;
             text-decoration: none;
             transition: background-color 0.15s, border-color 0.15s;
         }
         .search-filter-pill:hover {
-            background: #f8f9fa;
-            border-color: #adb5bd;
-            color: #2d2d2d;
+            background: var(--ss-surface-alt);
+            border-color: var(--ss-rule-strong);
+            color: var(--ss-text);
             text-decoration: none;
         }
         .search-filter-pill.active {
-            background: #1a1a2e;
-            color: #fff;
-            border-color: #1a1a2e;
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            border-color: var(--ss-navy);
         }
         .search-result-card {
-            padding: 16px 0;
-            border-bottom: 1px solid #dee2e6;
+            padding: var(--ss-space-4) 0;
+            border-bottom: 1px solid var(--ss-rule);
         }
         .search-result-card:last-child {
             border-bottom: none;
         }
         .search-result-name {
-            font-size: 16px;
-            font-weight: 600;
-            margin: 0 0 4px 0;
+            font-size: var(--ss-fs-16);
+            font-weight: var(--ss-fw-strong);
+            margin: 0 0 var(--ss-space-1) 0;
         }
         .search-result-name a {
-            color: #1a5276;
+            color: var(--ss-link);
             text-decoration: none;
         }
         .search-result-name a:hover {
-            color: #0d3b54;
+            color: var(--ss-link-hover);
             text-decoration: underline;
         }
         .search-result-context {
-            font-size: 13px;
-            color: #6c757d;
-            margin: 0 0 6px 0;
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
+            margin: 0 0 var(--ss-space-2) 0;
         }
         .search-result-snippet {
-            font-size: 14px;
-            color: #2d2d2d;
+            font-size: var(--ss-fs-14);
+            color: var(--ss-text);
             margin: 0;
             line-height: 1.5;
         }
         .search-lang-badge {
             display: inline-block;
-            background: #e9ecef;
-            border-radius: 3px;
-            padding: 1px 6px;
-            font-size: 11px;
-            color: #6c757d;
-            margin-left: 6px;
+            background: var(--ss-surface-hover);
+            border-radius: var(--ss-radius-sm);
+            padding: 1px var(--ss-space-2);
+            font-size: var(--ss-fs-12);
+            color: var(--ss-text-secondary);
+            margin-left: var(--ss-space-2);
             vertical-align: middle;
         }
         .search-no-results {
             text-align: center;
-            padding: 48px 16px;
-            color: #6c757d;
+            padding: var(--ss-space-9) var(--ss-space-4);
+            color: var(--ss-text-secondary);
         }
         .search-no-results p {
-            font-size: 15px;
-            margin-top: 12px;
+            font-size: var(--ss-fs-16);
+            margin-top: var(--ss-space-3);
         }
         .search-no-results a {
-            color: #1a5276;
+            color: var(--ss-link);
         }
     </style>
     <script src="/js/analytics.js"></script>
@@ -150,7 +150,7 @@
 <body class="auth-page">
     <%- include('default/header.ejs') %>
     <div class="search-page-container">
-        <h1 style="font-size: 22px; font-weight: 600; margin-bottom: 20px;"><%= lang === 'ru' ? 'Поиск' : 'Search' %></h1>
+        <h1 style="font-size: var(--ss-fs-20); font-weight: var(--ss-fw-strong); margin-bottom: var(--ss-space-5);"><%= lang === 'ru' ? 'Поиск' : 'Search' %></h1>
 
         <form class="search-page-form" action="/global-search" method="get">
             <input type="hidden" name="lang" value="<%= lang %>">
@@ -205,7 +205,7 @@
                     </button>
                 </div>
             <% } else if (!searchTerm) { %>
-                <p style="color: #6c757d;"><%= __('menu.searchTypeToSeeResults') %></p>
+                <p style="color: var(--ss-text-secondary);"><%= __('menu.searchTypeToSeeResults') %></p>
             <% } else { %>
                 <% results.forEach(function(result) { %>
                     <div class="search-result-card" data-lang="<%= result.lang %>" data-chapter="<%= result.chapterNum %>">
@@ -276,7 +276,7 @@
         if (!terms.length) return;
         const pattern = new RegExp('(' + terms.map(function(t) { return t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')', 'gi');
         document.querySelectorAll('.search-result-snippet').forEach(function(el) {
-            el.innerHTML = el.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(pattern, '<mark style="background:#fff3cd;padding:0 1px;border-radius:2px;">$1</mark>');
+            el.innerHTML = el.textContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(pattern, '<mark style="background:var(--ss-warning-soft);padding:0 1px;border-radius:var(--ss-radius-sm);">$1</mark>');
         });
     })();
     </script>

@@ -11,28 +11,28 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: #2d2d2d; }
-    .lb-container { max-width: 700px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .back-link { font-size: 13px; color: #1a5276; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; margin-bottom: 1.5rem; }
-    .back-link:hover { color: #0d3b54; }
-    .page-title { font-size: 28px; font-weight: 600; font-family: Inter, sans-serif; margin-bottom: 0.25rem; }
-    .page-subtitle { font-size: 15px; color: #6c757d; margin-bottom: 2rem; }
+    body { font-family: var(--ss-font-ui); background: var(--ss-surface); color: var(--ss-text); }
+    .lb-container { max-width: 700px; margin: 0 auto; padding: var(--ss-space-7) var(--ss-space-6); }
+    .back-link { font-size: var(--ss-fs-13); color: var(--ss-link); text-decoration: none; display: inline-flex; align-items: center; gap: var(--ss-space-1); margin-bottom: var(--ss-space-6); }
+    .back-link:hover { color: var(--ss-link-hover); }
+    .page-title { font-size: var(--ss-fs-28); font-weight: var(--ss-fw-strong); font-family: var(--ss-font-ui); margin-bottom: var(--ss-space-1); }
+    .page-subtitle { font-size: var(--ss-fs-16); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-7); }
 
     .lb-table { width: 100%; border-collapse: collapse; }
-    .lb-table th { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; padding: 0.5rem 0.75rem; border-bottom: 2px solid #dee2e6; text-align: left; }
-    .lb-table td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-    .lb-table tr:hover { background: #f8f9fa; }
-    .rank-cell { width: 40px; text-align: center; font-weight: 600; }
+    .lb-table th { font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); text-transform: uppercase; letter-spacing: 0.5px; color: var(--ss-text-secondary); padding: var(--ss-space-2) var(--ss-space-3); border-bottom: 2px solid var(--ss-rule); text-align: left; }
+    .lb-table td { padding: var(--ss-space-2) var(--ss-space-3); border-bottom: 1px solid var(--ss-rule-soft); font-size: var(--ss-fs-14); }
+    .lb-table tr:hover { background: var(--ss-surface-alt); }
+    .rank-cell { width: 40px; text-align: center; font-weight: var(--ss-fw-strong); }
     .rank-gold { color: #d4a017; }
     .rank-silver { color: #8a8a8a; }
     .rank-bronze { color: #a0522d; }
-    .user-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .user-cell { display: flex; align-items: center; gap: var(--ss-space-2); }
     .user-cell img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-    .user-cell a { color: #1a5276; text-decoration: none; font-weight: 500; }
-    .user-cell a:hover { color: #0d3b54; }
-    .score-cell { font-weight: 600; }
-    .streak-cell { color: #6c757d; }
-    .empty-state { text-align: center; padding: 3rem 1rem; color: #6c757d; }
+    .user-cell a { color: var(--ss-link); text-decoration: none; font-weight: var(--ss-fw-regular); }
+    .user-cell a:hover { color: var(--ss-link-hover); }
+    .score-cell { font-weight: var(--ss-fw-strong); }
+    .streak-cell { color: var(--ss-text-secondary); }
+    .empty-state { text-align: center; padding: var(--ss-space-9) var(--ss-space-4); color: var(--ss-text-secondary); }
   </style>
 </head>
 <body>
@@ -84,9 +84,9 @@
     </table>
     <% } else { %>
     <div class="empty-state">
-      <p style="font-size: 16px; font-weight: 500;"><%= __('challengesPage.noScoresLeaderboard') %></p>
+      <p style="font-size: var(--ss-fs-16); font-weight: var(--ss-fw-regular);"><%= __('challengesPage.noScoresLeaderboard') %></p>
       <p><%= __('challengesPage.completeChallengesToAppear') %></p>
-      <a href="/compete" style="color: #1a5276;"><%= __('challengesPage.viewCurrentChallenge') %></a>
+      <a href="/compete" style="color: var(--ss-link);"><%= __('challengesPage.viewCurrentChallenge') %></a>
     </div>
     <% } %>
   </div>
