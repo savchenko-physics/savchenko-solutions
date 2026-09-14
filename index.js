@@ -228,11 +228,13 @@ app.use("/img/profile_images", express.static(AVATAR_DIR, {
 }));
 app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: '30d' }));
 // Site fonts are content-hashed (scripts/build-fonts.py), so a file name never changes meaning:
-// a year, immutable. Mounted before /css so its week-long max-age never applies to them, and
-// fallthrough:false so a stale hash 404s here instead of wandering into the routes below.
+// a year, immutable. Mounted before /css so its week-long max-age never applies to them. A stale
+// hash ends here as a plain 404: with fallthrough:false the static middleware handed its 404 to
+// the error handler, which answered 500.
 app.use("/css/vendor/fonts/h", express.static(path.join(__dirname, "css", "vendor", "fonts", "h"), {
-    immutable: true, maxAge: '365d', index: false, fallthrough: false,
+    immutable: true, maxAge: '365d', index: false,
 }));
+app.use("/css/vendor/fonts/h", (req, res) => res.sendStatus(404));
 app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d' }));
 app.use("/en", express.static(path.join(__dirname, "en")));
 app.use("/theory", express.static(path.join(__dirname, "theory")));

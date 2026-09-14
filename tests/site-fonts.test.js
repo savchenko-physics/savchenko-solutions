@@ -177,6 +177,8 @@ test('the hashed files are served immutable for a year, before the general /css 
     const mount = index.indexOf('app.use("/css/vendor/fonts/h"');
     assert.ok(mount > 0);
     assert.match(index.slice(mount, mount + 400), /immutable: true, maxAge: '365d'/);
+    // A file that is not there is a 404 from this prefix, not the error handler's 500.
+    assert.match(index, /app\.use\("\/css\/vendor\/fonts\/h", \(req, res\) => res\.sendStatus\(404\)\);/);
     assert.ok(mount < index.indexOf('app.use("/css", express.static'), 'the general mount would answer first with a 7-day cache');
 });
 
