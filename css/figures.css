@@ -23,13 +23,12 @@
     --fig-rule: #dee2e6;
     --fig-paper: #ffffff;
 
-    /* The solution body is justified 1.35rem serif with an indent on every paragraph
-       (solution_post.ejs:198-222). None of that should reach the figure. */
-    /* The same face and size as the statement and the solution around it, so the figure
-       reads as part of the page rather than as a widget dropped into it. */
-    font-family: "Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif;
-    font-size: 1.35rem;
-    line-height: 1.5;
+    /* The same face and size as the statement and the solution around it (SS Text at the prose
+       size), so the figure reads as part of the page rather than as a widget dropped into it.
+       The prose's paragraph indent and hyphenation must not reach it. */
+    font-family: var(--ss-font-text);
+    font-size: var(--ss-text-prose);
+    line-height: var(--ss-lh-ui);
     text-align: left;
     text-indent: 0;
     hyphens: none;
@@ -87,8 +86,8 @@
     right: 0;
     z-index: 2;
     padding-left: 2.2em;
-    font-size: 0.62em;
-    line-height: 1.3;
+    font-size: var(--ss-fs-14);
+    line-height: var(--ss-lh-snug);
     color: var(--fig-muted);
     pointer-events: none;
 }
@@ -107,7 +106,7 @@
     z-index: 2;
     padding: 0 3px;
     background: rgba(255, 255, 255, 0.86);   /* knockout, so a label stays readable over the wireframe */
-    font-size: 1em;
+    font-size: var(--ss-text-prose-small);
     line-height: 1.2;
     white-space: nowrap;
     pointer-events: none;
@@ -135,7 +134,8 @@
     right: 0;
     bottom: 0;
     z-index: 2;
-    font-size: 0.62em;
+    font-family: var(--ss-font-ui);
+    font-size: var(--ss-text-meta);
     color: var(--fig-muted);
     pointer-events: none;
     transition: opacity 0.25s linear;
@@ -162,14 +162,14 @@
 }
 
 .ss-fig-control > label {
-    font-size: 1em;
-    font-weight: 400;
+    font-size: var(--ss-text-prose-small);
+    font-weight: var(--ss-fw-regular);
     color: var(--fig-ink);
     margin: 0;
 }
 
 .ss-fig-control .ss-fig-value {
-    font-size: 1em;
+    font-size: var(--ss-text-prose-small);
     color: var(--fig-muted);
     font-variant-numeric: tabular-nums;
     justify-self: start;
@@ -237,18 +237,19 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 2.2em;
-    padding: 0 0.7em;
+    min-height: var(--ss-control-sm);
+    padding: 0 var(--ss-space-3);
     border: 1px solid var(--fig-rule);
-    border-radius: 6px;
+    border-radius: var(--ss-radius);
     background: var(--fig-paper);
     color: var(--fig-deposit);
-    font: inherit;
-    font-size: 0.92em;
+    font-family: var(--ss-font-ui);
+    font-size: var(--ss-text-ui);
+    font-weight: var(--ss-fw-strong);
     cursor: pointer;
 }
 
-.ss-fig-btn:hover { background: #f8f9fa; }
+.ss-fig-btn:hover { background: var(--ss-surface-alt); }
 
 .ss-fig-btn:focus-visible {
     outline: 2px solid var(--fig-a);
@@ -268,8 +269,8 @@
 .ss-fig-caption {
     grid-area: caption;
     margin: 2px 0 0;
-    font-size: 0.72em;
-    line-height: 1.5;
+    font-size: var(--ss-text-prose-small);
+    line-height: var(--ss-lh-snug);
     color: var(--fig-deposit);
     text-align: left;
     text-indent: 0;
@@ -344,8 +345,8 @@
 
     /* Four buttons have to make one row on a 360px screen. */
     .ss-fig-btn {
-        padding: 0 0.55em;
-        font-size: 0.86em;
+        padding: 0 var(--ss-space-2);
+        font-size: var(--ss-text-meta);
     }
 
     .ss-fig-buttons { gap: 6px; }
@@ -375,11 +376,9 @@
     text-align: left;
 }
 
-/* The solution body itself drops to 1rem below 768px (solution_post.ejs:1261), and the
-   figure follows it down — the whole point of tying the two together. */
+/* The figure follows the prose size down on phones through the --ss-text-prose token. */
 @media (max-width: 768px) {
     .ss-fig {
-        font-size: 1rem;
         gap: 14px 16px;
     }
 }

@@ -98,7 +98,7 @@ test('reachable stylesheets contain no third-party url() or @import', () => {
     }
   }
   // css/bundle.css is generated from these by scripts/build-css.js.
-  for (const n of ['design-system.css', 'main_page.css', 'solutions.css']) {
+  for (const n of require('../scripts/build-css').SOURCES) {
     const p = path.join(ROOT, 'css', n);
     if (fs.existsSync(p)) referenced.add(p);
   }
@@ -135,4 +135,19 @@ test('vendored stylesheets reference only local font files', () => {
     }
   }
   assert.deepStrictEqual(offenders, [], `Broken or remote references in vendored CSS:\n  ${offenders.join('\n  ')}`);
+});
+
+// fetch() is a request the page makes too. The contributors map fetched its world outline from
+// raw.githubusercontent.com until 2026-09, which this file's tag scan could not see.
+test('page scripts fetch nothing from a third-party origin', () => {
+  const offenders = [];
+  const files = [...walk(path.join(ROOT, 'views'), ['.ejs']), ...walk(path.join(ROOT, 'js'), ['.js'])];
+  for (const f of files) {
+    const src = fs.readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/\b(?:fetch|fetchJSON|d3\.json|\$\.getJSON)\(\s*[`'"](https?:\/\/[^`'"]+)/g)) {
+      const host = hostOf(m[1]);
+      if (host && !ALLOWED_HOSTS.has(host) && !OWN_HOSTS.has(host)) offenders.push(`${rel(f)} -> ${m[1]}`);
+    }
+  }
+  assert.deepStrictEqual(offenders, [], `Third-party fetch(es):\n  ${offenders.join('\n  ')}`);
 });

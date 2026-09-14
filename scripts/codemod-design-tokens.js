@@ -92,9 +92,19 @@ function scanCss(css, masked, baseOffset, opts, ctx, inlineSelector = null) {
         if (colon < 0) return;
         const prop = raw.slice(0, colon).trim();
         if (!prop || prop.startsWith('--') || /[^a-zA-Z-]/.test(prop)) return;
+        const prelude = inline ? inlineSelector : (stack.filter((s) => !s.startsWith('@')).pop() || '');
+        // Every declaration, for tests/design-rules.test.js: what is written, where, and whether it
+        // sits inside an ss-codemod: off region (the system's own definitions).
+        if (opts.visit) {
+            opts.visit({
+                file: ctx.file, line: lineOf(ctx.text, baseOffset + start), selector: prelude, prop: prop.toLowerCase(),
+                value: css.slice(start + colon + 1, end).trim(), inline, off,
+                media: stack.filter((s) => s.startsWith('@media')).join(' '),
+                dynamic: /\u0001/.test(masked.slice(start + colon + 1, end)) || /\$\{/.test(raw),
+            });
+        }
         const rule = ruleFor(prop);
         if (!rule || !opts.rules.includes(rule)) return;
-        const prelude = inline ? inlineSelector : (stack.filter((s) => !s.startsWith('@')).pop() || '');
         if (!inline && /(^|,)\s*(:root|\[data-bs-theme)/.test(prelude)) return;
         if (off) return;
         const valueStart = start + colon + 1;

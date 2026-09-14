@@ -17,9 +17,10 @@
 //      `a:visited` — that would outrank .btn. Use `:not(.btn)`, or `:where(:not(.btn))` to
 //      keep the old specificity.
 //
-// Not covered: contrast in general. A container rule like `.dark a { color: #fff }` still
-// loses to design-system.css's a:link:not(.btn) at (0,2,1) and leaves the link #1a5276;
-// that takes a real browser to see, not the source.
+// Since the September 2026 type unification the site link rule itself is `a { color }` at
+// (0,0,1), so a container rule like `.dark a { color: #fff }` wins as it should; the (0,2,1)
+// a:link:not(.btn) rule it replaced is what used to leave such links #1a5276.
+// Not covered: contrast in general — that takes a real browser (scripts/qa/type_audit.py).
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -113,7 +114,7 @@ test('no stylesheet a page loads colours a bare a:link or a:visited', () => {
     ];
     // Stylesheets linked from templates (absolute, ../../ relative, or through asset()/av()),
     // the files concatenated into bundle.css, and anything they @import.
-    const linked = new Set(['design-system.css', 'main_page.css', 'solutions.css'].map((f) => path.join(ROOT, 'css', f)));
+    const linked = new Set(require('../scripts/build-css').SOURCES.map((f) => path.join(ROOT, 'css', f)));
     const offenders = [];
     for (const file of templates) {
         const src = fs.readFileSync(file, 'utf8');
@@ -138,4 +139,12 @@ test('no stylesheet a page loads colours a bare a:link or a:visited', () => {
         }
     }
     assert.deepEqual(offenders, []);
+});
+
+test('the site link rule stays at (0,0,1), so containers and buttons can colour their own links', () => {
+    const ds = fs.readFileSync(path.join(ROOT, 'css', 'design-system.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.match(ds, /(^|\n)a \{\s*color: var\(--ss-link\);/);
+    assert.doesNotMatch(ds, /a:link:not\(\.btn\)|a:visited:not\(\.btn\)/);
+    // Hover and visited are wrapped in :where() so they add nothing to the specificity.
+    assert.match(ds, /a:where\(:hover\) \{/);
 });

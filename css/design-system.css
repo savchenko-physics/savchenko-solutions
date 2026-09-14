@@ -127,7 +127,7 @@
   --ss-accent: #7d3c98;                  /* "solved in both languages"; community highlights */
   --ss-accent-soft: #f3ecf7;
   --ss-success: #27ae60;                 /* fills and rules only — 2.9:1 as text on white */
-  --ss-success-strong: #1e8449;          /* success text, and fills under white text */
+  --ss-success-strong: #1b7a43;          /* success text, and fills under white text (4.9:1 on success-soft) */
   --ss-success-soft: #eaf7ef;
   --ss-error: #c0392b;
   --ss-error-soft: #fdf2f0;
@@ -245,7 +245,7 @@
   --bs-box-shadow-lg: 0 1px 3px rgba(0, 0, 0, 0.08);
   --bs-box-shadow-inset: none;
   --bs-focus-ring-color: rgba(26, 82, 118, 0.35);
-  --bs-form-valid-color: #1e8449;
+  --bs-form-valid-color: #1b7a43;
   --bs-form-valid-border-color: #27ae60;
   --bs-form-invalid-color: #c0392b;
   --bs-form-invalid-border-color: #c0392b;
@@ -253,8 +253,8 @@
   --bs-primary-rgb: 26, 26, 46;
   --bs-secondary: #6c757d;
   --bs-secondary-rgb: 108, 117, 125;
-  --bs-success: #1e8449;
-  --bs-success-rgb: 30, 132, 73;
+  --bs-success: #1b7a43;
+  --bs-success-rgb: 27, 122, 67;
   --bs-info: #1a5276;
   --bs-info-rgb: 26, 82, 118;
   --bs-warning: #9a6700;
@@ -268,7 +268,7 @@
   --bs-primary-text-emphasis: #1a1a2e;
   --bs-primary-bg-subtle: #eef1f4;
   --bs-primary-border-subtle: #dee2e6;
-  --bs-success-text-emphasis: #1e8449;
+  --bs-success-text-emphasis: #1b7a43;
   --bs-success-bg-subtle: #eaf7ef;
   --bs-success-border-subtle: #b6e1c8;
   --bs-danger-text-emphasis: #c0392b;
@@ -360,8 +360,8 @@
 }
 .btn-success {
   --bs-btn-color: #ffffff;
-  --bs-btn-bg: #1e8449;
-  --bs-btn-border-color: #1e8449;
+  --bs-btn-bg: #1b7a43;
+  --bs-btn-border-color: #1b7a43;
   --bs-btn-hover-color: #ffffff;
   --bs-btn-hover-bg: #186b3b;
   --bs-btn-hover-border-color: #186b3b;
@@ -388,7 +388,7 @@
   --bs-btn-hover-border-color: #adb5bd;
   --bs-btn-active-bg: #eef1f4;
 }
-.btn-outline-success { --bs-btn-color: #1e8449; --bs-btn-hover-color: #1e8449; --bs-btn-active-color: #1e8449; }
+.btn-outline-success { --bs-btn-color: #1b7a43; --bs-btn-hover-color: #1b7a43; --bs-btn-active-color: #1b7a43; }
 .btn-outline-danger { --bs-btn-color: #c0392b; --bs-btn-hover-color: #c0392b; --bs-btn-active-color: #c0392b; }
 .btn-outline-warning { --bs-btn-color: #9a6700; --bs-btn-hover-color: #9a6700; --bs-btn-active-color: #9a6700; }
 .btn-outline-info { --bs-btn-color: #1a5276; --bs-btn-hover-color: #1a5276; --bs-btn-active-color: #1a5276; }
@@ -2336,34 +2336,34 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 
    Colour takes the fill only; the borders those rules set are left alone, so
    language status still reads while difficulty is showing. */
-body.grid-heat .heat-1 { background: #ffffcc !important; color: #2d2d2d !important; }
-body.grid-heat .heat-2 { background: #ffeda0 !important; color: #2d2d2d !important; }
-body.grid-heat .heat-3 { background: #fed976 !important; color: #2d2d2d !important; }
-body.grid-heat .heat-4 { background: #feb24c !important; color: #2d2d2d !important; }
-body.grid-heat .heat-5 { background: #fd8d3c !important; color: #2d2d2d !important; }
-body.grid-heat .heat-6 { background: #fc4e2a !important; color: #ffffff !important; }
-body.grid-heat .heat-7 { background: #e31a1c !important; color: #ffffff !important; }
-body.grid-heat .heat-8 { background: #bd0026 !important; color: #ffffff !important; }
-body.grid-heat .heat-9 { background: #800026 !important; color: #ffffff !important; }
+body.grid-heat .heat-1 { background: var(--ss-heat-1) !important; color: var(--ss-heat-1-ink) !important; }
+body.grid-heat .heat-2 { background: var(--ss-heat-2) !important; color: var(--ss-heat-2-ink) !important; }
+body.grid-heat .heat-3 { background: var(--ss-heat-3) !important; color: var(--ss-heat-3-ink) !important; }
+body.grid-heat .heat-4 { background: var(--ss-heat-4) !important; color: var(--ss-heat-4-ink) !important; }
+body.grid-heat .heat-5 { background: var(--ss-heat-5) !important; color: var(--ss-heat-5-ink) !important; }
+body.grid-heat .heat-6 { background: var(--ss-heat-6) !important; color: var(--ss-heat-6-ink) !important; }
+body.grid-heat .heat-7 { background: var(--ss-heat-7) !important; color: var(--ss-heat-7-ink) !important; }
+body.grid-heat .heat-8 { background: var(--ss-heat-8) !important; color: var(--ss-heat-8-ink) !important; }
+body.grid-heat .heat-9 { background: var(--ss-heat-9) !important; color: var(--ss-heat-9-ink) !important; }
 /* Not yet scored — shown as absent rather than as easy. */
-body.grid-heat .heat-none { background: #ffffff !important; color: #adb5bd !important; }
+body.grid-heat .heat-none { background: var(--ss-heat-none) !important; color: var(--ss-heat-none-ink) !important; }
 /* Savchenko's own ∗: a heavier dark border rather than a hue, so his judgement
    and the model's stay separable and the marker survives greyscale. */
 body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight: var(--ss-fw-strong); }
 
 /* Legend swatches: always coloured, regardless of whether heat mode is on. */
 .heat-chip { width: 14px; height: 12px; border-radius: var(--ss-radius-sm); display: inline-block; }
-.heat-chip.heat-1 { background: #ffffcc; }
-.heat-chip.heat-2 { background: #ffeda0; }
-.heat-chip.heat-3 { background: #fed976; }
-.heat-chip.heat-4 { background: #feb24c; }
-.heat-chip.heat-5 { background: #fd8d3c; }
-.heat-chip.heat-6 { background: #fc4e2a; }
-.heat-chip.heat-7 { background: #e31a1c; }
-.heat-chip.heat-8 { background: #bd0026; }
-.heat-chip.heat-9 { background: #800026; }
+.heat-chip.heat-1 { background: var(--ss-heat-1); }
+.heat-chip.heat-2 { background: var(--ss-heat-2); }
+.heat-chip.heat-3 { background: var(--ss-heat-3); }
+.heat-chip.heat-4 { background: var(--ss-heat-4); }
+.heat-chip.heat-5 { background: var(--ss-heat-5); }
+.heat-chip.heat-6 { background: var(--ss-heat-6); }
+.heat-chip.heat-7 { background: var(--ss-heat-7); }
+.heat-chip.heat-8 { background: var(--ss-heat-8); }
+.heat-chip.heat-9 { background: var(--ss-heat-9); }
 .heat-ramp { display: inline-flex; gap: 2px; }
-.legend-star { background: #fed976; border: 2px solid var(--ss-navy); }
+.legend-star { background: var(--ss-heat-3); border: 2px solid var(--ss-navy); }
 
 /* ── Feedback: the suggestion box, the poll and the public board ─────────────────────
    Site-wide, and deliberately quiet. The tab has to be findable without competing with

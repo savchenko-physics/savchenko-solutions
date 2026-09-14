@@ -19,9 +19,10 @@
 }(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
-    // 9-step YlOrRd ramp for difficulty (0-100 → 1…9). Dark text on steps 1-5, white on 6-9.
+    // 9-step YlOrRd ramp for difficulty (0-100 → 1…9). Navy ink on steps 1-6, white on 7-9: the
+    // ink with the better contrast on each step (white on step 6 was 3.35:1, navy is 5.1:1).
     const HEAT = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
-    const HEAT_INK = ['#2d2d2d', '#2d2d2d', '#2d2d2d', '#2d2d2d', '#2d2d2d', '#ffffff', '#ffffff', '#ffffff', '#ffffff'];
+    const HEAT_INK = ['#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#ffffff', '#ffffff', '#ffffff'];
     const HEAT_NONE = { fill: '#ffffff', ink: '#8c959f' };
 
     // Which languages a solution exists in. Shape carries the meaning as well as hue (solid = both,

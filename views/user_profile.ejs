@@ -65,6 +65,7 @@
     <link rel="icon" type="image/png" href="/img/logo.png">
     <link rel="apple-touch-icon" href="/img/logo.png">
     <%- include('default/site_styles', { ssStyles: { icons: 'bi' } }) %>
+    <script src="<%= (typeof asset === 'function') ? asset('/js/palettes.js') : '/js/palettes.js' %>"></script>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
     <style>
         :root {
@@ -2382,20 +2383,24 @@
 
         /* ── Contribution Rating (Codeforces-style) ── */
 
-        // Score → rank title + color. Mirrors the tiers on /:lang/contributors
-        // (getReputationBadge) and forum.js so the same title shows everywhere.
+        // Score → rank title + color. The tiers live in js/palettes.js, shared with
+        // /:lang/contributors and forum.js, so the same title shows everywhere.
+        const RANK_LABELS = {
+            legendaryGrandmaster: ["Legendary Grandmaster", "Легендарный гроссмейстер"],
+            internationalGrandmaster: ["International Grandmaster", "Международный гроссмейстер"],
+            grandmaster: ["Grandmaster", "Гроссмейстер"],
+            internationalMaster: ["International Master", "Международный мастер"],
+            master: ["Master", "Мастер"],
+            candidateMaster: ["Candidate Master", "Кандидат в мастера"],
+            expert: ["Expert", "Эксперт"],
+            specialist: ["Specialist", "Специалист"],
+            pupil: ["Pupil", "Ученик"],
+            newbie: ["Newbie", "Новичок"],
+        };
         function getReputationBadge(score) {
-            const L = (en, ru) => (lang === "ru" ? ru : en);
-            if (score >= 200) return { label: L("Legendary Grandmaster", "Легендарный гроссмейстер"), color: "#FF0000" };
-            if (score >= 160) return { label: L("International Grandmaster", "Международный гроссмейстер"), color: "#FF0000" };
-            if (score >= 130) return { label: L("Grandmaster", "Гроссмейстер"), color: "#CC0000" };
-            if (score >= 110) return { label: L("International Master", "Международный мастер"), color: "#FF8C00" };
-            if (score >= 90)  return { label: L("Master", "Мастер"), color: "#FF8C00" };
-            if (score >= 70)  return { label: L("Candidate Master", "Кандидат в мастера"), color: "#AA00AA" };
-            if (score >= 50)  return { label: L("Expert", "Эксперт"), color: "#0000FF" };
-            if (score >= 30)  return { label: L("Specialist", "Специалист"), color: "#03A89E" };
-            if (score >= 10)  return { label: L("Pupil", "Ученик"), color: "#008000" };
-            return { label: L("Newbie", "Новичок"), color: "#808080" };
+            const tier = window.SSPalettes.rankFor(score);
+            const names = RANK_LABELS[tier.key];
+            return { label: lang === "ru" ? names[1] : names[0], color: tier.color };
         }
 
         async function renderRating() {

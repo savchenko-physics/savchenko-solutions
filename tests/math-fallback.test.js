@@ -149,6 +149,20 @@ test('the shapes of maths real solutions use still render', () => {
     }
 });
 
+// ── sized in em: a formula must not change size while the text font loads ─────────────
+test('server formulas are sized in em at SS Text\'s x-height, never in ex', () => {
+    const { EX_IN_EM } = require('../mathRender');
+    assert.equal(EX_IN_EM, 0.431, 'NewCM Book sxHeight is 431/1000');
+    const html = renderMathInHtml('<p>$x^2$ и $$\\frac{a}{b}$$ и $10\\,\\text{кОм}$</p>');
+    const outer = html.match(/<mjx-container\b[^>]*><svg\b[^>]*>/g) || [];
+    assert.equal(outer.length, 3);
+    for (const tag of outer) {
+        assert.doesNotMatch(tag, /ex[";]/, tag);
+        assert.match(tag, /width="[\d.]+em" height="[\d.]+em"/, tag);
+        assert.match(tag, /vertical-align: -?[\d.]+em/, tag);
+    }
+});
+
 // ── the pages: server-rendered maths is only whole with the stylesheet on the page ──────
 // Since the 2026-09 type unification no template links stylesheets itself: every page includes
 // views/default/site_styles.ejs, which links /css/mathjax.css?v=<content hash> when the page

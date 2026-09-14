@@ -60,12 +60,12 @@
     var RULE = "#dee2e6";
     var PAPER = "#ffffff";
 
-    /* The same stack the statement and the solution are set in (solution_post.ejs:211):
-       Latin from Latin Modern, Cyrillic falling through per-glyph to CMU Serif. Canvas does
-       not itself trigger a webfont download, so start() asks for these explicitly. */
-    var BODY = '"Computer Modern Serif", "Latin Modern Roman", "CMU Serif", "Times New Roman", serif';
+    /* The face the statement and the solution are set in: SS Text, New Computer Modern Book
+       (css/design-system.css --ss-font-text), Latin and Cyrillic alike. Canvas does not itself
+       trigger a webfont download, so the loader at the bottom asks for it explicitly. */
+    var BODY = '"SS Text", "SS Text Fallback", "Times New Roman", serif';
     var TXT = 1;                             // css font-size / 15, refreshed on every layout
-    var MATHF = '"Latin Modern Roman", "CMU Serif", "STIX Two Math", "Times New Roman", serif';
+    var MATHF = '"SS Text", "SS Text Fallback", "STIX Two Math", "Times New Roman", serif';
 
     /* ------------------------------------------------------------------ physics */
 
@@ -302,9 +302,9 @@
 
     /* ----------------------------------------------------------- text primitives */
 
-    /* Words are set in Inter (a Nature figure is sans-labelled); single symbols are set
-       in Latin Modern italic so they match the server-rendered TeX elsewhere on the page.
-       A label is therefore a list of runs, laid out here rather than in one fillText. */
+    /* Words are set in SS Text upright; single symbols in SS Text italic, so they match the
+       server-rendered TeX elsewhere on the page. A label is therefore a list of runs, laid
+       out here rather than in one fillText. */
     /* measureText is one of the more expensive things a 2-D context does, and drawRuns
        used to call it twice per run. Widths are memoised on (font, text) and the cache is
        dropped whenever the type scale or the webfonts change. */
@@ -1569,9 +1569,9 @@
     start();
     if (document.fonts && document.fonts.load) {
         Promise.all([
-            document.fonts.load('16px "Latin Modern Roman"', "Fx0"),
-            document.fonts.load('italic 16px "Latin Modern Roman"', "Fx0"),
-            document.fonts.load('16px "CMU Serif"', "пылинки")
+            document.fonts.load('16px "SS Text"', "Fx0"),
+            document.fonts.load('italic 16px "SS Text"', "Fx0"),
+            document.fonts.load('16px "SS Text"', "пылинки")
         ]).catch(function () { /* a missing face just means the fallback stack */ })
           .then(function () { textCache.clear(); layout(); });
     } else if (document.fonts && document.fonts.ready) {

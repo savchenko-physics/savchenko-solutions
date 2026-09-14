@@ -118,6 +118,22 @@ function decodeEntities(s) {
 // the published page about which formulas render. See js/tex-normalize.js.
 const { normalizeTex } = require('./js/tex-normalize');
 
+// Formulas are sized in em, not in MathJax's ex. An ex follows whatever font is on screen, so
+// while SS Text was still loading (its size-matched fallback has an x-height of 0.49 em against
+// New Computer Modern's 0.431 em) every formula was drawn about 14% too large and shrank when the
+// font arrived; tall inline fractions reflowed whole paragraphs (layout shift 0.15 on /ru/1.1.1
+// with the fonts 0.4 s late, 0.005 after this). One ex of SS Text is exactly 0.431 em, so once the
+// font is in the page looks as it did before, and nothing moves while it loads.
+const EX_IN_EM = 0.431;
+function emLength(v) {
+    return `${Number((parseFloat(v) * EX_IN_EM).toFixed(3))}em`;
+}
+function exToEm(html) {
+    return html.replace(/^(<mjx-container\b[^>]*>)(<svg\b[^>]*>)/, (all, container, svg) => container + svg
+        .replace(/\b(width|height)="(-?[\d.]+)ex"/g, (m, attr, v) => `${attr}="${emLength(v)}"`)
+        .replace(/vertical-align:\s*(-?[\d.]+)ex/g, (m, v) => `vertical-align: ${emLength(v)}`));
+}
+
 const formulaCache = new Map();
 const CACHE_MAX = 20000;
 function tex2svg(tex, display) {
@@ -127,7 +143,7 @@ function tex2svg(tex, display) {
     let out;
     try {
         const node = mathDoc.convert(normalizeTex(decodeEntities(tex).trim()), { display });
-        out = adaptor.outerHTML(node);
+        out = exToEm(adaptor.outerHTML(node));
     } catch (err) {
         out = null; // signal failure → keep the raw delimiters untouched
     }
@@ -209,4 +225,4 @@ function renderMathInHtml(html) {
     return restore(s, store);
 }
 
-module.exports = { renderMathInHtml, getMathCss };
+module.exports = { renderMathInHtml, getMathCss, EX_IN_EM };

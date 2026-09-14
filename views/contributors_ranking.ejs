@@ -25,6 +25,7 @@
     <link rel="apple-touch-icon" href="/img/logo.png">
     <!-- Bootstrap 5: required for main_site_header (navbar, grid, collapse) -->
     <%- include('default/site_styles') %>
+    <script src="<%= (typeof asset === 'function') ? asset('/js/palettes.js') : '/js/palettes.js' %>"></script>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
     <style>
         :root {
@@ -1125,17 +1126,10 @@
             }
         }
 
+        // The tiers and their colours live in js/palettes.js (shared with forum.js and the profile).
         function getReputationBadge(score) {
-            if (score >= 200) return { label: t.legendaryGrandmaster, color: '#FF0000' };
-            if (score >= 160) return { label: t.internationalGrandmaster, color: '#FF0000' };
-            if (score >= 130) return { label: t.grandmaster, color: '#CC0000' };
-            if (score >= 110) return { label: t.internationalMaster, color: '#FF8C00' };
-            if (score >= 90)  return { label: t.master, color: '#FF8C00' };
-            if (score >= 70)  return { label: t.candidateMaster, color: '#AA00AA' };
-            if (score >= 50)  return { label: t.expert, color: '#0000FF' };
-            if (score >= 30)  return { label: t.specialist, color: '#03A89E' };
-            if (score >= 10)  return { label: t.pupil, color: '#008000' };
-            return { label: t.newbie, color: '#808080' };
+            const tier = window.SSPalettes.rankFor(score);
+            return { label: t[tier.key], color: tier.color };
         }
 
         function renderRows(rows) {
@@ -1251,7 +1245,10 @@
 
         async function loadMap() {
             const [geojson, mapData] = await Promise.all([
-                fetchJSON("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson"),
+                // Self-hosted copy of the D3 Graph Gallery world outline (Natural Earth, public
+                // domain); fetched from raw.githubusercontent.com until 2026-09, which put the map
+                // behind a third-party origin (CLAUDE.md, What NOT to Do).
+                fetchJSON("/js/vendor/world.geojson"),
                 fetchJSON("/api/contributors/map"),
             ]);
 

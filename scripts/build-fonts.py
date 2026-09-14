@@ -62,7 +62,8 @@ URL_PREFIX = '/css/vendor/fonts/h/'
 RANGES = {
     'latin': 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, '
              'U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2217, U+221E, U+2248, U+2260, U+2264-2265, U+FEFF, U+FFFD',
-    'latin-ext': 'U+0100-0130, U+0132-0151, U+0154-02AF, U+1E00-1E9F, U+1EF2-1EFF, U+20A0-20AB, U+20AD-20B3, U+20B5-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF',
+    # European names and Vietnamese; not IPA or the rarer extension blocks, which tripled the file.
+    'latin-ext': 'U+0100-0130, U+0132-0151, U+0154-024F, U+0259, U+1E9E, U+1EA0-1EF9, U+20A0-20AB, U+20AD-20B3, U+20B5-20C0, U+2113',
     'cyrillic': 'U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116',
     'cyrillic-ext': 'U+0460-048F, U+0492-04AF, U+04B2-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F',
     'greek': 'U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF',
@@ -140,7 +141,9 @@ def rename(font, family, style_name, ps):
 
 
 def cut(src_path, codepoints, family, style_name, ps, license_text=None):
-    font = TTFont(src_path)
+    # recalcTimestamp=False: the head table keeps the source date, so a rebuild with the same inputs
+    # produces the same bytes and the same hashed names (a new name costs every reader a download).
+    font = TTFont(src_path, recalcTimestamp=False)
     options = subset.Options()
     options.flavor = 'woff2'
     options.layout_features = LAYOUT_FEATURES
@@ -188,7 +191,12 @@ def metrics(path):
     f = TTFont(path, lazy=True)
     upm = f['head'].unitsPerEm
     os2, hhea = f['OS/2'], f['hhea']
-    sample = 'Определите силу, действующую на вертикальную стенку со стороны клина. The quick brown fox 0123456789'
+    # Weighted like the site's reading: about 70% of solution views are Russian.
+    sample = ('Какую наибольшую разность потенциалов можно получить от источника тока, который имеет внутреннее '
+              'сопротивление. Определите силу, действующую на вертикальную стенку со стороны клина, если на него '
+              'положили груз массы. Угол при основании клина. Коэффициент трения между грузом и поверхностью клина. '
+              'Determine the force acting on the vertical wall from the side of the wedge, if a weight of mass is '
+              'placed on it. Angle at the base of the wedge 0123456789.')
     cmap, hmtx = f.getBestCmap(), f['hmtx']
     width = sum(hmtx[cmap[ord(c)]][0] for c in sample if ord(c) in cmap) / upm
     return {'xh': os2.sxHeight / upm, 'asc': hhea.ascent / upm, 'desc': -hhea.descent / upm, 'gap': hhea.lineGap / upm, 'width': width}
@@ -288,27 +296,39 @@ def main():
 
     # Fallback faces: a local system font scaled so the swap moves as little as possible. Metrics
     # come from the metric-compatible Liberation fonts (same advance widths as Times New Roman,
-    # Arial and Courier New). Serif matches x-height, because formulas are sized in ex; the others
-    # match average width, because what shifts on swap is the line breaks.
+    # Arial and Courier New). All of them match average width, because what shifts on swap is the
+    # line breaks. The serif once matched x-height instead (formulas are sized in ex), but Times at
+    # that size set 7% more text per line than NewCM, and solution pages shifted by 0.11–0.33 CLS
+    # when the font arrived 0.4 s late; matched by width they shift by 0.005–0.013, and formulas
+    # being a little larger during the swap moves nothing measurable.
     lib = '/usr/share/fonts/truetype/liberation'
+    ssdc = os.path.join(args.texlive, CMU_SSDC)
     newcm_m = metrics(os.path.join(args.texlive, NEWCM[0][0]))
+    newcm_bold_m = metrics(os.path.join(args.texlive, NEWCM[2][0]))
     ssdc_m = metrics(ssdc)
     with zipfile.ZipFile(args.plex_sans_zip) as zf:
         plex_m = metrics(io.BytesIO(zf.read('ibm-plex-sans/fonts/complete/ttf/IBMPlexSans-Regular.ttf')))
+        plex_semi_m = metrics(io.BytesIO(zf.read('ibm-plex-sans/fonts/complete/ttf/IBMPlexSans-SemiBold.ttf')))
     serif_m = metrics(os.path.join(lib, 'LiberationSerif-Regular.ttf'))
+    serif_bold_m = metrics(os.path.join(lib, 'LiberationSerif-Bold.ttf'))
     sans_m = metrics(os.path.join(lib, 'LiberationSans-Regular.ttf'))
+    sans_bold_m = metrics(os.path.join(lib, 'LiberationSans-Bold.ttf'))
     narrow = os.path.join(lib, 'LiberationSansNarrow-Regular.ttf')
     narrow_m = metrics(narrow) if os.path.exists(narrow) else sans_m
 
-    def fallback(name, locals_, target, base, by):
-        adj = (target['xh'] / base['xh']) if by == 'xh' else (target['width'] / base['width'])
-        return {'family': name, 'local': locals_, 'sizeAdjust': round(adj * 100, 1),
+    def fallback(name, weight, locals_, target, base):
+        adj = target['width'] / base['width']
+        return {'family': name, 'weight': weight, 'local': locals_, 'sizeAdjust': round(adj * 100, 1),
                 'ascent': round(target['asc'] / adj * 100, 1), 'descent': round(target['desc'] / adj * 100, 1), 'lineGap': 0}
+    # The bold cuts get their own fallback: CM Bold is 10% wider than CM Book, and the problem
+    # number and title (bold) reflowed the whole statement when only the regular face was matched.
     fallbacks = [
-        fallback('SS Text Fallback', ['Times New Roman', 'TimesNewRomanPSMT', 'Liberation Serif', 'Tinos'], newcm_m, serif_m, 'xh'),
-        fallback('SS Sans Fallback', ['Arial', 'ArialMT', 'Liberation Sans', 'Arimo', 'Helvetica'], plex_m, sans_m, 'width'),
-        fallback('SS Display Fallback', ['Arial Narrow', 'ArialNarrow', 'Liberation Sans Narrow'], ssdc_m, narrow_m, 'width'),
-        {'family': 'SS Mono Fallback', 'local': ['Courier New', 'CourierNewPSMT', 'Liberation Mono', 'Cousine'],
+        fallback('SS Text Fallback', 400, ['Times New Roman', 'TimesNewRomanPSMT', 'Liberation Serif', 'Tinos'], newcm_m, serif_m),
+        fallback('SS Text Fallback', 700, ['Times New Roman Bold', 'TimesNewRomanPS-BoldMT', 'Liberation Serif Bold', 'Tinos Bold'], newcm_bold_m, serif_bold_m),
+        fallback('SS Sans Fallback', 400, ['Arial', 'ArialMT', 'Liberation Sans', 'Arimo', 'Helvetica'], plex_m, sans_m),
+        fallback('SS Sans Fallback', 600, ['Arial Bold', 'Arial-BoldMT', 'Liberation Sans Bold', 'Arimo Bold', 'Helvetica Bold'], plex_semi_m, sans_bold_m),
+        fallback('SS Display Fallback', 600, ['Arial Narrow', 'ArialNarrow', 'Liberation Sans Narrow'], ssdc_m, narrow_m),
+        {'family': 'SS Mono Fallback', 'weight': 400, 'local': ['Courier New', 'CourierNewPSMT', 'Liberation Mono', 'Cousine'],
          'sizeAdjust': 100.0, 'ascent': round(1.025 * 100, 1), 'descent': round(0.275 * 100, 1), 'lineGap': 0},
     ]
 
@@ -341,6 +361,7 @@ def main():
             lines.append('@font-face {')
             lines.append(f"  font-family: '{fb['family']}';")
             lines.append(f"  font-style: {style};")
+            lines.append(f"  font-weight: {fb['weight']};")
             lines.append(f"  src: {srcs};")
             lines.append(f"  size-adjust: {fb['sizeAdjust']}%;")
             lines.append(f"  ascent-override: {fb['ascent']}%;")
@@ -361,7 +382,7 @@ def main():
         fams.setdefault(f['family'], 0)
         fams[f['family']] += f['bytes']
     print(f"{len(faces)} faces, {manifest['totalBytes'] // 1024} KB total: " + ', '.join(f"{k} {v // 1024} KB" for k, v in fams.items()))
-    print('fallbacks:', ', '.join(f"{fb['family']} {fb['sizeAdjust']}%" for fb in fallbacks))
+    print('fallbacks:', ', '.join(f"{fb['family']} {fb['weight']} {fb['sizeAdjust']}%" for fb in fallbacks))
 
 
 if __name__ == '__main__':
