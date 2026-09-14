@@ -287,25 +287,40 @@
 
         <!-- Legend. Swatches mirror the dot shapes exactly, so the key works in
              greyscale and for colour-deficient readers. Sits directly above the grid,
-             which is where it is needed. -->
+             which is where it is needed. One key at a time: languages, or with the
+             difficulty switch on, the difficulty scale (grid-mode.js toggles them). -->
+        <% const hasDifficultyKey = typeof difficultyGrid !== 'undefined' && difficultyGrid; %>
         <div class="grid-legend">
-          <span class="legend-item">
-            <span class="legend-swatch legend-both"></span>
-            <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
+          <span class="legend-set"<% if (hasDifficultyKey) { %> data-grid-mode-when="progress"<% } %>>
+            <span class="legend-item">
+              <span class="legend-swatch legend-both"></span>
+              <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
+            </span>
+            <span class="legend-item">
+              <span class="legend-swatch legend-en"></span>
+              <%= lang === 'ru' ? 'Только английский' : 'English only' %>
+            </span>
+            <span class="legend-item">
+              <span class="legend-swatch legend-ru"></span>
+              <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
+            </span>
+            <span class="legend-item">
+              <span class="legend-swatch legend-unsolved"></span>
+              <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
+            </span>
           </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-en"></span>
-            <%= lang === 'ru' ? 'Только английский' : 'English only' %>
+          <% if (hasDifficultyKey) { %>
+          <span class="legend-set legend-set--heat" id="heatLegend" data-grid-mode-when="difficulty" hidden>
+            <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
+            <span class="heat-ramp">
+              <% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %>
+            </span>
+            <span class="legend-item"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+            <span class="legend-item legend-item--apart">
+              <span class="legend-swatch legend-star"></span>
+              <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
+            </span>
           </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-ru"></span>
-            <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
-          </span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-unsolved"></span>
-            <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
-          </span>
-          <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
           <!-- Off by default: without it the grid is byte-identical to what it has always
                been, and nobody has to opt out of a view they did not ask for. -->
           <label class="ss-switch grid-mode-toggle" for="heatmapToggle">
@@ -315,19 +330,6 @@
           </label>
           <% } %>
         </div>
-        <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
-        <div class="grid-legend heat-legend" id="heatLegend" data-grid-mode-when="difficulty" hidden>
-          <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
-          <span class="heat-ramp">
-            <% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %>
-          </span>
-          <span class="legend-item"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
-          <span class="legend-item">
-            <span class="legend-swatch legend-star"></span>
-            <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
-          </span>
-        </div>
-        <% } %>
 
         <!-- Chapter Grid -->
         <div class="chapter-grid">
@@ -367,7 +369,7 @@
               <div class="chapter-card-row">
                 <span class="chapter-num"><%= chNum %></span>
                 <div class="chapter-card-text">
-                  <div class="chapter-card-name"><%= chapter.title %></div>
+                  <div class="chapter-card-name" id="ch-<%= chNum %>-name"><%= chapter.title %></div>
                   <% if (lang === 'ru') { %>
                     <%
                       const enChapterNames = ['Kinematics','Dynamics','Oscillations and Waves','Fluid Mechanics','Molecular Physics','Electrostatics','Motion of charged particles in an electric field','Electric current','Constant magnetic field','Motion of charged particles in complex fields','Electromagnetic induction','Electromagnetic waves','Geometrical optics. Photometry. Quantum nature of light','Special theory of relativity'];
@@ -391,8 +393,7 @@
               grid-auto-flow: dense the cards after it close up the row the card sits in, so
               opening a chapter never leaves the rest of its row empty (it used to span the
               whole row itself and pushed its neighbours down, 2026-09-14). %>
-          <div class="chapter-content" id="ch-<%= chNum %>-panel" role="region" aria-labelledby="ch-<%= chNum %>-panel-title">
-            <div class="chapter-content-head" id="ch-<%= chNum %>-panel-title"><span class="chapter-num chapter-num--sm"><%= chNum %></span><%= chapter.title %></div>
+          <div class="chapter-content" id="ch-<%= chNum %>-panel" role="region" aria-labelledby="ch-<%= chNum %>-name">
               <% chSections.forEach(sec => { %>
               <div class="section-block">
                 <div class="section-header" id="<%= sec.number %>">
@@ -663,7 +664,7 @@
                   <span class="ta-avatar-wrap">
                     <img src="<%= author.profile_picture || '/img/profile_images/Default_placeholder.svg' %>"
                          alt="<%= author.username %>"
-                         class="ta-avatar" width="24" height="24" />
+                         class="ta-avatar" width="32" height="32" loading="lazy" />
                     <% if (author.is_online) { %>
                       <span class="ta-online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>" aria-label="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span>
                     <% } %>
@@ -972,23 +973,32 @@
       .hero-search-input { height: 48px; font-size: var(--ss-fs-16); }
       .hero-search-button { height: 48px; }
     }
-    /* Wide screens: two columns instead of one narrow column and a blank right half.
-       The search keeps its own column so it stays the obvious primary object, and the
-       worklist moves up beside it rather than being pushed below the fold. */
+    /* Wide screens: the headline and its byline on the left, the search on the right beside
+       them, and the numbers and the worklist on one line underneath. The previous split put the
+       whole intro in the left column and only the worklist on the right, so with one or two
+       problems in the list the right half of the first screen stood empty under a three-line
+       headline (2026-09-14). Phones keep the source order: headline, byline, search, numbers. */
     @media (min-width: 992px) {
       .hero-primary {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        column-gap: var(--ss-space-9);
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        grid-template-areas:
+          "headline search"
+          "byline   search"
+          "proof    wanted";
+        grid-template-rows: auto 1fr auto;
+        column-gap: var(--ss-space-8);
         align-items: start;
+        padding-bottom: var(--ss-space-4);
       }
-      .hero-headline { max-width: 26ch; }
-      .hero-byline { max-width: 62ch; margin-bottom: var(--ss-space-4); }
+      .hero-main { display: contents; }
+      .hero-headline { grid-area: headline; max-width: none; margin-bottom: var(--ss-space-2); }
+      .hero-byline { grid-area: byline; max-width: 62ch; margin-bottom: 0; }
+      .hero-search { grid-area: search; align-self: center; }
       .hero-search-row { max-width: none; }
-      .most-wanted { margin-top: 0; max-width: none; }
-      /* The list runs down the column rather than wrapping into a ragged block. */
-      .most-wanted-list { flex-direction: column; gap: var(--ss-space-2); }
-      .most-wanted-item { justify-content: space-between; width: 100%; }
+      .hero-proof { grid-area: proof; margin-top: var(--ss-space-4); }
+      .most-wanted { grid-area: wanted; margin-top: var(--ss-space-4); max-width: none; }
+      .most-wanted-list { gap: var(--ss-space-2); }
     }
     @media (min-width: 1400px) {
     }
@@ -1713,16 +1723,7 @@
     .chapter-content.open {
       display: block;
     }
-    .chapter-content-head {
-      display: flex;
-      align-items: center;
-      gap: var(--ss-space-2);
-      margin-bottom: var(--ss-space-3);
-      font-size: var(--ss-text-ui);
-      font-weight: var(--ss-fw-strong);
-      color: var(--ss-text);
-    }
-    .chapter-num--sm { width: 24px; height: 24px; font-size: var(--ss-text-label); }
+
     .section-block {
       margin-bottom: var(--ss-space-3);
     }
@@ -1768,6 +1769,9 @@
       margin-bottom: var(--ss-space-3); font-size: var(--ss-fs-12); color: var(--ss-text-secondary);
     }
     .legend-item { display: flex; align-items: center; gap: var(--ss-space-2); }
+    .legend-set { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2) var(--ss-space-4); }
+    .legend-set--heat { gap: var(--ss-space-2); }
+    .legend-set--heat .legend-item--apart { margin-left: var(--ss-space-3); }
     .legend-swatch {
       display: inline-block; width: 16px; height: 14px; border-radius: var(--ss-radius-sm); flex: 0 0 auto;
     }
@@ -1792,7 +1796,6 @@
        matters here for the same reason set out under the dot shapes below. */
     /* Layout only — the control itself is .ss-switch in design-system.css. */
     .grid-mode-toggle { margin-left: auto; }
-    .heat-legend { gap: var(--ss-space-2); }
 
     /* The ramp itself now lives in design-system.css, shared with the section grid
        on every solution page so the two read as one scale. */
@@ -1957,7 +1960,7 @@
       flex: 1;
       display: flex;
       align-items: center;
-      gap: var(--ss-space-2);
+      gap: var(--ss-space-3);
       min-width: 0;
     }
     .ta-score-col {
@@ -1971,9 +1974,10 @@
       flex-shrink: 0;
     }
     .ta-avatar {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
+      object-fit: cover;
       flex-shrink: 0;
       display: block;
     }

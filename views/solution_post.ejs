@@ -1866,7 +1866,7 @@
                         <% } %>
                     <% }); %>
                 </div>
-                <div class="sg-legend">
+                <div class="sg-legend"<% if (sectionGrid.hasDifficulty) { %> data-grid-mode-when="progress"<% } %>>
                     <span class="sg-leg"><span class="sg-sw sg-sw-both"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-en"></span>EN</span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-ru"></span>RU</span>
