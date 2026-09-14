@@ -47,7 +47,6 @@
             border: 1px solid var(--ss-rule); background: var(--ss-surface-alt); color: var(--ss-link); text-decoration: none; cursor: pointer;
         }
         .pf-record-chip:hover { background: var(--ss-surface-hover); color: var(--ss-link-hover); }
-        .pf-record-chip.pf-clear { color: var(--ss-error); border-color: var(--ss-error-rule); }
 
         .pf-layout { display: flex; gap: var(--ss-space-3); align-items: flex-start; }
         .pf-filters {
@@ -122,6 +121,18 @@
         .pf-clear-btn:hover { background: var(--ss-surface-hover); }
 
         .pf-results { flex: 1 1 auto; min-width: 0; }
+        .pf-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2); min-height: 30px; margin-bottom: var(--ss-space-2); }
+        .pf-chip {
+            display: inline-flex; align-items: center; gap: var(--ss-space-1); max-width: 100%;
+            padding: 2px var(--ss-space-2) 2px var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius);
+            background: var(--ss-surface-alt); color: var(--ss-text); font-size: var(--ss-fs-13); line-height: 1.6; cursor: pointer;
+            overflow-wrap: anywhere; text-align: left;
+        }
+        .pf-chip:hover { border-color: var(--ss-navy); background: var(--ss-surface-hover); }
+        .pf-chip-x { color: var(--ss-text-secondary); font-size: var(--ss-fs-16); line-height: 1; }
+        .pf-chip:hover .pf-chip-x { color: var(--ss-error); }
+        .pf-chip-action { border: none; background: none; padding: 2px var(--ss-space-1); font-size: var(--ss-fs-13); color: var(--ss-link); cursor: pointer; }
+        .pf-chip-action:hover { color: var(--ss-link-hover); text-decoration: underline; }
         .pf-result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ss-space-2); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); gap: var(--ss-space-3); flex-wrap: wrap; }
         .pf-sort-label { color: var(--ss-text-secondary); }
         .pf-sort-select {
@@ -249,7 +260,6 @@
         <button class="pf-record-chip" data-preset="quickest"><%= lang === 'ru' ? 'Быстрее всего' : 'Quickest' %></button>
         <button class="pf-record-chip" data-preset="elegant"><%= lang === 'ru' ? 'Красивее всего' : 'Most elegant' %></button>
         <button class="pf-record-chip" data-preset="starred"><%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></button>
-        <button class="pf-record-chip pf-clear" data-preset="clear"><%= lang === 'ru' ? 'Сбросить всё' : 'Clear all' %></button>
     </div>
 
     <div class="pf-layout">
@@ -346,6 +356,8 @@
         </aside>
 
         <main class="pf-results">
+            <%# What is selected, each removable, with a link that reproduces it (js/problems-finder.js). %>
+            <div class="pf-chips" id="pfChips" aria-live="polite"<% if (!hasFilters) { %> hidden<% } %>></div>
             <div class="pf-result-bar">
                 <span id="pfResultCount"><%= lang === 'ru' ? 'Показано' : 'Showing' %> <%= ssrRows.length %> <%= lang === 'ru' ? 'из' : 'of' %> <%= total %><% if (searchQuery) { %> <%= lang === 'ru' ? 'по запросу' : 'for' %> «<%= searchQuery %>»<% } %></span>
                 <span>

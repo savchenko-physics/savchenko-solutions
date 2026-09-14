@@ -2930,11 +2930,20 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-tab:hover { background: var(--ss-primary-btn-hover); color: var(--ss-white); }
 .fb-tab:focus-visible { outline: 2px solid var(--ss-link); outline-offset: 2px; }
-/* Over the navy footer (js/feedback.js adds the class while the tab is over it): the same tab
-   in the footer's colours inverted, so it does not disappear into the ground. */
-.fb-tab { transition: background-color 0.15s ease, color 0.15s ease; }
-.fb-tab.fb-tab--on-dark { background: var(--ss-on-navy); color: var(--ss-navy); }
-.fb-tab.fb-tab--on-dark:hover { background: var(--ss-surface-alt); color: var(--ss-navy); }
+/* Over the navy footer the navy tab would vanish, so the part of it the footer is behind shows
+   an inverted copy of its contents: .fb-tab-invert, clipped from the top and bottom by
+   --fb-cut-top / --fb-cut-bottom, which js/feedback.js sets from the footer's position on every
+   scroll frame. The white travels up through the tab with the footer's edge, pixel by pixel,
+   instead of the whole tab flipping at once (owner's request, 2026-09-14). */
+.fb-tab-invert {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: inherit; gap: inherit; padding: inherit;
+  border-radius: inherit;
+  background: var(--ss-on-navy); color: var(--ss-navy);
+  clip-path: inset(var(--fb-cut-top, 100%) 0 var(--fb-cut-bottom, 0px) 0);
+  pointer-events: none;
+}
+.fb-tab:hover .fb-tab-invert { background: var(--ss-surface-alt); }
 .fb-tab.fb-tab--on-dark:focus-visible { outline-color: var(--ss-on-navy); }
 .fb-tab[hidden] { display: none; }
 .fb-tab-glyph { display: inline-flex; align-items: center; }

@@ -226,19 +226,34 @@
     }
     function searchActive() { return state.q && SEARCH.q === state.q && SEARCH.rank.size > 0; }
 
+    // Every filter lives in the URL (syncUrl below), so a copied link, a reload or the back
+    // button brings back exactly these results. Until 2026-09-14 the difficulty slider, the
+    // chapter boxes, the solution language, bookmarks and the skill axes were lost on reload.
+    function clampPct(v, fallback) { v = Number(v); return isFinite(v) ? Math.max(0, Math.min(100, v)) : fallback; }
+    function parseRange(v) {
+        var m = /^(\d{1,3})-(\d{1,3})$/.exec(String(v || ''));
+        if (!m) return null;
+        var lo = Math.min(100, Number(m[1])), hi = Math.min(100, Number(m[2]));
+        if (lo > hi) { var t = lo; lo = hi; hi = t; }
+        return (lo === 0 && hi === 100) ? null : [lo, hi];
+    }
     var state = {
-        q: (Q.q || '').trim(),
-        min: Q.min != null ? Number(Q.min) : 0,
-        max: Q.max != null ? Number(Q.max) : 100,
+        q: (typeof Q.q === 'string' ? Q.q : '').trim(),
+        min: Q.min != null ? clampPct(Q.min, 0) : 0,
+        max: Q.max != null ? clampPct(Q.max, 100) : 100,
         starred: !!Q.starred,
-        bookmarked: false,
-        lang: 'any',
-        chapters: new Set(Q.chapter ? String(Q.chapter).split(',').map(Number) : []),
+        bookmarked: Q.bookmarked === '1',
+        lang: ['en', 'ru', 'none'].indexOf(Q.solved) !== -1 ? Q.solved : 'any',
+        chapters: new Set(Q.chapter ? String(Q.chapter).split(',').map(Number).filter(function (n) { return n >= 1 && n <= 14; }) : []),
         tags: new Set(Q.tag ? String(Q.tag).split(',').filter(Boolean) : []),
         tagMode: Q.tagMode === 'and' ? 'and' : 'or',
         sort: Q.sort || '',
         dir: Q.dir === 'asc' ? 'asc' : 'desc',
-        axisRanges: {},
+        axisRanges: (function () {
+            var out = {};
+            DATA.axisKeys.forEach(function (k) { var r = parseRange(Q['ax_' + k]); if (r) out[k] = r; });
+            return out;
+        })(),
     };
 
     // ── build the tag list (Codeforces/LeetCode-style checkbox sidebar) ────────
@@ -464,13 +479,20 @@
     function syncUrl() {
         var params = new URLSearchParams();
         if (state.q) params.set('q', state.q);
-        if (state.min > 0) params.set('min', state.min);
-        if (state.max < 100) params.set('max', state.max);
+        // Difficulty as the ratings on the slider ("rating=1200-2400"), not the percentiles
+        // underneath: a link should read as what the reader chose. Old min/max links still load.
+        if (state.min > 0 || state.max < 100) params.set('rating', calibLoEl.value + '-' + calibHiEl.value);
         if (state.starred) params.set('starred', '1');
         if (state.chapters.size) params.set('chapter', Array.from(state.chapters).join(','));
         if (state.tags.size) params.set('tag', Array.from(state.tags).join(','));
         if (state.tags.size && state.tagMode === 'and') params.set('tagMode', 'and');
         if (state.sort) { params.set('sort', state.sort); params.set('dir', state.dir); }
+        if (state.lang !== 'any') params.set('solved', state.lang);
+        if (state.bookmarked) params.set('bookmarked', '1');
+        Object.keys(state.axisRanges).forEach(function (k) {
+            var r = state.axisRanges[k];
+            if (r) params.set('ax_' + k, r[0] + '-' + r[1]);
+        });
         var qs = params.toString();
         var url = window.location.pathname + (qs ? '?' + qs : '');
         window.history.replaceState(null, '', url);
@@ -486,6 +508,7 @@
         currentRows = sortRows(filtered);
         renderPage(currentRows, false);
         syncUrl();
+        renderChips();
     }
 
     // ── dual-range slider wiring ─────────────────────────────────────────────
@@ -553,8 +576,20 @@
     // bucket under the quantile-mapped scale), so the low handle uses its bucket's
     // floor and the high handle uses its bucket's ceiling — "at least this rating" and
     // "at most this rating" both capture the whole bucket they land on.
-    wireRange(document.getElementById('pfCalibLo').closest('.pf-range-track'),
-        document.getElementById('pfCalibLo'), document.getElementById('pfCalibHi'),
+    var calibLoEl = document.getElementById('pfCalibLo');
+    var calibHiEl = document.getElementById('pfCalibHi');
+    // The handles start where the link puts them: "rating=1200-2400", or an older link's
+    // percentiles (the high handle's bucket is the one that ends at max, hence the step below it).
+    var ratingParam = /^(\d{3,4})-(\d{3,4})$/.exec(String(Q.rating || ''));
+    if (ratingParam) {
+        calibLoEl.value = Math.min(Number(ratingParam[1]), Number(ratingParam[2]));
+        calibHiEl.value = Math.max(Number(ratingParam[1]), Number(ratingParam[2]));
+    } else {
+        if (state.min > 0) calibLoEl.value = toRating(state.min);
+        if (state.max < 100) calibHiEl.value = toRating(Math.max(0, state.max - 1e-9));
+    }
+    wireRange(calibLoEl.closest('.pf-range-track'),
+        calibLoEl, calibHiEl,
         function (lo, hi) {
             state.min = ratingToPercentileRange(lo)[0];
             state.max = ratingToPercentileRange(hi)[1];
@@ -565,6 +600,7 @@
         var key = loEl.getAttribute('data-axis');
         var hiEl = document.querySelector('.pf-axis-hi[data-axis="' + key + '"]');
         var labelEl = document.querySelector('[data-axis-val="' + key + '"]');
+        if (state.axisRanges[key]) { loEl.value = state.axisRanges[key][0]; hiEl.value = state.axisRanges[key][1]; }
         wireRange(loEl.closest('.pf-range-track'), loEl, hiEl, function (lo, hi) {
             state.axisRanges[key] = (lo === 0 && hi === 100) ? null : [lo, hi];
         }, labelEl, function (lo, hi) { return lo + '–' + hi; });
@@ -607,9 +643,14 @@
     starredCb.addEventListener('change', function () { state.starred = starredCb.checked; applyState(); });
 
     var bookmarkedCb = document.getElementById('pfBookmarked');
+    if (bookmarkedCb) bookmarkedCb.checked = state.bookmarked; else state.bookmarked = false;
     if (bookmarkedCb) bookmarkedCb.addEventListener('change', function () { state.bookmarked = bookmarkedCb.checked; applyState(); });
 
     var langSeg = document.getElementById('pfLangSeg');
+    function syncLangSeg() {
+        Array.prototype.forEach.call(langSeg.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-val') === state.lang); });
+    }
+    syncLangSeg();
     langSeg.addEventListener('click', function (e) {
         var btn = e.target.closest('button');
         if (!btn) return;
@@ -620,6 +661,7 @@
     });
 
     Array.prototype.forEach.call(document.querySelectorAll('.pf-chapter-cb'), function (cb) {
+        cb.checked = state.chapters.has(parseInt(cb.value, 10));
         cb.addEventListener('change', function () {
             var v = parseInt(cb.value, 10);
             if (cb.checked) state.chapters.add(v); else state.chapters.delete(v);
@@ -628,6 +670,10 @@
     });
 
     var tagModeEl = document.getElementById('pfTagMode');
+    function syncTagMode() {
+        Array.prototype.forEach.call(tagModeEl.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-val') === state.tagMode); });
+    }
+    syncTagMode();
     tagModeEl.addEventListener('click', function (e) {
         var btn = e.target.closest('button');
         if (!btn) return;
@@ -668,6 +714,114 @@
         });
     });
 
+    // ── active filters as chips ─────────────────────────────────────────────
+    // Everything that narrows or orders the list, shown above the results and removable one by
+    // one, with the link that reproduces it. Built from state, so it cannot disagree with the URL.
+    var chipsEl = document.getElementById('pfChips');
+    var RU = LANG === 'ru';
+    function axisLabel(key) {
+        var val = document.querySelector('[data-axis-val="' + key + '"]');
+        var name = val && val.previousElementSibling;
+        return name ? name.textContent.trim() : key;
+    }
+    function activeFilters() {
+        var list = [];
+        if (state.q) list.push({ kind: 'q', label: (RU ? 'Поиск «' : 'Search «') + state.q + '»' });
+        Array.from(state.chapters).sort(function (a, b) { return a - b; }).forEach(function (n) {
+            list.push({ kind: 'chapter', value: n, label: n + '. ' + (DATA.chapters[n] || '') });
+        });
+        Array.from(state.tags).forEach(function (t) { list.push({ kind: 'tag', value: t, label: tagLabel(t) }); });
+        if (state.tags.size > 1 && state.tagMode === 'and') list.push({ kind: 'tagMode', label: RU ? 'Все выбранные темы сразу' : 'All selected topics at once' });
+        if (state.min > 0 || state.max < 100) {
+            list.push({ kind: 'difficulty', label: (RU ? 'Сложность ' : 'Difficulty ') + calibLoEl.value + '–' + calibHiEl.value });
+        }
+        if (state.starred) list.push({ kind: 'starred', label: RU ? 'Со звёздочкой ∗' : 'Asterisked ∗' });
+        if (state.bookmarked) list.push({ kind: 'bookmarked', label: RU ? 'Мои закладки' : 'My bookmarks' });
+        if (state.lang !== 'any') {
+            var solved = { en: RU ? 'Решение на английском' : 'Solved in English', ru: RU ? 'Решение на русском' : 'Solved in Russian', none: RU ? 'Без решения' : 'Unsolved' };
+            list.push({ kind: 'solved', label: solved[state.lang] });
+        }
+        Object.keys(state.axisRanges).forEach(function (k) {
+            var r = state.axisRanges[k];
+            if (r) list.push({ kind: 'axis', value: k, label: axisLabel(k) + ' ' + r[0] + '–' + r[1] });
+        });
+        if (state.sort) {
+            // The "quickest" preset sorts by a key the dropdown does not offer.
+            var extraSorts = { est_minutes: RU ? 'Быстрее сначала' : 'Quickest first' };
+            var opt = sortSelect.options[sortSelect.selectedIndex];
+            var sortName = opt && opt.value ? opt.textContent.trim() : (extraSorts[state.sort] || state.sort);
+            list.push({ kind: 'sort', label: (RU ? 'Сортировка: ' : 'Sort: ') + sortName });
+        }
+        return list;
+    }
+    function renderChips() {
+        if (!chipsEl) return;
+        var list = activeFilters();
+        chipsEl.hidden = list.length === 0;
+        if (!list.length) { chipsEl.innerHTML = ''; return; }
+        var removeLabel = RU ? 'Убрать фильтр' : 'Remove filter';
+        chipsEl.innerHTML = list.map(function (f) {
+            return '<button type="button" class="pf-chip" data-kind="' + f.kind + '"' + (f.value != null ? ' data-value="' + esc(f.value) + '"' : '')
+                + ' title="' + removeLabel + '">' + esc(f.label) + '<span class="pf-chip-x" aria-hidden="true">×</span></button>';
+        }).join('')
+            + '<button type="button" class="pf-chip-action" data-action="clear">' + (RU ? 'Сбросить всё' : 'Clear all') + '</button>'
+            + '<button type="button" class="pf-chip-action" data-action="copy">' + (RU ? 'Скопировать ссылку' : 'Copy link') + '</button>';
+    }
+    function removeFilter(kind, value) {
+        if (kind === 'q') {
+            state.q = ''; searchEls.forEach(function (el) { el.value = ''; });
+            searchSeq++; SEARCH = { q: '', rank: new Map(), snippets: {}, terms: [] };
+        } else if (kind === 'chapter') {
+            state.chapters.delete(Number(value));
+            var cb = document.querySelector('.pf-chapter-cb[value="' + Number(value) + '"]');
+            if (cb) cb.checked = false;
+        } else if (kind === 'tag') {
+            toggleTag(value); return;
+        } else if (kind === 'tagMode') {
+            state.tagMode = 'or'; syncTagMode();
+        } else if (kind === 'difficulty') {
+            calibLoEl.value = calibLoEl.min; calibHiEl.value = calibHiEl.max;
+            rangeRegistry[0].render(false);
+            state.min = 0; state.max = 100;
+        } else if (kind === 'starred') {
+            state.starred = false; starredCb.checked = false;
+        } else if (kind === 'bookmarked') {
+            state.bookmarked = false; if (bookmarkedCb) bookmarkedCb.checked = false;
+        } else if (kind === 'solved') {
+            state.lang = 'any'; syncLangSeg();
+        } else if (kind === 'axis') {
+            var lo = document.querySelector('.pf-axis-lo[data-axis="' + value + '"]');
+            var entry = rangeRegistry.filter(function (r) { return r.loEl === lo; })[0];
+            if (entry) { entry.loEl.value = entry.loEl.min; entry.hiEl.value = entry.hiEl.max; entry.render(false); }
+            state.axisRanges[value] = null;
+        } else if (kind === 'sort') {
+            state.sort = ''; state.dir = 'desc'; sortSelect.value = '';
+        }
+        applyState();
+    }
+    function copyLink(btn) {
+        var done = function () {
+            btn.textContent = RU ? 'Ссылка скопирована' : 'Link copied';
+            setTimeout(function () { btn.textContent = RU ? 'Скопировать ссылку' : 'Copy link'; }, 2000);
+        };
+        var url = window.location.href;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done, function () { window.prompt(RU ? 'Ссылка на эту выборку' : 'Link to these results', url); });
+        } else {
+            window.prompt(RU ? 'Ссылка на эту выборку' : 'Link to these results', url);
+        }
+    }
+    if (chipsEl) chipsEl.addEventListener('click', function (e) {
+        var action = e.target.closest('.pf-chip-action');
+        if (action) {
+            if (action.getAttribute('data-action') === 'clear') resetAll();
+            else copyLink(action);
+            return;
+        }
+        var chip = e.target.closest('.pf-chip');
+        if (chip) removeFilter(chip.getAttribute('data-kind'), chip.getAttribute('data-value'));
+    });
+
     function resetAll(doApply) {
         state.q = ''; searchEls.forEach(function (el) { el.value = ''; });
         searchSeq++; SEARCH = { q: '', rank: new Map(), snippets: {}, terms: [] };
@@ -679,12 +833,12 @@
         state.starred = false; starredCb.checked = false;
         if (bookmarkedCb) { state.bookmarked = false; bookmarkedCb.checked = false; }
         state.lang = 'any';
-        Array.prototype.forEach.call(langSeg.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-val') === 'any'); });
+        syncLangSeg();
         state.chapters = new Set();
         Array.prototype.forEach.call(document.querySelectorAll('.pf-chapter-cb'), function (cb) { cb.checked = false; });
         state.tags = new Set();
         state.tagMode = 'or';
-        Array.prototype.forEach.call(tagModeEl.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-val') === 'or'); });
+        syncTagMode();
         renderTagList('');
         state.sort = ''; state.dir = 'desc';
         sortSelect.value = '';

@@ -436,23 +436,31 @@
     // ── Wiring ──────────────────────────────────────────────────────────────────────
 
     // The tab is navy, and so is the footer: scrolled down over it, the tab vanished into it.
-    // While the tab's middle is over the footer it takes the footer's colours inverted, and
-    // its own again as it leaves (owner's request, 2026-09-14).
+    // Where the two overlap, the tab's inverted copy (.fb-tab-invert) shows through a clip that
+    // follows the footer's edge, so navy turns to white smoothly as the edge passes through the
+    // tab rather than all at once (owner's request, 2026-09-14). Measured once per frame.
     function watchDarkGround() {
         const tab = document.querySelector('[data-fb-tab]');
         const grounds = document.querySelectorAll('.ss-footer');
-        if (!tab || !grounds.length) return;
+        if (!tab || !grounds.length || !tab.querySelector('.fb-tab-invert')) return;
         let queued = false;
         const update = () => {
             queued = false;
             const t = tab.getBoundingClientRect();
             if (!t.height) return;
-            const middle = t.top + t.height / 2;
-            const over = Array.prototype.some.call(grounds, (g) => {
+            let top = t.height;
+            let bottom = 0;
+            for (const g of grounds) {
                 const r = g.getBoundingClientRect();
-                return middle >= r.top && middle <= r.bottom;
-            });
-            tab.classList.toggle('fb-tab--on-dark', over);
+                if (r.bottom <= t.top || r.top >= t.bottom) continue;
+                top = Math.max(0, r.top - t.top);
+                bottom = Math.max(0, t.bottom - r.bottom);
+                break;
+            }
+            tab.style.setProperty('--fb-cut-top', `${top}px`);
+            tab.style.setProperty('--fb-cut-bottom', `${bottom}px`);
+            // The focus ring needs the light colour once most of the tab is on the dark ground.
+            tab.classList.toggle('fb-tab--on-dark', top < t.height / 2);
         };
         const queue = () => {
             if (queued) return;
@@ -461,6 +469,9 @@
         };
         window.addEventListener('scroll', queue, { passive: true });
         window.addEventListener('resize', queue, { passive: true });
+        window.addEventListener('load', queue);
+        // Comments, figures and fonts arriving move the footer without a scroll.
+        if (typeof ResizeObserver === 'function') new ResizeObserver(queue).observe(document.body);
         update();
     }
 

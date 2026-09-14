@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 const { AXIS_META, axesByCategory } = require('./lib/difficultyAxes');
 const { AXIS_KEYS } = require('./difficultyRubric');
 const { readCSV, getSolvedSet } = require('./parents');
-const { toRating, FLOOR: RATING_FLOOR, CEIL: RATING_CEIL, STEP: RATING_STEP } = require('./lib/difficultyRating');
+const { toRating, ratingToPercentileRange, FLOOR: RATING_FLOOR, CEIL: RATING_CEIL, STEP: RATING_STEP } = require('./lib/difficultyRating');
 const { heatColor, heatTextColor } = require('./lib/heatColor');
 const { getStatements } = require('./lib/statementRender');
 const rateLimit = require('express-rate-limit');
@@ -166,9 +166,31 @@ async function getProblemFinderDataset(lang) {
 }
 
 // `hits` is lib/problemSearch.js's answer for q.q: a problem matches the query when its number
-// or topic contains it (as before) or when its statement or solution does.
-function applyFilters(rows, q, hits) {
+// or topic contains it (as before) or when its statement or solution does. Every filter the
+// page puts in its URL is applied here too, so a shared link renders the same first page
+// before the script runs (js/problems-finder.js, syncUrl).
+function parseAxisRange(v) {
+    const m = /^(\d{1,3})-(\d{1,3})$/.exec(String(v || ''));
+    if (!m) return null;
+    const lo = Math.min(100, Number(m[1]));
+    const hi = Math.min(100, Number(m[2]));
+    return lo === 0 && hi === 100 ? null : [Math.min(lo, hi), Math.max(lo, hi)];
+}
+
+function applyFilters(rows, q, hits, { axisKeys = [], bookmarked = null } = {}) {
     let out = rows;
+    if (q.solved === 'en') out = out.filter((r) => r[COL.SOLVED_EN]);
+    if (q.solved === 'ru') out = out.filter((r) => r[COL.SOLVED_RU]);
+    if (q.solved === 'none') out = out.filter((r) => !r[COL.SOLVED_EN] && !r[COL.SOLVED_RU]);
+    if (q.bookmarked === '1' && bookmarked) out = out.filter((r) => bookmarked.has(r[COL.NAME]));
+    axisKeys.forEach((key, i) => {
+        const range = parseAxisRange(q[`ax_${key}`]);
+        if (!range) return;
+        out = out.filter((r) => {
+            const v = r[COL.SCORES] ? r[COL.SCORES][i] : null;
+            return v == null ? range[0] === 0 : v >= range[0] && v <= range[1];
+        });
+    });
     if (q.chapter) {
         const chapters = new Set(String(q.chapter).split(',').map(Number));
         out = out.filter((r) => chapters.has(r[COL.CHAPTER]));
@@ -181,8 +203,18 @@ function applyFilters(rows, q, hits) {
             : tags.some((t) => r[COL.CANONICAL_TAGS].includes(t))));
     }
     if (q.starred) out = out.filter((r) => r[COL.STARRED] === 1);
-    if (q.min) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] >= Number(q.min));
-    if (q.max) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] <= Number(q.max));
+    // "rating=1200-2400" is what the page writes; min/max percentiles are what older links carry.
+    let min = q.min ? Number(q.min) : null;
+    let max = q.max ? Number(q.max) : null;
+    const rating = /^(\d{3,4})-(\d{3,4})$/.exec(String(q.rating || ''));
+    if (rating) {
+        const lo = Math.min(Number(rating[1]), Number(rating[2]));
+        const hi = Math.max(Number(rating[1]), Number(rating[2]));
+        min = lo > RATING_FLOOR ? ratingToPercentileRange(lo)[0] : null;
+        max = hi < RATING_CEIL ? ratingToPercentileRange(hi)[1] : null;
+    }
+    if (min) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] >= min);
+    if (max != null && max < 100) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] <= max);
     if (q.q) {
         const needle = String(q.q).trim().toLowerCase();
         const found = new Set(hits ? hits.names : []);
@@ -295,7 +327,7 @@ router.get('/', async (req, res) => {
 
     if (!dataset) {
         return res.render('problems/index', {
-            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [], snippets: {},
+            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [], snippets: {}, hasFilters: false,
             axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },
             toRating, ratingFloor: RATING_FLOOR, ratingCeil: RATING_CEIL, ratingStep: RATING_STEP, pageSize: PAGE_SIZE,
         });
@@ -309,12 +341,6 @@ router.get('/', async (req, res) => {
             console.error('problem search failed:', err.message);
         }
     }
-    const filtered = applyFilters(dataset.rows, req.query, hits);
-    const sorted = req.query.sort ? applySort(filtered, req.query.sort, req.query.dir || 'desc', dataset.axisKeys) : orderByRelevance(filtered, hits);
-    const ssrRows = sorted.slice(0, PAGE_SIZE);
-    const snippets = {};
-    if (hits) for (const r of ssrRows) if (hits.snippets[r[COL.NAME]]) snippets[r[COL.NAME]] = hits.snippets[r[COL.NAME]];
-
     let bookmarked = [];
     if (req.session?.userId) {
         try {
@@ -323,6 +349,15 @@ router.get('/', async (req, res) => {
         } catch (err) { console.error('bookmarked lookup:', err.message); }
     }
 
+    const filtered = applyFilters(dataset.rows, req.query, hits, { axisKeys: dataset.axisKeys, bookmarked: new Set(bookmarked) });
+    const sorted = req.query.sort ? applySort(filtered, req.query.sort, req.query.dir || 'desc', dataset.axisKeys) : orderByRelevance(filtered, hits);
+    const ssrRows = sorted.slice(0, PAGE_SIZE);
+    const snippets = {};
+    if (hits) for (const r of ssrRows) if (hits.snippets[r[COL.NAME]]) snippets[r[COL.NAME]] = hits.snippets[r[COL.NAME]];
+    // Reserves the chips' row before the script fills it, so the cards do not jump down.
+    const hasFilters = ['q', 'chapter', 'tag', 'starred', 'min', 'max', 'rating', 'solved', 'bookmarked', 'sort']
+        .some((k) => req.query[k]) || Object.keys(req.query).some((k) => k.startsWith('ax_'));
+
     res.render('problems/index', {
         ...locals,
         dataset,
@@ -330,6 +365,7 @@ router.get('/', async (req, res) => {
         total: filtered.length,
         query: req.query,
         snippets,
+        hasFilters,
         bookmarked,
         axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },
         toRating, ratingFloor: RATING_FLOOR, ratingCeil: RATING_CEIL, ratingStep: RATING_STEP, pageSize: PAGE_SIZE,
@@ -410,3 +446,6 @@ router.get('/methodology', async (req, res) => {
 });
 
 module.exports = router;
+// Exported for tests: the URL a shared link carries must filter the same on the server as in the page.
+module.exports.applyFilters = applyFilters;
+module.exports.COL = COL;
