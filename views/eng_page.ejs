@@ -32,17 +32,9 @@
   <%# The service worker is retired: in Firefox it made every image reload on each navigation (public/sw.js). This removes it from browsers that still have it. %>
   <script>try{navigator.serviceWorker&&navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});}).catch(function(){});}catch(e){}</script>
 
-  <!-- Bootstrap 5 (via CDN) -->
+  <!-- Site stylesheets (self-hosted): Bootstrap, the bundle, and the statement-popup maths CSS -->
   <%- include('default/site_styles', { ssStyles: { math: true } }) %>
-  
-  <!-- Google Fonts: Roboto -->
-
-  
-  <!-- Design system + page CSS -->
-" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-" />
-  <!-- Server-rendered statement maths (problem popup): MathJax's SVG rules + the Cyrillic fallback font -->
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
 
   <title><%= titleText(__('title')) %></title>
@@ -863,14 +855,18 @@
       border-bottom: 1px solid var(--border, #dee2e6);
       background: var(--ss-surface);
     }
+    /* The one display title on the site: the condensed sans of the 3rd edition's title page
+       ("ЗАДАЧИ ПО ФИЗИКЕ"), SS Display at the display size (32 → 40px). */
     .hero-headline {
-      font-family: var(--ss-font-ui);
-      font-weight: var(--ss-fw-strong);
-      font-size: var(--ss-fs-24);
-      line-height: 1.25;
-      color: var(--text, #2d2d2d);
-      margin: 0 0 var(--ss-space-2);
-      max-width: 34ch;
+      font-family: var(--ss-font-display);
+      font-weight: 600;
+      font-synthesis: none;
+      font-size: var(--ss-text-display);
+      line-height: var(--ss-lh-tight);
+      letter-spacing: 0;
+      color: var(--ss-navy);
+      margin: 0 0 var(--ss-space-3);
+      max-width: 24ch;
     }
     .hero-byline {
       font-size: var(--ss-fs-16);
@@ -966,7 +962,7 @@
     }
     @media (min-width: 768px) {
       .hero-primary { padding: var(--ss-space-4) var(--ss-space-6) var(--ss-space-3); }
-      .hero-headline { font-size: var(--ss-fs-32); max-width: 22ch; }
+      .hero-headline { max-width: 22ch; }
       .hero-byline { font-size: var(--ss-fs-16); }
       .hero-search-input { height: 48px; font-size: var(--ss-fs-16); }
       .hero-search-button { height: 48px; }
@@ -981,7 +977,7 @@
         column-gap: var(--ss-space-9);
         align-items: start;
       }
-      .hero-headline { font-size: var(--ss-fs-32); max-width: 26ch; }
+      .hero-headline { max-width: 26ch; }
       .hero-byline { max-width: 62ch; margin-bottom: var(--ss-space-4); }
       .hero-search-row { max-width: none; }
       .most-wanted { margin-top: 0; max-width: none; }
@@ -990,7 +986,6 @@
       .most-wanted-item { justify-content: space-between; width: 100%; }
     }
     @media (min-width: 1400px) {
-      .hero-headline { font-size: var(--ss-fs-40); }
     }
 
     /* Compact Introduction */
@@ -2204,7 +2199,7 @@
                     const data = await res.json();
                     if (ticket !== popupStatementTicket) return;
                     popupStatementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
-                        (data.starred ? '<sup class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
+                        (data.starred ? '<sup class="ss-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
                     popupStatementBody.innerHTML = data.html +
                         (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
                     popupStatement.classList.add("is-visible");

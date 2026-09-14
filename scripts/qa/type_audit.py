@@ -113,6 +113,8 @@ PROBE = r"""
     title: document.title, chars, families: top(fam), sizes: top(size), weights: top(weight), colors: top(color),
     minSize: minSize === 1e9 ? null : minSize, minSample, inputs, overflowPx: Math.max(0, sw - W), offenders: offenders.slice(0, 8),
     formulas: document.querySelectorAll('mjx-container').length,
+    bookNumbers: document.querySelectorAll('.ss-problem .ss-num').length,
+    captionFormulas: [...document.querySelectorAll('figure')].filter(f => f.querySelector('img[src*="statement"]')).reduce((k, f) => k + f.querySelectorAll('figcaption mjx-container').length, 0),
     images: main.querySelectorAll('img').length,
     textLen: (main.innerText || '').replace(/\s+/g, ' ').trim().length,
     statementCaptions: captions, prose, fontsLoaded: [...new Set(loaded)].sort(),
@@ -292,7 +294,8 @@ def violations(rec, other=None):
     odd = [f for f in fams if f not in allowed]
     if odd:
         v.append('families ' + ','.join(odd))
-    if len([f for f in fams if f.startswith('SS ')]) > 3 and 'SS Display' not in fams:
+    # Text, interface and code faces; the wordmark and display face are the brand, counted apart.
+    if len([f for f in fams if f.startswith('SS ') and f not in ('SS Display', 'SS Wordmark')]) > 3:
         v.append('more than 3 families')
     if rec.get('minSize') is not None and rec['minSize'] < 12:
         v.append(f"min size {rec['minSize']} ('{rec.get('minSample', '')[:20]}')")
@@ -321,8 +324,11 @@ def violations(rec, other=None):
         v.append(f"CLS {rec['cls']:.3f}")
     if other and not other.get('error') and other.get('status') == rec.get('status') == 200:
         if rec.get('kind') == 'solution':
-            if rec.get('formulas') != other.get('formulas'):
-                v.append(f"formulas {other.get('formulas')}→{rec.get('formulas')}")
+            # The book number ($2.1.32.$) is typeset as text now: count it as the formula it replaced.
+            # Formulas inside the dropped duplicate "К задаче $N$" captions are not content.
+            fn = lambda r: (r.get('formulas') or 0) + (r.get('bookNumbers') or 0) - (r.get('captionFormulas') or 0)
+            if fn(rec) != fn(other):
+                v.append(f"formulas {other.get('formulas')}→{rec.get('formulas')}+{rec.get('bookNumbers') or 0}")
             if rec.get('images') != other.get('images'):
                 v.append(f"images {other.get('images')}→{rec.get('images')}")
             a, b = other.get('textLen') or 1, rec.get('textLen') or 1

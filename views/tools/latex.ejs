@@ -9,8 +9,6 @@
 
     <%- include('../default/site_styles', { ssStyles: { stix: true } }) %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-" />
-" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
@@ -146,7 +144,7 @@
             width: 100%;
             min-height: 200px;
             font-family: var(--ss-font-mono);
-            font-size: var(--ss-fs-14);
+            font-size: var(--ss-text-input);
             border: 1px solid var(--ss-rule);
             border-radius: var(--ss-radius);
             padding: var(--ss-space-4);

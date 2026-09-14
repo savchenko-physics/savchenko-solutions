@@ -18,6 +18,7 @@ const { label: axisLabel, explain: axisExplain, bucketWord, WIDGET_COST_KEYS, WI
 const { toRating } = require("./lib/difficultyRating");
 const { ruVotes } = require("./lib/ruPlural");
 const { getFigure, splitAtSolutionHeading } = require("./lib/solutionFigures");
+const { structureSolution } = require('./js/solution-structure');
 const { solutionTitle } = require("./lib/pageTitle");
 
 const pool = new Pool({
@@ -114,9 +115,9 @@ async function renderPost(req, res) {
 
         // An interactive figure registered for this problem (lib/solutionFigures.js) is
         // injected into the body rather than written into posts/, which is the
-        // contributors' copy. The seam is computed here so the template stays logic-free.
+        // contributors' copy. The seam is computed just before rendering, after the
+        // sections have been typeset, so the template stays logic-free.
         const figure = getFigure(name);
-        const figureSplit = figure ? splitAtSolutionHeading(html) : null;
 
         const pageRef = name.split(".").slice(0, 2).join(".");
 
@@ -256,8 +257,10 @@ async function renderPost(req, res) {
             if (allContributors.length > 0) {
                 const originalAuthor = allContributors[0];
                 const editors = allContributors.slice(1);
+                // In the page's language: "10 сент. 2026 г." on /ru, "Sep 10, 2026" on /en — the same
+                // form the edit history line under it already used.
                 const lastUpdatedFormatted = lastModified
-                    ? formatDate(new Date(lastModified), "MMM d, yyyy")
+                    ? new Date(lastModified).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
                     : null;
 
                 attribution = {
@@ -494,6 +497,18 @@ async function renderPost(req, res) {
         } catch (bundleError) {
             console.error("Solution bundle failed, falling back to client fetches:", bundleError);
         }
+
+        // Typeset the sections (statement card, boxed answer, book problem number with ∗) on
+        // the HTML marked produced, before the single maths pass below. Display only: posts/
+        // is never touched. SS_STRUCTURE=off restores the plain rendering without a deploy.
+        if (process.env.SS_STRUCTURE !== 'off') {
+            try {
+                html = structureSolution(html, { lang, name, starred: difficulty ? Boolean(difficulty.starred) : undefined });
+            } catch (structureErr) {
+                console.error('solution structure failed, rendering plain:', structureErr.message);
+            }
+        }
+        const figureSplit = figure ? splitAtSolutionHeading(html) : null;
 
         res.render("solution_post", {
             chapterRecommendations,

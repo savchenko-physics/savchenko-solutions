@@ -8,8 +8,6 @@
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems/topic/<%= tagMeta.key %>" />
 
     <%- include('../default/site_styles') %>
-" />
-" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <script src="/js/vendor/bootstrap.bundle.min.js"></script>
@@ -31,7 +29,6 @@
         .pft-table tr:last-child td { border-bottom: none; }
         .pft-pname { font-weight: var(--ss-fw-strong); color: var(--ss-link); text-decoration: none; }
         .pft-pname:hover { color: var(--ss-link-hover); text-decoration: underline; }
-        .pft-star { font-weight: var(--ss-fw-strong); color: var(--ss-navy); vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
         .pft-badge { display: inline-block; min-width: 28px; text-align: center; font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-12); padding: 2px var(--ss-space-2); border-radius: var(--ss-radius-sm); background: #eceff1; color: var(--ss-text); }
         .pft-none { color: var(--ss-text-secondary); }
         .pft-pager { display: flex; gap: var(--ss-space-2); margin-top: var(--ss-space-4); }
@@ -66,7 +63,7 @@
         <tbody>
             <% rows.forEach(function(r) { %>
             <tr>
-                <td><a class="pft-pname" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a><% if (r[4] === 1) { %><span class="pft-star">&#8727;</span><% } %></td>
+                <td><a class="pft-pname" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a><% if (r[4] === 1) { %><sup class="ss-star">&#8727;</sup><% } %></td>
                 <td><% if (r[5] != null) { %><span class="pft-badge"><%= toRating(r[5]) %></span><% } else { %><span class="pft-none">—</span><% } %></td>
             </tr>
             <% }); %>

@@ -14,6 +14,8 @@
     codemirror  true → CodeMirror's stylesheet
     stix        true → STIX Two Math for the editor's symbol palette
 
+  Order is the cascade: vendor stylesheets first, then bundle.css, so the site's tokens win over
+  Bootstrap's and CodeMirror's defaults at equal specificity; the maths stylesheet last.
   Local helpers come from app.locals: asset(), siteFonts (lib/siteFonts.json), mathCssVersion.
 %><%
   const _ss = (typeof ssStyles !== 'undefined' && ssStyles) ? ssStyles : {};
@@ -30,10 +32,6 @@
 <link rel="preload" href="<%= href %>" as="font" type="font/woff2" crossorigin>
 <% }); %><% if (_ss.bootstrap !== false) { %>
 <link rel="stylesheet" href="/css/vendor/bootstrap.min.css">
-<% } %>
-<link rel="stylesheet" href="<%= _asset('/css/bundle.css') %>">
-<% if (_ss.math) { %>
-<link rel="stylesheet" href="/css/mathjax.css?v=<%= (typeof mathCssVersion !== 'undefined' && mathCssVersion) ? mathCssVersion : '1' %>">
 <% } %><% if (_ss.codemirror) { %>
 <link rel="stylesheet" href="/css/vendor/codemirror/codemirror.min.css">
 <% } %><% if (_ss.stix) { %>
@@ -44,4 +42,8 @@
 <link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
 <% } %><% if (_icons.indexOf('bi') !== -1) { %>
 <link rel="stylesheet" href="/css/vendor/bootstrap-icons/bootstrap-icons.min.css">
+<% } %>
+<link rel="stylesheet" href="<%= _asset('/css/bundle.css') %>">
+<% if (_ss.math) { %>
+<link rel="stylesheet" href="/css/mathjax.css?v=<%= (typeof mathCssVersion !== 'undefined' && mathCssVersion) ? mathCssVersion : '1' %>">
 <% } %>

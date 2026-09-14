@@ -40,8 +40,6 @@
     <!-- Fonts & Icons -->
     <%- include('default/site_styles', { ssStyles: { math: true, prose: true, icons: 'fa6' } }) %>
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-" />
-" />
 
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
@@ -85,186 +83,90 @@
             line-height: 1.6;
         }
 
-        /* Main Layout */
-        /* Two caps used to stack here: 1400px on this container and 1100px on
-           .content-body inside it. On a 1920px screen that left 285px of dead margin on the
-           left and 264px on the right, roughly 30% of the viewport, while the solution the
-           reader came for sat in the middle at 1044px. The page fills the screen now and the
-           surplus goes to the two things that wanted it: the solution column and a sidebar
-           that was cramped enough to wrap its own heading over three lines. */
+        /* Main layout — a paper page, not a card on a card: the solution column at a reading
+           measure and the section rail beside it, centred at the site's content width. The
+           full-width layout that preceded this (2026-07) set 116 Russian characters per line;
+           the column now holds about 67, with .ss-prose capping the measure at 34em. */
         .main-container {
             width: 100%;
-            max-width: none;
+            max-width: calc(var(--ss-w-content) + 2 * var(--ss-gutter));
             margin: 0 auto;
-            padding: 0 var(--ss-space-5) var(--ss-space-5) var(--ss-space-5);
+            padding: var(--ss-space-5) var(--ss-gutter) var(--ss-space-9);
             display: grid;
-            /* The sidebar flexes instead of being pinned at 320px. A fixed 320 squeezed the
-               992px breakpoint into horizontal overflow, which is exactly where a small
-               laptop lands. */
-            grid-template-columns: minmax(0, 1fr) clamp(260px, 20vw, 320px);
-            gap: var(--ss-space-5);
+            grid-template-columns: minmax(0, 1fr);
+            gap: var(--ss-space-7);
         }
+        @media (min-width: 992px) {
+            .main-container {
+                grid-template-columns: minmax(0, 46rem) 300px;
+                justify-content: space-between;
+                gap: var(--ss-space-9);
+            }
+        }
+        /* The column is the measure (46rem ≈ 70 characters of SS Text at 20px), so the prose
+           fills it and the title, answer box and comments share one right edge. */
+        .content-section .ss-prose { max-width: none; }
 
         .content-section {
-            background: var(--ss-surface);
-            border-radius: var(--ss-radius-lg);
+            min-width: 0;
             overflow: hidden;
-            box-shadow: var(--ss-shadow);
         }
 
-        /* Breadcrumb Header */
-        .content-header {
-            background: var(--ss-surface);
-            padding: var(--ss-space-3) var(--ss-space-5);
+        /* Title block: breadcrumb, "Задача N∗" in SS Text Bold, then navigation and actions. */
+        .solution-head {
+            padding-bottom: var(--ss-space-4);
+            margin-bottom: var(--ss-space-5);
             border-bottom: 1px solid var(--ss-rule);
+        }
+        .solution-title {
+            margin: 0 0 var(--ss-space-3);
+        }
+        .solution-title .ss-num { font-weight: inherit; }
+        .solution-bar {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
-            gap: var(--ss-space-3);
+            gap: var(--ss-space-2) var(--ss-space-4);
         }
-
-        .content-title {
-            font-size: var(--ss-fs-16);
-            font-weight: var(--ss-fw-strong);
-            margin: 0;
-            font-family: var(--ss-font-ui);
-            flex: 1 1 auto;
-            min-width: 0;
-            line-height: 1.3;
-            white-space: normal;
-        }
-
-        .content-breadcrumb-link {
-            color: var(--ss-link);
-            text-decoration: none;
-            font-weight: var(--ss-fw-regular);
-        }
-        .content-breadcrumb-link:hover {
-            color: var(--ss-link-hover);
-            text-decoration: underline;
-        }
-        .content-breadcrumb-sep {
-            font-weight: var(--ss-fw-regular);
-            opacity: 0.65;
-            user-select: none;
-        }
-
-        .content-nav {
+        .solution-steps {
             display: flex;
-            justify-content: flex-end;
             align-items: center;
-            gap: var(--ss-space-2);
-            flex: 0 0 auto;
-            flex-wrap: nowrap;
+            gap: var(--ss-space-4);
+            font-size: var(--ss-text-ui);
+            font-variant-numeric: tabular-nums;
         }
+        .solution-steps a { font-weight: var(--ss-fw-strong); text-decoration: none; }
+        .solution-steps a:hover { text-decoration: underline; }
+        .solution-actions { display: flex; gap: var(--ss-space-2); }
+        .solution-actions .btn i { font-size: var(--ss-text-ui); }
 
-        .nav-btn {
-            background: var(--ss-surface-alt);
-            border: 1px solid var(--ss-rule);
-            color: var(--ss-text);
-            padding: var(--ss-space-1) var(--ss-space-3);
-            border-radius: var(--ss-radius);
-            text-decoration: none;
-            font-weight: var(--ss-fw-strong);
-            font-size: var(--ss-fs-13);
-            white-space: nowrap;
-            transition: background 0.2s;
-        }
-        .nav-btn:hover {
-            background: var(--ss-surface-hover);
-            color: var(--ss-text);
-            text-decoration: none;
-        }
-
-        /* Prev/Next Navigation */
+        /* Prev/Next at the foot of the solution */
         .problem-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: var(--ss-space-2) var(--ss-space-5);
-            border-bottom: 1px solid var(--ss-rule);
-        }
-        .problem-nav--bottom {
-            border-bottom: none;
+            padding: var(--ss-space-3) 0;
+            margin-top: var(--ss-space-7);
             border-top: 1px solid var(--ss-rule);
         }
         .problem-nav-link {
-            font-size: var(--ss-fs-14);
-            color: var(--ss-link);
-            text-decoration: none;
+            font-size: var(--ss-text-ui);
             font-weight: var(--ss-fw-strong);
+            text-decoration: none;
+            font-variant-numeric: tabular-nums;
         }
-        .problem-nav-link:hover {
-            color: var(--ss-link-hover);
-            text-decoration: underline;
-        }
+        .problem-nav-link:hover { text-decoration: underline; }
 
-        /* Content Body */
+        /* The solution itself: .ss-prose (design-system.css §4) does the typesetting. */
         .content-body {
-            padding: var(--ss-space-4) var(--ss-space-7);
-            /* Bigger, because the solution is the point of the page and a wider column with
-               the same type would only mean longer lines.
-               The cap is a measure, not a page width. The card itself now spans the screen,
-               so nothing looks empty; this keeps the prose near the same character count it
-               had before and, more importantly, stops a short display equation from sitting
-               marooned in the middle of a 1450px column with its equation number stranded
-               half a screen away. */
-            font-size: var(--ss-fs-20);
-            line-height: 1.6;
-            max-width: 1280px;
-            margin: 0 auto;
-            font-family: var(--ss-font-text);
-            text-align: justify;
-            text-justify: inter-word;
-            hyphens: auto;
-            -webkit-hyphens: auto;
-            overflow-wrap: break-word;
-        }
-
-        .content-body p {
-            margin-bottom: var(--ss-space-2);
-            text-indent: 0.9em;
-        }
-
-        .content-body p:first-of-type,
-        .content-body h1 + p,
-        .content-body h2 + p,
-        .content-body h3 + p,
-        .content-body h4 + p {
-            text-indent: 0;
-        }
-
-        .content-body h1,
-        .content-body h2,
-        .content-body h3,
-        .content-body h4 {
-            font-family: var(--ss-font-text);
-            line-height: 1.25;
-            margin-top: var(--ss-space-4);
-            margin-bottom: var(--ss-space-2);
-        }
-
-        .content-body img {
-            margin: var(--ss-space-1) 0;
-            padding: 0;
-            max-width: 100%;
-            height: auto;
-            vertical-align: middle;
-        }
-
-        .content-body figure {
-            margin: var(--ss-space-1) 0;
             padding: 0;
         }
-
-        .content-body figcaption {
-            margin-top: var(--ss-space-1);
-            margin-bottom: 0;
-        }
+        .content-body img { vertical-align: middle; }
 
         /* Contributor Attribution */
         .attribution {
-            padding: var(--ss-space-4) var(--ss-space-5);
+            padding: var(--ss-space-4) 0;
             border-top: 1px solid var(--ss-rule);
             font-size: var(--ss-fs-13);
             color: var(--ss-text-secondary);
@@ -284,7 +186,7 @@
 
         /* Edit History */
         .edit-history {
-            padding: var(--ss-space-3) var(--ss-space-5);
+            padding: var(--ss-space-3) 0;
             border-top: 1px solid var(--ss-rule);
         }
         .edit-history-more {
@@ -301,7 +203,7 @@
         .social-actions {
             display: flex;
             align-items: center;
-            padding: var(--ss-space-3) var(--ss-space-5);
+            padding: var(--ss-space-3) 0;
             border-top: 1px solid var(--ss-rule);
             gap: var(--ss-space-6);
         }
@@ -349,7 +251,7 @@
         /* The old .report-link styles lived here; the link they styled is now the
            .fb-inline prompt, which is defined once in design-system.css and shared with
            the search, 404 and upload entry points. */
-        .fb-inline { margin: 0 var(--ss-space-5) var(--ss-space-4); }
+        .fb-inline { margin: 0 0 var(--ss-space-4); }
 
         /* Right rail (Brainstorm block + section grid). The rail is the sticky
            grid item; the section grid nested inside is a normal block. */
@@ -742,9 +644,9 @@
         }
 
         .comment-content {
-            font-size: var(--ss-fs-14);
+            font-size: var(--ss-text-body);
             color: var(--ss-text);
-            line-height: 1.6;
+            line-height: var(--ss-lh-ui);
             margin-bottom: var(--ss-space-1);
         }
 
@@ -1303,10 +1205,6 @@
 
         /* Mobile: below 768px */
         @media (max-width: 768px) {
-            .main-container {
-                padding: 0 var(--ss-space-2) var(--ss-space-5) var(--ss-space-2);
-            }
-
             .search-section {
                 display: none;
             }
@@ -1315,40 +1213,9 @@
                 display: flex;
             }
 
-            .content-header {
-                padding: var(--ss-space-2) var(--ss-space-3);
-                flex-wrap: nowrap;
-                gap: var(--ss-space-2);
-            }
-
-            .content-title {
-                font-size: var(--ss-fs-14);
-                line-height: 1.3;
-                white-space: normal;
-                word-break: break-word;
-            }
-
-            .content-breadcrumb-link,
-            .content-breadcrumb-sep {
-                font-size: var(--ss-fs-14);
-            }
-
-            .content-nav {
-                gap: var(--ss-space-1);
-            }
-
-            .nav-btn {
-                padding: var(--ss-space-1) var(--ss-space-2);
-                font-size: var(--ss-fs-12);
-            }
-
-            .content-body {
-                padding: var(--ss-space-6) var(--ss-space-4);
-                font-size: var(--ss-fs-16);
-            }
-
-            /* Hide desktop prev/next on mobile */
-            .problem-nav {
+            /* On phones the fixed bottom bar carries prev/next. */
+            .problem-nav,
+            .solution-steps {
                 display: none;
             }
 
@@ -1408,7 +1275,7 @@
 </head>
 
 <body>
-    <%- include('default/main_site_header', { showViewsButton: true, hidePracticumStrip: true }) %>
+    <%- include('default/main_site_header', { showViewsButton: true, hidePracticumStrip: true, pageHasOwnH1: true }) %>
 
     <!-- Mobile Navigation -->
     <div class="mobile-nav-overlay" id="mobileNavOverlay"></div>
@@ -1488,44 +1355,33 @@
     <div class="main-container">
         <!-- Content Section -->
         <div class="content-section">
-            <!-- Breadcrumb Header -->
-            <div class="content-header">
-                <h1 class="content-title">
-                    <% if (problemBreadcrumb) { %>
-                        <a href="<%= problemBreadcrumb.chapterHref %>" class="content-breadcrumb-link"><%= problemBreadcrumb.chapterTitle %></a>
-                        <span class="content-breadcrumb-sep"> &gt; </span>
-                        <a href="<%= problemBreadcrumb.sectionHref %>" class="content-breadcrumb-link"><%= problemBreadcrumb.sectionTitle %></a>
-                        <span class="content-breadcrumb-sep"> &gt; </span>
-                        <a href="/<%= lang %>/<%= name %>" class="content-breadcrumb-link content-breadcrumb-link--current"><%= problemBreadcrumb.problemLabel %></a>
-                    <% } else { %>
-                        <%= problemBreadcrumbTitle %>
+            <!-- Title block -->
+            <header class="solution-head">
+                <% if (problemBreadcrumb) { %>
+                <nav class="ss-breadcrumb" aria-label="<%= lang === 'ru' ? 'Раздел' : 'Section' %>">
+                    <a href="<%= problemBreadcrumb.chapterHref %>"><%= problemBreadcrumb.chapterTitle %></a>
+                    <span class="ss-sep" aria-hidden="true">›</span>
+                    <a href="<%= problemBreadcrumb.sectionHref %>"><%= problemBreadcrumb.sectionTitle %></a>
+                </nav>
+                <% } %>
+                <h1 class="ss-title solution-title"><%= lang === 'ru' ? 'Задача' : 'Problem' %> <span class="ss-num"><%= name %></span><% if (typeof difficulty !== 'undefined' && difficulty && difficulty.starred) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Задача повышенной сложности (звёздочка Савченко)' : 'A harder problem (Savchenko\'s asterisk)' %>">∗</sup><% } %></h1>
+                <div class="solution-bar">
+                    <% if (prevProblem || nextProblem) { %>
+                    <div class="solution-steps">
+                        <% if (prevProblem) { %><a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link">&larr; <%= prevProblem %></a><% } %>
+                        <% if (nextProblem) { %><a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a><% } %>
+                    </div>
                     <% } %>
-                </h1>
-                <div class="content-nav">
-                    <a href="/<%= lang %>/edit/<%= name %>" class="nav-btn">
-                        <i class="fas fa-edit me-2"></i><%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
-                    </a>
-                    <a href="/<%= lang %>/contributions/<%= name %>" class="nav-btn">
-                        <i class="fas fa-history me-2"></i><%= lang === 'ru' ? 'История' : 'History' %>
-                    </a>
+                    <div class="solution-actions">
+                        <a href="/<%= lang %>/edit/<%= name %>" class="btn btn-sm btn-outline-dark">
+                            <i class="fas fa-edit" aria-hidden="true"></i><%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
+                        </a>
+                        <a href="/<%= lang %>/contributions/<%= name %>" class="btn btn-sm btn-outline-dark">
+                            <i class="fas fa-history" aria-hidden="true"></i><%= lang === 'ru' ? 'История' : 'History' %>
+                        </a>
+                    </div>
                 </div>
-            </div>
-
-            <!-- Prev/Next Navigation (Top) -->
-            <% if (prevProblem || nextProblem) { %>
-            <div class="problem-nav">
-                <% if (prevProblem) { %>
-                    <a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link">&larr; <%= prevProblem %></a>
-                <% } else { %>
-                    <span></span>
-                <% } %>
-                <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
-                <% } else { %>
-                    <span></span>
-                <% } %>
-            </div>
-            <% } %>
+            </header>
 
             <!-- Practicum 2026 callout (prominent card; collapsible to a thin band,
                  remembered per-browser so applied / non-target users aren't distracted).
@@ -1614,7 +1470,7 @@
             <% } %>
 
             <!-- Content Body -->
-            <div class="content-body">
+            <div class="content-body ss-prose">
                 <% if (typeof figure !== 'undefined' && figure) { %>
                 <%- contentBefore %>
                 <%- include('partials/figures/' + figure.id) %>
@@ -1772,7 +1628,7 @@
 
             <!-- Prev/Next Navigation (Bottom) -->
             <% if (prevProblem || nextProblem) { %>
-            <div class="problem-nav problem-nav--bottom">
+            <div class="problem-nav">
                 <% if (prevProblem) { %>
                     <a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link">&larr; <%= prevProblem %></a>
                 <% } else { %>
@@ -2077,7 +1933,7 @@
                 <div class="section-grid-title">
                     <%= lang === 'ru' ? 'Сложность' : 'Difficulty' %>
                     <% if (difficulty.starred) { %>
-                    <span class="ss-diff-star" title="<%= lang === 'ru' ? 'Отмечена Савченко как задача повышенной трудности' : 'Marked by Savchenko as a harder problem' %>">&#8727;</span>
+                    <sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена Савченко как задача повышенной трудности' : 'Marked by Savchenko as a harder problem' %>">&#8727;</sup>
                     <% } %>
                 </div>
                 <div class="ss-diff-headline">
@@ -3345,6 +3201,7 @@
     <% if (typeof figure !== 'undefined' && figure) { %>
     <script src="<%= asset(figure.script) %>" defer></script>
     <% } %>
+    <%- include('default/modern_footer', { lang }) %>
     <%- include('default/main_site_search_script') %>
 </body>
 </html>

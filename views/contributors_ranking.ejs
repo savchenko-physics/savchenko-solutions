@@ -25,9 +25,7 @@
     <link rel="apple-touch-icon" href="/img/logo.png">
     <!-- Bootstrap 5: required for main_site_header (navbar, grid, collapse) -->
     <%- include('default/site_styles') %>
-" />
     <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-" />
     <style>
         :root {
             --sv-primary: #1a1a2e;
@@ -285,7 +283,7 @@
             border-radius: var(--ss-radius);
             background: var(--sv-bg);
             color: var(--sv-text);
-            font-size: var(--ss-fs-14);
+            font-size: var(--ss-text-input);
             font-family: inherit;
         }
 

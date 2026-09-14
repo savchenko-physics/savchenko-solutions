@@ -2,6 +2,9 @@ New Computer Modern (NewCM10 Book, BookItalic, Bold, BoldItalic)
 (C) 2019-2020 Antonis Tsolomitis. Released under the GUST Font License, which is legally
 equivalent to the LaTeX Project Public License 1.3c: http://tug.org/fonts/licenses/GUST-FONT-LICENSE.txt
 
-The files named ss-text-*.woff2 in this directory are MODIFIED versions: subsets for
-savchenkosolutions.com made by scripts/build-fonts.py, renamed (files and internal names
-"SS Text") as the licence requires. The original fonts are in TeX Live's newcomputermodern package.
+New Computer Modern Math (NewCMMath-Book), same author and licence.
+
+The files named ss-text-*.woff2 and ss-symbols-*.woff2 in this directory are MODIFIED versions:
+subsets for savchenkosolutions.com made by scripts/build-fonts.py, renamed (files and internal
+names "SS Text", "SS Symbols") as the licence requires. The original fonts are in TeX Live's
+newcomputermodern package.

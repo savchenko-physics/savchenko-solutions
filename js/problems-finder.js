@@ -350,7 +350,7 @@
             + tagsHtml
             + '<div class="pf-card-head">'
             + '<a class="pf-card-name" href="' + href + '">' + esc(r[COL.NAME]) + '</a>'
-            + (r[COL.STARRED] === 1 ? '<span class="pf-star" title="Asterisked by Savchenko">∗</span>' : '')
+            + (r[COL.STARRED] === 1 ? '<sup class="ss-star" title="Asterisked by Savchenko">∗</sup>' : '')
             + ratingHtml
             + '<span class="pf-card-status">' + statusHtml + '</span>'
             + voteHtml

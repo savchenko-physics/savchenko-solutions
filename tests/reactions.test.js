@@ -26,6 +26,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const EMOJI_DIR = path.join(ROOT, 'img', 'emoji');
 const Reactions = require('../js/reactions');
+const { resolveVar, toPx } = require('../scripts/lib/design-tokens');
 const { ALLOWED_REACTIONS: BRAINSTORM_REACTIONS } = require('../brainstorm');
 
 // The picker's Unicode row since 2026-09-13, most used first (👍 ❤️ 🙏 🔥 😂 🤔), and the two it
@@ -248,9 +249,12 @@ test('both pickers follow the design rules', () => {
     ];
     for (const [source, selector] of rules) {
         const block = between(source, selector, '}');
-        const radius = block.match(/border-radius:\s*(\d+)px/);
-        assert.ok(radius && Number(radius[1]) <= 8, `${selector.trim()} radius`);
-        assert.match(block, /box-shadow:\s*0 1px 3px rgba\(0,0,0,0\.08\);/, `${selector.trim()} shadow`);
+        // Values are design tokens since the 2026-09 type unification; resolve them before judging.
+        const radius = block.match(/border-radius:\s*([^;]+);/);
+        assert.ok(radius && toPx(radius[1]) <= 8, `${selector.trim()} radius`);
+        const shadow = block.match(/box-shadow:\s*([^;]+);/);
+        assert.ok(shadow, `${selector.trim()} shadow`);
+        assert.equal(resolveVar(shadow[1]).replace(/\s+/g, ''), '01px3pxrgba(0,0,0,0.08)', `${selector.trim()} shadow`);
         assert.doesNotMatch(block, /gradient/);
     }
 });

@@ -467,6 +467,8 @@ function getLineStatement(text) {
     return match ? convertLatexToPlainText(match[1]) : "Solution";
 }
 
+const { isBookCaption } = require('./js/solution-structure');
+
 const transformImageMarkdown = (htmlContent) => {
     // Regular expression for YouTube URL format, e.g., ![](https://www.youtube.com/embed/VIDEO_ID)
     const youtubeRegex = /!\[\]\((https:\/\/www\.youtube\.com\/embed\/[a-zA-Z0-9_-]+(\?t=\d+)?)\)/g;
@@ -482,28 +484,27 @@ const transformImageMarkdown = (htmlContent) => {
     const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
 
     return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
-        // Extract width, height, and scale if provided
-        let width = "auto",
-            height = "auto";
-        let scalePercentage = "100%"; // Default scale
+        // "|507x327, 26%": the file's own size, then the display width as a share of 600px.
+        const [w, h] = String(dimensions || "").split("x").map((v) => parseInt(v, 10));
+        const natural = w > 0 && h > 0;
+        const displayWidth = scale ? Math.round(600 * (parseInt(scale, 10) / 100)) : null;
 
-        if (dimensions) {
-            const [w, h] = dimensions.split("x");
-            width = w ? `${w}px` : "auto";
-            height = h ? `${h.replace("\\, ", "")}px` : "auto";
-        }
-        if (scale) {
-            const percentage = parseInt(scale);
-            scalePercentage = `${Math.round(600 * (percentage/100))}px`;
-        }
+        // Width and height attributes let the browser reserve the figure's box before the file
+        // arrives; without them every lazy statement figure pushed the solution down as it loaded
+        // (layout shift 0.08–0.15 on solution pages). height:auto keeps the file's real ratio
+        // once it is in, so a wrong size in the markdown can shift a little but never distort.
+        const sizeAttrs = displayWidth
+            ? `width="${displayWidth}"${natural ? ` height="${Math.round(displayWidth * h / w)}"` : ""}`
+            : (natural ? `width="${w}" height="${h}"` : `width="100%"`);
+        const sizeStyle = displayWidth ? `width: min(${displayWidth}px, 100%); height: auto;` : "width: 100%; height: auto;";
 
         const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
         const hasWebpVariant = /\.(jpg|jpeg|png)$/i.test(filename);
 
         const imgTag = `<img src="../../img/${folder}/${filename}"
           loading="lazy" alt="${altText}"
-          width="${scalePercentage}"
-          style="width: min(${scalePercentage}, 100vw);" />`;
+          ${sizeAttrs}
+          style="${sizeStyle}" />`;
 
         const pictureHtml = hasWebpVariant
             ? `<picture>
@@ -512,12 +513,14 @@ const transformImageMarkdown = (htmlContent) => {
         </picture>`
             : imgTag;
 
-        return `<center style="margin-top: 5px; margin-bottom: 5px;">
-      <figure>
-        ${pictureHtml}
-        <figcaption>${altText}</figcaption>
-      </figure>
-      </center>`;
+        // The book's statement figures carry their caption ("К задаче 2.1.32") inside the bitmap, so repeating the
+        // alt text under them printed it twice. Empty alts get no caption at all.
+        const caption = (altText || '').trim();
+        const showCaption = caption && !isBookCaption(caption, folder, filename);
+        return `<figure class="ss-image">
+        ${pictureHtml}${showCaption ? `
+        <figcaption>${altText}</figcaption>` : ''}
+      </figure>`;
     });
 };
 

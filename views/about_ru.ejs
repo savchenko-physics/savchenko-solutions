@@ -1,214 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <%- include('default/head_ru.ejs') %>
     <%- include('default/main_site_header_head') %>
     <title>Авторы Решений Задач из Савченко О.Я.</title>
-    <style>
-        body.about-page {
-            font-family: var(--ss-font-ui);
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background-color: var(--ss-surface-alt);
-            color: var(--ss-text);
-        }
-
-        .about-page-inner {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: var(--ss-space-5);
-        }
-
-        .about-page-inner h3 {
-            color: var(--ss-text);
-            margin-top: 1em;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--ss-space-1);
-            text-decoration: none;
-            color: var(--ss-link);
-            font-size: 0.95em;
-            font-weight: normal;
-            padding: var(--ss-space-2) var(--ss-space-3);
-            background: #f2f4f8;
-            border-radius: var(--ss-radius);
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .back-link:hover {
-            background: #edf0f7;
-            border-color: var(--ss-link);
-            transform: translateX(-1px);
-            text-decoration: none;
-            color: inherit;
-        }
-
-        .animate-img {
-            transition: transform 0.3s ease;
-        }
-
-        .animate-img:hover {
-            transform: scale(1.02);
-        }
-
-        .about-page-inner a {
-            color: var(--ss-link);
-            text-decoration: none;
-        }
-
-        .about-page-inner a:hover {
-            text-decoration: underline;
-        }
-
-        .content_contributors ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .content_contributors li {
-            margin-bottom: var(--ss-space-3);
-            padding: var(--ss-space-3);
-            background: var(--ss-surface);
-            border-radius: var(--ss-radius-lg);
-            box-shadow: var(--ss-shadow);
-        }
-    </style>
     <script src="/js/analytics.js"></script>
 </head>
 
-<body class="about-page">
+<body>
     <%- include('default/header.ejs') %>
-    <div class="about-page-inner">
-        <h3 id="back-link" style="color: var(--ss-link);">
-            <a href="../ru#description" class="back-link" >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke="#36c" fill="none">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                Назад
-            </a>
-        </h3>
-
-        <h3 id="team" style="margin-top: 1em;">
-            Спасибо участникам проекта
-        </h3>
-        <!--<p style="text-align: justify; font-style: italic;">Made to help olympiad takers, students of physics classes, physics enthusiasts, this project is the first and most complete collection of solutions for the Savchenko "Problems in Physics"</p>-->
-
-        <center>
-            <figure>
-                <img src="../../img/team.png" loading="lazy" width="280" class="animate-img" />
+    <main class="ss-container ss-container--text ss-page ss-doc">
+        <nav class="ss-doc-bar">
+            <a href="../ru#description" class="ss-back" id="back-link"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>Назад</a>
+            <a href="/about" lang="en">English version</a>
+        </nav>
+        <header class="ss-page-head">
+            <h1 class="ss-title" id="team">Спасибо участникам проекта</h1>
+        </header>
+        <div class="ss-prose">
+            <figure class="ss-image">
+                <img src="/img/team.png" loading="lazy" width="280" height="292" alt="" style="width: min(280px, 100%); height: auto;" />
             </figure>
-        </center>
 
-        <h3>
-            Наша команда
-        </h3>
-        <div class="content_contributors">
-            <ul>
-                <li>
-                    <a href="https://melnichenka.com/" target="_blank">Александр Мельниченко</a> — руководитель и
-                    основатель проекта. Я отвечаю за дизайн сайта, содержание веб-страниц: добавление теоретических
-                    материалов, новых решений и
-                    перевод содержание страниц.
-                </li>
+            <h2>Наша команда</h2>
+            <ul class="ss-people">
+                <li><a href="https://melnichenka.com/" target="_blank">Александр Мельниченко</a> — руководитель и основатель проекта. Я отвечаю за дизайн сайта, содержание веб-страниц: добавление теоретических материалов, новых решений и перевод содержание страниц.</li>
+                <li><a href="https://www.linkedin.com/in/stefannicov/" target="_blank">Стефан Ников</a>, двукратный медалист Международной олимпиады по физике (IPhO) и студент Гарварда, за создание первого перевода задач Савченко на английский язык, а также за идею создания решений в формате pdf.</li>
+                <li><a href="https://savchenkosolutions.com/user/emixter/" target="_blank">Евгений Дубровин,</a> магистр физико-математических наук, преподаватель. Предоставил решения более двухсот задач из разных разделов задачника. Уделяет особенное внимание точности и полноте решения. Жизненное кредо: "Физика это инструмент для объяснения мира, а значит, и счастья".</li>
+                <li><a href="https://www.linkedin.com/in/luis-daniel-fern%C3%A1ndez-quintana-9684581a0" target="_blank">Луис Даниэль Фернандес Кинтана</a>, тренер по физическим олимпиадам в Сантьяго-де-Куба и профессор Университета Орьенте, за первые публикации в английской <a href="http://savchenkosolutions.com/en">версии раздела</a> и более 35 решений из каждого разделов.</li>
+                <li><a href="https://t.me/ar4senN" target="_blank">Арсен Алмасхан</a> — предоставил более 50 решений из разных разделов, с акцентом на задачи повышенного уровня сложности (с пометкой "*").</li>
+                <li><a href="https://www.linkedin.com/in/andrei-yersh-33b28a2a5" target="_blank">Андрей Ёрш</a> — бронзовый медалист IPhO, за полные решения разделов "9.1. Индукция магнитного поля. Влияние магнитного поля на ток" и "9.2. Магнитное поле движущегося заряда. Индукция магнитного поля от линейного тока"; частичное решение раздела "10.1. Движение в однородном магнитном поле"; и оформление в <img src="/img/LaTeX_logo.svg" alt="LaTeX" width="45" height="20" class="ss-latex-logo" /></li>
+                <li><a href="https://www.instagram.com/jepkinsss/" target="_blank">Артём Левко</a> — бронзовый медалист IPhO, за полный вклад в решение раздела "6.1. Закон Кулона. Электрическое поле" с подробным и юмористическим объяснением.</li>
+                <li><a href="https://www.instagram.com/diikann_/" target="_blank">Дикан Никита</a> — предоставил решения разделов "3.1. Малые отклонения от равновесия." и "3.2. Период и частота свободных колебаний", а также их оформление в <img src="/img/LaTeX_logo.svg" alt="LaTeX" width="45" height="20" class="ss-latex-logo" />.</li>
+                <li><a href="https://www.instagram.com/animka_nk/" target="_blank">Анастасия Козак</a> и <a href="https://www.instagram.com/gandzyyaa/" target="_blank">Анна Корделюк</a> — за идею создания этой платформы и за предоставление решений задач по кинематике и динамике.</li>
+                <li><a href="https://www.instagram.com/_chender_/" target="_blank">Александр Канашенко</a> — серебряный медалист Белорусской физической олимпиады (BelPhO), за решения задач "3.1. Малые отклонения от равновесия." и "3.2. Период и частота свободных колебаний", за альтернативные решения и дополнение к решениям Никиты.</li>
+                <li><a href="https://t.me/UzbPhysicist" target="_blank">Шукрулло Лутфуллоев</a>, студент физического факультета Национального университета Узбекистана, за предоставление решений раздела "2.5. Столкновения" и дополнительных задач по динамике.</li>
+                <li><a href="https://www.instagram.com/_den.di__/" target="_blank">Дикан Данила</a> — внёс вклад в решения нескольких задач из раздела "1.1-1.2. Движение с постоянной и переменной скоростью".</li>
             </ul>
-            <ul>
-                <li>
-                    <a href="https://www.linkedin.com/in/stefannicov/" target="_blank">Стефан Ников</a>, двукратный
-                    медалист Международной олимпиады по физике (IPhO) и студент Гарварда, за создание первого перевода
-                    задач Савченко на
-                    английский язык, а также за идею создания решений в формате pdf.
-                </li>
-                <li>
-                    <a href="https://savchenkosolutions.com/user/emixter/" target="_blank">Евгений Дубровин,</a> магистр физико-математических наук, преподаватель. Предоставил решения более двухсот задач из разных разделов задачника. Уделяет особенное внимание точности и полноте решения. Жизненное кредо: "Физика это инструмент для объяснения мира, а значит, и счастья".
-                </li>
-                <li style="padding-bottom: 5; padding-top: 5;">
-                    <a href="https://www.linkedin.com/in/luis-daniel-fern%C3%A1ndez-quintana-9684581a0"
-                        target="_blank">Луис Даниэль Фернандес Кинтана</a>, тренер по физическим олимпиадам в
-                    Сантьяго-де-Куба и профессор Университета Орьенте,
-                    за первые публикации в английской <a href="http://savchenkosolutions.com/en">версии раздела</a> и
-                    более 35 решений из каждого разделов.
-                </li>
-                <li><a href="https://t.me/ar4senN" target="_blank">Арсен Алмасхан</a> — предоставил более 50 решений из
-                    разных разделов, с акцентом на задачи повышенного уровня сложности (с пометкой "*").</li>
-                <li>
-                    <a href="https://www.linkedin.com/in/andrei-yersh-33b28a2a5" target="_blank">Андрей Ёрш</a> —
-                    бронзовый медалист IPhO, за полные решения разделов "9.1. Индукция магнитного поля. Влияние
-                    магнитного поля на ток" и "9.2.
-                    Магнитное поле движущегося заряда. Индукция магнитного поля от линейного тока"; частичное решение
-                    раздела "10.1. Движение в однородном магнитном поле"; и оформление в
-                    <span style="display: inline-flex; align-items: center;">
-                        <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20" style="transform: translateY(5px);" />
-                    </span>
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/jepkinsss/" target="_blank">Артём Левко</a> — бронзовый медалист
-                    IPhO, за полный вклад в решение раздела "6.1. Закон Кулона. Электрическое поле" с подробным и
-                    юмористическим
-                    объяснением.
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/diikann_/" target="_blank">Дикан Никита</a> — предоставил решения
-                    разделов "3.1. Малые отклонения от равновесия." и "3.2. Период и частота свободных колебаний", а
-                    также их оформление в
-                    <span style="display: inline-flex; align-items: center;">
-                        <img src="../img/LaTeX_logo.svg" alt="LaTeX Logo" width="45" height="20" style="transform: translateY(5px);" />
-                    </span>.
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/animka_nk/" target="_blank">Анастасия Козак</a> и <a
-                        href="https://www.instagram.com/gandzyyaa/" target="_blank">Анна Корделюк</a> — за идею создания
-                    этой платформы и за предоставление
-                    решений задач по кинематике и динамике.
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/_chender_/" target="_blank">Александр Канашенко</a> — серебряный
-                    медалист Белорусской физической олимпиады (BelPhO), за решения задач "3.1. Малые отклонения от
-                    равновесия." и "3.2.
-                    Период и частота свободных колебаний", за альтернативные решения и дополнение к решениям Никиты.
-                </li>
-                <li>
-                    <a href="https://t.me/UzbPhysicist" target="_blank">Шукрулло Лутфуллоев</a>, студент физического
-                    факультета Национального университета Узбекистана, за предоставление решений раздела "2.5.
-                    Столкновения" и дополнительных
-                    задач по динамике.
-                </li>
-                <li><a href="https://www.instagram.com/_den.di__/" target="_blank">Дикан Данила</a> — внёс вклад в
-                    решения нескольких задач из раздела "1.1-1.2. Движение с постоянной и переменной скоростью".</li>
+
+            <h2>Огромное спасибо за предоставление авторских прав на использование материалов</h2>
+            <ul class="ss-people">
+                <li><a href="https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D1%82%D0%BE%D1%80,_%D0%9F%D0%B0%D0%B2%D0%B5%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D0%B5%D0%B5%D0%B2%D0%B8%D1%87" target="_blank">Павлу Андреевичу Виктору</a> - доценту, кандидату физико-математических наук, <a href="https://www.youtube.com/pvictor54">автору</a> канала с более 1,1 млн просмортов;</li>
+                <li><a href="https://lisakov.com/about/" target="_blank">Сергею Михайловичу Лисакову</a> — автору <a href="https://phys.pro/">сайта</a> для подготовки к ЕГЭ по физике, за любезно предоставленные подробные решения задач и конструктивную критику по дизайну сайта.</li>
+                <li><a href="https://www.youtube.com/@user-sf6su9qk5h" target="_blank">Вячеславу Гунькову</a> — кандидату физико-математических наук, за разрешение опубликовать некоторые его решения задач.</li>
+                <li><a href="https://vk.com/yarbar2003" target="_blank">Александру Яренкову</a> — студенту Московского физико-технического института.</li>
             </ul>
         </div>
-        <h3>
-            Огромное спасибо за предоставление авторских прав на использование материалов
-        </h3>
-        <div class="content_contributors">
-            <ul>
-                <li>
-                    <a href="https://ru.wikipedia.org/wiki/%D0%92%D0%B8%D0%BA%D1%82%D0%BE%D1%80,_%D0%9F%D0%B0%D0%B2%D0%B5%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D0%B5%D0%B5%D0%B2%D0%B8%D1%87"
-                        target="_blank">Павлу Андреевичу Виктору</a> - доценту,
-                    кандидату физико-математических наук, <a href="https://www.youtube.com/pvictor54">автору</a> канала
-                    с более 1,1 млн просмортов;
-                </li>
-                <li>
-                    <a href="https://lisakov.com/about/" target="_blank">Сергею Михайловичу Лисакову</a> — автору <a
-                        href="https://phys.pro/">сайта</a> для подготовки к ЕГЭ по физике, за любезно предоставленные
-                    подробные решения задач и
-                    конструктивную критику по дизайну сайта.
-                </li>
-                <li><a href="https://www.youtube.com/@user-sf6su9qk5h" target="_blank">Вячеславу Гунькову</a> —
-                    кандидату физико-математических наук, за разрешение опубликовать некоторые его решения задач.</li>
-                <li><a href="https://vk.com/yarbar2003" target="_blank">Александру Яренкову</a> — студенту Московского
-                    физико-технического института.</li>
-            </ul>
-        </div>
-
-        <%- include('default/main_site_footer_scripts') %>
-        <%- include('default/modern_footer', { lang: 'ru' }) %>
-    </div>
+    </main>
+    <%- include('default/main_site_footer_scripts') %>
+    <%- include('default/modern_footer', { lang: 'ru' }) %>
 </body>
 
 </html>

@@ -19,9 +19,7 @@
   <link rel="apple-touch-icon" href="/img/logo.png">
   <!-- Bootstrap CSS & Google Fonts -->
   <%- include('default/site_styles', { ssStyles: { math: true, icons: 'bi' } }) %>
-" />
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-" />
   <!-- Server-rendered statement maths: MathJax's SVG rules + the Cyrillic fallback font -->
 
   <style>
@@ -775,7 +773,7 @@
           const data = await res.json();
           if (ticket !== statementRequest) return;
           statementLabel.innerHTML = `<%= __('upload.statementHeading') %> ${data.name}` +
-            (data.starred ? '<sup class="ss-statement-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
+            (data.starred ? '<sup class="ss-star" title="<%= __("upload.statementStarred") %>">&#8727;</sup>' : '');
           statementBody.innerHTML = data.html +
             (data.needsReview ? `<div class="ss-statement-note"><%= __('upload.statementUnverified') %></div>` : '');
           statementPreview.classList.add('is-visible');

@@ -12,8 +12,6 @@
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
   <%# Reaction glyphs (js/reactions.js): community emoji are SVGs in img/emoji, the six Unicode ones are text. Guarded, so a process that has not restarted yet still renders this template. %>
   <% var rxUrls = (typeof reactionUrls === 'function') ? reactionUrls() : {}; var rxGlyph = (typeof reactionGlyph === 'function') ? function (v) { return reactionGlyph(v, lang, rxUrls); } : null; %>
-" />
-" />
   <!-- MathJax: render $…$ / $$…$$ in messages. We typeset manually as bubbles arrive. -->
   <script>
     window.MathJax = {
@@ -442,8 +440,8 @@
     .msg-unsent-retry:hover { background: var(--ss-surface-alt); }
 
     .msg-bubble-avatar {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       object-fit: cover;
       flex-shrink: 0;
@@ -452,9 +450,9 @@
     .msg-bubble {
       position: relative;
       padding: var(--ss-space-2) var(--ss-space-3);
-      border-radius: 16px;
-      font-size: var(--ss-fs-14);
-      line-height: 1.4;
+      border-radius: var(--ss-radius-lg);
+      font-size: var(--ss-text-body);
+      line-height: var(--ss-lh-ui);
       word-break: break-word;
       white-space: pre-wrap;
       max-width: 100%;
@@ -1224,7 +1222,7 @@
     /* Message text formatting (bold + code) */
     .msg-code-inline {
       font-family: var(--ss-font-mono);
-      font-size: 0.88em;
+      font-size: var(--ss-fs-13);
       background: rgba(0, 0, 0, 0.06);
       padding: 1px var(--ss-space-1);
       border-radius: var(--ss-radius-sm);
@@ -1234,7 +1232,7 @@
 
     .msg-code {
       font-family: var(--ss-font-mono);
-      font-size: 0.84em;
+      font-size: var(--ss-fs-13);
       background: rgba(0, 0, 0, 0.06);
       padding: var(--ss-space-2) var(--ss-space-3);
       border-radius: var(--ss-radius);

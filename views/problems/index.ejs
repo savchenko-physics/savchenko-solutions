@@ -10,8 +10,6 @@
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/problems" />
 
     <%- include('../default/site_styles', { ssStyles: { math: true, prose: true } }) %>
-" />
-" />
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
     <link rel="icon" type="image/png" href="/img/logo.png" />
     <!-- Card statement previews arrive pre-rendered as SVG math from
@@ -98,7 +96,7 @@
         .pf-tag-toggle { display: flex; gap: var(--ss-space-1); margin-bottom: var(--ss-space-2); }
         .pf-tag-toggle button { flex: 1; font-size: var(--ss-fs-12); padding: var(--ss-space-1) var(--ss-space-2); border: 1px solid var(--ss-rule); background: var(--ss-surface); color: var(--ss-text-secondary); cursor: pointer; border-radius: var(--ss-radius-sm); }
         .pf-tag-toggle button.on { background: var(--ss-link); color: var(--ss-on-navy); border-color: var(--ss-link); }
-        .pf-tag-search { height: 30px; width: 100%; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-sm); padding: 0 var(--ss-space-2); font-size: var(--ss-fs-13); margin-bottom: var(--ss-space-2); box-sizing: border-box; }
+        .pf-tag-search { height: 40px; width: 100%; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); padding: 0 var(--ss-space-3); font-size: var(--ss-text-input); margin-bottom: var(--ss-space-2); box-sizing: border-box; }
         .pf-tag-list { max-height: 220px; overflow-y: auto; border: 1px solid var(--ss-rule-soft); border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-2); background: var(--ss-surface); }
         .pf-tag-row { display: flex; align-items: center; gap: var(--ss-space-2); font-size: var(--ss-fs-13); padding: 2px 0; }
         .pf-tag-row .n { margin-left: auto; color: var(--ss-text-secondary); font-size: var(--ss-fs-12); }
@@ -148,7 +146,6 @@
         .pf-card-name:hover { color: var(--ss-link-hover); text-decoration: underline; }
         /* Raised like a footnote marker (LaTeX's $^*$), not sitting on the baseline — a
            centred asterisk at body size reads as a bullet, not Savchenko's own mark. */
-        .pf-star { font-weight: var(--ss-fw-strong); color: var(--ss-navy); vertical-align: super; font-size: 0.75em; line-height: 0; margin-left: 1px; }
         .pf-card-rating {
             font-family: var(--ss-font-ui); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-13); padding: 2px var(--ss-space-2);
             border-radius: var(--ss-radius-sm); color: var(--ss-on-navy);
@@ -159,17 +156,15 @@
         .pf-card-status span { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: var(--ss-radius-sm); }
         .pf-card-status .en { background: var(--ss-surface-hover); color: var(--ss-link); }
         .pf-card-status .ru { background: var(--ss-warning-soft); color: var(--ss-warning); }
-        .pf-card-statement {
-            font-family: var(--ss-font-text); font-size: var(--ss-fs-14); line-height: 1.5; color: var(--ss-text);
-            min-height: 1.4em;
-        }
+        /* The statement is set like the book (.ss-prose--compact): SS Text at 18px. */
+        .pf-card-statement { min-height: 1.4em; }
         .pf-card-statement img { max-width: 100%; height: auto; }
         /* Book figures come in through statementRender.js as <figure>; the UA default
            margin (1em 40px) would indent them like a blockquote. Centred under the text. */
         .pf-card-statement figure { margin: var(--ss-space-2) 0 0; text-align: center; }
         .pf-card-statement figure img { display: inline-block; }
         .pf-card-statement p:last-child { margin-bottom: 0; }
-        .pf-card-statement.is-loading { color: var(--ss-text-secondary); font-family: inherit; font-style: italic; font-size: var(--ss-fs-13); }
+        .pf-card-statement.is-loading { color: var(--ss-text-secondary); font-family: var(--ss-font-ui); font-size: var(--ss-fs-13); }
         .pf-none { color: var(--ss-text-secondary); font-size: var(--ss-fs-12); }
 
         .pf-load-more { display: block; width: 100%; margin-top: var(--ss-space-1); height: 42px; border-radius: var(--ss-radius-lg); border: 1px solid var(--ss-rule); background: var(--ss-surface-alt); color: var(--ss-navy); font-size: var(--ss-fs-13); font-weight: var(--ss-fw-regular); cursor: pointer; }
@@ -359,7 +354,7 @@
                     <% } %>
                     <div class="pf-card-head">
                         <a class="pf-card-name" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a>
-                        <% if (r[4] === 1) { %><span class="pf-star" title="Asterisked by Savchenko">&#8727;</span><% } %>
+                        <% if (r[4] === 1) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Asterisked by Savchenko' %>">&#8727;</sup><% } %>
                         <% if (rating != null) { %><span class="pf-card-rating <%= heat ? 'pf-heat-bg-' + heat : 'pf-heat-none' %>"><%= rating %></span><% } %>
                         <span class="pf-card-status">
                             <% if (r[11]) { %><span class="en" title="English solution">EN</span><% } %>
@@ -368,7 +363,7 @@
                         <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
                         <span class="pf-card-go" aria-hidden="true">&rarr;</span>
                     </div>
-                    <div class="pf-card-statement is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
+                    <div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
                 </div>
                 <% }); %>
             </div>

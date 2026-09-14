@@ -150,7 +150,16 @@ test('the shapes of maths real solutions use still render', () => {
 });
 
 // ── the pages: server-rendered maths is only whole with the stylesheet on the page ──────
-test('every template that shows server-rendered maths links /css/mathjax.css', () => {
+// Since the 2026-09 type unification no template links stylesheets itself: every page includes
+// views/default/site_styles.ejs, which links /css/mathjax.css?v=<content hash> when the page
+// passes `ssStyles: { math: true }` (tests/site-styles.test.js checks the include itself).
+test('every template that shows server-rendered maths asks site_styles for /css/mathjax.css', () => {
+    const partial = fs.readFileSync(path.join(ROOT, 'views', 'default', 'site_styles.ejs'), 'utf8');
+    assert.match(partial, /if \(_ss\.math\) \{ %>\s*<link rel="stylesheet" href="\/css\/mathjax\.css\?v=<%= [^%]*mathCssVersion/);
+    const index = fs.readFileSync(path.join(ROOT, 'index.js'), 'utf8');
+    assert.match(index, /app\.locals\.mathCssVersion = crypto\.createHash\('md5'\)\.update\(require\('\.\/mathRender'\)\.getMathCss\(\)\)/,
+        'the ?v= is the hash of getMathCss(), so a change to the maths CSS can never be served stale');
+    const asksForMath = (src) => /include\([^)]*site_styles[^)]*\bmath:\s*true/.test(src) || src.includes('/css/mathjax.css');
     const views = path.join(ROOT, 'views');
     const offenders = [];
     (function walk(dir) {
@@ -161,12 +170,12 @@ test('every template that shows server-rendered maths links /css/mathjax.css', (
             const src = fs.readFileSync(p, 'utf8');
             // Pages that fetch a statement into the DOM, plus the two rendered with maths already inline.
             const shows = src.includes('/statement?lang=') || ['solution_post.ejs', 'index.ejs'].includes(name) && src.includes('ss-statement');
-            if (shows && !src.includes('/css/mathjax.css')) offenders.push(path.relative(ROOT, p));
+            if (shows && !asksForMath(src)) offenders.push(path.relative(ROOT, p));
         }
     })(views);
     assert.deepStrictEqual(offenders, []);
     // The incident page, by name.
     for (const v of ['views/upload_page.ejs', 'views/eng_page.ejs', 'views/solution_post.ejs', 'views/problems/index.ejs']) {
-        assert.ok(fs.readFileSync(path.join(ROOT, v), 'utf8').includes('/css/mathjax.css'), v);
+        assert.ok(asksForMath(fs.readFileSync(path.join(ROOT, v), 'utf8')), v);
     }
 });

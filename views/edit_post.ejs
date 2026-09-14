@@ -50,6 +50,8 @@
         this back to tex-svg.js is a one-line change if exact visual identity is wanted. %>
     <script id="MathJax-script" async src="/vendor/mathjax/tex-chtml.js"></script>
     <script defer src="/js/tex-normalize.js"></script>
+    <%# The published page typesets sections and figure captions with this; the preview uses the same file. %>
+    <script defer src="<%= (typeof asset === 'function') ? asset('/js/solution-structure.js') : '/js/solution-structure.js' %>"></script>
     <script defer src="/js/vendor/codemirror/addon/mode/multiplex.min.js"></script>
     <script defer src="/js/vendor/codemirror/addon/selection/active-line.min.js"></script>
     <script defer src="/js/vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
@@ -57,7 +59,7 @@
 
     <style>
         :root {
-            --font-size: 12px;
+            --font-size: var(--ss-fs-14);
             --source-font-family: "Lucida Console", "Source Code Pro", monospace;
             --line-height: 1.6;
         }
@@ -83,7 +85,7 @@
             height: calc(100vh - 50px);
             overflow-y: auto;
             box-sizing: border-box;
-            background: var(--ss-surface-alt);
+            background: var(--ss-surface);
             word-break: break-word;
             padding: var(--ss-space-4) var(--ss-space-9) var(--ss-space-4) var(--ss-space-9);
             /* margin-top: 50px; */
@@ -279,28 +281,27 @@
         .cm-header-1 {
             /* # */
             color: var(--ss-text);
-            font-size: 1.4em;
+            font-size: var(--ss-fs-20);
             font-weight: var(--ss-fw-strong);
         }
 
         .cm-header-2 {
             /* ## */
             color: #34495e;
-            font-size: 1.3em;
+            font-size: var(--ss-fs-18);
             font-weight: var(--ss-fw-strong);
         }
 
         .cm-header-3 {
             /* ### */
             color: var(--ss-link);
-            font-size: 1.2em;
+            font-size: var(--ss-fs-16);
             font-weight: var(--ss-fw-strong);
         }
 
         .cm-header-4 {
             /* #### */
             color: var(--ss-link);
-            font-size: 1.1em;
             font-weight: var(--ss-fw-strong);
         }
 
@@ -667,7 +668,7 @@
 
         .image-dimensions {
             color: var(--ss-text-secondary);
-            font-size: 0.9em;
+            font-size: var(--ss-text-meta);
         }
 
         .ol-cm-toolbar-button-menu-popover {
@@ -1210,8 +1211,8 @@
     <div style="display: flex; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden;">
         <div id="editor" style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%;"></div>
         <div id="resizer" style="flex: 0 0 5px; height: 100%; background-color: var(--ss-navy-hover); cursor: ew-resize;"></div>
-        <div id="preview"
-            style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%; overflow-y: auto; background: var(--ss-surface-alt); word-break: break-word; padding: var(--ss-space-4) var(--ss-space-9);">
+        <div id="preview" class="ss-prose"
+            style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%; overflow-y: auto; background: var(--ss-surface); word-break: break-word; padding: var(--ss-space-4) var(--ss-space-9);">
         </div>
     </div>
 
@@ -1779,6 +1780,8 @@
             // Apply custom image and YouTube transformations
             html = html.replace(/<em>/g, "_").replace(/<\/em>/g, "_");
             html = html.replace(/\\\*/g, "*");
+            // Same section typesetting as the published page (post.js): statement card, answer box.
+            if (window.SolutionStructure) html = window.SolutionStructure.structureSolution(html, { lang: '<%= lang %>', name: '<%= name %>' });
 
             if (html === lastPreviewHtml) return;
             lastPreviewHtml = html;
@@ -1831,13 +1834,13 @@
                     scalePercentage = scale;
                 }
 
-                return `<center>
-              <figure>
+                const caption = (altText || '').trim();
+                const showCaption = caption && !(window.SolutionStructure && window.SolutionStructure.isBookCaption(caption, folder, filename));
+                return `<figure class="ss-image">
                 <img src="..\\..\\img\\${folder}\\${filename}"
-                  loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />
-                <figcaption>${altText}</figcaption>
-              </figure>
-              </center>`;
+                  loading="lazy" alt="${altText}" width="${scalePercentage}" style="max-width:${width}; max-height:${height};" />${showCaption ? `
+                <figcaption>${altText}</figcaption>` : ''}
+              </figure>`;
             });
         }
 

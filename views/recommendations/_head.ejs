@@ -92,7 +92,8 @@
        the rubric name; the non-breaking space in the markup does the joining. */
     .rec-rubric-n { color: var(--ss-text-secondary); font-weight: 400; font-size: var(--ss-fs-13); white-space: nowrap; }
     .rec-rubric-items { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); line-height: 1.6; }
-    .rec-rubric-items a { color: var(--ss-link); text-decoration: none; }
+    .rec-rubric-items a { color: var(--ss-link); text-decoration: none; overflow-wrap: anywhere; }
+    .rec-cell { min-width: 0; }
     .rec-rubric-items a:hover { text-decoration: underline; }
 
     .rec-layout { display: grid; grid-template-columns: 190px 1fr; gap: var(--ss-space-8); align-items: start; }
