@@ -1,8 +1,14 @@
 const fs = require("fs");
 const path = require("path");
 const { flagEmojiForCountryName, countryCodeForName } = require("./lib/countries");
-const { getOnlineUsernames } = require("./lib/presence");
+const { getPeopleNow } = require("./lib/presence");
 
+// What this cache holds is the expensive part: counts, rankings, who worked with whom. The
+// people in it are another matter. A name and a picture change the moment someone saves
+// their settings, and served from here a new avatar stayed invisible to every other visitor
+// for up to an hour (2026-09-13). So no name, picture or online dot is ever answered from
+// the cache: each handler lays them over the cached payload per request (withFaceNow,
+// profileUserBlock), from rows it reads fresh.
 const CACHE_TTL_MS = 60 * 60 * 1000;
 // A user counts as "online" while their last_seen_at is within this window.
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
@@ -25,6 +31,36 @@ async function withCache(key, loader) {
     const value = await loader();
     cache.set(key, { createdAt: Date.now(), value });
     return value;
+}
+
+// A cached person with the name and picture they have now (`now` is from getPeopleNow).
+// Someone the lookup missed (renamed since, or the query failed) keeps the cached ones.
+// The cached row itself is never mutated.
+function withFaceNow(person, now) {
+    const fresh = now.get(person.username);
+    return fresh ? { ...person, fullName: fresh.fullName, profilePicture: fresh.profilePicture } : person;
+}
+
+// The header of a profile, from a users row. Built from the cached row when the cache is
+// filled, then again per request from a fresh one: the settings form saves the picture,
+// name, bio, country, institution and links together, and all of them should show at once.
+function profileUserBlock(user) {
+    return {
+        id: user.id,
+        username: user.username,
+        fullName: user.full_name || user.username,
+        profilePicture: user.profile_picture || "/img/profile_images/Default_placeholder.svg",
+        countryLocation: user.country_location || null,
+        countryFlag: user.country_location ? flagEmojiForCountryName(user.country_location) : "",
+        institution: user.institution || null,
+        bio: user.bio || "",
+        isVerifiedUser: !!user.is_verified_user,
+        github: user.github || null,
+        linkedin: user.linkedin || null,
+        website: user.personal_website || null,
+        cvUrl: user.cv_url || null,
+        createdAt: user.created_at || null,
+    };
 }
 
 function parseCsvLineLoose(line) {
@@ -658,14 +694,19 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 };
             });
 
-            // Online presence is time-sensitive, so it is resolved fresh per
-            // request (outside the 1h leaderboard cache) for the current page.
-            const onlineUsernames = await getOnlineUsernames(pool, pageRows.map((r) => r.username));
-            const rows = pageRows.map((r) => ({ ...r, isOnline: onlineUsernames.has(r.username) }));
+            // Online presence, names and pictures are resolved fresh per request
+            // (outside the 1h leaderboard cache) for the current page.
+            const now = await getPeopleNow(pool, pageRows.map((r) => r.username));
+            const rows = pageRows.map((r) => ({
+                ...withFaceNow(r, now),
+                isOnline: now.get(r.username)?.isOnline === true,
+            }));
 
-            // Short max-age: the row data is cached server-side for 1h, but the
-            // isOnline flags must not be frozen in the client cache for long.
-            res.set("Cache-Control", "public, max-age=60");
+            // no-cache rather than a max-age: the rankings are cached server-side for
+            // 1h, but the online flags and faces are as of this request, and even a
+            // minute in the browser's cache would show someone their old picture right
+            // after they changed it. Revalidating costs a 304.
+            res.set("Cache-Control", "no-cache");
             res.json({
                 page,
                 limit,
@@ -975,22 +1016,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 }
 
                 return {
-                    user: {
-                        id: user.id,
-                        username: user.username,
-                        fullName: user.full_name || user.username,
-                        profilePicture: user.profile_picture || "/img/profile_images/Default_placeholder.svg",
-                        countryLocation: user.country_location || null,
-                        countryFlag: user.country_location ? flagEmojiForCountryName(user.country_location) : "",
-                        institution: user.institution || null,
-                        bio: user.bio || "",
-                        isVerifiedUser: !!user.is_verified_user,
-                        github: user.github || null,
-                        linkedin: user.linkedin || null,
-                        website: user.personal_website || null,
-                        cvUrl: user.cv_url || null,
-                        createdAt: user.created_at || null,
-                    },
+                    user: profileUserBlock(user),
                     stats: {
                         solutions: Number(stats.solutions || 0),
                         edits: Number(stats.edits || 0),
@@ -1036,12 +1062,15 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 result.isFollowing = followCheck.rows.length > 0;
             }
 
-            // Presence (fresh, not cached) — respects the show_online_status
-            // preference. Owners always see their own presence.
+            // The person and their presence (fresh, not cached). The whole header is
+            // rebuilt from this row, not only the picture: one save of the settings form
+            // changes the picture, name, bio and links together. Same row, same query
+            // this request already made for presence. Presence respects the
+            // show_online_status preference; owners always see their own.
             result.presence = { lastSeenAt: null, isOnline: false, hidden: false };
             try {
                 const presenceRow = await pool.query(
-                    `SELECT u.last_seen_at, COALESCE(pr.show_online_status, true) AS show_online
+                    `SELECT u.*, COALESCE(pr.show_online_status, true) AS show_online
                      FROM users u
                      LEFT JOIN user_preferences pr ON pr.user_id = u.id
                      WHERE u.id = $1`,
@@ -1049,6 +1078,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 );
                 const pRow = presenceRow.rows[0];
                 if (pRow) {
+                    result.user = profileUserBlock(pRow);
                     const viewingSelf = req.session.userId === payload.user.id;
                     if (pRow.show_online || viewingSelf) {
                         result.presence.lastSeenAt = pRow.last_seen_at || null;
@@ -1063,18 +1093,19 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
                 // last_seen_at column may not exist yet (pre-migration); ignore.
             }
 
-            // Fresh online flags for collaborator avatars. Remap to new objects so
-            // we never mutate the cached payload's collaborator rows.
+            // Fresh names, pictures and online flags for the collaborators. Remap to new
+            // objects so we never mutate the cached payload's collaborator rows.
             if (Array.isArray(result.collaborators) && result.collaborators.length) {
-                const collabOnline = await getOnlineUsernames(pool, result.collaborators.map((c) => c.username));
-                result.collaborators = result.collaborators.map((c) => ({ ...c, isOnline: collabOnline.has(c.username) }));
+                const now = await getPeopleNow(pool, result.collaborators.map((c) => c.username));
+                result.collaborators = result.collaborators.map((c) => ({
+                    ...withFaceNow(c, now),
+                    isOnline: now.get(c.username)?.isOnline === true,
+                }));
             }
 
-            if (req.session.userId) {
-                res.set("Cache-Control", "private, no-cache");
-            } else {
-                res.set("Cache-Control", "public, max-age=3600");
-            }
+            // Revalidated on every use, signed in or not: the people in this response are
+            // as of this request, and an hour of browser cache would undo that.
+            res.set("Cache-Control", req.session.userId ? "private, no-cache" : "no-cache");
             res.json(result);
         } catch (error) {
             console.error("Failed to load user stats:", error);
@@ -1543,8 +1574,17 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             if (!payload) {
                 return res.status(404).json({ error: "User not found" });
             }
-            res.set("Cache-Control", "public, max-age=3600");
-            res.json(payload);
+
+            // The counts come from the cache; the name and picture beside each count
+            // are fresh, as everywhere else in this file.
+            const lists = ["likedBy", "commentedBy", "likesGiven", "commentsGiven"];
+            const now = await getPeopleNow(pool, lists.flatMap((key) => payload[key].map((p) => p.username)));
+            const result = { ...payload };
+            for (const key of lists) {
+                result[key] = payload[key].map((p) => withFaceNow(p, now));
+            }
+            res.set("Cache-Control", "no-cache");
+            res.json(result);
         } catch (error) {
             console.error("Failed to load user social activity:", error);
             res.status(500).json({ error: "Failed to load user social activity" });
