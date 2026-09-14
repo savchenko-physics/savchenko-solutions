@@ -1,5 +1,4 @@
 const fs = require("fs");
-const { recommendationsForChapter } = require('./lib/recommendationsForChapter');
 const path = require("path");
 const { parseMarkdown, transformImageMarkdown, getLineStatement, convertLatexToPlainText, buildMetaDescription } = require("./utils"); // Adjust the import based on your utils file
 const { getProblemBreadcrumbTitle, getProblemBreadcrumbParts, getPrevNextProblems, getSectionProblemsGrid, getRelatedProblems } = require("./parents");
@@ -474,12 +473,6 @@ async function renderPost(req, res) {
         }
         const articleJsonLdStr = jsonLdSafe(articleJsonLd);
 
-        let chapterRecommendations = [];
-        try {
-            const rec = require('./recommendations');
-            chapterRecommendations = recommendationsForChapter(rec.getCatalog(), name, lang, 3);
-        } catch (_e) { /* catalog optional — the block simply does not render */ }
-
         // The discussion and the like/star counts used to be two fetches the browser
         // made after the page arrived — ~700 ms of round trip for data the server can
         // read in single-digit milliseconds while it is already rendering. Gathered
@@ -511,7 +504,6 @@ async function renderPost(req, res) {
         const figureSplit = figure ? splitAtSolutionHeading(html) : null;
 
         res.render("solution_post", {
-            chapterRecommendations,
             solutionBundle,
             __: i18n.__,
             lang,

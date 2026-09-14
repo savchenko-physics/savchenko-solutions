@@ -803,15 +803,19 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose .ss-sec + figure,
 .ss-prose p + .ss-sec,
 .ss-prose figure + .ss-sec { margin-top: var(--ss-space-6); }
+/* Условие / Решение / Ответ are headings of the text like any other the author writes, so they
+   are set like them (bold SS Text at the reading size, below), not as small grey interface
+   labels, which read as a different font and colour on the same page (2026-09-14). */
 .ss-prose .ss-label {
-  font-family: var(--ss-font-ui);
-  font-size: var(--ss-text-label);
-  font-weight: var(--ss-fw-strong);
-  line-height: var(--ss-lh-snug);
-  letter-spacing: var(--ss-ls-caps);
-  text-transform: uppercase;
+  font-family: var(--ss-font-text);
+  font-size: var(--ss-text-prose);
+  font-weight: var(--ss-fw-text-bold);
+  line-height: var(--ss-lh-tight);
+  letter-spacing: 0;
+  text-transform: none;
   text-align: left;
-  color: var(--ss-text-secondary);
+  color: var(--ss-heading);
+  hyphens: manual;
   margin: 0 0 var(--ss-space-2);
 }
 .ss-prose .ss-problem {

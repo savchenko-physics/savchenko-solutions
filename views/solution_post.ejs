@@ -122,21 +122,23 @@
             margin-bottom: var(--ss-space-4);
             border-bottom: 1px solid var(--ss-rule);
         }
-        .solution-title {
-            margin: 0 0 var(--ss-space-2);
-        }
-        .solution-title .ss-num { font-weight: inherit; }
-        .solution-bar {
+        .solution-title-row {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: var(--ss-space-2) var(--ss-space-4);
         }
+        .solution-title {
+            margin: 0;
+        }
+        .solution-title .ss-num { font-weight: inherit; }
         .solution-steps {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: var(--ss-space-4);
+            margin-top: var(--ss-space-2);
             font-size: var(--ss-text-ui);
             font-variant-numeric: tabular-nums;
         }
@@ -1375,14 +1377,8 @@
                     <a href="<%= problemBreadcrumb.sectionHref %>"><%= problemBreadcrumb.sectionTitle %></a>
                 </nav>
                 <% } %>
-                <h1 class="ss-title solution-title"><%= lang === 'ru' ? 'Задача' : 'Problem' %> <span class="ss-num"><%= name %></span><% if (typeof difficulty !== 'undefined' && difficulty && difficulty.starred) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Задача повышенной сложности (звёздочка Савченко)' : 'A harder problem (Savchenko\'s asterisk)' %>">∗</sup><% } %></h1>
-                <div class="solution-bar">
-                    <% if (prevProblem || nextProblem) { %>
-                    <div class="solution-steps">
-                        <% if (prevProblem) { %><a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link">&larr; <%= prevProblem %></a><% } %>
-                        <% if (nextProblem) { %><a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a><% } %>
-                    </div>
-                    <% } %>
+                <div class="solution-title-row">
+                    <h1 class="ss-title solution-title"><%= lang === 'ru' ? 'Задача' : 'Problem' %> <span class="ss-num"><%= name %></span><% if (typeof difficulty !== 'undefined' && difficulty && difficulty.starred) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Задача повышенной сложности (звёздочка Савченко)' : 'A harder problem (Savchenko\'s asterisk)' %>">∗</sup><% } %></h1>
                     <div class="solution-actions">
                         <a href="/<%= lang %>/edit/<%= name %>" class="btn btn-sm btn-outline-dark">
                             <i class="fas fa-edit" aria-hidden="true"></i><%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
@@ -1392,6 +1388,13 @@
                         </a>
                     </div>
                 </div>
+                <%# The previous problem at the left edge, the next at the right, as in a book. %>
+                <% if (prevProblem || nextProblem) { %>
+                <nav class="solution-steps" aria-label="<%= lang === 'ru' ? 'Соседние задачи' : 'Neighbouring problems' %>">
+                    <% if (prevProblem) { %><a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link" rel="prev">&larr; <%= prevProblem %></a><% } else { %><span></span><% } %>
+                    <% if (nextProblem) { %><a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link" rel="next"><%= nextProblem %> &rarr;</a><% } else { %><span></span><% } %>
+                </nav>
+                <% } %>
             </header>
 
             <!-- Practicum 2026 callout (prominent card; collapsible to a thin band,
@@ -1899,23 +1902,6 @@
             </div>
             <% } %>
             <!-- Problempedia section removed for now -->
-            <%# Topic-matched catalog entries. Renders nothing when the chapter has no
-                match, rather than falling back to a generic list — an always-on
-                widget that sometimes shows irrelevant links is worse than absent. %>
-            <% if (typeof chapterRecommendations !== 'undefined' && chapterRecommendations && chapterRecommendations.length > 0) { %>
-            <div class="section-grid-card" style="margin-top: var(--ss-space-4);">
-                <div class="section-grid-title"><%= lang === 'ru' ? 'Где ещё почитать' : 'More on this topic' %></div>
-                <% chapterRecommendations.forEach(function(cr) { %>
-                <div style="padding: var(--ss-space-1) 0; border-bottom: 1px solid var(--ss-rule-soft);">
-                    <a href="<%= cr.url %>" rel="noopener nofollow" target="_blank" style="color: var(--ss-link); text-decoration: none; font-size: var(--ss-fs-13); font-weight: var(--ss-fw-regular);"><%= cr.title %></a>
-                    <div style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary);"><%= (lang === 'ru' ? (cr.summaryRu || cr.summaryEn) : (cr.summaryEn || cr.summaryRu)).slice(0, 88) %></div>
-                </div>
-                <% }); %>
-                <div style="padding-top: var(--ss-space-2);">
-                    <a href="/<%= lang %>/recommendations" style="color: var(--ss-text-secondary); text-decoration: none; font-size: var(--ss-fs-12);"><%= lang === 'ru' ? 'Все рекомендации' : 'All recommendations' %> &rarr;</a>
-                </div>
-            </div>
-            <% } %>
             <% if (typeof problemPaths !== 'undefined' && problemPaths && problemPaths.length > 0) { %>
             <div class="section-grid-card" style="margin-top: var(--ss-space-4);">
                 <div class="section-grid-title"><%= lang === 'ru' ? 'Часть пути' : 'Part of' %></div>
