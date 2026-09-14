@@ -98,7 +98,9 @@
 
         /* Source and preview side by side, the divider draggable (flex-basis set by the resize
            script below). */
-        .editor-split { display: flex; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden; }
+        /* body is a flex row on this page, so the split is a flex item: min-width: 0, or the widest
+           formula or image in the preview sets its width and the page scrolls sideways on a phone. */
+        .editor-split { display: flex; flex: 1 1 auto; min-width: 0; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden; }
         .editor-split > #editor { flex: 0 0 calc(50% - 2.5px); width: auto; min-width: 100px; height: 100%; }
         .editor-split > #resizer { flex: 0 0 5px; height: 100%; }
         /* The preview uses its whole pane, like the published page: .ss-prose's reading measure
@@ -110,7 +112,7 @@
             .editor-split { flex-direction: column; height: auto; overflow: visible; }
             .editor-split > #editor { flex: none; height: 60vh; }
             .editor-split > #resizer { display: none; }
-            .editor-split > #preview { flex: none; height: auto; overflow: visible; padding: var(--ss-space-5) var(--ss-space-4); border-top: 1px solid var(--ss-rule); }
+            .editor-split > #preview { flex: none; height: auto; overflow-x: auto; overflow-y: hidden; padding: var(--ss-space-5) var(--ss-space-4); border-top: 1px solid var(--ss-rule); }
         }
 
         #preview pre {
@@ -1023,13 +1025,10 @@
             .draft-status { display: none; }
         }
 
-        /* On a phone the header ran out of room and clipped the primary button — it read
-           as a bare icon with no label at 380px, before this change too. The problem
-           number is already in the URL and the tab title, so the centre label is the one
-           thing here that can be given up. `!important` because the buttons carry inline
-           styles from long before the no-inline-styles rule. */
         /* The navy top bar's two actions: the way back (outlined on navy) and Publish (the site's
-           success colour, 5.4:1 under white text). */
+           success colour, 5.4:1 under white text). On a phone the bar ran out of room and clipped
+           the primary button; the problem number is already in the URL and the tab title, so the
+           centre label is the first thing given up (below). */
         .header-right .editor-bar-btn {
             font-size: var(--ss-text-ui);
             color: var(--ss-on-navy);
@@ -1048,8 +1047,8 @@
         @media (max-width: 640px) {
             .post-title { display: none; }
             .header-right .submit-button {
-                font-size: var(--ss-fs-13) !important;
-                padding: var(--ss-space-2) var(--ss-space-3) !important;
+                font-size: var(--ss-fs-13);
+                padding: var(--ss-space-2) var(--ss-space-3);
             }
             .header-right .submit-button svg,
             .header-right .submit-button .fa {
@@ -1061,6 +1060,16 @@
                ~376px and reports zero overflow, so the primary button keeps its full
                label down to the narrowest phones. */
             .header-left .mw-logo-wordmark { max-width: 120px; }
+            /* The way back is an arrow on its own (it keeps its name for screen readers): with
+               "Назад" spelled out the bar was 397px wide at 390 and 36px too wide at 360. */
+            .header-right .editor-bar-btn--back > span { display: none; }
+            .header-right { padding-right: var(--ss-space-2); }
+        }
+        @media (max-width: 575.98px) {
+            .header-left .submit-button { padding-left: var(--ss-space-2); padding-right: var(--ss-space-2); }
+            .header-left .mw-logo-wordmark { max-width: 104px; }
+            .header-right .submit-button { padding-left: var(--ss-space-2); padding-right: var(--ss-space-2); }
+            .header-right .editor-bar-btn { margin-left: var(--ss-space-2); }
         }
 
         /* Restore notice — shown once, when the editor opened a draft instead of the
@@ -1125,8 +1134,8 @@
             <%= lang %>/<%= name %>
         </span>
         <div style="display: flex; align-items: center;" class="header-right">
-            <a href="/<%= lang %>/<%= name %>" class="submit-button editor-bar-btn editor-bar-btn--back">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <a href="/<%= lang %>/<%= name %>" class="submit-button editor-bar-btn editor-bar-btn--back" aria-label="<%= __('post.backLink') %>" title="<%= __('post.backLink') %>">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M15 7H3.83L7.41 3.41L6 2L0 8L6 14L7.41 12.59L3.83 9H15V7Z" fill="currentColor" />
                 </svg>
                 <span>

@@ -103,7 +103,8 @@ const rel = (p) => path.relative(ROOT, p);
 
 test('the route files still render the pages this test knows about', () => {
     const pages = renderedPages();
-    assert.ok(pages.length >= 66, `only ${pages.length} rendered templates found`);
+    // 65 since 2026-09-14: search.ejs went when search results moved onto /<lang>/problems.
+    assert.ok(pages.length >= 65, `only ${pages.length} rendered templates found`);
     const index = fs.readFileSync(path.join(ROOT, 'index.js'), 'utf8');
     assert.match(index, /const working_page = isMobile \? "eng_page" : "eng_page";/);
     assert.match(index, /'community_guidelines_ru' : 'community_guidelines_en'/);

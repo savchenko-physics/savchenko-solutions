@@ -170,6 +170,30 @@
         .blog-post-header {
             margin-bottom: var(--ss-space-6);
         }
+        /* The title and its Edit link share a row until there is no room, then Edit drops below:
+           without the wrap a long Russian title pushed the link 36px off a 390px phone. */
+        .blog-post-title-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0 var(--ss-space-4);
+        }
+        .blog-post-title-row h1 { min-width: 0; overflow-wrap: break-word; }
+        .blog-post-edit {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--ss-space-1);
+            font-size: var(--ss-fs-13);
+            color: var(--ss-text-secondary);
+            text-decoration: none;
+            padding: var(--ss-space-1) var(--ss-space-3);
+            border: 1px solid var(--ss-rule);
+            border-radius: var(--ss-radius);
+            margin: var(--ss-space-1) 0 var(--ss-space-3);
+        }
+        .blog-post-edit i { font-size: var(--ss-fs-12); }
         /* A post is a typeset article: its title in SS Text Bold, like a knowledge page (.ss-title). */
         .blog-post-header h1 {
             font-family: var(--ss-font-text);
@@ -512,7 +536,9 @@
             margin-top: var(--ss-space-4);
         }
         .comment-input {
-            flex: 1;
+            /* min-width: 0, or the textarea keeps its intrinsic 20 columns and pushes Send off a 360px phone. */
+            flex: 1 1 0;
+            min-width: 0;
             min-height: 42px;
             max-height: 160px;
             padding: var(--ss-space-2) var(--ss-space-3);
@@ -670,11 +696,11 @@
         <a href="/blog" class="blog-back-link">&larr; <%= lang === 'ru' ? 'Все записи' : 'All posts' %></a>
 
         <div class="blog-post-header">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--ss-space-4);">
+            <div class="blog-post-title-row">
                 <h1><%= post.title %></h1>
                 <% if (userId && (post.author_id === userId || username === 'astrosander')) { %>
-                <a href="/blog/<%= post.slug %>/edit" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: var(--ss-space-1); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); text-decoration: none; padding: var(--ss-space-1) var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); margin-top: var(--ss-space-1);">
-                    <i class="fas fa-pen" style="font-size: var(--ss-fs-12);"></i> <%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
+                <a href="/blog/<%= post.slug %>/edit" class="blog-post-edit">
+                    <i class="fas fa-pen" aria-hidden="true"></i> <%= lang === 'ru' ? 'Редактировать' : 'Edit' %>
                 </a>
                 <% } %>
             </div>

@@ -3,7 +3,14 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <% const searchQuery = query && typeof query.q === 'string' ? query.q.trim() : ''; %>
+    <% if (searchQuery) { %>
+    <title><%= docTitle(titleText(searchQuery), lang === 'ru' ? 'Поиск задач' : 'Problem search', 'Savchenko Solutions') %></title>
+    <%# A results page for one query is not a page worth indexing; the finder itself is. %>
+    <meta name="robots" content="noindex, follow" />
+    <% } else { %>
     <title><%= docTitle(lang === 'ru' ? 'Найти задачи по сложности' : 'Find problems by difficulty', 'Savchenko Solutions') %></title>
+    <% } %>
     <meta name="description" content="<%= lang === 'ru'
         ? 'Фильтруйте и сортируйте все 2023 задачи Савченко по сложности, теме и отдельным навыкам — идея, математика, вычисления, красота решения и другие.'
         : 'Filter and sort all 2,023 Savchenko problems by difficulty, topic and individual skill axes — insight, mathematics, computation, elegance and more.' %>" />
@@ -54,6 +61,7 @@
             height: 40px; width: 100%; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); padding: 0 var(--ss-space-3); font-size: var(--ss-fs-16); box-sizing: border-box;
         }
         .pf-search-input:focus { outline: none; border-color: var(--ss-navy); }
+        @media (min-width: 768px) { .pf-search-form { display: none; } }
 
         .pf-range-head { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--ss-fs-13); color: var(--ss-text); margin-bottom: 2px; }
         .pf-range-val { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); font-variant-numeric: tabular-nums; }
@@ -200,8 +208,12 @@
         .pf-heat-none { background: #adb5bd; color: #fff; }
 
         /* Long formulas and unbreakable tokens must wrap or scroll inside the card, never
-           push the card past the viewport. */
-        .pf-card-statement { overflow-wrap: anywhere; }
+           push the card past the viewport. An inline formula is an inline box, which max-width
+           and overflow cannot touch (a 42em one reached 776px on a 390px phone), so the
+           statement itself scrolls as well. */
+        .pf-card-statement { overflow-wrap: anywhere; overflow-x: auto; overflow-y: hidden; }
+        /* Where a query was found when it was not in the statement: a line of the solution. */
+        .pf-card-snippet { margin: 0 0 var(--ss-space-2); font-size: var(--ss-fs-13); line-height: var(--ss-lh-snug); color: var(--ss-text-secondary); overflow-wrap: anywhere; }
         .pf-card-statement mjx-container { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
 
         @media (max-width: 900px) {
@@ -216,7 +228,7 @@
     </style>
 </head>
 <body>
-<%- include('../default/main_site_header') %>
+<%- include('../default/main_site_header', { finderSearch: true }) %>
 
 <div class="pf-wrap">
     <div class="pf-crumb"><a href="/<%= lang %>">Savchenko Solutions</a>&nbsp;/&nbsp;<%= lang === 'ru' ? 'Задачи по сложности' : 'Problems by difficulty' %></div>
@@ -242,10 +254,14 @@
 
     <div class="pf-layout">
         <aside class="pf-filters" id="pfFilters">
-            <div class="pf-filter-group">
-                <div class="pf-filter-label"><%= lang === 'ru' ? 'Поиск' : 'Search' %></div>
-                <input type="text" class="pf-search-input" id="pfSearch" placeholder="<%= lang === 'ru' ? 'Номер задачи, тема...' : 'Problem number, topic...' %>" />
-            </div>
+            <%# The site's search lands here (the header, /find, links to the old results page): a query
+                matches problem numbers, topics, statements and solutions. From 768px the header's
+                box is this page's search, so this one only shows on a phone, where the header has
+                none. A plain GET form, so it works before the script loads. %>
+            <form class="pf-filter-group pf-search-form" id="pfSearchForm" action="/<%= lang %>/problems" method="get" role="search">
+                <label class="pf-filter-label" for="pfSearch"><%= lang === 'ru' ? 'Поиск' : 'Search' %></label>
+                <input type="search" class="pf-search-input" id="pfSearch" name="q" value="<%= searchQuery %>" autocomplete="off" placeholder="<%= lang === 'ru' ? 'Номер, тема или слова из условия' : 'Number, topic or words from the problem' %>" />
+            </form>
 
             <div class="pf-filter-group">
                 <div class="pf-range-head"><span><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span><span class="pf-range-val" id="pfCalibVal"><%= ratingFloor %>–<%= ratingCeil %></span></div>
@@ -331,11 +347,11 @@
 
         <main class="pf-results">
             <div class="pf-result-bar">
-                <span id="pfResultCount"><%= lang === 'ru' ? 'Показано' : 'Showing' %> <%= ssrRows.length %> <%= lang === 'ru' ? 'из' : 'of' %> <%= total %></span>
+                <span id="pfResultCount"><%= lang === 'ru' ? 'Показано' : 'Showing' %> <%= ssrRows.length %> <%= lang === 'ru' ? 'из' : 'of' %> <%= total %><% if (searchQuery) { %> <%= lang === 'ru' ? 'по запросу' : 'for' %> «<%= searchQuery %>»<% } %></span>
                 <span>
                     <span class="pf-sort-label"><%= lang === 'ru' ? 'Сортировка:' : 'Sort:' %></span>
                     <select class="pf-sort-select" id="pfSortSelect">
-                        <option value=""><%= lang === 'ru' ? 'По номеру' : 'Problem order' %></option>
+                        <option value="" id="pfSortDefault" data-label="<%= lang === 'ru' ? 'По номеру' : 'Problem order' %>" data-label-search="<%= lang === 'ru' ? 'Лучшие совпадения' : 'Best match' %>"><%= searchQuery ? (lang === 'ru' ? 'Лучшие совпадения' : 'Best match') : (lang === 'ru' ? 'По номеру' : 'Problem order') %></option>
                         <option value="calibrated:desc"><%= lang === 'ru' ? 'Сложнее сначала' : 'Hardest first' %></option>
                         <option value="calibrated:asc"><%= lang === 'ru' ? 'Легче сначала' : 'Easiest first' %></option>
                         <option value="elegance:desc"><%= lang === 'ru' ? 'Красивее сначала' : 'Most elegant first' %></option>
@@ -373,6 +389,7 @@
                         <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
                         <span class="pf-card-go" aria-hidden="true">&rarr;</span>
                     </div>
+                    <% if (snippets && snippets[r[0]]) { %><p class="pf-card-snippet"><%= snippets[r[0]] %></p><% } %>
                     <div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
                 </div>
                 <% }); %>

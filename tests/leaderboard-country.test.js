@@ -18,7 +18,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { selectLeaderboardRows, countryOnLeaderboard } = require('../contributorsUserMetricsApi');
+const { selectLeaderboardRows, countryOnLeaderboard, summarizeContributors } = require('../contributorsUserMetricsApi');
 
 // Shaped like a row of the leaderboard query: user_id, country_location and the
 // COALESCE'd show_country preference are all this step looks at.
@@ -146,4 +146,27 @@ test('a contributor with no preferences row still shows their country', () => {
   assert.strictEqual(countryOnLeaderboard(noPrefs), 'Poland');
   const { countries } = selectLeaderboardRows([noPrefs], '');
   assert.deepStrictEqual(countries.map((c) => c.name), ['Poland']);
+});
+
+// /:lang/contributors showed 98 contributors in its header, 99 in the table, 22 countries
+// in the header but 21 in the filter, and 97 people on the map (2026-09-14). All of them
+// now come from summarizeContributors over the leaderboard's rows, so they can only agree.
+test('the header, the filter and the map count the same contributors and countries', () => {
+  const rows = [
+    { ...row(28, 'astrosander', 'Belarus'), edits_total: 12950 },
+    { ...row(2, 'igor', 'Russia'), edits_total: 40 },
+    { ...row(3, 'emixter', 'Russia'), edits_total: 30 },
+    { ...row(4, 'hidden', 'Finland', false), edits_total: 18 },
+    { ...row(5, 'nowhere', null), edits_total: 2 },
+  ];
+  const summary = summarizeContributors(rows);
+  const { placed, countries } = selectLeaderboardRows(rows, '');
+  assert.strictEqual(summary.contributors, placed.length, 'header contributors = table rows');
+  assert.strictEqual(summary.countries, countries.length, 'header countries = filter options');
+  assert.deepStrictEqual(summary.byCountry.map((c) => c.country).sort(), countries.map((c) => c.name).sort(), 'map countries = filter options');
+  for (const c of countries) {
+    assert.strictEqual(summary.byCountry.find((m) => m.country === c.name).contributors, c.count, `${c.name} on the map = in the filter`);
+  }
+  assert.ok(!summary.byCountry.some((c) => c.country === 'Finland'), 'a hidden country stays off the map too');
+  assert.deepStrictEqual(summary.byCountry[0], { country: 'Belarus', contributors: 1, contributions: 12950, total_contributions: 12950 });
 });

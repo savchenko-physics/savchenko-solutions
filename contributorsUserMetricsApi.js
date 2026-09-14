@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { flagEmojiForCountryName, countryCodeForName } = require("./lib/countries");
 const { getPeopleNow } = require("./lib/presence");
+const { getSolvedSet } = require("./parents");
 
 // What this cache holds is the expensive part: counts, rankings, who worked with whom. The
 // people in it are another matter. A name and a picture change the moment someone saves
@@ -25,12 +26,26 @@ function getCached(key) {
     return item.value;
 }
 
+// Concurrent misses share one load. The leaderboard's rows now also feed the homepage's
+// numbers, so after a restart every early homepage request would otherwise start its own
+// copy of the leaderboard query.
+const inflight = new Map();
+
 async function withCache(key, loader) {
     const cached = getCached(key);
     if (cached) return cached;
-    const value = await loader();
-    cache.set(key, { createdAt: Date.now(), value });
-    return value;
+    if (inflight.has(key)) return inflight.get(key);
+    const pending = (async () => {
+        try {
+            const value = await loader();
+            cache.set(key, { createdAt: Date.now(), value });
+            return value;
+        } finally {
+            inflight.delete(key);
+        }
+    })();
+    inflight.set(key, pending);
+    return pending;
 }
 
 // A cached person with the name and picture they have now (`now` is from getPeopleNow).
@@ -252,6 +267,34 @@ function countryOnLeaderboard(row) {
     return name || null;
 }
 
+// Every number on /:lang/contributors comes from the leaderboard's own rows (2026-09-14).
+// The header, the table, its country filter and the map used to count with four different
+// queries and disagreed on one screen: 98 contributors in the header and 99 in the table, 22
+// countries in the header and 21 in the filter, 97 people on the map. The header counted only
+// edits made on the site, not the GitHub era; the map still counted someone who had hidden
+// their country, and put the owner in the United States while their profile, and so the
+// table, says Belarus. Solutions are the problems with a solution file in either language,
+// the homepage's count, not problem names that once had an edit.
+function summarizeContributors(rows) {
+    const byCountry = new Map();
+    for (const row of rows) {
+        const country = countryOnLeaderboard(row);
+        if (!country) continue;
+        const entry = byCountry.get(country) || { country, contributors: 0, contributions: 0 };
+        entry.contributors += 1;
+        entry.contributions += Number(row.edits_total || 0);
+        byCountry.set(country, entry);
+    }
+    const countries = [...byCountry.values()]
+        .map((e) => ({ ...e, total_contributions: e.contributions }))
+        .sort((a, b) => b.contributions - a.contributions || b.contributors - a.contributors || a.country.localeCompare(b.country));
+    return { contributors: rows.length, countries: countries.length, byCountry: countries };
+}
+
+function solvedProblemCount() {
+    return new Set([...getSolvedSet("en"), ...getSolvedSet("ru")]).size;
+}
+
 // Turns the sorted contributor rows into what one leaderboard request needs:
 // every row with its place number, the subset matching the requested country, and
 // the facet counts behind the dropdown. Pure, so it is tested directly — there is
@@ -323,6 +366,51 @@ function normalizeLang(value) {
     return String(value || "").toLowerCase() === "ru" ? "ru" : "en";
 }
 
+// Everyone with a visible edit, on the site or from the GitHub era, with what the
+// leaderboard shows of them.
+const LEADERBOARD_SQL = `
+                    WITH combined AS (
+                        SELECT user_id, problem_name, language, edited_at
+                        FROM contributions
+                        WHERE user_id IS NOT NULL
+                          AND content_changed = true
+                          AND invisible = false
+                        UNION ALL
+                        SELECT user_id, problem_name, language, edited_at
+                        FROM github_contributions
+                        WHERE user_id IS NOT NULL
+                    ),
+                    user_stats AS (
+                        SELECT
+                            u.id AS user_id,
+                            u.username,
+                            u.full_name,
+                            u.profile_picture,
+                            u.country_location,
+                            COALESCE(pr.show_country_on_leaderboard, true) AS show_country,
+                            u.created_at,
+                            u.is_verified_user,
+                            COUNT(*)::int AS edits_total,
+                            COUNT(DISTINCT c.problem_name)::int AS unique_solutions,
+                            MIN(c.edited_at) AS first_contribution_at,
+                            MAX(c.edited_at) AS last_active_at,
+                            ROUND((19 * LN(COUNT(DISTINCT c.problem_name) * SQRT(COUNT(*))))::numeric, 0)::int AS score
+                        FROM combined c
+                        JOIN users u ON u.id = c.user_id
+                        LEFT JOIN user_preferences pr ON pr.user_id = u.id
+                        GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.country_location,
+                                 pr.show_country_on_leaderboard, u.created_at, u.is_verified_user
+                    ),
+                    ranked AS (
+                        SELECT
+                            *,
+                            ROW_NUMBER() OVER (ORDER BY score DESC, unique_solutions DESC, username ASC) AS rank_position
+                        FROM user_stats
+                    )
+                    SELECT *
+                    FROM ranked
+                `;
+
 module.exports = function registerContributorAndUserMetricsApi({ app, pool, baseDir }) {
     const structures = { en: loadBookStructure(baseDir, "en") };
     try {
@@ -388,80 +476,62 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         return bundle;
     };
 
+    // The leaderboard's rows, cached for an hour: the one set of contributors the header,
+    // the table, the country filter and the map all count (see summarizeContributors).
+    function loadContributorRows() {
+        return withCache("contributors:leaderboard:v2", async () => {
+            const result = await pool.query(LEADERBOARD_SQL);
+            return result.rows;
+        });
+    }
+
+    // Fills in missing countries from edit IPs, at most once an hour (it can call out to a
+    // geolocation service for up to 90 users).
+    function hydrateCountriesHourly() {
+        return withCache("contributors:hydrate", async () => {
+            await hydrateMissingCountries(pool);
+            return true;
+        });
+    }
+
+    // Every visible edit, on the site or from the GitHub era, anonymous ones included.
+    function loadTotalEdits() {
+        return withCache("contributors:total-edits", async () => {
+            const result = await pool.query(
+                `
+                SELECT (
+                    (SELECT COUNT(*)::int FROM contributions
+                     WHERE content_changed = true AND invisible = false)
+                    +
+                    (SELECT COUNT(*)::int FROM github_contributions)
+                ) AS value
+            `
+            );
+            return result.rows[0]?.value || 0;
+        });
+    }
+
+    // Also what the homepage's hero counts ("99 авторов, 16 808 правок"), whose link leads here.
+    // Page renders call it without the country lookup, which can wait on a geolocation service;
+    // the page's own API calls below run that, as they always did.
+    async function contributorsSummary() {
+        const [rows, totalEdits] = await Promise.all([loadContributorRows(), loadTotalEdits()]);
+        return { ...summarizeContributors(rows), solutions: solvedProblemCount(), totalEdits };
+    }
+    app.locals.loadContributorsSummary = contributorsSummary;
+
     app.get("/api/contributors/stats", async (_req, res) => {
         try {
-            const payload = await withCache("contributors:stats", async () => {
-                await hydrateMissingCountries(pool);
-
-                const contributorsCount = await pool.query(
-                    `
-                    SELECT COUNT(DISTINCT user_id)::int AS value
-                    FROM contributions
-                    WHERE content_changed = true
-                      AND invisible = false
-                      AND user_id IS NOT NULL
-                `
-                );
-
-                const solutionsCount = await pool.query(
-                    `
-                    SELECT COUNT(DISTINCT problem_name)::int AS value
-                    FROM (
-                        SELECT problem_name
-                        FROM contributions
-                        WHERE content_changed = true
-                          AND invisible = false
-                          AND problem_name IS NOT NULL
-                        UNION
-                        SELECT problem_name
-                        FROM github_contributions
-                        WHERE problem_name IS NOT NULL
-                    ) src
-                `
-                );
-
-                const countriesCount = await pool.query(
-                    `
-                    WITH contributor_users AS (
-                        SELECT DISTINCT user_id
-                        FROM contributions
-                        WHERE content_changed = true
-                          AND invisible = false
-                          AND user_id IS NOT NULL
-                        UNION
-                        SELECT DISTINCT user_id
-                        FROM github_contributions
-                        WHERE user_id IS NOT NULL
-                    )
-                    SELECT COUNT(DISTINCT TRIM(u.country_location))::int AS value
-                    FROM contributor_users cu
-                    JOIN users u ON u.id = cu.user_id
-                    WHERE u.country_location IS NOT NULL
-                      AND TRIM(u.country_location) <> ''
-                `
-                );
-
-                const totalEditsCount = await pool.query(
-                    `
-                    SELECT (
-                        (SELECT COUNT(*)::int FROM contributions
-                         WHERE content_changed = true AND invisible = false)
-                        +
-                        (SELECT COUNT(*)::int FROM github_contributions)
-                    ) AS value
-                `
-                );
-
-                return {
-                    contributors: contributorsCount.rows[0]?.value || 0,
-                    solutions: solutionsCount.rows[0]?.value || 0,
-                    countries: countriesCount.rows[0]?.value || 0,
-                    totalEdits: totalEditsCount.rows[0]?.value || 0,
-                };
+            await hydrateCountriesHourly();
+            const summary = await contributorsSummary();
+            // no-cache like the leaderboard, so the header never shows an older count than the table.
+            res.set("Cache-Control", "no-cache");
+            res.json({
+                contributors: summary.contributors,
+                solutions: summary.solutions,
+                countries: summary.countries,
+                totalEdits: summary.totalEdits,
             });
-
-            res.set("Cache-Control", "public, max-age=3600");
-            res.json(payload);
         } catch (error) {
             console.error("Failed to load contributor stats:", error);
             res.status(500).json({ error: "Failed to load contributor stats" });
@@ -470,46 +540,10 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
 
     app.get("/api/contributors/map", async (_req, res) => {
         try {
-            const payload = await withCache("contributors:map:v3", async () => {
-                await hydrateMissingCountries(pool);
-
-                const result = await pool.query(
-                    `
-                    WITH combined AS (
-                        SELECT user_id
-                        FROM contributions
-                        WHERE content_changed = true
-                          AND invisible = false
-                          AND user_id IS NOT NULL
-                        UNION ALL
-                        SELECT user_id
-                        FROM github_contributions
-                        WHERE user_id IS NOT NULL
-                    )
-                    SELECT
-                        CASE
-                            WHEN c.user_id = 28 THEN 'United States'
-                            ELSE TRIM(u.country_location)
-                        END AS country,
-                        COUNT(DISTINCT c.user_id)::int AS contributors,
-                        COUNT(*)::int AS contributions,
-                        COUNT(*)::int AS total_contributions
-                    FROM combined c
-                    JOIN users u ON u.id = c.user_id
-                    WHERE u.country_location IS NOT NULL
-                      AND TRIM(u.country_location) <> ''
-                    GROUP BY
-                        CASE
-                            WHEN c.user_id = 28 THEN 'United States'
-                            ELSE TRIM(u.country_location)
-                        END
-                    ORDER BY contributions DESC, contributors DESC, country ASC
-                `
-                );
-                return result.rows;
-            });
-            res.set("Cache-Control", "public, max-age=3600");
-            res.json(payload);
+            await hydrateCountriesHourly();
+            const summary = await contributorsSummary();
+            res.set("Cache-Control", "no-cache");
+            res.json(summary.byCountry);
         } catch (error) {
             console.error("Failed to load contributor map:", error);
             res.status(500).json({ error: "Failed to load contributor map" });
@@ -621,53 +655,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             const countryFilter = String(req.query.country || "").trim();
 
             // v2: the row set now carries the show_country_on_leaderboard preference.
-            const payload = await withCache(`contributors:leaderboard:v2`, async () => {
-                const result = await pool.query(
-                    `
-                    WITH combined AS (
-                        SELECT user_id, problem_name, language, edited_at
-                        FROM contributions
-                        WHERE user_id IS NOT NULL
-                          AND content_changed = true
-                          AND invisible = false
-                        UNION ALL
-                        SELECT user_id, problem_name, language, edited_at
-                        FROM github_contributions
-                        WHERE user_id IS NOT NULL
-                    ),
-                    user_stats AS (
-                        SELECT
-                            u.id AS user_id,
-                            u.username,
-                            u.full_name,
-                            u.profile_picture,
-                            u.country_location,
-                            COALESCE(pr.show_country_on_leaderboard, true) AS show_country,
-                            u.created_at,
-                            u.is_verified_user,
-                            COUNT(*)::int AS edits_total,
-                            COUNT(DISTINCT c.problem_name)::int AS unique_solutions,
-                            MIN(c.edited_at) AS first_contribution_at,
-                            MAX(c.edited_at) AS last_active_at,
-                            ROUND((19 * LN(COUNT(DISTINCT c.problem_name) * SQRT(COUNT(*))))::numeric, 0)::int AS score
-                        FROM combined c
-                        JOIN users u ON u.id = c.user_id
-                        LEFT JOIN user_preferences pr ON pr.user_id = u.id
-                        GROUP BY u.id, u.username, u.full_name, u.profile_picture, u.country_location,
-                                 pr.show_country_on_leaderboard, u.created_at, u.is_verified_user
-                    ),
-                    ranked AS (
-                        SELECT
-                            *,
-                            ROW_NUMBER() OVER (ORDER BY score DESC, unique_solutions DESC, username ASC) AS rank_position
-                        FROM user_stats
-                    )
-                    SELECT *
-                    FROM ranked
-                `
-                );
-                return result.rows;
-            });
+            const payload = await loadContributorRows();
 
             const sorted = sortSafeContributors(payload, sortBy, sortOrder);
             const { placed, matching, countries } = selectLeaderboardRows(sorted, countryFilter);
@@ -1932,3 +1920,4 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
 // Exported for tests only — the leaderboard route itself has no test database.
 module.exports.selectLeaderboardRows = selectLeaderboardRows;
 module.exports.countryOnLeaderboard = countryOnLeaderboard;
+module.exports.summarizeContributors = summarizeContributors;

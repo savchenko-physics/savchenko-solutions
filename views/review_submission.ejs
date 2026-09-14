@@ -72,27 +72,6 @@
             background: var(--ss-navy-hover);
         }
 
-        .footer {
-            background-color: #1a202c;
-            color: #cbd5e0;
-            text-align: center;
-            padding: var(--ss-space-5) 0;
-        }
-
-        .footer-link {
-            transition: color 0.3s;
-        }
-
-        /* Qualified with .footer and the link states: bundle.css's a:link:not(.btn) and
-           a:hover:not(.btn) are (0,2,1) and painted a bare .footer-link #1a5276 on #1a202c. */
-        .footer a.footer-link:link,
-        .footer a.footer-link:visited {
-            color: #cbd5e0;
-        }
-
-        .footer a.footer-link:hover {
-            color: var(--ss-link);
-        }
     </style>
     <script src="/js/analytics.js"></script>
 </head>
@@ -115,19 +94,7 @@
         <a href="/<%= lang %>/register" class="btn btn-primary">Create account</a>
     </div>
 
-    <footer class="footer">
-        <div class="footer-container">
-            <p class="footer-text">
-                © <strong>Savchenko Solutions</strong>, 2023-2025
-            </p>
-            <p class="footer-text">
-                All solutions are contributed by their respective authors (Savchenko Solutions contributors) and are based on original textbook content, which remains the property of the textbook authors. Unless otherwise noted, solutions are provided under the Creative Commons Attribution–ShareAlike 4.0 International (CC BY-SA 4.0) license. Commercial use of any material requires written permission.
-            </p>
-            <p class="footer-text">
-                <a href="mailto:alex@savchenkosolutions.com" class="footer-link">alex@savchenkosolutions.com</a>
-            </p>
-        </div>
-    </footer>
+    <%- include('default/modern_footer', { lang }) %>
     <%- include('default/main_site_footer_scripts') %>
 </body>
 

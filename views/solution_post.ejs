@@ -133,21 +133,12 @@
             margin: 0;
         }
         .solution-title .ss-num { font-weight: inherit; }
-        .solution-steps {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--ss-space-4);
-            margin-top: var(--ss-space-2);
-            font-size: var(--ss-text-ui);
-            font-variant-numeric: tabular-nums;
-        }
-        .solution-steps a { font-weight: var(--ss-fw-strong); text-decoration: none; }
-        .solution-steps a:hover { text-decoration: underline; }
         .solution-actions { display: flex; gap: var(--ss-space-2); }
         .solution-actions .btn i { font-size: var(--ss-text-ui); }
 
-        /* Prev/Next at the foot of the solution */
+        /* Prev/Next once, at the foot of the solution, where reading ends: right after the answer.
+           A second copy under the title repeated it (removed 2026-09-14); at the top the rail's
+           section grid already marks the neighbours, and on phones the fixed bottom bar does. */
         .problem-nav {
             display: flex;
             justify-content: space-between;
@@ -172,12 +163,17 @@
 
         /* Contributor Attribution */
         .attribution {
-            padding: var(--ss-space-4) 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            column-gap: var(--ss-space-1);
+            padding: var(--ss-space-3) 0;
             border-top: 1px solid var(--ss-rule);
             font-size: var(--ss-fs-13);
             color: var(--ss-text-secondary);
             line-height: 1.7;
         }
+        .attribution .edit-history-more { margin-left: auto; padding-left: var(--ss-space-4); }
         .attribution a {
             color: var(--ss-link);
             text-decoration: none;
@@ -188,12 +184,6 @@
         }
         .attribution-sep {
             margin: 0 var(--ss-space-1);
-        }
-
-        /* Edit History */
-        .edit-history {
-            padding: var(--ss-space-3) 0;
-            border-top: 1px solid var(--ss-rule);
         }
         .edit-history-more {
             font-size: var(--ss-fs-13);
@@ -270,9 +260,11 @@
             gap: var(--ss-space-4);
         }
 
-        /* Sidebar (section problem grid), now nested in .right-rail */
+        /* Sidebar (section problem grid), nested in .right-rail. It stretches to the rail's
+           width: the align-self: start it kept from its grid-item days made it shrink-to-fit,
+           so anything with a wide minimum (the signed-in vote row) widened the whole rail. */
         .sidebar {
-            align-self: start;
+            min-width: 0;
         }
 
         .section-grid-card {
@@ -1227,8 +1219,7 @@
             }
 
             /* On phones the fixed bottom bar carries prev/next. */
-            .problem-nav,
-            .solution-steps {
+            .problem-nav {
                 display: none;
             }
 
@@ -1388,13 +1379,6 @@
                         </a>
                     </div>
                 </div>
-                <%# The previous problem at the left edge, the next at the right, as in a book. %>
-                <% if (prevProblem || nextProblem) { %>
-                <nav class="solution-steps" aria-label="<%= lang === 'ru' ? 'Соседние задачи' : 'Neighbouring problems' %>">
-                    <% if (prevProblem) { %><a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link" rel="prev">&larr; <%= prevProblem %></a><% } else { %><span></span><% } %>
-                    <% if (nextProblem) { %><a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link" rel="next"><%= nextProblem %> &rarr;</a><% } else { %><span></span><% } %>
-                </nav>
-                <% } %>
             </header>
 
             <!-- Practicum 2026 callout (prominent card; collapsible to a thin band,
@@ -1640,72 +1624,48 @@
             </script>
             <% } %>
 
-            <!-- Prev/Next Navigation (Bottom) -->
+            <!-- Prev/Next Navigation -->
             <% if (prevProblem || nextProblem) { %>
-            <div class="problem-nav">
+            <nav class="problem-nav" aria-label="<%= lang === 'ru' ? 'Соседние задачи' : 'Neighbouring problems' %>">
                 <% if (prevProblem) { %>
-                    <a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link">&larr; <%= prevProblem %></a>
+                    <a href="/<%= lang %>/<%= prevProblem %>" class="problem-nav-link" rel="prev">&larr; <%= prevProblem %></a>
                 <% } else { %>
                     <span></span>
                 <% } %>
                 <% if (nextProblem) { %>
-                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link"><%= nextProblem %> &rarr;</a>
+                    <a href="/<%= lang %>/<%= nextProblem %>" class="problem-nav-link" rel="next"><%= nextProblem %> &rarr;</a>
                 <% } else { %>
                     <span></span>
                 <% } %>
-            </div>
+            </nav>
             <% } %>
 
-            <!-- Contributor Attribution -->
-            <% if (attribution) { %>
+            <%# Who wrote it and when it last changed, on one line. It used to be two ruled rows,
+                "Contributed by @X · Last updated <date>" and "Last edited X, <date>", which on
+                most solutions named the same person and the same day twice. %>
+            <% const lastEdit = editHistory && editHistory.length > 0 ? editHistory[0] : null; %>
+            <% const lastEditDate = lastEdit ? new Date(lastEdit.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : (attribution && attribution.lastUpdated); %>
+            <% if (attribution || lastEdit) { %>
             <div class="attribution">
-                <div>
+                <% if (attribution) { %>
+                <span>
                     <%= lang === 'ru' ? 'Автор' : 'Contributed by' %>
-                    <% if (attribution.originalAuthor.userId) { %>
-                        <a href="/user/<%= attribution.originalAuthor.username %>">@<%= attribution.originalAuthor.username %></a>
-                    <% } else { %>
-                        <%= attribution.originalAuthor.username %>
-                    <% } %>
-                    <% if (attribution.lastUpdated) { %>
-                        <span class="attribution-sep">&middot;</span>
-                        <%= lang === 'ru' ? 'Обновлено' : 'Last updated' %> <%= attribution.lastUpdated %>
-                    <% } %>
-                </div>
+                    <% if (attribution.originalAuthor.userId) { %><a href="/user/<%= attribution.originalAuthor.username %>">@<%= attribution.originalAuthor.username %></a><% } else { %><%= attribution.originalAuthor.username %><% } %>
+                </span>
                 <% if (attribution.editors.length > 0) { %>
-                <div>
+                <span class="attribution-sep" aria-hidden="true">&middot;</span>
+                <span>
                     <%= lang === 'ru' ? 'Редакторы:' : 'Edited by' %>
-                    <% attribution.editors.forEach(function(editor, i) { %>
-                        <% if (i > 0) { %>, <% } %>
-                        <% if (editor.userId) { %>
-                            <a href="/user/<%= editor.username %>">@<%= editor.username %></a>
-                        <% } else { %>
-                            <%= editor.username %>
-                        <% } %>
-                    <% }); %>
-                    <% if (attribution.extraEditors > 0) { %>
-                        + <%= attribution.extraEditors %> <%= lang === 'ru' ? 'других' : 'others' %>
-                    <% } %>
-                </div>
+                    <% attribution.editors.forEach(function(editor, i) { %><% if (i > 0) { %>, <% } %><% if (editor.userId) { %><a href="/user/<%= editor.username %>">@<%= editor.username %></a><% } else { %><%= editor.username %><% } %><% }); %>
+                    <% if (attribution.extraEditors > 0) { %>+ <%= attribution.extraEditors %> <%= lang === 'ru' ? 'других' : 'others' %><% } %>
+                </span>
                 <% } %>
-            </div>
-            <% } %>
-
-            <!-- Edit History (compact) -->
-            <% if (editHistory && editHistory.length > 0) { %>
-            <div class="edit-history">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="font-size: var(--ss-fs-13); color: var(--ss-text-secondary);">
-                        <% const lastEdit = editHistory[0]; %>
-                        <%= lang === 'ru' ? 'Последняя правка' : 'Last edited' %>
-                        <% if (lastEdit.username) { %>
-                            <a href="/user/<%= lastEdit.username %>" style="color: var(--ss-link);"><%= lastEdit.username %></a>
-                        <% } else { %>
-                            <span><%= lang === 'ru' ? 'Аноним' : 'Anonymous' %></span>
-                        <% } %>,
-                        <%= new Date(lastEdit.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %>
-                    </div>
-                    <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %></a>
-                </div>
+                <% } %>
+                <% if (lastEditDate) { %>
+                <% if (attribution) { %><span class="attribution-sep" aria-hidden="true">&middot;</span><% } %>
+                <span><%= lang === 'ru' ? 'Последняя правка' : 'Last edited' %> <%= lastEditDate %></span>
+                <% } %>
+                <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %></a>
             </div>
             <% } %>
 
@@ -3195,6 +3155,5 @@
     <script src="<%= asset(figure.script) %>" defer></script>
     <% } %>
     <%- include('default/modern_footer', { lang }) %>
-    <%- include('default/main_site_search_script') %>
 </body>
 </html>

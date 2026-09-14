@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= titleText(__('contributorsPage.metaTitle')) %></title>
-    <meta name="description" content="<%= __('contributorsPage.metaDescription') %>">
+    <title><%= titleText(metaTitle || __('contributorsPage.metaTitle')) %></title>
+    <meta name="description" content="<%= metaDescription || __('contributorsPage.metaDescription') %>">
     <link rel="canonical" href="https://savchenkosolutions.com/<%= lang %>/contributors" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="<%= titleText(__('contributorsPage.metaTitle')) %>" />
-    <meta property="og:description" content="<%= __('contributorsPage.metaDescription') %>" />
+    <meta property="og:title" content="<%= titleText(metaTitle || __('contributorsPage.metaTitle')) %>" />
+    <meta property="og:description" content="<%= metaDescription || __('contributorsPage.metaDescription') %>" />
     <meta property="og:url" content="https://savchenkosolutions.com/<%= lang %>/contributors" />
     <meta property="og:site_name" content="Savchenko Solutions" />
     <meta property="og:locale" content="<%= lang === 'ru' ? 'ru_RU' : 'en_US' %>" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="<%= titleText(__('contributorsPage.metaTitle')) %>" />
-    <meta name="twitter:description" content="<%= __('contributorsPage.metaDescription') %>" />
+    <meta name="twitter:title" content="<%= titleText(metaTitle || __('contributorsPage.metaTitle')) %>" />
+    <meta name="twitter:description" content="<%= metaDescription || __('contributorsPage.metaDescription') %>" />
 
     <link rel="icon" type="image/svg+xml" href="/img/logo.svg">
     <link rel="icon" type="image/png" href="/img/logo.png">
@@ -620,8 +620,11 @@
             .contributors-page {
                 padding: var(--ss-space-4) var(--ss-space-3) var(--ss-space-6);
             }
+            /* stretch: with flex-start the graph shrink-wrapped to its 53 weeks (474px) and the
+               whole page scrolled sideways on a phone, instead of the graph scrolling in its box. */
             .heatmap-graph-row {
                 flex-direction: column;
+                align-items: stretch;
             }
             .heatmap-year-nav {
                 flex-direction: row;
@@ -694,7 +697,6 @@
                     <span class="bar"></span>
                     <span><%= lang === 'ru' ? 'больше' : 'more' %></span>
                 </div>
-                <div class="geo-caption" id="geo-caption"></div>
             </div>
         </section>
 
@@ -1396,14 +1398,6 @@
             const width = 960, height = 460, cx = width / 2, cy = height / 2, R = 196;
             const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 
-            // Caption is identical in both render modes.
-            const totalPeople = mapData.reduce((s, x) => s + Number(x.contributors || 0), 0);
-            const caption = document.getElementById("geo-caption");
-            if (caption) {
-                caption.innerHTML = lang === "ru"
-                    ? `<strong>${mapData.length}</strong> стран · <strong>${totalPeople}</strong> участников по всему миру`
-                    : `<strong>${mapData.length}</strong> countries · <strong>${totalPeople}</strong> contributors worldwide`;
-            }
 
             function addGlobeDefs() {
                 const defs = svg.append("defs");

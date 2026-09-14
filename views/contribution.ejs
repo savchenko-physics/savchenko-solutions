@@ -181,26 +181,6 @@
       font-weight: var(--ss-fw-strong);
     }
 
-    /* Footer styling */
-    .footer {
-      border-top: 1px solid var(--border-color);
-      padding: var(--ss-space-6) 0;
-      text-align: center;
-      background-color: var(--bg-light);
-    }
-    .footer p {
-      margin: var(--ss-space-1) 0;
-      color: var(--ss-text-secondary);
-    }
-    .footer-link {
-      color: var(--primary-color);
-      text-decoration: none;
-      transition: color 0.3s;
-    }
-    .footer-link:hover {
-      color: var(--secondary-color);
-    }
-
     /* Responsive adjustments */
     @media (max-width: 576px) {
       .search {
@@ -415,28 +395,13 @@
     <div id="outputdiv"></div>
   </div>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="container">
-      <p class="mb-1">
-        © <strong>Savchenko Solutions</strong>, 2023-2025
-      </p>
-      <p class="mb-1">
-        Solutions are contributed by their authors and based on original textbook content, which remains the property of the textbook authors. Unless stated otherwise, solutions are licensed under CC BY-SA 4.0. Commercial use requires written permission.
-      </p>
-      <p class="mb-0">
-        <a href="mailto:alex@savchenkosolutions.com" class="footer-link"
-          >alex@savchenkosolutions.com</a
-        >
-      </p>
-    </div>
-  </footer>
+  <%# The site's footer, as on every other page (this one kept a 2023-era footer of its own). %>
+  <%- include('default/modern_footer', { lang }) %>
 
   <!-- Bootstrap JS (Popper + Bootstrap) -->
   <script
     src="/js/vendor/bootstrap.bundle.min.js"
   ></script>
-  <%- include('default/main_site_search_script') %>
 
   <script>
     // Server emits edited_at in its own (UTC) timezone. Reformat with the

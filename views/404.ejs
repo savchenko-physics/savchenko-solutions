@@ -56,10 +56,9 @@
     document.getElementById('search404').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') {
         const q = this.value.trim();
-        if (q) window.location.href = '/global-search?q=' + encodeURIComponent(q);
+        if (q) window.location.href = '/find?lang=<%= pageLang %>&search=' + encodeURIComponent(q);
       }
     });
   </script>
-  <%- include('default/main_site_search_script') %>
 </body>
 </html>

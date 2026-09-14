@@ -9,6 +9,8 @@ const { readCSV, getSolvedSet } = require('./parents');
 const { toRating, FLOOR: RATING_FLOOR, CEIL: RATING_CEIL, STEP: RATING_STEP } = require('./lib/difficultyRating');
 const { heatColor, heatTextColor } = require('./lib/heatColor');
 const { getStatements } = require('./lib/statementRender');
+const rateLimit = require('express-rate-limit');
+const { searchProblems } = require('./lib/problemSearch');
 
 // mergeParams so :lang from the mount path ('/:lang(en|ru)/problems') reaches
 // handlers here — same reasoning as recommendations.js's router.
@@ -163,7 +165,9 @@ async function getProblemFinderDataset(lang) {
     return value;
 }
 
-function applyFilters(rows, q) {
+// `hits` is lib/problemSearch.js's answer for q.q: a problem matches the query when its number
+// or topic contains it (as before) or when its statement or solution does.
+function applyFilters(rows, q, hits) {
     let out = rows;
     if (q.chapter) {
         const chapters = new Set(String(q.chapter).split(',').map(Number));
@@ -180,12 +184,24 @@ function applyFilters(rows, q) {
     if (q.min) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] >= Number(q.min));
     if (q.max) out = out.filter((r) => r[COL.CALIBRATED] != null && r[COL.CALIBRATED] <= Number(q.max));
     if (q.q) {
-        const needle = String(q.q).toLowerCase();
+        const needle = String(q.q).trim().toLowerCase();
+        const found = new Set(hits ? hits.names : []);
         out = out.filter((r) => r[COL.NAME].includes(needle)
             || r[COL.PREREQUISITES].some((t) => t.toLowerCase().includes(needle))
-            || r[COL.CANONICAL_TAGS].some((t) => t.toLowerCase().includes(needle)));
+            || r[COL.CANONICAL_TAGS].some((t) => t.toLowerCase().includes(needle))
+            || found.has(r[COL.NAME]));
     }
     return out;
+}
+
+// With a text query and no chosen sort, the best matches lead, in the search's own order;
+// problems that matched only by number or topic follow in book order.
+function orderByRelevance(rows, hits) {
+    if (!hits || !hits.names.length) return rows;
+    const rank = new Map(hits.names.map((n, i) => [n, i]));
+    const last = hits.names.length;
+    return [...rows].sort((a, b) => ((rank.has(a[COL.NAME]) ? rank.get(a[COL.NAME]) : last) - (rank.has(b[COL.NAME]) ? rank.get(b[COL.NAME]) : last))
+        || (a[COL.CHAPTER] - b[COL.CHAPTER]) || (a[COL.SECTION] - b[COL.SECTION]) || (a[COL.IDX] - b[COL.IDX]));
 }
 
 function applySort(rows, sort, dir, axisKeys) {
@@ -253,21 +269,51 @@ router.get('/statements', async (req, res) => {
     }
 });
 
+// The finder's text search: problem numbers ranked for a query, plus a snippet for problems
+// found only in their solution text. Same budget as the header's live suggestions (/search).
+const searchLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({ error: 'rate_limited' }),
+});
+
+router.get('/search', searchLimiter, async (req, res) => {
+    const lang = getLang(req);
+    try {
+        res.json(await searchProblems(pool, req.query.q, lang));
+    } catch (err) {
+        console.error('problem search failed:', err.message);
+        res.status(500).json({ error: 'search failed' });
+    }
+});
+
 router.get('/', async (req, res) => {
     const locals = base(req, res);
     const dataset = await getProblemFinderDataset(locals.lang);
 
     if (!dataset) {
         return res.render('problems/index', {
-            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [],
+            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [], snippets: {},
             axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },
             toRating, ratingFloor: RATING_FLOOR, ratingCeil: RATING_CEIL, ratingStep: RATING_STEP, pageSize: PAGE_SIZE,
         });
     }
 
-    const filtered = applyFilters(dataset.rows, req.query);
-    const sorted = req.query.sort ? applySort(filtered, req.query.sort, req.query.dir || 'desc', dataset.axisKeys) : filtered;
+    let hits = null;
+    if (req.query.q) {
+        try {
+            hits = await searchProblems(pool, req.query.q, locals.lang);
+        } catch (err) {
+            console.error('problem search failed:', err.message);
+        }
+    }
+    const filtered = applyFilters(dataset.rows, req.query, hits);
+    const sorted = req.query.sort ? applySort(filtered, req.query.sort, req.query.dir || 'desc', dataset.axisKeys) : orderByRelevance(filtered, hits);
     const ssrRows = sorted.slice(0, PAGE_SIZE);
+    const snippets = {};
+    if (hits) for (const r of ssrRows) if (hits.snippets[r[COL.NAME]]) snippets[r[COL.NAME]] = hits.snippets[r[COL.NAME]];
 
     let bookmarked = [];
     if (req.session?.userId) {
@@ -283,6 +329,7 @@ router.get('/', async (req, res) => {
         ssrRows,
         total: filtered.length,
         query: req.query,
+        snippets,
         bookmarked,
         axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },
         toRating, ratingFloor: RATING_FLOOR, ratingCeil: RATING_CEIL, ratingStep: RATING_STEP, pageSize: PAGE_SIZE,

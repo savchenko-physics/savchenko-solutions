@@ -435,7 +435,38 @@
 
     // ── Wiring ──────────────────────────────────────────────────────────────────────
 
+    // The tab is navy, and so is the footer: scrolled down over it, the tab vanished into it.
+    // While the tab's middle is over the footer it takes the footer's colours inverted, and
+    // its own again as it leaves (owner's request, 2026-09-14).
+    function watchDarkGround() {
+        const tab = document.querySelector('[data-fb-tab]');
+        const grounds = document.querySelectorAll('.ss-footer');
+        if (!tab || !grounds.length) return;
+        let queued = false;
+        const update = () => {
+            queued = false;
+            const t = tab.getBoundingClientRect();
+            if (!t.height) return;
+            const middle = t.top + t.height / 2;
+            const over = Array.prototype.some.call(grounds, (g) => {
+                const r = g.getBoundingClientRect();
+                return middle >= r.top && middle <= r.bottom;
+            });
+            tab.classList.toggle('fb-tab--on-dark', over);
+        };
+        const queue = () => {
+            if (queued) return;
+            queued = true;
+            requestAnimationFrame(update);
+        };
+        window.addEventListener('scroll', queue, { passive: true });
+        window.addEventListener('resize', queue, { passive: true });
+        update();
+    }
+
     function init() {
+        watchDarkGround();
+
         document.addEventListener('click', (e) => {
             const opener = e.target.closest('[data-fb-open], [data-fb-tab]');
             if (!opener) return;

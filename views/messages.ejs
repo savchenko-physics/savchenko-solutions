@@ -899,7 +899,9 @@
     }
 
     .msg-input {
-      flex: 1;
+      /* min-width: 0, or the textarea keeps its intrinsic 20 columns and Send leaves a 320px screen. */
+      flex: 1 1 0;
+      min-width: 0;
       border: 1px solid var(--msg-border);
       border-radius: var(--ss-radius);
       padding: var(--ss-space-2) var(--ss-space-4);
@@ -4174,7 +4176,6 @@
 
 <!-- Shared header behaviour: Bootstrap (dropdowns/mobile collapse) + site search -->
 <script src="/js/vendor/bootstrap.bundle.min.js"></script>
-<%- include('default/main_site_search_script') %>
 
 </body>
 </html>

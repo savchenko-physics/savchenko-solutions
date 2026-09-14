@@ -143,6 +143,9 @@
             color: var(--ss-text);
             word-wrap: break-word;
             overflow-wrap: break-word;
+            /* An inline formula cannot wrap; a long one scrolls inside the post, not the page. */
+            overflow-x: auto;
+            overflow-y: hidden;
         }
         .post-content .problem-ref {
             color: var(--ss-link);
@@ -419,7 +422,6 @@
     </div>
 
     <%- include('../default/modern_footer') %>
-    <%- include('../default/main_site_search_script') %>
 
     <script>
     (function() {

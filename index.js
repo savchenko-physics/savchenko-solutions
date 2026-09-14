@@ -38,6 +38,7 @@ const renderContributorPage = require('./contributorPage');
 const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
+const { ruPlural } = require("./lib/ruPlural");
 const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { sendEmail } = require("./email");
 const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
@@ -356,6 +357,7 @@ app.locals.assetIfPresent = assetIfPresent;
 // tests/page-titles.test.js rejects a <title> built any other way. See lib/pageTitle.js.
 app.locals.docTitle = docTitle;
 app.locals.titleText = titleText;
+app.locals.ruPlural = ruPlural;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
@@ -2752,30 +2754,17 @@ async function getDifficultyGrid() {
 
 // Three numbers that prove other people are here: solutions, contributors, edits.
 // Shown to logged-out visitors in place of a top-ten leaderboard, which means nothing to
-// someone who has never seen the site. Cached — these move slowly and the homepage is
-// the most-hit page there is.
-let _proofCache = { at: 0, value: null };
+// someone who has never seen the site. Cached for an hour in contributorsUserMetricsApi.js.
 async function getProofNumbers() {
-    if (_proofCache.value && Date.now() - _proofCache.at < 10 * 60 * 1000) return _proofCache.value;
+    // The same counts as /:lang/contributors, which the hero's "who wrote them" link opens: it
+    // used to count every distinct name in contributions (anonymous uploads included) and every
+    // row (no-op saves included), so the two pages never agreed (2026-09-14).
     try {
-        const { rows } = await pool.query(`
-            SELECT
-              -- contributions has no "author" column; the free-text name field is
-              -- full_name, used when someone uploads without an account.
-              (SELECT count(DISTINCT COALESCE(user_id::text, NULLIF(btrim(full_name), '')))
-                 FROM contributions
-                WHERE COALESCE(user_id::text, NULLIF(btrim(full_name), '')) IS NOT NULL) AS contributors,
-              (SELECT count(*) FROM contributions)                                  AS edits
-        `);
-        const value = {
-            contributors: parseInt(rows[0].contributors, 10) || 0,
-            edits: parseInt(rows[0].edits, 10) || 0,
-        };
-        _proofCache = { at: Date.now(), value };
-        return value;
+        const s = await app.locals.loadContributorsSummary();
+        return { contributors: s.contributors, edits: s.totalEdits };
     } catch (err) {
         console.error('getProofNumbers failed:', err.message);
-        return _proofCache.value || { contributors: 0, edits: 0 };
+        return null;
     }
 }
 
@@ -3163,9 +3152,29 @@ async function handleContributorsRanking(req, res) {
     const lang = req.params.lang || "en";
     i18n.setLocale(res, lang);
     try {
+        // The description search engines show carries the page's own numbers, from the same
+        // rows as its header (contributorsUserMetricsApi.js, summarizeContributors). It said
+        // "70+ contributors from 18 countries, 1,500+ solutions, 446 open" long after all four changed.
+        let metaDescription = null;
+        let metaTitle = null;
+        try {
+            const s = await app.locals.loadContributorsSummary();
+            const open = Math.max(0, 2023 - s.solutions);
+            const n = (x) => x.toLocaleString(lang === "ru" ? "ru-RU" : "en-US");
+            metaDescription = lang === "ru"
+                ? `${n(s.contributors)} ${ruPlural(s.contributors, "автор", "автора", "авторов")} из ${n(s.countries)} ${ruPlural(s.countries, "страны", "стран", "стран")} решают задачи из сборника Савченко. Опубликовано ${n(s.solutions)} ${ruPlural(s.solutions, "решение", "решения", "решений")}, без решения ${n(open)} ${ruPlural(open, "задача", "задачи", "задач")}. Рейтинг, карта и статистика.`
+                : `${n(s.contributors)} contributors from ${n(s.countries)} countries solving Savchenko's Problems in Physics. ${n(s.solutions)} solutions published, ${n(open)} problems still open. See the leaderboard and find your chapter.`;
+            metaTitle = lang === "ru"
+                ? docTitle("Участники", "Решения Савченко", `${n(s.contributors)} ${ruPlural(s.contributors, "автор", "автора", "авторов")} из ${n(s.countries)} ${ruPlural(s.countries, "страны", "стран", "стран")}`)
+                : docTitle("Contributors", "Savchenko Solutions", `${n(s.contributors)} Physics Problem Solvers from ${n(s.countries)} Countries`);
+        } catch (err) {
+            console.error("contributors summary for the description:", err.message);
+        }
         res.render("contributors_ranking", {
             __: i18n.__,
             lang,
+            metaDescription,
+            metaTitle,
             username: req.session.username || null,
             userId: req.session.userId || null,
         });
@@ -3672,7 +3681,7 @@ app.get("/find", searchLimiter, (req, res) => {
     }
 
     if (!raw) return res.redirect(302, `/${lang}/`);
-    return res.redirect(302, `/global-search?search=${encodeURIComponent(raw)}&lang=${lang}`);
+    return res.redirect(302, `/${lang}/problems?q=${encodeURIComponent(raw)}`);
 });
 
 app.get("/search", searchLimiter, (req, res) => {
@@ -3688,34 +3697,13 @@ app.get("/search", searchLimiter, (req, res) => {
     res.json({ results });
 });
 
+// The old results page. Search results live on the problem finder now, in its cards
+// (lib/problemSearch.js, 2026-09-14); links, bookmarks and the homepage's old SearchAction
+// still point here, so they are sent on, query and language intact.
 app.get("/global-search", (req, res) => {
-    const query = req.query.search?.trim() || "";
+    const query = String(req.query.search || req.query.q || "").trim();
     const lang = normalizeLang(req.query.lang);
-
-    i18n.setLocale(res, lang);
-
-    const searchLocals = {
-        __: i18n.__,
-        lang,
-        username: req.session.username || null,
-        chapters: searchIndex.getChapterList(lang),
-    };
-
-    if (!query) {
-        return res.render("search", {
-            ...searchLocals,
-            results: [],
-            searchTerm: "",
-        });
-    }
-
-    const results = searchIndex.search(query, lang, 50);
-
-    res.render("search", {
-        ...searchLocals,
-        results,
-        searchTerm: query,
-    });
+    res.redirect(301, query ? `/${lang}/problems?q=${encodeURIComponent(query)}` : `/${lang}/problems`);
 });
 
 // Update the route to handle contributions with an ID

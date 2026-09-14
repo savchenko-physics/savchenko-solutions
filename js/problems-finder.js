@@ -196,8 +196,38 @@
     }
     function heatOf(c) { return c == null ? null : Math.min(9, Math.max(1, Math.ceil((c / 100) * 9) || 1)); }
 
+    // Text search (lib/problemSearch.js via GET /<lang>/problems/search): the problems whose
+    // statement or solution contains the query, best first, and a snippet for those found only
+    // in the solution. A number ("2.1.32") is matched by the name filter alone.
+    var SEARCH = { q: '', rank: new Map(), snippets: {}, terms: [] };
+    function isNumberQuery(q) { return /^\d{1,2}([.,]\d{0,2}([.,]\d{0,3})?)?$/.test(String(q || '').replace(/\s+/g, '')); }
+    var searchSeq = 0;
+    function runSearch(q, then) {
+        var seq = ++searchSeq;
+        if (!q || q.length < 2 || isNumberQuery(q)) {
+            SEARCH = { q: q, rank: new Map(), snippets: {}, terms: [] };
+            then();
+            return;
+        }
+        fetch('/' + LANG + '/problems/search?q=' + encodeURIComponent(q), { credentials: 'same-origin' })
+            .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+            .then(function (data) {
+                if (seq !== searchSeq) return;   // a newer query has been typed since
+                var rank = new Map();
+                (data.names || []).forEach(function (n, i) { rank.set(n, i); });
+                SEARCH = { q: q, rank: rank, snippets: data.snippets || {}, terms: data.terms || [] };
+                then();
+            })
+            .catch(function () {
+                if (seq !== searchSeq) return;
+                SEARCH = { q: q, rank: new Map(), snippets: {}, terms: [] };
+                then();
+            });
+    }
+    function searchActive() { return state.q && SEARCH.q === state.q && SEARCH.rank.size > 0; }
+
     var state = {
-        q: Q.q || '',
+        q: (Q.q || '').trim(),
         min: Q.min != null ? Number(Q.min) : 0,
         max: Q.max != null ? Number(Q.max) : 100,
         starred: !!Q.starred,
@@ -254,7 +284,8 @@
             var needle = state.q.toLowerCase();
             var hit = r[COL.NAME].indexOf(needle) !== -1
                 || r[COL.PREREQUISITES].some(function (t) { return t.toLowerCase().indexOf(needle) !== -1; })
-                || r[COL.CANONICAL_TAGS].some(function (t) { return t.toLowerCase().indexOf(needle) !== -1; });
+                || r[COL.CANONICAL_TAGS].some(function (t) { return t.toLowerCase().indexOf(needle) !== -1; })
+                || (SEARCH.q === state.q && SEARCH.rank.has(r[COL.NAME]));
             if (!hit) return false;
         }
         if (r[COL.CALIBRATED] != null) {
@@ -291,7 +322,14 @@
 
     function sortRows(rows) {
         if (!state.sort) {
+            var rank = searchActive() ? SEARCH.rank : null;
+            var last = rank ? rank.size : 0;
             return rows.slice().sort(function (a, b) {
+                if (rank) {
+                    var ra = rank.has(a[COL.NAME]) ? rank.get(a[COL.NAME]) : last;
+                    var rb = rank.has(b[COL.NAME]) ? rank.get(b[COL.NAME]) : last;
+                    if (ra !== rb) return ra - rb;
+                }
                 return (a[COL.CHAPTER] - b[COL.CHAPTER]) || (a[COL.SECTION] - b[COL.SECTION]) || (a[COL.IDX] - b[COL.IDX]);
             });
         }
@@ -316,6 +354,14 @@
     var emptyEl = document.getElementById('pfEmpty');
     var loadMoreBtn = document.getElementById('pfLoadMore');
     var esc = function (s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+    // The query's words marked in an escaped snippet, as the header's live suggestions mark them.
+    function highlight(text, query) {
+        var escaped = esc(text);
+        var terms = String(query || '').trim().split(/\s+/).filter(function (t) { return t.length > 1; });
+        if (!terms.length) return escaped;
+        var pattern = terms.map(function (t) { return esc(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|');
+        return escaped.replace(new RegExp('(' + pattern + ')', 'gi'), '<mark class="ss-search-mark">$1</mark>');
+    }
     var PAGE_SIZE = BATCH_SIZE;   // same server-authoritative value
 
     var currentRows = [];   // full filtered+sorted set for the active query
@@ -346,6 +392,9 @@
 
         var loadingText = LANG === 'ru' ? 'Загрузка условия…' : 'Loading statement…';
         var href = '/' + LANG + '/' + esc(r[COL.NAME]);
+        var snippet = SEARCH.q === state.q ? SEARCH.snippets[r[COL.NAME]] : null;
+        // Marked by the search's own stems ("трен" in "трения"), not the words as typed.
+        var snippetHtml = snippet ? '<p class="pf-card-snippet">' + highlight(snippet, SEARCH.terms.length ? SEARCH.terms.join(' ') : state.q) + '</p>' : '';
         return '<div class="pf-card ' + heatClass + '" data-name="' + esc(r[COL.NAME]) + '" data-href="' + href + '" role="link" tabindex="0">'
             + tagsHtml
             + '<div class="pf-card-head">'
@@ -356,6 +405,7 @@
             + voteHtml
             + '<span class="pf-card-go" aria-hidden="true">→</span>'
             + '</div>'
+            + snippetHtml
             + '<div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="' + esc(r[COL.NAME]) + '">' + loadingText + '</div>'
             + '</div>';
     }
@@ -403,8 +453,11 @@
         shownCount += slice.length;
         loadMoreBtn.hidden = shownCount >= rows.length;
         emptyEl.hidden = rows.length !== 0;
-        countEl.textContent = (LANG === 'ru' ? 'Показано ' : 'Showing ') + shownCount + (LANG === 'ru' ? ' из ' : ' of ') + rows.length;
+        countEl.textContent = (LANG === 'ru' ? 'Показано ' : 'Showing ') + shownCount + (LANG === 'ru' ? ' из ' : ' of ') + rows.length
+            + (state.q ? (LANG === 'ru' ? ' по запросу «' : ' for «') + state.q + '»' : '');
+        if (sortDefaultOpt) sortDefaultOpt.textContent = sortDefaultOpt.getAttribute(state.q && !isNumberQuery(state.q) ? 'data-label-search' : 'data-label');
     }
+    var sortDefaultOpt = document.getElementById('pfSortDefault');
 
     loadMoreBtn.addEventListener('click', function () { renderPage(currentRows, true); });
 
@@ -518,13 +571,35 @@
     });
 
     // ── other controls ──────────────────────────────────────────────────────
+    // Two boxes, one query: the header's (from 768px, views/default/main_site_header.ejs marks
+    // it data-finder) and the panel's (phones, where the header has no search). Typing in either
+    // updates the other.
     var searchEl = document.getElementById('pfSearch');
-    searchEl.value = state.q;
+    var headerSearchEl = document.querySelector('#searchInput[data-finder]');
+    var searchEls = [searchEl, headerSearchEl].filter(Boolean);
+    searchEls.forEach(function (el) { el.value = state.q; });
     var searchTimer = null;
-    searchEl.addEventListener('input', function () {
-        state.q = searchEl.value.trim().toLowerCase();
+    function searchNow(source) {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(applyState, 200);
+        var q = source.value.trim();
+        searchEls.forEach(function (el) { if (el !== source) el.value = source.value; });
+        if (q === state.q && SEARCH.q === q) return;
+        state.q = q;
+        runSearch(q, applyState);
+    }
+    searchEls.forEach(function (el) {
+        el.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function () { searchNow(el); }, 250);
+        });
+        el.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); searchNow(el); }
+        });
+    });
+    // Enter searches in place; the form's GET is for a page whose script has not loaded.
+    document.getElementById('pfSearchForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        searchNow(searchEl);
     });
 
     var starredCb = document.getElementById('pfStarred');
@@ -594,7 +669,8 @@
     });
 
     function resetAll(doApply) {
-        state.q = ''; searchEl.value = '';
+        state.q = ''; searchEls.forEach(function (el) { el.value = ''; });
+        searchSeq++; SEARCH = { q: '', rank: new Map(), snippets: {}, terms: [] };
         state.min = 0; state.max = 100;
         state.axisRanges = {};
         rangeRegistry.forEach(function (r) {
@@ -617,7 +693,8 @@
     document.getElementById('pfClearBtn').addEventListener('click', function () { resetAll(); });
 
     // First client-side render replaces the SSR cards with the exact same
-    // (already-filtered-server-side) view, then every control is instantly live.
-    applyState();
+    // (already-filtered-server-side) view, then every control is instantly live. With a query
+    // in the URL it waits for the search, or it would briefly drop the text matches.
+    if (state.q) runSearch(state.q, applyState); else applyState();
     } // end init()
 })();

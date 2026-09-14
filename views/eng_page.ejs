@@ -56,7 +56,7 @@
     },
     "potentialAction": {
       "@type": "SearchAction",
-      "target": {"@type": "EntryPoint", "urlTemplate": "https://savchenkosolutions.com/global-search?search={search_term_string}"},
+      "target": {"@type": "EntryPoint", "urlTemplate": "https://savchenkosolutions.com/<%= lang %>/problems?q={search_term_string}"},
       "query-input": "required name=search_term_string"
     }
   }
@@ -77,7 +77,7 @@
 </head>
 
 <body>
-  <%- include('default/main_site_header', { pageHasOwnH1: true }) %>
+  <%- include('default/main_site_header', { pageHasOwnH1: true, hideHeaderSearch: true }) %>
 
   <!-- ============================
        MAIN CONTENT (FULL WIDTH)
@@ -216,9 +216,9 @@
         <%# Evidence that other people are here, placed where a first-time visitor looks. %>
         <% if (typeof proofNumbers !== 'undefined' && proofNumbers) { %>
         <div class="hero-proof">
-          <span><strong><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'решений' : 'solutions' %></span>
-          <span><strong><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'авторов' : 'contributors' %></span>
-          <span><strong><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? 'правок' : 'edits' %></span>
+          <span><strong><%= solutionProgress.totalUniqueSolutions.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? ruPlural(solutionProgress.totalUniqueSolutions, 'решение', 'решения', 'решений') : 'solutions' %></span>
+          <span><strong><%= proofNumbers.contributors.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? ruPlural(proofNumbers.contributors, 'автор', 'автора', 'авторов') : 'contributors' %></span>
+          <span><strong><%= proofNumbers.edits.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %></strong> <%= lang === 'ru' ? ruPlural(proofNumbers.edits, 'правка', 'правки', 'правок') : 'edits' %></span>
           <a href="/<%= lang %>/contributors"><%= lang === 'ru' ? 'Кто их написал' : 'Who wrote them' %></a>
         </div>
         <% } %>
@@ -413,12 +413,12 @@
         <script type="application/json" id="gridDifficulty"><%- JSON.stringify(difficultyGrid) %></script>
         <% } %>
 
-    <!-- Secondary: team, actions, progress, video. Moved below the grid so the
+    <!-- Secondary: team, actions, video. Moved below the grid so the
          first screen is the problem index rather than decoration. -->
     <!-- Compact Introduction -->
       <div class="compact-intro mb-2">
-        <div class="row align-items-start g-3 compact-intro-row">
-          <div class="col-12 col-sm-auto col-lg-3 intro-team-col">
+        <div class="intro-band">
+          <div class="intro-team-col">
             <figure class="intro-team-figure mb-0">
               <img
                 src="/img/team.webp"
@@ -434,107 +434,66 @@
               </figcaption>
             </figure>
           </div>
-          <div class="col-12 col-sm col-lg-5 compact-intro-main">
-            <!-- The intro paragraph moved up into the hero as a one-line byline. -->
-            <!-- Stacked action cards (left) + progress panel (right) -->
-            <div class="row g-3 align-items-stretch intro-actions-stats-row">
-              <div class="col-12 intro-actions-stats-col d-flex flex-column">
-                <div class="intro-actions flex-grow-1">
-                  <a href="/<%= lang %>/study-guide" class="action-link primary-action">
-                    <span class="action-content">
-                      <strong class="action-title d-inline-flex align-items-center gap-2">
-                        <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="17" height="17" fill="currentColor">
-                          <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path>
-                        </svg>
-                        <span>
-                          <%# A card without a verb does not read as something you can do.
-                              "Upload Solution" survived only because it happens to contain one. %>
-                          <% if (lang === 'en') { %>Read the contributing guide<% } else { %>Читать руководство по участию<% } %>
-                        </span>
-                      </strong>
-                      <span class="action-desc">
-                        <% if (lang === 'en') { %>Learn how to submit solutions, edit problems, and earn recognition<% } else { %>Узнайте, как отправлять решения, редактировать задачи и получать признание<% } %>
-                      </span>
+          <div class="compact-intro-main">
+            <%# Two actions and the core team. The progress panel that sat under them repeated
+                the bar above the chapter grid and the hero's count, a third time, and made this
+                column the band's tallest, which left empty strips under the photo and the video
+                (removed 2026-09-14). %>
+            <div class="intro-actions">
+              <a href="/<%= lang %>/study-guide" class="action-link primary-action">
+                <span class="action-content">
+                  <strong class="action-title d-inline-flex align-items-center gap-2">
+                    <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="17" height="17" fill="currentColor">
+                      <path d="M1.5 3.25a2.25 2.25 0 1 1 3 2.122v5.256a2.251 2.251 0 1 1-1.5 0V5.372A2.25 2.25 0 0 1 1.5 3.25Zm5.677-.177L9.573.677A.25.25 0 0 1 10 .854V2.5h1A2.5 2.5 0 0 1 13.5 5v5.628a2.251 2.251 0 1 1-1.5 0V5a1 1 0 0 0-1-1h-1v1.646a.25.25 0 0 1-.427.177L7.177 3.427a.25.25 0 0 1 0-.354ZM3.75 2.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm0 9.5a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Zm8.25.75a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Z"></path>
+                    </svg>
+                    <span>
+                      <%# A card without a verb does not read as something you can do.
+                          "Upload Solution" survived only because it happens to contain one. %>
+                      <% if (lang === 'en') { %>Read the contributing guide<% } else { %>Читать руководство по участию<% } %>
                     </span>
-                  </a>
-                  <a href="/<%= lang %>/upload" class="action-link secondary-action">
-                    <span class="action-content">
-                      <strong class="action-title d-inline-flex align-items-center gap-2">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                          <path d="M12 3v14" />
-                          <path d="M6 9l6-6 6 6" />
-                          <path d="M5 19h14" />
-                        </svg>
-                        <span>
-                          <% if (lang === 'en') { %>Upload Solution<% } else { %>Загрузить решение<% } %>
-                        </span>
-                      </strong>
-                      <span class="action-desc">
-                        <% if (lang === 'en') { %>Quick upload - no registration needed<% } else { %>Быстрая загрузка - регистрация не требуется<% } %>
-                      </span>
+                  </strong>
+                  <span class="action-desc">
+                    <% if (lang === 'en') { %>Learn how to submit solutions, edit problems, and earn recognition<% } else { %>Узнайте, как отправлять решения, редактировать задачи и получать признание<% } %>
+                  </span>
+                </span>
+              </a>
+              <a href="/<%= lang %>/upload" class="action-link secondary-action">
+                <span class="action-content">
+                  <strong class="action-title d-inline-flex align-items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+                      <path d="M12 3v14" />
+                      <path d="M6 9l6-6 6 6" />
+                      <path d="M5 19h14" />
+                    </svg>
+                    <span>
+                      <% if (lang === 'en') { %>Upload Solution<% } else { %>Загрузить решение<% } %>
                     </span>
-                  </a>
-                </div>
-              </div>
-              <div class="col-12 solution-progress-stats-col d-flex flex-column">
-                <% 
-                  var _tp = solutionProgress.totalProblems;
-                  var _curBar = _tp > 0 ? ((solutionProgress.currentLangSolutions / _tp) * 100).toFixed(1) : '0';
-                  var _otherBar = _tp > 0 ? (((solutionProgress.totalUniqueSolutions - solutionProgress.currentLangSolutions) / _tp) * 100).toFixed(1) : '0';
-                %>
-                <div class="solution-progress-panel w-100">
-                  <div class="solution-coverage-card">
-                    <div class="solution-coverage-head">
-                      <span class="solution-coverage-eyebrow"><%= __('unsolved.overallProgress') %></span>
-                      <a href="/<%= lang %>/unsolved" class="solution-coverage-detail" title="<%= __('unsolved.title') %>">
-                        <span class="solution-coverage-detail-text"><%= lang === 'en' ? 'Breakdown' : 'Детали' %></span>
-                        <svg class="solution-coverage-detail-icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                          <path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </a>
-                    </div>
-                    <div class="solution-coverage-metric" aria-live="polite">
-                      <span id="engHomeProgressCounter" class="solution-coverage-num">0</span>
-                      <span class="solution-coverage-slash" aria-hidden="true">/</span>
-                      <span class="solution-coverage-total"><%= _tp %></span>
-                    </div>
-                    <p class="solution-coverage-meta">
-                      <span class="solution-coverage-caption"><%= __('unsolved.totalSolved') %></span>
-                      <span class="solution-coverage-meta-sep" aria-hidden="true">·</span>
-                      <span class="solution-coverage-pct-wrap">
-                        <span id="engHomePercentageCounter" class="solution-coverage-pct-value">0</span><span class="solution-coverage-pct-unit">%</span>
-                      </span>
-                    </p>
-                    <div class="solution-coverage-bar" role="presentation">
-                      <div class="solution-coverage-bar-track">
-                        <div class="solution-coverage-bar-current" style="width: <%= _curBar %>%"></div>
-                        <div class="solution-coverage-bar-other" style="width: <%= _otherBar %>%"></div>
-                      </div>
-                    </div>
-                  </div>
-                  <hr class="solution-progress-divider">
-                  <p class="info-team-members">
-                    <% if (lang === 'en') { %>
-                      <span class="info-team-label-inline">Core Team:</span>
-                      <a href="/user/astrosander/">astrosander</a>,
-                      <a href="/user/emixter/">emixter</a>,
-                      <a href="/user/igor/">igor</a>,
-                      <a href="/user/Ismail">Ismail</a>
-                      <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+more</a>
-                    <% } else { %>
-                      <span class="info-team-label-inline">Команда:</span>
-                      <a href="/user/astrosander/">astrosander</a>,
-                      <a href="/user/emixter/">emixter</a>,
-                      <a href="/user/igor/">igor</a>,
-                      <a href="/user/Ismail">Ismail</a>
-                      <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+ещё</a>
-                    <% } %>
-                  </p>
-                </div>
-              </div>
+                  </strong>
+                  <span class="action-desc">
+                    <% if (lang === 'en') { %>Quick upload - no registration needed<% } else { %>Быстрая загрузка - регистрация не требуется<% } %>
+                  </span>
+                </span>
+              </a>
             </div>
+            <p class="info-team-members">
+              <% if (lang === 'en') { %>
+                <span class="info-team-label-inline">Core Team:</span>
+                <a href="/user/astrosander/">astrosander</a>,
+                <a href="/user/emixter/">emixter</a>,
+                <a href="/user/igor/">igor</a>,
+                <a href="/user/Ismail">Ismail</a>
+                <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+more</a>
+              <% } else { %>
+                <span class="info-team-label-inline">Команда:</span>
+                <a href="/user/astrosander/">astrosander</a>,
+                <a href="/user/emixter/">emixter</a>,
+                <a href="/user/igor/">igor</a>,
+                <a href="/user/Ismail">Ismail</a>
+                <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+ещё</a>
+              <% } %>
+            </p>
           </div>
-          <div class="col-12 col-lg-4 intro-youtube-col">
+          <div class="intro-youtube-col">
             <%# The LEX News segment about the project, served from our own /video and
                 played by the browser — YouTube refuses to embed it (LEX has embedding off,
                 so any <iframe> renders "Playback on other websites has been disabled by
@@ -542,7 +501,7 @@
                 is ever missing; the poster is a frame of the segment itself, keeping LEX's
                 own lower-third and attribution on screen. The how-to walkthrough that used
                 to sit here now lives on the study guide. %>
-            <div class="mb-3">
+            <div class="intro-video">
               <%- include('default/video_embed', {
                 videoId: 'cNSQZJMJFZs',
                 videoFile: (typeof assetIfPresent === 'function') ? assetIfPresent('/video/lex-news.mp4') : null,
@@ -1011,52 +970,47 @@
       box-shadow: none;
     }
 
-    .compact-intro-row {
+    /* Team photo, the two actions and the press video. A grid whose arrangement follows the
+       band's own width (a container query: the sidebar beside it takes a different share at
+       each screen width), so each width gets the layout that leaves no empty strip (2026-09-14):
+         under 480px   photo, actions, video, one under another;
+         480-899px     photo beside the video, the two actions side by side under them;
+         900px up      one row: photo, actions, video.
+       Wherever the photo shares a row it takes that row's height (the video's, or the
+       actions'), less its caption: the image has flex-basis 0, so it asks for no height. */
+    .compact-intro { container-type: inline-size; }
+    .intro-band {
       --intro-team-photo-max: min(100%, 239px);
       --intro-team-figure-max: min(100%, 23.3rem);
+      display: grid;
+      gap: var(--ss-space-4);
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "team" "main" "video";
     }
+    .intro-team-col { grid-area: team; display: flex; flex-direction: column; min-width: 0; }
+    .compact-intro-main { grid-area: main; display: flex; flex-direction: column; min-width: 0; }
+    .intro-youtube-col { grid-area: video; min-width: 0; }
+    .intro-band .info-team-members { margin-top: var(--ss-space-2); }
 
-    .intro-team-col {
-      display: flex;
-      justify-content: center;
+    @container (min-width: 480px) {
+      .intro-band {
+        --intro-team-photo-max: 100%;
+        --intro-team-figure-max: 100%;
+        grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+        grid-template-areas: "team video" "main main";
+      }
+      .intro-band .intro-actions { flex-direction: row; }
+      .intro-band .intro-actions .action-link { flex: 1 1 0; }
+      .intro-band .intro-team-figure { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+      .intro-band .intro-team-img { flex: 1 1 0; min-height: 0; aspect-ratio: auto; object-fit: contain; }
     }
-
-    /* Stretch every column of the band to the tallest, so no column leaves a strip. */
-    @media (min-width: 992px) {
-      .compact-intro-row { align-items: stretch; }
-      .compact-intro-row > .intro-youtube-col,
-      .compact-intro-row > .compact-intro-main,
-      .compact-intro-row > .intro-team-col { display: flex; flex-direction: column; }
-      .compact-intro-row > .intro-youtube-col > *,
-      .compact-intro-row > .intro-team-col > * { flex: 1 1 auto; }
-      .intro-actions-stats-row { flex: 1 1 auto; }
-      .intro-actions-stats-row > .intro-actions-stats-col { justify-content: flex-start; }
-    }
-
-    @media (min-width: 992px) {
-      .compact-intro-row {
-        --intro-team-photo-max: min(100%, 289px);
-        --intro-team-figure-max: min(100%, 30.4rem);
+    @container (min-width: 900px) {
+      .intro-band {
+        grid-template-columns: minmax(0, 22fr) minmax(0, 40fr) minmax(0, 38fr);
+        grid-template-areas: "team main video";
       }
-
-      /* Team column 5% narrower than col-lg-3 (25% → 23.75%); rest split 5:4 */
-      .compact-intro-row > .intro-team-col {
-        flex: 0 0 23.75%;
-        max-width: 23.75%;
-        width: 23.75%;
-      }
-
-      .compact-intro-row > .compact-intro-main {
-        flex: 0 0 42.3611%;
-        max-width: 42.3611%;
-        width: 42.3611%;
-      }
-
-      .compact-intro-row > .intro-youtube-col {
-        flex: 0 0 33.8889%;
-        max-width: 33.8889%;
-        width: 33.8889%;
-      }
+      .intro-band .intro-actions { flex: 1 1 auto; flex-direction: column; }
+      .intro-band .intro-actions .action-link { flex: 1 1 auto; }
     }
 
     .intro-team-figure {
@@ -1095,25 +1049,6 @@
       font-size: var(--ss-fs-16);
       line-height: 1.5;
       margin-bottom: var(--ss-space-3);
-    }
-
-    /* Stats column = 90% of former col-md-7 (7/12 × 0.9 = 52.5%); actions fill remainder */
-    @media (min-width: 768px) {
-      .intro-actions-stats-row {
-        align-items: flex-start;
-      }
-
-      .intro-actions-stats-row > .intro-actions-stats-col {
-        flex: 0 0 100%;
-        max-width: 100%;
-        width: 100%;
-      }
-
-      .intro-actions-stats-row > .solution-progress-stats-col {
-        flex: 0 0 100%;
-        max-width: 100%;
-        width: 100%;
-      }
     }
 
     .intro-actions {
@@ -1214,193 +1149,6 @@
       opacity: 0.9;
     }
 
-    /* Solution progress — aligned with /:lang/unsolved data + bar semantics */
-    .solution-progress-panel {
-      background: var(--ss-surface-hover);
-      border: 1px solid rgba(15, 23, 42, 0.07);
-      border-radius: 0;
-      padding: var(--ss-space-2) var(--ss-space-4) var(--ss-space-2);
-      box-shadow: none;
-      font-size: var(--ss-fs-13);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .solution-progress-panel::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: #9a8a5c;
-      opacity: 0.9;
-      border-radius: 0;
-    }
-
-    .solution-coverage-card {
-      position: relative;
-      z-index: 1;
-      padding-left: var(--ss-space-2);
-    }
-
-    .solution-coverage-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--ss-space-2);
-      margin-bottom: var(--ss-space-1);
-    }
-
-    .solution-coverage-eyebrow {
-      font-size: var(--ss-fs-12);
-      font-weight: var(--ss-fw-strong);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--ss-text-secondary);
-      line-height: 1.2;
-    }
-
-    .solution-coverage-detail {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.15rem;
-      font-size: var(--ss-fs-13);
-      font-weight: var(--ss-fw-regular);
-      color: var(--ss-text-secondary);
-      text-decoration: none;
-      padding: 0.12rem var(--ss-space-1);
-      margin: -0.12rem calc(-1 * var(--ss-space-1));
-      border-radius: 0;
-      transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    .solution-coverage-detail:hover {
-      color: var(--ss-text);
-      background-color: rgba(15, 23, 42, 0.04);
-    }
-
-    .solution-coverage-detail-icon {
-      opacity: 0.65;
-      transition: transform 0.25s ease, opacity 0.2s ease;
-    }
-
-    .solution-coverage-detail:hover .solution-coverage-detail-icon {
-      opacity: 1;
-      transform: translateX(2px);
-    }
-
-    .solution-coverage-metric {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      gap: 0.12rem;
-      font-family: var(--ss-font-ui);
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum" 1;
-      margin: 0 0 var(--ss-space-1);
-    }
-
-    .solution-coverage-num {
-      font-size: var(--ss-fs-24);
-      font-weight: var(--ss-fw-strong);
-      color: var(--ss-text);
-      line-height: 1;
-      letter-spacing: -0.02em;
-    }
-
-    .solution-coverage-slash {
-      font-size: var(--ss-fs-16);
-      font-weight: 400;
-      color: var(--ss-text-secondary);
-      margin: 0 0.02rem;
-    }
-
-    .solution-coverage-total {
-      font-size: var(--ss-fs-16);
-      font-weight: var(--ss-fw-strong);
-      color: #334155;
-    }
-
-    .solution-coverage-meta {
-      margin: 0 0 var(--ss-space-1);
-      text-align: center;
-      font-size: var(--ss-fs-13);
-      line-height: 1.3;
-      color: var(--ss-text-secondary);
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: center;
-      gap: var(--ss-space-1);
-    }
-
-    .solution-coverage-caption {
-      margin: 0;
-    }
-
-    .solution-coverage-meta-sep {
-      color: #cbd5e1;
-      user-select: none;
-    }
-
-    .solution-coverage-pct-wrap {
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum" 1;
-      color: var(--ss-text-secondary);
-      white-space: nowrap;
-    }
-
-    .solution-coverage-pct-value {
-      font-weight: var(--ss-fw-strong);
-      color: var(--ss-text);
-    }
-
-    .solution-coverage-pct-unit {
-      font-weight: var(--ss-fw-regular);
-      color: var(--ss-text-secondary);
-      margin-left: 0.05rem;
-    }
-
-    .solution-coverage-bar-track {
-      display: flex;
-      height: 5px;
-      border-radius: 0;
-      overflow: hidden;
-      background: rgba(15, 23, 42, 0.06);
-    }
-
-    .solution-coverage-bar-current {
-      height: 100%;
-      background: #5a9e5e;
-      transition: width 0.85s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .solution-coverage-bar-other {
-      height: 100%;
-      background: #5b9fd4;
-      transition: width 0.85s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .solution-coverage-bar-current,
-      .solution-coverage-bar-other {
-        transition: none;
-      }
-    }
-
-    .solution-progress-divider {
-      margin: var(--ss-space-1) 0 var(--ss-space-1);
-      border: none;
-      border-top: 1px solid rgba(15, 23, 42, 0.08);
-    }
-
-    .solution-progress-panel .info-team-members {
-      line-height: 1.32;
-      font-size: var(--ss-fs-13);
-      margin-bottom: 0;
-    }
-
     .info-team-label {
       font-weight: var(--ss-fw-strong);
       color: var(--ss-text-secondary);
@@ -1482,58 +1230,7 @@
         font-size: var(--ss-fs-13);
       }
 
-      .solution-progress-panel {
-        padding: var(--ss-space-2) var(--ss-space-3) var(--ss-space-2);
-        font-size: var(--ss-fs-13);
-      }
-
-      .solution-coverage-head {
-        margin-bottom: var(--ss-space-1);
-      }
-
-      .solution-coverage-eyebrow {
-        font-size: var(--ss-fs-12);
-      }
-
-      .solution-coverage-detail {
-        font-size: var(--ss-fs-12);
-      }
-
-      .solution-coverage-metric {
-        margin-bottom: 0.16rem;
-      }
-
-      .solution-coverage-num {
-        font-size: var(--ss-fs-20);
-      }
-
-      .solution-coverage-slash {
-        font-size: var(--ss-fs-16);
-      }
-
-      .solution-coverage-total {
-        font-size: var(--ss-fs-16);
-      }
-
-      .solution-coverage-meta {
-        font-size: var(--ss-fs-12);
-        margin-bottom: var(--ss-space-1);
-      }
-
-      .solution-coverage-bar-track {
-        height: 4px;
-      }
-
-      .solution-progress-divider {
-        margin: var(--ss-space-1) 0 var(--ss-space-1);
-      }
-
-      .solution-progress-panel .info-team-members {
-        font-size: var(--ss-fs-13);
-        line-height: 1.28;
-      }
-
-      .compact-intro-row {
+      .intro-band {
         --intro-team-photo-max: min(100%, 209px);
         --intro-team-figure-max: min(100%, 21.85rem);
       }
@@ -2001,9 +1698,10 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    /* Hover darkens the name but draws no underline (owner's request, 2026-09-14). */
     .ta-username:hover {
       color: var(--ss-link-hover);
-      text-decoration: underline;
+      text-decoration: none;
     }
     .ta-score-value {
       font-weight: var(--ss-fw-strong);
@@ -2167,7 +1865,6 @@
 
   </style>
   
-  <%- include('default/main_site_search_script') %>
 
   <script>
   // Navigation is entirely server-side (GET /find). This only adds the affordance that
@@ -2360,49 +2057,6 @@
         el.style.transition = `opacity 0.5s ease ${index * 0.15}s, transform 0.5s ease ${index * 0.15}s`;
         observer.observe(el);
       });
-    });
-  </script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const progressCounter = document.getElementById('engHomeProgressCounter');
-      const percentageCounter = document.getElementById('engHomePercentageCounter');
-      if (!progressCounter || !percentageCounter) return;
-
-      function animateValue(obj, start, end, duration) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-          if (!startTimestamp) startTimestamp = timestamp;
-          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-          const value = Math.floor(progress * (end - start) + start);
-          obj.textContent = value;
-          if (progress < 1) {
-            window.requestAnimationFrame(step);
-          }
-        };
-        window.requestAnimationFrame(step);
-      }
-
-      function animatePercentage(obj, start, end, duration) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-          if (!startTimestamp) startTimestamp = timestamp;
-          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-          const value = (progress * (end - start) + start).toFixed(1);
-          obj.textContent = value;
-          if (progress < 1) {
-            window.requestAnimationFrame(step);
-          }
-        };
-        window.requestAnimationFrame(step);
-      }
-
-      const totalUniqueSolutions = <%= solutionProgress.totalUniqueSolutions %>;
-      const totalProblems = <%= solutionProgress.totalProblems %>;
-      const percentage = totalProblems > 0 ? (totalUniqueSolutions / totalProblems * 100) : 0;
-
-      animateValue(progressCounter, 0, totalUniqueSolutions, 1000);
-      animatePercentage(percentageCounter, 0, percentage, 1000);
     });
   </script>
 

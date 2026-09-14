@@ -1387,7 +1387,11 @@ mjx-container[jax="SVG"] > svg > g {
   border: 1px solid var(--ss-rule);
   border-radius: var(--ss-radius);
 }
+/* The answer box hugs what it holds. Full width, a one-line formula sat centred in 1,240px of
+   empty box (2026-09-14); a long worded answer still wraps at the column's edge. */
 .ss-prose .ss-answer {
+  width: fit-content;
+  max-width: 100%;
   padding: var(--ss-space-3) var(--ss-space-4);
   background: var(--ss-surface);
   border: 1px solid var(--ss-rule);
@@ -1397,6 +1401,8 @@ mjx-container[jax="SVG"] > svg > g {
 }
 .ss-prose .ss-answer p + p { text-indent: 0; margin-top: 0.35em; }
 .ss-prose .ss-answer .ss-eq { margin: 0.25em 0; }
+.ss-prose .ss-answer > :first-child { margin-top: 0; }
+.ss-prose .ss-answer > :last-child { margin-bottom: 0; }
 .ss-prose .ss-sec--alternative { padding-top: var(--ss-space-6); border-top: 1px solid var(--ss-rule); }
 .ss-prose .ss-sec--literature { font-size: var(--ss-text-prose-small); }
 .ss-prose .ss-sec--literature p { padding-left: 1.8em; text-indent: -1.8em; text-align: left; }
@@ -1896,12 +1902,15 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
   gap: var(--ss-space-7);
   margin-bottom: var(--ss-space-7);
 }
+/* Column titles are the header's own menu labels (Задачи, Обучение, Сообщество) and are set
+   like them, in sentence case at the interface size. Spaced small capitals read as another
+   typeface on the same page (2026-09-14). */
 .ss-footer-title {
   margin: 0 0 var(--ss-space-3);
-  font-size: var(--ss-text-label);
+  font-size: var(--ss-text-ui);
   font-weight: var(--ss-fw-strong);
-  letter-spacing: var(--ss-ls-caps);
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ss-on-navy);
 }
 .ss-footer ul { list-style: none; margin: 0; padding: 0; }
@@ -2775,7 +2784,9 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .ss-diff-votes-login { font-size: var(--ss-fs-12); color: var(--ss-link, #1a5276); text-decoration: none; }
 .ss-diff-votes-login:hover { color: var(--ss-link-hover, #0d3b54); text-decoration: underline; }
 .ss-diff-vote-row { display: flex; align-items: center; gap: var(--ss-space-2); margin-top: var(--ss-space-2); }
-.ss-diff-vote-slider { flex: 1; accent-color: var(--ss-navy, #1a1a2e); }
+/* min-width: 0, or the range input keeps its intrinsic ~160px and the row outgrows the rail:
+   in Firefox that pushed every signed-in solution page 60px past the window (2026-09-14). */
+.ss-diff-vote-slider { flex: 1 1 0; min-width: 0; accent-color: var(--ss-navy, #1a1a2e); }
 .ss-diff-vote-val { font-size: var(--ss-fs-13); font-weight: var(--ss-fw-strong); min-width: 18px; text-align: center; color: var(--ss-body-text, #2d2d2d); }
 .ss-diff-vote-submit {
     font-size: var(--ss-fs-12); padding: var(--ss-space-1) var(--ss-space-3); border-radius: var(--ss-radius); border: none;
@@ -2919,6 +2930,12 @@ body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight
 }
 .fb-tab:hover { background: var(--ss-primary-btn-hover); color: var(--ss-white); }
 .fb-tab:focus-visible { outline: 2px solid var(--ss-link); outline-offset: 2px; }
+/* Over the navy footer (js/feedback.js adds the class while the tab is over it): the same tab
+   in the footer's colours inverted, so it does not disappear into the ground. */
+.fb-tab { transition: background-color 0.15s ease, color 0.15s ease; }
+.fb-tab.fb-tab--on-dark { background: var(--ss-on-navy); color: var(--ss-navy); }
+.fb-tab.fb-tab--on-dark:hover { background: var(--ss-surface-alt); color: var(--ss-navy); }
+.fb-tab.fb-tab--on-dark:focus-visible { outline-color: var(--ss-on-navy); }
 .fb-tab[hidden] { display: none; }
 .fb-tab-glyph { display: inline-flex; align-items: center; }
 /* Filled, sized in px, and inheriting the button's colour. The previous glyph was the

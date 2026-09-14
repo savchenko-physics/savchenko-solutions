@@ -5,6 +5,10 @@
   const searchResultsList = document.querySelector("#searchResults ul");
   const clearButton = document.getElementById("clearSearch");
   if (!searchInput || !searchResults || !searchResultsList) return;
+  if (searchInput.dataset.ssSearchBound) return;
+  searchInput.dataset.ssSearchBound = "1";
+  // On /<lang>/problems the box is the finder's own query; js/problems-finder.js binds it.
+  if (searchInput.hasAttribute("data-finder")) return;
 
   let lastSearchResults = "";
   let activeIndex = -1;
@@ -67,7 +71,9 @@
         const query = searchInput.value.trim();
         if (query) {
           const currentLang = "<%= typeof lang !== 'undefined' ? lang : 'en' %>";
-          window.location.href = `/global-search?search=${encodeURIComponent(query)}&lang=${encodeURIComponent(currentLang)}`;
+          // /find opens a problem number in whichever language has it, and hands anything else
+          // to the problem finder's search (/<lang>/problems?q=).
+          window.location.href = `/find?search=${encodeURIComponent(query)}&lang=${encodeURIComponent(currentLang)}`;
         }
       }
     } else if (e.key === "Escape") {
@@ -119,7 +125,7 @@
 
         const fullResultsHTML = `
             <li class="ss-search-more">
-                <a href="/global-search?search=${encodeURIComponent(query)}&lang=${encodeURIComponent(currentLang)}"><%= typeof lang !== 'undefined' && lang === 'ru' ? 'Enter — все результаты' : 'Press Enter for full results' %></a>
+                <a href="/${encodeURIComponent(currentLang)}/problems?q=${encodeURIComponent(query)}"><%= typeof lang !== 'undefined' && lang === 'ru' ? 'Enter — все результаты' : 'Press Enter for full results' %></a>
             </li>
         `;
 
@@ -136,7 +142,7 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 <%= __('menu.upload') %>
                             </a>
-                            <a href="/global-search?search=${encodeURIComponent(query)}" class="btn btn-sm btn-outline-dark">
+                            <a href="/${encodeURIComponent(currentLang)}/problems?q=${encodeURIComponent(query)}" class="btn btn-sm btn-outline-dark">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                 <%= __('menu.advancedSearch') %>
                             </a>

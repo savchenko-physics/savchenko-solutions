@@ -136,5 +136,6 @@ Disallow: /*?*api_key*
 Disallow: /search
 Disallow: /find
 Disallow: /global-search
+Disallow: /*problems?*q=
 
 Sitemap: https://savchenkosolutions.com/sitemap.xml

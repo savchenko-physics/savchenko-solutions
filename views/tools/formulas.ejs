@@ -150,6 +150,9 @@
             color: var(--ss-text-secondary);
             margin: var(--ss-space-1) 0 0;
             line-height: 1.55;
+            /* Inline formulas cannot wrap; a long one scrolls in the card, not the page. */
+            overflow-x: auto;
+            overflow-y: hidden;
         }
 
         /* ---- Mobile chapter dropdown ---- */
