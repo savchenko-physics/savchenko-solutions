@@ -1299,7 +1299,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose img { max-width: 100%; height: auto; }
 .ss-prose figure,
 .ss-image {
-  margin: 0.6em 0;
+  margin: 0.8em 0;
   text-align: center;
   text-indent: 0;
 }
@@ -1365,7 +1365,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose .ss-sec + p,
 .ss-prose .ss-sec + figure,
 .ss-prose p + .ss-sec,
-.ss-prose figure + .ss-sec { margin-top: var(--ss-space-5); }
+.ss-prose figure + .ss-sec { margin-top: var(--ss-space-6); }
 .ss-prose .ss-label {
   font-family: var(--ss-font-ui);
   font-size: var(--ss-text-label);
@@ -1398,7 +1398,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose .ss-sec--literature p { padding-left: 1.8em; text-indent: -1.8em; text-align: left; }
 .ss-prose .ss-sec--literature p + p { text-indent: -1.8em; margin-top: 0.3em; }
 @media (min-width: 768px) {
-  .ss-prose .ss-problem { padding: var(--ss-space-4) var(--ss-space-5); }
+  .ss-prose .ss-problem { padding: var(--ss-space-5) var(--ss-space-6); }
 }
 
 .ss-title {
@@ -2730,7 +2730,6 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
     letter-spacing: 0.03em; text-transform: uppercase;
     color: var(--ss-text-secondary, #6c757d);
 }
-.ss-diff-hint { margin: calc(-1 * var(--ss-space-1)) 0 var(--ss-space-1); font-size: var(--ss-text-label); color: var(--ss-text-secondary); }
 .ss-diff-row { display: flex; align-items: center; gap: var(--ss-space-2); padding: 2px 0; }
 .ss-diff-label { flex: 0 0 45%; font-size: var(--ss-fs-12); color: var(--ss-body-text, #2d2d2d); }
 .ss-diff-track { flex: 1; height: 6px; background: #eceff1; border-radius: var(--ss-radius-sm); overflow: hidden; }
@@ -2756,9 +2755,8 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .ss-diff-idea summary::before { content: '\25B8  '; }
 .ss-diff-idea[open] summary::before { content: '\25BE  '; }
 .ss-diff-idea p { margin: var(--ss-space-2) 0 0; font-size: var(--ss-fs-13); line-height: 1.5; color: var(--ss-body-text, #2d2d2d); }
-.ss-diff-note { margin-top: var(--ss-space-3); font-size: var(--ss-fs-12); line-height: 1.4; color: var(--ss-text-secondary, #6c757d); }
-.ss-diff-note a { color: var(--ss-link, #1a5276); }
-.ss-diff-note a:hover { color: var(--ss-link-hover, #0d3b54); }
+.ss-diff-info { display: inline-flex; margin-left: auto; color: var(--ss-text-tertiary); }
+.ss-diff-info:hover { color: var(--ss-link-hover); }
 
 /* Reader difficulty votes — a separate, clearly-labeled number below the AI panel's
    note, never blended into the /100 score or the bars above it. */

@@ -99,11 +99,12 @@
         }
         @media (min-width: 992px) {
             .main-container {
-                padding-inline: var(--ss-space-5);
-                /* The rail flexes rather than being pinned: a fixed 320px pushed small laptops at
-                   992px into horizontal overflow. */
-                grid-template-columns: minmax(0, 1fr) clamp(260px, 20vw, 320px);
-                gap: var(--ss-space-6);
+                padding: var(--ss-space-5) var(--ss-space-7) var(--ss-space-9);
+                /* The rail flexes rather than being pinned (a fixed 320px pushed small laptops at
+                   992px into overflow), and stays narrow: seven problem cells a row at 1600px, the
+                   rest of the width goes to the solution. */
+                grid-template-columns: minmax(0, 1fr) clamp(240px, 16vw, 272px);
+                gap: var(--ss-space-8);
             }
         }
         /* The prose fills the column, so the title, statement card, answer box and comments
@@ -1945,6 +1946,10 @@
                     <% if (difficulty.starred) { %>
                     <sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена Савченко как задача повышенной трудности' : 'Marked by Savchenko as a harder problem' %>">&#8727;</sup>
                     <% } %>
+                    <%# The same on every page, so it is a link and a tooltip, not a paragraph. %>
+                    <a class="ss-diff-info" href="/<%= lang %>/problems/methodology"
+                       title="<%= lang === 'ru' ? 'Оценка модели, не человека. Звёздочка — пометка самого Савченко. Как это считается' : 'Rated by a model, not a person. The star is Savchenko\'s own mark. How this is scored' %>"
+                       aria-label="<%= lang === 'ru' ? 'Как считается сложность' : 'How difficulty is scored' %>"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 7.2v4.3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="8" cy="4.8" r="0.95" fill="currentColor"/></svg></a>
                 </div>
                 <div class="ss-diff-headline">
                     <span class="ss-diff-score"><%= typeof difficultyRating !== 'undefined' && difficultyRating != null ? difficultyRating : difficulty.calibrated %></span>
@@ -1954,7 +1959,6 @@
                 </div>
 
                 <div class="ss-diff-group"><%= lang === 'ru' ? 'Чего стоит' : 'What it costs' %></div>
-                <div class="ss-diff-hint"><%= lang === 'ru' ? 'Выше — тяжелее решать' : 'Higher = harder to solve' %></div>
                 <% cost.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
                 <div class="ss-diff-row" title="<%= a[2] %>">
                     <span class="ss-diff-label"><%= a[1] %></span>
@@ -1964,7 +1968,6 @@
                 <% }); %>
 
                 <div class="ss-diff-group"><%= lang === 'ru' ? 'Что даёт' : 'What it repays' %></div>
-                <div class="ss-diff-hint"><%= lang === 'ru' ? 'Выше — приятнее решать' : 'Higher = more rewarding to solve' %></div>
                 <% reward.forEach(function(a) { if (difficulty.scores[a[0]] == null) return; %>
                 <div class="ss-diff-row" title="<%= a[2] %>">
                     <span class="ss-diff-label"><%= a[1] %></span>
@@ -1987,12 +1990,6 @@
                     <p><%= difficulty.key_idea %></p>
                 </details>
                 <% } %>
-
-                <div class="ss-diff-note">
-                    <%= lang === 'ru' ? 'Оценка ' : 'Rated by a ' %><a href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'модели' : 'model' %></a><%= lang === 'ru'
-                        ? ', не человека. Звёздочка — пометка самого Савченко.'
-                        : ', not a person. The star is Savchenko\'s own mark.' %>
-                </div>
 
                 <% if (typeof difficultyVotes !== 'undefined') { %>
                 <div class="ss-diff-votes">
