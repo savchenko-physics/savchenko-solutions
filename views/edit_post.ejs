@@ -96,6 +96,21 @@
             height: auto;
         }
 
+        /* Source and preview side by side, the divider draggable (flex-basis set by the resize
+           script below). */
+        .editor-split { display: flex; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden; }
+        .editor-split > #editor { flex: 0 0 calc(50% - 2.5px); width: auto; min-width: 100px; height: 100%; }
+        .editor-split > #resizer { flex: 0 0 5px; height: 100%; }
+        .editor-split > #preview { flex: 0 0 calc(50% - 2.5px); width: auto; min-width: 100px; height: 100%; padding: var(--ss-space-4) var(--ss-space-9); }
+        /* On a phone half of 390px left the preview ~110px of text and every other word was cut.
+           Stack them: the source on top, the typeset preview under it. */
+        @media (max-width: 767.98px) {
+            .editor-split { flex-direction: column; height: auto; overflow: visible; }
+            .editor-split > #editor { flex: none; height: 60vh; }
+            .editor-split > #resizer { display: none; }
+            .editor-split > #preview { flex: none; height: auto; overflow: visible; padding: var(--ss-space-5) var(--ss-space-4); border-top: 1px solid var(--ss-rule); }
+        }
+
         #preview pre {
             overflow-x: auto;
             max-width: 100%;
@@ -1009,6 +1024,23 @@
            number is already in the URL and the tab title, so the centre label is the one
            thing here that can be given up. `!important` because the buttons carry inline
            styles from long before the no-inline-styles rule. */
+        /* The navy top bar's two actions: the way back (outlined on navy) and Publish (the site's
+           success colour, 5.4:1 under white text). */
+        .header-right .editor-bar-btn {
+            font-size: var(--ss-text-ui);
+            color: var(--ss-on-navy);
+            border: 1px solid var(--ss-on-navy-rule);
+            border-radius: var(--ss-radius);
+            box-shadow: none;
+            padding: var(--ss-space-2) var(--ss-space-4);
+            margin-left: var(--ss-space-3);
+            text-decoration: none;
+        }
+        .header-right .editor-bar-btn--back { background-color: transparent; }
+        .header-right .editor-bar-btn--back:hover { background-color: var(--ss-navy-hover); color: var(--ss-on-navy); }
+        .header-right .editor-bar-btn--publish { background-color: var(--ss-success-strong); border-color: var(--ss-success-strong); }
+        .header-right .editor-bar-btn--publish:hover { background-color: #15653a; }
+
         @media (max-width: 640px) {
             .post-title { display: none; }
             .header-right .submit-button {
@@ -1089,8 +1121,7 @@
             <%= lang %>/<%= name %>
         </span>
         <div style="display: flex; align-items: center;" class="header-right">
-            <a href="/<%= lang %>/<%= name %>" class="submit-button"
-                style="font-size: var(--ss-fs-16); color: var(--ss-on-navy); opacity: 0.9; background-color: #4a90e2; border-color: #4a90e2; border-radius: var(--ss-radius-sm); border-right: 1px solid #000; box-shadow: none; padding: var(--ss-space-3) var(--ss-space-5); text-decoration: none; margin-left: var(--ss-space-3);">
+            <a href="/<%= lang %>/<%= name %>" class="submit-button editor-bar-btn editor-bar-btn--back">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M15 7H3.83L7.41 3.41L6 2L0 8L6 14L7.41 12.59L3.83 9H15V7Z" fill="currentColor" />
                 </svg>
@@ -1101,8 +1132,7 @@
             <% if (userId) { %>
             <form id="save-form" action="/<%= lang %>/save/<%= name %>" method="POST">
                 <textarea id="hidden-content" name="content" style="display:none;"></textarea>
-                <button type="submit" id="save-button" class="submit-button"
-                    style="font-size: var(--ss-fs-16); color: var(--ss-on-navy); opacity: 0.9; background-color: #007b0c; border-color: #6fae75; border-radius: var(--ss-radius-sm); box-shadow: none; padding: var(--ss-space-3) var(--ss-space-5);">
+                <button type="submit" id="save-button" class="submit-button editor-bar-btn editor-bar-btn--publish">
                     <i class="fa fa-upload" aria-hidden="true"></i>
                     <span id="save-button-label">
                         <%= __('post.publish') %>
@@ -1110,8 +1140,7 @@
                 </button>
             </form>
             <% } else { %>
-            <a href="/<%= lang %>/login" class="submit-button"
-                style="font-size: var(--ss-fs-16); color: var(--ss-on-navy); opacity: 0.6; background-color: #666; border-radius: var(--ss-radius-sm); box-shadow: none; padding: var(--ss-space-3) var(--ss-space-5); text-decoration: none; pointer-events: auto;">
+            <a href="/<%= lang %>/login" class="submit-button editor-bar-btn editor-bar-btn--back">
                 <i class="fa fa-save" aria-hidden="true"></i>
                 <span><%= lang === 'ru' ? 'Войдите для сохранения' : 'Log in to save' %></span>
             </a>
@@ -1208,12 +1237,10 @@
         </div>
     </div>
 
-    <div style="display: flex; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden;">
-        <div id="editor" style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%;"></div>
-        <div id="resizer" style="flex: 0 0 5px; height: 100%; background-color: var(--ss-navy-hover); cursor: ew-resize;"></div>
-        <div id="preview" class="ss-prose"
-            style="flex: 0 0 calc(50% - 2.5px); min-width: 100px; height: 100%; overflow-y: auto; background: var(--ss-surface); word-break: break-word; padding: var(--ss-space-4) var(--ss-space-9);">
-        </div>
+    <div class="editor-split">
+        <div id="editor"></div>
+        <div id="resizer"></div>
+        <div id="preview" class="ss-prose"></div>
     </div>
 
     <div class="symbol-palette-items" role="listbox" aria-label="Symbols">

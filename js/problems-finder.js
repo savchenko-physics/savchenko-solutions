@@ -356,7 +356,7 @@
             + voteHtml
             + '<span class="pf-card-go" aria-hidden="true">→</span>'
             + '</div>'
-            + '<div class="pf-card-statement is-loading" data-statement-for="' + esc(r[COL.NAME]) + '">' + loadingText + '</div>'
+            + '<div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="' + esc(r[COL.NAME]) + '">' + loadingText + '</div>'
             + '</div>';
     }
 

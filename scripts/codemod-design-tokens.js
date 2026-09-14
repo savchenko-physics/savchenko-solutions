@@ -24,7 +24,7 @@ const path = require('path');
 const R = require('./lib/design-token-rules');
 
 const ROOT = path.join(__dirname, '..');
-const DEAD = new Set(['eng_page_old', 'post_en', 'post_ru', 'solutions_post', 'search_results', 'add_markdown',
+const DEAD = new Set(['eng_page_old', 'post_en', 'post_ru', 'solutions_post', 'search_results', 'add_markdown', 'post', 'profile',
     'default/modern_header', 'default/header_mobile', 'default/footer_en', 'default/footer_ru', 'partials/brainstorm_block']);
 const ALL_RULES = ['family', 'size', 'weight', 'color', 'radius', 'shadow', 'spacing'];
 

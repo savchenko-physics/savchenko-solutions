@@ -95,7 +95,9 @@ function getMathCss() {
         `  font-display: swap;\n  src: url(/css/vendor/fonts/files/${s.file}) format('woff2');\n` +
         `  unicode-range: ${unicodeRange};\n}`).join('\n\n');
     return adaptor.textContent(svgOutput.styleSheet(mathDoc)) +
-        '\n\n/* Glyphs the TeX font lacks (Cyrillic, µ, ², …): Computer Modern Unicode, laid out\n' +
+        '\n\n/* An inline formula and the punctuation after it never split across lines. */\n' +
+        '.mjx-nobr { white-space: nowrap; }\n' +
+        '\n/* Glyphs the TeX font lacks (Cyrillic, µ, ², …): Computer Modern Unicode, laid out\n' +
         '   server-side from lib/mathFallbackFont.json (scripts/build-math-fallback-font.py). */\n' +
         faces + '\n';
 }
@@ -198,7 +200,19 @@ function renderInlineDollar(s, render) {
             }
             if (close > i + 1) {
                 const svg = render(s.slice(i + 1, close));
-                if (svg) { out += svg; i = close + 1; continue; }
+                if (svg) {
+                    // Punctuation right after a formula stays on its line: a break between the
+                    // SVG and "." left lines starting with ". Определите" (/ru/1.1.1).
+                    const punct = s.slice(close + 1).match(/^[.,;:!?)\]»…]+/);
+                    if (punct) {
+                        out += `<span class="mjx-nobr">${svg}${punct[0]}</span>`;
+                        i = close + 1 + punct[0].length;
+                    } else {
+                        out += svg;
+                        i = close + 1;
+                    }
+                    continue;
+                }
             }
         }
         out += s[i]; i++;

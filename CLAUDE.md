@@ -7,8 +7,18 @@ SavchenkoSolutions.com is a collaborative platform for peer-reviewed solutions t
 All render-critical third-party libraries are **self-hosted**, not loaded from a CDN
 (see "What NOT to Do"). No page depends on an external origin to render.
 - `css/vendor/` — Bootstrap 5.3.3, Bootstrap Icons, Font Awesome 6.4.0 + 4.7.0,
-  CodeMirror 5.65.10 CSS, and `fonts/` (Inter, Roboto, STIX Two Math, Noto Serif,
-  JetBrains Mono — all subsets incl. Cyrillic, generated from the Google Fonts API).
+  CodeMirror 5.65.10 CSS, and `fonts/`. The site's own type lives in `fonts/h/`: content-hashed
+  WOFF2 files served with a one-year immutable cache (mounted before `/css` in `index.js`), built
+  by `scripts/build-fonts.py` from TeX Live (New Computer Modern, CM Unicode) and IBM's Plex
+  release zips, which also writes `fonts/site-fonts.css` and `lib/siteFonts.json`. Re-run it only
+  when a character set or a font changes; the build is reproducible. `fonts/stix-two-math.css` is
+  for the two symbol palettes (editor, `/tools/latex`). The older Inter/Roboto/Noto/JetBrains/LMR
+  files are unreferenced since 2026-09-14 and can be deleted in a later deploy.
+- **Every page gets its stylesheets from `views/default/site_styles.ejs` and nowhere else**
+  (fonts preloads, Bootstrap, vendor CSS, `bundle.css`, maths CSS), included once in `<head>`
+  before the page's own `<style>`, with what the page needs passed as data:
+  `include('default/site_styles', { ssStyles: { math: true, prose: true, icons: 'fa6' } })`.
+  `tests/site-styles.test.js` finds every rendered page and enforces it.
 - `js/vendor/` — Bootstrap JS, Popper, Chart.js, D3, marked, html2canvas, jQuery,
   CodeMirror JS + modes/addons.
 - MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`
@@ -19,10 +29,12 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   lays them out from that font's advance widths (`lib/mathFallbackFont.json`, built by
   `scripts/build-math-fallback-font.py` from TeX Live's cm-unicode). Before that the server
   guessed 0.6 em per letter in whatever serif the visitor had, and "10 кОм" lost half its "м"
-  on `/ru/upload` (2026-09-02). **Every page that shows server-rendered maths must link
-  `/css/mathjax.css?v=…`** — it carries MathJax's `overflow: visible` and the `@font-face`
-  rules; bump the `?v=` in the templates when `getMathCss()` changes (the route is served
-  with a week of max-age and `asset()` cannot hash a virtual file). `tests/math-fallback.test.js`.
+  on `/ru/upload` (2026-09-02). **Every page that shows server-rendered maths must pass
+  `ssStyles: { math: true }`** — `/css/mathjax.css` carries MathJax's `overflow: visible` and
+  the `@font-face` rules. Its `?v=` is the md5 of `getMathCss()` computed at boot
+  (`app.locals.mathCssVersion`), so there is nothing to bump. Server formulas are sized in `em`
+  at SS Text's x-height (0.431), not in `ex`, so they do not change size while the text font
+  loads. `tests/math-fallback.test.js`.
 - The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
   separate Express app on its own subdomain and would otherwise 404 on shared assets.
 - **Reactions** (chat and solution comments) have one vocabulary, `js/reactions.js`: six
@@ -130,21 +142,20 @@ problem, not a UI one; the `/admin/feedback` tab surfaces the backlog. The IP bl
 moved to the `blocked_ips` table (migration 002).
 
 ## Known Technical Debt
-- Dual Bootstrap: Bootstrap 5.3.3 AND Bootstrap 3.0.0 (local `/css/bootstrap.css`) loaded simultaneously (both self-hosted; neither is a CDN)
 - jQuery 1.10.1 still loaded on every page (nothing requires it)
-- **`npm run build:css` is a required step, not an optional one.** `main_site_header_head.ejs`
-  loads `/css/bundle.css`, which `scripts/build-css.js` concatenates from `design-system.css`
-  + `main_page.css` + `solutions.css`. Editing `design-system.css` without rebuilding ships
-  invisible CSS. Some pages (`404.ejs`, `solution_post.ejs`, `views/feedback/*`) link the
-  source files directly instead — an inconsistency worth resolving.
+- **`npm run build:css` is a required step, not an optional one.** Every page loads
+  `/css/bundle.css`, which `scripts/build-css.js` builds from `fonts/site-fonts.css`, the data
+  palettes in `js/palettes.js`, `design-system.css` and `main_page.css`. Editing either stylesheet
+  without rebuilding ships invisible CSS; `tests/site-styles.test.js` fails on a stale bundle.
 - Search scans filesystem on every query (no search index)
-- **`views/default/modern_footer.ejs` is included by 43 templates but NOT by nine of them,
-  including `solution_post.ejs`** — the most-visited page type on the site. Only
+- **`views/default/modern_footer.ejs` is not on every page** (the editor, the chat and admin
+  have none by design; solution pages have it since 2026-09-14). Only
   `views/default/main_site_header.ejs` is genuinely on every page, so anything that must
   appear site-wide belongs there.
 - Dead templates, zero includes: `modern_header.ejs`, `header_mobile.ejs`, `footer_en.ejs`,
-  `footer_ru.ejs`, `eng_page_old.ejs`, `profile.ejs`. `header.ejs` is a one-line alias for
-  `main_site_header.ejs`.
+  `footer_ru.ejs`, `eng_page_old.ejs`, `profile.ejs`, `post.ejs` (only the standalone
+  `markdownParser.js` and `profile.js`, which nothing requires, render the last two).
+  `header.ejs` is a one-line alias for `main_site_header.ejs`.
 - **Dead `en.json` / `ru.json` at the repo root**, unrelated to `locales/*.json` and loaded by
   nothing. Edit only the files in `locales/` — they are tab-indented, and `updateFiles: false`
   (`index.js:2522`) means hand edits are safe.
@@ -157,7 +168,13 @@ moved to the `blocked_ips` table (migration 002).
   964 users). Anything gated behind sign-in on this site collects nothing.
 
 ## Design System
-All new UI must follow these rules:
+All new UI must follow these rules. The system is the tokens in `css/design-system.css` §1
+(type, colour, space, radius, shadow, widths), the Bootstrap bridge in §2, base elements §3,
+reading type §4 and components §5; it was introduced by the September 2026 typography
+unification (plan and research: 39 font stacks, 110 sizes and 291 colours before). Use the
+tokens and components; `tests/design-rules.test.js` and `tests/design-tokens.test.js` check
+every declaration on every live page, and `scripts/codemod-design-tokens.js` maps literal
+values onto tokens (`--check` in CI-style runs, `/* ss-codemod: off */` to exempt a region).
 
 ### Colors
 - Primary navy: #1a1a2e
@@ -170,16 +187,34 @@ All new UI must follow these rules:
 - Success: #27ae60
 - Error: #c0392b
 
+In CSS always the tokens (`--ss-navy`, `--ss-text`, `--ss-text-secondary`, `--ss-link`,
+`--ss-rule`, `--ss-surface-alt`, …). #27ae60 is for fills only (2.9:1 as text): success *text*
+and white-on-green fills use `--ss-success-strong` (#1b7a43). Greys lighter than
+`--ss-text-secondary` (`--ss-text-tertiary`) are for placeholders, separators and icons, never
+content. Data colours (difficulty heat ramp, language states, activity, rank tiers) exist once,
+in `js/palettes.js`, and reach CSS as generated `--ss-heat-*` / `--ss-lang-*` variables.
+
 ### Typography
-- Headings: Inter, weight 600
-- Body: system font stack (-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif)
-- Solution content: Latin Modern Roman (already loaded)
-- Code: JetBrains Mono
+Four families, self-hosted, never a system font stack:
+- **SS Text** — New Computer Modern Book, the Computer Modern of Savchenko's 3rd edition and of
+  the server-rendered TeX: statements, solutions, prose, knowledge-page titles, problem numbers.
+- **SS Sans** — IBM Plex Sans (400, 600, italic): the whole interface.
+- **SS Mono** — IBM Plex Mono: code and the editor.
+- **SS Display** — CMU Sans Serif Demi Condensed (the book's title page): the wordmark and big
+  titles only. **SS Symbols** (NewCM Math) supplies the few glyphs Plex lacks, above all
+  Savchenko's ∗ — write it as `<sup class="ss-star">∗</sup>`.
+
+Exactly ten sizes: 12 13 14 16 18 20 24 28 32 40 (`--ss-fs-*`), used through role tokens
+(`--ss-text-label` 12, `-meta` 13, `-ui` 14, `-body`/`-input` 16, `-lead`/`-h3` 18, `-h2`,
+`-h1`, `-display`, `-title`, `-prose` 18→20 at 768px). Weights: interface 400/600, serif
+400/700. Line heights 1.2 / 1.35 / 1.5 / 1.6. Prose (`.ss-prose`) is ragged right with
+hyphenation and a 1em paragraph indent, as journals set text.
 
 ### Rules
-- No gradients anywhere
-- No shadows heavier than `0 1px 3px rgba(0,0,0,0.08)`
-- No border-radius larger than 8px
+- No gradients anywhere (hard-stop half fills that mark a language are data, not decoration)
+- No shadows other than `var(--ss-shadow)` (`0 1px 3px rgba(0,0,0,0.08)`)
+- No border-radius larger than 8px (`--ss-radius-sm` 4, `--ss-radius` 6, `--ss-radius-lg` 8);
+  50% only for avatars and dots; no `rounded-pill` / `rounded-4` classes
 - No emojis in the UI. The one exception is reactions: the pickers and chips under chat
   messages and solution comments show the vocabulary in `js/reactions.js` (six Unicode emoji
   and the community set in `img/emoji/`), and nothing else may borrow it
@@ -188,8 +223,14 @@ All new UI must follow these rules:
   semicolon; parts are joined with ` | `. Build them with `docTitle(...parts)` and pass any
   database or user text through `titleText()` (`lib/pageTitle.js`, both `app.locals`).
   `tests/page-titles.test.js` checks every template's source
-- Inputs: 40px height, border 1px solid #dee2e6, border-radius 6px
-- Buttons primary: background #1a1a2e, text #ffffff, border-radius 6px
+- Inputs: 40px height, border 1px solid #dee2e6, border-radius 6px, **16px text** (below that iOS
+  zooms on focus; `design-system.css` enforces it as a floor)
+- Buttons primary: background #1a1a2e, text #ffffff, border-radius 6px (Bootstrap `.btn-primary`
+  and `.btn-dark` are mapped onto this; `.btn-outline-dark` is the secondary button)
+- One focus style: `:focus-visible` 2px `--ss-link` outline; `outline: none` only as
+  `:focus:not(:focus-visible)`
+- Images in solutions carry width and height so nothing moves while they load; fallback font
+  faces are size-matched for the same reason
 - The site should feel like arXiv meets GitHub. Academic, clean, no-nonsense.
 
 ## Coding Standards
@@ -257,6 +298,13 @@ All new UI must follow these rules:
   the server and never let a script rewrite them — the statements table is the place for
   generated text.
 - Custom markdown image syntax: `![alt|WxH,scale%](../../img/folder/file)`
+- **Solutions are structured when displayed, never in the files.** `js/solution-structure.js`
+  (shared by `post.js` and the editor preview) turns the headings, in all nine spellings the
+  posts use, into typeset sections: the statement as a card, answers in a box (including the
+  397 posts that put the answer into the heading), the leading `$2.1.32.$` as the book's number
+  with ∗ from `problem_difficulty.starred`. `SS_STRUCTURE=off` in the environment turns it off
+  without a deploy. `transformImageMarkdown` drops the "К задаче N" caption on `statement.*`
+  figures, because the book's bitmap already carries it.
 - LaTeX inline: `$...$`, display: `$$...$$`
 
 ## What NOT to Do
@@ -283,7 +331,13 @@ All new UI must follow these rules:
   `tests/brainstorm.test.js:1-10`.
 - Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
   `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`,
-  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`.
+  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, and the design system's
+  `site-styles.test.js`, `site-fonts.test.js`, `design-tokens.test.js`, `design-rules.test.js`
+  and `solution-structure.test.js`.
+- Rendering is checked outside `npm test`: `scripts/qa/type_audit.py` renders every page type in
+  headless Chrome (families, sizes, overflow, layout shift, formula counts) and compares two runs
+  as contact sheets; `scripts/check-solution-structure.js` runs the solution transform over a
+  copy of the server's `posts/` with MathJax. Both write outside the repo.
 - There is **no test database**, so route handlers are not integration-tested. The house
   pattern is to export the pure decision logic from a module and test that
   (`parseProblemLinks`, `validateFeedback`), then say plainly in the file header what is left

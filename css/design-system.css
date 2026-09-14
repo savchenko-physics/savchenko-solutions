@@ -691,6 +691,21 @@ select,
 textarea {
   font-size: var(--ss-text-input) !important;
 }
+/* The browser's own file button, on the pages that show a bare file input (settings, upload). */
+input[type="file"] { font-size: var(--ss-text-ui); }
+input[type="file"]::file-selector-button {
+  min-height: var(--ss-control-sm);
+  margin-right: var(--ss-space-3);
+  padding: 0 var(--ss-space-3);
+  font: inherit;
+  font-weight: var(--ss-fw-strong);
+  color: var(--ss-text);
+  background-color: var(--ss-surface);
+  border: 1px solid var(--ss-rule-strong);
+  border-radius: var(--ss-radius);
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background-color: var(--ss-surface-hover); }
 ::selection { background: rgba(26, 82, 118, 0.18); }
 
 /* One focus style for everything a keyboard can reach. */

@@ -476,7 +476,7 @@ const transformImageMarkdown = (htmlContent) => {
     // Replace YouTube URL format with video container HTML
     htmlContent = htmlContent.replace(youtubeRegex, (match, youtubeUrl) => {
         return `<div class="video-container">
-                    <iframe allowfullscreen="" class="video" frameborder="0" src="${youtubeUrl}"></iframe>
+                    <iframe allowfullscreen="" class="video" frameborder="0" loading="lazy" title="YouTube" src="${youtubeUrl}"></iframe>
                 </div>`;
     });
 

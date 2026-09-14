@@ -34,16 +34,22 @@ const SIGNATURE = 'site_styles — the only place that emits';
 // Renders whose template name is a variable (index.js): the homepage and the guidelines.
 const DYNAMIC = ['eng_page', 'community_guidelines_en', 'community_guidelines_ru'];
 
+// The app's own modules: index.js and everything it requires, transitively. Standalone scripts
+// at the root (markdownParser.js, profile.js) render templates too, but no route reaches them.
 function routeFiles() {
-    const out = [];
-    for (const e of fs.readdirSync(ROOT, { withFileTypes: true })) {
-        if (e.isFile() && e.name.endsWith('.js')) out.push(path.join(ROOT, e.name));
-    }
-    for (const dir of ['lib', 'routes']) {
-        const d = path.join(ROOT, dir);
-        if (fs.existsSync(d)) for (const f of fs.readdirSync(d)) if (f.endsWith('.js')) out.push(path.join(d, f));
-    }
-    return out;
+    const seen = new Set();
+    const visit = (file) => {
+        if (seen.has(file)) return;
+        seen.add(file);
+        const src = fs.readFileSync(file, 'utf8');
+        for (const m of src.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) {
+            let target = path.resolve(path.dirname(file), m[1]);
+            if (!target.endsWith('.js') && fs.existsSync(`${target}.js`)) target += '.js';
+            if (target.endsWith('.js') && fs.existsSync(target) && !target.includes('node_modules')) visit(target);
+        }
+    };
+    visit(path.join(ROOT, 'index.js'));
+    return [...seen];
 }
 
 function renderedPages() {
@@ -192,7 +198,7 @@ test('design-system.css and main_page.css use no @layer and no nesting', () => {
 test('every live template compiles', () => {
     const failures = [];
     const templates = liveTemplates();
-    assert.ok(templates.length >= 80, `only ${templates.length} live templates`);
+    assert.ok(templates.length >= 75, `only ${templates.length} live templates`);
     for (const file of templates) {
         try {
             ejs.compile(fs.readFileSync(file, 'utf8'), { filename: file, views: [VIEWS] });

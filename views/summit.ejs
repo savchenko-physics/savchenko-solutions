@@ -12,579 +12,169 @@
   <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
   <link rel="icon" type="image/png" href="/img/logo.png" />
   <link rel="apple-touch-icon" href="/img/logo.png" />
-  
-  
-  <!-- Bootstrap 5 -->
   <%- include('default/site_styles') %>
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
-  
-  <!-- Google Fonts -->
-  
-  <!-- Custom CSS -->
-  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
-  
   <title><%= titleText(__('summit.title')) %></title>
-  
   <style>
-    :root {
-      --summit-primary: #28a745;
-      --summit-secondary: #004e89;
-      --summit-accent: #1a659e;
-      --summit-light: #f8f9fa;
-      --summit-dark: #1e2328;
-      --summit-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-      --summit-text: #2c3e50;
-      --summit-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      --summit-success: #28a745;
-    }
-
-    body {
-      font-family: var(--ss-font-ui);
-      line-height: 1.6;
-      color: var(--summit-text);
-      overflow-x: hidden;
-    }
-
+    /* The summit report: a navy title band, then plain sections on the text grid. */
     .summit-hero {
-      background: var(--summit-gradient);
-      min-height: 80vh;
-      display: flex;
-      align-items: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .summit-hero::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="var(--ss-surface)" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="var(--ss-surface)" opacity="0.05"/><circle cx="50" cy="10" r="0.5" fill="var(--ss-surface)" opacity="0.1"/><circle cx="10" cy="60" r="0.8" fill="var(--ss-surface)" opacity="0.08"/><circle cx="90" cy="30" r="0.6" fill="var(--ss-surface)" opacity="0.06"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-      animation: grain 20s infinite linear;
-    }
-
-    @keyframes grain {
-      0% { transform: translate(0, 0); }
-      100% { transform: translate(-100px, -100px); }
-    }
-
-    .summit-hero .container {
-      position: relative;
-      z-index: 2;
-    }
-
-    .summit-title {
-      font-size: var(--ss-fs-40);
-      font-weight: var(--ss-fw-strong);
+      background-color: var(--ss-navy);
       color: var(--ss-on-navy);
-      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      margin-bottom: var(--ss-space-4);
-      animation: slideInUp 1s ease-out;
+      padding-block: var(--ss-space-9);
     }
-
-    .summit-subtitle {
-      font-size: var(--ss-fs-20);
-      color: rgba(255, 255, 255, 0.9);
-      margin-bottom: var(--ss-space-7);
-      animation: slideInUp 1s ease-out 0.2s both;
-    }
-
-    .summit-success-badge {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: var(--ss-radius);
-      padding: var(--ss-space-4) var(--ss-space-7);
-      margin: var(--ss-space-7) 0;
+    .summit-hero .ss-kicker { color: var(--ss-on-navy-muted); }
+    .summit-hero .ss-display { color: var(--ss-on-navy); margin-bottom: var(--ss-space-3); }
+    .summit-hero .ss-lead { color: var(--ss-on-navy-muted); margin: 0 0 var(--ss-space-6); }
+    .summit-done {
       display: inline-block;
-      animation: slideInUp 1s ease-out 0.4s both;
-    }
-
-    .summit-success-badge h3 {
-      color: var(--ss-on-navy);
-      margin: 0;
-      font-size: var(--ss-fs-18);
-      font-weight: var(--ss-fw-strong);
-    }
-
-    .summit-stats {
-      display: flex;
-      gap: var(--ss-space-7);
-      justify-content: center;
-      margin-top: var(--ss-space-7);
-      animation: slideInUp 1s ease-out 0.6s both;
-      flex-wrap: wrap;
-    }
-
-    .stat-item {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border-radius: var(--ss-radius-lg);
-      padding: var(--ss-space-6);
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      min-width: 150px;
-    }
-
-    .stat-number {
-      font-size: var(--ss-fs-32);
+      margin: 0 0 var(--ss-space-7);
+      padding: var(--ss-space-1) var(--ss-space-3);
+      font-size: var(--ss-text-ui);
       font-weight: var(--ss-fw-strong);
       color: var(--ss-on-navy);
-      display: block;
+      border: 1px solid var(--ss-on-navy-rule);
+      border-radius: var(--ss-radius);
     }
-
-    .stat-label {
-      font-size: var(--ss-fs-14);
-      color: rgba(255, 255, 255, 0.8);
-      margin-top: var(--ss-space-2);
-    }
-
-    @keyframes slideInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .summit-section {
-      padding: var(--ss-space-10) 0;
-      position: relative;
-    }
-
-    .summit-section:nth-child(even) {
-      background: var(--summit-light);
-    }
-
-    .section-title {
-      font-size: var(--ss-fs-40);
-      font-weight: var(--ss-fw-strong);
-      text-align: center;
-      margin-bottom: var(--ss-space-9);
-      color: var(--summit-secondary);
-    }
-
-    .feature-card {
-      background: var(--ss-surface);
-      border-radius: var(--ss-radius-lg);
-      padding: var(--ss-space-8);
-      box-shadow: var(--ss-shadow);
-      margin-bottom: var(--ss-space-7);
-      transition: transform 0.3s ease;
-    }
-
-    .feature-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .feature-icon {
-      font-size: var(--ss-fs-40);
-      text-align: center;
-      margin-bottom: var(--ss-space-6);
-    }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: var(--ss-space-6);
-      margin-top: var(--ss-space-9);
-    }
-
-    .gallery-item {
-      position: relative;
-      border-radius: var(--ss-radius-lg);
-      overflow: hidden;
-      box-shadow: var(--ss-shadow);
-      transition: transform 0.3s ease;
-    }
-
-    .gallery-item:hover {
-      transform: scale(1.05);
-    }
-
-    .gallery-item img {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-    }
-
-    .gallery-caption {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    .summit-stats { display: flex; flex-wrap: wrap; gap: var(--ss-space-7); margin: 0; }
+    .summit-stats div { min-width: 96px; }
+    .summit-stats dt {
+      font-family: var(--ss-font-display);
+      font-weight: 600;
+      font-synthesis: none;
+      font-size: var(--ss-text-display);
+      line-height: var(--ss-lh-tight);
       color: var(--ss-on-navy);
-      padding: var(--ss-space-7) var(--ss-space-6) var(--ss-space-6);
-      font-size: var(--ss-fs-14);
     }
+    .summit-stats dd { margin: 0; font-size: var(--ss-text-meta); color: var(--ss-on-navy-muted); }
 
-    .testimonial-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: var(--ss-on-navy);
-      border-radius: var(--ss-radius-lg);
-      padding: var(--ss-space-7);
-      margin: var(--ss-space-4) 0;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .testimonial-card::before {
-      content: '"';
-      position: absolute;
-      top: -10px;
-      left: 20px;
-      font-size: var(--ss-fs-40);
-      opacity: 0.3;
-      font-family: var(--ss-font-text);
-    }
-
-    .impact-metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: var(--ss-space-7);
-      margin-top: var(--ss-space-9);
-    }
-
-    .metric-card {
-      background: var(--ss-surface);
-      border-radius: var(--ss-radius-lg);
-      padding: var(--ss-space-7);
-      text-align: center;
-      box-shadow: var(--ss-shadow);
-      border-left: 4px solid var(--summit-success);
-    }
-
-    .metric-number {
-      font-size: var(--ss-fs-40);
-      font-weight: var(--ss-fw-strong);
-      color: var(--summit-success);
-      margin-bottom: var(--ss-space-2);
-    }
-
-    .metric-label {
-      color: var(--summit-text);
-      font-weight: var(--ss-fw-strong);
-    }
-
-    .back-to-main {
-      position: fixed;
-      top: 2rem;
-      left: 2rem;
-      background: rgba(255,255,255,0.9);
-      color: var(--summit-secondary);
-      border: none;
-      padding: var(--ss-space-4) var(--ss-space-6);
-      border-radius: var(--ss-radius-lg);
-      text-decoration: none;
-      font-weight: var(--ss-fw-strong);
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s ease;
-    }
-
-    .back-to-main:hover {
-      background: var(--ss-surface);
-      color: var(--summit-secondary);
-      text-decoration: none;
-      transform: translateY(-2px);
-    }
-
-    @media (max-width: 768px) {
-      .summit-title {
-        font-size: var(--ss-fs-40);
-      }
-      
-      .summit-stats {
-        gap: var(--ss-space-4);
-      }
-      
-      .stat-item {
-        min-width: 120px;
-        padding: var(--ss-space-4);
-      }
-      
-      .stat-number {
-        font-size: var(--ss-fs-24);
-      }
-
-      .back-to-main {
-        top: 1rem;
-        left: 1rem;
-        padding: var(--ss-space-3) var(--ss-space-5);
-      }
-    }
+    .summit-section { padding-block: var(--ss-space-8) 0; }
+    .summit-section > h2 { margin-bottom: var(--ss-space-5); }
+    .summit-section > p { max-width: 42em; }
+    .summit-grid { display: grid; gap: var(--ss-space-5); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .summit-grid .ss-card h3 { font-size: var(--ss-text-h3); margin-bottom: var(--ss-space-3); }
+    .summit-grid ul { margin: 0; padding-left: 1.2em; }
+    .summit-grid li + li { margin-top: var(--ss-space-2); }
+    .summit-guests { display: grid; gap: var(--ss-space-3); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); list-style: none; padding: 0; margin: 0; }
+    .summit-guests li { padding: var(--ss-space-3) var(--ss-space-4); border-left: 3px solid var(--ss-navy); background: var(--ss-surface-alt); }
+    .summit-gallery { display: grid; gap: var(--ss-space-5); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .summit-gallery figure { margin: 0; }
+    .summit-gallery img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--ss-radius); }
+    .summit-gallery figcaption { margin-top: var(--ss-space-2); font-size: var(--ss-text-meta); color: var(--ss-text-secondary); }
+    .summit-quotes { display: grid; gap: var(--ss-space-5); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin: 0; padding: 0; list-style: none; }
+    .summit-quotes blockquote { margin: 0; padding-left: var(--ss-space-4); border-left: 3px solid var(--ss-rule); font-family: var(--ss-font-text); font-size: var(--ss-text-lead); line-height: var(--ss-lh-prose); }
+    .summit-list { margin: 0; padding-left: 1.4em; max-width: 42em; }
+    .summit-list li + li { margin-top: var(--ss-space-2); }
+    .summit-cta { margin-top: var(--ss-space-6); }
   </style>
   <script src="/js/analytics.js"></script>
 </head>
 
 <body>
-  <!-- Back to Main Button -->
-  <a href="/ru" class="btn back-to-main">
-    ← На главную
-  </a>
+  <%- include('default/main_site_header') %>
 
-  <!-- Hero Section -->
-  <section class="summit-hero">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-lg-8 mx-auto text-center">
-          <h1 class="summit-title"><%= __('summit.shortTitle') %></h1>
-          <p class="summit-subtitle"><%= __('summit.subtitle') %></p>
-          
-          <div class="summit-success-badge">
-            <h3>✅ <%= __('summit.completed.title') %></h3>
-          </div>
-
-          <div class="summit-stats">
-            <div class="stat-item">
-              <span class="stat-number">40+</span>
-              <div class="stat-label">Участников</div>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">3</span>
-              <div class="stat-label">Часа</div>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">100%</span>
-              <div class="stat-label">Успех</div>
-            </div>
-          </div>
-        </div>
+  <main>
+    <section class="summit-hero">
+      <div class="ss-container">
+        <div class="ss-kicker"><%= __('summit.date') %> · <%= __('summit.location') %></div>
+        <h1 class="ss-display"><%= __('summit.shortTitle') %></h1>
+        <p class="ss-lead"><%= __('summit.subtitle') %></p>
+        <div class="summit-done"><%= __('summit.completed.title') %></div>
+        <dl class="summit-stats">
+          <div><dt>40+</dt><dd>Участников</dd></div>
+          <div><dt>3</dt><dd>Часа</dd></div>
+          <div><dt>100%</dt><dd>Успех</dd></div>
+        </dl>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Event Summary Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.completed.subtitle') %></h2>
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <div class="feature-card text-center">
-            <p class="lead" style="font-size: var(--ss-fs-20); color: var(--summit-text); margin-bottom: var(--ss-space-7);">
-              <%= __('summit.completed.duration') %>
-            </p>
-            <p style="font-size: var(--ss-fs-18); color: var(--summit-text);">
-              <%= __('summit.completed.attendance') %>
-            </p>
+    <div class="ss-container ss-page">
+      <section class="summit-section">
+        <h2><%= __('summit.completed.subtitle') %></h2>
+        <p class="ss-lead"><%= __('summit.completed.duration') %></p>
+        <p><%= __('summit.completed.attendance') %></p>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.completed.highlights') %></h2>
+        <div class="summit-grid">
+          <div class="ss-card">
+            <h3>Технологические Инновации</h3>
+            <ul>
+              <% __('summit.completed.topics').slice(0, 4).forEach(topic => { %><li><%= topic %></li><% }); %>
+            </ul>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Key Highlights Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.completed.highlights') %></h2>
-      <div class="row">
-        <div class="col-md-6 mb-4">
-          <div class="feature-card">
-            <div class="feature-icon">🤖</div>
-            <h4>Технологические Инновации</h4>
-            <ul class="list-unstyled">
-              <% __('summit.completed.topics').slice(0, 4).forEach(topic => { %>
-                <li style="margin: var(--ss-space-3) 0; padding-left: var(--ss-space-6); position: relative;">
-                  <span style="position: absolute; left: 0; color: var(--summit-success);">•</span>
-                  <%= topic %>
-                </li>
-              <% }); %>
+          <div class="ss-card">
+            <h3>Образовательные Инициативы</h3>
+            <ul>
+              <% __('summit.completed.topics').slice(4).forEach(topic => { %><li><%= topic %></li><% }); %>
             </ul>
           </div>
         </div>
-        <div class="col-md-6 mb-4">
-          <div class="feature-card">
-            <div class="feature-icon">🚀</div>
-            <h4>Образовательные Инициативы</h4>
-            <ul class="list-unstyled">
-              <% __('summit.completed.topics').slice(4).forEach(topic => { %>
-                <li style="margin: var(--ss-space-3) 0; padding-left: var(--ss-space-6); position: relative;">
-                  <span style="position: absolute; left: 0; color: var(--summit-success);">•</span>
-                  <%= topic %>
-                </li>
-              <% }); %>
-            </ul>
-          </div>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.completed.specialGuests') %></h2>
+        <ul class="summit-guests">
+          <% __('summit.completed.guests').forEach(guest => { %><li><%= guest %></li><% }); %>
+        </ul>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.gallery.title') %></h2>
+        <p class="ss-meta"><%= __('summit.gallery.subtitle') %></p>
+        <div class="summit-gallery">
+          <figure>
+            <img src="/img/summit/summit_1.avif" alt="Summit Group Photo" loading="lazy" width="800" height="600">
+            <figcaption>Общая фотография участников саммита у входа в парк</figcaption>
+          </figure>
+          <figure>
+            <img src="/img/summit/summit_2.avif" alt="Summit Discussions" loading="lazy" width="800" height="600">
+            <figcaption>Активные дискуссии о будущем физического образования</figcaption>
+          </figure>
+          <figure>
+            <img src="/img/summit/summit_3.avif" alt="Networking" loading="lazy" width="800" height="600">
+            <figcaption>Networking и обмен контактами между участниками</figcaption>
+          </figure>
+          <figure>
+            <img src="/img/summit/summit_4.avif" alt="Park Walk" loading="lazy" width="800" height="600">
+            <figcaption>Прогулка по живописному парку "Крылатские холмы"</figcaption>
+          </figure>
         </div>
-      </div>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.completed.activities') %></h2>
+        <ul class="summit-list">
+          <% __('summit.completed.activitiesList').forEach(activity => { %><li><%= activity %></li><% }); %>
+        </ul>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.completed.feedback') %></h2>
+        <ul class="summit-quotes">
+          <% __('summit.completed.testimonials').forEach(testimonial => { %><li><blockquote><%= testimonial %></blockquote></li><% }); %>
+        </ul>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.impact.title') %></h2>
+        <p><%= __('summit.impact.description') %></p>
+        <ol class="summit-list">
+          <% __('summit.impact.achievements').forEach(achievement => { %><li><%= achievement %></li><% }); %>
+        </ol>
+      </section>
+
+      <section class="summit-section">
+        <h2><%= __('summit.completed.futureEvents') %></h2>
+        <ul class="summit-list">
+          <% __('summit.completed.futurePlans').forEach(plan => { %><li><%= plan %></li><% }); %>
+        </ul>
+        <a href="https://t.me/savchenko_summit_2025" target="_blank" rel="noopener" class="btn btn-dark btn-lg summit-cta">Присоединиться к сообществу</a>
+      </section>
     </div>
-  </section>
+  </main>
 
-  <!-- Distinguished Guests Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.completed.specialGuests') %></h2>
-      <div class="row">
-        <% __('summit.completed.guests').forEach((guest, index) => { %>
-          <div class="col-md-6 mb-4">
-            <div class="feature-card">
-              <div class="feature-icon">
-                <% if (index === 0) { %>🎓
-                <% } else if (index === 1) { %>🏆
-                <% } else if (index === 2) { %>🥇
-                <% } else { %>⭐
-                <% } %>
-              </div>
-              <h5 style="color: var(--summit-secondary); margin-bottom: var(--ss-space-4);"><%= guest %></h5>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    </div>
-  </section>
-
-  <!-- Photo Gallery Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.gallery.title') %></h2>
-      <p class="text-center text-muted mb-4"><%= __('summit.gallery.subtitle') %></p>
-      <div class="gallery-grid">
-        <div class="gallery-item">
-          <img src="/img/summit/summit_1.avif" alt="Summit Group Photo">
-          <div class="gallery-caption">
-            Общая фотография участников саммита у входа в парк
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="/img/summit/summit_2.avif" alt="Summit Discussions">
-          <div class="gallery-caption">
-            Активные дискуссии о будущем физического образования
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="/img/summit/summit_3.avif" alt="Networking">
-          <div class="gallery-caption">
-            Networking и обмен контактами между участниками
-          </div>
-        </div>
-        <div class="gallery-item">
-          <img src="/img/summit/summit_4.avif" alt="Park Walk">
-          <div class="gallery-caption">
-            Прогулка по живописному парку "Крылатские холмы"
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Activities Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.completed.activities') %></h2>
-      <div class="row">
-        <% __('summit.completed.activitiesList').forEach((activity, index) => { %>
-          <div class="col-md-4 mb-4">
-            <div class="feature-card text-center">
-              <div class="feature-icon">
-                <% const icons = ['👥', '💡', '🌊', '💻', '🤝', '📸']; %>
-                <%= icons[index % icons.length] %>
-              </div>
-              <p style="font-size: var(--ss-fs-16); color: var(--summit-text);"><%= activity %></p>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    </div>
-  </section>
-
-  <!-- Testimonials Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.completed.feedback') %></h2>
-      <div class="row">
-        <% __('summit.completed.testimonials').forEach(testimonial => { %>
-          <div class="col-md-4 mb-4">
-            <div class="testimonial-card">
-              <p style="font-style: italic; margin: 0;"><%= testimonial %></p>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    </div>
-  </section>
-
-  <!-- Impact and Results Section -->
-  <section class="summit-section">
-    <div class="container">
-      <h2 class="section-title"><%= __('summit.impact.title') %></h2>
-      <div class="row justify-content-center">
-        <div class="col-lg-8">
-          <div class="feature-card text-center">
-            <p class="lead" style="font-size: var(--ss-fs-18); color: var(--summit-text); margin-bottom: var(--ss-space-7);">
-              <%= __('summit.impact.description') %>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="impact-metrics">
-        <% __('summit.impact.achievements').forEach((achievement, index) => { %>
-          <div class="metric-card">
-            <div class="metric-number"><%= index + 1 %></div>
-            <div class="metric-label"><%= achievement %></div>
-          </div>
-        <% }); %>
-      </div>
-    </div>
-  </section>
-
-  <!-- Future Plans Section -->
-  <section class="summit-section" style="background: var(--summit-gradient); color: var(--ss-on-navy);">
-    <div class="container text-center">
-      <h2 style="font-size: var(--ss-fs-40); margin-bottom: var(--ss-space-6); color: var(--ss-on-navy);">
-        <%= __('summit.completed.futureEvents') %>
-      </h2>
-      
-      <div class="row">
-        <% __('summit.completed.futurePlans').forEach(plan => { %>
-          <div class="col-md-4 mb-4">
-            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: var(--ss-radius-lg); padding: var(--ss-space-7); border: 1px solid rgba(255, 255, 255, 0.2);">
-              <p style="margin: 0; font-size: var(--ss-fs-18);"><%= plan %></p>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-
-      <div class="row justify-content-center mt-4">
-        <div class="col-auto">
-          <a href="https://t.me/savchenko_summit_2025" target="_blank" class="btn btn-light btn-lg px-4 py-3" style="color: var(--summit-success); font-weight: var(--ss-fw-strong);">
-            Присоединиться к сообществу
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <script>
-    // Add some smooth scrolling animations
-    document.addEventListener('DOMContentLoaded', () => {
-      const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      };
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-          }
-        });
-      }, observerOptions);
-
-      document.querySelectorAll('.feature-card, .gallery-item, .testimonial-card').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
-      });
-    });
-  </script>
+  <%- include('default/modern_footer', { lang: 'ru' }) %>
+  <%- include('default/main_site_search_script') %>
 </body>
-</html> 
+</html>

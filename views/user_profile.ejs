@@ -1262,16 +1262,18 @@
         /* ── Skeleton ── */
 
         .skeleton {
-            background: linear-gradient(90deg, #eceff2, #f3f5f7, #eceff2);
-            background-size: 200% 100%;
-            animation: pulse 1.2s linear infinite;
+            background: var(--ss-surface-hover);
+            animation: ss-skeleton 1.4s ease-in-out infinite;
             border-radius: var(--ss-radius-sm);
             color: transparent;
         }
 
-        @keyframes pulse {
-            0% { background-position: 0% 0%; }
-            100% { background-position: -200% 0%; }
+        @keyframes ss-skeleton {
+            50% { opacity: 0.55; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .skeleton { animation: none; }
         }
 
         /* ── Responsive ── */

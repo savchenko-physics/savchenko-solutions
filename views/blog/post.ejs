@@ -170,13 +170,15 @@
         .blog-post-header {
             margin-bottom: var(--ss-space-6);
         }
+        /* A post is a typeset article: its title in SS Text Bold, like a knowledge page (.ss-title). */
         .blog-post-header h1 {
-            font-family: var(--ss-font-ui);
-            font-size: var(--ss-fs-28);
-            font-weight: var(--ss-fw-strong);
-            color: var(--ss-text);
-            line-height: 1.25;
-            letter-spacing: -0.01em;
+            font-family: var(--ss-font-text);
+            font-size: var(--ss-text-title);
+            font-weight: var(--ss-fw-text-bold);
+            color: var(--ss-heading);
+            line-height: var(--ss-lh-tight);
+            letter-spacing: 0;
+            text-wrap: balance;
             margin: 0 0 var(--ss-space-3) 0;
         }
         .blog-author-info {
@@ -594,10 +596,7 @@
 
         @media (max-width: 768px) {
             .blog-post-container { padding: var(--ss-space-3) var(--ss-space-3) var(--ss-space-6); }
-            .blog-post-header h1 { font-size: var(--ss-fs-24); }
-            .blog-content { font-size: var(--ss-fs-16); line-height: 1.65; }
-            .blog-content h2 { font-size: var(--ss-fs-20); margin-top: var(--ss-space-6); }
-            .blog-content h3 { font-size: var(--ss-fs-16); }
+            .blog-content h2 { margin-top: var(--ss-space-6); }
             .blog-content hr { margin: var(--ss-space-5) 0; }
             .blog-post-nav { flex-direction: column; }
             .blog-post-nav a { max-width: 100%; }

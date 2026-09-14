@@ -958,6 +958,13 @@
             margin: 0 var(--ss-space-1);
         }
 
+        /* Markdown inside comments (renderCommentMarkdown): headings a step above the text, never larger. */
+        .comment-content .cm-h { font-weight: var(--ss-fw-strong); line-height: var(--ss-lh-snug); margin: 0.5em 0 0.25em; }
+        .comment-content .cm-h2 { font-size: var(--ss-fs-18); }
+        .comment-content .cm-h3,
+        .comment-content .cm-h4 { font-size: var(--ss-text-body); }
+        .comment-content .cm-quote { border-left: 3px solid var(--ss-rule); padding-left: var(--ss-space-3); margin: var(--ss-space-1) 0; color: var(--ss-text-secondary); }
+        .comment-content .cm-list { margin: var(--ss-space-1) 0; padding-left: 1.5em; }
         .comment-content code {
             background: var(--ss-surface-hover);
             padding: 1px var(--ss-space-1);
@@ -2164,7 +2171,7 @@
                 if (headingMatch) {
                     if (inList) { output.push('</' + listType + '>'); inList = false; }
                     const level = headingMatch[1].length + 1;
-                    output.push('<h' + level + ' style="font-size:' + (level === 2 ? '16' : level === 3 ? '15' : '14') + 'px;font-weight:var(--ss-fw-strong);margin:0.5em 0 0.25em;">' + headingMatch[2] + '</h' + level + '>');
+                    output.push('<h' + level + ' class="cm-h cm-h' + level + '">' + headingMatch[2] + '</h' + level + '>');
                     continue;
                 }
 
@@ -2172,7 +2179,7 @@
                 const quoteMatch = line.match(/^&gt;\s?(.*)$/);
                 if (quoteMatch) {
                     if (inList) { output.push('</' + listType + '>'); inList = false; }
-                    output.push('<blockquote style="border-left:3px solid var(--ss-rule);padding-left:0.75em;margin:0.25em 0;color:var(--ss-text-secondary);">' + (quoteMatch[1] || '') + '</blockquote>');
+                    output.push('<blockquote class="cm-quote">' + (quoteMatch[1] || '') + '</blockquote>');
                     continue;
                 }
 
@@ -2181,7 +2188,7 @@
                 if (ulMatch) {
                     if (!inList || listType !== 'ul') {
                         if (inList) output.push('</' + listType + '>');
-                        output.push('<ul style="margin:0.25em 0;padding-left:1.5em;">');
+                        output.push('<ul class="cm-list">');
                         inList = true; listType = 'ul';
                     }
                     output.push('<li>' + ulMatch[1] + '</li>');
@@ -2193,7 +2200,7 @@
                 if (olMatch) {
                     if (!inList || listType !== 'ol') {
                         if (inList) output.push('</' + listType + '>');
-                        output.push('<ol style="margin:0.25em 0;padding-left:1.5em;">');
+                        output.push('<ol class="cm-list">');
                         inList = true; listType = 'ol';
                     }
                     output.push('<li>' + olMatch[1] + '</li>');
