@@ -38,7 +38,7 @@ const renderContributorPage = require('./contributorPage');
 const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
-const { getOnlineUsernames } = require("./lib/presence");
+const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { sendEmail } = require("./email");
 const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
 
@@ -2801,8 +2801,30 @@ const homeWidgetCache = new Map();   // lang -> { at, value }
 
 async function getHomeWidgets(lang) {
     const hit = homeWidgetCache.get(lang);
-    if (hit && Date.now() - hit.at < HOME_WIDGET_TTL_MS) return hit.value;
+    const widgets = (hit && Date.now() - hit.at < HOME_WIDGET_TTL_MS) ? hit.value : await loadHomeWidgets(lang);
+    return withPeopleNow(widgets);
+}
 
+// The faces, names and online dots in those widgets are not part of the minute. They are
+// read fresh for every page (getPeopleNow, lib/presence.js): the newest members are listed
+// here, and someone who has just uploaded a picture should find it on the homepage at once,
+// not a minute later. One query, for sixteen people.
+async function withPeopleNow(widgets) {
+    const now = await getPeopleNow(pool, [...widgets.topAuthors, ...widgets.recentContributors].map((p) => p.username));
+    return {
+        ...widgets,
+        topAuthors: widgets.topAuthors.map((author) => {
+            const fresh = now.get(author.username);
+            return fresh ? { ...author, profile_picture: fresh.profilePicture, is_online: fresh.isOnline } : author;
+        }),
+        recentContributors: widgets.recentContributors.map((member) => {
+            const fresh = now.get(member.username);
+            return fresh ? { ...member, full_name: fresh.fullName, profile_picture: fresh.profilePicture } : member;
+        }),
+    };
+}
+
+async function loadHomeWidgets(lang) {
     const [recentContributions, topAuthors, solutionProgress, challengeWidget, recentContributors] =
         await Promise.all([
             getRecentContributions(10),
