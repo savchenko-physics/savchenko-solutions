@@ -364,9 +364,9 @@
           %>
           <div class="chapter-card<%= chapterIndex === chapters.length - 1 ? ' chapter-card--last' : '' %><%= chapterIndex === chapters.length - 2 ? ' chapter-card--penultimate' : '' %>" id="ch-<%= chNum %>">
             <div class="chapter-card-header" data-chapter="<%= chNum %>" role="button" tabindex="0" aria-expanded="false" aria-controls="ch-<%= chNum %>-panel">
-              <div class="d-flex align-items-start gap-3">
+              <div class="chapter-card-row">
                 <span class="chapter-num"><%= chNum %></span>
-                <div class="flex-grow-1">
+                <div class="chapter-card-text">
                   <div class="chapter-card-name"><%= chapter.title %></div>
                   <% if (lang === 'ru') { %>
                     <%
@@ -379,11 +379,11 @@
                       <div class="chapter-mini-bar-fill" style="width: <%= chPct %>%;"></div>
                     </div>
                     <span class="chapter-card-count"><%= chSolved %> / <%= chTotal %> <%= lang === 'ru' ? 'решено' : 'solved' %></span>
+                    <svg class="chapter-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M4 6l4 4 4-4" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                   </div>
                 </div>
-                <svg class="chapter-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 6l4 4 4-4" stroke="#6c757d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
               </div>
             </div>
           </div>
@@ -1582,10 +1582,8 @@
       grid-template-columns: 1fr;
       gap: var(--ss-space-2);
       /* dense: an open chapter's panel takes the next full row and the cards after it fill
-         the rest of the card's own row. start: a card is as tall as its own title, not as
-         tall as the longest title in its row. */
+         the rest of the card's own row. */
       grid-auto-flow: row dense;
-      align-items: start;
       /* No container background: with 14 chapters the trailing cells of the last row
          would otherwise show as grey voids. Each card carries its own border. */
     }
@@ -1606,22 +1604,44 @@
     /* The open card stays in its cell, marked; its sections open in the row below. */
     .chapter-card.open { border-color: var(--ss-navy); }
     .chapter-card.open .chapter-card-header { background: var(--ss-surface-alt); }
+    /* Cards in a row share one height and their progress bars sit on one line at the
+       bottom; the chevron rides in that bar row, so the title gets the card's full width —
+       at four columns (a 1600px window) "Движение заряженных частиц в электрическом поле"
+       took three lines beside a top-right chevron, and every other card in its row showed
+       the difference as empty space. */
     .chapter-card {
+      display: flex;
+      flex-direction: column;
       background: var(--ss-surface);
       border: 1px solid var(--ss-rule);
       border-radius: var(--ss-radius-lg);
       overflow: hidden;
     }
     .chapter-card-header {
+      flex: 1 0 auto;
+      display: flex;
+      flex-direction: column;
       padding: var(--ss-space-4) var(--ss-space-4);
       cursor: pointer;
       user-select: none;
       transition: background-color 0.15s ease;
     }
+    .chapter-card-row {
+      flex: 1 0 auto;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--ss-space-3);
+    }
+    .chapter-card-text {
+      flex: 1 1 auto;
+      min-width: 0;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+    }
     .chapter-card-header:hover {
       background: var(--ss-surface-alt);
     }
-    .chapter-card-header .flex-grow-1 { min-width: 0; }
     .chapter-num {
       display: flex;
       align-items: center;
@@ -1654,7 +1674,8 @@
       display: flex;
       align-items: center;
       gap: var(--ss-space-2);
-      margin-top: var(--ss-space-2);
+      margin-top: auto;
+      padding-top: var(--ss-space-2);
     }
     .chapter-mini-bar {
       flex: 1;
@@ -1677,7 +1698,6 @@
     .chapter-chevron {
       flex-shrink: 0;
       transition: transform 0.2s ease;
-      margin-top: var(--ss-space-1);
     }
     .chapter-card.open .chapter-chevron {
       transform: rotate(180deg);

@@ -101,7 +101,9 @@
         .editor-split { display: flex; padding-top: var(--ss-space-6); height: calc(100vh - 32px - 40px); overflow: hidden; }
         .editor-split > #editor { flex: 0 0 calc(50% - 2.5px); width: auto; min-width: 100px; height: 100%; }
         .editor-split > #resizer { flex: 0 0 5px; height: 100%; }
-        .editor-split > #preview { flex: 0 0 calc(50% - 2.5px); width: auto; min-width: 100px; height: 100%; padding: var(--ss-space-4) var(--ss-space-9); }
+        /* The preview uses its whole pane, like the published page: .ss-prose's reading measure
+           (34em) and 48px side padding left a third of it empty. */
+        .editor-split > #preview { flex: 0 0 calc(50% - 2.5px); width: auto; max-width: none; min-width: 100px; height: 100%; padding: var(--ss-space-4) var(--ss-space-5); }
         /* On a phone half of 390px left the preview ~110px of text and every other word was cut.
            Stack them: the source on top, the typeset preview under it. */
         @media (max-width: 767.98px) {
@@ -580,7 +582,9 @@
             right: 0;
             height: 40px;
             background-color: var(--ss-navy);
-            border-bottom: 1px solid #e5e7eb;
+            /* No light rule here: on the navy bar it drew a white line between the bar and the
+               toolbar under it. */
+            border-bottom: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
