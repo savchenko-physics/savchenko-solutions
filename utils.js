@@ -484,10 +484,15 @@ const transformImageMarkdown = (htmlContent) => {
     const regex = /!\[(.*?)?\|(.*?x.*?)?,?(\d+%)?\]\(\.\.\/\.\.\/img\/(.*?)\/(.*?)\)/g;
 
     return htmlContent.replace(regex, (match, altText = "", dimensions, scale, folder, filename) => {
-        // "|507x327, 26%": the file's own size, then the display width as a share of 600px.
+        // "|507x327, 26%": the file's own size, then the display width as a share of 800px.
+        // The basis was 600px while the solution column was narrow; on the full-width page a
+        // scanned solution at 100% sat at 600px in a 1000px+ column (/ru/11.2.16). An image is
+        // never drawn wider than its file, except that none gets smaller than it was at 600px.
         const [w, h] = String(dimensions || "").split("x").map((v) => parseInt(v, 10));
         const natural = w > 0 && h > 0;
-        const displayWidth = scale ? Math.round(600 * (parseInt(scale, 10) / 100)) : null;
+        const pct = scale ? parseInt(scale, 10) / 100 : 0;
+        const displayWidth = scale ? Math.round(800 * pct) : null;
+        const maxWidth = displayWidth && natural ? Math.max(w, Math.round(600 * pct)) : null;
 
         // Width and height attributes let the browser reserve the figure's box before the file
         // arrives; without them every lazy statement figure pushed the solution down as it loaded
@@ -496,7 +501,9 @@ const transformImageMarkdown = (htmlContent) => {
         const sizeAttrs = displayWidth
             ? `width="${displayWidth}"${natural ? ` height="${Math.round(displayWidth * h / w)}"` : ""}`
             : (natural ? `width="${w}" height="${h}"` : `width="100%"`);
-        const sizeStyle = displayWidth ? `width: min(${displayWidth}px, 100%); height: auto;` : "width: 100%; height: auto;";
+        const sizeStyle = displayWidth
+            ? `width: min(${displayWidth}px, 100%);${maxWidth && maxWidth < displayWidth ? ` max-width: ${maxWidth}px;` : ""} height: auto;`
+            : "width: 100%; height: auto;";
 
         const webpFilename = filename.replace(/\.(jpg|jpeg|png)$/i, '.webp');
         const hasWebpVariant = /\.(jpg|jpeg|png)$/i.test(filename);

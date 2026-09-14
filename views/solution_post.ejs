@@ -83,28 +83,31 @@
             line-height: 1.6;
         }
 
-        /* Main layout — a paper page, not a card on a card: the solution column at a reading
-           measure and the section rail beside it, centred at the site's content width. The
-           full-width layout that preceded this (2026-07) set 116 Russian characters per line;
-           the column now holds about 67, with .ss-prose capping the measure at 34em. */
+        /* Main layout: the solution fills the screen and the section rail sits beside it. The
+           owner widened this page in 2026-07 (a 1400px cap left 30% of a 1920px screen empty);
+           the type unification briefly centred it at 1200px with a 46rem column, which on
+           /ru/11.2.16 left 328px of dead margin a side and a 164px gap. Back to full width, with
+           a cap only for ultra-wide monitors, where lines would otherwise run past 200 characters. */
         .main-container {
             width: 100%;
-            max-width: calc(var(--ss-w-content) + 2 * var(--ss-gutter));
+            max-width: 1920px;
             margin: 0 auto;
-            padding: var(--ss-space-5) var(--ss-gutter) var(--ss-space-9);
+            padding: var(--ss-space-4) var(--ss-space-4) var(--ss-space-9);
             display: grid;
             grid-template-columns: minmax(0, 1fr);
-            gap: var(--ss-space-7);
+            gap: var(--ss-space-6);
         }
         @media (min-width: 992px) {
             .main-container {
-                grid-template-columns: minmax(0, 46rem) 300px;
-                justify-content: space-between;
-                gap: var(--ss-space-9);
+                padding-inline: var(--ss-space-5);
+                /* The rail flexes rather than being pinned: a fixed 320px pushed small laptops at
+                   992px into horizontal overflow. */
+                grid-template-columns: minmax(0, 1fr) clamp(260px, 20vw, 320px);
+                gap: var(--ss-space-6);
             }
         }
-        /* The column is the measure (46rem ≈ 70 characters of SS Text at 20px), so the prose
-           fills it and the title, answer box and comments share one right edge. */
+        /* The prose fills the column, so the title, statement card, answer box and comments
+           share one right edge. */
         .content-section .ss-prose { max-width: none; }
 
         .content-section {
@@ -114,12 +117,12 @@
 
         /* Title block: breadcrumb, "Задача N∗" in SS Text Bold, then navigation and actions. */
         .solution-head {
-            padding-bottom: var(--ss-space-4);
-            margin-bottom: var(--ss-space-5);
+            padding-bottom: var(--ss-space-3);
+            margin-bottom: var(--ss-space-4);
             border-bottom: 1px solid var(--ss-rule);
         }
         .solution-title {
-            margin: 0 0 var(--ss-space-3);
+            margin: 0 0 var(--ss-space-2);
         }
         .solution-title .ss-num { font-weight: inherit; }
         .solution-bar {
@@ -147,7 +150,7 @@
             justify-content: space-between;
             align-items: center;
             padding: var(--ss-space-3) 0;
-            margin-top: var(--ss-space-7);
+            margin-top: var(--ss-space-6);
             border-top: 1px solid var(--ss-rule);
         }
         .problem-nav-link {

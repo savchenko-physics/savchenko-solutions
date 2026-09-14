@@ -362,8 +362,8 @@
             });
             const chPct = chTotal > 0 ? ((chSolved / chTotal) * 100).toFixed(0) : '0';
           %>
-          <div class="chapter-card" id="ch-<%= chNum %>">
-            <div class="chapter-card-header" data-chapter="<%= chNum %>">
+          <div class="chapter-card<%= chapterIndex === chapters.length - 1 ? ' chapter-card--last' : '' %><%= chapterIndex === chapters.length - 2 ? ' chapter-card--penultimate' : '' %>" id="ch-<%= chNum %>">
+            <div class="chapter-card-header" data-chapter="<%= chNum %>" role="button" tabindex="0" aria-expanded="false" aria-controls="ch-<%= chNum %>-panel">
               <div class="d-flex align-items-start gap-3">
                 <span class="chapter-num"><%= chNum %></span>
                 <div class="flex-grow-1">
@@ -372,7 +372,7 @@
                     <%
                       const enChapterNames = ['Kinematics','Dynamics','Oscillations and Waves','Fluid Mechanics','Molecular Physics','Electrostatics','Motion of charged particles in an electric field','Electric current','Constant magnetic field','Motion of charged particles in complex fields','Electromagnetic induction','Electromagnetic waves','Geometrical optics. Photometry. Quantum nature of light','Special theory of relativity'];
                     %>
-                    <div class="chapter-card-name-alt"><%= enChapterNames[chapterIndex] || '' %></div>
+                    <div class="chapter-card-name-alt" title="<%= enChapterNames[chapterIndex] || '' %>"><%= enChapterNames[chapterIndex] || '' %></div>
                   <% } %>
                   <div class="chapter-card-progress">
                     <div class="chapter-mini-bar">
@@ -386,7 +386,13 @@
                 </svg>
               </div>
             </div>
-            <div class="chapter-content">
+          </div>
+          <%# The open chapter's sections: a sibling of the card, one full-width row. With
+              grid-auto-flow: dense the cards after it close up the row the card sits in, so
+              opening a chapter never leaves the rest of its row empty (it used to span the
+              whole row itself and pushed its neighbours down, 2026-09-14). %>
+          <div class="chapter-content" id="ch-<%= chNum %>-panel" role="region" aria-labelledby="ch-<%= chNum %>-panel-title">
+            <div class="chapter-content-head" id="ch-<%= chNum %>-panel-title"><span class="chapter-num chapter-num--sm"><%= chNum %></span><%= chapter.title %></div>
               <% chSections.forEach(sec => { %>
               <div class="section-block">
                 <div class="section-header" id="<%= sec.number %>">
@@ -397,7 +403,6 @@
                 <div class="problem-dots" data-section="<%= sec.number %>" data-count="<%= sec.count %>"></div>
               </div>
               <% }); %>
-            </div>
           </div>
           <% }); %>
         </div>
@@ -1576,6 +1581,11 @@
       display: grid;
       grid-template-columns: 1fr;
       gap: var(--ss-space-2);
+      /* dense: an open chapter's panel takes the next full row and the cards after it fill
+         the rest of the card's own row. start: a card is as tall as its own title, not as
+         tall as the longest title in its row. */
+      grid-auto-flow: row dense;
+      align-items: start;
       /* No container background: with 14 chapters the trailing cells of the last row
          would otherwise show as grey voids. Each card carries its own border. */
     }
@@ -1585,17 +1595,17 @@
     @media (min-width: 1200px) {
       .chapter-grid { grid-template-columns: repeat(3, 1fr); }
       /* 14 items over 3 columns leaves 2 in the last row; widen the final card. */
-      .chapter-card:last-child { grid-column: span 2; }
+      .chapter-card--last { grid-column: span 2; }
     }
     @media (min-width: 1600px) {
       .chapter-grid { grid-template-columns: repeat(4, 1fr); }
       /* 14 over 4 leaves 2; widen both so the row is full. */
-      .chapter-card:last-child { grid-column: span 2; }
-      .chapter-card:nth-last-child(2) { grid-column: span 2; }
+      .chapter-card--last,
+      .chapter-card--penultimate { grid-column: span 2; }
     }
-    /* An expanded chapter needs the full width for its dots, so it spans every column
-       rather than being squeezed into one narrow one. */
-    .chapter-card.open { grid-column: 1 / -1; }
+    /* The open card stays in its cell, marked; its sections open in the row below. */
+    .chapter-card.open { border-color: var(--ss-navy); }
+    .chapter-card.open .chapter-card-header { background: var(--ss-surface-alt); }
     .chapter-card {
       background: var(--ss-surface);
       border: 1px solid var(--ss-rule);
@@ -1611,6 +1621,7 @@
     .chapter-card-header:hover {
       background: var(--ss-surface-alt);
     }
+    .chapter-card-header .flex-grow-1 { min-width: 0; }
     .chapter-num {
       display: flex;
       align-items: center;
@@ -1630,10 +1641,14 @@
       color: var(--ss-text);
       line-height: 1.3;
     }
+    /* One line: the translation is secondary, and a two-line one made its whole row taller. */
     .chapter-card-name-alt {
       font-size: var(--ss-fs-12);
       color: var(--ss-text-secondary);
       line-height: 1.3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .chapter-card-progress {
       display: flex;
@@ -1669,12 +1684,25 @@
     }
     .chapter-content {
       display: none;
-      border-top: 1px solid var(--ss-rule);
+      grid-column: 1 / -1;
+      background: var(--ss-surface);
+      border: 1px solid var(--ss-navy);
+      border-radius: var(--ss-radius-lg);
       padding: var(--ss-space-3) var(--ss-space-4) var(--ss-space-4);
     }
-    .chapter-card.open .chapter-content {
+    .chapter-content.open {
       display: block;
     }
+    .chapter-content-head {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-2);
+      margin-bottom: var(--ss-space-3);
+      font-size: var(--ss-text-ui);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-text);
+    }
+    .chapter-num--sm { width: 24px; height: 24px; font-size: var(--ss-text-label); }
     .section-block {
       margin-bottom: var(--ss-space-3);
     }
@@ -2428,12 +2456,22 @@
       // The switch itself is wired by /js/grid-mode.js, shared with the section grid on
       // every solution page so the two can never disagree.
 
+      function setChapterOpen(card, open) {
+        const panel = document.getElementById(card.id + '-panel');
+        if (!panel) return;
+        if (open) panel.querySelectorAll('.problem-dots').forEach(fillSection);
+        card.classList.toggle('open', open);
+        panel.classList.toggle('open', open);
+        const header = card.querySelector('.chapter-card-header');
+        if (header) header.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+
       document.querySelectorAll('.chapter-card-header').forEach(header => {
-        header.addEventListener('click', () => {
-          const card = header.closest('.chapter-card');
-          const opening = !card.classList.contains('open');
-          if (opening) card.querySelectorAll('.problem-dots').forEach(fillSection);
-          card.classList.toggle('open');
+        const card = header.closest('.chapter-card');
+        const toggle = () => setChapterOpen(card, !card.classList.contains('open'));
+        header.addEventListener('click', toggle);
+        header.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
         });
       });
 
@@ -2444,11 +2482,9 @@
         if (!target) return;
         const el = document.getElementById(target);
         if (!el) return;
-        const card = el.closest('.chapter-card');
-        if (card) {
-          card.querySelectorAll('.problem-dots').forEach(fillSection);
-          card.classList.add('open');
-        }
+        const panel = el.closest('.chapter-content');
+        const card = panel ? document.getElementById(panel.id.replace(/-panel$/, '')) : null;
+        if (card) setChapterOpen(card, true);
         el.scrollIntoView({ block: 'start' });
       }
       openFromHash();

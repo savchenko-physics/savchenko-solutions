@@ -1299,7 +1299,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose img { max-width: 100%; height: auto; }
 .ss-prose figure,
 .ss-image {
-  margin: 0.8em 0;
+  margin: 0.6em 0;
   text-align: center;
   text-indent: 0;
 }
@@ -1365,7 +1365,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose .ss-sec + p,
 .ss-prose .ss-sec + figure,
 .ss-prose p + .ss-sec,
-.ss-prose figure + .ss-sec { margin-top: var(--ss-space-6); }
+.ss-prose figure + .ss-sec { margin-top: var(--ss-space-5); }
 .ss-prose .ss-label {
   font-family: var(--ss-font-ui);
   font-size: var(--ss-text-label);
@@ -1378,7 +1378,7 @@ mjx-container[jax="SVG"] > svg > g {
   margin: 0 0 var(--ss-space-2);
 }
 .ss-prose .ss-problem {
-  padding: var(--ss-space-4);
+  padding: var(--ss-space-3) var(--ss-space-4);
   background: var(--ss-surface-alt);
   border: 1px solid var(--ss-rule);
   border-radius: var(--ss-radius);
@@ -1398,7 +1398,7 @@ mjx-container[jax="SVG"] > svg > g {
 .ss-prose .ss-sec--literature p { padding-left: 1.8em; text-indent: -1.8em; text-align: left; }
 .ss-prose .ss-sec--literature p + p { text-indent: -1.8em; margin-top: 0.3em; }
 @media (min-width: 768px) {
-  .ss-prose .ss-problem { padding: var(--ss-space-5) var(--ss-space-6); }
+  .ss-prose .ss-problem { padding: var(--ss-space-4) var(--ss-space-5); }
 }
 
 .ss-title {
