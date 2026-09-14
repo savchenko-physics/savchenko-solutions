@@ -985,7 +985,12 @@
     (function wrapPortraitImages() {
         const content = document.getElementById('blogContent');
         if (!content) return;
-        let floatIdx = 0;
+
+        // Portraits alternate right, left, right in reading order. They used to alternate in the
+        // order the images finished loading, so a post's first photo sat on the left on a cold
+        // visit and on the right once cached (2026-09-14); each image now waits for the ones
+        // before it (drain, below).
+        let portraitCount = 0;
 
         // Find the H2 that opens the section containing `el`, walking backward
         // through siblings. Returns null if no preceding H2 exists.
@@ -1033,8 +1038,7 @@
             const veryTall = ratio < 0.5;
             const fig = document.createElement('figure');
             const tallClass = veryTall ? ' very-tall' : '';
-            fig.className = 'blog-thumb' + tallClass + (floatIdx % 2 === 1 ? ' float-left' : '');
-            floatIdx++;
+            fig.className = 'blog-thumb' + tallClass + (portraitCount++ % 2 === 1 ? ' float-left' : '');
 
             img.dataset.thumbProcessed = '1';
             fig.appendChild(img);
@@ -1061,13 +1065,22 @@
             }
         }
 
-        content.querySelectorAll('img').forEach(img => {
-            if (img.complete && img.naturalWidth) {
-                wrap(img);
-            } else {
-                img.addEventListener('load', () => wrap(img), { once: true });
+        const imgs = Array.prototype.slice.call(content.querySelectorAll('img'));
+        let next = 0;
+        function drain() {
+            while (next < imgs.length) {
+                const img = imgs[next];
+                if (!img.complete) return;
+                if (img.naturalWidth) wrap(img);
+                next++;
             }
+        }
+        imgs.forEach((img) => {
+            if (img.complete) return;
+            img.addEventListener('load', drain, { once: true });
+            img.addEventListener('error', drain, { once: true });
         });
+        drain();
     })();
     </script>
 </body>
