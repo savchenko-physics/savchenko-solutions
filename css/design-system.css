@@ -3776,6 +3776,7 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
    (pre-wrap, white text in a sent bubble). */
 .mapp-card {
   display: block;
+  cursor: pointer;
   width: 288px;
   max-width: 100%;
   margin-top: var(--ss-space-2);
@@ -3790,6 +3791,8 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   white-space: normal;
   text-align: left;
 }
+.mapp-card:hover { border-color: var(--ss-rule-strong); background: var(--ss-surface-alt); }
+.mapp-card:hover .mapp-card-bar { background: var(--ss-surface); }
 .mapp-card-head { display: flex; align-items: center; gap: var(--ss-space-2); }
 .mapp-card-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
 .mapp-card-titles { min-width: 0; }

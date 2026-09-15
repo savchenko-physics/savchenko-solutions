@@ -744,6 +744,7 @@
                 toast(`${C.bought} ${nf0.format(r.shares)} ${plural(r.shares, C.shares)} ${r.problem}`);
                 openRow = null;
                 await refresh();
+                autoFlip();
             });
             return;
         }
@@ -756,6 +757,7 @@
                 const r = await post('trade', { problem, side: 'sell', shares });
                 toast(`${C.sold} ${problem}, +${nf0.format(r.amount)} ħ`);
                 await refresh();
+                autoFlip();
             });
             return;
         }
@@ -801,6 +803,7 @@
                 toast(C.unlocked);
                 tellChat({ type: 'ss-rx-unlocked', emoji });
                 await refresh();
+                autoFlip();
             });
         }
     });
@@ -830,6 +833,12 @@
     }, 30 * 1000);
 
     render();
-    // Opening the app turns the coin over once.
+    // Opening the app turns the coin over, every time: on load, and each time the chat shows the
+    // sheet again with the app still loaded in it.
     setTimeout(autoFlip, 450);
+    window.addEventListener('message', (e) => {
+        if (e.origin !== window.location.origin || !e.data || e.data.type !== 'ss-app-shown') return;
+        setTimeout(autoFlip, 250);
+        refresh();
+    });
 })();

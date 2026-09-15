@@ -3,11 +3,11 @@
  * solutions (views/solution_post.ejs).
  *
  *   - A message carrying a link to the app gets a live card: the question, the top three problems,
- *     the best predictors, an Open button. Found by a MutationObserver over the message list,
+ *     the best predictors; the whole card opens the app. Found by a MutationObserver over the message list,
  *     so bubbles drawn by the server, by the live stream, by history paging and by the catch-up
  *     poll all get one without touching the four places that build a bubble.
- *   - The app itself runs in an iframe in a sheet: full screen on a phone, a 420px panel on a
- *     desktop. It asks to close, reports that its state changed, and reports an unlocked
+ *   - The app itself runs in an iframe in a sheet: full screen on a phone, a panel on a
+ *     desktop (720px). It asks to close, reports that its state changed, and reports an unlocked
  *     reaction, all by postMessage from the same origin.
  *   - /messages/<chat>?app=last-problem opens it straight away (the bell notification links there).
  *   - Premium reactions (js/reactions.js) look locked in the pickers until this member owns them;
@@ -48,11 +48,15 @@
             document.body.appendChild(sheet);
         }
         const frame = sheet.querySelector('iframe');
-        if (frame.getAttribute('src') !== src) frame.setAttribute('src', src);
+        const reuse = frame.getAttribute('src') === src;
+        if (!reuse) frame.setAttribute('src', src);
         returnFocus = document.activeElement;
         sheet.hidden = false;
         document.documentElement.classList.add('mapp-open');
         frame.focus();
+        // An app already loaded in the sheet is only shown again: tell it, so it greets the reader
+        // the same way every time (the coin turns over) and fetches fresh prices.
+        if (reuse && frame.contentWindow) frame.contentWindow.postMessage({ type: 'ss-app-shown', app: APP }, window.location.origin);
     }
 
     function close() {
@@ -75,6 +79,10 @@
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && sheet && !sheet.hidden) close();
+        if ((e.key === 'Enter' || e.key === ' ') && e.target instanceof Element && e.target.matches('.mapp-card[data-mapp-open]')) {
+            e.preventDefault();
+            open();
+        }
     });
 
     // ── Cards under messages that link to the app ─────────────────────────────────────
@@ -157,9 +165,8 @@
         }
 
         const foot = el('div', 'mapp-card-foot');
-        const openBtn = el('button', 'ss-btn ss-btn--primary ss-btn--sm mapp-card-open', d.open);
-        openBtn.type = 'button';
-        openBtn.dataset.mappOpen = '';
+        const openBtn = el('span', 'ss-btn ss-btn--primary ss-btn--sm mapp-card-open', d.open);
+        openBtn.setAttribute('aria-hidden', 'true');
         foot.append(el('span', 'mapp-card-traders', d.traders), openBtn);
         box.appendChild(foot);
     }
@@ -178,6 +185,11 @@
                 if (!bubble || bubble.querySelector('.mapp-card')) continue;
                 a.classList.add('mapp-link');
                 const box = el('div', 'mapp-card');
+                // The whole card opens the app, by click, Enter or Space; the Open button is its label.
+                box.dataset.mappOpen = '';
+                box.tabIndex = 0;
+                box.setAttribute('role', 'button');
+                box.setAttribute('aria-label', `${data.title}. ${data.question}`);
                 fillCard(box, data);
                 bubble.insertBefore(box, bubble.querySelector('.msg-reaction-add'));
             }
@@ -188,7 +200,10 @@
         if (!document.querySelector('.mapp-card')) return;
         fetchCard(true).then((data) => {
             if (!data) return;
-            document.querySelectorAll('.mapp-card').forEach((box) => fillCard(box, data));
+            document.querySelectorAll('.mapp-card').forEach((box) => {
+                fillCard(box, data);
+                box.setAttribute('aria-label', `${data.title}. ${data.question}`);
+            });
         });
     }
 
