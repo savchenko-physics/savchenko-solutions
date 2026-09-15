@@ -417,7 +417,7 @@
 
                         <div class="field">
                             <label class="field-label" for="username"><%= __('settings.profile.username') %></label>
-                            <input class="input" type="text" id="username" name="username" value="<%= username %>" autocomplete="username" pattern="[a-zA-Z0-9._\-]{2,32}">
+                            <input class="input" type="text" id="username" name="username" value="<%= username %>" data-original="<%= username %>" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32">
                             <p class="field-hint"><%= __('settings.profile.usernameHelp') %></p>
                             <div class="username-status" id="usernameStatus" aria-live="polite"></div>
                         </div>
@@ -731,6 +731,7 @@
     var MSG = {
         usernameOk: <%- JSON.stringify(__('settings.profile.usernameAvailable')) %>,
         usernameTaken: <%- JSON.stringify(__('settings.profile.usernameTaken')) %>,
+        usernameRules: <%- JSON.stringify(__('settings.errors.invalidUsername')) %>,
         saved: <%- JSON.stringify(__('settings.profile.saved')) %>
     };
     var initialSnapshot = '';
@@ -816,13 +817,24 @@
     // Username availability
     var unameInput = document.getElementById('username');
     var unameStatus = document.getElementById('usernameStatus');
+    var unameOriginal = unameInput.getAttribute('data-original');
+    var unameRe = new RegExp('^<%= usernamePattern %>$');
     var t;
     function checkU() {
         var v = unameInput.value.trim();
         unameStatus.textContent = '';
         unameStatus.className = 'username-status';
-        if (v.length < 2) return;
         clearTimeout(t);
+        // An unchanged username is always kept (older ones may have capitals or Cyrillic);
+        // a new one follows lib/usernames.js.
+        if (v === unameOriginal.trim()) { unameInput.setCustomValidity(''); return; }
+        if (!unameRe.test(v)) {
+            unameInput.setCustomValidity(MSG.usernameRules);
+            unameStatus.textContent = MSG.usernameRules;
+            unameStatus.className = 'username-status bad';
+            return;
+        }
+        unameInput.setCustomValidity('');
         t = setTimeout(function () {
             fetch('/' + lang + '/api/username-available?u=' + encodeURIComponent(v), { credentials: 'same-origin' })
                 .then(function (r) { return r.json(); })

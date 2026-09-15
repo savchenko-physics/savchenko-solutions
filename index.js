@@ -39,6 +39,7 @@ const crypto = require("crypto");
 const { getSortedCountryNames } = require("./lib/countries");
 const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsApi");
 const { ruPlural } = require("./lib/ruPlural");
+const { isValidNewUsername, resolveUsernameChange, USERNAME_PATTERN } = require("./lib/usernames");
 const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { sendEmail } = require("./email");
 const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
@@ -358,6 +359,7 @@ app.locals.assetIfPresent = assetIfPresent;
 app.locals.docTitle = docTitle;
 app.locals.titleText = titleText;
 app.locals.ruPlural = ruPlural;
+app.locals.usernamePattern = USERNAME_PATTERN;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
@@ -744,19 +746,20 @@ app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("pr
     } = req.body;
 
     const bioTrim = String(bio || "").slice(0, 300);
-    const uname = String(newUsername || "").trim();
-    const usernameRe = /^[a-zA-Z0-9._-]{2,32}$/;
-
-    if (!usernameRe.test(uname)) {
-        return res.redirect(
-            `/${lang}/settings?tab=profile&error=${encodeURIComponent(i18n.__("settings.errors.invalidUsername"))}`
-        );
-    }
 
     try {
         const self = await pool.query("SELECT username FROM users WHERE id = $1", [req.session.userId]);
         const currentUsername = self.rows[0]?.username;
-        if (uname.toLowerCase() !== String(currentUsername).toLowerCase()) {
+        // An unchanged username is kept whatever it is (accounts from before the rule have
+        // capitals, Cyrillic, spaces); a changed one must follow lib/usernames.js.
+        const usernameChange = resolveUsernameChange(currentUsername, newUsername);
+        if (!usernameChange.ok) {
+            return res.redirect(
+                `/${lang}/settings?tab=profile&error=${encodeURIComponent(i18n.__("settings.errors.invalidUsername"))}`
+            );
+        }
+        const uname = usernameChange.username;
+        if (usernameChange.changed) {
             const clash = await pool.query(
                 "SELECT id FROM users WHERE LOWER(username) = LOWER($1) AND id <> $2",
                 [uname, req.session.userId]
@@ -2460,7 +2463,8 @@ app.get("/en/register", checkNotAuthenticated, (req, res) => {
 
 // Registration Route
 app.post("/register", registerLimiter, async (req, res) => {
-    const { username, email, fullname, password, password2 } = req.body;
+    const { email, fullname, password, password2 } = req.body;
+    const username = String(req.body.username ?? "").trim();
     // Picks the verification email's language, the redirect target and which community
     // chat starts unmuted, so only "en" or "ru" may pass (see normalizeLang in utils.js).
     const lang = normalizeLang(req.body.lang);
@@ -2470,12 +2474,28 @@ app.post("/register", registerLimiter, async (req, res) => {
         return res.redirect(`/${lang}/register?error=${i18n.__('All fields are required')}`);
     }
 
+    // Lowercase a-z, digits and underscore only (lib/usernames.js); existing accounts keep theirs.
+    if (!isValidNewUsername(username)) {
+        return res.redirect(`/${lang}/register?error=${encodeURIComponent(
+            i18n.__({ phrase: 'auth.register.usernameRules', locale: lang })
+        )}`);
+    }
+
     // Check if passwords match
     if (password !== password2) {
         return res.redirect(`/${lang}/register?error=${i18n.__('Passwords do not match')}`);
     }
 
     try {
+        // The unique index on users.username is case-sensitive, and older accounts have
+        // capitals, so "mark" would otherwise sit next to an existing "Mark".
+        const clash = await pool.query("SELECT 1 FROM users WHERE LOWER(username) = $1 LIMIT 1", [username]);
+        if (clash.rows.length > 0) {
+            return res.redirect(`/${lang}/register?error=${encodeURIComponent(
+                i18n.__({ phrase: 'auth.register.usernameTaken', locale: lang })
+            )}`);
+        }
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Insert into the database

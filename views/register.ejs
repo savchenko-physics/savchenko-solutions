@@ -23,7 +23,11 @@
             <input type="hidden" name="lang" value="<%= lang %>">
             <div class="form-group">
                 <label for="username"><%= __('auth.register.username') %></label>
-                <input type="text" id="username" name="username" required />
+                <input type="text" id="username" name="username" required
+                       pattern="<%= usernamePattern %>" minlength="2" maxlength="32"
+                       autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
+                       title="<%= __('auth.register.usernameRules') %>" aria-describedby="usernameHint" />
+                <p class="ss-field-hint" id="usernameHint"><%= __('auth.register.usernameRules') %></p>
             </div>
             <div class="form-group">
                 <label for="fullname"><%= __('auth.register.fullName') %></label>

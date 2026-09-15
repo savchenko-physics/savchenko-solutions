@@ -260,7 +260,9 @@
 			"submit": "Register",
 			"haveAccount": "Already have an account?",
 			"loginHere": "Login here",
-			"passwordsNoMatch": "Passwords do not match. Please try again."
+			"passwordsNoMatch": "Passwords do not match. Please try again.",
+			"usernameRules": "2 to 32 characters: lowercase English letters a–z, digits and underscore",
+			"usernameTaken": "This username is already taken"
 		},
 		"forgotPassword": {
 			"title": "Reset Password",
@@ -326,7 +328,7 @@
 			"personalInfo": "Personal Information",
 			"fullName": "Full Name",
 			"username": "Username",
-			"usernameHelp": "This appears on your contributions. Cannot contain spaces.",
+			"usernameHelp": "This appears on your contributions. A new username may use only lowercase English letters a–z, digits and underscore.",
 			"email": "Email",
 			"emailPrivate": "Not displayed publicly",
 			"country": "Country",
@@ -381,7 +383,7 @@
 			"accountDeleted": "Your account has been deleted"
 		},
 		"errors": {
-			"invalidUsername": "Username must be 2–32 characters: letters, digits, dot, underscore, or hyphen",
+			"invalidUsername": "Username must be 2–32 characters: lowercase English letters a–z, digits and underscore",
 			"usernameTaken": "Username is already taken",
 			"profileUpdateFailed": "Could not save profile",
 			"privacyUpdateFailed": "Could not save privacy settings",
