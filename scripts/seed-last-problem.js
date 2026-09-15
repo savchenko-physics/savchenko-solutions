@@ -38,6 +38,11 @@ const ROOT = path.join(__dirname, '..');
 const B = 1000;
 const DEMON_SEED = 800;
 const QUESTION_MESSAGE = 1958;
+// Seconds after the question at which the demon places each of its ten bets, in weight order.
+// Uneven on purpose, and all before Valter's bet at 13:52:31: ten trades a second apart read as a
+// script, not as someone weighing up each problem (the owner, 2026-09-15). Changing only the
+// times, never the order, leaves every price and share the replay computes unchanged.
+const DEMON_DELAYS = [29, 108, 200, 275, 353, 431, 478, 557, 603, 646];
 const CHAT_BETS = [
     { message: 1962, username: 'Valter', problem: '5.8.9', amount: 100 },
     { message: 1965, username: 'emixter', problem: '7.2.11', amount: 100 },
@@ -123,7 +128,7 @@ async function plan(db) {
     const events = [];
     const amounts = LP.allocate(DEMON_SEED, WEIGHTS);
     Object.keys(WEIGHTS).forEach((problem, i) => {
-        events.push({ type: 'buy', actor: 'demon', problem, amount: amounts[problem], at: new Date(openedAt.getTime() + (i + 1) * 1000) });
+        events.push({ type: 'buy', actor: 'demon', problem, amount: amounts[problem], at: new Date(openedAt.getTime() + DEMON_DELAYS[i] * 1000) });
     });
     for (const bet of CHAT_BETS) {
         const msg = await db.query('SELECT created_at, sender_id, content FROM messages WHERE id = $1', [bet.message]);

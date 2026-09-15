@@ -466,6 +466,14 @@
       --auto-link-color: #9fc9ef;
     }
 
+    /* The site's selection tint (18% link blue) disappears on a navy bubble, so selected text in
+       one looked unselectable; there it is the on-navy link colour instead. */
+    .msg-bubble.sent ::selection,
+    .msg-bubble.sent::selection {
+      background: var(--ss-on-navy-link);
+      color: var(--ss-navy);
+    }
+
     .msg-bubble.received {
       background: var(--msg-received);
       color: var(--msg-received-text);
@@ -1618,7 +1626,7 @@
       <!-- Pinned Saved Messages (self-chat) — always available to every user.
            Kept outside #convList so the live sidebar refresh never removes it. -->
       <% const savedConv = conversations.find(function(c){ return c.isSaved; }); %>
-      <a href="/messages/saved"
+      <a href="/<%= lang %>/messages/saved"
          class="msg-conv-item msg-saved-item<%= activeConversation && activeConversation.isSaved ? ' active' : '' %>"
          data-name="<%= lang === 'ru' ? 'избранное saved messages' : 'saved messages избранное' %>">
         <div class="msg-saved-avatar">
@@ -1642,7 +1650,7 @@
           </div>
         <% } else { %>
           <% nonSaved.forEach(function(c) { %>
-            <a href="/messages/<%= c.id %>"
+            <a href="/<%= lang %>/messages/<%= c.id %>"
                class="msg-conv-item<%= activeConversation && activeConversation.id === c.id ? ' active' : '' %>"
                data-name="<%= c.displayName.toLowerCase() %>">
               <% if (c.is_group) { %>
@@ -1716,7 +1724,7 @@
         <!-- Chat header -->
         <div class="msg-chat-header-wrap">
           <div class="msg-chat-header">
-            <button class="msg-back-btn" onclick="window.location.href='/messages'">
+            <button class="msg-back-btn" onclick="window.location.href='/<%= lang %>/messages'">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
@@ -1907,7 +1915,7 @@
         <div class="msg-lang-hint" id="langHintBar" hidden>
           <span class="msg-lang-hint-text"><%= _hintInRussian ? 'Это чат на английском. Для сообщений на русском есть отдельный чат.' : 'This chat is in Russian. English messages have their own chat.' %></span>
           <% if (typeof otherCommunity !== 'undefined' && otherCommunity) { %>
-          <a class="msg-lang-hint-link" id="langHintLink" href="/messages/<%= otherCommunity.id %>" data-conv-id="<%= otherCommunity.id %>"><%= _hintInRussian ? 'Открыть русский чат' : 'Open the English chat' %></a>
+          <a class="msg-lang-hint-link" id="langHintLink" href="/<%= lang %>/messages/<%= otherCommunity.id %>" data-conv-id="<%= otherCommunity.id %>"><%= _hintInRussian ? 'Открыть русский чат' : 'Open the English chat' %></a>
           <% } %>
           <button type="button" class="msg-lang-hint-close" id="langHintClose" title="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>" aria-label="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>">&times;</button>
         </div>
@@ -2970,7 +2978,7 @@
   if (ctxCopyLink) {
     ctxCopyLink.addEventListener('click', function() {
       if (ctxMsgId && CONV_ID) {
-        var url = location.origin + '/messages/' + CONV_ID + '#msg-' + ctxMsgId;
+        var url = location.origin + '/' + LANG + '/messages/' + CONV_ID + '#msg-' + ctxMsgId;
         if (navigator.clipboard) navigator.clipboard.writeText(url).catch(function() {});
       }
       ctxMenu.classList.remove('show');
@@ -3044,7 +3052,7 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.error) { alert(data.error); return; }
-        if (data.conversationId) window.location.href = '/messages/' + data.conversationId;
+        if (data.conversationId) window.location.href = '/' + LANG + '/messages/' + data.conversationId;
       })
       .catch(function() {});
   }
@@ -3753,7 +3761,7 @@
       if (!confirm(LANG === 'ru' ? 'Выйти из группы?' : 'Leave this group?')) return;
       groupAction('leave', {}).then(function(d) {
         if (d.error) { alert(d.error); return; }
-        window.location.href = '/messages';
+        window.location.href = '/' + LANG + '/messages';
       });
     });
   }
@@ -3958,7 +3966,7 @@
     const badge = unread > 0
       ? '<span class="msg-conv-badge' + (c.muted ? ' muted' : '') + '">' + (unread > 99 ? '99+' : unread) + '</span>'
       : '';
-    return '<a href="/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
+    return '<a href="/' + LANG + '/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
       '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
       avatar +
       '<div class="msg-conv-info"><div class="msg-conv-name">' + esc(c.displayName || '') + '</div>' +
@@ -4180,7 +4188,7 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.conversationId) {
-          window.location.href = '/messages/' + data.conversationId;
+          window.location.href = '/' + LANG + '/messages/' + data.conversationId;
         }
       })
       .catch(function() {

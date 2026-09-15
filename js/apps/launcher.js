@@ -149,7 +149,7 @@
 
         if (d.leaders && d.leaders.length) {
             const leaders = el('div', 'mapp-card-leaders');
-            leaders.appendChild(el('span', 'mapp-card-leaders-label', `${d.leadersLabel}: `));
+            leaders.appendChild(el('span', 'mapp-card-leaders-label', `${d.leadersLabel} · `));
             d.leaders.forEach((l, i) => {
                 leaders.appendChild(el('span', 'mapp-card-leader', `${i + 1}. ${l.username} +${Math.round(l.profit)} ħ`));
             });

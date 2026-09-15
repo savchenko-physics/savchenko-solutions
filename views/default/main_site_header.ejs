@@ -284,16 +284,13 @@
             <!-- Messages icon (logged-in, desktop) -->
             <% if (navUser) { %>
             <li class="nav-item px-1 px-lg-0 px-xxl-1 d-none d-lg-block">
-              <a href="/messages" class="header-icon-btn" aria-label="Messages">
+              <a href="/<%= navLang %>/messages" class="header-icon-btn" aria-label="Messages">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#6c757d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <% const msgCount = typeof unreadMessageCount !== 'undefined' ? unreadMessageCount : 0; %>
-                <% if (msgCount > 0) { %>
-                <span class="ss-count ss-count--corner">
-                  <%= msgCount > 99 ? '99+' : msgCount %>
-                </span>
-                <% } %>
+                <%# Always present, so js/pulse.js can show it the moment a message arrives. %>
+                <span id="nav-msg-badge" class="ss-count ss-count--corner"<%= msgCount > 0 ? '' : ' hidden' %>><%= msgCount > 99 ? '99+' : msgCount %></span>
               </a>
             </li>
             <% } %>
@@ -392,11 +389,10 @@
                   <div class="collapse" id="mobileCommunity">
                     <a href="/discuss" class="mobile-nav-link"><%= navLang === 'ru' ? 'Обсуждение' : 'Discussion' %></a>
                     <% if (navUser) { %>
-                    <a href="/messages" class="mobile-nav-link">
+                    <a href="/<%= navLang %>/messages" class="mobile-nav-link">
                       <%= navLang === 'ru' ? 'Сообщения' : 'Messages' %>
-                      <% if (typeof unreadMessageCount !== 'undefined' && unreadMessageCount > 0) { %>
-                      <span class="ss-count"><%= unreadMessageCount > 99 ? '99+' : unreadMessageCount %></span>
-                      <% } %>
+                      <% const msgCountM = typeof unreadMessageCount !== 'undefined' ? unreadMessageCount : 0; %>
+                      <span id="nav-msg-badge-m" class="ss-count"<%= msgCountM > 0 ? '' : ' hidden' %>><%= msgCountM > 99 ? '99+' : msgCountM %></span>
                     </a>
                     <% } %>
                     <% if (navDraftCount > 0) { %>
@@ -581,6 +577,8 @@
   </style>
 
   <% if (navUser) { %>
+  <%# Live alerts and badges on every page: new DMs, replies and mentions (js/pulse.js, lib/pulse.js). %>
+  <script src="<%= asset('/js/pulse.js') %>" defer data-lang="<%= navLang === 'ru' ? 'ru' : 'en' %>"></script>
   <script>
   (function() {
     const bell = document.getElementById('notif-bell');

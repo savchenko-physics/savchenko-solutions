@@ -56,18 +56,19 @@
         { id: ':cat:', ru: 'Кот Шрёдингера', en: "Schrödinger's cat" },        // 1
 
         // Premium, since 2026-09-15: bought with quanta (ħ) in the «Последняя задача» mini app
-        // (lastProblem.js), from the in-jokes of that week's chat. `price` in ħ; Infinity is
+        // (lastProblem.js), from the in-jokes of that week's chat. Every price is above the 1000 ħ
+        // everyone starts with, so only someone who has won quanta can buy one. `price` in ħ; Infinity is
         // never for sale; `trophy` cannot be bought, the app awards it; `sale` limits when it
         // can be bought (UTC dates, inclusive). Owning one is a row in reaction_unlocks. Anyone
         // can see a premium reaction left by its owner, and taking one back always works.
-        { id: ':kvant:', ru: 'Квант', en: 'Quantum', price: 200 },
-        { id: ':errata:', ru: 'Закон сохранения ошибок', en: 'Conservation of errata', price: 300 },
-        { id: ':ammeter:', ru: 'Сломанный амперметр', en: 'Broken ammeter', price: 300 },
-        { id: ':dino:', ru: 'Динозавр из 80-х', en: '80s dinosaur', price: 350 },
-        { id: ':cyborgs:', ru: 'Отряд вальтерят', en: 'Cyborg squad', price: 350 },
+        { id: ':kvant:', ru: 'Квант', en: 'Quantum', price: 1200 },
+        { id: ':errata:', ru: 'Закон сохранения ошибок', en: 'Conservation of errata', price: 1300 },
+        { id: ':ammeter:', ru: 'Сломанный амперметр', en: 'Broken ammeter', price: 1300 },
+        { id: ':dino:', ru: 'Динозавр из 80-х', en: '80s dinosaur', price: 1400 },
+        { id: ':cyborgs:', ru: 'Отряд вальтерят', en: 'Cyborg squad', price: 1400 },
         // The site is a Libra (first solution 10 Oct 2023), so it is sold in Libra season only.
-        { id: ':libra:', ru: 'Весы', en: 'Libra', price: 400, sale: { from: '2026-09-23', to: '2026-10-23' } },
-        { id: ':laplace:', ru: 'Демон Лапласа', en: "Laplace's demon", price: 500 },
+        { id: ':libra:', ru: 'Весы', en: 'Libra', price: 1500, sale: { from: '2026-09-23', to: '2026-10-23' } },
+        { id: ':laplace:', ru: 'Демон Лапласа', en: "Laplace's demon", price: 2000 },
         // "Всё возможно, кроме вечного двигателя" (emixter). The shop shows it; nobody gets it.
         { id: ':perpetuum:', ru: 'Вечный двигатель', en: 'Perpetual motion', price: Infinity },
         { id: ':n2000:', ru: 'Задача № 2000', en: 'Problem 2000', trophy: true },

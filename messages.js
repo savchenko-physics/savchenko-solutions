@@ -8,6 +8,8 @@ const { Pool } = require('pg');
 const i18n = require('i18n');
 const notifications = require('./notifications');
 const { linkifyMessageContent, normalizeLang } = require('./utils');
+const { langFromMessagesPath, preferredLang, langMessagesUrl, messagesPath } = require('./lib/messagesUrls');
+const { alertKind, previewText } = require('./lib/pulse');
 const { getOnlineUsernames } = require('./lib/presence');
 const { communityAvatarSVG, otherLang } = require('./lib/communityChats');
 const { isKnownReaction, isPremium, reactionAction } = require('./js/reactions');
@@ -364,6 +366,22 @@ function checkAuth(req, res, next) {
 
 router.use(checkAuth);
 
+/* The language of a messenger page is the /en or /ru in its address (lib/messagesUrls.js). A bare
+ * /messages/... page address is answered with a redirect to the same page with the language in it,
+ * and null tells the handler to stop. */
+function pageLang(req, res) {
+    const urlLang = langFromMessagesPath(req.originalUrl);
+    if (!urlLang) {
+        res.redirect(302, langMessagesUrl(req.originalUrl, preferredLang({
+            sessionLang: req.session.lang,
+            acceptLanguage: req.get('accept-language'),
+        })));
+        return null;
+    }
+    if (req.session.lang !== urlLang) req.session.lang = urlLang;
+    return urlLang;
+}
+
 // ── Rate limiting (in-memory fixed window, per user + bucket) ────────────
 const rateBuckets = new Map();
 function rateLimit(bucket, max, windowMs) {
@@ -549,7 +567,8 @@ async function buildConversationList(userId, lang = 'en') {
 router.get('/', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = normalizeLang(req.session.lang);
+        const lang = pageLang(req, res);
+        if (!lang) return;
         // The shared site header translates through __(), which otherwise follows the
         // browser's Accept-Language while this page follows the session: a Russian chat
         // under an English menu. Same fix as feedback.js.
@@ -592,8 +611,10 @@ router.get('/', async (req, res) => {
 // Saved Messages self-chat, then redirect to the normal conversation view.
 router.get('/saved', async (req, res) => {
     try {
+        const lang = pageLang(req, res);
+        if (!lang) return;
         const convId = await findOrCreateSavedMessages(req.session.userId);
-        res.redirect(`/messages/${convId}`);
+        res.redirect(messagesPath(lang, convId));
     } catch (err) {
         console.error('Saved messages error:', err);
         res.status(500).send('Internal server error');
@@ -630,7 +651,8 @@ router.get('/stream', (req, res) => {
 router.get('/:id(\\d+)', async (req, res) => {
     try {
         const userId = req.session.userId;
-        const lang = normalizeLang(req.session.lang);
+        const lang = pageLang(req, res);
+        if (!lang) return;
         i18n.setLocale(req, lang); // header in the chat's language, see GET /
         const convId = parseInt(req.params.id);
 
@@ -640,7 +662,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             [convId, userId]
         );
         if (membership.rows.length === 0) {
-            return res.redirect('/messages');
+            return res.redirect(messagesPath(lang));
         }
         const prevLastRead = membership.rows[0].last_read_at;
         const activeMuted = !!membership.rows[0].muted;
@@ -943,7 +965,7 @@ router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
                     [convId, ...uniqueIds]
                 );
                 await client.query('COMMIT');
-                return res.redirect(`/messages/${convId}`);
+                return res.redirect(messagesPath(normalizeLang(req.session.lang), convId));
             } catch (err) {
                 await client.query('ROLLBACK');
                 throw err;
@@ -955,16 +977,16 @@ router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
         // 1:1 conversation
         const targetId = parseInt(recipientId);
         if (!targetId || targetId === userId) {
-            return res.redirect('/messages');
+            return res.redirect(messagesPath(normalizeLang(req.session.lang)));
         }
 
         const targetUser = await pool.query('SELECT id FROM users WHERE id = $1', [targetId]);
         if (targetUser.rows.length === 0) {
-            return res.redirect('/messages');
+            return res.redirect(messagesPath(normalizeLang(req.session.lang)));
         }
 
         const convId = await findOrCreateDM(userId, targetId);
-        res.redirect(`/messages/${convId}`);
+        res.redirect(messagesPath(normalizeLang(req.session.lang), convId));
     } catch (err) {
         console.error('New conversation error:', err);
         res.status(500).send('Internal server error');
@@ -996,7 +1018,7 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
         }
 
         if (!content && !imageUrl && !fileUrl) {
-            return res.redirect(`/messages/${convId}`);
+            return res.redirect(messagesPath(lang, convId));
         }
 
         // Check membership
@@ -1090,7 +1112,7 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 image_url: imageUrl, file_url: fileUrl, file_name: fileName, file_size: fileSize,
             });
         }
-        res.redirect(`/messages/${convId}`);
+        res.redirect(messagesPath(lang, convId));
     } catch (err) {
         console.error('Send message error:', err);
         res.status(500).send('Internal server error');
@@ -1807,6 +1829,72 @@ router.get('/search-users', async (req, res) => {
     }
 });
 
+// GET /messages/pulse?since=<message id> — what the header on any page needs to stay current
+// (js/pulse.js): both unread counts, and the messages newer than `since` that deserve a live alert
+// for this person (lib/pulse.js). Without `since` it only answers the cursor to start from, so a
+// fresh page never alerts about messages that were already there.
+router.get('/pulse', rateLimit('pulse', 20, 60000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const lang = normalizeLang(req.session.lang);
+        const since = Number.parseInt(req.query.since, 10);
+        const [maxRow, unreadMessages, unreadNotifications] = await Promise.all([
+            pool.query('SELECT COALESCE(MAX(id), 0)::int AS id FROM messages'),
+            getUnreadMessageCount(userId),
+            notifications.getUnreadCount(userId),
+        ]);
+        const cursor = maxRow.rows[0].id;
+        let items = [];
+        if (Number.isSafeInteger(since) && since > 0 && since < cursor) {
+            const { rows } = await pool.query(
+                `SELECT m.id, m.conversation_id, m.sender_id, m.content, m.image_url, m.file_name,
+                        u.username AS sender_username, u.profile_picture AS sender_picture,
+                        c.is_group, c.title, c.saved_for_user_id, cm.muted,
+                        r.sender_id AS reply_to_sender_id,
+                        (SELECT count(*)::int FROM conversation_members x WHERE x.conversation_id = m.conversation_id) AS member_count
+                   FROM messages m
+                   JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $1
+                   JOIN conversations c ON c.id = m.conversation_id
+                   LEFT JOIN users u ON u.id = m.sender_id
+                   LEFT JOIN messages r ON r.id = m.reply_to_id
+                  WHERE m.id > $2 AND m.id <= $3 AND m.sender_id <> $1 AND m.deleted_at IS NULL
+                  ORDER BY m.id DESC
+                  LIMIT 50`,
+                [userId, since, cursor]
+            );
+            const viewer = { userId, username: req.session.username };
+            items = rows
+                .map((row) => ({
+                    row,
+                    kind: alertKind({
+                        senderId: row.sender_id,
+                        isGroup: row.is_group,
+                        memberCount: row.member_count,
+                        muted: row.muted,
+                        replyToSenderId: row.reply_to_sender_id,
+                        content: row.content,
+                        isSaved: row.saved_for_user_id != null,
+                    }, viewer),
+                }))
+                .filter((x) => x.kind)
+                .slice(0, 5)
+                .map(({ row, kind }) => ({
+                    id: row.id,
+                    kind,
+                    sender: row.sender_username || '',
+                    picture: row.sender_picture || '/img/profile_images/Default_placeholder.svg',
+                    chat: row.is_group ? (row.title || '') : '',
+                    preview: previewText(row.content, { imageUrl: row.image_url, fileName: row.file_name, lang }),
+                    url: `${messagesPath(lang, row.conversation_id)}#msg-${row.id}`,
+                }));
+        }
+        res.set('Cache-Control', 'no-store').json({ cursor, unreadMessages, unreadNotifications, items });
+    } catch (err) {
+        console.error('Pulse error:', err);
+        res.status(500).json({ error: 'server' });
+    }
+});
+
 // GET /messages/unread-count — get total unread message count (AJAX, used by header)
 router.get('/unread-count', async (req, res) => {
     try {
@@ -1853,7 +1941,7 @@ router.post('/new-group', rateLimit('new', 15, 60000), async (req, res) => {
             if (req.xhr || req.headers.accept?.includes('application/json')) {
                 return res.json({ ok: true, conversationId: convId });
             }
-            res.redirect(`/messages/${convId}`);
+            res.redirect(messagesPath(normalizeLang(req.session.lang), convId));
         } catch (err) {
             await client.query('ROLLBACK');
             throw err;

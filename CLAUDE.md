@@ -122,7 +122,12 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   (`conversations.community_lang` = `'ru'` / `'en'`, migration 051; the Russian one is the
   old site-wide conversation 5). Every account is in both; registration joins both and mutes
   the one not in the signup page's language (`lib/communityChats.js`). **Muted conversations
-  don't count toward the header's unread badge.** Leaving a community chat is refused (mute
+  don't count toward the header's unread badge.** The messenger's pages live at
+  `/ru/messages[/:id|/saved]` and `/en/messages…` (`lib/messagesUrls.js`); a bare `/messages/…` page
+  address redirects there with its query, while the JSON and SSE endpoints stay unprefixed. Every
+  page of a signed-in member polls `GET /messages/pulse` (`js/pulse.js`, loaded by the header) and
+  shows a card for a new DM, small-group message, reply or @mention (`lib/pulse.js`), updating the
+  header badges in place. Leaving a community chat is refused (mute
   instead). The split itself was a one-off, `scripts/split-community-chat.js` (`--undo` with
   the backup in `deploy-backups/`). Above 25 members a conversation does not fan out one
   notification per member, only to members who have posted there (`notifications.js:84`)

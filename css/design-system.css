@@ -1055,6 +1055,7 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .ss-badge--error { color: var(--ss-error); background-color: var(--ss-error-soft); border-color: var(--ss-error-rule); }
 .ss-badge--warning { color: var(--ss-warning); background-color: var(--ss-warning-soft); border-color: var(--ss-warning-rule); }
 .ss-badge--solid { color: var(--ss-on-navy); background-color: var(--ss-navy); border-color: var(--ss-navy); }
+.ss-count[hidden] { display: none; }
 .ss-count {
   display: inline-flex;
   align-items: center;
@@ -3263,11 +3264,16 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
 }
 .lp-body.is-embed { background: var(--ss-surface); }
 .lp-body.is-busy { cursor: progress; }
+/* The site's selection tint is invisible on navy; on the app's navy surfaces it is the on-navy link colour. */
+.lp-bar ::selection,
+.lp-banner ::selection,
+.lp-toast::selection,
+.lp-podium-1 .lp-podium-place::selection { background: var(--ss-on-navy-link); color: var(--ss-navy); }
 
 .lp-app {
   display: flex;
   flex-direction: column;
-  max-width: 560px;
+  max-width: 720px;
   min-height: 100vh;
   margin: 0 auto;
   background: var(--ss-surface);
@@ -3387,11 +3393,9 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
 .lp-main { flex: 1 1 auto; min-width: 0; padding: var(--ss-space-4) var(--ss-space-4) var(--ss-space-8); }
 .lp-question {
   margin: 0 0 var(--ss-space-1);
-  font-family: var(--ss-font-display);
-  font-size: var(--ss-fs-24);
-  font-weight: 600;
-  font-synthesis: none;
-  line-height: var(--ss-lh-tight);
+  font-size: var(--ss-fs-20);
+  font-weight: var(--ss-fw-strong);
+  line-height: var(--ss-lh-snug);
   color: var(--ss-heading);
 }
 .lp-meta { margin: 0 0 var(--ss-space-3); font-size: var(--ss-fs-13); line-height: var(--ss-lh-ui); color: var(--ss-text-secondary); }
@@ -3425,7 +3429,6 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   position: absolute;
   left: 50%;
   top: 50%;
-  font-family: var(--ss-font-text);
   color: var(--ss-accent);
   animation: lp-burst 1.6s ease-out forwards;
 }
@@ -3450,13 +3453,16 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   list-style: none;
 }
 .lp-legend-item { display: inline-flex; align-items: center; gap: var(--ss-space-1); font-size: var(--ss-fs-13); }
-.lp-legend-name { font-family: var(--ss-font-text); font-weight: var(--ss-fw-text-bold); font-variant-numeric: lining-nums; }
+.lp-legend-name { font-weight: var(--ss-fw-strong); font-variant-numeric: tabular-nums; }
 .lp-legend-value { color: var(--ss-text-secondary); font-variant-numeric: tabular-nums; }
 .lp-plot { position: relative; min-width: 0; border-radius: var(--ss-radius-sm); }
 .lp-svg { display: block; max-width: 100%; height: auto; }
 .lp-grid { stroke: var(--ss-rule-soft); stroke-width: 1; }
 .lp-axis { fill: var(--ss-text-secondary); font-family: var(--ss-font-ui); font-size: var(--ss-fs-12); font-variant-numeric: tabular-nums; }
 .lp-axis--end { text-anchor: end; }
+.lp-axis--mid { text-anchor: middle; }
+.lp-tick { stroke: var(--ss-rule-strong); stroke-width: 1; }
+.lp-point { stroke: none; }
 .lp-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .lp-dot { stroke: var(--ss-surface); stroke-width: 2; }
 .lp-cross { stroke: var(--ss-rule-strong); stroke-width: 1; }
@@ -3481,11 +3487,24 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .lp-tip-row span { color: var(--ss-text-secondary); }
 
 /* The problems, most likely to be last first. */
-.lp-outcomes { margin: var(--ss-space-3) 0 0; padding: 0; list-style: none; border-top: 1px solid var(--ss-rule); }
+/* Column names over the problems, on the same grid as a row. */
+.lp-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px 64px 56px;
+  gap: var(--ss-space-2);
+  margin-top: var(--ss-space-2);
+  padding-bottom: var(--ss-space-1);
+  border-bottom: 1px solid var(--ss-rule);
+  font-size: var(--ss-fs-12);
+  color: var(--ss-text-secondary);
+}
+.lp-cols-num { text-align: right; }
+.lp-cols-mid { text-align: center; }
+.lp-outcomes { margin: 0; padding: 0; list-style: none; }
 .lp-row { border-bottom: 1px solid var(--ss-rule); }
 .lp-row-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto 56px 48px;
+  grid-template-columns: minmax(0, 1fr) 72px 64px 56px;
   align-items: center;
   gap: var(--ss-space-2);
   width: 100%;
@@ -3504,16 +3523,30 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .lp-row-name { display: flex; align-items: baseline; gap: var(--ss-space-2); min-width: 0; }
 .lp-row-id {
   flex-shrink: 0;
-  font-family: var(--ss-font-text);
-  font-weight: var(--ss-fw-text-bold);
-  font-size: var(--ss-fs-16);
-  font-variant-numeric: lining-nums;
+  font-weight: var(--ss-fw-strong);
+  font-size: var(--ss-fs-14);
+  font-variant-numeric: tabular-nums;
 }
 .lp-row-demon { flex-shrink: 0; align-self: center; width: 16px; height: 16px; border-radius: 50%; }
 .lp-row-title { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--ss-text-secondary); font-size: var(--ss-fs-13); }
-.lp-row-price { text-align: right; font-weight: var(--ss-fw-strong); font-variant-numeric: tabular-nums; }
+/* The price reads as the button it is: tapping a row opens the buy form under it. */
+.lp-row-price {
+  justify-self: end;
+  min-width: 56px;
+  padding: 2px var(--ss-space-2);
+  border: 1px solid var(--ss-rule-strong);
+  border-radius: var(--ss-radius);
+  background: var(--ss-surface);
+  text-align: center;
+  font-weight: var(--ss-fw-strong);
+  font-variant-numeric: tabular-nums;
+}
+.lp-row-main:hover .lp-row-price { border-color: var(--ss-navy); }
+.lp-row.is-open .lp-row-price { background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-on-navy); }
+.lp-hint { margin: var(--ss-space-4) 0 0; font-size: var(--ss-fs-13); line-height: var(--ss-lh-ui); color: var(--ss-text); }
 .lp-row-mult { text-align: right; color: var(--ss-text-secondary); font-size: var(--ss-fs-13); font-variant-numeric: tabular-nums; }
 .lp-heat {
+  justify-self: center;
   min-width: 28px;
   padding: 0 var(--ss-space-1);
   border-radius: var(--ss-radius-sm);
@@ -3569,13 +3602,25 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .lp-preview { min-height: 1.5em; margin: var(--ss-space-2) 0 0; font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
 .lp-egg { margin: var(--ss-space-1) 0 0; font-size: var(--ss-fs-13); color: var(--ss-accent); }
 .lp-trade-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2); margin-top: var(--ss-space-2); }
-.lp-statement { margin-top: var(--ss-space-2); padding: var(--ss-space-3); border-radius: var(--ss-radius); background: var(--ss-surface-alt); }
+.lp-statement {
+  margin-top: var(--ss-space-2);
+  padding: var(--ss-space-3);
+  border-radius: var(--ss-radius);
+  background: var(--ss-surface-alt);
+  font-size: var(--ss-fs-14);
+  line-height: var(--ss-lh-ui);
+  overflow-wrap: anywhere;
+}
+.lp-statement p { margin: 0 0 var(--ss-space-2); }
+.lp-statement p:last-child { margin-bottom: 0; }
+.lp-statement img,
+.lp-statement svg { max-width: 100%; height: auto; }
 
 .lp-positions { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--ss-space-2); }
 .lp-pos { padding: var(--ss-space-2) var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); }
 .lp-pos.is-out { opacity: 0.6; }
 .lp-pos-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--ss-space-2); }
-.lp-pos-id { font-family: var(--ss-font-text); font-weight: var(--ss-fw-text-bold); font-size: var(--ss-fs-16); }
+.lp-pos-id { font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-14); font-variant-numeric: tabular-nums; }
 .lp-pos-shares { margin-left: auto; font-size: var(--ss-fs-13); color: var(--ss-text-secondary); font-variant-numeric: tabular-nums; }
 .lp-pos-money { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
 .lp-pos-actions { display: flex; flex-wrap: wrap; gap: var(--ss-space-1); margin-top: var(--ss-space-2); }
@@ -3592,7 +3637,7 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   border-bottom: 1px solid var(--ss-rule-soft);
   font-size: var(--ss-fs-13);
 }
-.lp-solved-id { font-family: var(--ss-font-text); font-weight: var(--ss-fw-text-bold); }
+.lp-solved-id { font-weight: var(--ss-fw-strong); font-variant-numeric: tabular-nums; }
 .lp-solved-who { flex: 1 1 auto; min-width: 0; color: var(--ss-text-secondary); }
 .lp-solved-when,
 .lp-feed-when { flex-shrink: 0; margin-left: auto; color: var(--ss-text-secondary); font-variant-numeric: tabular-nums; }
@@ -3629,10 +3674,8 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   background: var(--ss-surface-alt);
   border: 1px solid var(--ss-rule);
   border-bottom: 0;
-  font-family: var(--ss-font-display);
-  font-size: var(--ss-fs-24);
-  font-weight: 600;
-  font-synthesis: none;
+  font-size: var(--ss-fs-20);
+  font-weight: var(--ss-fw-strong);
   color: var(--ss-text-secondary);
 }
 .lp-podium-1 .lp-podium-place { height: 72px; background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-on-navy); }
@@ -3702,7 +3745,7 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .lp-welcome-coin { padding: 0; border: 0; background: transparent; cursor: pointer; }
 .lp-welcome-coin img { display: block; width: 120px; height: 120px; margin: 0 auto; }
 .lp-welcome-title { margin: var(--ss-space-3) 0 var(--ss-space-1); font-size: var(--ss-fs-16); font-weight: var(--ss-fw-strong); color: var(--ss-text-secondary); }
-.lp-welcome-amount { margin: 0 0 var(--ss-space-2); font-family: var(--ss-font-display); font-size: var(--ss-fs-40); font-weight: 600; font-synthesis: none; line-height: var(--ss-lh-tight); color: var(--ss-heading); }
+.lp-welcome-amount { margin: 0 0 var(--ss-space-2); font-size: var(--ss-fs-32); font-weight: var(--ss-fw-strong); line-height: var(--ss-lh-tight); font-variant-numeric: tabular-nums; color: var(--ss-heading); }
 .lp-notes-head { display: flex; align-items: center; gap: var(--ss-space-3); }
 .lp-notes-head .lp-welcome-title { margin: 0; color: var(--ss-heading); }
 .lp-notes-list { margin: var(--ss-space-3) 0; padding-left: var(--ss-space-5); font-size: var(--ss-fs-14); line-height: var(--ss-lh-ui); }
@@ -3755,7 +3798,7 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .mapp-card-question { margin: var(--ss-space-2) 0; font-weight: var(--ss-fw-strong); }
 .mapp-card-top { display: grid; gap: var(--ss-space-1); margin: 0; padding: 0; list-style: none; }
 .mapp-card-row { display: grid; grid-template-columns: 56px minmax(0, 1fr) 48px; align-items: center; gap: var(--ss-space-2); }
-.mapp-card-id { font-family: var(--ss-font-text); font-weight: var(--ss-fw-text-bold); font-variant-numeric: lining-nums; }
+.mapp-card-id { font-weight: var(--ss-fw-strong); font-variant-numeric: tabular-nums; }
 .mapp-card-bar { display: block; height: 6px; border-radius: var(--ss-radius-sm); background: var(--ss-surface-alt); overflow: hidden; }
 .mapp-card-fill { display: block; width: calc(var(--p, 0) * 100%); height: 100%; border-radius: var(--ss-radius-sm); background: var(--ss-link); }
 .mapp-card-pct { text-align: right; font-weight: var(--ss-fw-strong); font-variant-numeric: tabular-nums; }
@@ -3781,9 +3824,9 @@ html.mapp-open body { overflow: hidden; }
 @media (min-width: 768px) {
   .mapp-sheet { align-items: center; padding: var(--ss-space-6); }
   .mapp-panel {
-    width: 420px;
+    width: 720px;
     max-width: 100%;
-    height: 760px;
+    height: 820px;
     max-height: 100%;
     border-radius: var(--ss-radius-lg);
     box-shadow: var(--ss-shadow);
@@ -3801,3 +3844,78 @@ html.mapp-open body { overflow: hidden; }
   filter: grayscale(0.3);
   opacity: 0.85;
 }
+
+/* ── Live alerts on every page (js/pulse.js) ────────────────────────────────────────────────────
+   A new DM, a reply to you or an @mention shows as a small card: across the top on a phone, in the
+   top-right corner under the header on a wider screen. Up to three at a time. */
+.ss-toasts {
+  position: fixed;
+  top: var(--ss-space-2);
+  left: var(--ss-space-2);
+  right: var(--ss-space-2);
+  z-index: 1500;
+  display: grid;
+  gap: var(--ss-space-2);
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .ss-toasts { top: 72px; left: auto; right: var(--ss-space-4); width: 360px; }
+}
+.ss-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid var(--ss-rule);
+  border-radius: var(--ss-radius-lg);
+  background: var(--ss-surface);
+  box-shadow: var(--ss-shadow);
+  pointer-events: auto;
+  animation: ss-toast-in 0.2s ease-out;
+}
+@keyframes ss-toast-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ss-toast { animation: none; }
+}
+.ss-toasts .ss-toast-link {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ss-space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--ss-space-3) var(--ss-space-8) var(--ss-space-3) var(--ss-space-3);
+  color: var(--ss-text);
+  text-decoration: none;
+}
+.ss-toasts .ss-toast-link:hover { color: var(--ss-text); background: var(--ss-surface-alt); border-radius: var(--ss-radius-lg); }
+.ss-toast-avatar { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.ss-toast-body { display: grid; gap: 2px; min-width: 0; }
+.ss-toast-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ss-space-1); font-size: var(--ss-fs-14); }
+.ss-toast-what { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
+.ss-toast-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: var(--ss-fs-14);
+  line-height: var(--ss-lh-snug);
+  overflow-wrap: anywhere;
+}
+.ss-toast-close {
+  position: absolute;
+  top: var(--ss-space-1);
+  right: var(--ss-space-1);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ss-radius);
+  background: transparent;
+  color: var(--ss-text-secondary);
+  font-size: var(--ss-fs-20);
+  line-height: 1;
+  cursor: pointer;
+}
+.ss-toast-close:hover { background: var(--ss-surface-hover); color: var(--ss-text); }

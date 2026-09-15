@@ -155,7 +155,7 @@ async function communityChats() {
 }
 
 function appLink(lang, chats) {
-    return chats && chats[lang] ? `/messages/${chats[lang]}?app=last-problem` : `/${lang}/apps/last-problem`;
+    return chats && chats[lang] ? `/${lang}/messages/${chats[lang]}?app=last-problem` : `/${lang}/apps/last-problem`;
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────────────
@@ -873,8 +873,8 @@ pageRouter.get('/', async (req, res) => {
                     demon: asset('/img/apps/last-problem/demon.svg'),
                 },
                 loginUrl: `/${lang}/login`,
-                chatUrl: chats[lang] ? `/messages/${chats[lang]}?app=last-problem` : null,
-                chatMessageUrl: chats[lang] ? `/messages/${chats[lang]}` : null,
+                chatUrl: chats[lang] ? `/${lang}/messages/${chats[lang]}?app=last-problem` : null,
+                chatMessageUrl: chats[lang] ? `/${lang}/messages/${chats[lang]}` : null,
                 api: '/api/last-problem',
             },
         });

@@ -37,8 +37,11 @@
     const nf0 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
     const nf1 = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
     const dayFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' });
-    const timeFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    const hourFmt = new Intl.DateTimeFormat(LOCALE, { hour: '2-digit', minute: '2-digit' });
+    const dayLocalFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' });
+    // Times as 13.40, never with a colon (the owner's rule for everything this app says).
+    const clock = (date) => `${date.getHours()}.${String(date.getMinutes()).padStart(2, '0')}`;
+    const timeFmt = { format: (date) => `${dayLocalFmt.format(date)} ${clock(date)}` };
+    const hourFmt = { format: clock };
 
     const esc = (value) => String(value == null ? '' : value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -194,18 +197,20 @@
         return steps.find((s) => s >= p * 1.08) || 1;
     }
 
+    /* The price chart. Every event (a trade, a solved problem) gets its own evenly spaced slot, so
+     * ten trades a minute apart are ten visible steps rather than one jump at the left edge; the
+     * axis labels as many of their times as fit without touching, and every point carries a dot. */
     function drawChart() {
         const box = main.querySelector('[data-lp-chart]');
         const chart = state.chart;
         if (!box || !chart || !chart.t.length) return;
         const W = Math.max(260, Math.round(box.clientWidth));
-        const H = 184;
-        const pad = { l: 4, r: 40, t: 10, b: 24 };
+        const H = 196;
+        const pad = { l: 8, r: 44, t: 10, b: 30 };
         const t = chart.t;
-        const t0 = t[0];
-        const t1 = t[t.length - 1] > t0 ? t[t.length - 1] : t0 + 1;
+        const n = t.length;
         const maxP = niceMax(Math.max(0.01, ...chart.series.flatMap((s) => s.p)));
-        const x = (v) => pad.l + ((v - t0) / (t1 - t0)) * (W - pad.l - pad.r);
+        const x = (i) => pad.l + (n > 1 ? i / (n - 1) : 0.5) * (W - pad.l - pad.r);
         const y = (p) => pad.t + (1 - p / maxP) * (H - pad.t - pad.b);
         const ns = 'http://www.w3.org/2000/svg';
         const svg = document.createElementNS(ns, 'svg');
@@ -224,24 +229,45 @@
             const label = el('text', { x: W - pad.r + 6, y: y(g) + 4, class: 'lp-axis' });
             label.textContent = `${Number.isInteger(Math.round(g * 1000) / 10) ? nf0.format(g * 100) : nf1.format(g * 100)}%`;
         }
-        // One day on the chart reads as two times, several days as two dates.
-        const sameDay = dayFmt.format(new Date(t0)) === dayFmt.format(new Date(t1));
-        const axisFmt = sameDay ? hourFmt : dayFmt;
-        const first = el('text', { x: pad.l, y: H - 6, class: 'lp-axis' });
-        first.textContent = axisFmt.format(new Date(t0));
-        const last = el('text', { x: W - pad.r, y: H - 6, class: 'lp-axis lp-axis--end' });
-        last.textContent = axisFmt.format(new Date(t1));
+
+        // Axis times: the last point is "now"; a label shows the date as well when the day changes.
+        const labelText = (i, prevDay) => {
+            const date = new Date(t[i]);
+            if (i === n - 1) return RU ? 'сейчас' : 'now';
+            const day = dayLocalFmt.format(date);
+            return day === prevDay ? clock(date) : `${day} ${clock(date)}`;
+        };
+        const approxWidth = (text) => text.length * 6.4;
+        const baseY = H - pad.b;
+        const lastText = labelText(n - 1, null);
+        const lastLeft = x(n - 1) - approxWidth(lastText);
+        let right = -Infinity;
+        let prevDay = null;
+        for (let i = 0; i < n; i++) {
+            const text = i === n - 1 ? lastText : labelText(i, prevDay);
+            const w = approxWidth(text);
+            const left = i === 0 ? x(i) : (i === n - 1 ? x(i) - w : x(i) - w / 2);
+            if (i !== n - 1 && (left < right + 10 || left + w > lastLeft - 10)) continue;
+            el('line', { x1: x(i), x2: x(i), y1: baseY, y2: baseY + 4, class: 'lp-tick' });
+            const label = el('text', { x: i === 0 ? x(i) : (i === n - 1 ? x(i) : x(i)), y: H - 8, class: `lp-axis${i === n - 1 ? ' lp-axis--end' : (i === 0 ? '' : ' lp-axis--mid')}` });
+            label.textContent = text;
+            right = left + w;
+            prevDay = dayLocalFmt.format(new Date(t[i]));
+        }
 
         for (const s of chart.series) {
-            let d = `M${x(t[0]).toFixed(1)} ${y(s.p[0]).toFixed(1)}`;
-            for (let i = 1; i < t.length; i++) d += ` H${x(t[i]).toFixed(1)} V${y(s.p[i]).toFixed(1)}`;
+            let d = `M${x(0).toFixed(1)} ${y(s.p[0]).toFixed(1)}`;
+            for (let i = 1; i < n; i++) d += ` H${x(i).toFixed(1)} V${y(s.p[i]).toFixed(1)}`;
             el('path', { d, class: 'lp-line', stroke: colourOf.get(s.key) });
         }
         for (const s of chart.series) {
-            el('circle', { cx: x(t[t.length - 1]), cy: y(s.p[s.p.length - 1]), r: 4, class: 'lp-dot', fill: colourOf.get(s.key) });
+            for (let i = 0; i < n - 1; i++) {
+                el('circle', { cx: x(i), cy: y(s.p[i]), r: 2.5, class: 'lp-point', fill: colourOf.get(s.key) });
+            }
+            el('circle', { cx: x(n - 1), cy: y(s.p[n - 1]), r: 4, class: 'lp-dot', fill: colourOf.get(s.key) });
         }
-        const cross = el('line', { x1: 0, x2: 0, y1: pad.t, y2: H - pad.b, class: 'lp-cross', visibility: 'hidden' });
-        const hit = el('rect', { x: pad.l, y: 0, width: W - pad.l - pad.r, height: H, class: 'lp-hit' });
+        const cross = el('line', { x1: 0, x2: 0, y1: pad.t, y2: baseY, class: 'lp-cross', visibility: 'hidden' });
+        const hit = el('rect', { x: 0, y: 0, width: W - pad.r + 4, height: H, class: 'lp-hit' });
 
         const tip = document.createElement('div');
         tip.className = 'lp-tip';
@@ -249,15 +275,15 @@
         box.replaceChildren(svg, tip);
 
         function show(i) {
-            chartIndex = Math.max(0, Math.min(t.length - 1, i));
-            const cx = x(t[chartIndex]);
+            chartIndex = Math.max(0, Math.min(n - 1, i));
+            const cx = x(chartIndex);
             cross.setAttribute('x1', cx);
             cross.setAttribute('x2', cx);
             cross.setAttribute('visibility', 'visible');
             tip.replaceChildren();
             const when = document.createElement('div');
             when.className = 'lp-tip-when';
-            when.textContent = chartIndex === t.length - 1 ? (RU ? 'сейчас' : 'now') : timeFmt.format(new Date(t[chartIndex]));
+            when.textContent = chartIndex === n - 1 ? (RU ? 'сейчас' : 'now') : timeFmt.format(new Date(t[chartIndex]));
             tip.appendChild(when);
             const rows = chart.series.map((s) => ({ key: s.key, p: s.p[chartIndex] })).sort((a, b) => b.p - a.p);
             for (const r of rows) {
@@ -290,23 +316,18 @@
         const nearest = (clientX) => {
             const rect = svg.getBoundingClientRect();
             const px = ((clientX - rect.left) / rect.width) * W;
-            let best = 0;
-            let bestD = Infinity;
-            for (let i = 0; i < t.length; i++) {
-                const dist = Math.abs(x(t[i]) - px);
-                if (dist < bestD) { bestD = dist; best = i; }
-            }
-            return best;
+            const i = n > 1 ? Math.round(((px - pad.l) / (W - pad.l - pad.r)) * (n - 1)) : 0;
+            return Math.max(0, Math.min(n - 1, i));
         };
         hit.addEventListener('pointermove', (e) => show(nearest(e.clientX)));
         hit.addEventListener('pointerdown', (e) => show(nearest(e.clientX)));
         hit.addEventListener('pointerleave', hide);
-        box.onfocus = () => show(t.length - 1);
+        box.onfocus = () => show(n - 1);
         box.onblur = hide;
         box.onkeydown = (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
                 e.preventDefault();
-                show((chartIndex == null ? t.length - 1 : chartIndex) + (e.key === 'ArrowLeft' ? -1 : 1));
+                show((chartIndex == null ? n - 1 : chartIndex) + (e.key === 'ArrowLeft' ? -1 : 1));
             }
         };
     }
@@ -338,7 +359,7 @@
     }
 
     function heat(difficulty) {
-        if (difficulty == null) return '';
+        if (difficulty == null) return '<span></span>';
         const bucket = Math.min(9, Math.max(1, Math.ceil((difficulty / 100) * 9) || 1));
         return `<span class="lp-heat lp-heat-${bucket}">${nf0.format(difficulty)}</span>`;
     }
@@ -360,7 +381,7 @@
 
     function tradeHtml(o) {
         const statement = `<button type="button" class="ss-btn ss-btn--ghost ss-btn--sm" data-lp-statement="${esc(o.id)}">${esc(C.statement)}</button>`;
-        const statementBody = '<div class="lp-statement ss-prose ss-prose--compact" data-lp-statement-body hidden></div>';
+        const statementBody = '<div class="lp-statement" data-lp-statement-body hidden></div>';
         if (!boot.signedIn) {
             return `<div class="lp-trade"><p class="lp-note">${esc(C.signIn)}</p>
                 <div class="lp-trade-actions"><a class="ss-btn ss-btn--primary ss-btn--sm" href="${esc(boot.loginUrl)}" target="_top">${esc(C.signInButton)}</a>${statement}</div>${statementBody}</div>`;
@@ -404,7 +425,7 @@
             const who = f.actor === 'demon' ? C.demonName : (f.username || '');
             const what = f.kind === 'solved'
                 ? `<b>${esc(f.problem)}</b> ${esc(C.feedSolved)}${f.username ? ` · ${esc(C.solvedBy)} ${esc(f.username)}` : ''}`
-                : `${esc(who)} ${esc(f.side === 'sell' ? C.feedSell : C.feedBuy)} <b>${esc(f.problem)}</b> ${quanta(f.amount || 0)}${f.actor === 'chat' ? ` <span class="ss-badge">${esc(C.fromChat)}</span>` : ''}`;
+                : `${esc(who)} ${esc(f.side === 'sell' ? C.feedSell : (f.actor === 'demon' ? C.feedBuyDemon : C.feedBuy))} <b>${esc(f.problem)}</b> ${quanta(f.amount || 0)}${f.actor === 'chat' ? ` <span class="ss-badge">${esc(C.fromChat)}</span>` : ''}`;
             return `<li class="${f.cancelled ? 'is-cancelled' : ''}"><span class="lp-feed-what">${what}</span><span class="lp-feed-when">${esc(timeFmt.format(new Date(f.at)))}</span></li>`;
         }).join('');
         return `<section class="lp-block"><h2 class="lp-h2">${esc(C.recent)}</h2><ul class="lp-feed">${items}</ul></section>`;
@@ -424,6 +445,9 @@
             <p class="lp-meta">${meta}</p>
             ${chartHtml()}
             ${positionsHtml()}
+            ${state.decidedAt || state.resolvedAt ? '' : `<p class="lp-hint">${esc(C.listHint.replace('{n}', String(open.length)))}</p>`}
+            <div class="lp-cols" aria-hidden="true"><span>${esc(C.columns.problem)}</span><span class="lp-cols-mid">${esc(C.columns.difficulty)}</span>
+                <span class="lp-cols-num">${esc(C.columns.chance)}</span><span class="lp-cols-num">${esc(C.columns.payout)}</span></div>
             <ol class="lp-outcomes">${open.map(rowHtml).join('')}</ol>
             ${solvedHtml()}
             ${feedHtml()}
@@ -567,7 +591,14 @@
         layer.hidden = false;
         const claim = layer.querySelector('[data-lp-claim]');
         if (claim) claim.focus({ preventScroll: true });
+        // The big coin keeps turning over while it waits to be claimed.
+        clearInterval(welcomeSpin);
+        welcomeSpin = setInterval(() => {
+            if (layer.dataset.kind === 'welcome' && !layer.hidden) autoFlip();
+            else clearInterval(welcomeSpin);
+        }, 3200);
     }
+    let welcomeSpin = null;
 
     function closeLayer() {
         layer.hidden = true;
@@ -587,6 +618,20 @@
     }
 
     // ── Easter eggs ───────────────────────────────────────────────────────────────────
+
+    /* Flip every coin on screen to its other face and back, without counting toward the easter egg. */
+    function autoFlip() {
+        if (reducedMotion) return;
+        const turn = (side) => document.querySelectorAll('[data-lp-coin-face]').forEach((img) => {
+            img.dataset.side = side;
+            img.src = side === 'back' ? boot.art.coinBack : boot.art.coin;
+            img.classList.remove('is-flipping');
+            void img.offsetWidth;
+            img.classList.add('is-flipping');
+        });
+        turn('back');
+        setTimeout(() => turn('front'), 700);
+    }
 
     function spinCoin() {
         if (reducedMotion) return;
@@ -616,7 +661,7 @@
         flipTimer = setTimeout(() => { flips = 0; }, 2500);
         if (flips === 7) {
             flips = 0;
-            toast(`${C.collapse}: ${Math.random() < 0.5 ? 'ħ' : '∗'}`);
+            toast(`${C.collapse}, ${Math.random() < 0.5 ? 'ħ' : '∗'}`);
         }
     }
 
@@ -667,6 +712,7 @@
                 closeLayer();
                 await refresh();
                 spinCoin();
+                toast(C.claimedHint);
             });
             return;
         }
@@ -695,7 +741,7 @@
             const amount = amountValue();
             act(async () => {
                 const r = await post('trade', { problem: buy.dataset.lpBuy, side: 'buy', amount });
-                toast(`${C.bought}: ${nf0.format(r.shares)} ${plural(r.shares, C.shares)} ${r.problem}`);
+                toast(`${C.bought} ${nf0.format(r.shares)} ${plural(r.shares, C.shares)} ${r.problem}`);
                 openRow = null;
                 await refresh();
             });
@@ -708,7 +754,7 @@
             const shares = sell.dataset.shares === 'all' || !pos ? 'all' : pos.shares / 2;
             act(async () => {
                 const r = await post('trade', { problem, side: 'sell', shares });
-                toast(`${C.sold}: ${problem} · +${nf0.format(r.amount)} ħ`);
+                toast(`${C.sold} ${problem}, +${nf0.format(r.amount)} ħ`);
                 await refresh();
             });
             return;
@@ -784,4 +830,6 @@
     }, 30 * 1000);
 
     render();
+    // Opening the app turns the coin over once.
+    setTimeout(autoFlip, 450);
 })();

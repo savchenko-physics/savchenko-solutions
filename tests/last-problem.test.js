@@ -273,15 +273,15 @@ test('premium reactions: priced, trophies, the one nobody gets, and Libra season
     assert.equal(Reactions.isPremium('\u{1F44D}'), false);
 
     const inSeason = new Date('2026-10-01T12:00:00Z');
-    assert.deepEqual(Reactions.purchaseCheck(':kvant:', { balance: 1000, now: inSeason }), { ok: true, price: 200 });
-    assert.equal(Reactions.purchaseCheck(':laplace:', { balance: 499.99, now: inSeason }).error, 'insufficient');
-    assert.equal(Reactions.purchaseCheck(':kvant:', { owned: [':kvant:'], balance: 1000 }).error, 'owned');
+    assert.deepEqual(Reactions.purchaseCheck(':kvant:', { balance: 1200, now: inSeason }), { ok: true, price: 1200 });
+    assert.equal(Reactions.purchaseCheck(':laplace:', { balance: 1999.99, now: inSeason }).error, 'insufficient');
+    assert.equal(Reactions.purchaseCheck(':kvant:', { owned: [':kvant:'], balance: 5000 }).error, 'owned');
     assert.equal(Reactions.purchaseCheck(':n2000:', { balance: 1e9 }).error, 'trophy');
     assert.equal(Reactions.purchaseCheck(':perpetuum:', { balance: 1e12 }).error, 'never');
-    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 1000, now: inSeason }).ok, true);
-    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 1000, now: new Date('2026-09-22T23:59:59Z') }).error, 'off_season');
-    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 1000, now: new Date('2026-10-23T23:59:59Z') }).ok, true, 'the last day counts');
-    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 1000, now: new Date('2026-10-24T00:00:00Z') }).error, 'off_season');
+    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 5000, now: inSeason }).ok, true);
+    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 5000, now: new Date('2026-09-22T23:59:59Z') }).error, 'off_season');
+    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 5000, now: new Date('2026-10-23T23:59:59Z') }).ok, true, 'the last day counts');
+    assert.equal(Reactions.purchaseCheck(':libra:', { balance: 5000, now: new Date('2026-10-24T00:00:00Z') }).error, 'off_season');
     assert.equal(Reactions.purchaseCheck(':jedi:', { balance: 1000 }).error, 'not_premium');
     assert.equal(Reactions.purchaseCheck('__proto__', { balance: 1000 }).error, 'unknown');
 });
@@ -362,13 +362,15 @@ test('migration 054 only creates tables, and its rollback removes premium reacti
     assert.ok(down.indexOf('DELETE FROM message_reactions') < down.indexOf('DROP TABLE IF EXISTS reaction_unlocks'));
 });
 
-test('the copy has both languages, no dollar signs and no em or en dashes', () => {
+test('the copy has both languages, and no dollar signs, dashes or colons', () => {
     const shape = (o) => Object.keys(o).sort();
     assert.deepEqual(shape(COPY.ru), shape(COPY.en));
     const walk = (value, where) => {
         if (typeof value === 'string') {
             assert.doesNotMatch(value, /\$/, `${where} uses $`);
             assert.doesNotMatch(value, /[—–]/, `${where} has a dash`);
+            // The owner's rule for this app: no colons anywhere in what it says (a time is written 13.40).
+            assert.doesNotMatch(value, /:/, `${where} has a colon`);
         } else if (typeof value === 'function') {
             walk(value('5.8.9', 100), where);
         } else if (value && typeof value === 'object') {
@@ -398,7 +400,10 @@ test('a premium reaction someone left can always be taken back, bought or not', 
     }
 });
 
-test('the starting grant covers the cheapest reaction and a real bet', () => {
-    const cheapest = Math.min(...Reactions.CUSTOM.filter((e) => Number.isFinite(e.price)).map((e) => e.price));
-    assert.ok(LP.START_BALANCE >= cheapest + 100);
+test('the starting grant alone buys nothing: a reaction has to be won', () => {
+    const priced = Reactions.CUSTOM.filter((e) => Number.isFinite(e.price));
+    for (const e of priced) {
+        assert.ok(e.price > LP.START_BALANCE, `${e.id} costs ${e.price}, which the starting ${LP.START_BALANCE} ħ could buy`);
+        assert.equal(Reactions.purchaseCheck(e.id, { balance: LP.START_BALANCE, now: new Date('2026-10-01T00:00:00Z') }).error, 'insufficient', e.id);
+    }
 });

@@ -3047,18 +3047,12 @@ app.get(["/drafts", "/:lang(en|ru)/drafts"], checkAuthenticated, async (req, res
     }
 });
 
-// The messenger lives at /messages with no language in its path, so the header's EN/RU
-// switch on that page points here: record the choice and go straight back to the same
-// conversation, instead of dropping the reader on the home page as it used to. Must precede
-// the /:lang/:name catch-all. The lang middleware near the top already saves the choice for
-// most visitors, but it skips requests botgate rates as not countable (a VPN or datacenter
-// address), and a signed-in person switching languages is never a crawler.
-app.get(["/:lang(en|ru)/messages", "/:lang(en|ru)/messages/:id(\\d+)"], (req, res) => {
-    if (req.session.userId && req.session.lang !== req.params.lang) {
-        req.session.lang = req.params.lang;
-    }
-    res.redirect(req.params.id ? `/messages/${req.params.id}` : "/messages");
-});
+// The messenger's pages have the language in their address like every other page: /ru/messages,
+// /en/messages/5, /ru/messages/saved (lib/messagesUrls.js). The same router also answers at
+// /messages, where its JSON and live-update endpoints stay and a bare page address redirects to
+// the language one, so links stored in notifications keep working. Must precede the /:lang/:name
+// catch-all.
+app.use('/:lang(en|ru)/messages', messagesRouter);
 
 app.get("/:lang(en|ru)/:name/brainstorm", (req, res) => {
     return res.redirect(301, `/${req.params.lang}/${req.params.name}`);
