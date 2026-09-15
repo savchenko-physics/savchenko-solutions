@@ -14,9 +14,10 @@
  * b is the liquidity: how far one trade moves the price. With b = 1000 and 32 outcomes, 100 ħ on
  * a 3% problem takes it to about 12%.
  *
- * When a problem gets solved it can no longer be the last one, so its term simply leaves the sum
- * (eliminate). Its holders keep their shares, which are now worth nothing, and the remaining
- * prices scale up so they still add up to one.
+ * When a problem gets solved its term leaves the sum (eliminate), its shares are worth nothing, and
+ * the market pays interest to everything still in play (solve, below). The prices above are then
+ * relative weights, and what a share costs in quanta is scale × price: the scale starts at 1 and
+ * shrinks at every solve by exactly what the interest paid out, so no price per share jumps.
  *
  * Plain numbers keyed by problem id, never user input as a key (the router validates ids first).
  * Log-sum-exp throughout: exp(q / b) overflows long before any realistic market does otherwise.
@@ -82,26 +83,31 @@
         return cost(withDelta(q, k, shares), b) - cost(q, b);
     }
 
-    /* How many shares of k an amount buys. Solving C(q + x e_k) - C(q) = amount for x gives
-     *   x = b * ln( (exp(amount / b) - 1 + p) / p ),   p the current price of k,
-     * exact, so the buyer pays precisely what they typed. expm1 keeps small amounts precise. */
-    function sharesForAmount(q, b, k, amount) {
+    /* How many shares of k an amount buys at a given scale. Solving
+     * scale × (C(q + x e_k) - C(q)) = amount for x gives
+     *   x = b * ln( (exp(a) - 1 + p) / p ),   a = amount / (scale × b),  p the current price of k,
+     * exact, so the buyer pays precisely what they typed. expm1 keeps small amounts precise, and a
+     * large a (late in the market, when the scale is small) is taken in logs so it cannot overflow. */
+    function sharesForAmount(q, b, k, amount, scale) {
         if (!(amount > 0)) return 0;
         const p = priceOf(q, b, k);
-        return b * Math.log((Math.expm1(amount / b) + p) / p);
+        const a = amount / ((scale > 0 ? scale : 1) * b);
+        const top = a > 30 ? a + Math.log1p((p - 1) * Math.exp(-a)) : Math.log(Math.expm1(a) + p);
+        return b * (top - Math.log(p));
     }
 
-    /** What selling `shares` of k pays out now. */
-    function sellProceeds(q, b, k, shares) {
+    /** What selling `shares` of k pays out now, in quanta. */
+    function sellProceeds(q, b, k, shares, scale) {
         if (!(shares > 0)) return 0;
-        return -tradeCost(q, b, k, -shares);
+        return -tradeCost(q, b, k, -shares) * (scale > 0 ? scale : 1);
     }
 
-    /* What a whole portfolio fetches if all of it is sold now: C(q) - C(q - h), for holdings h
-     * keyed like q (outcomes missing from q are worth nothing). Selling one position at a time
-     * and adding up the proceeds undervalues a spread of bets, because each sale is priced as if
-     * the others were still held; sold together, a complete set of x shares fetches exactly x. */
-    function portfolioValue(q, b, holdings) {
+    /* What a whole portfolio fetches if all of it is sold now: scale × (C(q) - C(q - h)), for
+     * holdings h keyed like q (outcomes missing from q are worth nothing). Selling one position at
+     * a time and adding up the proceeds undervalues a spread of bets, because each sale is priced
+     * as if the others were still held; sold together, a complete set of x shares fetches exactly
+     * scale × x. */
+    function portfolioValue(q, b, holdings, scale) {
         let any = false;
         const after = {};
         for (const key of keysOf(q)) {
@@ -109,7 +115,39 @@
             if (h > 0) any = true;
             after[key] = q[key] - h;
         }
-        return any ? cost(q, b) - cost(after, b) : 0;
+        return any ? (cost(q, b) - cost(after, b)) * (scale > 0 ? scale : 1) : 0;
+    }
+
+    // The scale never reaches zero, even if a problem holding practically the whole market is
+    // solved; below this the next trade's arithmetic would stop being meaningful.
+    const MIN_SCALE = 1e-9;
+
+    /* Problem k is solved: the rule the owner set on the evening the market opened, "conservation
+     * of interest". Its shares are worth nothing, and every holding in the problems still open earns
+     * interest at the rate p_k / (1 - p_k) on what it sells for right after (interestOn). The
+     * scale shrinks by (1 - p_k), which keeps every other price per share where it was, and is
+     * exactly what the interest can pay: a complete set of shares is worth the same before and
+     * after, part of it now as quanta. So the later a problem is solved, the more interest its
+     * shares have collected; the last one standing also keeps its full value. */
+    function solve(q, b, scale, k) {
+        const before = scale > 0 ? scale : 1;
+        const share = priceOf(q, b, k);
+        return {
+            share,
+            rate: share / (1 - share),
+            q: eliminate(q, k),
+            scaleBefore: before,
+            scale: Math.max(before * (1 - share), MIN_SCALE),
+        };
+    }
+
+    /* The interest one holder gets from a solve (the result of solve), for their holdings in the
+     * problems still open. rate × scale after is share × scale before, written that way so it stays
+     * finite when the solved problem held almost everything. */
+    function interestOn(solved, b, holdings) {
+        if (!solved || !(solved.share > 0)) return 0;
+        const value = portfolioValue(solved.q, b, holdings, 1);
+        return value > 0 ? solved.share * solved.scaleBefore * value : 0;
     }
 
     /** The market with outcome k removed: it was solved, so it can no longer be the last one. */
@@ -130,5 +168,5 @@
         return q;
     }
 
-    return { cost, prices, priceOf, tradeCost, sharesForAmount, sellProceeds, portfolioValue, eliminate, qForPrices, logSumExp };
+    return { cost, prices, priceOf, tradeCost, sharesForAmount, sellProceeds, portfolioValue, eliminate, solve, interestOn, qForPrices, logSumExp, MIN_SCALE };
 });

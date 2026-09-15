@@ -7,22 +7,11 @@
   // vague mush, and on a page carrying nineteen months of history it makes everything look
   // freshly manufactured whether or not it is. A written date cannot be mistaken for that,
   // and it is the thing a sceptical reader checks.
-  const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  function ago(d) {
-    const t = new Date(d);
-    const s = Math.max(0, (Date.now() - t.getTime()) / 1000);
-    if (s < 3600) return ru ? 'только что' : 'just now';
-    // UTC getters on purpose. A date-only string parses as UTC midnight, so reading it back
-    // with local getters lands on the previous day for anyone west of Greenwich: 2024-12-28
-    // rendered as "27 декабря". The server also stores timestamptz, so UTC is the one frame
-    // that gives every reader the same answer.
-    const day = t.getUTCDate(), mon = t.getUTCMonth(), yr = t.getUTCFullYear();
-    const sameYear = yr === new Date().getUTCFullYear();
-    return ru
-      ? `${day} ${RU_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`
-      : `${day} ${EN_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`;
-  }
+  //
+  // In the reader's own time zone (localTime, js/local-time.js), except the seeded history: those
+  // rows are dates stored as UTC midnight, and shifting one west of Greenwich would show the day
+  // before (2024-12-28 as "27 декабря"), so `calendar` keeps them in UTC.
+  const ago = (d) => localTime(d, 'recent', pageLang, { calendar: true });
   const CHECK = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm4.1 5.8-4.9 5a.9.9 0 0 1-1.3 0L3.9 8.7a.9.9 0 1 1 1.3-1.3l1.4 1.5 4.2-4.4a.9.9 0 0 1 1.3 1.3z"/></svg>';
   const LOCK = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M4.5 6.5V5a3.5 3.5 0 1 1 7 0v1.5h.5A1.5 1.5 0 0 1 13.5 8v5A1.5 1.5 0 0 1 12 14.5H4A1.5 1.5 0 0 1 2.5 13V8A1.5 1.5 0 0 1 4 6.5h.5zm1.6 0h3.8V5a1.9 1.9 0 1 0-3.8 0v1.5z"/></svg>';
   const ARROW_UP = '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M10 3.5 3 11h4v5.5h6V11h4z"/></svg>';
@@ -65,7 +54,7 @@
           <p class="fb-solved" style="font-size:var(--ss-fs-13); padding:var(--ss-space-1) var(--ss-space-3) var(--ss-space-1) var(--ss-space-2);">
             <%- CHECK %>
             <span><%= copy.resolvedTitle %></span>
-            <% if (item.resolved_at) { %><span class="fb-solved-when"><%= ago(item.resolved_at) %></span><% } %>
+            <% if (item.resolved_at) { %><span class="fb-solved-when"><%- ago(item.resolved_at) %></span><% } %>
           </p>
         <% } else if (locked) { %>
           <p class="fb-closed-tag"><%- LOCK %><span><%= copy.declinedTitle %></span></p>
@@ -74,7 +63,7 @@
           <span class="fb-badge fb-badge-<%= item.status %>"><%= statusLabel %></span>
           <span><%= item.category %></span>
           <span aria-hidden="true">&middot;</span>
-          <span><%= ago(item.created_at) %></span>
+          <span><%- ago(item.created_at) %></span>
           <% if (item.problem_name) { %>
             <span aria-hidden="true">&middot;</span>
             <a href="/<%= item.problem_lang || pageLang %>/<%= item.problem_name %>" style="color: var(--ss-link);">

@@ -260,7 +260,7 @@
                         </span>
                         <span><%= topic.author_username %></span>
                         <span>&middot;</span>
-                        <span><%= timeAgo(topic.created_at) %></span>
+                        <span><%- localTime(topic.created_at, 'relative', lang) %></span>
                     </div>
                 </div>
                 <div class="topic-stats">
@@ -276,7 +276,7 @@
                 <div class="topic-last-reply">
                     <% if (topic.last_reply_username) { %>
                         <div><%= topic.last_reply_username %></div>
-                        <div><%= timeAgo(topic.last_reply_at) %></div>
+                        <div><%- localTime(topic.last_reply_at, 'relative', lang) %></div>
                     <% } else { %>
                         <div>-</div>
                     <% } %>

@@ -38,8 +38,10 @@ module.exports = function(mainPool) {
     app.set('view engine', 'ejs');
     app.use(expressLayouts);
 
-    app.set('layout', 'layout'); 
+    app.set('layout', 'layout');
     app.locals.titleText = titleText;
+    // Dates in the reader's time zone, as on the main site (lib/localTime.js, js/local-time.js).
+    app.locals.localTime = require('../lib/localTime').localTime;
 
     // Set the views directory (could also leave as default 'views')
     app.set('views', path.join(__dirname, 'views'));

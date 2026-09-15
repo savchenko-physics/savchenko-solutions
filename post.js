@@ -19,6 +19,7 @@ const { ruVotes } = require("./lib/ruPlural");
 const { getFigure, splitAtSolutionHeading } = require("./lib/solutionFigures");
 const { structureSolution } = require('./js/solution-structure');
 const { solutionTitle } = require("./lib/pageTitle");
+const { isBookProblem } = require("./lib/bookProblems");
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -256,11 +257,8 @@ async function renderPost(req, res) {
             if (allContributors.length > 0) {
                 const originalAuthor = allContributors[0];
                 const editors = allContributors.slice(1);
-                // In the page's language: "10 сент. 2026 г." on /ru, "Sep 10, 2026" on /en — the same
-                // form the edit history line under it already used.
-                const lastUpdatedFormatted = lastModified
-                    ? new Date(lastModified).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                    : null;
+                // A moment, not text: the template writes it in the reader's time zone (localTime).
+                const lastUpdatedFormatted = lastModified ? new Date(lastModified) : null;
 
                 attribution = {
                     originalAuthor: {
@@ -557,6 +555,13 @@ async function renderPost(req, res) {
             res.send(renderMathInHtml(pageHtml));
         });
     } else {
+        // A real problem of the book with nothing written in this language is not a broken link
+        // (the owner, 2026-09-15). If the other language has the solution, that is the page; with
+        // none at all, the unsolved list is where someone might write one. Anything else is a 404.
+        if ((lang === 'en' || lang === 'ru') && isBookProblem(name)) {
+            if (fs.existsSync(alternateFilePath)) return res.redirect(302, `/${alternateLang}/${name}`);
+            return res.redirect(302, `/${lang}/unsolved`);
+        }
         i18n.setLocale(res, lang);
         res.status(404).render("404", {
             __: i18n.__,

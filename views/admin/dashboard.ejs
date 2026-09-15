@@ -486,7 +486,7 @@
               <% } else { %> <%= a.action_type %>
               <% } %>
             </span>
-            <span class="activity-time"><%= new Date(a.created_at).toLocaleString() %></span>
+            <span class="activity-time"><%- localTime(a.created_at, 'datetime', 'en') %></span>
           </li>
         <% }); %>
       </ul>
@@ -524,7 +524,7 @@
           <td><%= (r.language || '').toUpperCase() %></td>
           <td style="max-width:300px; word-break:break-word;"><%= r.reason %></td>
           <td><%= r.reporter_name || 'Anonymous' %></td>
-          <td style="white-space:nowrap;"><%= new Date(r.created_at).toLocaleDateString() %></td>
+          <td style="white-space:nowrap;"><%- localTime(r.created_at, 'date', 'en') %></td>
           <td>
             <span class="status-badge status-<%= r.status || 'pending' %>"><%= r.status || 'pending' %></span>
           </td>
@@ -584,7 +584,7 @@
             <span class="status-badge"><%= f.category %></span>
             <span class="status-badge"><%= (f.lang || '').toUpperCase() %></span>
             <strong><%= f.author_name || 'Anonymous' %></strong>
-            <span style="color: var(--admin-muted);"><%= new Date(f.created_at).toLocaleString() %></span>
+            <span style="color: var(--admin-muted);"><%- localTime(f.created_at, 'datetime', 'en') %></span>
             <a href="/feedback/<%= f.public_id %>" target="_blank">receipt</a>
             <% if (f.upvotes || f.downvotes) { %>
               <span class="status-badge" title="score / up / down"><%= f.votes %> &nbsp;&uarr;<%= f.upvotes %> &darr;<%= f.downvotes %></span>
@@ -668,7 +668,7 @@
             <tr>
               <td style="white-space:nowrap;"><%= p.question_id %></td>
               <td style="word-break:break-word;"><%= p.free_text %></td>
-              <td style="white-space:nowrap;"><%= new Date(p.created_at).toLocaleDateString() %></td>
+              <td style="white-space:nowrap;"><%- localTime(p.created_at, 'date', 'en') %></td>
             </tr>
           <% }); %>
         </tbody>
@@ -698,7 +698,7 @@
           <td><a href="/<%= f.language || 'en' %>/<%= f.problem_name %>" target="_blank"><%= f.problem_name %></a></td>
           <td><%= (f.language || '').toUpperCase() %></td>
           <td><%= f.editor_name || f.ip_address || 'Unknown' %></td>
-          <td style="white-space:nowrap;"><%= new Date(f.edited_at).toLocaleDateString() %></td>
+          <td style="white-space:nowrap;"><%- localTime(f.edited_at, 'date', 'en') %></td>
           <td style="max-width:300px; word-break:break-word; font-size:var(--ss-fs-12); color:var(--admin-muted);">
             <%= (f.new_content || '').substring(0, 200) %><% if ((f.new_content || '').length > 200) { %>...<% } %>
           </td>
@@ -780,7 +780,7 @@
             <% } %>
           </td>
           <td><%= u.contribution_count %></td>
-          <td style="white-space:nowrap;"><%= u.created_at ? new Date(u.created_at).toLocaleDateString() : '' %></td>
+          <td style="white-space:nowrap;"><%- localTime(u.created_at, 'date', 'en') %></td>
           <td style="white-space:nowrap;">
             <form method="POST" action="/admin/users/<%= u.id %>/verify?page=<%= page %>&sort=<%= sort %>&dir=<%= dir %><%= search ? '&search=' + encodeURIComponent(search) : '' %>" style="display:inline;">
               <button type="submit" class="<%= u.is_verified_user ? 'btn-admin-danger' : 'btn-admin-success' %>" style="font-size:var(--ss-fs-12);">
@@ -846,7 +846,7 @@
           <td><code><%= ip.ip_address %></code></td>
           <td><%= ip.reason || '—' %></td>
           <td><%= ip.blocked_by_name || '—' %></td>
-          <td style="white-space:nowrap;"><%= new Date(ip.blocked_at).toLocaleDateString() %></td>
+          <td style="white-space:nowrap;"><%- localTime(ip.blocked_at, 'date', 'en') %></td>
           <td>
             <form method="POST" action="/admin/blocked-ips/<%= ip.id %>/remove" style="display:inline;">
               <button type="submit" class="btn-admin-danger">Remove</button>
@@ -899,7 +899,7 @@
             <% } %>
           </td>
           <td><% if (r.username) { %><%= r.username %><% } else { %><span style="color:var(--admin-muted);">No account</span><% } %></td>
-          <td style="white-space:nowrap;"><%= new Date(r.created_at).toLocaleString() %></td>
+          <td style="white-space:nowrap;"><%- localTime(r.created_at, 'datetime', 'en') %></td>
           <td><code style="font-size:var(--ss-fs-12);"><%= r.ip_address || '—' %></code></td>
           <td>
             <span class="status-badge status-<%= r.status === 'handled' ? 'resolved' : r.status === 'dismissed' ? 'dismissed' : 'pending' %>"><%= r.status %></span>
@@ -926,7 +926,7 @@
                 <button type="submit" class="btn-admin-danger">Dismiss</button>
               </form>
             <% } else { %>
-              <span style="font-size:var(--ss-fs-12); color:var(--admin-muted);"><%= r.handled_at ? new Date(r.handled_at).toLocaleDateString() : '' %></span>
+              <span style="font-size:var(--ss-fs-12); color:var(--admin-muted);"><%- localTime(r.handled_at, 'date', 'en') %></span>
             <% } %>
           </td>
         </tr>
@@ -1001,7 +1001,7 @@
             <% if (ch.is_active) { %><span style="color: var(--ss-success-strong); font-size: var(--ss-fs-12); margin-left: var(--ss-space-1);">(active)</span><% } %>
           </td>
           <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center; font-size: var(--ss-fs-13);">
-            <%= new Date(ch.week_start).toLocaleDateString() %> &ndash; <%= new Date(ch.week_end).toLocaleDateString() %>
+            <%- localTime(ch.week_start, 'date', 'en', { calendar: true }) %> &ndash; <%- localTime(ch.week_end, 'date', 'en', { calendar: true }) %>
           </td>
           <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center;"><%= ch.submission_count %></td>
           <td style="padding: var(--ss-space-2); border-bottom: 1px solid var(--ss-rule-soft); text-align: center;">
@@ -1026,7 +1026,7 @@
             <div>
               <img src="<%= sub.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" style="width: 20px; height: 20px; border-radius: 50%; vertical-align: middle;" />
               <strong><a href="/user/<%= sub.username %>" style="color: var(--ss-link);"><%= sub.username %></a></strong>
-              <span style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-left: var(--ss-space-1);"><%= new Date(sub.submitted_at).toLocaleString() %></span>
+              <span style="font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-left: var(--ss-space-1);"><%- localTime(sub.submitted_at, 'datetime', 'en') %></span>
             </div>
             <div>
               <% if (sub.is_correct === null) { %>
@@ -1066,6 +1066,8 @@
 </div>
 
 <script src="/js/vendor/bootstrap.bundle.min.js"></script>
+<%# Dates in the reader's time zone; this page has no site header to load it. %>
+<script src="<%= typeof asset === 'function' ? asset('/js/local-time.js') : '/js/local-time.js' %>" defer></script>
 
 <% if (tab === 'flagged') { %>
 <script>
@@ -1365,8 +1367,8 @@
             <a href="/en/profile/<%= c.username %>" target="_blank"><%= c.username %></a>
             <% if (c.full_name) { %><br><span style="font-size:var(--ss-fs-12); color:var(--admin-muted);"><%= c.full_name %></span><% } %>
           </td>
-          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%= new Date(c.en_at).toLocaleDateString('en-GB') %></td>
-          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%= new Date(c.ru_at).toLocaleDateString('en-GB') %></td>
+          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%- localTime(c.en_at, 'date', 'en') %></td>
+          <td style="white-space:nowrap; font-size:var(--ss-fs-12);"><%- localTime(c.ru_at, 'date', 'en') %></td>
           <td>
             <span class="status-badge <%=
               c.current_decision === 'pending'          ? 'status-pending'   :
@@ -1436,7 +1438,7 @@
               'status-resolved'
             %>"><%= o.decision %></span>
           </td>
-          <td style="font-size:var(--ss-fs-12); white-space:nowrap;"><%= new Date(o.decided_at).toLocaleString('en-GB') %></td>
+          <td style="font-size:var(--ss-fs-12); white-space:nowrap;"><%- localTime(o.decided_at, 'datetime', 'en') %></td>
         </tr>
         <% }); %>
       </tbody>

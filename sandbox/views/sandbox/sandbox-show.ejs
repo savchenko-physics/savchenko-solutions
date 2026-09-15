@@ -58,7 +58,7 @@
         <span><strong>Subject:</strong> <%= solution.subject %></span>
         <span><strong>Difficulty:</strong> <%= solution.difficulty %></span>
         <span><strong>Status:</strong> <%= solution.status %></span>
-        <span><strong>Posted:</strong> <%= solution.created_at %></span>
+        <span><strong>Posted:</strong> <%- localTime(solution.created_at, 'datetime', 'en') %></span>
       </div>
 
       <h5 class="mb-3">Solution Content</h5>
@@ -146,7 +146,7 @@
                   <% }); %>
                 </div>
               <% } %>
-              <small class="text-muted"><%= comment.created_at %></small>
+              <small class="text-muted"><%- localTime(comment.created_at, 'datetime', 'en') %></small>
             </li>
           <% }); %>
         </ul>

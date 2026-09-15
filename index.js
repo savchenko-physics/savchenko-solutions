@@ -14,6 +14,7 @@ const {
     normalizeLang,
 } = require("./utils"); // Importing functions from utils.js
 const { docTitle, titleText } = require("./lib/pageTitle");
+const { localTime } = require("./lib/localTime");
 const { COMMUNITY_LANGS, mutedByDefault } = require("./lib/communityChats");
 // Shared with the browser (views/edit_post.ejs loads the same file) so that "did this
 // text actually change?" has exactly one answer on both sides. See js/draft-state.js.
@@ -368,6 +369,9 @@ app.locals.docTitle = docTitle;
 app.locals.titleText = titleText;
 app.locals.ruPlural = ruPlural;
 app.locals.usernamePattern = USERNAME_PATTERN;
+// Dates and times in the reader's own time zone: <%- localTime(value, 'relative', lang) %> writes a
+// <time data-local> in UTC that js/local-time.js (loaded by the header) rewrites in the browser.
+app.locals.localTime = localTime;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
@@ -2571,16 +2575,6 @@ async function getProofNumbers() {
 // happened to a solution, so they share one time-ordered feed rather than sitting in
 // two boxes competing for the same corner of the sidebar. Comments are rare next to
 // edits (355 against 8,277), so they read as occasional punctuation, not noise.
-function formatFeedTimestamp(date) {
-    return new Intl.DateTimeFormat(undefined, {
-        hour: '2-digit',
-        minute: '2-digit',
-        month: 'short',
-        day: '2-digit',
-        timeZoneName: 'short'
-    }).format(date);
-}
-
 // The homepage widget set — recent changes, top authors, progress, most wanted — is
 // the same for every visitor and costs 400-600 ms of database work, which it used to
 // pay on every single request. None of it changes by the second, so it is held briefly
@@ -2670,7 +2664,6 @@ async function getRecentContributions(limit) {
             editor: row.username || 'Anonymous',
             hasUser: !!row.username,
             isNew: parseInt(row.edit_number) === 1,
-            timestamp: formatFeedTimestamp(row.edited_at),
             relativeTime: row.edited_at,
             sortAt: new Date(row.edited_at).getTime(),
             id: row.id,
@@ -2685,7 +2678,6 @@ async function getRecentContributions(limit) {
             editor: row.username || 'Anonymous',
             hasUser: !!row.username,
             isNew: false,
-            timestamp: formatFeedTimestamp(row.created_at),
             relativeTime: row.created_at,
             sortAt: new Date(row.created_at).getTime(),
             id: row.id,

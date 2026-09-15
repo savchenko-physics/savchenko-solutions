@@ -21,9 +21,15 @@
 //   3. The two bets people named in the chat go in at the moment they wrote them, 100 ħ each from
 //      their own 1000: Valter on 5.8.9 (#1962), emixter on 7.2.11 (#1965). Each can cancel it in the
 //      app for a full refund; the activation step tells them so.
-//   4. Every problem solved since the question drops out at the time its solution appeared.
+//   4. Every problem solved since the question drops out at the time its solution appeared, and
+//      pays interest to everything still in play (conservation of interest, lib/lastProblem.js
+//      settleSolve), exactly as the app's sync would have.
 //
-// Needs migration 054. Reads PG_* from the repository's .env like the app.
+// --revert undoes a solve: the problem is open again, the scale goes back, and the interest that
+// solve paid is taken back from each wallet, as far as the balance allows (quanta already spent on
+// a reaction stay spent; the shortfall is printed).
+//
+// Needs migrations 054 and 055. Reads PG_* from the repository's .env like the app.
 'use strict';
 
 const path = require('path');
@@ -145,7 +151,7 @@ async function plan(db) {
 
     // Replay, keeping the q a solved problem had when it dropped out (the database keeps it, so a
     // revert restores its price).
-    const { steps } = LP.replay(outcomes, B, events);
+    const { steps, scale } = LP.replay(outcomes, B, events);
     const fullQ = Object.fromEntries(outcomes.map((k) => [k, 0]));
     const demonShares = Object.fromEntries(outcomes.map((k) => [k, 0]));
     const positions = new Map();
@@ -156,7 +162,7 @@ async function plan(db) {
         else positions.set(`${s.userId}:${s.problem}`, { userId: s.userId, problem: s.problem, shares: s.shares, spent: s.amount });
     }
     const uniform = snapshot(LMSR.prices(Object.fromEntries(outcomes.map((k) => [k, 0])), B));
-    return { openedAt, outcomes, steps, fullQ, demonShares, positions, uniform, solves };
+    return { openedAt, outcomes, steps, scale, fullQ, demonShares, positions, uniform, solves };
 }
 
 function printBoard(p) {
@@ -164,11 +170,14 @@ function printBoard(p) {
     const board = Object.entries(last).sort((a, b) => b[1] - a[1]);
     console.log(`opened ${p.openedAt.toISOString()} with ${p.outcomes.length} problems; ${p.solves.length} solved since`);
     for (const s of p.steps) {
-        const what = s.type === 'buy' ? `${s.actor.padEnd(5)} buys ${s.problem.padEnd(8)} ${String(s.amount).padStart(4)} ħ -> ${s.shares.toFixed(1)} shares` : `${s.problem} solved`;
+        const paid = s.type === 'solve' ? s.payments.reduce((acc, x) => acc + x.total, 0) : 0;
+        const what = s.type === 'buy'
+            ? `${s.actor.padEnd(5)} buys ${s.problem.padEnd(8)} ${String(s.amount).padStart(4)} ħ -> ${s.shares.toFixed(1)} shares`
+            : `${s.problem} solved, the rest earn ${(s.rate * 100).toFixed(2)}%, ${paid.toFixed(2)} ħ paid`;
         console.log(`  ${s.at.toISOString()}  ${what}`);
     }
-    console.log('board now:');
-    for (const [k, v] of board.slice(0, 12)) console.log(`  ${k.padEnd(8)} ${(v * 100).toFixed(1).padStart(5)}%  ×${(1 / v).toFixed(1)}`);
+    console.log(`board now (scale ${p.scale.toFixed(4)}):`);
+    for (const [k, v] of board.slice(0, 12)) console.log(`  ${k.padEnd(8)} ${(v * 100).toFixed(1).padStart(5)}%  if solved the rest earn +${((v / (1 - v)) * 100).toFixed(1)}%`);
     console.log(`  … ${board.length - 12} more at ${(board[board.length - 1][1] * 100).toFixed(1)}% or so`);
 }
 
@@ -182,8 +191,8 @@ async function apply() {
         printBoard(p);
 
         await client.query(
-            'INSERT INTO lp_market (id, b, opened_at, demon_spent) VALUES (1, $1, $2, $3)',
-            [B, p.openedAt, DEMON_SEED]
+            'INSERT INTO lp_market (id, b, opened_at, demon_spent, scale) VALUES (1, $1, $2, $3, $4)',
+            [B, p.openedAt, DEMON_SEED, p.scale]
         );
         const solvedAt = new Map(p.solves.map((s) => [s.problem, s]));
         for (const k of p.outcomes) {
@@ -197,21 +206,6 @@ async function apply() {
             "INSERT INTO lp_ticks (kind, actor, prices, source, created_at) VALUES ('open', 'system', $1, $2, $3)",
             [JSON.stringify(p.uniform), `chat:${QUESTION_MESSAGE}`, p.openedAt]
         );
-        for (const s of p.steps) {
-            if (s.type === 'buy') {
-                await client.query(
-                    `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, shares, amount, prices, source, created_at)
-                     VALUES ('trade', $1, $2, $3, $4, $5, $6, $7, $8)`,
-                    [s.actor, s.userId || null, s.problem, s.shares, s.amount.toFixed(4), JSON.stringify(snapshot(s.prices)), s.source || null, s.at]
-                );
-            } else {
-                await client.query(
-                    `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, prices, created_at)
-                     VALUES ('solved', 'system', $1, $2, $3, $4)`,
-                    [s.userId || null, s.problem, JSON.stringify(snapshot(s.prices)), s.at]
-                );
-            }
-        }
         for (const pos of p.positions.values()) {
             const bet = p.steps.find((s) => s.type === 'buy' && s.userId === pos.userId && s.problem === pos.problem);
             await client.query(
@@ -231,6 +225,41 @@ async function apply() {
                 'INSERT INTO lp_positions (user_id, problem_name, shares, spent) VALUES ($1, $2, $3, $4)',
                 [pos.userId, pos.problem, pos.shares, pos.spent.toFixed(4)]
             );
+        }
+        // The ticks, and for each solve the interest it paid, the way lastProblem.js eliminate()
+        // writes it: one ledger row per position, ref solved:<tick>:<problem>.
+        for (const s of p.steps) {
+            if (s.type === 'buy') {
+                await client.query(
+                    `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, shares, amount, prices, source, created_at)
+                     VALUES ('trade', $1, $2, $3, $4, $5, $6, $7, $8)`,
+                    [s.actor, s.userId || null, s.problem, s.shares, s.amount.toFixed(4), JSON.stringify(snapshot(s.prices)), s.source || null, s.at]
+                );
+                continue;
+            }
+            const total = s.payments.reduce((acc, x) => acc + x.total, 0);
+            const tick = await client.query(
+                `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, amount, rate, prices, created_at)
+                 VALUES ('solved', 'system', $1, $2, $3, $4, $5, $6) RETURNING id`,
+                [s.userId || null, s.problem, LP.floor4(total).toFixed(4), s.rate, JSON.stringify(snapshot(s.prices)), s.at]
+            );
+            for (const pay of s.payments) {
+                if (pay.key === 'demon') {
+                    await client.query('UPDATE lp_market SET demon_interest = demon_interest + $1 WHERE id = 1', [pay.total.toFixed(4)]);
+                    continue;
+                }
+                for (const [k, amount] of Object.entries(pay.byProblem)) {
+                    await client.query('UPDATE quanta_wallets SET balance = balance + $2 WHERE user_id = $1', [Number(pay.key), amount.toFixed(4)]);
+                    await client.query(
+                        "INSERT INTO quanta_ledger (user_id, delta, reason, ref, created_at) VALUES ($1, $2, 'interest', $3, $4)",
+                        [Number(pay.key), amount.toFixed(4), `solved:${tick.rows[0].id}:${k}`, s.at]
+                    );
+                    await client.query(
+                        'UPDATE lp_positions SET interest = interest + $3 WHERE user_id = $1 AND problem_name = $2',
+                        [Number(pay.key), k, amount.toFixed(4)]
+                    );
+                }
+            }
         }
         await client.query('COMMIT');
         console.log('market opened');
@@ -252,6 +281,50 @@ async function revert(problem) {
         if (m.rows[0].resolved_at) throw new Error('the market has already paid out; a revert would need the payouts undone by hand');
         const o = await client.query("UPDATE lp_outcomes SET status = 'open', solved_at = NULL, solved_by = NULL WHERE problem_name = $1 AND status = 'solved' RETURNING problem_name", [problem]);
         if (!o.rowCount) throw new Error(`${problem} is not a solved outcome`);
+
+        // The interest that solve paid comes back, as far as each balance allows.
+        const t = await client.query(
+            "SELECT id, rate, amount FROM lp_ticks WHERE kind = 'solved' AND problem_name = $1 ORDER BY created_at DESC, id DESC LIMIT 1",
+            [problem]
+        );
+        let back = 0;
+        let short = 0;
+        if (t.rowCount) {
+            const tick = t.rows[0];
+            const rows = await client.query(
+                "SELECT user_id, delta, ref FROM quanta_ledger WHERE reason = 'interest' AND ref LIKE $1 ORDER BY id",
+                [`solved:${tick.id}:%`]
+            );
+            let toUsers = 0;
+            for (const r of rows.rows) {
+                const k = r.ref.split(':')[2];
+                const delta = Number(r.delta);
+                toUsers += delta;
+                const w = await client.query('SELECT balance FROM quanta_wallets WHERE user_id = $1 FOR UPDATE', [r.user_id]);
+                const take = LP.floor4(Math.min(delta, Math.max(0, w.rows.length ? Number(w.rows[0].balance) : 0)));
+                if (take > 0) {
+                    await client.query('UPDATE quanta_wallets SET balance = balance - $2, updated_at = NOW() WHERE user_id = $1', [r.user_id, take.toFixed(4)]);
+                    await client.query(
+                        "INSERT INTO quanta_ledger (user_id, delta, reason, ref) VALUES ($1, $2, 'clawback', $3)",
+                        [r.user_id, (-take).toFixed(4), `revert:${tick.id}:${k}`]
+                    );
+                }
+                await client.query(
+                    'UPDATE lp_positions SET interest = GREATEST(0, interest - $3) WHERE user_id = $1 AND problem_name = $2',
+                    [r.user_id, k, delta.toFixed(4)]
+                );
+                back += take;
+                short += delta - take;
+            }
+            const demonPart = Math.max(0, Number(tick.amount || 0) - toUsers);
+            await client.query('UPDATE lp_market SET demon_interest = GREATEST(0, demon_interest - $1) WHERE id = 1', [demonPart.toFixed(4)]);
+            // The scale shrank by (1 - p) at that solve, p = rate / (1 + rate); it never exceeds 1.
+            if (tick.rate != null) {
+                const share = Number(tick.rate) / (1 + Number(tick.rate));
+                await client.query('UPDATE lp_market SET scale = LEAST(1, scale / $1) WHERE id = 1', [1 - share]);
+            }
+        }
+
         const outs = await client.query("SELECT problem_name, q FROM lp_outcomes WHERE status = 'open'");
         const q = Object.fromEntries(outs.rows.map((r) => [r.problem_name, Number(r.q)]));
         await client.query(
@@ -261,6 +334,7 @@ async function revert(problem) {
         if (outs.rowCount > 1) await client.query('UPDATE lp_market SET decided_at = NULL WHERE id = 1');
         await client.query('COMMIT');
         console.log(`${problem} is back in the market (the sync will knock it out again while its post counts as a solution)`);
+        console.log(`interest taken back ${back.toFixed(4)} ħ${short > 0 ? `, ${short.toFixed(4)} ħ already spent and left alone` : ''}`);
     } catch (err) {
         await client.query('ROLLBACK').catch(() => {});
         throw err;

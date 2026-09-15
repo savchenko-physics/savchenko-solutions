@@ -720,7 +720,7 @@
                 <div class="blog-author-details">
                     <a href="/user/<%= post.author_username %>" class="blog-author-name"><%= post.author_username %></a>
                     <span class="blog-author-meta">
-                        <%= new Date(post.published_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                        <%- localTime(post.published_at, 'longdate', lang) %>
                         &middot;
                         <%= readingTime %> <%= lang === 'ru' ? 'мин чтения' : 'min read' %>
                     </span>
@@ -775,7 +775,7 @@
                 <div class="comment-author-row">
                     <span class="avatar-presence"><img src="<%= comment.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" /><% if (comment.is_online) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                     <a href="/user/<%= comment.username %>" class="comment-username"><%= comment.username %></a>
-                    <span class="comment-time"><%= new Date(comment.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                    <%- localTime(comment.created_at, 'date', lang, { className: 'comment-time' }) %>
                 </div>
                 <div class="comment-body"><%= comment.content %></div>
                 <% if (userId) { %>
@@ -789,7 +789,7 @@
                         <div class="comment-author-row">
                             <span class="avatar-presence"><img src="<%= reply.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" class="comment-avatar" width="32" height="32" /><% if (reply.is_online) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %></span>
                             <a href="/user/<%= reply.username %>" class="comment-username"><%= reply.username %></a>
-                            <span class="comment-time"><%= new Date(reply.created_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) %></span>
+                            <%- localTime(reply.created_at, 'date', lang, { className: 'comment-time' }) %>
                         </div>
                         <div class="comment-body"><%= reply.content %></div>
                     </div>

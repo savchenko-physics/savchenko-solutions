@@ -1644,7 +1644,7 @@
                 "Contributed by @X · Last updated <date>" and "Last edited X, <date>", which on
                 most solutions named the same person and the same day twice. %>
             <% const lastEdit = editHistory && editHistory.length > 0 ? editHistory[0] : null; %>
-            <% const lastEditDate = lastEdit ? new Date(lastEdit.edited_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : (attribution && attribution.lastUpdated); %>
+            <% const lastEditDate = lastEdit ? lastEdit.edited_at : (attribution && attribution.lastUpdated); %>
             <% if (attribution || lastEdit) { %>
             <div class="attribution">
                 <% if (attribution) { %>
@@ -1663,7 +1663,7 @@
                 <% } %>
                 <% if (lastEditDate) { %>
                 <% if (attribution) { %><span class="attribution-sep" aria-hidden="true">&middot;</span><% } %>
-                <span><%= lang === 'ru' ? 'Последняя правка' : 'Last edited' %> <%= lastEditDate %></span>
+                <span><%= lang === 'ru' ? 'Последняя правка' : 'Last edited' %> <%- localTime(lastEditDate, 'date', lang) %></span>
                 <% } %>
                 <a href="/<%= lang %>/contributions/<%= name %>" class="edit-history-more"><%= lang === 'ru' ? 'Все правки' : 'All edits' %></a>
             </div>
@@ -3137,7 +3137,8 @@
                 new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: last14Days.map(function(date) { return new Date(date).toLocaleDateString(); }),
+                        // Calendar days counted in UTC: read back in UTC, or a reader west of Greenwich sees each a day early.
+                        labels: last14Days.map(function(date) { return new Date(date).toLocaleDateString(undefined, { timeZone: 'UTC' }); }),
                         datasets: [{
                             label: i18nText.viewsLabel,
                             data: chartData,

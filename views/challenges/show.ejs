@@ -142,7 +142,7 @@
         <h3><%= __('challengesPage.yourSubmission') %></h3>
         <% if (userSubmission) { %>
         <div class="existing-sub">
-          <%= __('challengesPage.submittedOn') %> <%= new Date(userSubmission.submitted_at).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %>. <%= __('challengesPage.canUpdateBelow') %>
+          <%= __('challengesPage.submittedOn') %> <%- localTime(userSubmission.submitted_at, 'daytime', lang) %>. <%= __('challengesPage.canUpdateBelow') %>
         </div>
         <% } %>
         <!-- Image upload -->
@@ -208,7 +208,7 @@
               <% if (sub.isOnline && sub.username !== (typeof username !== 'undefined' ? username : null)) { %><span class="online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>"></span><% } %>
             </span>
             <a href="/user/<%= sub.username %>" style="color: var(--ss-link); font-weight: var(--ss-fw-regular);"><%= sub.username %></a>
-            &middot; <%= new Date(sub.submitted_at).toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }) %>
+            &middot; <%- localTime(sub.submitted_at, 'day', lang) %>
           </div>
           <% if (sub.image_path) { %>
           <img src="<%= sub.image_path %>" alt="Handwritten solution" class="submission-image" />

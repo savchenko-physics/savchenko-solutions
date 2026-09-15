@@ -9,7 +9,6 @@
 
     <%
         const catName = __('forumPage.cat_' + category.slug + '_name') !== 'forumPage.cat_' + category.slug + '_name' ? __('forumPage.cat_' + category.slug + '_name') : category.name;
-        const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US';
     %>
 
     <script type="application/ld+json">
@@ -362,7 +361,7 @@
                 </div>
                 <% } %>
                 <div class="post-author-joined">
-                    <%= __('forumPage.joined') %> <%= post.user_joined ? new Date(post.user_joined).toLocaleDateString(dateLocale, { month: 'short', year: 'numeric' }) : '—' %>
+                    <%= __('forumPage.joined') %> <% if (post.user_joined) { %><%- localTime(post.user_joined, 'month', lang) %><% } else { %>—<% } %>
                 </div>
             </div>
             <div class="post-body">
@@ -374,7 +373,7 @@
                 <% } %>
                 <div class="post-content"><%- autoLinkContent(post.content, lang) %></div>
                 <div class="post-footer">
-                    <span style="color: var(--ss-text-secondary); font-size: var(--ss-fs-12);"><%= timeAgo(post.created_at) %><% if (post.is_edited) { %> (<%= __('forumPage.edited') %>)<% } %></span>
+                    <span style="color: var(--ss-text-secondary); font-size: var(--ss-fs-12);"><%- localTime(post.created_at, 'relative', lang) %><% if (post.is_edited) { %> (<%= __('forumPage.edited') %>)<% } %></span>
                     <% if (index > 0) { %>
                     <div style="display: flex; align-items: center; gap: var(--ss-space-1);">
                         <button class="vote-btn<%= userVotes[post.id] === 1 ? ' active-up' : '' %>" data-post-id="<%= post.id %>" data-vote="1" title="Upvote">

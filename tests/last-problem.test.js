@@ -7,6 +7,12 @@
 // is not a solution), the market paying before the grace period or paying twice, and the premium
 // reactions being bought or used by someone who should not.
 //
+// The same evening the owner replaced winner-takes-all with "conservation of interest": every
+// solve pays interest to everything still in play. So this file also guards that a solve creates
+// no value (a complete set of shares is worth the same before and after), that nobody can raise
+// the interest they get by trading just before a solve, and that the payout really grows the
+// closer to the end a problem is solved, the one before last still winning.
+//
 // Not covered, because there is no test database or browser here: the SQL in lastProblem.js, the
 // sync against a real posts/ folder, the chat card and the app's layout. Those were checked
 // against a scratch copy of the production schema in a real browser before release.
@@ -91,6 +97,147 @@ test('a solved problem leaves the market and the others scale up', () => {
     for (const k of Object.keys(after)) assert.ok(close(after[k], before[k] * scale, 1e-9), k);
 });
 
+test('at any scale an amount buys exactly the shares that cost that amount, even late and large', () => {
+    const q = emptyMarket();
+    q['5.8.9'] = 1200;
+    for (const scale of [1, 0.4, 0.03, 1e-6]) {
+        for (const amount of [1, 100, 5000]) {
+            const shares = LMSR.sharesForAmount(q, 1000, '7.2.13', amount, scale);
+            assert.ok(Number.isFinite(shares) && shares > 0, `${scale} ${amount}`);
+            assert.ok(close(LMSR.tradeCost(q, 1000, '7.2.13', shares) * scale, amount, 1e-7), `${scale} ${amount}`);
+            const after = Object.assign({}, q, { '7.2.13': q['7.2.13'] + shares });
+            assert.ok(LMSR.sellProceeds(after, 1000, '7.2.13', shares, scale) <= amount * (1 + 1e-9), 'no round trip profit at any scale');
+        }
+    }
+});
+
+// ── Conservation of interest ─────────────────────────────────────────────────────────────
+
+const holder = (key, holdings) => ({ key, holdings: Object.entries(holdings).map(([problem, shares]) => ({ problem, shares })) });
+
+test('a solve pays p / (1 - p): a problem weighing 20% gives the rest +25%', () => {
+    const q = LMSR.qForPrices({ a: 0.2, b: 0.5, c: 0.3 }, 1000);
+    const s = LMSR.solve(q, 1000, 1, 'a');
+    assert.ok(close(s.share, 0.2, 1e-12));
+    assert.ok(close(s.rate, 0.25, 1e-12));
+    assert.ok(close(s.scale, 0.8, 1e-12));
+    assert.equal('a' in s.q, false);
+});
+
+test('a solve creates no value: a complete set is worth the same before and after', () => {
+    const b = 1000;
+    const q = emptyMarket();
+    q['5.8.9'] = 1628.7;
+    q['14.4.31'] = 2853.9;
+    q['7.2.11'] = 2227.6;
+    for (const scale of [1, 0.37]) {
+        const set = Object.fromEntries(OUTCOMES.map((k) => [k, 10]));
+        const before = LMSR.portfolioValue(q, b, set, scale);
+        assert.ok(close(before, 10 * scale, 1e-9));
+        for (const solvedId of ['5.8.9', '3.6.20']) {
+            const s = LMSR.solve(q, b, scale, solvedId);
+            const rest = Object.fromEntries(Object.keys(s.q).map((k) => [k, 10]));
+            const after = LMSR.portfolioValue(s.q, b, rest, s.scale) + LMSR.interestOn(s, b, rest);
+            assert.ok(close(after, before, 1e-9), `${solvedId} at scale ${scale}: ${before} -> ${after}`);
+        }
+    }
+});
+
+test('no price per share jumps at a solve, and the solved problem pays nothing', () => {
+    const b = 1000;
+    const q = emptyMarket();
+    q['5.8.9'] = 1600;
+    q['7.2.13'] = 900;
+    const before = LMSR.prices(q, b);
+    const s = LMSR.solve(q, b, 0.6, '5.8.9');
+    const after = LMSR.prices(s.q, b);
+    for (const k of Object.keys(after)) assert.ok(close(0.6 * before[k], s.scale * after[k], 1e-9), k);
+    assert.equal(LMSR.interestOn(s, b, { '5.8.9': 500 }), 0, 'shares of the solved problem earn nothing');
+    const settled = LP.settleSolve({ q, b, scale: 0.6, problem: '5.8.9', holders: [holder('u1', { '5.8.9': 500 }), holder('u2', { '7.2.13': 100 })] });
+    assert.deepEqual(settled.payments.map((p) => p.key), ['u2']);
+});
+
+test('trading the solved problem just before its solve cannot raise anyone\'s interest', () => {
+    const b = 1000;
+    const q = emptyMarket();
+    const mine = LMSR.sharesForAmount(q, b, '7.2.13', 200);
+    q['7.2.13'] += mine;
+    const total = (market) => {
+        const s = LMSR.solve(market, b, 1, '5.8.9');
+        return LMSR.interestOn(s, b, { '7.2.13': mine }) + LMSR.portfolioValue(s.q, b, { '7.2.13': mine }, s.scale);
+    };
+    const honest = total(q);
+    // Up to ten times b, where 5.8.9 already holds 99.9% of the market; beyond that 1 - p runs into
+    // the floor on the scale (js/lmsr.js MIN_SCALE) and floating point, not into the rule.
+    for (const pump of [100, 2000, 10000]) {
+        const pumped = Object.assign({}, q, { '5.8.9': q['5.8.9'] + pump });
+        assert.ok(close(total(pumped), honest, 1e-7), `pumping 5.8.9 by ${pump} shares changes nothing for a 7.2.13 holder`);
+    }
+});
+
+test('the closer to the end a problem is solved, the more it pays, and the one before last still wins', () => {
+    const b = 1000;
+    const X = '5.8.9';
+    const others = OUTCOMES.filter((k) => k !== X);
+    const back = (place) => {
+        const q = emptyMarket();
+        const shares = LMSR.sharesForAmount(q, b, X, 100);
+        q[X] += shares;
+        const order = others.slice(0, place - 1).concat([X], others.slice(place - 1));
+        let market = q;
+        let scale = 1;
+        let got = 0;
+        for (const id of order.slice(0, -1)) {
+            if (id === X) return got;
+            const s = LMSR.solve(market, b, scale, id);
+            got += LMSR.interestOn(s, b, { [X]: shares });
+            market = s.q;
+            scale = s.scale;
+        }
+        return got + shares * scale;
+    };
+    const returns = Array.from({ length: 32 }, (_, i) => back(i + 1));
+    assert.equal(returns[0], 0, 'solved first, the stake is lost');
+    for (let i = 1; i < 32; i++) assert.ok(returns[i] > returns[i - 1], `place ${i + 1} pays more than place ${i}`);
+    assert.ok(returns[9] < 100, 'solved tenth, still a loss');
+    assert.ok(returns[30] > 200, `the one before last more than doubles (${returns[30].toFixed(0)})`);
+    assert.ok(returns[31] > returns[30] * 1.5, 'the last one pays the most');
+});
+
+test('settleSolve pays each holder on what their shares fetch together, rounded down, split over positions', () => {
+    const b = 1000;
+    let q = emptyMarket();
+    const amounts = LP.allocate(800, WEIGHTS);
+    const demon = {};
+    for (const problem of Object.keys(WEIGHTS)) {
+        const shares = LMSR.sharesForAmount(q, b, problem, amounts[problem]);
+        q = Object.assign({}, q, { [problem]: q[problem] + shares });
+        demon[problem] = shares;
+    }
+    const s = LP.settleSolve({ q, b, problem: '7.2.13', holders: [holder('demon', demon), holder('nobody', {})] });
+    assert.equal(s.payments.length, 1);
+    const pay = s.payments[0];
+    const rest = Object.assign({}, demon);
+    delete rest['7.2.13'];
+    const exact = LMSR.interestOn(LMSR.solve(q, b, 1, '7.2.13'), b, rest);
+    assert.ok(pay.total <= exact + 1e-9 && pay.total > exact - 0.001 * Object.keys(rest).length, `${pay.total} vs ${exact}`);
+    assert.ok(close(Object.values(pay.byProblem).reduce((a, x) => a + x, 0), pay.total, 1e-9));
+    assert.equal('7.2.13' in pay.byProblem, false);
+    for (const v of Object.values(pay.byProblem)) assert.ok(Number.isInteger(Math.round(v * 10000)) && v > 0);
+    assert.throws(() => LP.settleSolve({ q: s.q, b, problem: '7.2.13', holders: [] }), /not open/);
+});
+
+test('even a problem holding almost the whole market can be solved without breaking the arithmetic', () => {
+    const q = emptyMarket();
+    q['5.8.9'] = 60000;
+    const s = LMSR.solve(q, 1000, 1, '5.8.9');
+    assert.ok(s.scale >= LMSR.MIN_SCALE && Number.isFinite(s.scale));
+    const interest = LMSR.interestOn(s, 1000, { '7.2.13': 100 });
+    assert.ok(Number.isFinite(interest) && interest >= 0);
+    const shares = LMSR.sharesForAmount(s.q, 1000, '7.2.13', 1000, s.scale);
+    assert.ok(Number.isFinite(shares) && shares > 0);
+});
+
 test('opening at given probabilities reproduces them', () => {
     const want = { a: 0.5, b: 0.3, c: 0.2 };
     const p = LMSR.prices(LMSR.qForPrices(want, 1000), 1000);
@@ -135,6 +282,14 @@ test('the replayed seed opens the board the plan showed', () => {
     assert.throws(() => LP.replay(OUTCOMES, 1000, [{ type: 'buy', problem: '1.1.1', amount: 5 }]));
     const solved = LP.replay(OUTCOMES, 1000, [{ type: 'solve', problem: '3.6.20' }]);
     assert.equal(Object.keys(solved.steps[0].prices).length, 31);
+
+    // A solve in the replay pays the demon and the chat bets their interest, and shrinks the scale.
+    const withSolve = LP.replay(OUTCOMES, 1000, events.map((e) => Object.assign({ userId: e.actor === 'chat' ? e.source : undefined }, e)).concat([{ type: 'solve', problem: '5.8.9' }]));
+    const step = withSolve.steps[withSolve.steps.length - 1];
+    assert.ok(close(step.rate, last['5.8.9'] / (1 - last['5.8.9']), 1e-12));
+    assert.ok(close(withSolve.scale, 1 - last['5.8.9'], 1e-12));
+    const keys = step.payments.map((p) => p.key).sort();
+    assert.deepEqual(keys, ['chat:1965', 'demon'], 'Valter held only 5.8.9, so the solve pays him nothing');
 });
 
 // ── What counts as solved ────────────────────────────────────────────────────────────────
@@ -360,6 +515,36 @@ test('migration 054 only creates tables, and its rollback removes premium reacti
         assert.ok(down.includes(`'${e.id}'`), `${e.id} is cleaned up on rollback`);
     }
     assert.ok(down.indexOf('DELETE FROM message_reactions') < down.indexOf('DROP TABLE IF EXISTS reaction_unlocks'));
+});
+
+test('migration 055 only adds columns with defaults, and nothing that existed changes', () => {
+    const up = read('sql', 'migrations', '055_last_problem_interest.sql').replace(/^--.*$/gm, '');
+    assert.doesNotMatch(up, /\bDROP\b|\bUPDATE\b|\bDELETE\b|\bBEGIN\b|\bCOMMIT\b|CREATE TABLE/i);
+    const adds = [...up.matchAll(/ALTER TABLE (\w+) ADD COLUMN IF NOT EXISTS (\w+) ([^;]+);/g)];
+    assert.deepEqual(adds.map((m) => `${m[1]}.${m[2]}`).sort(), ['lp_market.demon_interest', 'lp_market.scale', 'lp_positions.interest', 'lp_ticks.rate']);
+    for (const m of adds) {
+        if (m[2] !== 'rate') assert.match(m[3], /NOT NULL DEFAULT/, `${m[2]} has a default, so existing rows need nothing`);
+    }
+    assert.match(up, /scale DOUBLE PRECISION NOT NULL DEFAULT 1 CHECK \(scale > 0\)/);
+    const down = read('sql', 'rollback', '055_last_problem_interest_rollback.sql').replace(/^--.*$/gm, '');
+    for (const m of adds) assert.ok(down.includes(`DROP COLUMN IF EXISTS ${m[2]}`), m[2]);
+});
+
+test('a solve pays everyone in one transaction, one ledger row per position, and chat bets stop being refundable', () => {
+    const mod = read('lastProblem.js');
+    const elim = mod.slice(mod.indexOf('async function eliminate('), mod.indexOf('async function stepMarket('));
+    assert.match(elim, /inTransaction\(/);
+    assert.match(elim, /LP\.settleSolve\(/);
+    assert.match(elim, /'interest', `solved:\$\{tickId\}:\$\{k\}`/);
+    assert.match(elim, /UPDATE lp_market SET scale = \$1/);
+    assert.ok(elim.indexOf('UPDATE lp_market SET scale') < elim.indexOf('return { ok: true'), 'the scale moves inside the transaction');
+    const trade = mod.slice(mod.indexOf('async function executeTrade('), mod.indexOf('async function cancelChatBet('));
+    assert.match(trade, /sharesForAmount\(q, b, v\.problem, v\.amount, scale\)/);
+    assert.match(trade, /sellProceeds\(q, b, v\.problem, shares, scale\)/);
+    const cancel = mod.slice(mod.indexOf('async function cancelChatBet('), mod.indexOf('async function unlockReaction('));
+    assert.match(cancel, /\$\{NO_SOLVE_SINCE\}/);
+    const pay = mod.slice(mod.indexOf('async function payOut('), mod.indexOf('async function awardTrophy('));
+    assert.match(pay, /num\(h\.shares\) \* scale/);
 });
 
 test('the copy has both languages, and no dollar signs, dashes or colons', () => {

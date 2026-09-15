@@ -56,7 +56,14 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   2026-09-15 will be solved last; every account gets 1000 quanta (ħ, `img/apps/last-problem/coin.svg`), prices
   come from an LMSR market maker (`js/lmsr.js`, b = 1000), quanta buy the premium reactions. Play money, no cash
   value. A problem drops out when a real post appears (checked every 2 minutes, `syncSolved`; the untouched
-  `/create-problem` template does not count); one left → decided → pays after 72 h. Page
+  `/create-problem` template does not count). **Conservation of interest** (the owner's rule since the first
+  evening, migration 055): a solve burns the solved problem's shares and pays every holding still in play interest
+  at p / (1 − p) of the solved problem's price p, on what those shares fetch right after (`js/lmsr.js` `solve`,
+  `lib/lastProblem.js` `settleSolve`, one ledger row per position `solved:<tick>:<problem>`); `lp_market.scale`
+  shrinks by (1 − p) so no price per share jumps and a complete set of shares is worth the same before and after.
+  So a problem solved near the end pays off even if it is not the last; one left → decided → its shares pay
+  their full value (shares × scale) after 72 h. A chat bet is refundable only until the first solve after it.
+  `--revert` takes back a solve's interest as far as balances allow and restores the scale. Page
   `views/apps/last_problem.ejs` + `js/apps/last-problem.js` (in an iframe sheet when `?embed=1`), card and sheet
   `js/apps/launcher.js` (loaded by `messages.ejs` and `solution_post.ejs`), copy `lastProblemCopy.js`, pure rules
   `lib/lastProblem.js`, tables from migration 054. It opened with a seed (`scripts/seed-last-problem.js
@@ -139,9 +146,10 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
 - `problem_statements` (4,046) / `problem_difficulty` (2,023) — see Content Structure
 - `session` — Express session store
 - `quanta_wallets` / `quanta_ledger` / `lp_market` / `lp_outcomes` / `lp_ticks` / `lp_positions` /
-  `reaction_unlocks` — «Последняя задача» (migration 054): balances with every change logged, the one market row
-  (the demon's money is counted there), one row per problem with its LMSR `q`, every trade and elimination with a
-  price snapshot (the chart), holdings, and owned premium reactions (a trophy belongs to one person)
+  `reaction_unlocks` — «Последняя задача» (migrations 054, 055): balances with every change logged, the one market
+  row (the demon's money and interest are counted there, and the `scale`), one row per problem with its LMSR `q`,
+  every trade and elimination with a price snapshot (the chart) and a solve's interest `rate`, holdings with the
+  interest each earned, and owned premium reactions (a trophy belongs to one person)
 - `password_reset_requests` — every "Forgot password?" and recovery appeal, with `outcome`
   (migration 053). Its email rows are what the recovery limits count, per account and
   site-wide (`LIMITS` in `lib/passwordReset.js`), under an advisory lock in
@@ -290,6 +298,13 @@ hyphenation and a 1em paragraph indent, as journals set text.
 - Use `<%- include() %>` for shared partials.
 - Escape all user-generated content with `<%= %>` (not `<%- %>`).
 - Keep logic minimal in templates. Compute values in the route handler.
+- **Every date or time of an event goes through `<%- localTime(value, kind, lang) %>`** (`lib/localTime.js`,
+  kinds `date longdate day daytime datetime time month relative recent`): it writes a `<time data-local>` in UTC
+  that `js/local-time.js` (loaded by the header, and by the few pages without it) rewrites in the reader's time
+  zone and the page's language. Never `toLocaleDateString()` on the server: it runs in UTC. A calendar date stored
+  as UTC midnight (DATE columns, seeded rows) passes `{ calendar: true }` so it is not shifted into the day
+  before. SQL day buckets (heatmaps, view charts) are still UTC days. `tests/local-time.test.js` fails on a new
+  server-formatted time in a template.
 
 ### CSS
 - New styles go in `css/design-system.css` using CSS custom properties.
@@ -328,7 +343,10 @@ hyphenation and a 1em paragraph indent, as journals set text.
   `build-statements.js` prefers these files when present. A problem the book does not mark
   ♦ gets no figure even if a `statement.png` exists — that fallback is how 8.3.3 showed
   8.3.4's circuit. Do not hand-edit `figures.json`; fix `OVERRIDES` in `figures.py`.
-- Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24)
+- Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24). `lib/bookProblems.js` `isBookProblem` says
+  whether a number is one of the 2,023. A real problem's address with no post in that language redirects (302) to
+  the other language's solution, or to `/:lang/unsolved` when there is none; only a non-problem is a 404
+  (`post.js` renderPost, since 2026-09-15).
 - Solutions stored as markdown files in `posts/en/` and `posts/ru/`. **`posts/` on the
   server is the contributors' work and the only authoritative copy**: the site's editor
   writes it directly (a pre-edit copy goes to `posts-old/`, the saved text to
@@ -369,7 +387,8 @@ hyphenation and a 1em paragraph indent, as journals set text.
   `tests/brainstorm.test.js:1-10`.
 - Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
   `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`, `password-reset.test.js`,
-  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, `last-problem.test.js`, and the design system's
+  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, `last-problem.test.js`, `local-time.test.js`,
+  `book-problems.test.js`, and the design system's
   `site-styles.test.js`, `site-fonts.test.js`, `design-tokens.test.js`, `design-rules.test.js`
   and `solution-structure.test.js`.
 - Rendering is checked outside `npm test`: `scripts/qa/type_audit.py` renders every page type in

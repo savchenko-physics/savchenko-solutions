@@ -227,7 +227,7 @@
                     <span>
                         <a href="/user/<%= post.author_username %>"><%= post.author_username %></a>
                     </span>
-                    <span><%= new Date(post.published_at).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                    <span><%- localTime(post.published_at, 'longdate', lang) %></span>
                     <span class="blog-view-count"><i class="fas fa-eye"></i> <%= post.view_count %></span>
                 </div>
                 <% if (post.tags && post.tags.length > 0) { %>

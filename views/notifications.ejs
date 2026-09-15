@@ -57,8 +57,6 @@
 <body>
     <%- include('default/main_site_header') %>
 
-    <% const dateLocale = lang === 'ru' ? 'ru-RU' : 'en-US'; %>
-
     <div class="notif-page">
         <div class="notif-header">
             <h1><%= __('notificationsPage.title') %></h1>
@@ -93,22 +91,6 @@
                     else groups.earlier.push(n);
                 });
 
-                const relTimeLabels = {
-                    justNow: __('notificationsPage.justNow'),
-                    mAgo: __('notificationsPage.mAgo'),
-                    hAgo: __('notificationsPage.hAgo'),
-                    dAgo: __('notificationsPage.dAgo'),
-                };
-
-                function relTime(iso) {
-                    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-                    if (diff < 60) return relTimeLabels.justNow;
-                    if (diff < 3600) return Math.floor(diff / 60) + relTimeLabels.mAgo;
-                    if (diff < 86400) return Math.floor(diff / 3600) + relTimeLabels.hAgo;
-                    if (diff < 2592000) return Math.floor(diff / 86400) + relTimeLabels.dAgo;
-                    return new Date(iso).toLocaleDateString(dateLocale);
-                }
-
                 const groupLabels = {
                     today: __('notificationsPage.today'),
                     yesterday: __('notificationsPage.yesterday'),
@@ -122,22 +104,49 @@
                     items.forEach(function(n) {
                         const cls = n.is_read ? 'notif-item read' : 'notif-item unread';
                         const titleCls = n.is_read ? 'notif-title' : 'notif-title unread';
-                        html += '<a href="' + (n.link || '#') + '" class="' + cls + '" data-id="' + n.id + '">';
+                        html += '<a href="' + (n.link || '#') + '" class="' + cls + '" data-id="' + n.id + '" data-at="' + new Date(n.created_at).toISOString() + '">';
                         if (!n.is_read) html += '<div class="unread-dot"></div>';
                         else html += '<div style="width:8px;flex-shrink:0;"></div>';
                         html += '<div class="notif-body">';
                         html += '<div class="' + titleCls + '">' + n.title.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
                         if (n.message) html += '<div class="notif-message">' + n.message.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
-                        html += '<div class="notif-time">' + relTime(n.created_at) + '</div>';
+                        html += '<div class="notif-time">' + localTime(n.created_at, 'relative', lang) + '</div>';
                         html += '</div></a>';
                     });
                     return html;
                 }
             %>
+            <%# Grouped here by the server's (UTC) day; the script below regroups by the reader's own. %>
+            <div class="notif-groups" data-notif-groups data-labels="<%= JSON.stringify(groupLabels) %>">
             <%- renderGroup('today', groups.today) %>
             <%- renderGroup('yesterday', groups.yesterday) %>
             <%- renderGroup('thisWeek', groups.thisWeek) %>
             <%- renderGroup('earlier', groups.earlier) %>
+            </div>
+            <script>
+            (function () {
+                // Today, yesterday and this week by the reader's own midnight, not the server's.
+                var box = document.querySelector('[data-notif-groups]');
+                if (!box) return;
+                var labels = JSON.parse(box.getAttribute('data-labels'));
+                var now = new Date();
+                var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                var yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+                var weekAgo = new Date(today); weekAgo.setDate(weekAgo.getDate() - 7);
+                var keyOf = function (d) { return d >= today ? 'today' : (d >= yesterday ? 'yesterday' : (d >= weekAgo ? 'thisWeek' : 'earlier')); };
+                box.querySelectorAll('.notif-group-label').forEach(function (el) { el.remove(); });
+                var last = null;
+                box.querySelectorAll('a.notif-item[data-at]').forEach(function (a) {
+                    var key = keyOf(new Date(a.getAttribute('data-at')));
+                    if (key === last) return;
+                    var label = document.createElement('div');
+                    label.className = 'notif-group-label';
+                    label.textContent = labels[key];
+                    box.insertBefore(label, a);
+                    last = key;
+                });
+            })();
+            </script>
         <% } %>
 
         <% if (totalPages > 1) { %>

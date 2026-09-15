@@ -21,7 +21,7 @@
         <td><%= sol.subject %></td>
         <td><%= sol.difficulty %></td>
         <td><%= sol.status %></td>
-        <td><%= sol.created_at %></td>
+        <td><%- localTime(sol.created_at, 'date', 'en') %></td>
       </tr>
     <% }); %>
   </tbody>

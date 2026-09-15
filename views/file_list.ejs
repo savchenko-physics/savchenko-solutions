@@ -80,10 +80,10 @@
                         <%= file.size %>
                     </td>
                     <td>
-                        <%= file.date %>
+                        <%- localTime(file.modified, 'date', 'en') %>
                     </td>
                     <td>
-                        <%= file.time %>
+                        <%- localTime(file.modified, 'time', 'en') %>
                     </td>
                 </tr>
                 <% }); %>
@@ -91,6 +91,8 @@
     </table>
 
     <%- include('default/modern_footer') %>
+    <%# Dates in the reader's time zone; this page has no site header to load it. %>
+    <script src="<%= typeof asset === 'function' ? asset('/js/local-time.js') : '/js/local-time.js' %>" defer></script>
 </body>
 
 </html>

@@ -6,11 +6,14 @@
 // market, opened from a card in the chat the way a Telegram mini app opens from a bot message:
 //
 //   - the outcomes are the problems unsolved when the question was asked (lp_outcomes);
-//   - every account gets 1000 quanta (ħ) once, a share of a problem pays 1 ħ if it is the last one
-//     solved, and prices come from an LMSR market maker (js/lmsr.js), so any amount trades at
-//     any time;
+//   - every account gets 1000 quanta (ħ) once, and prices come from an LMSR market maker
+//     (js/lmsr.js), so any amount trades at any time;
 //   - a problem drops out when its solution appears (checked every two minutes: none of the four
-//     routes that write posts/ has a hook, see syncSolved);
+//     routes that write posts/ has a hook, see syncSolved), and then "conservation of interest",
+//     the owner's rule since the evening it opened: the solved problem's shares are worth nothing
+//     and everything still in play earns interest at p / (1 - p) of its price p, so a problem
+//     solved near the end pays off even if it is not the last (eliminate, lib/lastProblem.js
+//     settleSolve). The last one standing pays its full value after 72 hours;
 //   - quanta buy premium reactions (js/reactions.js), which is what makes predicting well worth
 //     something;
 //   - it opened with a seed (scripts/seed-last-problem.js): Laplace's demon, a house trader that
@@ -40,6 +43,7 @@ const { getCopy, clientCopy } = require('./lastProblemCopy');
 const { isCrossSite } = require('./lib/passwordReset');
 const { ruPlural } = require('./lib/ruPlural');
 const { ownedReactions } = require('./lib/reactionUnlocks');
+const { isBookProblem } = require('./lib/bookProblems');
 const notifications = require('./notifications');
 
 const pool = new Pool({
@@ -62,7 +66,7 @@ const NOTIFY_TYPE = 'last_problem';
 
 const num = (v) => Number(v) || 0;
 // Money leaves the market rounded down to 1/10000 ħ, never up.
-const floor4 = (x) => Math.floor(x * 10000) / 10000;
+const { floor4 } = LP;
 const round2 = (x) => Math.round(x * 100) / 100;
 
 function compareIds(a, b) {
@@ -89,12 +93,11 @@ function snapshot(prices) {
 
 // ── Static facts about the problems ───────────────────────────────────────────────────
 
-/* Section titles in both languages and each section's problem count, from the CSVs the rest of
- * the site reads (the Russian one starts with a byte-order mark and has CRLF line ends). */
+/* Section titles in both languages, from the CSVs the rest of the site reads (the Russian one
+ * starts with a byte-order mark and has CRLF line ends). */
 let sectionTitles = null;
 function loadSectionTitles() {
     if (sectionTitles) return sectionTitles;
-    const counts = new Map();
     const parse = (rel) => {
         const map = new Map();
         let text = '';
@@ -107,23 +110,12 @@ function loadSectionTitles() {
             const first = line.indexOf(',');
             const last = line.lastIndexOf(',');
             if (first <= 0 || last <= first) continue;
-            const section = line.slice(0, first).trim();
-            map.set(section, line.slice(first + 1, last).trim());
-            const count = Number(line.slice(last + 1).trim());
-            if (Number.isInteger(count) && count > 0) counts.set(section, count);
+            map.set(line.slice(0, first).trim(), line.slice(first + 1, last).trim());
         }
         return map;
     };
-    sectionTitles = { en: parse('src/database/sections.csv'), ru: parse('src/ru/database/sections.csv'), counts };
+    sectionTitles = { en: parse('src/database/sections.csv'), ru: parse('src/ru/database/sections.csv') };
     return sectionTitles;
-}
-
-/* One of the book's 2,023 problems: a known section and a number within it. */
-function isBookProblem(id) {
-    if (!LP.isProblemId(id)) return false;
-    const count = loadSectionTitles().counts.get(sectionOf(id));
-    const n = Number(id.split('.')[2]);
-    return !!count && n >= 1 && n <= count;
 }
 
 let metaCache = null;
@@ -153,6 +145,11 @@ async function communityChats() {
     chatIds = map;
     return map;
 }
+
+// A bet placed from the chat can be taken back for every quantum only until the first solve after
+// it: from then on it has earned interest, or been lost, and it is an ordinary position to sell.
+// A fixed fragment over lp_ticks t, no input in it.
+const NO_SOLVE_SINCE = "NOT EXISTS (SELECT 1 FROM lp_ticks s WHERE s.kind = 'solved' AND s.created_at >= t.created_at)";
 
 function appLink(lang, chats) {
     return chats && chats[lang] ? `/${lang}/messages/${chats[lang]}?app=last-problem` : `/${lang}/apps/last-problem`;
@@ -201,7 +198,13 @@ async function readMarket(db) {
            FROM lp_outcomes o LEFT JOIN users u ON u.id = o.solved_by`
     );
     const outcomes = o.rows.sort((a, b) => compareIds(a.problem_name, b.problem_name));
-    return { market: m.rows[0], outcomes, b: num(m.rows[0].b), q: openQ(outcomes) };
+    return { market: m.rows[0], outcomes, b: num(m.rows[0].b), scale: scaleOf(m.rows[0]), q: openQ(outcomes) };
+}
+
+// Before migration 055 there is no column, and the scale was 1.
+function scaleOf(market) {
+    const s = Number(market && market.scale);
+    return s > 0 ? s : 1;
 }
 
 let publicCache = null;
@@ -215,7 +218,7 @@ async function publicState() {
     if (publicCache && Date.now() - publicCache.at < PUBLIC_TTL_MS) return publicCache.value;
     const data = await readMarket(pool);
     if (!data) return null;
-    const { market, outcomes, b, q } = data;
+    const { market, outcomes, b, scale, q } = data;
     const prices = LMSR.prices(q, b);
     const ids = outcomes.map((o) => o.problem_name);
     const meta = await problemMeta(ids);
@@ -225,12 +228,12 @@ async function publicState() {
     const [ticksRes, positionsRes] = await Promise.all([
         pool.query(
             `SELECT t.id, t.kind, t.actor, t.user_id, u.username, t.problem_name, t.shares, t.amount,
-                    t.prices, t.source, t.cancelled_at, t.created_at
+                    t.rate, t.prices, t.source, t.cancelled_at, t.created_at
                FROM lp_ticks t LEFT JOIN users u ON u.id = t.user_id
               ORDER BY t.created_at, t.id`
         ),
         pool.query(
-            `SELECT p.user_id, u.username, u.profile_picture, p.problem_name, p.shares, p.spent, p.received
+            `SELECT p.user_id, u.username, u.profile_picture, p.problem_name, p.shares, p.spent, p.received, p.interest
                FROM lp_positions p JOIN users u ON u.id = p.user_id`
         ),
     ]);
@@ -242,32 +245,35 @@ async function publicState() {
     for (const r of positionsRes.rows) {
         let e = byUser.get(r.user_id);
         if (!e) {
-            e = { userId: r.user_id, username: r.username, picture: r.profile_picture, spent: 0, received: 0, value: 0, positions: [] };
+            e = { userId: r.user_id, username: r.username, picture: r.profile_picture, spent: 0, received: 0, interest: 0, value: 0, positions: [] };
             byUser.set(r.user_id, e);
         }
         const shares = num(r.shares);
         const status = statusOf.get(r.problem_name);
         e.spent += num(r.spent);
         e.received += num(r.received);
+        e.interest += num(r.interest);
         e.positions.push({
             problem: r.problem_name,
             shares,
             status,
             spent: num(r.spent),
             received: num(r.received),
-            value: LP.positionValue(q, b, r.problem_name, shares, status),
+            interest: num(r.interest),
+            value: LP.positionValue(q, b, r.problem_name, shares, status, scale),
         });
     }
-    const people = [...byUser.values()].filter((e) => e.spent > 0 || e.received > 0);
+    const people = [...byUser.values()].filter((e) => e.spent > 0 || e.received > 0 || e.interest > 0);
     for (const e of people) {
-        e.value = LP.portfolioValueOf(q, b, e.positions);
+        e.value = LP.portfolioValueOf(q, b, e.positions, scale);
         e.profit = LP.profitOf(e);
     }
 
     const demon = {
         spent: num(market.demon_spent),
         received: num(market.demon_received),
-        value: LP.portfolioValueOf(q, b, outcomes.map((o) => ({ problem: o.problem_name, shares: num(o.demon_shares), status: o.status }))),
+        interest: num(market.demon_interest),
+        value: LP.portfolioValueOf(q, b, outcomes.map((o) => ({ problem: o.problem_name, shares: num(o.demon_shares), status: o.status })), scale),
     };
     demon.profit = LP.profitOf(demon);
 
@@ -306,6 +312,7 @@ async function publicState() {
             username: t.username || null,
             problem: t.problem_name,
             amount: t.amount == null ? null : round2(Math.abs(num(t.amount))),
+            rate: t.kind === 'solved' && t.rate != null ? Number(t.rate) : null,
             side: num(t.shares) >= 0 ? 'buy' : 'sell',
             cancelled: !!t.cancelled_at,
             at: t.created_at,
@@ -313,6 +320,7 @@ async function publicState() {
 
     const value = {
         b,
+        scale,
         openedAt: market.opened_at,
         decidedAt: market.decided_at,
         resolvedAt: market.resolved_at,
@@ -342,6 +350,7 @@ async function stateFor(userId, lang) {
     const signedIn = !!userId;
     const state = {
         b: pub.b,
+        scale: pub.scale,
         openedAt: pub.openedAt,
         decidedAt: pub.decidedAt,
         resolvedAt: pub.resolvedAt,
@@ -362,9 +371,10 @@ async function stateFor(userId, lang) {
     const [wallet, chatBets, owned] = await Promise.all([
         pool.query('SELECT balance FROM quanta_wallets WHERE user_id = $1', [userId]),
         pool.query(
-            `SELECT id, problem_name, shares, amount FROM lp_ticks
-              WHERE user_id = $1 AND actor = 'chat' AND kind = 'trade' AND cancelled_at IS NULL AND shares > 0
-              ORDER BY created_at`,
+            `SELECT t.id, t.problem_name, t.shares, t.amount FROM lp_ticks t
+              WHERE t.user_id = $1 AND t.actor = 'chat' AND t.kind = 'trade' AND t.cancelled_at IS NULL AND t.shares > 0
+                AND ${NO_SOLVE_SINCE}
+              ORDER BY t.created_at`,
             [userId]
         ),
         ownedReactions(pool, userId),
@@ -373,8 +383,9 @@ async function stateFor(userId, lang) {
     const rank = pub.leaderboard.findIndex((e) => e.userId === userId);
     state.me = {
         balance: wallet.rows.length ? num(wallet.rows[0].balance) : null,
-        positions: mine ? mine.positions.filter((p) => p.shares > LP.DUST).map((p) => Object.assign({}, p, {
+        positions: mine ? mine.positions.filter((p) => p.shares > LP.DUST || p.interest > 0).map((p) => Object.assign({}, p, {
             value: round2(p.value),
+            interest: round2(p.interest),
         })) : [],
         profit: mine && mine.profit !== undefined ? round2(mine.profit) : 0,
         rank: rank >= 0 ? rank + 1 : null,
@@ -455,6 +466,7 @@ async function executeTrade(userId, body) {
         const market = m.rows[0];
         if (!market || market.decided_at || market.resolved_at) return { rollback: true, status: 409, error: 'not_open' };
         const b = num(market.b);
+        const scale = scaleOf(market);
         const outs = await client.query('SELECT problem_name, q, status FROM lp_outcomes');
         const q = openQ(outs.rows);
         const open = new Set(Object.keys(q));
@@ -473,7 +485,7 @@ async function executeTrade(userId, body) {
         let shares;
         let amount;
         if (v.side === 'buy') {
-            shares = LMSR.sharesForAmount(q, b, v.problem, v.amount);
+            shares = LMSR.sharesForAmount(q, b, v.problem, v.amount, scale);
             amount = v.amount;
             await client.query('UPDATE lp_outcomes SET q = q + $2 WHERE problem_name = $1', [v.problem, shares]);
             await client.query(
@@ -486,7 +498,7 @@ async function executeTrade(userId, body) {
             q[v.problem] += shares;
         } else {
             shares = v.shares;
-            const proceeds = floor4(LMSR.sellProceeds(q, b, v.problem, shares));
+            const proceeds = floor4(LMSR.sellProceeds(q, b, v.problem, shares, scale));
             const left = held - shares < LP.DUST ? 0 : held - shares;
             await client.query('UPDATE lp_outcomes SET q = q - $2 WHERE problem_name = $1', [v.problem, shares]);
             await client.query(
@@ -510,16 +522,17 @@ async function executeTrade(userId, body) {
 }
 
 /* A bet placed from what someone wrote in the chat can be undone by that person, for every
- * quantum they were charged. The shares go back to the market; whatever the price did in the
- * meantime is the house's loss, not theirs. */
+ * quantum they were charged, until the first solve after it (NO_SOLVE_SINCE). The shares go back
+ * to the market; whatever the price did in the meantime is the house's loss, not theirs. */
 async function cancelChatBet(userId, tickId) {
     const result = await inTransaction(async (client) => {
         const m = await client.query('SELECT * FROM lp_market WHERE id = 1 FOR UPDATE');
         const market = m.rows[0];
         if (!market || market.decided_at || market.resolved_at) return { rollback: true, status: 409, error: 'not_open' };
         const t = await client.query(
-            `SELECT id, problem_name, shares, amount FROM lp_ticks
-              WHERE id = $1 AND user_id = $2 AND actor = 'chat' AND kind = 'trade' AND cancelled_at IS NULL AND shares > 0
+            `SELECT t.id, t.problem_name, t.shares, t.amount FROM lp_ticks t
+              WHERE t.id = $1 AND t.user_id = $2 AND t.actor = 'chat' AND t.kind = 'trade' AND t.cancelled_at IS NULL AND t.shares > 0
+                AND ${NO_SOLVE_SINCE}
               FOR UPDATE`,
             [tickId, userId]
         );
@@ -604,39 +617,100 @@ async function firstSolution(id) {
     return { userId: null, at: null };
 }
 
+/* A problem is solved: it leaves the market, and everyone holding problems still in play is paid
+ * interest on them in the same transaction (lib/lastProblem.js settleSolve), the demon included.
+ * Each position's interest is its own ledger row, ref solved:<tick>:<problem>, so a revert
+ * (scripts/seed-last-problem.js) can take back exactly what this paid. */
 async function eliminate({ problem, solvedAt, userId }) {
     const done = await inTransaction(async (client) => {
         const m = await client.query('SELECT * FROM lp_market WHERE id = 1 FOR UPDATE');
         const market = m.rows[0];
         if (!market || market.resolved_at) return { rollback: true };
-        const outs = await client.query('SELECT problem_name, q, status FROM lp_outcomes');
+        const outs = await client.query('SELECT problem_name, q, status, demon_shares FROM lp_outcomes');
         const q = openQ(outs.rows);
         if (!(problem in q) || Object.keys(q).length <= 1) return { rollback: true };
         const last = await client.query('SELECT MAX(created_at) AS t FROM lp_ticks');
         const floor = Math.max(new Date(market.opened_at).getTime(), last.rows[0].t ? new Date(last.rows[0].t).getTime() : 0);
         const at = new Date(Math.min(Date.now(), Math.max(solvedAt ? new Date(solvedAt).getTime() : Date.now(), floor)));
+
+        const pos = await client.query(
+            'SELECT user_id, problem_name, shares FROM lp_positions WHERE shares > $1 FOR UPDATE',
+            [LP.DUST]
+        );
+        const byUser = new Map();
+        for (const r of pos.rows) {
+            if (!byUser.has(r.user_id)) byUser.set(r.user_id, []);
+            byUser.get(r.user_id).push({ problem: r.problem_name, shares: num(r.shares) });
+        }
+        const holders = [...byUser.entries()].map(([uid, holdings]) => ({ key: `u${uid}`, holdings }));
+        holders.push({
+            key: 'demon',
+            holdings: outs.rows.filter((o) => o.status === 'open').map((o) => ({ problem: o.problem_name, shares: num(o.demon_shares) })),
+        });
+        const s = LP.settleSolve({ q, b: num(market.b), scale: scaleOf(market), problem, holders });
+        const total = s.payments.reduce((acc, p) => acc + p.total, 0);
+
         await client.query(
             "UPDATE lp_outcomes SET status = 'solved', solved_at = $2, solved_by = $3 WHERE problem_name = $1",
             [problem, at, userId]
         );
-        const after = LMSR.eliminate(q, problem);
-        await client.query(
-            `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, prices, created_at)
-             VALUES ('solved', 'system', $1, $2, $3, $4)`,
-            [userId, problem, JSON.stringify(snapshot(LMSR.prices(after, num(market.b)))), at]
+        const tick = await client.query(
+            `INSERT INTO lp_ticks (kind, actor, user_id, problem_name, amount, rate, prices, created_at)
+             VALUES ('solved', 'system', $1, $2, $3, $4, $5, $6) RETURNING id`,
+            [userId, problem, floor4(total).toFixed(4), s.rate, JSON.stringify(snapshot(s.prices)), at]
         );
-        return { ok: true };
+        const tickId = tick.rows[0].id;
+        const paid = [];
+        for (const p of s.payments) {
+            if (p.key === 'demon') {
+                await client.query('UPDATE lp_market SET demon_interest = demon_interest + $1 WHERE id = 1', [p.total.toFixed(4)]);
+                continue;
+            }
+            const uid = Number(p.key.slice(1));
+            await ensureWallet(client, uid);
+            for (const [k, amount] of Object.entries(p.byProblem)) {
+                await moveMoney(client, uid, amount, 'interest', `solved:${tickId}:${k}`);
+                await client.query(
+                    'UPDATE lp_positions SET interest = interest + $3 WHERE user_id = $1 AND problem_name = $2',
+                    [uid, k, amount.toFixed(4)]
+                );
+            }
+            paid.push({ userId: uid, amount: p.total });
+        }
+        await client.query('UPDATE lp_market SET scale = $1 WHERE id = 1', [s.scale]);
+        const lost = pos.rows.filter((r) => r.problem_name === problem).map((r) => r.user_id);
+        return { ok: true, rate: s.rate, paid, lost };
     });
     if (!done || !done.ok) return false;
     invalidate();
-    const holders = await pool.query('SELECT user_id FROM lp_positions WHERE problem_name = $1 AND shares > $2', [problem, LP.DUST]);
+
     let who = null;
     if (userId) {
         const u = await pool.query('SELECT username FROM users WHERE id = $1', [userId]).catch(() => ({ rows: [] }));
         who = u.rows[0] ? u.rows[0].username : null;
     }
-    await notifyUsers(holders.rows.map((r) => r.user_id), (n) => ({ title: n.solvedTitle(problem), message: n.solved(problem, who) }));
+    // One bell per person: the interest they got (a whole quantum or more), and whether this
+    // solve took a position of theirs with it.
+    const gain = new Map(done.paid.map((p) => [p.userId, Math.floor(p.amount)]));
+    const lost = new Set(done.lost);
+    const people = [...new Set([...lost, ...[...gain.keys()].filter((uid) => gain.get(uid) >= 1)])];
+    for (const uid of people) {
+        await notifyUsers([uid], (n, lang) => {
+            const rate = ratePercent(done.rate, lang);
+            const interest = gain.get(uid) || 0;
+            return interest >= 1
+                ? { title: n.interestTitle(interest), message: n.interest(problem, rate, lost.has(uid)) }
+                : { title: n.solvedTitle(problem), message: n.solvedLost(problem, who) };
+        });
+    }
     return true;
+}
+
+/* A rate as the app shows it: "+2,9%", "+25%". */
+function ratePercent(rate, lang) {
+    const v = Math.max(0, rate) * 100;
+    const nf = new Intl.NumberFormat(lang === 'ru' ? 'ru-RU' : 'en-GB', { maximumFractionDigits: v < 10 ? 1 : 0 });
+    return `+${nf.format(v)}%`;
 }
 
 async function stepMarket() {
@@ -673,13 +747,15 @@ async function payOut(winner) {
         if (!market || market.resolved_at || !market.decided_at) return { rollback: true };
         const open = await client.query("SELECT problem_name, demon_shares FROM lp_outcomes WHERE status = 'open'");
         if (open.rows.length !== 1 || open.rows[0].problem_name !== winner) return { rollback: true };
+        // With one problem left a share is worth exactly the scale, which is what it pays.
+        const scale = scaleOf(market);
         const holders = await client.query(
             'SELECT user_id, shares FROM lp_positions WHERE problem_name = $1 AND shares > $2 FOR UPDATE',
             [winner, LP.DUST]
         );
         const payouts = [];
         for (const h of holders.rows) {
-            const amount = floor4(num(h.shares));
+            const amount = floor4(num(h.shares) * scale);
             if (!(amount > 0)) continue;
             await ensureWallet(client, h.user_id);
             await moveMoney(client, h.user_id, amount, 'payout', winner);
@@ -692,7 +768,7 @@ async function payOut(winner) {
         await client.query("UPDATE lp_outcomes SET status = 'won' WHERE problem_name = $1", [winner]);
         await client.query(
             'UPDATE lp_market SET resolved_at = NOW(), winner = $1, demon_received = demon_received + $2 WHERE id = 1',
-            [winner, floor4(num(open.rows[0].demon_shares)).toFixed(4)]
+            [winner, floor4(num(open.rows[0].demon_shares) * scale).toFixed(4)]
         );
         await client.query(
             "INSERT INTO lp_ticks (kind, actor, problem_name, prices) VALUES ('resolved', 'system', $1, $2)",

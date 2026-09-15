@@ -1860,7 +1860,7 @@
             <% if (typeof firstUnreadId !== 'undefined' && firstUnreadId && m.id === firstUnreadId) { %>
             <div class="msg-new-divider" id="newMessagesDivider"><%= lang === 'ru' ? 'Новые сообщения' : 'New messages' %></div>
             <% } %>
-            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= m.created_at %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
+            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= new Date(m.created_at).toISOString() %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
               <% if (showAvatar) { %>
                 <span class="avatar-presence">
                   <a href="/user/<%= m.sender_username %>"><img class="msg-bubble-avatar"
@@ -2065,8 +2065,8 @@
     return (n / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
-  // Date-separator grouping uses a UTC day key so server render and client
-  // (append/history) render agree on day boundaries.
+  // The server can only group by its own day, UTC. The page redraws these separators by the
+  // reader's day as soon as it loads (regroupDaySeparators), so this is what shows without script.
   function dayKeyOf(dateStr) {
     const d = new Date(dateStr);
     return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
@@ -2146,7 +2146,7 @@
   let readCutoff = <%- JSON.stringify(typeof readCutoff !== 'undefined' ? readCutoff : null) %>;
   let hasMoreHistory = <%= (typeof hasMoreHistory !== 'undefined' && hasMoreHistory) ? 'true' : 'false' %>;
   let loadingHistory = false;
-  let bottomDayKey = null;   // UTC day key of the newest rendered message
+  let bottomDayKey = null;   // the reader's day key of the newest rendered message
   let oldestMsgId = 0;       // smallest real message id currently rendered (for history paging)
   let lastMsgId = 0;
   let pollTimer = null;
@@ -2175,6 +2175,7 @@
   // Get last message ID for polling
   const chatEl = document.getElementById('chatMessages');
   const rowEls = chatEl ? chatEl.querySelectorAll('.msg-bubble-row[data-msg-id]') : [];
+  regroupDaySeparators();
   if (rowEls.length > 0) {
     // The largest id, not the last row's: a message inserted after the fact (the English
     // halves of the split announcements) sorts by its original time but has a newer id, and
@@ -3226,12 +3227,30 @@
       '<span class="msg-bubble-file-size">' + esc(size) + '</span></span></a>';
   }
 
+  // Days are the reader's own, in the browser's time zone: a message sent at 01:30 in Moscow
+  // belongs under that day, not under the day before, which it was in UTC.
   function clientDayKey(iso) {
     const d = new Date(iso);
-    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function clientDaySepText(iso) {
-    return new Date(iso).toLocaleDateString(LANG === 'ru' ? 'ru-RU' : 'en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(iso).toLocaleDateString(LANG === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  // The server draws the separators by its own (UTC) day; redraw them by the reader's, before
+  // anything on the page is measured or scrolled to.
+  function regroupDaySeparators() {
+    if (!chatEl) return;
+    chatEl.querySelectorAll('.msg-date-sep').forEach(function (el) { el.remove(); });
+    let last = null;
+    chatEl.querySelectorAll('.msg-bubble-row[data-created]').forEach(function (row) {
+      if (row.parentNode !== chatEl) return;
+      const key = clientDayKey(row.dataset.created);
+      if (key === last) return;
+      last = key;
+      const prev = row.previousElementSibling;
+      const before = prev && prev.classList.contains('msg-new-divider') ? prev : row;
+      chatEl.insertBefore(makeDateSep(row.dataset.created), before);
+    });
   }
   function makeDateSep(iso) {
     const el = document.createElement('div');

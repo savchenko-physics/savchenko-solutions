@@ -6,8 +6,9 @@
  * lives in an iframe (js/apps/launcher.js) and talks to the chat with postMessage: close, state
  * changed (the card refreshes), reaction unlocked (the pickers unlock it at once).
  *
- * Prices come from the server. The only market maths here is the preview of a buy, which for
- * LMSR depends on nothing but the problem's price and b (js/lmsr.js).
+ * Prices come from the server. The only market maths here is the preview of a buy: what it would
+ * earn in interest if the heaviest other problem were solved next, which depends on nothing but
+ * the prices on screen, b and the scale (js/lmsr.js, the same functions the server settles with).
  */
 (() => {
     'use strict';
@@ -36,7 +37,7 @@
 
     const nf0 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 0 });
     const nf1 = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-    const dayFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    // Every date and time in the viewer's own time zone.
     const dayLocalFmt = new Intl.DateTimeFormat(LOCALE, { day: 'numeric', month: 'short' });
     // Times as 13.40, never with a colon (the owner's rule for everything this app says).
     const clock = (date) => `${date.getHours()}.${String(date.getMinutes()).padStart(2, '0')}`;
@@ -50,11 +51,21 @@
         return `${v < 20 ? nf1.format(v) : nf0.format(v)}%`;
     }
 
-    function mult(p) {
-        if (!(p > 0)) return '';
-        const m = 1 / p;
-        return `×${m < 100 ? nf1.format(m) : nf0.format(m)}`;
+    const plusPercent = (r) => {
+        const v = Math.max(0, r) * 100;
+        return `+${v < 10 ? nf1.format(v) : nf0.format(v)}%`;
+    };
+
+    /* The interest everything else earns if a problem at weight p is solved: p / (1 - p). */
+    function rateText(p) {
+        return p > 0 && p < 1 ? plusPercent(p / (1 - p)) : '';
     }
+
+    /* A problem number opens the problem finder on that problem, in a new tab so the chat and the
+     * app stay where they are. */
+    const problemLink = (id, extra) => `<a class="lp-id-link${extra ? ` ${extra}` : ''}" href="/${boot.lang}/problems?q=${encodeURIComponent(id)}" target="_blank" rel="noopener">${esc(id)}</a>`;
+
+    const amountText = (x) => (x < 10 ? nf1.format(Math.floor(x * 10 + 1e-9) / 10) : nf0.format(Math.floor(x + 1e-9)));
 
     function plural(n, forms) {
         const k = Math.abs(Math.floor(n));
@@ -348,10 +359,11 @@
                 </div>` : '';
             const won = status.get(p.problem) === 'won';
             const outcome = open ? `${esc(C.worthNow)} ${quanta(p.value)}` : (won ? `${esc(C.payout)} ${quanta(p.received)}` : esc(C.feedSolved));
+            const interest = p.interest > 0 ? ` · ${esc(C.interest)} <span class="lp-q">+${amountText(p.interest)}${coin()}</span>` : '';
             return `<li class="lp-pos${open || won ? '' : ' is-out'}">
-                <div class="lp-pos-head"><span class="lp-pos-id">${esc(p.problem)}</span>${bet ? `<span class="ss-badge">${esc(C.fromChat)}</span>` : ''}
-                    <span class="lp-pos-shares">${shares}</span></div>
-                <div class="lp-pos-money">${esc(C.spent)} ${quanta(p.spent)} · ${outcome}</div>
+                <div class="lp-pos-head"><span class="lp-pos-id">${problemLink(p.problem)}</span>${bet ? `<span class="ss-badge">${esc(C.fromChat)}</span>` : ''}
+                    <span class="lp-pos-shares">${p.shares > 0 ? shares : ''}</span></div>
+                <div class="lp-pos-money">${esc(C.spent)} ${quanta(p.spent)} · ${outcome}${interest}</div>
                 ${buttons}
             </li>`;
         }).join('');
@@ -364,17 +376,19 @@
         return `<span class="lp-heat lp-heat-${bucket}">${nf0.format(difficulty)}</span>`;
     }
 
+    /* A row opens the buy form under it on a tap anywhere but the problem number, which is a link
+     * of its own; for the keyboard, the weight is the button that does it. */
     function rowHtml(o) {
         const isOpen = openRow === o.id;
         return `<li class="lp-row${isOpen ? ' is-open' : ''}">
-            <button type="button" class="lp-row-main" data-lp-row="${esc(o.id)}" aria-expanded="${isOpen ? 'true' : 'false'}">
-                <span class="lp-row-name"><span class="lp-row-id">${esc(o.id)}${o.starred ? '<sup class="ss-star">∗</sup>' : ''}</span>
+            <div class="lp-row-main" data-lp-row="${esc(o.id)}">
+                <span class="lp-row-name"><span class="lp-row-id">${problemLink(o.id)}${o.starred ? '<sup class="ss-star">∗</sup>' : ''}</span>
                     ${o.demon ? `<img class="lp-row-demon" src="${esc(boot.art.demon)}" alt="${esc(C.demonName)}" title="${esc(C.demonName)}" width="16" height="16">` : ''}
                     <span class="lp-row-title">${esc(o.title)}</span></span>
                 ${heat(o.difficulty)}
-                <span class="lp-row-price">${pct(o.price)}</span>
-                <span class="lp-row-mult">${mult(o.price)}</span>
-            </button>
+                <button type="button" class="lp-row-price" data-lp-toggle aria-expanded="${isOpen ? 'true' : 'false'}" aria-label="${esc(`${o.id} ${C.columns.weight} ${pct(o.price)}`)}">${pct(o.price)}</button>
+                <span class="lp-row-mult">${o.status === 'open' ? rateText(o.price) : ''}</span>
+            </div>
             ${isOpen ? tradeHtml(o) : ''}
         </li>`;
     }
@@ -389,7 +403,7 @@
         if (state.decidedAt) return `<div class="lp-trade"><div class="lp-trade-actions">${statement}</div>${statementBody}</div>`;
         const bal = balance() == null ? 1000 : balance();
         const start = Math.max(1, Math.min(100, Math.floor(bal + 1e-9)));
-        return `<div class="lp-trade" data-lp-trade="${esc(o.id)}" data-price="${o.price}">
+        return `<div class="lp-trade" data-lp-trade="${esc(o.id)}">
             <div class="lp-trade-row">
                 <label class="lp-amount"><span class="visually-hidden">${esc(C.amount)}</span>
                     <input class="lp-amount-input" type="text" inputmode="numeric" autocomplete="off" maxlength="9" value="${start}" data-lp-amount>${coin()}</label>
@@ -413,9 +427,9 @@
         const solved = state.outcomes.filter((o) => o.status === 'solved')
             .sort((a, b) => new Date(b.solvedAt) - new Date(a.solvedAt));
         if (!solved.length) return '';
-        const items = solved.map((o) => `<li><span class="lp-solved-id">${esc(o.id)}</span>
+        const items = solved.map((o) => `<li><span class="lp-solved-id">${problemLink(o.id)}</span>
             <span class="lp-solved-who">${o.solvedBy ? `${esc(C.solvedBy)} ${esc(o.solvedBy)}` : ''}</span>
-            <span class="lp-solved-when">${esc(dayFmt.format(new Date(o.solvedAt)))}</span></li>`).join('');
+            <span class="lp-solved-when">${esc(dayLocalFmt.format(new Date(o.solvedAt)))}</span></li>`).join('');
         return `<details class="lp-block lp-solved"><summary class="lp-h2">${esc(C.solvedList)} <span class="ss-badge">${solved.length}</span></summary><ul>${items}</ul></details>`;
     }
 
@@ -423,9 +437,10 @@
         if (!boot.signedIn || !state.feed || !state.feed.length) return '';
         const items = state.feed.map((f) => {
             const who = f.actor === 'demon' ? C.demonName : (f.username || '');
+            const rest = f.rate > 0 ? ` · ${esc(C.feedRest)} ${esc(plusPercent(f.rate))}` : '';
             const what = f.kind === 'solved'
-                ? `<b>${esc(f.problem)}</b> ${esc(C.feedSolved)}${f.username ? ` · ${esc(C.solvedBy)} ${esc(f.username)}` : ''}`
-                : `${esc(who)} ${esc(f.side === 'sell' ? C.feedSell : (f.actor === 'demon' ? C.feedBuyDemon : C.feedBuy))} <b>${esc(f.problem)}</b> ${quanta(f.amount || 0)}${f.actor === 'chat' ? ` <span class="ss-badge">${esc(C.fromChat)}</span>` : ''}`;
+                ? `<b>${problemLink(f.problem)}</b> ${esc(C.feedSolved)}${rest}${f.username ? ` · ${esc(C.solvedBy)} ${esc(f.username)}` : ''}`
+                : `${esc(who)} ${esc(f.side === 'sell' ? C.feedSell : (f.actor === 'demon' ? C.feedBuyDemon : C.feedBuy))} <b>${problemLink(f.problem)}</b> ${quanta(f.amount || 0)}${f.actor === 'chat' ? ` <span class="ss-badge">${esc(C.fromChat)}</span>` : ''}`;
             return `<li class="${f.cancelled ? 'is-cancelled' : ''}"><span class="lp-feed-what">${what}</span><span class="lp-feed-when">${esc(timeFmt.format(new Date(f.at)))}</span></li>`;
         }).join('');
         return `<section class="lp-block"><h2 class="lp-h2">${esc(C.recent)}</h2><ul class="lp-feed">${items}</ul></section>`;
@@ -447,7 +462,7 @@
             ${positionsHtml()}
             ${state.decidedAt || state.resolvedAt ? '' : `<p class="lp-hint">${esc(C.listHint.replace('{n}', String(open.length)))}</p>`}
             <div class="lp-cols" aria-hidden="true"><span>${esc(C.columns.problem)}</span><span class="lp-cols-mid">${esc(C.columns.difficulty)}</span>
-                <span class="lp-cols-num">${esc(C.columns.chance)}</span><span class="lp-cols-num">${esc(C.columns.payout)}</span></div>
+                <span class="lp-cols-num">${esc(C.columns.weight)}</span><span class="lp-cols-num">${esc(C.columns.ifSolved)}</span></div>
             <ol class="lp-outcomes">${open.map(rowHtml).join('')}</ol>
             ${solvedHtml()}
             ${feedHtml()}
@@ -552,20 +567,37 @@
         return clean ? Number(clean) : NaN;
     }
 
+    /* What a buy of `amount` on `id` would earn in interest if the heaviest other problem were
+     * solved next: the buy alone, at the prices on screen. */
+    function interestPreview(id, amount) {
+        const open = state.outcomes.filter((o) => o.status === 'open');
+        if (open.length < 2 || !window.LMSR) return null;
+        const b = state.b;
+        const scale = state.scale > 0 ? state.scale : 1;
+        const q = window.LMSR.qForPrices(Object.fromEntries(open.map((o) => [o.id, Math.max(o.price, 1e-12)])), b);
+        if (!(id in q)) return null;
+        const shares = window.LMSR.sharesForAmount(q, b, id, amount, scale);
+        q[id] += shares;
+        const after = window.LMSR.prices(q, b);
+        let other = null;
+        for (const o of open) if (o.id !== id && (other == null || after[o.id] > after[other])) other = o.id;
+        const solved = window.LMSR.solve(q, b, scale, other);
+        return { other, gain: window.LMSR.interestOn(solved, b, { [id]: shares }) };
+    }
+
     function updatePreview() {
         const box = main.querySelector('[data-lp-trade]');
         if (!box) return;
         const id = box.dataset.lpTrade;
-        const p = Number(box.dataset.price);
         const amount = amountValue();
         const bal = balance() == null ? 1000 : balance();
         const preview = box.querySelector('[data-lp-preview]');
         const buy = box.querySelector('[data-lp-buy]');
         const egg = box.querySelector('[data-lp-egg]');
         const valid = Number.isSafeInteger(amount) && amount >= 1 && amount <= Math.floor(bal + 1e-9);
-        if (Number.isSafeInteger(amount) && amount >= 1 && p > 0) {
-            const shares = state.b * Math.log((Math.expm1(amount / state.b) + p) / p);
-            preview.innerHTML = `${esc(C.youGet)} ${nf0.format(shares)} ${esc(plural(shares, C.shares))} · ${esc(C.payout)} ${quanta(shares)} (×${nf1.format(shares / amount)}), ${esc(C.ifLast)}`;
+        const est = Number.isSafeInteger(amount) && amount >= 1 ? interestPreview(id, amount) : null;
+        if (est) {
+            preview.textContent = `${C.previewGain.replace('{other}', est.other).replace('{gain}', amountText(est.gain))} ${C.previewLoss.replace('{problem}', id)}`;
         } else {
             preview.textContent = '';
         }
@@ -717,9 +749,17 @@
             return;
         }
         const row = hit('[data-lp-row]');
-        if (row) {
-            openRow = openRow === row.dataset.lpRow ? null : row.dataset.lpRow;
+        if (row && !hit('a')) {
+            const id = row.dataset.lpRow;
+            const viaKeyboardButton = !!hit('[data-lp-toggle]');
+            openRow = openRow === id ? null : id;
+            // Opening focuses the amount (render); closing from the button keeps focus on it.
             render();
+            if (!openRow && viaKeyboardButton) {
+                const again = [...main.querySelectorAll('[data-lp-row]')].find((el) => el.dataset.lpRow === id);
+                const toggle = again && again.querySelector('[data-lp-toggle]');
+                if (toggle) toggle.focus({ preventScroll: true });
+            }
             return;
         }
         const add = hit('[data-lp-add]');

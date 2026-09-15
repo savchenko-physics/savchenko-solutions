@@ -16,29 +16,13 @@ function renderFileList(req, res) {
             const filePath = path.join(directoryPath, file);
             const stats = fs.statSync(filePath);
 
-            const lastModified = stats.mtime;
-            const options = {
-                timeZone: "America/New_York",
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-                hour12: false,
-            };
-            const easternTime = new Intl.DateTimeFormat("en-US", options).format(lastModified);
-
-            // Split the formatted string into date and time
-            const [date, time] = easternTime.split(", ");
-
             return {
                 name: file,
                 version,
                 ipAddress,
                 size: stats.size, // File size in bytes
-                date, // Date in YYYY-MM-DD format
-                time, // Time in HH:MM:SS format
+                // A moment: the template writes its date and time in the reader's time zone.
+                modified: stats.mtime,
                 language, // Include the language in the file details
             };
         });
@@ -49,7 +33,9 @@ function renderFileList(req, res) {
     const ruFiles = processFiles(ruDirectoryPath, "Russian");
     const fileDetails = [...enFiles, ...ruFiles];
 
-    fileDetails.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+    // Newest first. (The old sort compared "MM/DD/YYYY" strings, which put December 2025 above
+    // January 2026.)
+    fileDetails.sort((a, b) => b.modified - a.modified);
 
     // Render the details in the EJS template
     res.render("file_list", { fileDetails });

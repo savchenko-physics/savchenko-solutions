@@ -3490,7 +3490,7 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 /* Column names over the problems, on the same grid as a row. */
 .lp-cols {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px 64px 56px;
+  grid-template-columns: minmax(0, 1fr) 72px 64px 72px;
   gap: var(--ss-space-2);
   margin-top: var(--ss-space-2);
   padding-bottom: var(--ss-space-1);
@@ -3502,9 +3502,10 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
 .lp-cols-mid { text-align: center; }
 .lp-outcomes { margin: 0; padding: 0; list-style: none; }
 .lp-row { border-bottom: 1px solid var(--ss-rule); }
+/* The row is not a button: its problem number is a link of its own, and the weight is the button. */
 .lp-row-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 72px 64px 56px;
+  grid-template-columns: minmax(0, 1fr) 72px 64px 72px;
   align-items: center;
   gap: var(--ss-space-2);
   width: 100%;
@@ -3537,10 +3538,23 @@ details.lp-block > summary { cursor: pointer; list-style-position: inside; }
   border: 1px solid var(--ss-rule-strong);
   border-radius: var(--ss-radius);
   background: var(--ss-surface);
+  color: var(--ss-text);
   text-align: center;
+  font-family: var(--ss-font-ui);
+  font-size: var(--ss-fs-14);
   font-weight: var(--ss-fw-strong);
+  line-height: var(--ss-lh-ui);
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
 }
+/* Problem numbers open the problem finder: text coloured, quietly underlined, the link colour on hover. */
+.lp-id-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--ss-rule-strong);
+  text-underline-offset: 3px;
+}
+.lp-id-link:hover { color: var(--ss-link); text-decoration-color: currentColor; }
 .lp-row-main:hover .lp-row-price { border-color: var(--ss-navy); }
 .lp-row.is-open .lp-row-price { background: var(--ss-navy); border-color: var(--ss-navy); color: var(--ss-on-navy); }
 .lp-hint { margin: var(--ss-space-4) 0 0; font-size: var(--ss-fs-13); line-height: var(--ss-lh-ui); color: var(--ss-text); }

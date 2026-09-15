@@ -1,24 +1,9 @@
 <!DOCTYPE html>
 <%
   const ru = lang === 'ru';
-  const RU_MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-  const EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   // Unlike the suggestions board, recency is the whole point here — "what was I in the
-  // middle of?" is answered by "four minutes ago", not by a date. Past a day, name the day.
-  function when(d) {
-    const t = new Date(d);
-    const mins = Math.max(0, (Date.now() - t.getTime()) / 60000);
-    if (mins < 1)  return ru ? 'только что' : 'just now';
-    if (mins < 60) return ru ? `${Math.round(mins)} мин назад` : `${Math.round(mins)} min ago`;
-    if (mins < 24 * 60) {
-      const h = Math.round(mins / 60);
-      return ru ? `${h} ч назад` : `${h} h ago`;
-    }
-    const day = t.getUTCDate(), mon = t.getUTCMonth(), yr = t.getUTCFullYear();
-    const sameYear = yr === new Date().getUTCFullYear();
-    return ru ? `${day} ${RU_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`
-              : `${day} ${EN_MONTHS[mon]}${sameYear ? '' : ' ' + yr}`;
-  }
+  // middle of?" is answered by "four minutes ago", not by a date. Past a day, name the day,
+  // in the reader's own time zone (localTime, js/local-time.js).
 %>
 <html lang="<%= lang %>">
 <head>
@@ -60,7 +45,7 @@
             <div class="drafts-item-head">
               <a class="drafts-problem" href="/<%= d.language %>/edit/<%= d.problemName %>"><%= d.problemName %></a>
               <span class="drafts-lang"><%= d.language %></span>
-              <span class="drafts-when"><%= when(d.updatedAt) %></span>
+              <span class="drafts-when"><%- localTime(d.updatedAt, 'relative', lang) %></span>
             </div>
             <p class="drafts-snippet"><%= d.snippet %></p>
             <div class="drafts-actions">
