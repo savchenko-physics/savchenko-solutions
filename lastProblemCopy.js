@@ -64,7 +64,7 @@ const COPY = {
         rulesTitle: 'Правила',
         rules: [
             'Рынок открыт 15 сентября, когда emixter спросил в чате, какая задача будет решена последней. В игре задачи, которые тогда были не решены.',
-            'Задача считается решённой, когда на сайте появляется её решение на любом языке. Пустой шаблон со страницы «Добавить задачу» не считается.',
+            'Задача считается решённой, когда на сайте появляется её решение на любом языке. Пустой шаблон и заготовка, в которую ничего не написали, не считаются.',
             'Вкладывайте кванты в задачи, которые, по-вашему, решат позже других. Вес задачи это её цена на рынке, веса всех задач вместе дают 100%. Чем больше в задачу вкладывают, тем больше её вес.',
             'Закон сохранения интереса. Когда решают задачу, её доли сгорают, а всё, что вложено в остальные задачи, получает проценты. Чем больше был вес решённой задачи, тем выше ставка. Решат задачу с весом 20%, и остальные получат +25%.',
             'Поэтому чем ближе к концу решат вашу задачу, тем больше процентов она соберёт. Решённая в числе первых принесёт убыток, решённая ближе к концу окупится, даже если она не последняя.',
@@ -220,7 +220,7 @@ const COPY = {
         rulesTitle: 'Rules',
         rules: [
             'The market opened on 15 September, when emixter asked in the chat which problem will be solved last. It covers the problems unsolved at that moment.',
-            'A problem counts as solved when its solution appears on the site in either language. The empty template from "Add a problem" does not count.',
+            'A problem counts as solved when its solution appears on the site in either language. An empty template, or one with nothing written into it, does not count.',
             'Put quanta on the problems you think will be solved later than the rest. A problem\'s weight is its price in the market, and the weights of all problems add up to 100%. The more goes into a problem, the heavier it gets.',
             'Conservation of interest. When a problem is solved its shares burn, and everything on the other problems earns interest. The heavier the solved problem was, the higher the rate. If a problem weighing 20% is solved, the rest get +25%.',
             'So the closer to the end your problem is solved, the more interest it collects. One solved among the first loses money, and one solved near the end pays off even if it is not the very last.',

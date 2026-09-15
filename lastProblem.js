@@ -147,9 +147,10 @@ async function communityChats() {
 }
 
 // A bet placed from the chat can be taken back for every quantum only until the first solve after
-// it: from then on it has earned interest, or been lost, and it is an ordinary position to sell.
-// A fixed fragment over lp_ticks t, no input in it.
-const NO_SOLVE_SINCE = "NOT EXISTS (SELECT 1 FROM lp_ticks s WHERE s.kind = 'solved' AND s.created_at >= t.created_at)";
+// it: from then on it has earned interest, or been lost, and it is an ordinary position to sell. A
+// solve that was reverted (cancelled_at set by scripts/seed-last-problem.js --revert) does not
+// count. A fixed fragment over lp_ticks t, no input in it.
+const NO_SOLVE_SINCE = "NOT EXISTS (SELECT 1 FROM lp_ticks s WHERE s.kind = 'solved' AND s.cancelled_at IS NULL AND s.created_at >= t.created_at)";
 
 function appLink(lang, chats) {
     return chats && chats[lang] ? `/${lang}/messages/${chats[lang]}?app=last-problem` : `/${lang}/apps/last-problem`;

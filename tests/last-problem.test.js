@@ -308,6 +308,32 @@ test('the /create-problem template is not a solution, in either language', () =>
     assert.equal(LP.isTemplatePost('![](../../img/5.8.9/1.jpg)'), false);
 });
 
+test('a post with nothing written in it is not a solution, whatever template it came from', () => {
+    // What knocked 5.8.9 out of the market on 2026-09-15, forty minutes after it opened.
+    const junk = '### Условие\n\n$5.8.9.$ [Вставьте условие задачи]\n\n### Решение\n\nasd\n\n#### Ответ\n\n[Вставьте краткий ответ или результат в рамке]';
+    assert.equal(LP.isTemplatePost(junk), true);
+    assert.equal(LP.isTemplatePost('### Statement\n\n$6.3.10.$ [Insert the problem statement]\n\n### Solution\n\n#### Answer\n\n[Insert a concise answer or boxed result]'), true);
+    // A statement copied in is still not a solution.
+    assert.equal(LP.isTemplatePost('### Условие\n\n$6.3.14.$ Найдите напряженность электрического поля между тремя пластинами, если средняя пластина заземлена.\n\n### Решение\n\n\n\n#### Ответ\n\n[Вставьте краткий ответ или результат в рамке]'), true);
+    assert.equal(LP.hasWrittenSolution(null), false);
+});
+
+// ── Must never block a real person (what counts as solved) ─────────────────────────────
+
+test('every kind of real solution on the site counts, placeholders and all', () => {
+    const real = {
+        'a scan upload that kept the answer placeholder (6.3.14)': '### Условие\n\n$6.3.14.$ Найдите напряженность поля.\n\n### Решение\n\n![К задаче $6.3.14$ |980x4080, 31%](../../img/6.3.14/scan-0.png)\n\n\n\n#### Ответ\n\n[Вставьте краткий ответ или результат в рамке]',
+        'text under the statement placeholder (5.9.26)': '### Условие\n\n$5.9.26.$ [Вставьте условие задачи]\n\n### Решение\n\nРассмотрим такой вариант цикла, где после высыхания воды мы заливаем новую воду.\n\n#### Ответ\n\n[Вставьте краткий ответ или результат в рамке]',
+        'sub-headings inside the solution (11.4.1)': '### Условие\n\nТекст.\n\n### Решение\n\n#### Закон изменения тока\n\nТок растёт линейно, $i = \\mathscr E t / L$.\n\n#### Ответ: $i=\\dfrac{\\mathscr Et}{L}$',
+        'a scan placed before the statement, with an empty solution section (13.4.7)': '![For problem $13.4.7$|2548x3488, 50%](../../img/13.4.7/1.jpg)### Statement\n\n$13.4.7.$ A beam of light falls on a plate.\n\n### Solution\n\n\n\n#### Answer\n\n$I\'=\\frac{1-k}{1+k} I_0$',
+        'a heading with a colon and two spaces (8.3.38)': '###  Условие:\n\nТекст.\n\n###  Решение:\n\n#### Решение для случая a:\n\n$U = IR$\n\n#### Ответ: $2$ и $100$',
+        'a formula alone': '### Решение\n\n$v = \\sqrt{2gh}$',
+        'a paragraph with no formula': 'Скорость не зависит от массы тела, поэтому оба тела упадут одновременно.',
+        'English with no headings at all': 'The block slides down with constant acceleration g sin(alpha), since friction is absent.',
+    };
+    for (const [what, text] of Object.entries(real)) assert.equal(LP.isTemplatePost(text), false, what);
+});
+
 test('problem ids are the book numbering and nothing else', () => {
     for (const id of ['5.8.9', '14.4.31', '1.1.1']) assert.equal(LP.isProblemId(id), true, id);
     for (const id of ['5.8', '5.8.9.1', ' 5.8.9', '5.8.9 ', '05.8.9a', '__proto__', '', null, 5.89, '1.1.1234']) {

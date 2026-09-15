@@ -56,7 +56,8 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   2026-09-15 will be solved last; every account gets 1000 quanta (ħ, `img/apps/last-problem/coin.svg`), prices
   come from an LMSR market maker (`js/lmsr.js`, b = 1000), quanta buy the premium reactions. Play money, no cash
   value. A problem drops out when a real post appears (checked every 2 minutes, `syncSolved`; the untouched
-  `/create-problem` template does not count). **Conservation of interest** (the owner's rule since the first
+  `/create-problem` template does not count, nor a post with nothing written in it, `hasWrittenSolution`, since
+  "asd" in the /upload template knocked 5.8.9 out on the first evening). **Conservation of interest** (the owner's rule since the first
   evening, migration 055): a solve burns the solved problem's shares and pays every holding still in play interest
   at p / (1 − p) of the solved problem's price p, on what those shares fetch right after (`js/lmsr.js` `solve`,
   `lib/lastProblem.js` `settleSolve`, one ledger row per position `solved:<tick>:<problem>`); `lp_market.scale`

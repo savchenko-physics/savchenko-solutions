@@ -284,13 +284,15 @@ async function revert(problem) {
 
         // The interest that solve paid comes back, as far as each balance allows.
         const t = await client.query(
-            "SELECT id, rate, amount FROM lp_ticks WHERE kind = 'solved' AND problem_name = $1 ORDER BY created_at DESC, id DESC LIMIT 1",
+            "SELECT id, rate, amount FROM lp_ticks WHERE kind = 'solved' AND problem_name = $1 AND cancelled_at IS NULL ORDER BY created_at DESC, id DESC LIMIT 1",
             [problem]
         );
         let back = 0;
         let short = 0;
         if (t.rowCount) {
             const tick = t.rows[0];
+            // Struck through in the feed, and no longer a solve that ends chat-bet refunds.
+            await client.query('UPDATE lp_ticks SET cancelled_at = NOW() WHERE id = $1', [tick.id]);
             const rows = await client.query(
                 "SELECT user_id, delta, ref FROM quanta_ledger WHERE reason = 'interest' AND ref LIKE $1 ORDER BY id",
                 [`solved:${tick.id}:%`]
