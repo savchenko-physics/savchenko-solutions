@@ -70,6 +70,7 @@ index.js                          # Main Express app (all routes)
 utils.js                          # Markdown parsing, XSS validation
 post.js                           # Solution rendering + view tracking
 upload.js                         # Upload router
+accountRecovery.js                # Forgot password, reset link, recovery appeal (rules: lib/passwordReset.js)
 contributions.js                  # Contribution display
 contributorsUserMetricsApi.js     # Leaderboard and user stats API
 userProfile.js                    # User profile rendering
@@ -117,10 +118,18 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
 - `special_contributions` — flagged edits (blocked IPs, emoji content)
 - `problem_statements` (4,046) / `problem_difficulty` (2,023) — see Content Structure
 - `session` — Express session store
+- `password_reset_requests` — every "Forgot password?" and recovery appeal, with `outcome`
+  (migration 053). Its email rows are what the recovery limits count, per account and
+  site-wide (`LIMITS` in `lib/passwordReset.js`), under an advisory lock in
+  `accountRecovery.js`, and mail only ever goes to an address already on an account. **Never
+  send recovery mail from anywhere else**; before 2026-09-15 `/recover-account` emailed any
+  address typed into it, with no rate limit
 
 ## Security — open issues
 1. **No CSRF protection anywhere.** Zero occurrences of `csrf` outside `node_modules`. The
-   only mitigation is the session cookie's `sameSite: 'lax'` (`index.js:121`).
+   only mitigation is the session cookie's `sameSite: 'lax'` (`index.js:121`). The one
+   exception: the account-recovery forms refuse cross-site posts by `Sec-Fetch-Site` / `Origin`
+   (`isCrossSite` in `lib/passwordReset.js`).
 2. **`apiLimiter` is a no-op.** `index.js:146` sets `max: Number.MAX_SAFE_INTEGER`, so
    mounting it on `/api/` at `:191` protects nothing. Any new public endpoint must bring its
    own limiter (see `feedback.js`).
@@ -136,7 +145,9 @@ Anonymous edit / upload / create-problem are all `checkAuthenticated` now (`inde
 `upload.js:29`, `index.js:1652`). `SESSION_SECRET` throws on startup if unset
 (`index.js:84`). Rate limiting exists (`express-rate-limit`, six limiters at
 `index.js:130-186`). Password reset and email verification both ship (migrations 003, 015,
-035). The report queue has an admin UI (`admin.js:140-215`) — the real problem is that
+035); account recovery was rewritten on 2026-09-15 (username or address, case-insensitive,
+flood limits in the database, token moved out of the URL; migration 053). The report queue
+has an admin UI (`admin.js:140-215`) — the real problem is that
 **62 of 63 reports are still pending at a mean age of 245 days**, which is a closure
 problem, not a UI one; the `/admin/feedback` tab surfaces the backlog. The IP blocklist
 moved to the `blocked_ips` table (migration 002).
@@ -330,7 +341,7 @@ hyphenation and a 1em paragraph indent, as journals set text.
   dependency**, and adding one is not wanted; the rationale is written down at
   `tests/brainstorm.test.js:1-10`.
 - Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
-  `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`,
+  `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`, `password-reset.test.js`,
   `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, and the design system's
   `site-styles.test.js`, `site-fonts.test.js`, `design-tokens.test.js`, `design-rules.test.js`
   and `solution-structure.test.js`.

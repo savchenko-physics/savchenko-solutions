@@ -671,6 +671,8 @@ router.get('/stats/data', async (req, res) => {
 });
 
 // ─── Password Reset Requests ────────────────────────────────────────────
+// outcome (migration 053) is what the request led to; labels and limits are lib/passwordReset.js's.
+const { LIMITS: RESET_LIMITS, OUTCOME_LABELS: RESET_OUTCOME_LABELS } = require('./lib/passwordReset');
 let hasResetRequestsTableCache = null;
 async function hasResetRequestsTable() {
     if (hasResetRequestsTableCache !== null) return hasResetRequestsTableCache;
@@ -698,6 +700,8 @@ router.get('/password-resets', async (req, res) => {
                 resetRequests: [],
                 showAll: false,
                 pendingCount: 0,
+                resetLimits: RESET_LIMITS,
+                resetOutcomeLabels: RESET_OUTCOME_LABELS,
             });
         }
 
@@ -724,6 +728,8 @@ router.get('/password-resets', async (req, res) => {
             resetRequests: requests.rows,
             showAll,
             pendingCount: parseInt(pendingResult.rows[0].count),
+            resetLimits: RESET_LIMITS,
+            resetOutcomeLabels: RESET_OUTCOME_LABELS,
         });
     } catch (err) {
         console.error('Admin password resets error:', err);

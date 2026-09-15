@@ -36,7 +36,7 @@
                 </div>
             </div>
             <p style="margin: var(--ss-space-2) 0 var(--ss-space-4); font-size: var(--ss-fs-13); text-align: right;">
-                <a href="/forgot-password" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Забыли пароль?' : 'Forgot password?' %></a>
+                <a href="/forgot-password?lang=<%= lang %>" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Забыли пароль?' : 'Forgot password?' %></a>
             </p>
             <button type="submit" class="submit-button"><%= __('auth.login.submit') %></button>
         </form>

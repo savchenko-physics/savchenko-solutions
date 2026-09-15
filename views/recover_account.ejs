@@ -4,42 +4,34 @@
     <meta name="robots" content="noindex, nofollow" />
     <%- include(`default/head_${lang}.ejs`) %>
     <%- include('default/main_site_header_head') %>
-    <title><%= titleText(lang === 'ru' ? 'Восстановление аккаунта' : 'Recover Account') %></title>
+    <title><%= titleText(t.recoverTitle) %></title>
     <script src="/js/analytics.js"></script>
 </head>
 <body class="auth-page">
     <%- include('default/header.ejs') %>
     <div class="container1">
-        <h2><%= lang === 'ru' ? 'Восстановление аккаунта' : 'Recover Account' %></h2>
-        <% if (error) { %>
-            <p class="error"><%= error %></p>
+        <h2><%= t.recoverTitle %></h2>
+        <% if (state === 'received') { %>
+            <p class="success" role="status"><%= t.recoverReceived %></p>
+        <% } else { %>
+            <% if (error) { %>
+                <p class="error" role="alert"><%= error %></p>
+            <% } %>
+            <p class="mt-0 mb-3"><%= t.recoverIntro %></p>
+            <form action="/recover-account" method="POST">
+                <input type="hidden" name="lang" value="<%= lang %>">
+                <div class="form-group">
+                    <label for="email"><%= t.recoverEmailLabel %></label>
+                    <input type="email" id="email" name="email" value="<%= email %>" required maxlength="<%= limits.identifierMaxLength %>" autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <label for="message"><%= t.recoverMessageLabel %></label>
+                    <textarea id="message" name="message" class="ss-input" rows="4" maxlength="2000"><%= message %></textarea>
+                </div>
+                <button type="submit" class="submit-button"><%= t.recoverSubmit %></button>
+            </form>
         <% } %>
-        <% if (success) { %>
-            <p class="success"><%= success %></p>
-        <% } %>
-        <% if (!success) { %>
-        <p style="font-size: var(--ss-fs-14); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-4);">
-            <%= lang === 'ru'
-                ? 'Не можете войти или сбросить пароль? Отправьте запрос — наша команда рассмотрит его вручную в течение 5 рабочих дней.'
-                : "Can't log in or reset your password? Submit an appeal and our team will review it manually within 5 business days." %>
-        </p>
-        <form action="/recover-account" method="POST">
-            <input type="hidden" name="lang" value="<%= lang %>">
-            <div class="form-group">
-                <label for="email"><%= lang === 'ru' ? 'Электронная почта аккаунта' : 'Account email' %></label>
-                <input type="email" id="email" name="email" required />
-            </div>
-            <div class="form-group">
-                <label for="message"><%= lang === 'ru' ? 'Опишите проблему (необязательно)' : 'Describe the problem (optional)' %></label>
-                <textarea id="message" name="message" rows="4" maxlength="2000"
-                          style="width:100%; padding:var(--ss-space-2); font-size:var(--ss-fs-16); margin-top:var(--ss-space-1); border:1px solid var(--ss-rule); border-radius:var(--ss-radius-sm); font-family:var(--ss-font-ui); resize:vertical;"></textarea>
-            </div>
-            <button type="submit" class="submit-button"><%= lang === 'ru' ? 'Отправить запрос' : 'Submit appeal' %></button>
-        </form>
-        <% } %>
-        <p style="margin-top: var(--ss-space-4);">
-            <a href="/<%= lang %>/login"><%= lang === 'ru' ? 'Вернуться к входу' : 'Back to login' %></a>
-        </p>
+        <p><a href="/<%= lang %>/login"><%= t.backToLogin %></a></p>
     </div>
     <%- include('default/modern_footer') %>
     <%- include('default/main_site_footer_scripts') %>

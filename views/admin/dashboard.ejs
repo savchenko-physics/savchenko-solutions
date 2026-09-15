@@ -204,6 +204,9 @@
     .status-pending { background: var(--ss-warning-soft); color: var(--ss-warning); }
     .status-resolved { background: var(--ss-success-soft); color: var(--ss-success-strong); }
     .status-dismissed { background: var(--ss-error-soft); color: var(--ss-error); }
+    /* What an account-recovery request led to (password_reset_requests.outcome) */
+    .reset-outcome { display: block; margin-top: var(--ss-space-1); font-size: var(--ss-fs-12); color: var(--admin-muted); }
+    .reset-outcome--held { color: var(--ss-error); }
     /* Activity log */
     .activity-log {
       list-style: none;
@@ -859,7 +862,7 @@
     <!-- ═══ PASSWORD RESETS ═══ -->
     <h1>Password Reset Requests</h1>
     <p style="font-size: var(--ss-fs-13); color: var(--admin-muted); margin-bottom: var(--ss-space-4);">
-      Password reset requests and account-recovery appeals (flagged "recovery appeal"). Reset emails now send automatically; recovery appeals need manual review.
+      Password reset requests and account-recovery appeals (flagged "recovery appeal"). Reset emails send automatically, only ever to the address already on the account, at most <%= resetLimits.emailsPerAccountPerDay %> a day per account and <%= resetLimits.emailsPerSitePerHour %> an hour (<%= resetLimits.emailsPerSitePerDay %> a day) for the whole site; recovery appeals need manual review. A request is marked handled when its link is used.
     </p>
     <div style="margin-bottom: var(--ss-space-4);">
       <% if (showAll) { %>
@@ -900,6 +903,9 @@
           <td><code style="font-size:var(--ss-fs-12);"><%= r.ip_address || '—' %></code></td>
           <td>
             <span class="status-badge status-<%= r.status === 'handled' ? 'resolved' : r.status === 'dismissed' ? 'dismissed' : 'pending' %>"><%= r.status %></span>
+            <% if (r.outcome) { %>
+              <span class="reset-outcome<%= /limit|failed/.test(r.outcome) ? ' reset-outcome--held' : '' %>"><%= resetOutcomeLabels[r.outcome] || r.outcome %></span>
+            <% } %>
           </td>
           <td>
             <% if (r.reset_token) { %>
@@ -908,7 +914,7 @@
                      id="token-<%= r.id %>" />
               <button class="btn-admin-outline" style="font-size:var(--ss-fs-12); padding:var(--ss-space-1) var(--ss-space-2); margin-left:var(--ss-space-1);" onclick="copyToken(<%= r.id %>)">Copy</button>
             <% } else { %>
-              <span style="color:var(--admin-muted); font-size:var(--ss-fs-12);">No account found</span>
+              <span style="color:var(--admin-muted); font-size:var(--ss-fs-12);"><%= r.user_id ? 'No link sent' : 'No account found' %></span>
             <% } %>
           </td>
           <td style="white-space:nowrap;">

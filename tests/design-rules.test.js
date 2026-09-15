@@ -118,7 +118,7 @@ test('no pill or oversized Bootstrap rounding classes in markup', () => {
 // Lower them as the work continues; never raise them. Before the unification the templates
 // carried 688 style attributes, 28 heavy shadows and 23 gradients.
 const RATCHETS = {
-    styleAttributeDeclarations: 1094,
+    styleAttributeDeclarations: 1074, // 1094 until the account-recovery pages lost theirs, 2026-09-15
     important: 100,
     outlineNoneOutsideFocusVisible: 38,
     spacingOffGrid: 3,
