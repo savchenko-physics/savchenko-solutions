@@ -378,6 +378,7 @@
                 </div>
             </div>
             <p class="lp-preview" data-lp-preview></p>
+            ${C.problemEggs && C.problemEggs[o.id] ? `<p class="lp-egg">${esc(C.problemEggs[o.id])}</p>` : ''}
             <p class="lp-egg" data-lp-egg hidden></p>
             <div class="lp-trade-actions">
                 <button type="button" class="ss-btn ss-btn--primary ss-btn--sm" data-lp-buy="${esc(o.id)}"></button>

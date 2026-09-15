@@ -106,6 +106,11 @@ const COPY = {
             1836: 'mₚ/mₑ ≈ 1836. Протон доволен',
             2023: 'Ровно столько задач в задачнике, и в этом году родился сайт',
         },
+        // 5.8.9 was declared the most horrifying problem in the book on 15 Sep, so that nobody would
+        // solve it and spoil a bet; its "followers", it was explained, do not like to lose.
+        problemEggs: {
+            '5.8.9': 'Осторожно: у этой задачи есть последователи, и они не любят проигрывать. Не злите их.',
+        },
         collapse: 'Коллапс волновой функции',
         birthday: 'Savchenko Solutions 3 года',
 
@@ -248,6 +253,9 @@ const COPY = {
             666: "The demon's number. Laplace's, of course",
             1836: 'mₚ/mₑ ≈ 1836. The proton is pleased',
             2023: 'Exactly the number of problems in the book, and the year the site was born',
+        },
+        problemEggs: {
+            '5.8.9': 'Careful: this problem has followers, and they do not like to lose. Do not anger them.',
         },
         collapse: 'Wave function collapse',
         birthday: 'Savchenko Solutions turns 3',
