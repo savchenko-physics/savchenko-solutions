@@ -41,14 +41,13 @@ const BRAINSTORM_SIX = ['\u{1F44D}', '\u{1F44E}', '\u{2764}\u{FE0F}', '\u{1F602}
 const SHIPPED = [
     ':jedi:', ':etalon:', ':match:', ':cookies:', ':zachetka:', ':precious:',
     ':podgon:', ':trap:', ':ai:', ':grob:', ':cat:', ':horse:',
+    // Premium, 2026-09-15 (lastProblem.js).
+    ':kvant:', ':errata:', ':ammeter:', ':dino:', ':cyborgs:', ':libra:', ':laplace:',
+    ':perpetuum:', ':n2000:', ':last:',
 ];
 
-// The colours the emoji may use: the design system's, plus the art palette.
-const PALETTE = new Set([
-    '#1a1a2e', '#ffffff', '#dee2e6', '#adb5bd', '#6c757d', '#1a5276', '#27ae60', '#c0392b',
-    '#4fc3f7', '#d6eaf8', '#9ccc65', '#689f38', '#8d5a2b', '#5d3a1a', '#e0a458', '#d7a86e',
-    '#f39c4a', '#f1c40f', '#f7dc6f', '#e9b43a', '#b0bec5', '#78909c',
-]);
+// The drawing rules, shared with the mini app's art (tests/last-problem.test.js).
+const { assertSvgArt } = require('../scripts/lib/svg-art');
 
 const read = (...parts) => fs.readFileSync(path.join(ROOT, ...parts), 'utf8');
 
@@ -96,17 +95,23 @@ test('every community emoji has a Russian and an English name', () => {
     assert.equal(Reactions.reactionTitle('\u{1F44D}', 'ru'), '');
 });
 
-test('the picker is the six, then the community emoji that are not retired', () => {
-    const picker = Reactions.pickerIds();
-    // Most used first, left to right (measured 2026-09-13; see js/reactions.js).
+test('the picker is the six, the free community emoji, then the premium ones on offer', () => {
+    const winter = new Date('2026-12-01T00:00:00Z');
+    const picker = Reactions.pickerIds({ now: winter });
+    // Most used first, left to right (measured 2026-09-13; see js/reactions.js), then the premium
+    // row: what can be bought today (no Libra out of season, no trophies, no perpetual motion).
     assert.deepEqual(picker, [
         ...SIX,
         ':ai:', ':etalon:', ':match:', ':trap:', ':podgon:', ':cookies:',
         ':zachetka:', ':grob:', ':jedi:', ':horse:', ':precious:', ':cat:',
+        ':kvant:', ':errata:', ':ammeter:', ':dino:', ':cyborgs:', ':laplace:',
     ]);
     assert.equal(new Set(picker).size, picker.length);
-    assert.ok(picker.length <= 24, 'a picker taller than four rows stops fitting a phone');
-    assert.deepEqual(picker.slice(6), Reactions.CUSTOM.filter((e) => !e.retired).map((e) => e.id));
+    // Four rows of six until premium reactions added one row of their own (checked on a 390px
+    // phone in Firefox, 2026-09-15). A sixth row would no longer fit above a message on a phone.
+    assert.ok(Reactions.pickerIds({ now: new Date('2026-10-01T00:00:00Z'), owned: [':n2000:', ':last:'] }).length <= 30,
+        'a picker taller than five rows stops fitting a phone');
+    assert.deepEqual(picker.slice(6, 18), Reactions.CUSTOM.filter((e) => !e.retired && !Reactions.isPremium(e.id)).map((e) => e.id));
 
     const registry = Reactions.create({
         standard: SIX,
@@ -128,20 +133,7 @@ test('every community emoji has its SVG, and every SVG belongs to one', () => {
 
 test('the emoji are inert, small, flat drawings in the palette', () => {
     for (const file of fs.readdirSync(EMOJI_DIR)) {
-        const svg = fs.readFileSync(path.join(EMOJI_DIR, file), 'utf8');
-        const where = `img/emoji/${file}`;
-        assert.ok(Buffer.byteLength(svg) <= 4096, `${where} is over 4 KB`);
-        assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="0 0 64 64"/, `${where} root`);
-        // Anything that could run, fetch, or pull in other markup.
-        assert.doesNotMatch(svg, /<script|\son\w+\s*=|javascript:|<foreignObject|<!DOCTYPE|<!ENTITY|<image|<style|@import|<animate|<set\b/i, where);
-        assert.doesNotMatch(svg, /href\s*=\s*["'](?!#)|url\((?!#)/i, `${where} references something outside itself`);
-        // Design rules, and web fonts do not load inside <img>.
-        assert.doesNotMatch(svg, /gradient|<filter|<text/i, where);
-        // Editor leftovers (img/logo.svg carries a C:\Users path).
-        assert.doesNotMatch(svg, /inkscape:|sodipodi:|<metadata|\\Users\\/i, where);
-        for (const colour of svg.match(/#[0-9a-f]{3,8}\b/gi) || []) {
-            assert.ok(PALETTE.has(colour.toLowerCase()), `${where} uses ${colour}, which is not in the palette`);
-        }
+        assertSvgArt(fs.readFileSync(path.join(EMOJI_DIR, file), 'utf8'), `img/emoji/${file}`);
     }
 });
 

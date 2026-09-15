@@ -1994,6 +1994,8 @@
     </div>
 
     <script src="<%= av('/js/reactions.js') %>"></script>
+    <%# Locked premium reactions in the comment picker, and the «Последняя задача» shop they open. %>
+    <script src="<%= av('/js/apps/launcher.js') %>" defer></script>
     <script>
         const problemName = '<%- name %>';
         const language = '<%- lang %>';
@@ -2278,10 +2280,16 @@
             if (!picker || !RX) return;
             const commentId = react.dataset.commentId;
             if (!picker.childElementCount) {
-                picker.innerHTML = RX.pickerIds().map(function (e, i) {
-                    const title = RX.reactionTitle(e, language);
-                    return (i === RX.STANDARD.length ? '<span class="comment-react-sep"></span>' : '') +
-                        '<button type="button" class="comment-react-pick" data-comment-id="' + escapeAttr(commentId) + '"' +
+                /* Premium reactions (bought with quanta in «Последняя задача») come last and stay
+                   locked until this member owns them (js/apps/launcher.js). */
+                const premium = window.SSApps ? window.SSApps.premium : null;
+                const ids = premium ? premium.pickerIds() : RX.pickerIds();
+                picker.innerHTML = ids.map(function (e, i) {
+                    const locked = !!(premium && premium.isLocked(e));
+                    const title = locked ? premium.lockedTitle(e, language) : RX.reactionTitle(e, language);
+                    const sep = i === RX.STANDARD.length || (RX.isPremium(e) && i > 0 && !RX.isPremium(ids[i - 1]));
+                    return (sep ? '<span class="comment-react-sep"></span>' : '') +
+                        '<button type="button" class="comment-react-pick' + (locked ? ' is-locked' : '') + '" data-comment-id="' + escapeAttr(commentId) + '"' +
                         ' data-emoji="' + escapeAttr(e) + '"' + (title ? ' title="' + escapeAttr(title) + '"' : '') +
                         ' aria-pressed="false">' + reactionGlyph(e) + '</button>';
                 }).join('');
@@ -2335,6 +2343,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ emoji: emoji }),
                 });
+                if (res.status === 403 && window.SSApps) {
+                    window.SSApps.open({ tab: 'shop', rx: emoji });
+                    return;
+                }
                 if (!res.ok) return;
                 const data = await res.json();
 
@@ -2412,6 +2424,10 @@
                 const react = pick.closest('.comment-react');
                 if (react) react.classList.add('is-dismissed');
                 pick.blur();   // or :focus-within would hold it open
+                if (pick.classList.contains('is-locked') && window.SSApps) {
+                    window.SSApps.open({ tab: 'shop', rx: pick.dataset.emoji });
+                    return;
+                }
                 toggleReaction(pick.dataset.commentId, pick.dataset.emoji);
                 return;
             }

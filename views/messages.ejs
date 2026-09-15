@@ -556,10 +556,14 @@
       background: #fde8e8;
     }
 
+    /* The chips wrap onto new lines, as in Telegram. The row is capped at about six chips: without
+       it the row only wrapped at the message row's 70% of the column, so on a desktop a dozen
+       reactions made one line ~810px long and stretched the bubble above them to match. */
     .msg-reactions {
       display: flex;
       flex-wrap: wrap;
       gap: var(--ss-space-1);
+      max-width: 360px;
       margin-top: calc(-1 * var(--ss-space-3));
       position: relative;
       z-index: 5;
@@ -2114,9 +2118,11 @@
 
 <script src="<%= av('/js/chat-language.js') %>"></script>
 <script src="<%= av('/js/reactions.js') %>"></script>
+<%# «Последняя задача»: cards under messages that link to the app, the app's sheet, locked premium reactions. %>
+<script src="<%= av('/js/apps/launcher.js') %>" defer></script>
 <script>
 (function() {
-  const CONV_ID = <%= activeConversation ? activeConversation.id : 'null' %>;
+  const CONV_ID =<%= activeConversation ? activeConversation.id : 'null' %>;
   const COMMUNITY_LANG = <%- JSON.stringify(activeConversation && activeConversation.communityLang ? activeConversation.communityLang : null) %>;
   // Versioned URLs of the community emoji, keyed by :shortcode: (js/reactions.js).
   const REACTION_URLS = <%- JSON.stringify(rxUrls || {}).replace(/</g, '\\u003c') %>;
@@ -2802,6 +2808,11 @@
         var msgId = parseInt(addEl.dataset.msgId);
         // Close on choosing, the way a menu does; leaving the button re-arms it.
         addEl.classList.add('is-dismissed');
+        // A premium reaction nobody bought yet opens the shop on it instead.
+        if (pickBtn.classList.contains('is-locked') && window.SSApps) {
+          window.SSApps.open({ tab: 'shop', rx: pickBtn.dataset.emoji });
+          return;
+        }
         toggleReaction(msgId, pickBtn.dataset.emoji);
         return;
       }
@@ -3316,14 +3327,20 @@
     return RX ? RX.glyphHTML(value, REACTION_URLS, LANG) : esc(value);
   }
 
-  // The picker ships empty and is filled the first time it opens.
+  // The picker ships empty and is filled the first time it opens. Premium reactions (bought with
+  // quanta in «Последняя задача») follow a second rule and stay locked until this member owns
+  // them (js/apps/launcher.js knows which).
   function fillReactionPicker(picker) {
     if (!picker || !RX || picker.childElementCount) return;
+    var premium = window.SSApps ? window.SSApps.premium : null;
+    var ids = premium ? premium.pickerIds() : RX.pickerIds();
     var html = '';
-    RX.pickerIds().forEach(function(id, i) {
+    ids.forEach(function(id, i) {
       if (i === RX.STANDARD.length) html += '<span class="msg-reaction-sep"></span>';
-      var title = RX.reactionTitle(id, LANG);
-      html += '<span class="msg-reaction-pick" data-emoji="' + escAttr(id) + '"' +
+      if (RX.isPremium(id) && i > 0 && !RX.isPremium(ids[i - 1])) html += '<span class="msg-reaction-sep"></span>';
+      var locked = !!(premium && premium.isLocked(id));
+      var title = locked ? premium.lockedTitle(id, LANG) : RX.reactionTitle(id, LANG);
+      html += '<span class="msg-reaction-pick' + (locked ? ' is-locked' : '') + '" data-emoji="' + escAttr(id) + '"' +
         (title ? ' title="' + escAttr(title) + '"' : '') + '>' + reactionGlyph(id) + '</span>';
     });
     picker.innerHTML = html;
@@ -3376,6 +3393,7 @@
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.reactions) updateReactionsUI(msgId, data.reactions);
+      else if (data.error === 'locked' && window.SSApps) window.SSApps.open({ tab: 'shop', rx: emoji });
     })
     .catch(function(err) { console.error('Reaction error:', err); });
   }

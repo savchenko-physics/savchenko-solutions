@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<%#
+  «Последняя задача» (lastProblem.js): the mini app the community chats open in a sheet over the
+  conversation (js/apps/launcher.js adds ?embed=1), and the same page on its own for a shared link.
+  No site header or footer, as with any app inside a messenger. Everything below the bar is drawn
+  by js/apps/last-problem.js from the state inlined here, so the first paint needs no request.
+%>
+<html lang="<%= pageLang %>">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo.svg" />
+  <link rel="icon" type="image/png" href="/img/logo.png" />
+  <title><%= docTitle(copy.appName, 'Savchenko Solutions') %></title>
+  <%- include('../default/site_styles', { ssStyles: { math: true } }) %>
+  <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
+</head>
+<body class="lp-body<%= embed ? ' is-embed' : '' %>">
+  <div class="lp-app" id="lpApp">
+    <header class="lp-bar">
+      <% if (embed) { %>
+        <button type="button" class="lp-bar-close" data-lp-close aria-label="<%= copy.close %>">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      <% } else { %>
+        <a class="lp-bar-close" href="<%= boot.chatUrl || '/' %>" aria-label="<%= copy.openInChat %>">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      <% } %>
+      <button type="button" class="lp-bar-avatar" data-lp-demon aria-label="<%= copy.host %>">
+        <img src="<%= boot.art.demon %>" alt="" width="36" height="36" />
+      </button>
+      <div class="lp-bar-titles">
+        <div class="lp-bar-title"><%= copy.appName %></div>
+        <div class="lp-bar-sub"><%= copy.appKind %> · <%= copy.host %></div>
+      </div>
+      <div class="lp-bar-end" id="lpBarEnd"></div>
+    </header>
+    <nav class="lp-tabs" role="tablist" aria-label="<%= copy.appName %>">
+      <button type="button" class="lp-tab" role="tab" data-lp-tab="market"><%= copy.tabs.market %></button>
+      <button type="button" class="lp-tab" role="tab" data-lp-tab="top"><%= copy.tabs.top %></button>
+      <button type="button" class="lp-tab" role="tab" data-lp-tab="shop"><%= copy.tabs.shop %></button>
+    </nav>
+    <main class="lp-main" id="lpMain"></main>
+  </div>
+  <div class="lp-layer" id="lpLayer" hidden></div>
+  <div class="lp-toast" id="lpToast" role="status" aria-live="polite" hidden></div>
+
+  <script type="application/json" id="lpBoot"><%- JSON.stringify(boot).replace(/</g, '\\u003c') %></script>
+  <script src="<%= av('/js/lmsr.js') %>"></script>
+  <script src="<%= av('/js/reactions.js') %>"></script>
+  <script src="<%= av('/js/palettes.js') %>"></script>
+  <script src="<%= av('/js/apps/last-problem.js') %>"></script>
+</body>
+</html>

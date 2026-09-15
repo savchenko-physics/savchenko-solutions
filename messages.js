@@ -10,7 +10,8 @@ const notifications = require('./notifications');
 const { linkifyMessageContent, normalizeLang } = require('./utils');
 const { getOnlineUsernames } = require('./lib/presence');
 const { communityAvatarSVG, otherLang } = require('./lib/communityChats');
-const { isKnownReaction, reactionAction } = require('./js/reactions');
+const { isKnownReaction, isPremium, reactionAction } = require('./js/reactions');
+const { ownsReaction } = require('./lib/reactionUnlocks');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -1247,8 +1248,14 @@ router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, re
             [msgId, userId, emoji]
         );
 
-        // Taking a reaction back always works; adding a retired emoji does not.
-        const action = reactionAction(emoji, existing.rows.length > 0);
+        // Taking a reaction back always works; adding a retired emoji does not, and a premium
+        // one (bought with quanta in lastProblem.js) needs to be owned.
+        const alreadyHas = existing.rows.length > 0;
+        const owned = !alreadyHas && isPremium(emoji) ? await ownsReaction(pool, userId, emoji) : false;
+        const action = reactionAction(emoji, alreadyHas, owned);
+        if (action === 'locked') {
+            return res.status(403).json({ error: 'locked' });
+        }
         if (action === 'reject') {
             return res.status(400).json({ error: 'Invalid reaction' });
         }

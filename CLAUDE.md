@@ -46,8 +46,23 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   `brainstorm_reactions` stays 8 and keeps its old six). **Never delete a registry entry** —
   retire it (`retired: true`, or `RETIRED_STANDARD` for Unicode), or the reactions people left
   can no longer be taken back. `/img` is gitignored, so new emoji need `git add -f img/emoji/<name>.svg`. The art
-  rules (64-unit viewBox, palette, no text/gradients/scripts, ≤ 4 KB) are enforced by
-  `tests/reactions.test.js`.
+  rules (64-unit viewBox, palette, no text/gradients/scripts, ≤ 4 KB) live in `scripts/lib/svg-art.js` and are
+  enforced by `tests/reactions.test.js`. Since 2026-09-15 ten entries are **premium** (`price` in quanta,
+  `price: Infinity` never for sale, `trophy` awarded, `sale` window): owning one is a row in
+  `reaction_unlocks`, both reaction endpoints answer 403 `locked` otherwise (`lib/reactionUnlocks.js`), taking
+  one back always works, and the pickers grey them out until `js/apps/launcher.js` learns what the member owns.
+- **«Последняя задача»** (`lastProblem.js`), a one-time prediction mini app opened from a card under a message in
+  the community chats, as a Telegram mini app opens from a bot. The market asks which of the problems unsolved on
+  2026-09-15 will be solved last; every account gets 1000 quanta (ħ, `img/apps/last-problem/coin.svg`), prices
+  come from an LMSR market maker (`js/lmsr.js`, b = 1000), quanta buy the premium reactions. Play money, no cash
+  value. A problem drops out when a real post appears (checked every 2 minutes, `syncSolved`; the untouched
+  `/create-problem` template does not count); one left → decided → pays after 72 h. Page
+  `views/apps/last_problem.ejs` + `js/apps/last-problem.js` (in an iframe sheet when `?embed=1`), card and sheet
+  `js/apps/launcher.js` (loaded by `messages.ejs` and `solution_post.ejs`), copy `lastProblemCopy.js`, pure rules
+  `lib/lastProblem.js`, tables from migration 054. It opened with a seed (`scripts/seed-last-problem.js
+  --dry-run|--apply|--revert <problem>`): Laplace's demon, a house trader with no account, spread 800 ħ over a
+  survival model's top ten, and the two bets Valter and emixter named in the chat. `LAST_PROBLEM=off` plus a
+  restart takes it off the site. `tests/last-problem.test.js`.
 
 ## Tech Stack
 - **Runtime:** Node.js
@@ -118,6 +133,10 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
 - `special_contributions` — flagged edits (blocked IPs, emoji content)
 - `problem_statements` (4,046) / `problem_difficulty` (2,023) — see Content Structure
 - `session` — Express session store
+- `quanta_wallets` / `quanta_ledger` / `lp_market` / `lp_outcomes` / `lp_ticks` / `lp_positions` /
+  `reaction_unlocks` — «Последняя задача» (migration 054): balances with every change logged, the one market row
+  (the demon's money is counted there), one row per problem with its LMSR `q`, every trade and elimination with a
+  price snapshot (the chart), holdings, and owned premium reactions (a trophy belongs to one person)
 - `password_reset_requests` — every "Forgot password?" and recovery appeal, with `outcome`
   (migration 053). Its email rows are what the recovery limits count, per account and
   site-wide (`LIMITS` in `lib/passwordReset.js`), under an advisory lock in
@@ -127,8 +146,9 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
 
 ## Security — open issues
 1. **No CSRF protection anywhere.** Zero occurrences of `csrf` outside `node_modules`. The
-   only mitigation is the session cookie's `sameSite: 'lax'` (`index.js:121`). The one
-   exception: the account-recovery forms refuse cross-site posts by `Sec-Fetch-Site` / `Origin`
+   only mitigation is the session cookie's `sameSite: 'lax'` (`index.js:121`). The
+   exceptions: the account-recovery forms and every money-moving POST of «Последняя задача»
+   (`guardWrite` in `lastProblem.js`) refuse cross-site posts by `Sec-Fetch-Site` / `Origin`
    (`isCrossSite` in `lib/passwordReset.js`).
 2. **`apiLimiter` is a no-op.** `index.js:146` sets `max: Number.MAX_SAFE_INTEGER`, so
    mounting it on `/api/` at `:191` protects nothing. Any new public endpoint must bring its
@@ -228,7 +248,9 @@ hyphenation and a 1em paragraph indent, as journals set text.
   50% only for avatars and dots; no `rounded-pill` / `rounded-4` classes
 - No emojis in the UI. The one exception is reactions: the pickers and chips under chat
   messages and solution comments show the vocabulary in `js/reactions.js` (six Unicode emoji
-  and the community set in `img/emoji/`), and nothing else may borrow it
+  and the community set in `img/emoji/`), and nothing else may borrow it except the shop of
+  «Последняя задача», which sells the premium ones. Its own art (the ħ coin, Laplace's demon)
+  follows the same drawing rules (`scripts/lib/svg-art.js`)
 - No "Built with love" or similar filler copy
 - **Page titles** (`<title>`, og:title, twitter:title) contain no em dash, en dash, colon or
   semicolon; parts are joined with ` | `. Build them with `docTitle(...parts)` and pass any
@@ -342,7 +364,7 @@ hyphenation and a 1em paragraph indent, as journals set text.
   `tests/brainstorm.test.js:1-10`.
 - Suites include `botgate.test.js`, `external-assets.test.js`, `statements.test.js`,
   `brainstorm.test.js`, `feedback.test.js`, `community-chats.test.js`, `password-reset.test.js`,
-  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, and the design system's
+  `page-titles.test.js`, `service-worker.test.js`, `reactions.test.js`, `last-problem.test.js`, and the design system's
   `site-styles.test.js`, `site-fonts.test.js`, `design-tokens.test.js`, `design-rules.test.js`
   and `solution-structure.test.js`.
 - Rendering is checked outside `npm test`: `scripts/qa/type_audit.py` renders every page type in

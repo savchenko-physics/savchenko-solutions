@@ -54,6 +54,24 @@
         { id: ':horse:', ru: 'Сферический конь', en: 'Spherical horse' },      // 3
         { id: ':precious:', ru: 'Моя прелесть', en: 'My precious' },           // 2
         { id: ':cat:', ru: 'Кот Шрёдингера', en: "Schrödinger's cat" },        // 1
+
+        // Premium, since 2026-09-15: bought with quanta (ħ) in the «Последняя задача» mini app
+        // (lastProblem.js), from the in-jokes of that week's chat. `price` in ħ; Infinity is
+        // never for sale; `trophy` cannot be bought, the app awards it; `sale` limits when it
+        // can be bought (UTC dates, inclusive). Owning one is a row in reaction_unlocks. Anyone
+        // can see a premium reaction left by its owner, and taking one back always works.
+        { id: ':kvant:', ru: 'Квант', en: 'Quantum', price: 200 },
+        { id: ':errata:', ru: 'Закон сохранения ошибок', en: 'Conservation of errata', price: 300 },
+        { id: ':ammeter:', ru: 'Сломанный амперметр', en: 'Broken ammeter', price: 300 },
+        { id: ':dino:', ru: 'Динозавр из 80-х', en: '80s dinosaur', price: 350 },
+        { id: ':cyborgs:', ru: 'Отряд вальтерят', en: 'Cyborg squad', price: 350 },
+        // The site is a Libra (first solution 10 Oct 2023), so it is sold in Libra season only.
+        { id: ':libra:', ru: 'Весы', en: 'Libra', price: 400, sale: { from: '2026-09-23', to: '2026-10-23' } },
+        { id: ':laplace:', ru: 'Демон Лапласа', en: "Laplace's demon", price: 500 },
+        // "Всё возможно, кроме вечного двигателя" (emixter). The shop shows it; nobody gets it.
+        { id: ':perpetuum:', ru: 'Вечный двигатель', en: 'Perpetual motion', price: Infinity },
+        { id: ':n2000:', ru: 'Задача № 2000', en: 'Problem 2000', trophy: true },
+        { id: ':last:', ru: 'Последняя задача', en: 'The last problem', trophy: true },
     ].map(Object.freeze));
 
     const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -83,18 +101,78 @@
             return typeof value === 'string' && customById.has(value);
         }
 
-        /* What pressing `value` does for someone who already has it (alreadyHas) or not.
-         * Taking a reaction back is always allowed for anything the site ever offered, so
-         * retiring an emoji can never strand one. */
-        function reactionAction(value, alreadyHas) {
-            if (!isKnownReaction(value)) return 'reject';
-            if (alreadyHas) return 'remove';
-            return retired.has(value) ? 'reject' : 'add';
+        function premiumEntry(value) {
+            const entry = isCustomReaction(value) ? customById.get(value) : null;
+            return entry && (entry.trophy || entry.price !== undefined) ? entry : null;
         }
 
-        /* The picker: the six, then the custom emoji that are not retired. */
-        function pickerIds() {
-            return [...standard, ...custom.filter((entry) => !entry.retired).map((entry) => entry.id)];
+        function isPremium(value) {
+            return premiumEntry(value) !== null;
+        }
+
+        /* `owned` as the callers have it: a Set or array of ids, or true/false for this one id. */
+        function owns(owned, value) {
+            if (owned === true) return true;
+            if (owned instanceof Set) return owned.has(value);
+            if (Array.isArray(owned)) return owned.indexOf(value) !== -1;
+            return false;
+        }
+
+        /* A sale window in UTC days, both ends included. No window: always. */
+        function inSeason(entry, now) {
+            if (!entry.sale) return true;
+            const t = (now instanceof Date ? now : new Date()).getTime();
+            const from = Date.parse(`${entry.sale.from}T00:00:00Z`);
+            const to = Date.parse(`${entry.sale.to}T00:00:00Z`) + 24 * 60 * 60 * 1000;
+            return t >= from && t < to;
+        }
+
+        /* Can this premium reaction be bought right now? Answers { ok, price } or { ok: false, error }. */
+        function purchaseCheck(value, options) {
+            const o = options || {};
+            if (!isKnownReaction(value)) return { ok: false, error: 'unknown' };
+            const entry = premiumEntry(value);
+            if (!entry) return { ok: false, error: 'not_premium' };
+            if (owns(o.owned, value)) return { ok: false, error: 'owned' };
+            if (entry.trophy) return { ok: false, error: 'trophy' };
+            if (entry.retired) return { ok: false, error: 'retired' };
+            if (!Number.isFinite(entry.price)) return { ok: false, error: 'never' };
+            if (!inSeason(entry, o.now)) return { ok: false, error: 'off_season' };
+            if (o.balance !== undefined && !(Number(o.balance) >= entry.price)) {
+                return { ok: false, error: 'insufficient', price: entry.price };
+            }
+            return { ok: true, price: entry.price };
+        }
+
+        /* What pressing `value` does for someone who already has it (alreadyHas) or not.
+         * Taking a reaction back is always allowed for anything the site ever offered, so
+         * retiring an emoji can never strand one. A premium reaction is 'locked' for anyone
+         * who does not own it (`owned`: a Set or array of ids, or true for this one). */
+        function reactionAction(value, alreadyHas, owned) {
+            if (!isKnownReaction(value)) return 'reject';
+            if (alreadyHas) return 'remove';
+            if (retired.has(value)) return 'reject';
+            if (isPremium(value) && !owns(owned, value)) return 'locked';
+            return 'add';
+        }
+
+        /* The picker: the six, then the free custom emoji that are not retired, then the premium
+         * ones this viewer owns or could buy today. A trophy nobody gave you and an emoji out
+         * of season stay out of it; the shop in the app lists everything. */
+        function pickerIds(options) {
+            const o = options || {};
+            const free = [];
+            const premium = [];
+            for (const entry of custom) {
+                if (entry.retired) continue;
+                if (!premiumEntry(entry.id)) {
+                    free.push(entry.id);
+                } else if (owns(o.owned, entry.id)
+                    || (!entry.trophy && Number.isFinite(entry.price) && inSeason(entry, o.now))) {
+                    premium.push(entry.id);
+                }
+            }
+            return [...standard, ...free, ...premium];
         }
 
         /* img/emoji/<name>.svg for a custom id, null for anything else. */
@@ -136,6 +214,10 @@
             CUSTOM: custom,
             isKnownReaction,
             isCustomReaction,
+            isPremium,
+            premiumEntry,
+            purchaseCheck,
+            inSeason,
             reactionAction,
             pickerIds,
             emojiFile,

@@ -38,6 +38,13 @@
     // Contribution heatmap, least to most active.
     const ACTIVITY = ['#ebedf0', '#b3c6d9', '#6d93b8', '#3a6a9e', '#1a1a2e'];
 
+    // Lines of a chart that tells series apart by colour (the price chart of «Последняя задача»):
+    // blue, orange, aqua, and the site's accent purple, in this order. Checked with a colour-vision
+    // validator on white: adjacent pairs at least ΔE 9.2 for deuteranopia and 27.6 for normal
+    // vision. Aqua is 2.8:1 against white, so every line also carries its name in the legend.
+    // The site's own navy and link blue fail as series colours (too dark and grey to tell apart).
+    const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#7d3c98'];
+
     // Codeforces-style rank tiers (deliberately the Codeforces colours, which this audience knows).
     const RANKS = [
         { min: 200, key: 'legendaryGrandmaster', color: '#FF0000' },
@@ -71,8 +78,9 @@
             }
         }
         ACTIVITY.forEach((c, i) => { vars[`--ss-activity-${i}`] = c; });
+        SERIES.forEach((c, i) => { vars[`--ss-series-${i + 1}`] = c; });
         return vars;
     }
 
-    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, RANKS, rankFor, cssVariables };
+    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, SERIES, RANKS, rankFor, cssVariables };
 }));

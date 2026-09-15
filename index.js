@@ -60,6 +60,13 @@ const { router: contestRouter, getActiveContestBanner } = require('./contest');
 const { getPracticumBanner } = require('./practicum');
 const { router: unsubscribeRouter } = require('./unsubscribe');
 const { router: feedbackRouter, api: feedbackApi } = require('./feedback');
+const {
+    pageRouter: lastProblemPage,
+    api: lastProblemApi,
+    reactionsApi: lastProblemReactionsApi,
+    start: startLastProblem,
+} = require('./lastProblem');
+const { ownsReaction } = require('./lib/reactionUnlocks');
 const { createAccountRecovery } = require('./accountRecovery');
 const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
@@ -1567,7 +1574,15 @@ app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, asy
 
         // 'remove' for the one you already left, 'add' swaps yours for this one. A retired
         // emoji (👎, 😢, or a retired community one) can still be taken back, but not newly left.
-        const action = Reactions.reactionAction(emoji, current === emoji);
+        // A premium one (bought with quanta in lastProblem.js) is 'locked' unless this person
+        // owns it; the lookup only runs for those.
+        const owned = current !== emoji && Reactions.isPremium(emoji)
+            ? await ownsReaction(pool, userId, emoji)
+            : false;
+        const action = Reactions.reactionAction(emoji, current === emoji, owned);
+        if (action === "locked") {
+            return res.status(403).json({ error: "locked" });
+        }
         if (action === "reject") {
             return res.status(400).json({ error: "Unsupported reaction" });
         }
@@ -2769,6 +2784,14 @@ app.use('/:lang(en|ru)/feedback', feedbackRouter);
 app.use('/feedback', feedbackRouter);
 app.use('/api/feedback', feedbackApi);
 
+// «Последняя задача»: the one-time prediction mini app that opens from a card in the community
+// chats (lastProblem.js). The page is what the chat shows in its sheet; the API carries its own
+// per-user limiters and refuses cross-site writes. Ahead of `/:lang/:name`, like feedback.
+app.use('/:lang(en|ru)/apps/last-problem', lastProblemPage);
+app.use('/apps/last-problem', lastProblemPage);
+app.use('/api/last-problem', lastProblemApi);
+app.use('/api/reactions', lastProblemReactionsApi);
+
 // Self-hosted email open/click tracking (pixel + signed click redirect).
 app.use('/e', trackingRouter);
 
@@ -3643,6 +3666,8 @@ app.use((err, req, res, next) => {
 const HOST = process.env.BIND_HOST || '127.0.0.1';
 app.listen(PORT, HOST, () => {
     console.log(`Main server listening on ${HOST}:${PORT}`);
+    // Watches posts/ for problems of «Последняя задача» that get solved (lastProblem.js).
+    startLastProblem();
 });
 
 // Add this function near your other database query functions
