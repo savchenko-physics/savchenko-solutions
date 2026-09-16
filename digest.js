@@ -96,30 +96,60 @@ async function collectSite(pool, { from, to }) {
             authors: r.authors,
             url: `${ORIGIN}/${r.language}/${r.problem_name}`,
         })),
-        wanted: await mostWanted(),
+        ...(await askForHelp(pool)),
     };
 }
 
-/** The three most looked-for problems nobody has written up. Never fails a run. */
-async function mostWanted() {
-    try {
-        const solved = new Set();
-        for (const lang of ['en', 'ru']) {
-            const dir = path.join(__dirname, 'posts', lang);
-            if (!fs.existsSync(dir)) continue;
-            for (const file of fs.readdirSync(dir)) {
-                if (file.endsWith('.md')) solved.add(file.replace(/\.md$/, ''));
-            }
+/** What each language has a solution for, from the files themselves. */
+function writtenUp() {
+    const byLang = { en: new Set(), ru: new Set() };
+    for (const lang of ['en', 'ru']) {
+        const dir = path.join(__dirname, 'posts', lang);
+        if (!fs.existsSync(dir)) continue;
+        for (const file of fs.readdirSync(dir)) {
+            if (file.endsWith('.md')) byLang[lang].add(file.replace(/\.md$/, ''));
         }
-        const rows = await getMostWantedProblems(solved, 3);
-        return rows.map((r) => ({
-            problem: r.problem_name,
-            views: r.total_views,
-            url: `${ORIGIN}/ru/${r.problem_name}`,
-        }));
+    }
+    return byLang;
+}
+
+/**
+ * The block that asks for something back. First choice is a problem nobody has written up,
+ * ordered by how often people looked for it. There are 26 of those left out of 2,023 and none
+ * of them has ever been opened, so the usual answer is the second choice: a solution that
+ * exists in one language and not the other, which is the work actually waiting on this site.
+ * Never fails a run.
+ */
+async function askForHelp(pool) {
+    try {
+        const written = writtenUp();
+        const solved = new Set([...written.en, ...written.ru]);
+        const unsolved = await getMostWantedProblems(solved, 3);
+        if (unsolved.length > 0) {
+            return {
+                wantedKind: 'unsolved',
+                wanted: unsolved.map((r) => ({ problem: r.problem_name, views: r.total_views, url: `${ORIGIN}/ru/${r.problem_name}` })),
+            };
+        }
+        const oneLanguage = [...written.ru].filter((p) => !written.en.has(p)).map((p) => ({ problem: p, has: 'ru' }))
+            .concat([...written.en].filter((p) => !written.ru.has(p)).map((p) => ({ problem: p, has: 'en' })));
+        if (oneLanguage.length === 0) return { wantedKind: 'unsolved', wanted: [] };
+        const views = await pool.query(
+            `SELECT problem_name, SUM(views)::int AS views FROM page_views WHERE problem_name = ANY($1) GROUP BY 1 ORDER BY 2 DESC LIMIT 3`,
+            [oneLanguage.map((p) => p.problem)]
+        );
+        const has = new Map(oneLanguage.map((p) => [p.problem, p.has]));
+        return {
+            wantedKind: 'translate',
+            wanted: views.rows.map((r) => ({
+                problem: r.problem_name,
+                views: r.views,
+                url: `${ORIGIN}/${has.get(r.problem_name)}/${r.problem_name}`,
+            })),
+        };
     } catch (err) {
-        console.error('digest: most wanted unavailable:', err.message);
-        return [];
+        console.error('digest: the help block is unavailable:', err.message);
+        return { wantedKind: 'unsolved', wanted: [] };
     }
 }
 
@@ -243,6 +273,7 @@ function digestData(user, site, personal, { from, to }) {
         discussions: site.discussions,
         updates: site.updates,
         wanted: site.wanted,
+        wantedKind: site.wantedKind,
         replies: personal.replies,
         onYourSolutions: personal.onYourSolutions,
         followers: personal.followers,

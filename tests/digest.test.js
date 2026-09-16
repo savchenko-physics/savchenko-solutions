@@ -137,6 +137,19 @@ test('the Russian copy counts in Russian', () => {
     assert.ok(one.includes('новых участника'), '3 members');
 });
 
+test('the block that asks for help says which kind of help', () => {
+    const unsolved = renderDigest(base({ wantedKind: 'unsolved' }));
+    assert.ok(unsolved.html.includes(COPY.ru.wantedTitle));
+    assert.ok(unsolved.html.includes(COPY.ru.wantedNote));
+    // 1,997 of the 2,023 problems are written up and none of the rest has ever been opened,
+    // so in practice the block asks for the language that is missing instead.
+    const translate = renderDigest(base({ wantedKind: 'translate' }));
+    assert.ok(translate.html.includes(COPY.ru.translateTitle));
+    assert.ok(translate.html.includes(COPY.ru.translateNote));
+    assert.ok(translate.text.includes(COPY.ru.translateTitle.toUpperCase()));
+    assert.ok(!translate.html.includes(COPY.ru.wantedNote));
+});
+
 // ── 2. Excerpts ─────────────────────────────────────────────────────────────────────────
 
 test('an excerpt reads as prose, not as markup', () => {
