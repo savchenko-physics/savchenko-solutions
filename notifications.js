@@ -9,92 +9,18 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
 });
 
-const { sendEmail } = require('./email');
-const { LIMITS: MAIL_LIMITS } = require('./lib/mailGuard');
-
-const SITE_URL = 'https://savchenkosolutions.com';
-
-// Notification types worth an email. Deliberately excludes high-frequency / low-value
-// ones (likes, chat messages) to protect deliverability and avoid inbox fatigue.
-const EMAIL_NOTIFICATION_TYPES = new Set([
+// Notifications no longer send an email of their own. Every one of these used to mail the
+// moment it happened, which made three replies in a discussion three emails nine minutes apart
+// and a follow/unfollow toggle ten emails in twenty-seven seconds (2026-09-16). They are now
+// collected once a week by digest.js, which reads the same events from their source tables.
+// This list is what the bell shows and what the digest is built from; immediate mail is only
+// for what an account needs to work (reset, verify, email change), and it goes through
+// email.js like everything else.
+const DIGEST_NOTIFICATION_TYPES = new Set([
     'reply_to_comment', 'comment_on_solution', 'new_follower',
     'challenge_result', 'report_resolved', 'forum_reply', 'forum_solution',
-    // Fires at most once per submitted suggestion, and only when the person explicitly
-    // asked to hear back. Low frequency, high value — the exact opposite of the likes and
-    // chat messages this list deliberately excludes, and the half of the loop that makes
-    // people write in a second time.
-    'feedback_update',
+    'feedback_update', 'solution_liked',
 ]);
-
-function escHtml(s) {
-    return String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-}
-
-/**
- * Has this person already been emailed about this thread recently? The bell gets every
- * notification; the inbox gets one email per thread per window. Reply notifications are
- * indistinguishable by content — every one of them reads "On problem 7.2.10" — so time and
- * thread are the only things that can tell a live discussion from a flood. Three replies on
- * 7.2.10 within nine minutes (2026-09-15) were three separate emails before this.
- * Fails open: an unreadable log costs the debounce, not the mail.
- */
-async function emailedAboutRecently(address, kind, thread) {
-    try {
-        const r = await pool.query(
-            `SELECT 1 FROM email_sends
-              WHERE to_address = $1 AND kind = $2
-                AND COALESCE(thread, '') = COALESCE($3, '')
-                AND status IN ('sent', 'failed')
-                AND created_at > NOW() - make_interval(mins => $4)
-              LIMIT 1`,
-            [String(address).trim().toLowerCase(), kind, thread || null, MAIL_LIMITS.threadDebounceMinutes]
-        );
-        return r.rows.length > 0;
-    } catch (err) {
-        console.error('Email notification debounce unavailable:', err.message);
-        return false;
-    }
-}
-
-/**
- * Best-effort email mirror of an in-app notification. Only fires for whitelisted
- * types, and only for users who are email-verified and haven't turned email
- * notifications off. Never throws — called fire-and-forget from createNotification.
- */
-async function sendEmailNotification(userId, type, title, message, link) {
-    if (!EMAIL_NOTIFICATION_TYPES.has(type)) return;
-    try {
-        const r = await pool.query(
-            `SELECT u.email, u.email_verified, COALESCE(up.email_notifications, true) AS email_on
-             FROM users u LEFT JOIN user_preferences up ON up.user_id = u.id
-             WHERE u.id = $1`,
-            [userId]
-        );
-        if (r.rows.length === 0) return;
-        const { email, email_verified, email_on } = r.rows[0];
-        if (!email || !email_verified || !email_on) return;
-        if (await emailedAboutRecently(email, type, link)) return;
-
-        const url = link
-            ? `${SITE_URL}${String(link).startsWith('/') ? '' : '/'}${link}`
-            : `${SITE_URL}/notifications`;
-        await sendEmail({
-            to: email,
-            kind: type,
-            thread: link || null,
-            userId,
-            subject: title,
-            html: `<p>${escHtml(message)}</p>
-                   <p><a href="${url}">View on Savchenko Solutions</a></p>
-                   <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-                   <p style="font-size:12px;color:#888;">You received this because email notifications are on.
-                   <a href="${SITE_URL}/en/settings">Manage your preferences</a>.</p>`,
-            text: `${message}\n\n${url}`,
-        });
-    } catch (err) {
-        console.error('Email notification failed:', err);
-    }
-}
 
 const DEFAULT_NOTIFICATION_SETTINGS = {
     comment_on_solution: true,
@@ -151,8 +77,7 @@ async function createNotification(userId, type, title, message, link, performerI
             'INSERT INTO notifications (user_id, type, title, message, link) VALUES ($1, $2, $3, $4, $5)',
             [userId, type, title, message, link]
         );
-        // Mirror to email (fire-and-forget; has its own try/catch, never blocks the request)
-        sendEmailNotification(userId, type, title, message, link);
+        // No email here: the weekly digest (digest.js) carries this.
     } catch (err) {
         console.error('Error creating notification:', err);
     }
@@ -305,6 +230,7 @@ module.exports = {
     markAsRead,
     markAllAsRead,
     hasRecentLikeNotification,
+    DIGEST_NOTIFICATION_TYPES,
     localizeNotification,
     DEFAULT_NOTIFICATION_SETTINGS,
 };

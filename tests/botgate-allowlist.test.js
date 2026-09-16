@@ -108,6 +108,23 @@ const GOOD_CRAWLERS = {
     'Feedly': 'Feedly/1.0 (+http://www.feedly.com/fetcher.html; 3 subscribers; like FeedFetcher-Google)',
 };
 
+// An email image proxy is a person opening our mail. Gmail's sends no Accept-Language and a
+// 2012 Firefox UA, which is rule 6 to the letter: before 2026-09-16 every image we mailed was
+// a 403 for Gmail readers.
+test('the mail clients that fetch an email\'s images are never blocked', () => {
+    const proxies = [
+        'Mozilla/5.0 (Windows NT 5.1; rv:11.0) Gecko Firefox/11.0 (via ggpht.com GoogleImageProxy)',
+        'Mozilla/5.0 (Windows NT 6.1; rv:11.0) Gecko Firefox/11.0 YahooMailProxy; https://help.yahoo.com/kb/yahoo-mail-proxy-SLN28749.html',
+        'Mozilla/5.0 ProtonMail/1.0 ImageProxy',
+    ];
+    for (const ua of proxies) {
+        for (const path of ['/img/icon-192.png', '/img/profile_images/1265_thumb.webp']) {
+            const v = classify(req({ ua, lang: null, hints: null, path }));
+            assert.notStrictEqual(v.cls, CLASS.BLOCK, `${ua} on ${path}`);
+        }
+    }
+});
+
 test('MUST NEVER BLOCK: every good crawler, arriving without Accept-Language', () => {
     for (const [name, ua] of Object.entries(GOOD_CRAWLERS)) {
         // Crawlers do not send zstd; give them the encoding they actually send.

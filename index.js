@@ -70,6 +70,7 @@ const {
 const { ownsReaction } = require('./lib/reactionUnlocks');
 const { createAccountRecovery } = require('./accountRecovery');
 const { LIMITS: MAIL_LIMITS } = require('./lib/mailGuard');
+const digest = require('./digest');
 const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
@@ -3699,6 +3700,8 @@ app.listen(PORT, HOST, () => {
     console.log(`Main server listening on ${HOST}:${PORT}`);
     // Watches posts/ for problems of «Последняя задача» that get solved (lastProblem.js).
     startLastProblem();
+    // Sundays at 06:00 UTC: one summary email instead of one email per notification (digest.js).
+    digest.startScheduler(pool);
 });
 
 // Add this function near your other database query functions

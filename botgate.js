@@ -71,6 +71,13 @@ const FREELOADER_UA = new RegExp([
 // matter: `\bbot\b` must not fire on "Cubot", a phone brand that appears in Android UAs.
 const GENERIC_BOT_UA = /\b(bot|bots|crawler|spider|scraper|fetcher|monitoring)\b/i;
 
+// A mail client fetching the images of an email somebody just opened. Gmail's proxy arrives
+// as a 2012 Firefox on Windows XP with no Accept-Language at all — rule 6 exactly — so every
+// image in every email this site sends was a 403 for Gmail readers, which is most of them
+// (found 2026-09-16 while building the weekly digest). It is not a visit, so it counts for
+// nothing; it is a person reading our mail, so it is never blocked.
+const EMAIL_IMAGE_PROXY = /(GoogleImageProxy|YahooMailProxy|ProtonMail|ImageProxy|MailProxy|ggpht\.com)/i;
+
 // ── Rule 3: clients that declare they are not a browser ─────────────────────────────
 // Also safe: the UA says so. Note this will catch a contributor scripting curl/wget —
 // check request_log for that pattern and add them to trusted_ips before enforcing.
@@ -425,6 +432,11 @@ function classify(req) {
         // Cache miss: kick off the lookup and let this request through uncounted.
         if (ip) verifyCrawlerAsync(ip, engine);
         return { cls: CLASS.COUNT_NOTHING, rule: 1, reasons: [`pending-verify:${engine.name}`] };
+    }
+
+    // Rule 8 — a mail client fetching an email's images on a reader's behalf.
+    if (EMAIL_IMAGE_PROXY.test(ua)) {
+        return { cls: CLASS.COUNT_NOTHING, rule: 8, reasons: ['email-image-proxy'] };
     }
 
     // Rule 2 — it named itself as a crawler we don't want.

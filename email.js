@@ -97,10 +97,13 @@ async function record({ address, kind, thread, subject, userId, status }) {
  * `kind` (and `thread`, the link the mail is about) go into the email_sends log and decide
  * the ceiling; see lib/mailGuard.js. A send refused by the ceiling resolves with
  * { skipped: 'rate_limited' } rather than throwing: nothing that mails is worth failing for.
- * @param {{to: string, subject: string, html: string, text?: string,
- *          kind?: string, thread?: string, userId?: number}} opts
+ * `headers` are SESv2 MessageHeader entries ({Name, Value}); the weekly digest uses them for
+ * List-Unsubscribe, which is what puts Gmail's own one-click unsubscribe button on a message
+ * and keeps a bulk-looking email out of the spam folder.
+ * @param {{to: string, subject: string, html: string, text?: string, kind?: string,
+ *          thread?: string, userId?: number, headers?: {Name: string, Value: string}[]}} opts
  */
-async function sendEmail({ to, subject, html, text, kind, thread, userId }) {
+async function sendEmail({ to, subject, html, text, kind, thread, userId, headers }) {
     const address = normalizeAddress(to);
     const sendKind = normalizeKind(kind);
     if (!address) return { skipped: "no_address" };
@@ -126,15 +129,16 @@ async function sendEmail({ to, subject, html, text, kind, thread, userId }) {
     const body = { Html: { Data: html, Charset: "UTF-8" } };
     if (text) body.Text = { Data: text, Charset: "UTF-8" };
 
+    const simple = {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: body,
+    };
+    if (Array.isArray(headers) && headers.length > 0) simple.Headers = headers;
+
     const input = {
         FromEmailAddress: FROM,
         Destination: { ToAddresses: [to] },
-        Content: {
-            Simple: {
-                Subject: { Data: subject, Charset: "UTF-8" },
-                Body: body,
-            },
-        },
+        Content: { Simple: simple },
     };
     if (REPLY_TO) input.ReplyToAddresses = [REPLY_TO];
 

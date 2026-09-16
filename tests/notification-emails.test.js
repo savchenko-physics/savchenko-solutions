@@ -3,11 +3,12 @@
 // The incident (2026-09-16, 04:20 local): ten identical "Albaert_Davronov started following
 // you" emails arrived in 27 seconds. Following is a toggle, so twenty clicks made ten follows,
 // each with a notification and an email; nothing counted mail per person, so nothing stopped
-// it. lib/mailGuard.js has the full account. This file checks:
+// it. Later the same day notifications stopped mailing altogether — the weekly digest carries
+// them now (tests/digest.test.js). lib/mailGuard.js has the full account. This file checks:
 //   1. the ceiling and which kinds are exempt from it;
-//   2. the source rules the three senders must keep — email.js counts before it sends and
-//      logs every outcome, notifications.js debounces per thread (and only the *email*, never
-//      the bell), index.js announces a follower once a month and rate-limits the toggle;
+//   2. the source rules the senders must keep — email.js counts before it sends and logs every
+//      outcome, notifications.js sends no mail at all, index.js announces a follower once a
+//      month and rate-limits the toggle;
 //   3. that every caller tells email.js what kind of mail it is, because an unlabelled send
 //      is an uncountable one.
 // Not covered, because the project has no test database: the SQL. The rig run is recorded in
@@ -97,18 +98,13 @@ test('the bookkeeping fails open: an unreadable log costs the limits, never the 
     // recipientCounts returns null on error and the caller only enforces `counts &&`.
     assert.match(EMAIL, /catch \(err\) \{[^}]*recipient counts unavailable[^}]*return null;/s);
     assert.match(EMAIL, /if \(counts && overRecipientCap/);
-    assert.match(NOTIFY, /catch \(err\) \{[^}]*debounce unavailable[^}]*return false;/s);
 });
 
-test('notifications.js debounces the email per thread, and the bell keeps everything', () => {
-    assert.match(NOTIFY, /if \(await emailedAboutRecently\(email, type, link\)\) return;/);
-    assert.match(NOTIFY, /make_interval\(mins => \$4\)/);
-    assert.match(NOTIFY, /MAIL_LIMITS\.threadDebounceMinutes/);
-    // The debounce belongs to the email path only: createNotification still inserts every row,
-    // because three replies in a live thread are three things to read.
+test('notifications.js sends no mail; the bell keeps everything and the digest carries it', () => {
+    assert.doesNotMatch(NOTIFY, /sendEmail/, 'per-event mail is what the digest replaced');
     const create = NOTIFY.slice(NOTIFY.indexOf('async function createNotification('), NOTIFY.indexOf('async function createMessageNotifications('));
-    assert.ok(create.includes('INSERT INTO notifications'));
-    assert.doesNotMatch(create, /emailedAboutRecently|threadDebounceMinutes/);
+    assert.ok(create.includes('INSERT INTO notifications'), 'three replies are still three things to read');
+    assert.match(NOTIFY, /DIGEST_NOTIFICATION_TYPES/);
 });
 
 test('the follow route announces a follower once a month and limits the toggle', () => {
@@ -144,7 +140,6 @@ test('the log the limits read is the table the migration creates', () => {
     }
     assert.match(MIGRATION, /idx_email_sends_address_time/);
     assert.ok(EMAIL.includes('FROM email_sends'));
-    assert.ok(NOTIFY.includes('FROM email_sends'));
 });
 
 // ── Must never block a real person ──────────────────────────────────────────────────────
@@ -155,13 +150,9 @@ test('the busiest hour and day anyone really had stay under the ceiling', () => 
     assert.equal(overRecipientCap({ kind: 'comment_on_solution', lastHour: BUSIEST_REAL_HOUR, lastDay: BUSIEST_REAL_DAY }), false);
 });
 
-test('a discussion that runs all afternoon still reaches the inbox', () => {
-    // One email per thread per window, so an afternoon of replies is a handful of emails,
-    // not one per reply, and never silence.
-    assert.ok(LIMITS.threadDebounceMinutes <= 120, 'a thread must not go quiet for hours');
-    assert.ok(LIMITS.threadDebounceMinutes >= 15, 'a shorter window would not have stopped the flood');
-    const perAfternoon = Math.floor((5 * 60) / LIMITS.threadDebounceMinutes);
-    assert.ok(perAfternoon >= 4 && perAfternoon < LIMITS.perAddressPerDay);
+test('a week of discussion fits inside the ceiling many times over', () => {
+    // The digest is one email a week per person; the ceiling exists for everything else.
+    assert.ok(LIMITS.perAddressPerDay >= 7, 'a week of account mail must fit');
 });
 
 test('a follower who comes back later is announced again', () => {
