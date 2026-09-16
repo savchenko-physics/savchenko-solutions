@@ -176,7 +176,7 @@ async function requestReset(client, { identifier, ip }) {
         if (decision === 'send') {
             site.lastHour += 1;
             site.lastDay += 1;
-            emails.push({ logId, to: account.email, username: account.username, token });
+            emails.push({ logId, to: account.email, username: account.username, token, userId: account.id });
         }
     }
     return { paused: false, emails };
@@ -194,14 +194,14 @@ async function fileAppeal(client, { identifier, ip, note }) {
     const logId = await logRequest(client, {
         identifier, userId: account ? account.id : null, token: null, ip, type: 'recovery_appeal', note: note || null, outcome,
     });
-    return { emails: decision === 'send' ? [{ logId, to: account.email, username: account.username }] : [] };
+    return { emails: decision === 'send' ? [{ logId, to: account.email, username: account.username, userId: account.id }] : [] };
 }
 
 // ── After the response ──────────────────────────────────────────────────────────────────
 
-function dispatch(pool, emails, build) {
+function dispatch(pool, emails, build, kind) {
     for (const email of emails) {
-        sendEmail({ to: email.to, ...build(email) }).catch(async (err) => {
+        sendEmail({ to: email.to, kind, userId: email.userId, ...build(email) }).catch(async (err) => {
             console.error(`account recovery: email for request ${email.logId} failed:`, err && err.message ? err.message : err);
             try {
                 await pool.query("UPDATE password_reset_requests SET outcome = 'failed' WHERE id = $1", [email.logId]);
@@ -294,7 +294,7 @@ function createAccountRecovery({ pool }) {
             lang,
             username: email.username,
             url: `${origin()}/reset-password?token=${email.token}&lang=${lang}`,
-        }));
+        }), 'password_reset');
     });
 
     const cookieOptions = (req) => ({
@@ -408,7 +408,7 @@ function createAccountRecovery({ pool }) {
             lang,
             username: appeal.username,
             forgotUrl: `${origin()}/forgot-password?lang=${lang}`,
-        }));
+        }), 'appeal_ack');
     });
 
     return router;

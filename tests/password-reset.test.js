@@ -274,7 +274,11 @@ test('the confirmation never asserts that an account exists', () => {
 
 test('the only email this module sends is the one dispatched after the locked decision', () => {
     assert.equal([...ROUTER.matchAll(/sendEmail\(/g)].length, 1);
-    assert.match(ROUTER, /function dispatch\(pool, emails, build\) \{\n\s+for \(const email of emails\) \{\n\s+sendEmail\(/);
+    assert.match(ROUTER, /function dispatch\(pool, emails, build, kind\) \{\n\s+for \(const email of emails\) \{\n\s+sendEmail\(/);
+    // Each send names its kind, so email.js can count it (lib/mailGuard.js) — and recovery
+    // mail is the kind that ceiling never applies to.
+    const kinds = [...ROUTER.matchAll(/\}\), '([a-z_]+)'\);/g)].map((m) => m[1]);
+    assert.deepEqual(kinds.sort(), ['appeal_ack', 'password_reset']);
     const dispatched = [...ROUTER.matchAll(/(?<!function )dispatch\(pool, ([\w.]+),/g)].map((m) => m[1]);
     assert.deepEqual(dispatched, ['result.emails', 'result.emails']);
     const locked = [...ROUTER.matchAll(/result = await inRecoveryLock\(pool, \(client\) => (\w+)\(/g)].map((m) => m[1]);

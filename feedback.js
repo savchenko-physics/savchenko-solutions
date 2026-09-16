@@ -260,6 +260,7 @@ async function notifyShipped(itemId, notifications, sendEmail) {
             const url = `https://savchenkosolutions.com${link}`;
             await sendEmail({
                 to: item.contact_value,
+                kind: 'feedback_update',
                 subject: title,
                 text: `${message}\n\n${url}`,
                 html: `<p>${message}</p><p><a href="${url}">${url}</a></p>`,

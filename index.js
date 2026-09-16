@@ -69,6 +69,7 @@ const {
 } = require('./lastProblem');
 const { ownsReaction } = require('./lib/reactionUnlocks');
 const { createAccountRecovery } = require('./accountRecovery');
+const { LIMITS: MAIL_LIMITS } = require('./lib/mailGuard');
 const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
@@ -217,6 +218,35 @@ const editSaveLimiter = rateLimit({
     message: 'Too many save attempts, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
+});
+
+// Both routes below are behind checkAuthenticated, so the key is always a real account —
+// unlike editSaveLimiter, which puts every signed-out visitor in one bucket (see CLAUDE.md).
+// The follow button is a toggle: twenty clicks in forty seconds on 2026-09-16 wrote twenty
+// activity rows and sent ten emails. The ceiling is far above browsing the contributor list.
+const followLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: MAIL_LIMITS.followTogglesPerHour,
+    keyGenerator: (req) => `follow:${req.session?.userId}`,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => res.status(429).json({ error: 'Too many follow changes, please slow down.' }),
+});
+
+// An email change mails a confirmation link to whatever address is typed, so it is the one
+// signed-in route that can put mail in a stranger's inbox. lib/mailGuard.js caps what any one
+// address receives; this caps how many addresses one account can reach in an hour.
+const emailChangeLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: MAIL_LIMITS.emailChangesPerHour,
+    keyGenerator: (req) => `emailchange:${req.session?.userId}`,
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req, res) => res.redirect(
+        `/${normalizeLang(req.params?.lang)}/settings?tab=account&error=${encodeURIComponent(
+            i18n.__('Too many attempts, please try again later')
+        )}`
+    ),
 });
 
 app.set("view engine", "ejs");
@@ -1043,7 +1073,7 @@ app.get("/:lang/api/username-available", async (req, res) => {
 });
 
 // Request email change (confirmation link — configure SMTP in production to email the link)
-app.post("/:lang/settings/account/email", checkAuthenticated, async (req, res) => {
+app.post("/:lang/settings/account/email", checkAuthenticated, emailChangeLimiter, async (req, res) => {
     const { lang } = req.params;
     i18n.setLocale(res, lang);
     const { newEmail, currentPassword } = req.body;
@@ -1106,6 +1136,8 @@ app.post("/:lang/settings/account/email", checkAuthenticated, async (req, res) =
                 : 'Confirm your email change. This link is valid for 24 hours:';
             await sendEmail({
                 to: email,
+                kind: 'email_change',
+                userId: req.session.userId,
                 subject,
                 html: `<p>${body}</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`,
                 text: `${body}\n\n${confirmUrl}`,
@@ -1184,7 +1216,7 @@ app.post("/:lang/settings/account/delete", checkAuthenticated, async (req, res) 
 // Social Media API Routes
 
 // Follow/Unfollow user
-app.post("/api/follow/:userId", checkAuthenticated, async (req, res) => {
+app.post("/api/follow/:userId", checkAuthenticated, followLimiter, async (req, res) => {
     const { userId } = req.params;
     const followerId = req.session.userId;
 
@@ -1226,18 +1258,29 @@ app.post("/api/follow/:userId", checkAuthenticated, async (req, res) => {
                 [followerId, 'follow', userId]
             );
 
-            // Notify the followed user
+            // Notify the followed user, at most once a month per follower. Following is a
+            // toggle, and being told a second time that the same person follows you says
+            // nothing new: on 2026-09-16 ten clicks put ten identical emails in one inbox.
             try {
                 const followerResult = await pool.query('SELECT username FROM users WHERE id = $1', [followerId]);
                 const followerName = followerResult.rows[0]?.username || 'Someone';
-                await notifications.createNotification(
-                    parseInt(userId),
-                    'new_follower',
-                    `${followerName} started following you`,
-                    null,
-                    `/user/${followerName}`,
-                    followerId
+                const alreadyTold = await pool.query(
+                    `SELECT 1 FROM notifications
+                      WHERE user_id = $1 AND type = 'new_follower' AND link = $2
+                        AND created_at > NOW() - make_interval(days => $3)
+                      LIMIT 1`,
+                    [parseInt(userId), `/user/${followerName}`, MAIL_LIMITS.followRepeatDays]
                 );
+                if (alreadyTold.rows.length === 0) {
+                    await notifications.createNotification(
+                        parseInt(userId),
+                        'new_follower',
+                        `${followerName} started following you`,
+                        null,
+                        `/user/${followerName}`,
+                        followerId
+                    );
+                }
             } catch (notifErr) { console.error('Notification error (follow):', notifErr); }
 
             res.json({ following: true, message: "Followed successfully" });
@@ -2321,6 +2364,8 @@ app.post("/register", registerLimiter, async (req, res) => {
             const verifyUrl = `${req.protocol}://${req.get("host")}/verify-email?token=${verifyToken}&lang=${lang}`;
             await sendEmail({
                 to: email,
+                kind: 'email_verify',
+                userId: newUser.rows[0].id,
                 subject: lang === 'ru'
                     ? 'Подтвердите ваш email — Savchenko Solutions'
                     : 'Confirm your email — Savchenko Solutions',
