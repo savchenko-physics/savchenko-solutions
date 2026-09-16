@@ -85,6 +85,17 @@ const SEND_GAP_MS = 400;
 const isOff = () => String(process.env.DIGEST || '').toLowerCase() === 'off';
 
 /**
+ * A person's own picture for the email, or null. Only a path the site serves, and never the SVG
+ * placeholder: mail clients do not render SVG, and lib/digestRender.js draws a coloured initial
+ * when there is no picture anyway.
+ */
+function avatarUrl(picture) {
+    const p = typeof picture === 'string' ? picture.trim() : '';
+    if (!p.startsWith('/') || /\.svg(\?|$)/i.test(p)) return null;
+    return `${ORIGIN}${p}`;
+}
+
+/**
  * While DIGEST_TEST_ONLY holds addresses, a run builds every digest as usual but sends only to
  * those, and says how many it held back. It is how a change to the email is tried on one
  * inbox before it reaches anyone else's, which is the owner's rule for this feature.
@@ -109,6 +120,7 @@ async function collectSite(pool, { from, to }) {
         pool.query(
             `SELECT sc.problem_name, sc.language, count(*)::int AS comments,
                     (array_agg(u.username ORDER BY sc.created_at DESC))[1] AS last_author,
+                    (array_agg(u.profile_picture ORDER BY sc.created_at DESC))[1] AS last_author_picture,
                     (array_agg(sc.content ORDER BY sc.created_at DESC))[1] AS excerpt
                FROM solution_comments sc JOIN users u ON u.id = sc.user_id
               WHERE sc.created_at >= $1 AND sc.created_at < $2 AND sc.is_deleted = false
@@ -134,6 +146,7 @@ async function collectSite(pool, { from, to }) {
             language: r.language,
             comments: r.comments,
             lastAuthor: r.last_author,
+            lastAuthorPicture: avatarUrl(r.last_author_picture),
             excerpt: r.excerpt,
             url: `${ORIGIN}/${r.language}/${r.problem_name}`,
         })),
@@ -212,7 +225,7 @@ async function collectPersonal(pool, { from, to }) {
 
     const [replies, onSolutions, followers, likes] = await Promise.all([
         pool.query(
-            `SELECT p.user_id AS owner, u.username AS author, c.problem_name, c.language, c.content, c.created_at
+            `SELECT p.user_id AS owner, u.username AS author, u.profile_picture, c.problem_name, c.language, c.content, c.created_at
                FROM solution_comments c
                JOIN solution_comments p ON p.id = c.parent_id
                JOIN users u ON u.id = c.user_id
@@ -225,7 +238,7 @@ async function collectPersonal(pool, { from, to }) {
         // problem, from either contribution table, minus the commenter.
         pool.query(
             `SELECT DISTINCT ON (owner, c.problem_name, c.language) owners.user_id AS owner,
-                    u.username AS author, c.problem_name, c.language, c.content, c.created_at
+                    u.username AS author, u.profile_picture, c.problem_name, c.language, c.content, c.created_at
                FROM solution_comments c
                JOIN users u ON u.id = c.user_id
                JOIN (SELECT DISTINCT problem_name, user_id FROM contributions WHERE user_id IS NOT NULL
@@ -237,7 +250,8 @@ async function collectPersonal(pool, { from, to }) {
         ),
         pool.query(
             // DISTINCT, because following is a toggle: the same person can appear many times.
-            `SELECT DISTINCT f.following_id AS owner, u.username FROM user_follows f JOIN users u ON u.id = f.follower_id
+            `SELECT DISTINCT f.following_id AS owner, u.username, u.profile_picture
+               FROM user_follows f JOIN users u ON u.id = f.follower_id
               WHERE f.created_at >= $1 AND f.created_at < $2`,
             [from, to]
         ),
@@ -255,18 +269,20 @@ async function collectPersonal(pool, { from, to }) {
 
     for (const r of replies.rows) {
         bucket(r.owner).replies.push({
-            kind: 'reply', author: r.author, problem: r.problem_name, language: r.language,
+            kind: 'reply', author: r.author, authorPicture: avatarUrl(r.profile_picture),
+            problem: r.problem_name, language: r.language,
             excerpt: r.content, url: `${ORIGIN}/${r.language}/${r.problem_name}`,
         });
     }
     for (const r of onSolutions.rows) {
         bucket(r.owner).onYourSolutions.push({
-            kind: 'comment', author: r.author, problem: r.problem_name, language: r.language,
+            kind: 'comment', author: r.author, authorPicture: avatarUrl(r.profile_picture),
+            problem: r.problem_name, language: r.language,
             excerpt: r.content, url: `${ORIGIN}/${r.language}/${r.problem_name}`,
         });
     }
     for (const r of followers.rows) {
-        bucket(r.owner).followers.push({ username: r.username, url: `${ORIGIN}/user/${r.username}` });
+        bucket(r.owner).followers.push({ username: r.username, picture: avatarUrl(r.profile_picture), url: `${ORIGIN}/user/${r.username}` });
     }
     for (const r of likes.rows) bucket(r.owner).likes = r.likes;
 
@@ -431,4 +447,4 @@ function startScheduler(pool) {
     return timer;
 }
 
-module.exports = { runDigest, startScheduler, shouldSend, chooseLanguage, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
+module.exports = { runDigest, startScheduler, shouldSend, chooseLanguage, avatarUrl, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };

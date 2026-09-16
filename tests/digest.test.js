@@ -21,7 +21,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, chooseLanguage, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, chooseLanguage, avatarUrl, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { colour, TOKENS, SERIES } = require('../lib/siteColours');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
 const ROOT = path.join(__dirname, '..');
@@ -44,10 +45,10 @@ const base = (over = {}) => ({
     username: 'astrosander',
     period: week,
     counters: { solutions: 56, comments: 16, members: 9 },
-    discussions: [{ problem: '7.2.9', language: 'ru', comments: 4, lastAuthor: 'igor', excerpt: 'Популяризовал задачу', url: `${ORIGIN}/ru/7.2.9` }],
+    discussions: [{ problem: '7.2.9', language: 'ru', comments: 4, lastAuthor: 'igor', lastAuthorPicture: `${ORIGIN}/img/profile_images/176.webp?v=5c648846`, excerpt: 'Популяризовал задачу', url: `${ORIGIN}/ru/7.2.9` }],
     updates: [{ problem: '12.1.7', languages: ['ru'], authors: ['Valter'], url: `${ORIGIN}/ru/12.1.7` }],
     wanted: [{ problem: '1.4.12', views: 1874, url: `${ORIGIN}/ru/1.4.12` }],
-    replies: [{ kind: 'reply', author: 'Valter', problem: '7.2.10', language: 'ru', excerpt: 'Посмотри на предельный случай', url: `${ORIGIN}/ru/7.2.10` }],
+    replies: [{ kind: 'reply', author: 'Valter', authorPicture: `${ORIGIN}/img/profile_images/2543.webp?v=e64aa047`, problem: '7.2.10', language: 'ru', excerpt: 'Посмотри на предельный случай', url: `${ORIGIN}/ru/7.2.10` }],
     onYourSolutions: [],
     followers: [{ username: 'Albaert_Davronov', url: `${ORIGIN}/user/Albaert_Davronov` }],
     likes: 7,
@@ -80,19 +81,56 @@ test('everything a person typed is escaped', () => {
     assert.ok(mail.html.includes('a&quot;b'));
 });
 
-test('one image, the official mark, and every link goes to the site', () => {
+test('the images are the mark and people\'s own avatars, and every link goes to the site', () => {
     const mail = renderDigest(base());
-    // The owner asked for the real logo in the masthead. It is the only image: everything that
-    // carries meaning (avatars, counters, buttons) is drawn with table cells and text, because
-    // mail clients block images until the reader allows them.
     const images = [...mail.html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
-    assert.equal(images.length, 1, images.join(' | '));
-    assert.match(images[0], /src="https:\/\/savchenkosolutions\.com\/img\/logo\.png"/);
-    assert.match(images[0], /alt=""/, 'the wordmark next to it is the name, so the mark is decorative');
-    assert.match(images[0], /width="34" height="34"/, 'a mail client needs the size up front');
+    const logo = images.filter((i) => i.includes('/img/logo.png'));
+    const avatars = images.filter((i) => i.includes('/img/profile_images/'));
+    assert.equal(logo.length, 1, 'one mark in the masthead');
+    assert.match(logo[0], /alt=""/, 'the wordmark next to it is the name, so the mark is decorative');
+    assert.equal(avatars.length, 2, 'the reply author and the discussion author');
+    // Every avatar carries the initial as its alt text and sits on the coloured circle, so a
+    // blocked or unreadable image still shows a person, not a broken frame.
+    for (const img of avatars) {
+        assert.match(img, /alt="[A-ZА-ЯЁ]"/, img);
+        assert.match(img, /border-radius:\d+px/, img);
+    }
+    assert.equal(images.length, logo.length + avatars.length, 'no other images');
+    for (const img of images) assert.match(img, /width="\d+" height="\d+"/, 'a mail client needs the size up front');
     const urls = [...mail.html.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
     assert.ok(urls.length > 5);
     for (const url of urls) assert.ok(url.startsWith(`${ORIGIN}/`), url);
+});
+
+test('somebody without a picture still has a face', () => {
+    const mail = renderDigest(base({ replies: [{ kind: 'reply', author: 'Андрей', problem: '1.1.1', language: 'ru', excerpt: 'текст', url: `${ORIGIN}/ru/1.1.1` }] }));
+    assert.ok(!mail.html.includes('/img/profile_images/2543'), 'no picture, no image');
+    assert.match(mail.html, /border-radius:32px;[^"]*">А</, 'the initial on the circle instead');
+});
+
+test('the avatar path is the site\'s own, and never the SVG placeholder', () => {
+    assert.equal(avatarUrl('/img/profile_images/28.webp?v=59ba230e'), `${ORIGIN}/img/profile_images/28.webp?v=59ba230e`);
+    assert.equal(avatarUrl('/img/profile_images/Default_placeholder.svg'), null, 'mail clients do not render SVG');
+    assert.equal(avatarUrl('https://evil.example/x.png'), null, 'only paths this site serves');
+    assert.equal(avatarUrl(''), null);
+    assert.equal(avatarUrl(null), null);
+});
+
+test('every colour in the email is a token from the site stylesheet', () => {
+    const src = read('lib/digestRender.js');
+    const literals = [...src.matchAll(/#[0-9a-fA-F]{3,8}\b/g)].map((m) => m[0]);
+    assert.deepEqual(literals, [], 'a hex here is a colour that will not follow the site');
+    // Every colour the rendered email uses is a design token or one of the data colours.
+    const mail = renderDigest(base()).html;
+    const allowed = new Set([...Object.values(TOKENS), ...SERIES]);
+    const used = new Set([...mail.matchAll(/#[0-9a-f]{6}\b/g)].map((m) => m[0]));
+    assert.ok(used.size >= 6, `only ${used.size} colours, the email should use more`);
+    for (const c of used) assert.ok(allowed.has(c), `${c} is not a site colour`);
+    assert.ok(used.has(colour('navy')) && used.has(colour('link')), 'the site navy and link blue are both in it');
+    // Avatars take the four data-series colours and nothing else.
+    const circles = [...mail.matchAll(/height:\d+px;background:(#[0-9a-f]{6});border-radius/g)].map((m) => m[1]);
+    assert.ok(circles.length > 0);
+    for (const c of circles) assert.ok(SERIES.includes(c), `${c} is not one of the site's data colours`);
 });
 
 test('the unsubscribe and the settings link are in both bodies', () => {
