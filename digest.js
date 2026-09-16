@@ -71,11 +71,14 @@ async function collectSite(pool, { from, to }) {
               GROUP BY 1, 2 ORDER BY comments DESC, max(sc.created_at) DESC LIMIT 4`,
             [from, to]
         ),
+        // By problem, not by problem and language: a solution written in both on the same day
+        // is one piece of work and reads as two lines otherwise.
         pool.query(
-            `SELECT c.problem_name, c.language, array_agg(DISTINCT u.username) AS authors, max(c.edited_at) AS at
+            `SELECT c.problem_name, array_agg(DISTINCT c.language) AS languages,
+                    array_agg(DISTINCT u.username) AS authors, max(c.edited_at) AS at
                FROM contributions c JOIN users u ON u.id = c.user_id
               WHERE c.edited_at >= $1 AND c.edited_at < $2 AND c.content_changed
-              GROUP BY 1, 2 ORDER BY at DESC LIMIT 8`,
+              GROUP BY 1 ORDER BY at DESC LIMIT 8`,
             [from, to]
         ),
     ]);
@@ -92,9 +95,9 @@ async function collectSite(pool, { from, to }) {
         })),
         updates: updates.rows.map((r) => ({
             problem: r.problem_name,
-            language: r.language,
+            languages: r.languages,
             authors: r.authors,
-            url: `${ORIGIN}/${r.language}/${r.problem_name}`,
+            url: `${ORIGIN}/${r.languages.includes('ru') ? 'ru' : r.languages[0]}/${r.problem_name}`,
         })),
         ...(await askForHelp(pool)),
     };

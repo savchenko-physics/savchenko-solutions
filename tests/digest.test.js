@@ -45,7 +45,7 @@ const base = (over = {}) => ({
     period: week,
     counters: { solutions: 56, comments: 16, members: 9 },
     discussions: [{ problem: '7.2.9', language: 'ru', comments: 4, lastAuthor: 'igor', excerpt: 'Популяризовал задачу', url: `${ORIGIN}/ru/7.2.9` }],
-    updates: [{ problem: '12.1.7', language: 'ru', authors: ['Valter'], url: `${ORIGIN}/ru/12.1.7` }],
+    updates: [{ problem: '12.1.7', languages: ['ru'], authors: ['Valter'], url: `${ORIGIN}/ru/12.1.7` }],
     wanted: [{ problem: '1.4.12', views: 1874, url: `${ORIGIN}/ru/1.4.12` }],
     replies: [{ kind: 'reply', author: 'Valter', problem: '7.2.10', language: 'ru', excerpt: 'Посмотри на предельный случай', url: `${ORIGIN}/ru/7.2.10` }],
     onYourSolutions: [],
@@ -120,7 +120,7 @@ test('long lists are cut to what an email can carry', () => {
     const mail = renderDigest(base({
         replies: many(20, (i) => ({ kind: 'reply', author: `a${i}`, problem: `1.1.${i}`, language: 'ru', excerpt: 'x', url: `${ORIGIN}/ru/1.1.${i}` })),
         discussions: many(20, (i) => ({ problem: `2.2.${i}`, language: 'ru', comments: 2, lastAuthor: 'b', excerpt: 'y', url: `${ORIGIN}/ru/2.2.${i}` })),
-        updates: many(30, (i) => ({ problem: `3.3.${i}`, language: 'ru', authors: ['c'], url: `${ORIGIN}/ru/3.3.${i}` })),
+        updates: many(30, (i) => ({ problem: `3.3.${i}`, languages: ['ru', 'en'], authors: ['c'], url: `${ORIGIN}/ru/3.3.${i}` })),
         wanted: many(10, (i) => ({ problem: `4.4.${i}`, views: 10, url: `${ORIGIN}/ru/4.4.${i}` })),
     }));
     const count = (re) => (mail.html.match(re) || []).length;
@@ -128,6 +128,12 @@ test('long lists are cut to what an email can carry', () => {
     assert.equal(count(/Задача 2\.2\.\d+<\/a>/g), 4);
     assert.equal(count(/Задача 3\.3\./g), 8);
     assert.equal(count(/Задача 4\.4\./g), 3);
+});
+
+test('a solution written in both languages is one line', () => {
+    const both = renderDigest(base({ updates: [{ problem: '9.9.9', languages: ['en', 'ru'], authors: ['igor', 'Valter'], url: `${ORIGIN}/ru/9.9.9` }] }));
+    assert.equal((both.html.match(/Задача 9\.9\.9/g) || []).length, 1);
+    assert.ok(both.html.includes('на русском и английском'));
 });
 
 test('the Russian copy counts in Russian', () => {
