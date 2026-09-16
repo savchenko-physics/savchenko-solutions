@@ -94,6 +94,7 @@ utils.js                          # Markdown parsing, XSS validation
 post.js                           # Solution rendering + view tracking
 upload.js                         # Upload router
 accountRecovery.js                # Forgot password, reset link, recovery appeal (rules: lib/passwordReset.js)
+digest.js                         # The weekly summary email (the email itself: lib/digestRender.js)
 contributions.js                  # Contribution display
 contributorsUserMetricsApi.js     # Leaderboard and user stats API
 userProfile.js                    # User profile rendering
@@ -157,7 +158,8 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   `accountRecovery.js`, and mail only ever goes to an address already on an account. **Never
   send recovery mail from anywhere else**; before 2026-09-15 `/recover-account` emailed any
   address typed into it, with no rate limit
-- `email_sends` — one row per email the site attempts (migration 056), with its kind, the
+- `email_sends` — one row per email the site attempts (migration 056), with its kind (a
+  notification type, `digest`, `password_reset`, `email_verify`, `email_change`), the
   thread it was about, and `sent` / `failed` / `suppressed`. It answers "how many emails did we
   send, and to whom" in one query, and it is what the limits count: an address gets at most
   `LIMITS.perAddressPerHour` / `perAddressPerDay` (`lib/mailGuard.js`), a notification about one
@@ -380,6 +382,12 @@ hyphenation and a 1em paragraph indent, as journals set text.
 - Do NOT send email except through `email.js`. It is the only place that counts what an
   address has already received (`lib/mailGuard.js`) and logs the send (`email_sends`); a sender
   that goes straight to SES is uncounted, uncapped and invisible.
+- Do NOT mail people per event. Notifications send nothing; `digest.js` collects the week and
+  sends one summary on Sunday at 06:00 UTC, to people who had news that week, and only that.
+  Immediate mail is what an account needs to work (reset, verify, email change). A digest
+  carries no images either: mail clients block them, and Gmail fetches through a proxy that
+  sends no `Accept-Language`, which botgate answered with 403 until rule 8 (2026-09-16).
+  `scripts/send-digest.js` builds and writes the week without sending it.
 - Do NOT use `res.send()` for HTML pages. Use `res.render()` with EJS templates.
 - Do NOT add social media features (stories, reels, feeds). This is an academic tool.
 - Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be
