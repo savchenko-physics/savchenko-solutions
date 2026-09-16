@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, filterPersonal, chooseLanguage, avatarUrl, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, filterPersonal, chooseLanguage, avatarUrl, isDue, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
 const { colour, TOKENS, SERIES } = require('../lib/siteColours');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
@@ -321,14 +321,34 @@ test('the site does not mail a thousand dormant accounts by accident', () => {
     assert.ok(DORMANT_DAYS >= 7);
 });
 
-test('once a week, on a fixed hour, and never twice', () => {
+test('once a week, at the minute chosen from the traffic, and never twice', () => {
     assert.equal(SCHEDULE.windowDays, 7);
     assert.ok(SCHEDULE.minDaysBetween >= 6 && SCHEDULE.minDaysBetween < SCHEDULE.windowDays);
-    assert.ok(SCHEDULE.dayUtc >= 0 && SCHEDULE.dayUtc <= 6);
-    assert.ok(SCHEDULE.hourUtc >= 0 && SCHEDULE.hourUtc <= 23);
-    // The window must cover the gap between runs, or a week of news falls between two digests.
-    assert.ok(SCHEDULE.windowDays * 24 >= 7 * 24);
-    assert.ok(SCHEDULE.checkEveryMs <= 60 * 60 * 1000, 'the hour would be missed');
+    // Saturday 06:12 UTC: 48 minutes before the busiest hour of the week for this audience
+    // (Saturday 07:00 UTC, 2,845 distinct readers over 120 days against 1,219 for the next).
+    assert.equal(SCHEDULE.dayUtc, 6, 'Saturday');
+    assert.equal(SCHEDULE.hourUtc, 6);
+    assert.equal(SCHEDULE.minuteUtc, 12);
+    assert.notEqual(SCHEDULE.minuteUtc, 0, 'bulk mail piles up on the hour');
+    assert.notEqual(SCHEDULE.minuteUtc, 30, 'and on the half hour');
+    const sendAt = SCHEDULE.hourUtc * 60 + SCHEDULE.minuteUtc;
+    assert.ok(sendAt < 7 * 60 && sendAt >= 5 * 60, 'it has to land before the 07:00 UTC peak, not in the night');
+    assert.ok(SCHEDULE.windowDays * 24 >= 7 * 24, 'a week of news must not fall between two digests');
+    assert.ok(SCHEDULE.checkEveryMs <= 60 * 1000, 'a minute-precise time needs a minute-precise tick');
+});
+
+test('the run fires at the minute, and still fires if the site was down at that minute', () => {
+    const due = (iso) => isDue(new Date(iso));
+    assert.equal(due('2026-09-19T06:11:59Z'), false, 'a minute early is not yet');
+    assert.equal(due('2026-09-19T06:12:00Z'), true, 'Saturday 06:12 UTC');
+    assert.equal(due('2026-09-19T09:40:00Z'), true, 'a restart later that day still sends the week');
+    assert.equal(due('2026-09-19T23:59:59Z'), true);
+    assert.equal(due('2026-09-18T23:59:00Z'), false, 'Friday');
+    assert.equal(due('2026-09-20T06:12:00Z'), false, 'Sunday');
+    assert.equal(due('2026-09-19T05:00:00Z'), false, 'Saturday, too early');
+    // Twice in one day is stopped by the day key here and by the per-person week check in SQL.
+    assert.match(DIGEST, /if \(lastRunKey === key\) return;/);
+    assert.match(DIGEST, /kind = 'digest'/);
 });
 
 // ── 4. The rules the code must keep ─────────────────────────────────────────────────────
