@@ -50,6 +50,16 @@ const SEND_GAP_MS = 400;
 
 const isOff = () => String(process.env.DIGEST || '').toLowerCase() === 'off';
 
+/**
+ * While DIGEST_TEST_ONLY holds addresses, a run builds every digest as usual but sends only to
+ * those, and says how many it held back. It is how a change to the email is tried on one
+ * inbox before it reaches anyone else's, which is the owner's rule for this feature.
+ */
+function testOnlyAddresses() {
+    return String(process.env.DIGEST_TEST_ONLY || '')
+        .split(',').map((a) => a.trim().toLowerCase()).filter(Boolean);
+}
+
 // ── The week, for everyone ──────────────────────────────────────────────────────────────
 
 async function collectSite(pool, { from, to }) {
@@ -235,7 +245,7 @@ async function collectPersonal(pool, { from, to }) {
  * the only language signal every account has (user_preferences has 19 rows for a thousand
  * accounts, and every one of them says "en").
  */
-async function candidates(pool) {
+async function candidates(pool, { ignoreLastSent = false } = {}) {
     const { rows } = await pool.query(
         `SELECT u.id, u.username, u.email, u.last_seen_at,
                 CASE WHEN ru.muted IS FALSE THEN 'ru' WHEN en.muted IS FALSE THEN 'en' ELSE 'ru' END AS lang
@@ -247,11 +257,11 @@ async function candidates(pool) {
                 AND en.conversation_id = (SELECT id FROM conversations WHERE community_lang = 'en' LIMIT 1)
           WHERE u.email IS NOT NULL AND u.email <> '' AND u.email_verified
             AND COALESCE(up.email_notifications, true)
-            AND NOT EXISTS (
+            AND ($2 OR NOT EXISTS (
                 SELECT 1 FROM email_sends e
                  WHERE e.user_id = u.id AND e.kind = 'digest' AND e.status IN ('sent', 'failed')
-                   AND e.created_at > NOW() - make_interval(days => $1))`,
-        [SCHEDULE.minDaysBetween]
+                   AND e.created_at > NOW() - make_interval(days => $1)))`,
+        [SCHEDULE.minDaysBetween, ignoreLastSent]
     );
     return rows;
 }
@@ -290,13 +300,13 @@ const EMPTY = { replies: [], onYourSolutions: [], followers: [], likes: 0 };
  * Build (and, unless dryRun, send) this week's digests.
  * @returns {Promise<{window: {from: Date, to: Date}, site: object, digests: Array}>}
  */
-async function runDigest(pool, { dryRun = true, onlyUser = null, now = new Date() } = {}) {
+async function runDigest(pool, { dryRun = true, onlyUser = null, force = false, now = new Date() } = {}) {
     const to = now;
     const from = new Date(to.getTime() - SCHEDULE.windowDays * 24 * 3600 * 1000);
     const [site, personalByUser, people] = await Promise.all([
         collectSite(pool, { from, to }),
         collectPersonal(pool, { from, to }),
-        candidates(pool),
+        candidates(pool, { ignoreLastSent: force }),
     ]);
     const siteHasNews = site.counters.solutions + site.counters.comments > 0;
 
@@ -314,8 +324,15 @@ async function runDigest(pool, { dryRun = true, onlyUser = null, now = new Date(
         digests.push({ user, data, mail, hasPersonalNews });
     }
 
+    const testOnly = testOnlyAddresses();
     if (!dryRun) {
-        for (const d of digests) {
+        const allowed = testOnly.length === 0
+            ? digests
+            : digests.filter((d) => testOnly.includes(String(d.user.email).trim().toLowerCase()));
+        if (testOnly.length > 0) {
+            console.log(`digest: DIGEST_TEST_ONLY is set, so ${allowed.length} of ${digests.length} will be sent`);
+        }
+        for (const d of allowed) {
             try {
                 await sendEmail({
                     to: d.user.email,
@@ -334,10 +351,10 @@ async function runDigest(pool, { dryRun = true, onlyUser = null, now = new Date(
             }
             await new Promise((r) => setTimeout(r, SEND_GAP_MS));
         }
-        console.log(`digest: ${digests.length} sent for the week to ${to.toISOString().slice(0, 10)}`);
+        console.log(`digest: ${allowed.length} sent for the week to ${to.toISOString().slice(0, 10)}`);
     }
 
-    return { window: { from, to }, site, digests };
+    return { window: { from, to }, site, digests, testOnly };
 }
 
 // ── The weekly clock ────────────────────────────────────────────────────────────────────
@@ -364,4 +381,4 @@ function startScheduler(pool) {
     return timer;
 }
 
-module.exports = { runDigest, startScheduler, shouldSend, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
+module.exports = { runDigest, startScheduler, shouldSend, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };

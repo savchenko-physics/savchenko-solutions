@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
 const ROOT = path.join(__dirname, '..');
@@ -80,11 +80,18 @@ test('everything a person typed is escaped', () => {
     assert.ok(mail.html.includes('a&quot;b'));
 });
 
-test('no images at all, and every link goes to the site', () => {
+test('one image, the official mark, and every link goes to the site', () => {
     const mail = renderDigest(base());
-    assert.doesNotMatch(mail.html, /<img\b/, 'an image would be blocked or proxied by the mail client');
+    // The owner asked for the real logo in the masthead. It is the only image: everything that
+    // carries meaning (avatars, counters, buttons) is drawn with table cells and text, because
+    // mail clients block images until the reader allows them.
+    const images = [...mail.html.matchAll(/<img\b[^>]*>/g)].map((m) => m[0]);
+    assert.equal(images.length, 1, images.join(' | '));
+    assert.match(images[0], /src="https:\/\/savchenkosolutions\.com\/img\/logo\.png"/);
+    assert.match(images[0], /alt=""/, 'the wordmark next to it is the name, so the mark is decorative');
+    assert.match(images[0], /width="34" height="34"/, 'a mail client needs the size up front');
     const urls = [...mail.html.matchAll(/(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
-    assert.ok(urls.length > 0);
+    assert.ok(urls.length > 5);
     for (const url of urls) assert.ok(url.startsWith(`${ORIGIN}/`), url);
 });
 
@@ -245,6 +252,18 @@ test('only people who asked for mail are candidates', () => {
     assert.match(q, /COALESCE\(up\.email_notifications, true\)/);
     assert.match(q, /kind = 'digest'/, 'a second digest in the same week must be impossible');
     assert.match(q, /make_interval\(days => \$1\)/);
+});
+
+test('a run can be held to one inbox until the email is approved', () => {
+    const before = process.env.DIGEST_TEST_ONLY;
+    process.env.DIGEST_TEST_ONLY = ' Aliaksandr@Melnichenka.com , second@example.org ';
+    assert.deepEqual(testOnlyAddresses(), ['aliaksandr@melnichenka.com', 'second@example.org']);
+    process.env.DIGEST_TEST_ONLY = '';
+    assert.deepEqual(testOnlyAddresses(), [], 'empty means everyone who qualifies');
+    if (before === undefined) delete process.env.DIGEST_TEST_ONLY; else process.env.DIGEST_TEST_ONLY = before;
+    // The filter is on the address, and only the allowed ones are sent.
+    assert.match(DIGEST, /const allowed = testOnly\.length === 0/);
+    assert.match(DIGEST, /for \(const d of allowed\)/);
 });
 
 test('the weekly clock is started by the app', () => {

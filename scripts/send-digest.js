@@ -5,6 +5,7 @@
 //   node scripts/send-digest.js --out /tmp/digest    # ... and writes each one as an HTML file
 //   node scripts/send-digest.js --user Valter --out /tmp/digest
 //   node scripts/send-digest.js --send               # really send (the scheduler does this on Sundays)
+//   node scripts/send-digest.js --user astrosander --send --force   # again, ignoring "one a week"
 //
 // A dry run touches nothing: it reads the week and renders, which is also how the design is
 // reviewed in a browser. --send goes through email.js, so it is logged in email_sends and a
@@ -32,7 +33,7 @@ const pool = new Pool({
     const send = flag('send');
     const outDir = value('out');
     const onlyUser = value('user');
-    const { window: w, site, digests } = await runDigest(pool, { dryRun: !send, onlyUser });
+    const { window: w, site, digests, testOnly } = await runDigest(pool, { dryRun: !send, onlyUser, force: flag('force') });
 
     console.log(`week ${w.from.toISOString().slice(0, 10)} → ${w.to.toISOString().slice(0, 10)}`);
     console.log(`site: ${site.counters.solutions} solutions updated, ${site.counters.comments} comments, ` +
@@ -56,6 +57,7 @@ const pool = new Pool({
         }
         console.log(`wrote ${digests.length} preview(s) to ${outDir}`);
     }
+    if (testOnly.length > 0) console.log(`DIGEST_TEST_ONLY: only ${testOnly.join(', ')} can receive one`);
     if (!send) console.log('dry run: nothing was sent (add --send to send)');
 
     await pool.end();
