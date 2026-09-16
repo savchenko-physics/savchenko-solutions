@@ -450,10 +450,11 @@
       <button type="button" class="translation-gap-header" aria-expanded="false" aria-controls="translationGapBody">
         <span class="chapter-toggle">&#9654;</span>
         <span class="translation-gap-title">
-          <%= untranslated.length.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
+          <% var _n = untranslated.length; %>
+          <%= lang === 'ru' ? 'Ещё ' : '' %><%= _n.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
           <%= lang === 'ru'
-              ? 'задач решены на английском и ждут перевода на русский'
-              : 'more are solved in Russian and waiting for an English translation' %>
+              ? ruPlural(_n, 'задача', 'задачи', 'задач') + ' с английским решением, но без русского'
+              : 'more solved in Russian, not yet in English' %>
         </span>
       </button>
       <div class="translation-gap-body" id="translationGapBody">
