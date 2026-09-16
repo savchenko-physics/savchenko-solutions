@@ -17,21 +17,25 @@
 // One run touches the database a handful of times, not once per person: the week's events are
 // collected in four queries and grouped in memory, because almost every account has no news.
 //
-// Timing: Saturdays at 06:12 UTC. Measured, not guessed (2026-09-16). Over 120 days of reader
-// traffic, Saturday 07:00 UTC is the busiest hour of the whole week by a distance: 2,845
-// distinct readers against 1,219 for the next one (Tuesday 18:00), and Saturday morning as a
-// whole draws four times the readers of any other weekday morning. Members, who are the ones
-// who actually get this, show no day preference at all (33 to 36 of them active on every day of
-// the week), so the wider rhythm decides: a summary that lands just before the busiest hour of
-// the week sits at the top of the inbox exactly when this audience sits down with physics, and
-// a Saturday morning leaves the whole weekend to act on it.
+// Timing is measured, not chosen. scripts/digest-best-time.js scores every minute of the week
+// by how much of the audience is on the site over the hours after a send, weighted by how fast
+// this audience opens what we send (60% of opens land in the first hour). On 2026-09-16 over 120
+// days of traffic it answered Saturday 06:48 UTC, and the ten best minutes of the week are all
+// Saturday 06:42 to 06:54, right before the busiest hour this site has (Saturday 07:00 UTC,
+// 2,845 distinct readers against 1,219 for the next one). In local time: 09:48 Moscow and Minsk,
+// 10:48 Baku and Tbilisi, 11:48 Tashkent, Almaty and Bishkek, 08:48 Berlin.
 //
-// 06:12 rather than 06:00 for two reasons. Bulk mail piles up on the hour and the half hour, so
-// an odd minute arrives in a quieter queue; and a distinctive minute makes a digest run obvious
-// in the logs. In local time it is 09:12 in Moscow and Minsk, 10:12 in Baku and Tbilisi, 11:12
-// in Tashkent, Almaty and Bishkek, 08:12 in Berlin.
+// Minutes 0 and 30 are excluded by that script on purpose: every bulk sender releases on the
+// hour and the half hour, and a queue is a worse place to be than a quiet minute.
 //
-// DIGEST=off in the environment stops it without a deploy.
+// The audience will move, so the answer is not frozen in this file: `--apply` writes it to
+// data/digest-schedule.json and the constant below is only the fallback. Re-run the script every
+// few months.
+//
+// It runs twice over: the timer in this process fires at the minute, and a cron on the box runs
+// scripts/send-digest.js --send --if-due every hour as a backstop, in case the app was restarting
+// at that minute. Neither can double-send: a person who has had a digest in the last six days is
+// not a candidate. DIGEST=off in the environment stops both without a deploy.
 
 const fs = require('fs');
 const path = require('path');
@@ -45,16 +49,44 @@ const ORIGIN = process.env.SITE_ORIGIN && /^https?:\/\/[^/\s?#]+$/.test(process.
     ? process.env.SITE_ORIGIN
     : 'https://savchenkosolutions.com';
 
-const SCHEDULE = Object.freeze({
+const SCHEDULE_FILE = path.join(__dirname, 'data', 'digest-schedule.json');
+
+const SCHEDULE_DEFAULTS = {
     dayUtc: 6,        // Saturday
     hourUtc: 6,
-    minuteUtc: 12,    // 06:12 UTC, see the header
+    minuteUtc: 48,    // 06:48 UTC, measured; see the header
     windowDays: 7,
     checkEveryMs: 60 * 1000,
     // A person gets at most one digest a week even if the process restarts inside the hour;
     // this is checked against the email_sends log, not against anything held in memory.
     minDaysBetween: 6,
-});
+};
+
+/**
+ * The slot from data/digest-schedule.json when the script has written one, else the fallback
+ * above. A file that is missing, unreadable or nonsensical is ignored with a line in the log:
+ * a bad measurement must never move the send into the middle of the night or stop it happening.
+ */
+function loadSchedule() {
+    let chosen = null;
+    try {
+        const raw = JSON.parse(fs.readFileSync(SCHEDULE_FILE, 'utf8'));
+        const ok = Number.isInteger(raw.dayUtc) && raw.dayUtc >= 0 && raw.dayUtc <= 6
+            && Number.isInteger(raw.hourUtc) && raw.hourUtc >= 0 && raw.hourUtc <= 23
+            && Number.isInteger(raw.minuteUtc) && raw.minuteUtc >= 0 && raw.minuteUtc <= 59;
+        if (!ok) throw new Error('day, hour or minute out of range');
+        chosen = { dayUtc: raw.dayUtc, hourUtc: raw.hourUtc, minuteUtc: raw.minuteUtc, measuredAt: raw.measuredAt || null };
+    } catch (err) {
+        if (err.code !== 'ENOENT') console.error(`digest: ignoring ${SCHEDULE_FILE} (${err.message})`);
+    }
+    return Object.freeze({
+        ...SCHEDULE_DEFAULTS,
+        ...(chosen || {}),
+        source: chosen ? `data/digest-schedule.json, measured ${chosen.measuredAt}` : 'the fallback in digest.js',
+    });
+}
+
+const SCHEDULE = loadSchedule();
 
 // Off by default; see the header.
 const SEND_TO_DORMANT = false;
@@ -472,8 +504,18 @@ function isDue(now) {
 let timer = null;
 let lastRunKey = null;
 
+function scheduleLabel() {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return `${days[SCHEDULE.dayUtc]} ${String(SCHEDULE.hourUtc).padStart(2, '0')}:${String(SCHEDULE.minuteUtc).padStart(2, '0')} UTC (${SCHEDULE.source})`;
+}
+
 function startScheduler(pool) {
-    if (isOff() || timer) return null;
+    if (isOff()) {
+        console.log('digest: DIGEST=off, the weekly summary is not scheduled');
+        return null;
+    }
+    if (timer) return timer;
+    console.log(`digest: scheduled for ${scheduleLabel()}`);
     const tick = async () => {
         const now = new Date();
         if (!isDue(now)) return;
@@ -491,4 +533,4 @@ function startScheduler(pool) {
     return timer;
 }
 
-module.exports = { runDigest, startScheduler, isDue, shouldSend, filterPersonal, chooseLanguage, avatarUrl, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
+module.exports = { runDigest, startScheduler, isDue, isOff, scheduleLabel, loadSchedule, shouldSend, filterPersonal, chooseLanguage, avatarUrl, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };

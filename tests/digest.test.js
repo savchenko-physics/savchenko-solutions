@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, filterPersonal, chooseLanguage, avatarUrl, isDue, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, filterPersonal, chooseLanguage, avatarUrl, isDue, loadSchedule, scheduleLabel, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
 const { colour, TOKENS, SERIES } = require('../lib/siteColours');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
@@ -324,28 +324,31 @@ test('the site does not mail a thousand dormant accounts by accident', () => {
 test('once a week, at the minute chosen from the traffic, and never twice', () => {
     assert.equal(SCHEDULE.windowDays, 7);
     assert.ok(SCHEDULE.minDaysBetween >= 6 && SCHEDULE.minDaysBetween < SCHEDULE.windowDays);
-    // Saturday 06:12 UTC: 48 minutes before the busiest hour of the week for this audience
-    // (Saturday 07:00 UTC, 2,845 distinct readers over 120 days against 1,219 for the next).
+    // Saturday 06:48 UTC, the answer scripts/digest-best-time.js gives from 120 days of traffic:
+    // twelve minutes before the busiest hour this site has (Saturday 07:00 UTC, 2,845 distinct
+    // readers against 1,219 for the next one), and inside the best ten minutes of the week.
     assert.equal(SCHEDULE.dayUtc, 6, 'Saturday');
     assert.equal(SCHEDULE.hourUtc, 6);
-    assert.equal(SCHEDULE.minuteUtc, 12);
+    assert.equal(SCHEDULE.minuteUtc, 48);
     assert.notEqual(SCHEDULE.minuteUtc, 0, 'bulk mail piles up on the hour');
     assert.notEqual(SCHEDULE.minuteUtc, 30, 'and on the half hour');
     const sendAt = SCHEDULE.hourUtc * 60 + SCHEDULE.minuteUtc;
     assert.ok(sendAt < 7 * 60 && sendAt >= 5 * 60, 'it has to land before the 07:00 UTC peak, not in the night');
+    assert.match(scheduleLabel(), /^Saturday 06:\d\d UTC \(/);
     assert.ok(SCHEDULE.windowDays * 24 >= 7 * 24, 'a week of news must not fall between two digests');
     assert.ok(SCHEDULE.checkEveryMs <= 60 * 1000, 'a minute-precise time needs a minute-precise tick');
 });
 
 test('the run fires at the minute, and still fires if the site was down at that minute', () => {
     const due = (iso) => isDue(new Date(iso));
-    assert.equal(due('2026-09-19T06:11:59Z'), false, 'a minute early is not yet');
-    assert.equal(due('2026-09-19T06:12:00Z'), true, 'Saturday 06:12 UTC');
+    assert.equal(due('2026-09-19T06:47:59Z'), false, 'a minute early is not yet');
+    assert.equal(due('2026-09-19T06:48:00Z'), true, 'Saturday 06:48 UTC');
     assert.equal(due('2026-09-19T09:40:00Z'), true, 'a restart later that day still sends the week');
     assert.equal(due('2026-09-19T23:59:59Z'), true);
     assert.equal(due('2026-09-18T23:59:00Z'), false, 'Friday');
     assert.equal(due('2026-09-20T06:12:00Z'), false, 'Sunday');
     assert.equal(due('2026-09-19T05:00:00Z'), false, 'Saturday, too early');
+    assert.equal(due('2026-09-19T06:12:00Z'), false, 'the old hand-picked minute is not the measured one');
     // Twice in one day is stopped by the day key here and by the per-person week check in SQL.
     assert.match(DIGEST, /if \(lastRunKey === key\) return;/);
     assert.match(DIGEST, /kind = 'digest'/);
@@ -388,9 +391,39 @@ test('a run can be held to one inbox until the email is approved', () => {
     assert.match(DIGEST, /for \(const d of allowed\)/);
 });
 
-test('the weekly clock is started by the app', () => {
+test('the weekly clock is started by the app, with a cron behind it', () => {
     assert.match(INDEX, /digest\.startScheduler\(pool\)/);
     assert.match(DIGEST, /process\.env\.DIGEST/, 'there has to be a way to stop it without a deploy');
+    // The backstop: an hourly cron runs the script, which costs nothing until the slot arrives,
+    // and cannot double-send because a person who had one in the last six days is not a candidate.
+    const cli = read('scripts/send-digest.js');
+    assert.match(cli, /if \(flag\('if-due'\)\)/);
+    assert.ok(cli.indexOf("flag('if-due')") < cli.indexOf('new Pool('), 'the clock is checked before the database is touched');
+    assert.match(cli, /refusing to send/, 'DIGEST=off must stop the cron too');
+});
+
+test('the slot can be re-measured without touching the code, and nonsense is ignored', () => {
+    const fsMod = require('node:fs');
+    const file = path.join(ROOT, 'data', 'digest-schedule.json');
+    const had = fsMod.existsSync(file) ? fsMod.readFileSync(file, 'utf8') : null;
+    try {
+        fsMod.writeFileSync(file, JSON.stringify({ dayUtc: 3, hourUtc: 19, minuteUtc: 7, measuredAt: '2026-09-16T00:00:00Z' }));
+        const measured = loadSchedule();
+        assert.equal(measured.dayUtc, 3);
+        assert.equal(measured.hourUtc, 19);
+        assert.equal(measured.minuteUtc, 7);
+        assert.match(measured.source, /digest-schedule\.json/);
+        // A broken file must never move the send into the night or stop it.
+        fsMod.writeFileSync(file, JSON.stringify({ dayUtc: 9, hourUtc: 99, minuteUtc: -1 }));
+        assert.deepEqual(
+            [loadSchedule().dayUtc, loadSchedule().hourUtc, loadSchedule().minuteUtc],
+            [SCHEDULE.dayUtc, SCHEDULE.hourUtc, SCHEDULE.minuteUtc]
+        );
+        fsMod.writeFileSync(file, 'not json at all');
+        assert.match(loadSchedule().source, /fallback/);
+    } finally {
+        if (had === null) fsMod.rmSync(file, { force: true }); else fsMod.writeFileSync(file, had);
+    }
 });
 
 // ── Must never spam a real person ───────────────────────────────────────────────────────

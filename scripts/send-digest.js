@@ -6,6 +6,10 @@
 //   node scripts/send-digest.js --user Valter --out /tmp/digest
 //   node scripts/send-digest.js --send               # really send (the scheduler does this on Sundays)
 //   node scripts/send-digest.js --user astrosander --send --force   # again, ignoring "one a week"
+//   node scripts/send-digest.js --send --if-due                      # the cron backstop: does
+//                                                                    # nothing unless it is the
+//                                                                    # scheduled minute or later
+//                                                                    # on the scheduled day
 //
 // A dry run touches nothing: it reads the week and renders, which is also how the design is
 // reviewed in a browser. --send goes through email.js, so it is logged in email_sends and a
@@ -14,11 +18,22 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
-const { runDigest } = require('../digest');
+const { runDigest, isDue, isOff, scheduleLabel } = require('../digest');
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(`--${name}`);
 const value = (name) => { const i = args.indexOf(`--${name}`); return i >= 0 ? args[i + 1] : null; };
+
+// The cron runs this every hour; almost every run should cost nothing but a node start, so the
+// clock and the kill switch are checked before the database is touched.
+if (flag('if-due')) {
+    if (isOff()) {
+        console.log('digest: DIGEST=off, nothing to do');
+        process.exit(0);
+    }
+    if (!isDue(new Date())) process.exit(0);
+    console.log(`digest: due (${scheduleLabel()}), checking what is still unsent`);
+}
 
 const pool = new Pool({
     user: process.env.PG_USER,
@@ -31,6 +46,11 @@ const pool = new Pool({
 
 (async () => {
     const send = flag('send');
+    if (send && isOff()) {
+        console.error('digest: DIGEST=off, refusing to send. Unset it in .env to allow sending.');
+        await pool.end();
+        process.exit(1);
+    }
     const outDir = value('out');
     const onlyUser = value('user');
     const { window: w, site, digests, testOnly } = await runDigest(pool, { dryRun: !send, onlyUser, force: flag('force') });
