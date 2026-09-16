@@ -383,9 +383,13 @@ hyphenation and a 1em paragraph indent, as journals set text.
   address has already received (`lib/mailGuard.js`) and logs the send (`email_sends`); a sender
   that goes straight to SES is uncounted, uncapped and invisible.
 - Do NOT mail people per event. Notifications send nothing; `digest.js` collects the week and
-  sends one summary on **Saturday at 06:12 UTC**, to people who had news that week, and only
-  that. The time is measured, not chosen: Saturday 07:00 UTC is the busiest hour of the week for
-  this audience by a factor of two, and bulk mail piles up on the hour.
+  sends one summary on **Saturday at 06:48 UTC**, to people who had news that week, and only
+  that. The slot is measured, not chosen: `scripts/digest-best-time.js` scores every minute of
+  the week by how much of the audience is on the site after a send, weighted by how fast this
+  audience opens mail, and `--apply` writes the winner to `data/digest-schedule.json`, which
+  `digest.js` reads at startup. The app's timer fires at the minute and an hourly cron runs
+  `scripts/send-digest.js --send --if-due` behind it; neither can double-send, because a person
+  who had a digest in the last six days is not a candidate.
   Immediate mail is what an account needs to work (reset, verify, email change). A digest
   carries no images either: mail clients block them, and Gmail fetches through a proxy that
   sends no `Accept-Language`, which botgate answered with 403 until rule 8 (2026-09-16).
