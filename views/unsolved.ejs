@@ -250,6 +250,59 @@
       color: var(--ss-link-hover);
     }
 
+    /* Solved in the other language, waiting for a translation. A separate block with a
+       separate count, because these are not unsolved problems and listing them as such
+       is what made the headline disagree with the grid under it. Closed by default:
+       the 23 problems nobody has written yet are the page's subject. */
+    .translation-gap {
+      margin-top: var(--ss-space-6);
+      border: 1px solid var(--ss-rule);
+      border-radius: var(--ss-radius-lg);
+      overflow: hidden;
+    }
+    .translation-gap-header {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-3);
+      padding: var(--ss-space-3) var(--ss-space-4);
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+      transition: background 100ms ease;
+    }
+    .translation-gap-header:hover {
+      background: var(--ss-surface-alt);
+    }
+    .translation-gap.is-open .chapter-toggle {
+      transform: rotate(90deg);
+    }
+    .translation-gap-title {
+      font-size: var(--ss-fs-14);
+      color: var(--ss-text-secondary);
+    }
+    .translation-gap-body {
+      display: none;
+      padding: 0 var(--ss-space-4) var(--ss-space-4);
+    }
+    .translation-gap.is-open .translation-gap-body {
+      display: block;
+    }
+    .translation-chapter {
+      margin-top: var(--ss-space-5);
+    }
+    .translation-chapter-name {
+      font-size: var(--ss-fs-14);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-text);
+      font-family: var(--ss-font-ui);
+      margin: 0;
+      padding-bottom: var(--ss-space-2);
+      border-bottom: 1px solid var(--ss-rule-soft);
+    }
+
     /* Difficulty heatmap — the same YlOrRd scale as the homepage. The heat-N /
        heat-none / heat-starred colour rules live in design-system.css and only bite
        under body.grid-heat; grid-mode.js drives the toggle and shares its on/off choice
@@ -312,7 +365,7 @@
 
   <div class="unsolved-page">
     <div class="unsolved-header">
-      <h1><%= totalProblems - totalUniqueSolutions %> <%= lang === 'ru' ? 'Нерешённых задач' : 'Unsolved Problems' %></h1>
+      <h1><%= unsolved.length %> <%= lang === 'ru' ? 'Нерешённых задач' : 'Unsolved Problems' %></h1>
       <p><%= lang === 'ru' ? 'Помогите завершить самый полный сборник решений Савченко.' : 'Help complete the most comprehensive Savchenko solution set.' %></p>
     </div>
 
@@ -391,6 +444,40 @@
       </div>
       <% }); %>
     </div>
+
+    <% if (untranslated && untranslated.length > 0) { %>
+    <div class="translation-gap">
+      <button type="button" class="translation-gap-header" aria-expanded="false" aria-controls="translationGapBody">
+        <span class="chapter-toggle">&#9654;</span>
+        <span class="translation-gap-title">
+          <%= untranslated.length.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
+          <%= lang === 'ru'
+              ? 'задач решены на английском и ждут перевода на русский'
+              : 'more are solved in Russian and waiting for an English translation' %>
+        </span>
+      </button>
+      <div class="translation-gap-body" id="translationGapBody">
+        <% translationChapters.forEach(function(ch) { %>
+        <div class="translation-chapter">
+          <h3 class="translation-chapter-name"><%= lang === 'ru' ? 'Глава' : 'Chapter' %> <%= ch.chapterNum %>. <%= ch.title %></h3>
+          <% ch.sections.forEach(function(sec) { %>
+          <div class="section-block">
+            <div class="section-info">
+              <span class="section-name"><%= ch.chapterNum %>.<%= sec.sectionNum %>: <%= sec.title %></span>
+              <span class="section-stats"><%= sec.problems.length %></span>
+            </div>
+            <div class="problem-grid">
+              <% sec.problems.forEach(function(prob) { %>
+              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(prob.problem) %>" class="problem-chip <%= prob.heat ? 'heat-' + prob.heat + (prob.starred ? ' heat-starred' : '') : 'heat-none' %>" title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.problem + (lang === 'ru' ? ' \u00b7 есть английское решение' : ' \u00b7 solved in Russian') + (prob.heat ? (lang === 'ru' ? ' \u00b7 сложность ' : ' \u00b7 difficulty ') + prob.heat + '/9' + (prob.starred ? (lang === 'ru' ? ', отмечена \u2217 Савченко' : ', marked \u2217 by Savchenko') : '') : '') %>"><%= prob.problem %></a>
+              <% }); %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+    <% } %>
   </div>
 
   <%- include('default/modern_footer') %>
@@ -405,6 +492,15 @@
         btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       });
     });
+
+    const translationToggle = document.querySelector('.translation-gap-header');
+    if (translationToggle) {
+      translationToggle.addEventListener('click', function() {
+        const block = translationToggle.closest('.translation-gap');
+        const isOpen = block.classList.toggle('is-open');
+        translationToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+    }
   </script>
 </body>
 </html>

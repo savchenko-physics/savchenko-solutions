@@ -40,6 +40,11 @@ async function getDifficultyByProblem() {
     return map;
 }
 
+// A problem is unsolved when nobody has written it up in *any* language. A problem that
+// exists only in Russian is not unsolved on /en/unsolved — /en/8.2.1 redirects to the
+// Russian solution (post.js) — it is waiting for a translation, and it is counted and
+// listed apart. Until 2026-09-16 both were pushed onto one list called "unsolved", so the
+// page's own headline said 23 above a grid of 1,114 chips.
 async function getUnsolvedProblems(lang = 'en') {
     const { chapters } = await getLanguageData(lang);
     const postsDir = path.join(__dirname, 'posts', lang);
@@ -49,6 +54,7 @@ async function getUnsolvedProblems(lang = 'en') {
     const existingProblems = new Set();
     const otherLangProblems = new Set();
     const unsolvedProblems = [];
+    const untranslatedProblems = [];
 
     // Get list of existing problems in current language
     if (fs.existsSync(postsDir)) {
@@ -82,17 +88,21 @@ async function getUnsolvedProblems(lang = 'en') {
             for (let problemNum = 1; problemNum <= section.maximum; problemNum++) {
                 const problemName = `${chapterNum}.${sectionNum}.${problemNum}`;
 
-                if (!existingProblems.has(problemName)) {
-                    unsolvedProblems.push({
-                        problem: problemName,
-                        chapter: chapter.title,
-                        section: section.title,
-                        chapterNum,
-                        sectionNum,
-                        problemNum,
-                        maximum: section.maximum,
-                        existsInOtherLang: otherLangProblems.has(problemName)
-                    });
+                if (existingProblems.has(problemName)) continue;
+
+                const entry = {
+                    problem: problemName,
+                    chapter: chapter.title,
+                    section: section.title,
+                    chapterNum,
+                    sectionNum,
+                    problemNum,
+                    maximum: section.maximum
+                };
+                if (otherLangProblems.has(problemName)) {
+                    untranslatedProblems.push(entry);
+                } else {
+                    unsolvedProblems.push(entry);
                 }
             }
         });
@@ -100,10 +110,10 @@ async function getUnsolvedProblems(lang = 'en') {
 
     return {
         unsolvedProblems,
+        untranslatedProblems,
         allSolvedProblems,
         currentLangSolutions: existingProblems.size,
-        otherLangSolutions: otherLangProblems.size,
-        totalUniqueSolutions: allSolvedProblems.size
+        otherLangSolutions: otherLangProblems.size
     };
 }
 
@@ -168,22 +178,30 @@ async function loadUnsolvedPagePayload(lang) {
     ]);
     const totalProblems = computeTotalProblems(langData.chapters);
     const unsolved = unsolvedData.unsolvedProblems;
+    const untranslated = unsolvedData.untranslatedProblems;
+    // Solved = written up in either language, the same set the homepage counts as
+    // totalUniqueSolutions. One source, so the headline and the list cannot disagree.
     const solvedProblems = Math.max(0, totalProblems - unsolved.length);
     return {
         unsolved,
+        untranslated,
         chapters: langData.chapters,
         allSolvedProblems: unsolvedData.allSolvedProblems,
         totalProblems,
         solvedProblems,
         currentLangSolutions: unsolvedData.currentLangSolutions,
         otherLangSolutions: unsolvedData.otherLangSolutions,
-        totalUniqueSolutions: unsolvedData.totalUniqueSolutions
+        // The homepage's "N solutions" and this page's "N unsolved" are the two halves of
+        // one count, so they are read off one number. Counting the files instead would
+        // drift the moment posts/ held a name the book does not have (a legacy "04.1.3"
+        // both adds a solution here and leaves 4.1.3 on the unsolved list).
+        totalUniqueSolutions: solvedProblems
     };
 }
 
 /** Progress fields only (no unsolved array reference in the returned object). */
 async function getSolutionProgressStats(lang) {
-    const { unsolved, chapters, allSolvedProblems, ...stats } = await loadUnsolvedPagePayload(lang);
+    const { unsolved, untranslated, chapters, allSolvedProblems, ...stats } = await loadUnsolvedPagePayload(lang);
     return stats;
 }
 
@@ -201,24 +219,28 @@ async function renderUnsolvedList(req, res) {
         i18n.setLocale(res, lang);
 
         const payload = await loadUnsolvedPagePayload(lang);
-        const { unsolved, chapters, allSolvedProblems, ...stats } = payload;
+        const { unsolved, untranslated, chapters, allSolvedProblems, ...stats } = payload;
 
         // Sort problems by chapter, section, and problem number
-        unsolved.sort((a, b) => {
+        const byNumber = (a, b) => {
             if (a.chapterNum !== b.chapterNum) return a.chapterNum - b.chapterNum;
             if (a.sectionNum !== b.sectionNum) return a.sectionNum - b.sectionNum;
             return a.problemNum - b.problemNum;
-        });
+        };
+        unsolved.sort(byNumber);
+        untranslated.sort(byNumber);
 
-        // Attach difficulty so each unsolved chip can be coloured on the homepage's
-        // heatmap scale. chapterData below reuses these same objects (via .filter), so
+        // Attach difficulty so each chip can be coloured on the homepage's heatmap
+        // scale. chapterData below reuses these same objects (via .filter), so
         // enriching here is enough for the sections too.
         const diffByProblem = await getDifficultyByProblem();
-        unsolved.forEach(p => {
+        const addHeat = (p) => {
             const d = diffByProblem.get(p.problem);
             p.heat = d ? d.bucket : 0;
             p.starred = d ? d.starred : false;
-        });
+        };
+        unsolved.forEach(addHeat);
+        untranslated.forEach(addHeat);
 
         // Build chapter-level aggregation for accordion
         const chapterData = [];
@@ -261,6 +283,27 @@ async function renderUnsolvedList(req, res) {
             }
         });
 
+        // The same grouping for the problems that only need translating, kept in its own
+        // block so neither list can be mistaken for the other. No progress bars here:
+        // a chapter's progress is how much of it is solved, and it is stated once, above.
+        const translationChapters = [];
+        chapters.forEach((chapter, chapterIndex) => {
+            const chapterNum = chapterIndex + 1;
+            const sections = [];
+            chapter.sections.forEach((section, sectionIndex) => {
+                const sectionNum = sectionIndex + 1;
+                const problems = untranslated.filter(
+                    p => p.chapterNum === chapterNum && p.sectionNum === sectionNum
+                );
+                if (problems.length > 0) {
+                    sections.push({ title: section.title, sectionNum, problems });
+                }
+            });
+            if (sections.length > 0) {
+                translationChapters.push({ title: chapter.title, chapterNum, sections });
+            }
+        });
+
         // Fetch most wanted problems
         const mostWanted = await getMostWantedProblems(allSolvedProblems, 10);
 
@@ -279,7 +322,10 @@ async function renderUnsolvedList(req, res) {
 
         res.render('unsolved', {
             unsolved,
+            untranslated,
             chapterData,
+            translationChapters,
+            otherLang: lang === 'en' ? 'ru' : 'en',
             mostWanted: mostWantedEnriched,
             hasDifficulty: diffByProblem.size > 0,
             lang,
