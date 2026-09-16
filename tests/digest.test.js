@@ -252,6 +252,12 @@ test('the email writes no interpunct, no dash, no colon, no semicolon and no bar
 
 test('the language is chosen from what is known about the person, not from where the site is', () => {
     // Measured on the real accounts (2026-09-16), which is what set the order.
+    // Valter: 73 Russian comments against 9 English, but 390 English contributions against 208
+    // Russian, because he translates solutions. He is a Russian speaker.
+    assert.equal(chooseLanguage({ commentRu: 73, commentEn: 9, wroteRu: 208, wroteEn: 390 }), 'ru', 'comments outrank translations');
+    assert.equal(chooseLanguage({ commentRu: 0, commentEn: 8, wroteRu: 0, wroteEn: 236 }), 'en');
+    // One comment is not evidence, so the whole body of writing decides instead.
+    assert.equal(chooseLanguage({ commentEn: 1, wroteRu: 40, wroteEn: 2 }), 'ru');
     assert.equal(chooseLanguage({ wroteEn: 213, country: 'Cuba', ruChatUnmuted: false }), 'en', 'writes English in Cuba');
     assert.equal(chooseLanguage({ country: 'Cuba', ruChatUnmuted: false }), 'en', 'new account in Cuba');
     assert.equal(chooseLanguage({ wroteRu: 4, country: 'Lithuania', ruChatUnmuted: true }), 'ru', 'writes Russian in Lithuania');

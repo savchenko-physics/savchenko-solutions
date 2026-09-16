@@ -100,12 +100,18 @@ const RUSSIAN_SPEAKING = new Set(['RU', 'BY', 'KZ', 'KG', 'UZ', 'TJ', 'TM', 'UA'
 
 /**
  * Which language to write to somebody in, best evidence first:
- *   1. what they have written on the site. Somebody who writes Russian solutions reads Russian,
- *      wherever they live;
- *   2. the page they signed up on, which is the community chat they kept unmuted. It is a
+ *   1. the language of their comments. A comment is a person talking to people, so it is the
+ *      clearest thing they have ever said about which language they use;
+ *   2. everything they have written, comments and solutions together;
+ *   3. the page they signed up on, which is the community chat they kept unmuted. It is a
  *      choice they made, unlike where they happen to be;
- *   3. the country on their profile, if there is somehow no chat membership;
- *   4. English, which is the language this audience is most likely to share.
+ *   4. the country on their profile, if there is somehow no chat membership;
+ *   5. English, which is the language this audience is most likely to share.
+ *
+ * Comments come first because a solution does not follow its writer's language: Valter has 390
+ * English contributions against 208 Russian, which made an earlier version of this address him
+ * in English, while his 73 Russian comments against 9 English say plainly that he is a Russian
+ * speaker who translates solutions (found 2026-09-16 by reading a dry run).
  *
  * The order of 2 and 3 was decided on the real accounts (2026-09-16). Country first would send
  * English to the six Russian speakers abroad who signed up in Russian and write Russian (two in
@@ -116,7 +122,8 @@ const RUSSIAN_SPEAKING = new Set(['RU', 'BY', 'KZ', 'KG', 'UZ', 'TJ', 'TM', 'UA'
  * user_preferences.preferred_language is not used: 19 rows for a thousand accounts, all of them
  * "en", which is a default nobody chose.
  */
-function chooseLanguage({ wroteRu = 0, wroteEn = 0, country = null, ruChatUnmuted = null } = {}) {
+function chooseLanguage({ commentRu = 0, commentEn = 0, wroteRu = 0, wroteEn = 0, country = null, ruChatUnmuted = null } = {}) {
+    if (commentRu + commentEn >= 2) return commentRu > commentEn ? 'ru' : 'en';
     if (wroteRu + wroteEn >= 2) return wroteRu > wroteEn ? 'ru' : 'en';
     if (ruChatUnmuted === true) return 'ru';
     if (ruChatUnmuted === false) return 'en';
@@ -344,13 +351,16 @@ async function candidates(pool, { ignoreLastSent = false } = {}) {
         `WITH wrote AS (
              SELECT user_id,
                     count(*) FILTER (WHERE language = 'ru')::int AS ru,
-                    count(*) FILTER (WHERE language = 'en')::int AS en
-               FROM (SELECT user_id, language FROM contributions WHERE user_id IS NOT NULL
+                    count(*) FILTER (WHERE language = 'en')::int AS en,
+                    count(*) FILTER (WHERE language = 'ru' AND src = 'comment')::int AS comment_ru,
+                    count(*) FILTER (WHERE language = 'en' AND src = 'comment')::int AS comment_en
+               FROM (SELECT user_id, language, 'contribution' AS src FROM contributions WHERE user_id IS NOT NULL
                      UNION ALL
-                     SELECT user_id, language FROM solution_comments WHERE user_id IS NOT NULL AND is_deleted = false) x
+                     SELECT user_id, language, 'comment' FROM solution_comments WHERE user_id IS NOT NULL AND is_deleted = false) x
               GROUP BY 1)
          SELECT u.id, u.username, u.email, u.last_seen_at, u.country_location, up.notification_settings,
                 COALESCE(w.ru, 0) AS wrote_ru, COALESCE(w.en, 0) AS wrote_en,
+                COALESCE(w.comment_ru, 0) AS comment_ru, COALESCE(w.comment_en, 0) AS comment_en,
                 (ru.muted IS FALSE) AS ru_chat_unmuted
            FROM users u
            LEFT JOIN user_preferences up ON up.user_id = u.id
@@ -368,6 +378,8 @@ async function candidates(pool, { ignoreLastSent = false } = {}) {
     return rows.map((r) => ({
         ...r,
         lang: chooseLanguage({
+            commentRu: r.comment_ru,
+            commentEn: r.comment_en,
             wroteRu: r.wrote_ru,
             wroteEn: r.wrote_en,
             country: r.country_location,
