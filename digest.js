@@ -26,6 +26,7 @@ const { renderDigest } = require('./lib/digestRender');
 const { sendEmail } = require('./email');
 const { tokenFor } = require('./unsubscribe');
 const { getMostWantedProblems } = require('./unsolved');
+const { countryCodeForName } = require('./lib/countries');
 
 const ORIGIN = process.env.SITE_ORIGIN && /^https?:\/\/[^/\s?#]+$/.test(process.env.SITE_ORIGIN)
     ? process.env.SITE_ORIGIN
@@ -44,6 +45,39 @@ const SCHEDULE = Object.freeze({
 // Off by default; see the header.
 const SEND_TO_DORMANT = false;
 const DORMANT_DAYS = 14;
+
+// Where Russian is a working language for physics. Not "where Russian is spoken at all": the
+// point is to decide what a stranger would rather read. The Baltic states are out on purpose,
+// and so is everywhere else — five accounts on this site are in Cuba, and a summary in Russian
+// is no use to them (the owner's rule, 2026-09-16).
+const RUSSIAN_SPEAKING = new Set(['RU', 'BY', 'KZ', 'KG', 'UZ', 'TJ', 'TM', 'UA', 'AM', 'AZ', 'GE', 'MD']);
+
+/**
+ * Which language to write to somebody in, best evidence first:
+ *   1. what they have written on the site. Somebody who writes Russian solutions reads Russian,
+ *      wherever they live;
+ *   2. the page they signed up on, which is the community chat they kept unmuted. It is a
+ *      choice they made, unlike where they happen to be;
+ *   3. the country on their profile, if there is somehow no chat membership;
+ *   4. English, which is the language this audience is most likely to share.
+ *
+ * The order of 2 and 3 was decided on the real accounts (2026-09-16). Country first would send
+ * English to the six Russian speakers abroad who signed up in Russian and write Russian (two in
+ * Germany, two in Lithuania, one in Poland, one in Vietnam). Country first protects nobody in
+ * exchange: all five accounts in Cuba signed up in English and have written between 10 and 213
+ * English contributions, so rules 1 and 2 already answer English for every one of them.
+ *
+ * user_preferences.preferred_language is not used: 19 rows for a thousand accounts, all of them
+ * "en", which is a default nobody chose.
+ */
+function chooseLanguage({ wroteRu = 0, wroteEn = 0, country = null, ruChatUnmuted = null } = {}) {
+    if (wroteRu + wroteEn >= 2) return wroteRu > wroteEn ? 'ru' : 'en';
+    if (ruChatUnmuted === true) return 'ru';
+    if (ruChatUnmuted === false) return 'en';
+    const code = country ? countryCodeForName(country) : null;
+    if (code) return RUSSIAN_SPEAKING.has(code) ? 'ru' : 'en';
+    return 'en';
+}
 
 // Gentle on SES and on the database: a short pause between sends.
 const SEND_GAP_MS = 400;
@@ -241,20 +275,26 @@ async function collectPersonal(pool, { from, to }) {
 
 /**
  * Who may be written to at all: a verified address, email notifications on, and no digest in
- * the last few days. The language is the community chat they kept unmuted at signup, which is
- * the only language signal every account has (user_preferences has 19 rows for a thousand
- * accounts, and every one of them says "en").
+ * the last few days. The row also carries the three language signals chooseLanguage() weighs.
  */
 async function candidates(pool, { ignoreLastSent = false } = {}) {
     const { rows } = await pool.query(
-        `SELECT u.id, u.username, u.email, u.last_seen_at,
-                CASE WHEN ru.muted IS FALSE THEN 'ru' WHEN en.muted IS FALSE THEN 'en' ELSE 'ru' END AS lang
+        `WITH wrote AS (
+             SELECT user_id,
+                    count(*) FILTER (WHERE language = 'ru')::int AS ru,
+                    count(*) FILTER (WHERE language = 'en')::int AS en
+               FROM (SELECT user_id, language FROM contributions WHERE user_id IS NOT NULL
+                     UNION ALL
+                     SELECT user_id, language FROM solution_comments WHERE user_id IS NOT NULL AND is_deleted = false) x
+              GROUP BY 1)
+         SELECT u.id, u.username, u.email, u.last_seen_at, u.country_location,
+                COALESCE(w.ru, 0) AS wrote_ru, COALESCE(w.en, 0) AS wrote_en,
+                (ru.muted IS FALSE) AS ru_chat_unmuted
            FROM users u
            LEFT JOIN user_preferences up ON up.user_id = u.id
+           LEFT JOIN wrote w ON w.user_id = u.id
            LEFT JOIN conversation_members ru ON ru.user_id = u.id
                 AND ru.conversation_id = (SELECT id FROM conversations WHERE community_lang = 'ru' LIMIT 1)
-           LEFT JOIN conversation_members en ON en.user_id = u.id
-                AND en.conversation_id = (SELECT id FROM conversations WHERE community_lang = 'en' LIMIT 1)
           WHERE u.email IS NOT NULL AND u.email <> '' AND u.email_verified
             AND COALESCE(up.email_notifications, true)
             AND ($2 OR NOT EXISTS (
@@ -263,7 +303,17 @@ async function candidates(pool, { ignoreLastSent = false } = {}) {
                    AND e.created_at > NOW() - make_interval(days => $1)))`,
         [SCHEDULE.minDaysBetween, ignoreLastSent]
     );
-    return rows;
+    return rows.map((r) => ({
+        ...r,
+        lang: chooseLanguage({
+            wroteRu: r.wrote_ru,
+            wroteEn: r.wrote_en,
+            country: r.country_location,
+            // null when the account is in neither community chat, which is what makes the
+            // country worth asking about at all.
+            ruChatUnmuted: typeof r.ru_chat_unmuted === 'boolean' ? r.ru_chat_unmuted : null,
+        }),
+    }));
 }
 
 /** Nothing personal and no reason to write: skip. Pure, so tests/digest.test.js can check it. */
@@ -381,4 +431,4 @@ function startScheduler(pool) {
     return timer;
 }
 
-module.exports = { runDigest, startScheduler, shouldSend, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
+module.exports = { runDigest, startScheduler, shouldSend, chooseLanguage, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };

@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, chooseLanguage, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
 const ROOT = path.join(__dirname, '..');
@@ -131,7 +131,8 @@ test('long lists are cut to what an email can carry', () => {
         wanted: many(10, (i) => ({ problem: `4.4.${i}`, views: 10, url: `${ORIGIN}/ru/4.4.${i}` })),
     }));
     const count = (re) => (mail.html.match(re) || []).length;
-    assert.equal(count(/Задача 1\.1\./g), 6);
+    // A reply reads "Valter ответил вам в задаче 7.2.10", so count the links, not the label.
+    assert.equal(count(/href="[^"]*\/1\.1\.\d+"/g), 6);
     assert.equal(count(/Задача 2\.2\.\d+<\/a>/g), 4);
     assert.equal(count(/Задача 3\.3\./g), 8);
     assert.equal(count(/Задача 4\.4\./g), 3);
@@ -190,10 +191,44 @@ test('the letter in the circle is the first letter of the name', () => {
 });
 
 test('the period reads naturally in both languages, inside a month and across two', () => {
-    assert.equal(periodLabel('2026-09-09T06:00:00Z', '2026-09-16T06:00:00Z', 'ru'), '9 – 16 сентября');
-    assert.equal(periodLabel('2026-09-09T06:00:00Z', '2026-09-16T06:00:00Z', 'en'), 'September 9 – 16');
-    assert.equal(periodLabel('2026-08-30T06:00:00Z', '2026-09-06T06:00:00Z', 'ru'), '30 августа – 6 сентября');
-    assert.equal(periodLabel('2026-08-30T06:00:00Z', '2026-09-06T06:00:00Z', 'en'), 'August 30 – September 6');
+    assert.equal(periodLabel('2026-09-09T06:00:00Z', '2026-09-16T06:00:00Z', 'ru'), 'с 9 по 16 сентября');
+    assert.equal(periodLabel('2026-09-09T06:00:00Z', '2026-09-16T06:00:00Z', 'en'), '9 to 16 September');
+    assert.equal(periodLabel('2026-08-30T06:00:00Z', '2026-09-06T06:00:00Z', 'ru'), 'с 30 августа по 6 сентября');
+    assert.equal(periodLabel('2026-08-30T06:00:00Z', '2026-09-06T06:00:00Z', 'en'), '30 August to 6 September');
+});
+
+test('the email writes no interpunct, no dash, no colon and no semicolon', () => {
+    // The owner's punctuation rule, applied to every word this file writes. What a person typed
+    // is left alone: an excerpt is their sentence, and repunctuating it misquotes them.
+    const banned = /[·—–:;]/;
+    for (const lang of ['ru', 'en']) {
+        const mail = renderDigest(base({ lang }));
+        const visible = mail.html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+        assert.doesNotMatch(visible, banned, `${lang} html: ${(visible.match(banned) || [])[0]}`);
+        const text = mail.text.split('\n').filter((l) => !l.includes('http')).join(' ');
+        assert.doesNotMatch(text, banned, `${lang} text`);
+        assert.doesNotMatch(mail.subject, banned, `${lang} subject`);
+    }
+});
+
+test('the language is chosen from what is known about the person, not from where the site is', () => {
+    // Measured on the real accounts (2026-09-16), which is what set the order.
+    assert.equal(chooseLanguage({ wroteEn: 213, country: 'Cuba', ruChatUnmuted: false }), 'en', 'writes English in Cuba');
+    assert.equal(chooseLanguage({ country: 'Cuba', ruChatUnmuted: false }), 'en', 'new account in Cuba');
+    assert.equal(chooseLanguage({ wroteRu: 4, country: 'Lithuania', ruChatUnmuted: true }), 'ru', 'writes Russian in Lithuania');
+    assert.equal(chooseLanguage({ wroteRu: 1, country: 'Germany', ruChatUnmuted: true }), 'ru', 'signed up in Russian abroad');
+    assert.equal(chooseLanguage({ country: 'Kazakhstan', ruChatUnmuted: true }), 'ru');
+    // Writing outweighs the page they signed up on.
+    assert.equal(chooseLanguage({ wroteEn: 9, wroteRu: 1, ruChatUnmuted: true }), 'en');
+    assert.equal(chooseLanguage({ wroteRu: 9, wroteEn: 1, ruChatUnmuted: false }), 'ru');
+    // One item is not evidence; two are.
+    assert.equal(chooseLanguage({ wroteRu: 1, ruChatUnmuted: false }), 'en');
+    assert.equal(chooseLanguage({ wroteRu: 2, ruChatUnmuted: false }), 'ru');
+    // The country only speaks when nothing else does.
+    assert.equal(chooseLanguage({ country: 'Russia', ruChatUnmuted: null }), 'ru');
+    assert.equal(chooseLanguage({ country: 'Brazil', ruChatUnmuted: null }), 'en');
+    assert.equal(chooseLanguage({ country: 'Nowhere at all', ruChatUnmuted: null }), 'en');
+    assert.equal(chooseLanguage({}), 'en', 'English when nothing is known');
 });
 
 test('the two languages say the same things', () => {
@@ -247,7 +282,7 @@ test('the digest goes out through email.js, logged, counted and one-click unsubs
 });
 
 test('only people who asked for mail are candidates', () => {
-    const q = DIGEST.slice(DIGEST.indexOf('async function candidates('), DIGEST.indexOf('function shouldSend('));
+    const q = DIGEST.slice(DIGEST.indexOf('async function candidates('), DIGEST.indexOf('/** Nothing personal'));
     assert.match(q, /u\.email_verified/);
     assert.match(q, /COALESCE\(up\.email_notifications, true\)/);
     assert.match(q, /kind = 'digest'/, 'a second digest in the same week must be impossible');
