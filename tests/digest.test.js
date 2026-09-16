@@ -197,10 +197,10 @@ test('the period reads naturally in both languages, inside a month and across tw
     assert.equal(periodLabel('2026-08-30T06:00:00Z', '2026-09-06T06:00:00Z', 'en'), '30 August to 6 September');
 });
 
-test('the email writes no interpunct, no dash, no colon and no semicolon', () => {
+test('the email writes no interpunct, no dash, no colon, no semicolon and no bar', () => {
     // The owner's punctuation rule, applied to every word this file writes. What a person typed
     // is left alone: an excerpt is their sentence, and repunctuating it misquotes them.
-    const banned = /[·—–:;]/;
+    const banned = /[·—–:;|]/;
     for (const lang of ['ru', 'en']) {
         const mail = renderDigest(base({ lang }));
         const visible = mail.html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
