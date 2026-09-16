@@ -21,7 +21,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { renderDigest, excerpt, initial, periodLabel, copyFor, COPY } = require('../lib/digestRender');
-const { shouldSend, chooseLanguage, avatarUrl, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
+const { shouldSend, filterPersonal, chooseLanguage, avatarUrl, testOnlyAddresses, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS } = require('../digest');
 const { colour, TOKENS, SERIES } = require('../lib/siteColours');
 const { KINDS, isCapped } = require('../lib/mailGuard');
 
@@ -138,6 +138,7 @@ test('the unsubscribe and the settings link are in both bodies', () => {
     for (const body of [mail.html, mail.text]) {
         assert.ok(body.includes('/unsubscribe?u=28'), 'unsubscribe link missing');
         assert.ok(body.includes('/ru/settings'), 'settings link missing');
+        assert.ok(body.includes('tab=privacy') || base().settingsUrl.includes('/ru/settings'), 'the link should reach the switch');
     }
 });
 
@@ -283,6 +284,34 @@ test('news about you is the reason to write; an empty week is not', () => {
     assert.equal(shouldSend({ hasPersonalNews: true, siteHasNews: false, daysSinceSeen: 0 }), true);
     assert.equal(shouldSend({ hasPersonalNews: false, siteHasNews: true, daysSinceSeen: 365 }), SEND_TO_DORMANT);
     assert.equal(shouldSend({ hasPersonalNews: false, siteHasNews: false, daysSinceSeen: 365 }), false);
+});
+
+test('the switches on the settings page decide what the digest may mention', () => {
+    // Until 2026-09-16 they only silenced the bell, because the email was sent per event and
+    // read them on the way out. The digest reads the source tables, so it asks the same thing.
+    const all = { replies: [{ a: 1 }], onYourSolutions: [{ a: 2 }], followers: [{ a: 3 }], likes: 5 };
+    assert.deepEqual(filterPersonal(all, null), all, 'no preferences row means everything');
+    assert.deepEqual(filterPersonal(all, {}), all, 'a missing key means yes');
+    assert.deepEqual(filterPersonal(all, { new_follower: false }).followers, []);
+    assert.equal(filterPersonal(all, { solution_liked: false }).likes, 0);
+    assert.deepEqual(filterPersonal(all, { reply_to_comment: false }).replies, []);
+    assert.deepEqual(filterPersonal(all, { comment_on_solution: false }).onYourSolutions, []);
+    const nothing = filterPersonal(all, { reply_to_comment: false, comment_on_solution: false, new_follower: false, solution_liked: false });
+    assert.deepEqual(nothing, { replies: [], onYourSolutions: [], followers: [], likes: 0 });
+    // Everything off means no personal news, which means no email at all that week.
+    const has = nothing.replies.length + nothing.onYourSolutions.length + nothing.followers.length + (nothing.likes > 0 ? 1 : 0);
+    assert.equal(shouldSend({ hasPersonalNews: has > 0, siteHasNews: true, daysSinceSeen: 1 }), false);
+    assert.match(DIGEST, /up\.notification_settings/, 'the preferences have to be selected to be read');
+});
+
+test('the settings link in the footer opens the pane that holds the switch', () => {
+    // "настройки писем" pointed at /ru/settings, which always opens the profile tab, so the
+    // reader saw no email setting at all (the owner, 2026-09-16).
+    assert.match(DIGEST, /settings\?tab=privacy/);
+    const settingsUrl = `${ORIGIN}/ru/settings?tab=privacy`;
+    const mail = renderDigest(base({ settingsUrl }));
+    assert.ok(mail.html.includes(settingsUrl));
+    assert.ok(mail.text.includes(settingsUrl));
 });
 
 test('the site does not mail a thousand dormant accounts by accident', () => {

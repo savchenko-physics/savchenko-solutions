@@ -303,7 +303,7 @@ async function candidates(pool, { ignoreLastSent = false } = {}) {
                      UNION ALL
                      SELECT user_id, language FROM solution_comments WHERE user_id IS NOT NULL AND is_deleted = false) x
               GROUP BY 1)
-         SELECT u.id, u.username, u.email, u.last_seen_at, u.country_location,
+         SELECT u.id, u.username, u.email, u.last_seen_at, u.country_location, up.notification_settings,
                 COALESCE(w.ru, 0) AS wrote_ru, COALESCE(w.en, 0) AS wrote_en,
                 (ru.muted IS FALSE) AS ru_chat_unmuted
            FROM users u
@@ -332,6 +332,23 @@ async function candidates(pool, { ignoreLastSent = false } = {}) {
     }));
 }
 
+/**
+ * What the person asked to hear about, from the switches on the settings page (the privacy tab
+ * holds them). Before 2026-09-16 those switches only silenced the bell, because the email was
+ * sent per event and checked them on its way out; now the digest is built from the source
+ * tables, so it has to ask the same question itself. A missing row or a missing key means yes,
+ * exactly as notifications.js reads it.
+ */
+function filterPersonal(personal, settings) {
+    const on = (type) => !settings || settings[type] !== false;
+    return {
+        replies: on('reply_to_comment') ? personal.replies : [],
+        onYourSolutions: on('comment_on_solution') ? personal.onYourSolutions : [],
+        followers: on('new_follower') ? personal.followers : [],
+        likes: on('solution_liked') ? personal.likes : 0,
+    };
+}
+
 /** Nothing personal and no reason to write: skip. Pure, so tests/digest.test.js can check it. */
 function shouldSend({ hasPersonalNews, siteHasNews, daysSinceSeen }) {
     if (hasPersonalNews) return true;
@@ -344,7 +361,8 @@ function digestData(user, site, personal, { from, to }) {
         lang: user.lang,
         origin: ORIGIN,
         siteUrl: `${ORIGIN}/${user.lang}`,
-        settingsUrl: `${ORIGIN}/${user.lang}/settings`,
+        // Straight to the pane that holds the switch, not to the page's first tab.
+        settingsUrl: `${ORIGIN}/${user.lang}/settings?tab=privacy`,
         unsubscribeUrl: `${ORIGIN}/unsubscribe?u=${user.id}&t=${tokenFor(user.id)}`,
         username: user.username,
         period: { fromISO: from.toISOString(), toISO: to.toISOString() },
@@ -379,7 +397,7 @@ async function runDigest(pool, { dryRun = true, onlyUser = null, force = false, 
     const digests = [];
     for (const user of people) {
         if (onlyUser && user.username !== onlyUser) continue;
-        const personal = personalByUser.get(user.id) || EMPTY;
+        const personal = filterPersonal(personalByUser.get(user.id) || EMPTY, user.notification_settings);
         const hasPersonalNews = personal.replies.length + personal.onYourSolutions.length
             + personal.followers.length + (personal.likes > 0 ? 1 : 0) > 0;
         const daysSinceSeen = user.last_seen_at ? (to - new Date(user.last_seen_at)) / 86400e3 : null;
@@ -447,4 +465,4 @@ function startScheduler(pool) {
     return timer;
 }
 
-module.exports = { runDigest, startScheduler, shouldSend, chooseLanguage, avatarUrl, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
+module.exports = { runDigest, startScheduler, shouldSend, filterPersonal, chooseLanguage, avatarUrl, testOnlyAddresses, collectSite, collectPersonal, candidates, SCHEDULE, SEND_TO_DORMANT, DORMANT_DAYS, ORIGIN };
