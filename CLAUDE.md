@@ -157,6 +157,14 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   `accountRecovery.js`, and mail only ever goes to an address already on an account. **Never
   send recovery mail from anywhere else**; before 2026-09-15 `/recover-account` emailed any
   address typed into it, with no rate limit
+- `email_sends` — one row per email the site attempts (migration 056), with its kind, the
+  thread it was about, and `sent` / `failed` / `suppressed`. It answers "how many emails did we
+  send, and to whom" in one query, and it is what the limits count: an address gets at most
+  `LIMITS.perAddressPerHour` / `perAddressPerDay` (`lib/mailGuard.js`), a notification about one
+  thread is not repeated within the hour, and a follower is announced once a month. Recovery
+  and signup mail are exempt from the ceiling on purpose. On 2026-09-16 a follow/unfollow
+  toggle put ten identical emails in one inbox in 27 seconds; replayed against the two months
+  before the fix, 233 notification emails become 142
 
 ## Security — open issues
 1. **No CSRF protection anywhere.** Zero occurrences of `csrf` outside `node_modules`. The
@@ -369,6 +377,9 @@ hyphenation and a 1em paragraph indent, as journals set text.
 - Do NOT add new npm dependencies unless absolutely necessary. Check if vanilla JS or an existing dependency can do the job.
 - Do NOT modify the database schema without documenting the migration in `sql/migrations/`.
 - Do NOT expose internal IPs, emails, or database credentials in client-side code.
+- Do NOT send email except through `email.js`. It is the only place that counts what an
+  address has already received (`lib/mailGuard.js`) and logs the send (`email_sends`); a sender
+  that goes straight to SES is uncounted, uncapped and invisible.
 - Do NOT use `res.send()` for HTML pages. Use `res.render()` with EJS templates.
 - Do NOT add social media features (stories, reels, feeds). This is an academic tool.
 - Do NOT add AI features (chatbots, auto-generated solutions). Every solution must be
