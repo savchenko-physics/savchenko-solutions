@@ -70,7 +70,15 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   `lib/lastProblem.js`, tables from migration 054. It opened with a seed (`scripts/seed-last-problem.js
   --dry-run|--apply|--revert <problem>`): Laplace's demon, a house trader with no account, spread 800 ħ over a
   survival model's top ten, and the two bets Valter and emixter named in the chat. `LAST_PROBLEM=off` plus a
-  restart takes it off the site. `tests/last-problem.test.js`.
+  restart takes it off the site. `tests/last-problem.test.js`. Since 2026-09-18, from three days of play (14 of
+  32 solved by five people, five traders, nobody able to afford a reaction): whoever first posts a real
+  solution of a market problem gets `SOLVER_BOUNTY` (150 ħ; `payBounties` in the sync, ledger `bounty`
+  `solved:<tick>`, back-paid for the first 14); the market is held at `MARKET_DEPTH` 1000 ħ of liquidity after
+  every solve (`deepen`: b and every q times one factor, so no price moves); reactions cost 1100 to 1800. The
+  demon's forecast is `data/lp-forecast.json`, from `scripts/last-problem-research.js` (on the server,
+  read-only) and `scripts/last-problem-forecast.py` (the weekly hazard model; the buy form shows each
+  problem's chance of being solved within 7 days), and `scripts/last-problem-demon.js --dry-run|--apply`
+  trades the demon towards its fair weights (`rebalancePlan`).
 - **2,007, the founder's year** (`lib/founderYear.js`, 2026-09-18). emixter's birth-year challenge in the chats
   says whoever was born in the year the solved count reaches solves the next problem. While the count (the
   homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423 to everyone but

@@ -18,7 +18,7 @@ const COPY = {
 
         welcomeTitle: 'Ваш стартовый баланс',
         welcomeClaim: 'Забрать',
-        welcomeNote: 'Вкладывайте кванты в задачи, которые решат позже других. Каждое решение другой задачи приносит вам проценты. Кванты игрушечные, а реакции в чате стоят больше стартовой тысячи, так что достаются тем, кто заработал на прогнозах.',
+        welcomeNote: 'Вкладывайте кванты в задачи, которые решат позже других, каждое решение другой задачи приносит вам проценты. А за своё решение задачи из списка вы получите премию {bounty} ħ. Кванты игрушечные, а реакции в чате стоят больше стартовой тысячи, так что достаются тем, кто заработал.',
         signIn: 'Войдите, чтобы получить 1 000 ħ и делать прогнозы',
         signInButton: 'Войти',
 
@@ -69,7 +69,8 @@ const COPY = {
             'Закон сохранения интереса. Когда решают задачу, её доли сгорают, а всё, что вложено в остальные задачи, получает проценты. Чем больше был вес решённой задачи, тем выше ставка. Решат задачу с весом 20%, и остальные получат +25%.',
             'Поэтому чем ближе к концу решат вашу задачу, тем больше процентов она соберёт. Решённая в числе первых принесёт убыток, решённая ближе к концу окупится, даже если она не последняя.',
             'Последняя оставшаяся задача через 72 часа выплачивает полную стоимость своих долей, сверх всех собранных процентов. Эти 72 часа нужны, чтобы отменить выбывание по ошибочно опубликованному решению.',
-            'Купить и продать можно в любой момент, второй стороной сделки выступает сам рынок (LMSR, b = 1000), поэтому каждая сделка двигает веса.',
+            'Премия за решение. Кто первым опубликует решение задачи из списка, получит {bounty} ħ. Решать можно и задачу, в которую вложились сами, только её доли тогда сгорят.',
+            'Купить и продать можно в любой момент, второй стороной сделки выступает сам рынок (LMSR), поэтому каждая сделка двигает веса. Рынок держит глубину 1000 ħ, так что 100 ħ поднимают задачу с весом 3% примерно до 12%.',
             'Кванты игрушечные, их нельзя купить за деньги или вывести. На них покупаются реакции, и каждая стоит больше стартовой тысячи, поэтому купить её можно только на заработанное.',
         ],
 
@@ -96,13 +97,13 @@ const COPY = {
 
         notesTitle: 'Заметки демона',
         notes: [
-            'Я изучил 36 недель истории решений, это 13 226 задаче-недель и 512 первых решений. На неделях после 20 июля, которые я не видел при обучении, AUC 0,71.',
-            'Лучше всего предсказывает, когда задачу решат, оценка времени на решение. Сложность по шкале сайта предсказывает слабее.',
-            'Длинные условия решают позже, каждое стандартное отклонение длины снижает шанс решения за неделю примерно на 17%. Valter был прав.',
-            'Звёздочка ∗ ничего не говорит о том, в каком порядке решат оставшиеся задачи.',
-            'Почти решённый раздел затягивает свои хвосты, а решения в той же главе за последние две недели ускоряют соседние задачи.',
-            'По 8 000 прогонам одна задача останется примерно через 261 день, скорее всего между мартом и октябрём 2027 года.',
-            'Мои 800 ħ разложены по десяти задачам пропорционально шансам, это 7.2.13, 6.6.27, 14.3.27, 7.2.12, 14.3.8, 5.8.9, 14.3.26, 5.3.11, 7.2.14, 8.2.32. Задача 7.2.11 у меня тринадцатая.',
+            'Я пересчитал модель 18 сентября. За две недели на сайте решили 35 задач, 14 из них за первые три дня рынка. На каждую нерешённую задачу это примерно в 15 раз чаще, чем в среднем за год, и мой прошлый прогноз в 261 день можно выбросить.',
+            'Модель та же, 37 недель истории и 532 первых решения. На неделях после 20 июля, которых она не видела при обучении, AUC 0,73.',
+            'Лучше всего предсказывает, когда задачу решат, оценка времени на решение, каждое стандартное отклонение почти вдвое снижает шанс за неделю. Длинные условия тоже решают позже, Valter был прав.',
+            'Почти решённый раздел затягивает свои хвосты сильнее всего остального, а задачи в конце раздела решают позже. Звёздочка ∗ последней задачу не делает, их решают даже чуть охотнее.',
+            'В ближайшие 7 дней скорее всего решат 8.2.2, 14.4.19 и 8.2.33, а последними, скорее всего, останутся 6.6.27, 7.2.13 и 7.2.12. Шанс каждой задачи я показываю под ней, когда её открываешь.',
+            'По 6 000 прогонам при нынешнем темпе за неделю решат около 8 задач. Когда темп вернётся к обычному, последние задачи будут держаться месяцами.',
+            'Рынок переоценил 7.2.14 и 14.3.8, поэтому я продал свои доли в них и вложил кванты в задачи, которые считаю недооценёнными.',
         ],
 
         amountEggs: {
@@ -142,7 +143,11 @@ const COPY = {
             open: 'Открыть',
             leaders: 'Лучшие прогнозы',
             nobody: 'Прогнозов пока нет',
+            progress: 'Решено {solved} из {total}',
+            bounty: 'Решите задачу из списка и получите {amount} ħ',
         },
+        soonLine: 'По расчёту демона, её решат в ближайшие 7 дней с шансом {p}.',
+        shortBy: 'не хватает {n} ħ',
 
         notify: {
             chatBetTitle: 'Ваша ставка из чата учтена',
@@ -156,6 +161,8 @@ const COPY = {
             payoutTitle: (amount) => `Выплата +${amount} ħ`,
             payout: (problem) => `${problem} оказалась последней задачей. Кванты на балансе.`,
             trophyTitle: (name) => `Трофей «${name}»`,
+            bountyTitle: (amount, count) => `Премия +${amount} ħ за ${count > 1 ? 'решения' : 'решение'}`,
+            bounty: (problems, each, count) => `Спасибо за ${count > 1 ? 'решения' : 'решение'} ${problems}. Каждое решение задачи из «Последней задачи» приносит автору ${each} ħ, кванты уже на балансе.`,
             trophyN2000: 'Вы опубликовали 2000-е решение на сайте. Эта реакция теперь только ваша.',
             trophyLast: 'Вы решили последнюю задачу Савченко на сайте. Эта реакция теперь только ваша.',
             announceTitle: 'Последняя задача, прогнозы открыты',
@@ -174,7 +181,7 @@ const COPY = {
 
         welcomeTitle: 'Your starting balance',
         welcomeClaim: 'Claim',
-        welcomeNote: 'Put quanta on the problems that will be solved later than the rest. Every other problem solved pays you interest. Quanta are play money, and chat reactions cost more than the starting thousand, so they go to those who earn at predicting.',
+        welcomeNote: 'Put quanta on the problems that will be solved later than the rest, and every other problem solved pays you interest. Solve a problem on the list yourself and you get a {bounty} ħ bounty. Quanta are play money, and chat reactions cost more than the starting thousand, so they go to those who earn them.',
         signIn: 'Sign in to get 1,000 ħ and make predictions',
         signInButton: 'Sign in',
 
@@ -225,7 +232,8 @@ const COPY = {
             'Conservation of interest. When a problem is solved its shares burn, and everything on the other problems earns interest. The heavier the solved problem was, the higher the rate. If a problem weighing 20% is solved, the rest get +25%.',
             'So the closer to the end your problem is solved, the more interest it collects. One solved among the first loses money, and one solved near the end pays off even if it is not the very last.',
             'The last problem standing pays the full value of its shares after 72 hours, on top of all the interest it collected. The wait is for undoing an elimination caused by a mistaken post.',
-            'You can buy and sell at any moment, and the market itself takes the other side of every trade (LMSR, b = 1000), so every trade moves the weights.',
+            'Bounty for solving. Whoever first posts a solution of a problem on the list gets {bounty} ħ. You may solve a problem you hold, too, only its shares then burn.',
+            'You can buy and sell at any moment, and the market itself takes the other side of every trade (LMSR), so every trade moves the weights. The market keeps a depth of 1000 ħ, so 100 ħ lifts a problem weighing 3% to about 12%.',
             'Quanta are play money, so they cannot be bought for money or cashed out. They buy reactions, and each costs more than the starting thousand, so only what you earn can buy one.',
         ],
 
@@ -252,13 +260,13 @@ const COPY = {
 
         notesTitle: "The demon's notes",
         notes: [
-            'I studied 36 weeks of solving history, 13,226 problem-weeks and 512 first solutions. On the weeks after 20 July, which I did not see while learning, the AUC is 0.71.',
-            'The best single predictor of when a problem gets solved is the estimated solving time. The site\'s difficulty score predicts less well.',
-            'Long statements get solved later, as each standard deviation of length lowers the weekly chance by about 17%. Valter was right.',
-            'The asterisk ∗ says nothing about the order in which the remaining problems get solved.',
-            'A nearly finished section pulls in its stragglers, and solutions in the same chapter over the last two weeks speed up the neighbours.',
-            'Across 8,000 simulations one problem is left in about 261 days, most likely between March and October 2027.',
-            'My 800 ħ are spread over ten problems in proportion to their chances, namely 7.2.13, 6.6.27, 14.3.27, 7.2.12, 14.3.8, 5.8.9, 14.3.26, 5.3.11, 7.2.14, 8.2.32. I rank 7.2.11 thirteenth.',
+            'I refit my model on 18 September. In two weeks the site solved 35 problems, 14 of them in the first three days of the market. Per unsolved problem that is about 15 times the year\'s average, and my old forecast of 261 days can go in the bin.',
+            'The model is the same, 37 weeks of history and 532 first solutions. On the weeks after 20 July, which it did not see while learning, the AUC is 0.73.',
+            'The best single predictor of when a problem gets solved is the estimated solving time, and each standard deviation of it nearly halves the weekly chance. Long statements get solved later too, as Valter said.',
+            'A nearly finished section pulls in its stragglers more than anything else, and problems late in a section get solved later. The asterisk ∗ does not make a problem last, starred ones are even picked slightly more often.',
+            'Within the next 7 days 8.2.2, 14.4.19 and 8.2.33 are the likeliest to go, and 6.6.27, 7.2.13 and 7.2.12 the likeliest to be left last. I show each problem\'s chance under it when you open it.',
+            'Across 6,000 simulations about 8 problems get solved within a week at the current pace. When the pace returns to normal, the last few will hold out for months.',
+            'The market priced 7.2.14 and 14.3.8 far above my view, so I sold my shares in them and put the quanta into the problems I think are underpriced.',
         ],
 
         amountEggs: {
@@ -296,7 +304,11 @@ const COPY = {
             open: 'Open',
             leaders: 'Best predictions',
             nobody: 'No predictions yet',
+            progress: '{solved} of {total} solved',
+            bounty: 'Solve a problem on the list and get {amount} ħ',
         },
+        soonLine: 'The demon puts the chance it is solved within 7 days at {p}.',
+        shortBy: '{n} ħ short',
 
         notify: {
             chatBetTitle: 'Your bet from the chat is in',
@@ -310,6 +322,8 @@ const COPY = {
             payoutTitle: (amount) => `Payout +${amount} ħ`,
             payout: (problem) => `${problem} was the last problem solved. The quanta are in your balance.`,
             trophyTitle: (name) => `Trophy "${name}"`,
+            bountyTitle: (amount) => `Bounty +${amount} ħ for solving`,
+            bounty: (problems, each, count) => `Thank you for solving ${problems}. Every solution of a problem in The Last Problem earns its author ${each} ħ, and the quanta are in your balance.`,
             trophyN2000: 'You posted the 2000th solution on the site. This reaction is now yours alone.',
             trophyLast: 'You solved the last Savchenko problem on the site. This reaction is now yours alone.',
             announceTitle: 'The Last Problem, predictions are open',

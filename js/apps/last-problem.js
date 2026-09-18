@@ -65,6 +65,8 @@
      * app stay where they are. */
     const problemLink = (id, extra) => `<a class="lp-id-link${extra ? ` ${extra}` : ''}" href="/${boot.lang}/problems?q=${encodeURIComponent(id)}" target="_blank" rel="noopener">${esc(id)}</a>`;
 
+    const withBounty = (text) => String(text).replace('{bounty}', nf0.format(state.bounty || 0));
+
     const amountText = (x) => (x < 10 ? nf1.format(Math.floor(x * 10 + 1e-9) / 10) : nf0.format(Math.floor(x + 1e-9)));
 
     function plural(n, forms) {
@@ -413,6 +415,7 @@
                 </div>
             </div>
             <p class="lp-preview" data-lp-preview></p>
+            ${o.soon != null ? `<p class="lp-note">${esc(C.soonLine.replace('{p}', pct(o.soon)))}</p>` : ''}
             ${C.problemEggs && C.problemEggs[o.id] ? `<p class="lp-egg">${esc(C.problemEggs[o.id])}</p>` : ''}
             <p class="lp-egg" data-lp-egg hidden></p>
             <div class="lp-trade-actions">
@@ -467,7 +470,7 @@
             ${solvedHtml()}
             ${feedHtml()}
             <details class="lp-block lp-rules"><summary class="lp-h2">${esc(C.rulesTitle)}</summary>
-                <ol>${C.rules.map((r) => `<li>${esc(r)}</li>`).join('')}</ol></details>`;
+                <ol>${C.rules.map((r) => `<li>${esc(withBounty(r))}</li>`).join('')}</ol></details>`;
     }
 
     // ── Leaders ───────────────────────────────────────────────────────────────────────
@@ -526,6 +529,8 @@
                 const short = bal == null || bal + 1e-9 < item.price;
                 const label = confirming === item.id ? `${esc(C.confirm)} ${nf0.format(item.price)}${coin()}` : `${esc(C.buyFor)} ${nf0.format(item.price)}${coin()}`;
                 action = `<button type="button" class="ss-btn ${confirming === item.id ? 'ss-btn--primary' : 'ss-btn--secondary'} ss-btn--sm" data-lp-unlock="${esc(item.id)}"${short ? ' disabled' : ''}>${label}</button>`;
+                // How far away it is, which is what makes it worth playing for.
+                if (short && bal != null) action += `<span class="lp-rx-note">${esc(C.shortBy.replace('{n}', nf0.format(Math.ceil(item.price - bal))))}</span>`;
             }
             return `<li class="lp-rx${boot.rx === item.id ? ' is-target' : ''}${owned.has(item.id) ? ' is-owned' : ''}" data-rx="${esc(item.id)}">
                 <img class="lp-rx-art" src="${esc(item.url)}" alt="" width="56" height="56">
@@ -617,7 +622,7 @@
                 <img data-lp-coin-face src="${esc(boot.art.coin)}" alt="" width="120" height="120"></button>
             <h2 class="lp-welcome-title" id="lpWelcomeTitle">${esc(C.welcomeTitle)}</h2>
             <p class="lp-welcome-amount">${quanta(1000, 'lp-coin--xl')}</p>
-            <p class="lp-note">${esc(C.welcomeNote)}</p>
+            <p class="lp-note">${esc(withBounty(C.welcomeNote))}</p>
             <button type="button" class="ss-btn ss-btn--primary ss-btn--block" data-lp-claim>${esc(C.welcomeClaim)}</button>
         </div>`;
         layer.hidden = false;

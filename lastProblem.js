@@ -136,6 +136,29 @@ async function problemMeta(ids) {
     return map;
 }
 
+/* The demon's forecast (scripts/last-problem-forecast.py writes data/lp-forecast.json): for each
+ * open problem the chance it is solved within 7 days and the market's fair weight under
+ * conservation of interest. Read again when the file changes; a missing or broken file means no
+ * forecast is shown, nothing else. */
+const FORECAST_PATH = path.join(__dirname, 'data', 'lp-forecast.json');
+let forecastCache = { mtime: 0, value: null };
+function forecast() {
+    try {
+        const mtime = fs.statSync(FORECAST_PATH).mtimeMs;
+        if (mtime !== forecastCache.mtime) {
+            const raw = JSON.parse(fs.readFileSync(FORECAST_PATH, 'utf8'));
+            const byProblem = new Map();
+            for (const p of raw.problems || []) {
+                if (LP.isProblemId(p.problem) && p.p7 >= 0 && p.p7 <= 1) byProblem.set(p.problem, { p7: p.p7, fair: p.fair });
+            }
+            forecastCache = { mtime, value: { generated: raw.generated || null, byProblem } };
+        }
+    } catch (_err) {
+        forecastCache = { mtime: 0, value: null };
+    }
+    return forecastCache.value;
+}
+
 let chatIds = null;
 async function communityChats() {
     if (chatIds) return chatIds;
@@ -283,6 +306,7 @@ async function publicState() {
         .concat([{ demon: true, profit: round2(demon.profit) }])
         .sort((a, b2) => (b2.profit - a.profit) || (a.demon ? 1 : 0) - (b2.demon ? 1 : 0));
 
+    const fc = forecast();
     const list = outcomes.map((o) => {
         const id = o.problem_name;
         const m = meta.get(id) || {};
@@ -296,6 +320,7 @@ async function publicState() {
             difficulty: m.difficulty == null ? null : m.difficulty,
             starred: !!m.starred,
             demon: num(o.demon_shares) > LP.DUST,
+            soon: o.status === 'open' && fc && fc.byProblem.has(id) ? fc.byProblem.get(id).p7 : null,
         };
     });
 
@@ -332,6 +357,10 @@ async function publicState() {
         feed,
         leaderboard,
         traders: people.length,
+        solvedCount: outcomes.filter((o) => o.status === 'solved').length,
+        total: outcomes.length,
+        bounty: LP.SOLVER_BOUNTY,
+        forecastAt: fc ? fc.generated : null,
         byUser,
     };
     publicCache = { at: Date.now(), value };
@@ -359,6 +388,10 @@ async function stateFor(userId, lang) {
         openCount: pub.openCount,
         traders: pub.traders,
         tradersLabel: tradersLabel(pub.traders, lang),
+        solvedCount: pub.solvedCount,
+        total: pub.total,
+        bounty: pub.bounty,
+        forecastAt: pub.forecastAt,
         chart: pub.chart,
         outcomes: pub.outcomes.map((o) => Object.assign({}, o, { title: o.title[lang] || o.title.en })),
         feed: pub.feed.map((f) => Object.assign({}, f, { username: signedIn ? f.username : null })),
@@ -679,6 +712,7 @@ async function eliminate({ problem, solvedAt, userId }) {
             paid.push({ userId: uid, amount: p.total });
         }
         await client.query('UPDATE lp_market SET scale = $1 WHERE id = 1', [s.scale]);
+        await keepDepth(client, { b: num(market.b), scale: s.scale });
         const lost = pos.rows.filter((r) => r.problem_name === problem).map((r) => r.user_id);
         return { ok: true, rate: s.rate, paid, lost };
     });
@@ -705,6 +739,83 @@ async function eliminate({ problem, solvedAt, userId }) {
         });
     }
     return true;
+}
+
+/* Back to LP.MARKET_DEPTH quanta of liquidity (lib/lastProblem.js deepen), inside the caller's
+ * transaction with the market row locked. Prices do not move, so no tick is written. */
+async function keepDepth(client, { b, scale }) {
+    const outs = await client.query('SELECT problem_name, q FROM lp_outcomes');
+    const q = Object.fromEntries(outs.rows.map((r) => [r.problem_name, num(r.q)]));
+    const d = LP.deepen({ b, scale, q });
+    if (!d) return null;
+    await client.query('UPDATE lp_market SET b = $1 WHERE id = 1', [d.b]);
+    await client.query('UPDATE lp_outcomes SET q = q * $1', [d.factor]);
+    return d.factor;
+}
+
+/* The same outside a solve: the sync calls it, so a market thinned before this rule existed is
+ * deepened once, on the first pass after the deploy. */
+async function deepenMarket() {
+    const factor = await inTransaction(async (client) => {
+        const m = await client.query('SELECT * FROM lp_market WHERE id = 1 FOR UPDATE');
+        const market = m.rows[0];
+        if (!market || market.resolved_at || market.decided_at) return { rollback: true };
+        const f = await keepDepth(client, { b: num(market.b), scale: scaleOf(market) });
+        return f ? { factor: f } : { rollback: true };
+    });
+    if (factor && factor.factor) {
+        invalidate();
+        console.log(`last-problem: market deepened ×${factor.factor.toFixed(3)} to ${LP.MARKET_DEPTH} ħ`);
+    }
+}
+
+/* The bounty for every solve still standing that has not had one: whoever posted the first real
+ * solution of a market problem gets LP.SOLVER_BOUNTY, once, ref solved:<tick> (a revert takes it
+ * back). Run by every sync, so a new solve is paid within two minutes, and the solves before the
+ * bounty existed (2026-09-15 to 18) were paid by the first sync after it shipped. One bell per
+ * person for whatever this pass paid them. */
+async function payBounties() {
+    const due = await pool.query(
+        `SELECT t.id, t.user_id, t.problem_name FROM lp_ticks t
+          WHERE t.kind = 'solved' AND t.cancelled_at IS NULL AND t.user_id IS NOT NULL
+            AND NOT EXISTS (SELECT 1 FROM quanta_ledger l WHERE l.reason = 'bounty' AND l.ref = 'solved:' || t.id)
+          ORDER BY t.created_at, t.id`
+    );
+    const paid = new Map();
+    for (const row of due.rows) {
+        const ok = await inTransaction(async (client) => {
+            // The tick row is the lock: two passes cannot pay the same solve twice.
+            const t = await client.query(
+                "SELECT id FROM lp_ticks WHERE id = $1 AND cancelled_at IS NULL FOR UPDATE", [row.id]
+            );
+            if (!t.rowCount) return { rollback: true };
+            const again = await client.query(
+                "SELECT 1 FROM quanta_ledger WHERE reason = 'bounty' AND ref = $1", [`solved:${row.id}`]
+            );
+            if (again.rowCount) return { rollback: true };
+            await ensureWallet(client, row.user_id);
+            await moveMoney(client, row.user_id, LP.SOLVER_BOUNTY, 'bounty', `solved:${row.id}`);
+            return { ok: true };
+        });
+        if (!ok || !ok.ok) continue;
+        if (!paid.has(row.user_id)) paid.set(row.user_id, []);
+        paid.get(row.user_id).push(row.problem_name);
+    }
+    if (!paid.size) return 0;
+    invalidate();
+    for (const [uid, problems] of paid) {
+        await notifyUsers([uid], (n, lang) => ({
+            title: n.bountyTitle(problems.length * LP.SOLVER_BOUNTY, problems.length),
+            message: n.bounty(listProblems(problems, lang), LP.SOLVER_BOUNTY, problems.length),
+        }));
+    }
+    return paid.size;
+}
+
+/* "7.2.10, 7.2.11 и 5.3.11" / "7.2.10, 7.2.11 and 5.3.11". */
+function listProblems(ids, lang) {
+    if (ids.length <= 1) return ids.join('');
+    return `${ids.slice(0, -1).join(', ')} ${lang === 'ru' ? 'и' : 'and'} ${ids[ids.length - 1]}`;
 }
 
 /* A rate as the app shows it: "+2,9%", "+25%". */
@@ -867,6 +978,8 @@ async function syncSolved() {
                 if (await eliminate(e)) console.log(`last-problem: ${e.problem} solved, out of the market`);
             }
             await stepMarket();
+            await payBounties();
+            await deepenMarket();
         } else {
             await checkLastTrophy(data.market);
         }
@@ -1002,6 +1115,8 @@ api.get('/card', readLimiter, async (req, res) => {
             top,
             leaders,
             traders: tradersLabel(pub.traders, lang),
+            progress: c.card.progress.replace('{solved}', String(pub.solvedCount)).replace('{total}', String(pub.total)),
+            bountyLine: pub.resolvedAt || pub.decidedAt ? null : c.card.bounty.replace('{amount}', String(pub.bounty)),
             winner: pub.winner,
             url: `/${lang}/apps/last-problem`,
             coin: req.app.locals.asset('/img/apps/last-problem/coin.svg'),

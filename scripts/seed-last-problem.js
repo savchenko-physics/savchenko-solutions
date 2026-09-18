@@ -25,9 +25,10 @@
 //      pays interest to everything still in play (conservation of interest, lib/lastProblem.js
 //      settleSolve), exactly as the app's sync would have.
 //
-// --revert undoes a solve: the problem is open again, the scale goes back, and the interest that
-// solve paid is taken back from each wallet, as far as the balance allows (quanta already spent on
-// a reaction stay spent; the shortfall is printed).
+// --revert undoes a solve: the problem is open again, the scale goes back, and the interest and
+// the solver's bounty that solve paid are taken back from each wallet, as far as the balance
+// allows (quanta already spent on a reaction stay spent; the shortfall is printed). The bounty
+// is not paid again, since the solve's tick is marked cancelled.
 //
 // Needs migrations 054 and 055. Reads PG_* from the repository's .env like the app.
 'use strict';
@@ -317,6 +318,24 @@ async function revert(problem) {
                 );
                 back += take;
                 short += delta - take;
+            }
+            // The solver's bounty (lastProblem.js payBounties), as far as the balance allows.
+            const bounty = await client.query(
+                "SELECT user_id, delta FROM quanta_ledger WHERE reason = 'bounty' AND ref = $1",
+                [`solved:${tick.id}`]
+            );
+            for (const r of bounty.rows) {
+                const w = await client.query('SELECT balance FROM quanta_wallets WHERE user_id = $1 FOR UPDATE', [r.user_id]);
+                const take = LP.floor4(Math.min(Number(r.delta), Math.max(0, w.rows.length ? Number(w.rows[0].balance) : 0)));
+                if (take > 0) {
+                    await client.query('UPDATE quanta_wallets SET balance = balance - $2, updated_at = NOW() WHERE user_id = $1', [r.user_id, take.toFixed(4)]);
+                    await client.query(
+                        "INSERT INTO quanta_ledger (user_id, delta, reason, ref) VALUES ($1, $2, 'clawback', $3)",
+                        [r.user_id, (-take).toFixed(4), `revert:${tick.id}:bounty`]
+                    );
+                }
+                back += take;
+                short += Number(r.delta) - take;
             }
             const demonPart = Math.max(0, Number(tick.amount || 0) - toUsers);
             await client.query('UPDATE lp_market SET demon_interest = GREATEST(0, demon_interest - $1) WHERE id = 1', [demonPart.toFixed(4)]);

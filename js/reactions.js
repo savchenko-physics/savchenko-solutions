@@ -61,14 +61,17 @@
         // never for sale; `trophy` cannot be bought, the app awards it; `sale` limits when it
         // can be bought (UTC dates, inclusive). Owning one is a row in reaction_unlocks. Anyone
         // can see a premium reaction left by its owner, and taking one back always works.
-        { id: ':kvant:', ru: 'Квант', en: 'Quantum', price: 1200 },
-        { id: ':errata:', ru: 'Закон сохранения ошибок', en: 'Conservation of errata', price: 1300 },
-        { id: ':ammeter:', ru: 'Сломанный амперметр', en: 'Broken ammeter', price: 1300 },
-        { id: ':dino:', ru: 'Динозавр из 80-х', en: '80s dinosaur', price: 1400 },
-        { id: ':cyborgs:', ru: 'Отряд вальтерят', en: 'Cyborg squad', price: 1400 },
+        // Repriced 2026-09-18 from what three days of play showed: the best trader held 1122 ħ and
+        // nobody could reach 1200. The ladder now starts within one good week of play or a couple of
+        // solved problems (the bounty), and the top is still out of reach for all but the best.
+        { id: ':kvant:', ru: 'Квант', en: 'Quantum', price: 1100 },
+        { id: ':errata:', ru: 'Закон сохранения ошибок', en: 'Conservation of errata', price: 1200 },
+        { id: ':ammeter:', ru: 'Сломанный амперметр', en: 'Broken ammeter', price: 1200 },
+        { id: ':dino:', ru: 'Динозавр из 80-х', en: '80s dinosaur', price: 1300 },
+        { id: ':cyborgs:', ru: 'Отряд вальтерят', en: 'Cyborg squad', price: 1300 },
         // The site is a Libra (first solution 10 Oct 2023), so it is sold in Libra season only.
-        { id: ':libra:', ru: 'Весы', en: 'Libra', price: 1500, sale: { from: '2026-09-23', to: '2026-10-23' } },
-        { id: ':laplace:', ru: 'Демон Лапласа', en: "Laplace's demon", price: 2000 },
+        { id: ':libra:', ru: 'Весы', en: 'Libra', price: 1400, sale: { from: '2026-09-23', to: '2026-10-23' } },
+        { id: ':laplace:', ru: 'Демон Лапласа', en: "Laplace's demon", price: 1800 },
         // "Всё возможно, кроме вечного двигателя" (emixter). The shop shows it; nobody gets it.
         { id: ':perpetuum:', ru: 'Вечный двигатель', en: 'Perpetual motion', price: Infinity },
         { id: ':n2000:', ru: 'Задача № 2000', en: 'Problem 2000', trophy: true },

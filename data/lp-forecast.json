@@ -1,0 +1,175 @@
+{
+ "generated": "2026-09-18T18:18:38.690000Z",
+ "model": {
+  "problem_weeks": 13264,
+  "first_solutions": 532,
+  "heldout_auc": 0.725,
+  "coefficients": {
+   "log_est_minutes": -0.575,
+   "est_missing": 0.0,
+   "difficulty": 0.169,
+   "star": 0.205,
+   "log_statement_len": -0.167,
+   "figure": 0.272,
+   "position_in_section": -0.645,
+   "section_solved_share": 1.51,
+   "neighbours_solved": 0.104,
+   "section_momentum_14d": 0.472,
+   "chapter_momentum_14d": 0.242
+  }
+ },
+ "pace": {
+  "solves_last_14_days": 35,
+  "speedup_vs_year": 14.8
+ },
+ "one_left_after_days": {
+  "median": 451.1,
+  "p10": 49.3
+ },
+ "problems": [
+  {
+   "problem": "6.6.27",
+   "p7": 0.1892,
+   "p30": 0.422,
+   "p_last": 0.2287,
+   "median_days": 138.9,
+   "fair": 0.2855
+  },
+  {
+   "problem": "7.2.13",
+   "p7": 0.2283,
+   "p30": 0.5343,
+   "p_last": 0.1598,
+   "median_days": 22.0,
+   "fair": 0.20198
+  },
+  {
+   "problem": "7.2.12",
+   "p7": 0.2847,
+   "p30": 0.6068,
+   "p_last": 0.1155,
+   "median_days": 14.7,
+   "fair": 0.13342
+  },
+  {
+   "problem": "14.3.8",
+   "p7": 0.3062,
+   "p30": 0.6867,
+   "p_last": 0.0983,
+   "median_days": 12.2,
+   "fair": 0.10055
+  },
+  {
+   "problem": "14.3.26",
+   "p7": 0.3363,
+   "p30": 0.7287,
+   "p_last": 0.0683,
+   "median_days": 11.1,
+   "fair": 0.06168
+  },
+  {
+   "problem": "7.2.14",
+   "p7": 0.3402,
+   "p30": 0.701,
+   "p_last": 0.0582,
+   "median_days": 11.1,
+   "fair": 0.05399
+  },
+  {
+   "problem": "8.2.32",
+   "p7": 0.404,
+   "p30": 0.7552,
+   "p_last": 0.0598,
+   "median_days": 9.5,
+   "fair": 0.0446
+  },
+  {
+   "problem": "5.8.7",
+   "p7": 0.3793,
+   "p30": 0.7537,
+   "p_last": 0.0403,
+   "median_days": 10.1,
+   "fair": 0.0323
+  },
+  {
+   "problem": "5.4.18",
+   "p7": 0.3897,
+   "p30": 0.7642,
+   "p_last": 0.0417,
+   "median_days": 9.6,
+   "fair": 0.03103
+  },
+  {
+   "problem": "14.3.28",
+   "p7": 0.4293,
+   "p30": 0.839,
+   "p_last": 0.025,
+   "median_days": 8.4,
+   "fair": 0.01251
+  },
+  {
+   "problem": "14.3.6",
+   "p7": 0.4297,
+   "p30": 0.8358,
+   "p_last": 0.0242,
+   "median_days": 8.5,
+   "fair": 0.01181
+  },
+  {
+   "problem": "5.4.8",
+   "p7": 0.444,
+   "p30": 0.8202,
+   "p_last": 0.0223,
+   "median_days": 8.2,
+   "fair": 0.01141
+  },
+  {
+   "problem": "5.8.6",
+   "p7": 0.4505,
+   "p30": 0.8352,
+   "p_last": 0.0218,
+   "median_days": 8.1,
+   "fair": 0.00944
+  },
+  {
+   "problem": "14.4.24",
+   "p7": 0.546,
+   "p30": 0.8865,
+   "p_last": 0.0175,
+   "median_days": 6.2,
+   "fair": 0.00577
+  },
+  {
+   "problem": "14.4.17",
+   "p7": 0.5863,
+   "p30": 0.9222,
+   "p_last": 0.0108,
+   "median_days": 5.6,
+   "fair": 0.00276
+  },
+  {
+   "problem": "8.2.33",
+   "p7": 0.6308,
+   "p30": 0.9403,
+   "p_last": 0.0038,
+   "median_days": 4.7,
+   "fair": 0.00063
+  },
+  {
+   "problem": "14.4.19",
+   "p7": 0.6863,
+   "p30": 0.9597,
+   "p_last": 0.0023,
+   "median_days": 4.2,
+   "fair": 0.00033
+  },
+  {
+   "problem": "8.2.2",
+   "p7": 0.686,
+   "p30": 0.9618,
+   "p_last": 0.0015,
+   "median_days": 4.0,
+   "fair": 0.00027
+  }
+ ]
+}

@@ -454,8 +454,8 @@ test('premium reactions: priced, trophies, the one nobody gets, and Libra season
     assert.equal(Reactions.isPremium('\u{1F44D}'), false);
 
     const inSeason = new Date('2026-10-01T12:00:00Z');
-    assert.deepEqual(Reactions.purchaseCheck(':kvant:', { balance: 1200, now: inSeason }), { ok: true, price: 1200 });
-    assert.equal(Reactions.purchaseCheck(':laplace:', { balance: 1999.99, now: inSeason }).error, 'insufficient');
+    assert.deepEqual(Reactions.purchaseCheck(':kvant:', { balance: 1100, now: inSeason }), { ok: true, price: 1100 });
+    assert.equal(Reactions.purchaseCheck(':laplace:', { balance: 1799.99, now: inSeason }).error, 'insufficient');
     assert.equal(Reactions.purchaseCheck(':kvant:', { owned: [':kvant:'], balance: 5000 }).error, 'owned');
     assert.equal(Reactions.purchaseCheck(':n2000:', { balance: 1e9 }).error, 'trophy');
     assert.equal(Reactions.purchaseCheck(':perpetuum:', { balance: 1e12 }).error, 'never');
@@ -543,6 +543,77 @@ test('migration 054 only creates tables, and its rollback removes premium reacti
     assert.ok(down.indexOf('DELETE FROM message_reactions') < down.indexOf('DROP TABLE IF EXISTS reaction_unlocks'));
 });
 
+// ── Since 18 Sep: the bounty, the depth, the demon's forecast ─────────────────────────────
+
+test('deepening the market moves no price and only ever deepens', () => {
+    const q = { a: 2000, b: 500, c: 0, gone: 900 };
+    const d = LP.deepen({ b: 1000, scale: 0.3928, q });
+    assert.ok(close(d.b * 0.3928, LP.MARKET_DEPTH, 1e-9), 'the depth is reached');
+    const open = (x) => ({ a: x.a, b: x.b, c: x.c });
+    const before = LMSR.prices(open(q), 1000);
+    const after = LMSR.prices(open(d.q), d.b);
+    for (const k of Object.keys(before)) assert.ok(close(before[k], after[k], 1e-12), k);
+    assert.ok(close(d.q.gone / q.gone, d.factor, 1e-12), 'a solved problem is scaled too, for a revert');
+    assert.equal(LP.deepen({ b: 1000, scale: 1, q }), null, 'already that deep');
+    assert.equal(LP.deepen({ b: 5000, scale: 0.5, q }), null, 'never shallower');
+});
+
+test('a deeper market lets a 100 ħ bet move a price the way the rules say', () => {
+    const q = LMSR.qForPrices({ a: 0.03, rest: 0.97 }, 2546.1);
+    const scale = LP.MARKET_DEPTH / 2546.1;
+    const shares = LMSR.sharesForAmount(q, 2546.1, 'a', 100, scale);
+    const after = LMSR.prices(Object.assign({}, q, { a: q.a + shares }), 2546.1);
+    assert.ok(after.a > 0.11 && after.a < 0.13, `3% goes to ${(after.a * 100).toFixed(1)}%`);
+});
+
+test('the demon sells what the market overprices and buys what it underprices, within its budget', () => {
+    const b = 1000;
+    const q = LMSR.qForPrices({ x: 0.54, y: 0.28, z: 0.01, w: 0.01, v: 0.16 }, b);
+    const state = { b, scale: 0.4, cash: 500, q, held: { x: 1200, y: 0, z: 300, w: 0, v: 0 } };
+    const fair = { x: 0.05, y: 0.1, z: 0.3, w: 0.35, v: 0.2 };
+    const { trades, after } = LP.rebalancePlan(state, fair, 300);
+    assert.equal(trades[0].problem, 'x');
+    assert.ok(trades[0].shares < 0 && close(-trades[0].shares, 1200, 1e-9), 'sells all it holds of the overpriced one');
+    assert.ok(!trades.some((t) => t.problem === 'z' && t.shares < 0), 'never sells what is underpriced');
+    const spent = trades.filter((t) => t.shares > 0).reduce((acc, t) => acc + LMSR.tradeCost(q, b, t.problem, t.shares) * state.scale, 0);
+    assert.ok(spent <= 300 + 1, `spends ${spent.toFixed(1)} of 300`);
+    const dist = (p) => Object.keys(fair).reduce((acc, k) => acc + Math.abs(p[k] - fair[k]), 0);
+    assert.ok(dist(after) < dist(LMSR.prices(q, b)) / 2, 'the weights end much nearer the forecast');
+    assert.deepEqual(LP.rebalancePlan(Object.assign({}, state, { cash: 0, held: {} }), fair, 300).trades, [], 'no cash, nothing held, nothing to do');
+});
+
+test('every solve pays its solver the bounty once, from the sync, and a revert takes it back', () => {
+    assert.equal(LP.SOLVER_BOUNTY, 150);
+    const mod = read('lastProblem.js');
+    const pay = mod.slice(mod.indexOf('async function payBounties('), mod.indexOf('function listProblems('));
+    assert.match(pay, /t\.kind = 'solved' AND t\.cancelled_at IS NULL AND t\.user_id IS NOT NULL/);
+    assert.match(pay, /NOT EXISTS \(SELECT 1 FROM quanta_ledger l WHERE l\.reason = 'bounty' AND l\.ref = 'solved:' \|\| t\.id\)/);
+    assert.match(pay, /FOR UPDATE/, 'the tick row is the lock');
+    assert.match(pay, /moveMoney\(client, row\.user_id, LP\.SOLVER_BOUNTY, 'bounty', `solved:\$\{row\.id\}`\)/);
+    const sync = mod.slice(mod.indexOf('async function syncSolved('), mod.indexOf('function start('));
+    assert.ok(sync.indexOf('payBounties()') > sync.indexOf('eliminate(e)'), 'paid after the solves of the same pass');
+    assert.match(sync, /deepenMarket\(\)/);
+    const elim = mod.slice(mod.indexOf('async function eliminate('), mod.indexOf('async function keepDepth('));
+    assert.ok(elim.indexOf('keepDepth(client') > elim.indexOf("UPDATE lp_market SET scale = $1"), 'a solve deepens the market in its own transaction');
+    const revert = read('scripts', 'seed-last-problem.js');
+    assert.match(revert, /reason = 'bounty' AND ref = \$1/);
+    assert.match(revert, /UPDATE lp_ticks SET cancelled_at = NOW\(\) WHERE id = \$1/);
+});
+
+test('the forecast the app shows is well formed and covers only problems of the market', () => {
+    const f = JSON.parse(read('data', 'lp-forecast.json'));
+    assert.ok(!Number.isNaN(Date.parse(f.generated)));
+    assert.ok(f.problems.length > 1);
+    const sum = f.problems.reduce((acc, p) => acc + p.fair, 0);
+    assert.ok(Math.abs(sum - 1) < 0.01, `fair weights sum to ${sum}`);
+    for (const p of f.problems) {
+        assert.ok(OUTCOMES.includes(p.problem), p.problem);
+        for (const k of ['p7', 'p30', 'p_last']) assert.ok(p[k] >= 0 && p[k] <= 1, `${p.problem} ${k}`);
+        assert.ok(p.p30 >= p.p7, `${p.problem}: within 30 days is at least within 7`);
+    }
+    assert.ok(f.model.heldout_auc > 0.6, 'the model still ranks better than chance on weeks it did not see');
+});
+
 test('migration 055 only adds columns with defaults, and nothing that existed changes', () => {
     const up = read('sql', 'migrations', '055_last_problem_interest.sql').replace(/^--.*$/gm, '');
     assert.doesNotMatch(up, /\bDROP\b|\bUPDATE\b|\bDELETE\b|\bBEGIN\b|\bCOMMIT\b|CREATE TABLE/i);
@@ -609,6 +680,12 @@ test('a premium reaction someone left can always be taken back, bought or not', 
         assert.equal(Reactions.reactionAction(e.id, true, []), 'remove', e.id);
         assert.ok(Reactions.glyphHTML(e.id, Reactions.emojiUrls(), 'ru').startsWith('<img'), `${e.id} renders for everyone`);
     }
+});
+
+test('a solver with the starting grant and one bounty can afford the cheapest reaction, not the dearest', () => {
+    const priced = Reactions.CUSTOM.filter((e) => Number.isFinite(e.price)).map((e) => e.price);
+    assert.ok(LP.START_BALANCE + LP.SOLVER_BOUNTY >= Math.min(...priced), 'one solve is enough to win something');
+    assert.ok(LP.START_BALANCE + 3 * LP.SOLVER_BOUNTY < Math.max(...priced), 'but not everything');
 });
 
 test('the starting grant alone buys nothing: a reaction has to be won', () => {

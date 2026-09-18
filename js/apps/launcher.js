@@ -164,6 +164,10 @@
             box.appendChild(leaders);
         }
 
+        // How far the market has got, and what anyone reading the chat can do about it: solve one.
+        const pulse = [d.progress, d.bountyLine].filter(Boolean).join('. ');
+        if (pulse) box.appendChild(el('div', 'mapp-card-leaders', pulse));
+
         const foot = el('div', 'mapp-card-foot');
         const openBtn = el('span', 'ss-btn ss-btn--primary ss-btn--sm mapp-card-open', d.open);
         openBtn.setAttribute('aria-hidden', 'true');
