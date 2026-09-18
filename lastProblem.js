@@ -249,7 +249,7 @@ async function publicState() {
     const titles = loadSectionTitles();
     const statusOf = new Map(outcomes.map((o) => [o.problem_name, o.status]));
 
-    const [ticksRes, positionsRes] = await Promise.all([
+    const [ticksRes, positionsRes, bountyRes] = await Promise.all([
         pool.query(
             `SELECT t.id, t.kind, t.actor, t.user_id, u.username, t.problem_name, t.shares, t.amount,
                     t.rate, t.prices, t.source, t.cancelled_at, t.created_at
@@ -260,18 +260,29 @@ async function publicState() {
             `SELECT p.user_id, u.username, u.profile_picture, p.problem_name, p.shares, p.spent, p.received, p.interest
                FROM lp_positions p JOIN users u ON u.id = p.user_id`
         ),
+        // Bounties for solving, net of any a revert took back (scripts/seed-last-problem.js).
+        pool.query(
+            `SELECT l.user_id, u.username, u.profile_picture, SUM(l.delta) AS bounty
+               FROM quanta_ledger l JOIN users u ON u.id = l.user_id
+              WHERE l.reason = 'bounty' OR (l.reason = 'clawback' AND l.ref LIKE 'revert:%:bounty')
+              GROUP BY l.user_id, u.username, u.profile_picture`
+        ),
     ]);
     const ticks = ticksRes.rows;
 
     // Each position carries what selling it alone fetches (the Sell button's figure); a person's
     // profit values everything they hold sold together (lib/lastProblem.js portfolioValueOf).
     const byUser = new Map();
-    for (const r of positionsRes.rows) {
+    const entryFor = (r) => {
         let e = byUser.get(r.user_id);
         if (!e) {
-            e = { userId: r.user_id, username: r.username, picture: r.profile_picture, spent: 0, received: 0, interest: 0, value: 0, positions: [] };
+            e = { userId: r.user_id, username: r.username, picture: r.profile_picture, spent: 0, received: 0, interest: 0, bounty: 0, value: 0, positions: [] };
             byUser.set(r.user_id, e);
         }
+        return e;
+    };
+    for (const r of positionsRes.rows) {
+        const e = entryFor(r);
         const shares = num(r.shares);
         const status = statusOf.get(r.problem_name);
         e.spent += num(r.spent);
@@ -287,10 +298,13 @@ async function publicState() {
             value: LP.positionValue(q, b, r.problem_name, shares, status, scale),
         });
     }
-    const people = [...byUser.values()].filter((e) => e.spent > 0 || e.received > 0 || e.interest > 0);
+    // Someone who solved a problem but never traded is on the board too.
+    for (const r of bountyRes.rows) entryFor(r).bounty = num(r.bounty);
+    const people = [...byUser.values()].filter((e) => e.spent > 0 || e.received > 0 || e.interest > 0 || e.bounty > 0);
     for (const e of people) {
         e.value = LP.portfolioValueOf(q, b, e.positions, scale);
         e.profit = LP.profitOf(e);
+        e.earned = LP.earnedOf(e);
     }
 
     const demon = {
@@ -301,10 +315,12 @@ async function publicState() {
     };
     demon.profit = LP.profitOf(demon);
 
-    const leaderboard = people
-        .map((e) => ({ userId: e.userId, username: e.username, picture: e.picture, profit: round2(e.profit) }))
-        .concat([{ demon: true, profit: round2(demon.profit) }])
-        .sort((a, b2) => (b2.profit - a.profit) || (a.demon ? 1 : 0) - (b2.demon ? 1 : 0));
+    // People only, by what they earned (lib/lastProblem.js rankBoard); the demon is the benchmark,
+    // shown apart, since it trades by the model with the house's money.
+    const leaderboard = LP.rankBoard(people.map((e) => ({
+        userId: e.userId, username: e.username, picture: e.picture, earned: round2(e.earned), profit: round2(e.profit),
+    })));
+    const benchmark = { earned: round2(demon.profit) };
 
     const fc = forecast();
     const list = outcomes.map((o) => {
@@ -356,6 +372,7 @@ async function publicState() {
         chart,
         feed,
         leaderboard,
+        benchmark,
         traders: people.length,
         solvedCount: outcomes.filter((o) => o.status === 'solved').length,
         total: outcomes.length,
@@ -398,6 +415,7 @@ async function stateFor(userId, lang) {
         leaderboard: signedIn
             ? pub.leaderboard.slice(0, 20).map((e) => Object.assign({}, e, { you: e.userId === userId }))
             : null,
+        benchmark: signedIn ? pub.benchmark : null,
         me: null,
     };
     if (!signedIn) return state;
@@ -1104,7 +1122,7 @@ api.get('/card', readLimiter, async (req, res) => {
             .slice(0, 3)
             .map((o) => ({ id: o.id, price: o.price }));
         const leaders = userId
-            ? pub.leaderboard.filter((e) => !e.demon && e.profit > 0).slice(0, 3).map((e) => ({ username: e.username, profit: e.profit }))
+            ? pub.leaderboard.filter((e) => e.earned > 0).slice(0, 3).map((e) => ({ username: e.username, earned: e.earned }))
             : [];
         res.set('Cache-Control', 'no-store').json({
             title: c.appName,

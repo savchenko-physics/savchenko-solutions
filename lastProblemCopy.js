@@ -74,9 +74,10 @@ const COPY = {
             'Кванты игрушечные, их нельзя купить за деньги или вывести. На них покупаются реакции, и каждая стоит больше стартовой тысячи, поэтому купить её можно только на заработанное.',
         ],
 
-        topTitle: 'Лучшие прогнозы',
+        topTitle: 'Кто заработал больше всех',
         topEmpty: 'Пока никто не сделал прогноз. Будьте первым.',
-        profit: 'прибыль',
+        earnedLabel: 'заработано прогнозами и решениями',
+        benchmarkNote: 'Демон торгует по своей модели на деньги рынка и в рейтинге не участвует. Он ориентир, обойти его и есть хороший прогноз.',
         you: 'вы',
         benchmark: 'эталон',
 
@@ -141,7 +142,7 @@ const COPY = {
 
         card: {
             open: 'Открыть',
-            leaders: 'Лучшие прогнозы',
+            leaders: 'Заработали больше всех',
             nobody: 'Прогнозов пока нет',
             progress: 'Решено {solved} из {total}',
             bounty: 'Решите задачу из списка и получите {amount} ħ',
@@ -237,9 +238,10 @@ const COPY = {
             'Quanta are play money, so they cannot be bought for money or cashed out. They buy reactions, and each costs more than the starting thousand, so only what you earn can buy one.',
         ],
 
-        topTitle: 'Best predictions',
+        topTitle: 'Who earned the most',
         topEmpty: 'No predictions yet. Be the first.',
-        profit: 'profit',
+        earnedLabel: 'earned by predicting and solving',
+        benchmarkNote: 'The demon trades by its model with the market\'s money and is not ranked. It is the yardstick, and beating it is what a good prediction looks like.',
         you: 'you',
         benchmark: 'benchmark',
 
@@ -302,7 +304,7 @@ const COPY = {
 
         card: {
             open: 'Open',
-            leaders: 'Best predictions',
+            leaders: 'Top earners',
             nobody: 'No predictions yet',
             progress: '{solved} of {total} solved',
             bounty: 'Solve a problem on the list and get {amount} ħ',

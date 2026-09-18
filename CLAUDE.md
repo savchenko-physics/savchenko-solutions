@@ -78,7 +78,8 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   demon's forecast is `data/lp-forecast.json`, from `scripts/last-problem-research.js` (on the server,
   read-only) and `scripts/last-problem-forecast.py` (the weekly hazard model; the buy form shows each
   problem's chance of being solved within 7 days), and `scripts/last-problem-demon.js --dry-run|--apply`
-  trades the demon towards its fair weights (`rebalancePlan`).
+  trades the demon towards its fair weights (`rebalancePlan`). The Рейтинг tab ranks people by quanta earned,
+  trading plus bounties (`earnedOf`, `rankBoard`); the demon is shown apart as the benchmark, never ranked.
 - **Birth-year turns, 2,007 and 2,008** (`lib/founderYear.js` `TURNS`, 2026-09-18). emixter's birth-year
   challenge in the chats says whoever was born in the year the solved count reaches solves the next problem.
   While the count (the homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423

@@ -491,19 +491,26 @@
             return `<p class="lp-note">${esc(C.signIn)}</p><a class="ss-btn ss-btn--primary" href="${esc(boot.loginUrl)}" target="_top">${esc(C.signInButton)}</a>`;
         }
         const board = state.leaderboard;
-        if (board.length <= 1 && board[0] && board[0].demon && state.traders === 0) {
-            return `<h1 class="lp-question">${esc(C.topTitle)}</h1><p class="lp-note">${esc(C.topEmpty)}</p>`;
+        // The demon is not ranked: it trades by the model with the house's money, so it is shown
+        // under the people, as the line to beat.
+        const bench = state.benchmark ? `<ul class="lp-leaders lp-benchmark">
+            <li class="lp-leader"><span class="lp-leader-rank"></span>${avatar({ demon: true }, 28)}
+                <span class="lp-leader-name">${leaderName({ demon: true })}</span><span class="lp-leader-profit">${signed(state.benchmark.earned)}${coin()}</span></li></ul>
+            <p class="lp-note">${esc(C.benchmarkNote)}</p>` : '';
+        if (!board.length) {
+            return `<h1 class="lp-question">${esc(C.topTitle)}</h1><p class="lp-note">${esc(C.topEmpty)}</p>${bench}`;
         }
         const podium = board.slice(0, 3).map((e, i) => `<li class="lp-podium-step lp-podium-${i + 1}">
             ${avatar(e, 48)}<div class="lp-podium-name">${leaderName(e)}</div>
-            <div class="lp-podium-profit">${signed(e.profit)}${coin()}</div><div class="lp-podium-place">${i + 1}</div></li>`).join('');
+            <div class="lp-podium-profit">${signed(e.earned)}${coin()}</div><div class="lp-podium-place">${i + 1}</div></li>`).join('');
         const rest = board.slice(3).map((e, i) => `<li class="lp-leader${e.you ? ' is-you' : ''}">
             <span class="lp-leader-rank">${e.you && i + 3 >= 20 ? (state.me && state.me.rank) || '' : i + 4}</span>${avatar(e, 28)}
-            <span class="lp-leader-name">${leaderName(e)}</span><span class="lp-leader-profit">${signed(e.profit)}${coin()}</span></li>`).join('');
+            <span class="lp-leader-name">${leaderName(e)}</span><span class="lp-leader-profit">${signed(e.earned)}${coin()}</span></li>`).join('');
         return `<h1 class="lp-question">${esc(C.topTitle)}</h1>
-            <p class="lp-meta">${esc(C.profit)} · ${esc(state.tradersLabel)}</p>
+            <p class="lp-meta">${esc(C.earnedLabel)} · ${esc(state.tradersLabel)}</p>
             <ol class="lp-podium">${podium}</ol>
-            ${rest ? `<ol class="lp-leaders">${rest}</ol>` : ''}`;
+            ${rest ? `<ol class="lp-leaders">${rest}</ol>` : ''}
+            ${bench}`;
     }
 
     // ── Shop ──────────────────────────────────────────────────────────────────────────

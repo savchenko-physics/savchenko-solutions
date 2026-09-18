@@ -614,6 +614,32 @@ test('the forecast the app shows is well formed and covers only problems of the 
     assert.ok(f.model.heldout_auc > 0.6, 'the model still ranks better than chance on weeks it did not see');
 });
 
+test('the board ranks people by what they earned, solving included, and never ranks the demon', () => {
+    // 18 Sep: by trading profit alone the demon led and all five traders were below zero, while
+    // the five people who had solved fourteen problems between them were not on the board at all.
+    assert.equal(LP.earnedOf({ spent: 1200, received: 168, interest: 161, value: 50, bounty: 600 }), -221);
+    assert.equal(LP.earnedOf({ bounty: 450 }), 450, 'a solver who never traded');
+    assert.equal(LP.earnedOf({}), 0);
+    const board = LP.rankBoard([
+        { username: 'Valter', earned: -221, profit: -821 },
+        { demon: true, earned: 357 },
+        { username: 'marthasg._', earned: 450, profit: 0 },
+        { username: 'igor', earned: 450, profit: 150 },
+        { username: 'Tete', earned: 300, profit: 0 },
+    ]);
+    assert.deepEqual(board.map((e) => e.username), ['igor', 'marthasg._', 'Tete', 'Valter'], 'a tie goes to the better trader');
+    assert.ok(!board.some((e) => e.demon));
+    const mod = read('lastProblem.js');
+    const pub = mod.slice(mod.indexOf('async function publicState('), mod.indexOf('function tradersLabel('));
+    assert.match(pub, /LP\.rankBoard\(/);
+    assert.doesNotMatch(pub, /demon: true/, 'the demon is not put into the ranking');
+    assert.match(pub, /const benchmark = \{ earned: round2\(demon\.profit\) \}/);
+    assert.match(pub, /l\.reason = 'bounty' OR \(l\.reason = 'clawback' AND l\.ref LIKE 'revert:%:bounty'\)/, 'a bounty a revert took back does not count');
+    const client = read('js', 'apps', 'last-problem.js');
+    assert.match(client, /state\.benchmark/);
+    assert.doesNotMatch(client, /signed\(e\.profit\)/);
+});
+
 test('migration 055 only adds columns with defaults, and nothing that existed changes', () => {
     const up = read('sql', 'migrations', '055_last_problem_interest.sql').replace(/^--.*$/gm, '');
     assert.doesNotMatch(up, /\bDROP\b|\bUPDATE\b|\bDELETE\b|\bBEGIN\b|\bCOMMIT\b|CREATE TABLE/i);
