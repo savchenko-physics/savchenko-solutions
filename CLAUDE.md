@@ -79,11 +79,12 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   read-only) and `scripts/last-problem-forecast.py` (the weekly hazard model; the buy form shows each
   problem's chance of being solved within 7 days), and `scripts/last-problem-demon.js --dry-run|--apply`
   trades the demon towards its fair weights (`rebalancePlan`).
-- **2,007, the founder's year** (`lib/founderYear.js`, 2026-09-18). emixter's birth-year challenge in the chats
-  says whoever was born in the year the solved count reaches solves the next problem. While the count (the
-  homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423 to everyone but
-  astrosander (user 28). The editor, `/upload` and `/drafts` say why, and drafts keep saving. It is inert
-  once his solution makes the count 2,008 and can then be deleted. `tests/founder-year.test.js`.
+- **Birth-year turns, 2,007 and 2,008** (`lib/founderYear.js` `TURNS`, 2026-09-18). emixter's birth-year
+  challenge in the chats says whoever was born in the year the solved count reaches solves the next problem.
+  While the count (the homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423
+  to everyone but astrosander (user 28); at exactly 2,008 to everyone but Valter (user 2543); 2,009 is open.
+  The editor, `/upload` and `/drafts` say why, and drafts keep saving. Inert past 2,008; delete it then.
+  `tests/founder-year.test.js`.
 
 ## Tech Stack
 - **Runtime:** Node.js
