@@ -9,6 +9,7 @@ const { Pool } = require("pg");
 require("dotenv").config();
 const { getLanguageData} = require("./parents");
 const searchIndex = require('./searchIndex');
+const { founderYearFor } = require('./lib/founderYear');
 
 // Add pool configuration
 const pool = new Pool({
@@ -32,7 +33,15 @@ router.post("/api/upload", checkAuthenticated, async (req, res) => {
         console.log("Request files:", req.files);
         
         const lang = req.body.lang || 'en';
-        
+
+        // A new solution moves the count, so at 2,007 it waits for the founder's
+        // (lib/founderYear.js). Before any image is written; the page keeps what was typed.
+        const uiLang = req.body.uiLang === 'ru' ? 'ru' : (req.body.uiLang === 'en' ? 'en' : (lang === 'ru' ? 'ru' : 'en'));
+        const founderYear = await founderYearFor(req.session.userId, uiLang);
+        if (founderYear && founderYear.blocked) {
+            return res.status(423).json({ success: false, founderYear: true, message: founderYear.message });
+        }
+
         if (!req.body.problemName || !req.body.method) {
             return res.status(400).json({
                 success: false,
@@ -284,7 +293,7 @@ function checkAuthenticated(req, res, next) {
 }
 
 // Upload page routes — require login
-router.get(["/upload", "/:lang([a-z]{2})/upload"], (req, res) => {
+router.get(["/upload", "/:lang([a-z]{2})/upload"], (req, res, next) => {
     const lang = req.params.lang || req.query.lang || 'en';
     i18n.setLocale(res, lang);
 
@@ -302,12 +311,17 @@ router.get(["/upload", "/:lang([a-z]{2})/upload"], (req, res) => {
         ? req.query.problem
         : '';
 
-    res.render("upload_page", {
-        __: i18n.__,
-        lang,
-        usernameCurrent: req.session.username,
-        prefillProblem,
-    });
+    // Whether uploads wait for the founder (lib/founderYear.js). A promise with .catch(next),
+    // not an async handler: Express 4 would drop what an async one throws.
+    founderYearFor(req.session.userId, lang).then((founderYear) => {
+        res.render("upload_page", {
+            __: i18n.__,
+            lang,
+            founderYear,
+            usernameCurrent: req.session.username,
+            prefillProblem,
+        });
+    }).catch(next);
 });
 
 // Add new route for problem verification

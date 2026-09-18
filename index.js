@@ -42,6 +42,7 @@ const registerContributorAndUserMetricsApi = require("./contributorsUserMetricsA
 const { ruPlural } = require("./lib/ruPlural");
 const { isValidNewUsername, resolveUsernameChange, USERNAME_PATTERN } = require("./lib/usernames");
 const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
+const { founderYearFor } = require("./lib/founderYear");
 const { sendEmail } = require("./email");
 const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
 
@@ -2020,6 +2021,12 @@ app.post("/create-problem", checkAuthenticated, async (req, res) => {
     // Becomes a directory under posts/, so only "en" or "ru" may pass.
     const lang = normalizeLang(req.body.lang);
 
+    // A created file counts as solved, so at 2,007 it waits for the founder (lib/founderYear.js).
+    const founderYear = await founderYearFor(req.session.userId, lang);
+    if (founderYear && founderYear.blocked) {
+        return res.status(423).json({ founderYear: true, message: founderYear.message });
+    }
+
     const { chapters } = await getLanguageData(lang);
 
     if (!problemName || !problemName.match(/^\d+\.\d+\.\d+$/)) {
@@ -3078,7 +3085,8 @@ app.get(["/drafts", "/:lang(en|ru)/drafts"], checkAuthenticated, async (req, res
                 snippet: plain.length > 160 ? `${plain.slice(0, 160)}…` : plain,
             };
         });
-        res.render("drafts", { __: i18n.__, lang, drafts });
+        const founderYear = await founderYearFor(req.session.userId, lang);
+        res.render("drafts", { __: i18n.__, lang, drafts, founderYear });
     } catch (error) {
         console.error("Drafts page failed:", error);
         res.status(500).render("drafts", { __: i18n.__, lang, drafts: [] });
@@ -3110,7 +3118,7 @@ app.get("/:lang/:name", (req, res, next) => {
     return renderPost(req, res).catch(next);
 }); // Use the renderPost function for this route
 
-app.get("/:lang/edit/:name", (req, res) => {
+app.get("/:lang/edit/:name", (req, res, next) => {
     const { lang, name } = req.params;
     if (!isValidSolutionLang(lang) || !isValidSolutionProblemName(name)) {
         i18n.setLocale(res, isValidSolutionLang(lang) ? lang : "en");
@@ -3131,16 +3139,21 @@ app.get("/:lang/edit/:name", (req, res) => {
         try {
             fileModifiedAt = fs.statSync(filePath).mtimeMs;
         } catch { /* fall back to 0: any draft then counts as newer */ }
-        i18n.setLocale(res, lang);
-        res.render("edit_post", {
-            __: i18n.__,
-            lang,
-            name,
-            content: fileContents,
-            fileModifiedAt: Math.round(fileModifiedAt),
-            title: docTitle(lang === 'ru' ? 'Изменить решение' : 'Edit Solution', name),
-            userId: req.session.userId || null,
-        });
+        // Whether publishing waits for the founder (lib/founderYear.js). A promise with
+        // .catch(next), not an async handler: Express 4 would drop what an async one throws.
+        founderYearFor(req.session.userId, lang).then((founderYear) => {
+            i18n.setLocale(res, lang);
+            res.render("edit_post", {
+                __: i18n.__,
+                lang,
+                name,
+                content: fileContents,
+                fileModifiedAt: Math.round(fileModifiedAt),
+                title: docTitle(lang === 'ru' ? 'Изменить решение' : 'Edit Solution', name),
+                userId: req.session.userId || null,
+                founderYear,
+            });
+        }).catch(next);
     } else {
         i18n.setLocale(res, lang);
         res.status(404).render("404", {
@@ -3294,6 +3307,27 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
             });
         }
         return res.status(400).send("Invalid request");
+    }
+
+    // At 2,007 solved only the founder publishes, until his solution is up (lib/founderYear.js).
+    // Asked before anything is read or written; the text stays in the editor and in drafts.
+    // uiLang is the drafts page's language, which can differ from the solution's.
+    const founderYear = await founderYearFor(userId, isValidSolutionLang(req.body.uiLang) ? req.body.uiLang : lang);
+    if (founderYear && founderYear.blocked) {
+        if (editSaveWantsJson(req)) {
+            return res.status(423).json({ ok: false, founderYear: true, error: founderYear.message });
+        }
+        i18n.setLocale(res, lang);
+        return res.status(423).render("edit_post", {
+            __: i18n.__,
+            lang,
+            name,
+            content: typeof content === "string" ? content : "",
+            title: docTitle(lang === "ru" ? "Изменить решение" : "Edit Solution", name),
+            saveError: founderYear.message,
+            userId,
+            founderYear,
+        });
     }
 
     const contentValidation = validateSolutionMarkdownContent(content, lang);

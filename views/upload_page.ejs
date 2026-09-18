@@ -202,6 +202,8 @@
         <div class="content-card shadow-sm p-4">
           <h2 class="text-center mb-4"><%= __('upload.title') %></h2>
 
+          <%- include('default/founder_year_notice') %>
+
           <!-- Step 1: Problem Name -->
           <div class="mb-4">
             <label for="problemName" class="form-label step-label">
@@ -397,6 +399,10 @@
               <i class="bi bi-cloud-upload me-2"></i> Submit Solution
             </button>
             <div id="submitBlockers" class="upload-blockers mt-3" role="alert" hidden></div>
+            <%# Not a failure, so not the blockers list (validateForm clears that every second)
+                and not the "cannot upload?" prompt: the site is waiting for the founder
+                (lib/founderYear.js), and what was typed here stays on the page. %>
+            <div id="founderYearRefusal" class="ss-alert ss-alert--info mt-3 text-start" role="alert" hidden></div>
           </div>
 
           <%# Shown only when the upload actually fails, and this is the single
@@ -954,7 +960,9 @@
         
         // Add language to formData
         formData.append('lang', selectedLanguage);
-        
+        // The page's own language, for a message the server writes (lib/founderYear.js)
+        formData.append('uiLang', '<%= lang === 'ru' ? 'ru' : 'en' %>');
+
         if (document.getElementById('fullName')) {
           formData.append('fullName', document.getElementById('fullName').value);
         }
@@ -991,6 +999,11 @@
           const data = await response.json();
           if (data.success) {
             window.location.href = data.redirectUrl;
+          } else if (data.founderYear) {
+            const refusal = document.getElementById('founderYearRefusal');
+            refusal.textContent = data.message;
+            refusal.hidden = false;
+            refusal.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
           } else {
             alert(data.message || 'There was an error uploading your solution.');
             revealUploadFailPrompt();

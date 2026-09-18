@@ -1170,6 +1170,9 @@
         </div>
     </div>
 
+    <%# Before the restore notice, so that one sits on top when both show. %>
+    <%- include('default/founder_year_notice', { variant: 'bar' }) %>
+
     <div id="draft-restored-bar" class="draft-restored-bar" role="status">
         <span id="draft-restored-text"></span>
         <a href="#" id="draft-show-published"><%= __('post.showPublished') %></a>

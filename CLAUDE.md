@@ -71,6 +71,11 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   --dry-run|--apply|--revert <problem>`): Laplace's demon, a house trader with no account, spread 800 ħ over a
   survival model's top ten, and the two bets Valter and emixter named in the chat. `LAST_PROBLEM=off` plus a
   restart takes it off the site. `tests/last-problem.test.js`.
+- **2,007, the founder's year** (`lib/founderYear.js`, 2026-09-18). emixter's birth-year challenge in the chats
+  says whoever was born in the year the solved count reaches solves the next problem. While the count (the
+  homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423 to everyone but
+  astrosander (user 28). The editor, `/upload` and `/drafts` say why, and drafts keep saving. It is inert
+  once his solution makes the count 2,008 and can then be deleted. `tests/founder-year.test.js`.
 
 ## Tech Stack
 - **Runtime:** Node.js

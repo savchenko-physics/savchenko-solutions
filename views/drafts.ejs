@@ -32,6 +32,8 @@
         <p class="drafts-lede"><%= __('drafts.lede') %></p>
       </div>
 
+      <%- include('default/founder_year_notice') %>
+
       <% if (!drafts.length) { %>
         <div class="drafts-empty">
           <p><%= __('drafts.emptyTitle') %></p>
@@ -104,7 +106,7 @@
               'X-Requested-With': 'XMLHttpRequest'
             },
             credentials: 'same-origin',
-            body: new URLSearchParams({ content: draftData.draft.content })
+            body: new URLSearchParams({ content: draftData.draft.content, uiLang: <%- JSON.stringify(lang) %> })
           });
           const data = await res.json().catch(function () { return {}; });
           if (!res.ok) { say(item, data.error || T.failed); btn.disabled = false; return; }
