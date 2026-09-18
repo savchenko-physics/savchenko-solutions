@@ -2022,7 +2022,7 @@ app.post("/create-problem", checkAuthenticated, async (req, res) => {
     const lang = normalizeLang(req.body.lang);
 
     // A created file counts as solved, so at 2,007 it waits for the founder (lib/founderYear.js).
-    const founderYear = await founderYearFor(req.session.userId, lang);
+    const founderYear = await founderYearFor(req.session.userId, lang, { fresh: true });
     if (founderYear && founderYear.blocked) {
         return res.status(423).json({ founderYear: true, message: founderYear.message });
     }
@@ -3312,7 +3312,7 @@ app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, r
     // At 2,007 solved only the founder publishes, until his solution is up (lib/founderYear.js).
     // Asked before anything is read or written; the text stays in the editor and in drafts.
     // uiLang is the drafts page's language, which can differ from the solution's.
-    const founderYear = await founderYearFor(userId, isValidSolutionLang(req.body.uiLang) ? req.body.uiLang : lang);
+    const founderYear = await founderYearFor(userId, isValidSolutionLang(req.body.uiLang) ? req.body.uiLang : lang, { fresh: true });
     if (founderYear && founderYear.blocked) {
         if (editSaveWantsJson(req)) {
             return res.status(423).json({ ok: false, founderYear: true, error: founderYear.message });

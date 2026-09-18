@@ -37,7 +37,7 @@ router.post("/api/upload", checkAuthenticated, async (req, res) => {
         // A new solution moves the count, so at 2,007 it waits for the founder's
         // (lib/founderYear.js). Before any image is written; the page keeps what was typed.
         const uiLang = req.body.uiLang === 'ru' ? 'ru' : (req.body.uiLang === 'en' ? 'en' : (lang === 'ru' ? 'ru' : 'en'));
-        const founderYear = await founderYearFor(req.session.userId, uiLang);
+        const founderYear = await founderYearFor(req.session.userId, uiLang, { fresh: true });
         if (founderYear && founderYear.blocked) {
             return res.status(423).json({ success: false, founderYear: true, message: founderYear.message });
         }
