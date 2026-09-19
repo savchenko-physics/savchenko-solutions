@@ -14,6 +14,8 @@ const { getOnlineUsernames } = require('./lib/presence');
 const { communityAvatarSVG, otherLang } = require('./lib/communityChats');
 const { isKnownReaction, isPremium, reactionAction } = require('./js/reactions');
 const { ownsReaction } = require('./lib/reactionUnlocks');
+const attachments = require('./lib/messageAttachments');
+const { videoDimensions } = require('./lib/videoMeta');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -26,39 +28,61 @@ const msgImageStorage = multer.diskStorage({
     },
 });
 
-// Images render inline; everything else on this allow-list renders as a
-// downloadable file card. Deliberately excludes html/htm/svg/js/xml so an
-// uploaded file can never be served as executable markup from our origin.
-const MSG_IMAGE_EXT = /\.(jpe?g|png|gif|webp)$/i;
-const MSG_FILE_EXT = /\.(jpe?g|png|gif|webp|pdf|txt|md|tex|csv|json|rtf|doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|zip|rar|7z)$/i;
-const MSG_MAX_BYTES = 25 * 1024 * 1024;
+// What may be attached, and how large, is stated once in lib/messageAttachments.js: images
+// render inline, videos play inline, the rest is a download card. multer's own ceiling is the
+// largest limit (a video's); a smaller file type over its own limit is refused once the file is
+// on disk, in the send handler, since the type is only known when the part arrives.
+function tooLarge(name) {
+    return `File too large (max ${Math.round(attachments.limitFor(name) / 1048576)} MB)`;
+}
 
 const msgFileUpload = multer({
     storage: msgImageStorage,
-    limits: { fileSize: MSG_MAX_BYTES },
+    limits: { fileSize: attachments.VIDEO_MAX_BYTES, files: 1 },
     fileFilter: (req, file, cb) => {
-        if (MSG_FILE_EXT.test(path.extname(file.originalname))) {
-            cb(null, true);
-        } else {
-            cb(new Error('File type not allowed'));
-        }
+        const limit = attachments.limitFor(file.originalname);
+        if (!limit) return cb(new Error('File type not allowed'));
+        // A request visibly larger than this type's limit is refused before the file is read.
+        const declared = Number(req.headers['content-length']) || 0;
+        if (declared > limit + 1024 * 1024) return cb(new Error(tooLarge(file.originalname)));
+        cb(null, true);
     },
 });
+
+// A full disk takes the whole site down (the outage of 2026-08-06), and a video is a hundredth of
+// what is free. No attachment is accepted while less than this is left on the disk that holds them.
+const FREE_DISK_MIN_BYTES = 1024 * 1024 * 1024;
+async function freeDiskBytes() {
+    try {
+        const st = await fs.promises.statfs(msgImageDir);
+        return Number(st.bavail) * Number(st.bsize);
+    } catch (err) {
+        return Infinity;   // an unreadable statfs must not refuse every upload
+    }
+}
 
 // Wrap the upload so a rejected/oversized file returns a clean 400 instead of
 // bubbling to the generic error handler (which would 500).
 function msgUploadMiddleware(req, res, next) {
-    msgFileUpload.single('file')(req, res, (err) => {
+    const answer = (status, msg) => {
+        if (req.xhr || req.headers.accept?.includes('application/json')) {
+            return res.status(status).json({ error: msg });
+        }
+        return res.status(status).send(msg);
+    };
+    const upload = () => msgFileUpload.single('file')(req, res, (err) => {
         if (err) {
             const msg = err.code === 'LIMIT_FILE_SIZE'
-                ? 'File too large (max 25 MB)'
+                ? `File too large (max ${Math.round(attachments.VIDEO_MAX_BYTES / 1048576)} MB)`
                 : (err.message || 'Upload failed');
-            if (req.xhr || req.headers.accept?.includes('application/json')) {
-                return res.status(400).json({ error: msg });
-            }
-            return res.status(400).send(msg);
+            return answer(400, msg);
         }
         next();
+    });
+    if (!/^multipart\/form-data/i.test(req.headers['content-type'] || '')) return upload();
+    freeDiskBytes().then((free) => {
+        if (free < FREE_DISK_MIN_BYTES) return answer(507, 'No room on the server for attachments right now');
+        upload();
     });
 }
 
@@ -121,6 +145,15 @@ function sseAdd(userId, res) {
 function sseRemove(userId, res) {
     const set = sseClients.get(userId);
     if (set) { set.delete(res); if (!set.size) sseClients.delete(userId); }
+}
+
+// Ends every live stream, for a process that is shutting down (index.js): an open stream would
+// otherwise hold server.close() until the deadline. The pages reconnect on their own.
+function closeStreams() {
+    for (const set of sseClients.values()) {
+        for (const res of set) { try { res.end(); } catch (e) { /* already gone */ } }
+    }
+    sseClients.clear();
 }
 
 function sseSend(userId, event, data) {
@@ -236,14 +269,40 @@ function groupAvatarSVG(convId, name, size, communityLang) {
            `font-size="${Math.round(s*0.38)}" opacity="0.9">${letter}</text></svg>`;
 }
 
+// What a file attachment is called wherever a message is summarised: a video by kind, since its
+// name is a phone's IMG_0042.MOV, any other file by name.
+function attachmentLabel(fileName, lang) {
+    if (!fileName) return fileName;
+    return attachments.kindOf(fileName) === 'video' ? (lang === 'ru' ? 'Видео' : 'Video') : fileName;
+}
+
 // Short, plain-text preview of a message being quoted in a reply.
 function buildReplyPreview(content, imageUrl, fileName, deleted, lang) {
     if (deleted) return lang === 'ru' ? 'Удалённое сообщение' : 'Deleted message';
     const t = (content || '').trim();
     if (t) return t.length > 80 ? t.substring(0, 80) + '…' : t;
-    if (fileName) return fileName;
+    if (fileName) return attachmentLabel(fileName, lang);
     if (imageUrl) return lang === 'ru' ? 'Фото' : 'Photo';
     return '';
+}
+
+// A deleted message keeps its row (and an image or document keeps its file, as before), but a
+// video is a hundred times the size, so its file goes when the last live message showing it is
+// deleted. Forwards share the file, hence the check for other messages.
+async function removeVideoFile(fileUrl, fileName, messageId) {
+    try {
+        if (!fileUrl || attachments.kindOf(fileName) !== 'video') return;
+        const base = path.basename(fileUrl);
+        if (!fileUrl.startsWith('/img/messages/') || base !== fileUrl.slice('/img/messages/'.length)) return;
+        const others = await pool.query(
+            `SELECT 1 FROM messages WHERE file_url = $1 AND id <> $2 AND deleted_at IS NULL LIMIT 1`,
+            [fileUrl, messageId]
+        );
+        if (others.rows.length) return;
+        await fs.promises.unlink(path.join(msgImageDir, base));
+    } catch (err) {
+        if (err.code !== 'ENOENT') console.error('Removing a deleted video:', err);
+    }
 }
 
 // Attach a `reply` object to each message row that quotes another message.
@@ -509,6 +568,9 @@ async function buildConversationList(userId, lang = 'en') {
         [userId]
     );
 
+    // The list shows a video as "Video", as the reply quote and the alert card do, not by file name.
+    for (const c of conversations.rows) c.last_message_file = attachmentLabel(c.last_message_file, lang);
+
     // For each 1:1 conversation, get the other user's info
     const convIds = conversations.rows.filter(c => !c.is_group).map(c => c.id);
     let memberMap = {};
@@ -590,6 +652,8 @@ router.get('/', async (req, res) => {
         res.render('messages', {
             __: req.__,
             lang,
+            attachmentRules: attachments.clientRules(),
+            attachmentAccept: attachments.acceptAttribute(),
             conversations: convList,
             activeConversation: null,
             messages: [],
@@ -863,6 +927,8 @@ router.get('/:id(\\d+)', async (req, res) => {
         res.render('messages', {
             __: req.__,
             lang,
+            attachmentRules: attachments.clientRules(),
+            attachmentAccept: attachments.acceptAttribute(),
             conversations: updatedConvList,
             activeConversation,
             messages: messagesResult.rows,
@@ -1001,12 +1067,21 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
         const convId = parseInt(req.params.id);
         const content = (req.body.content || '').trim().substring(0, 5000);
 
-        // An uploaded attachment is an inline image or a downloadable file card.
+        // An uploaded attachment is an inline image, an inline video or a downloadable file card.
+        // A video keeps the file columns (name, size, download fallback) and puts its pixel size
+        // in image_width / image_height, which are the attachment's box for either kind.
         let imageUrl = null, imageW = null, imageH = null, imagePlaceholder = null;
         let fileUrl = null, fileName = null, fileSize = null;
         if (req.file) {
+            const kind = attachments.kindOf(req.file.originalname);
+            if (req.file.size > attachments.limitFor(req.file.originalname)) {
+                await fs.promises.unlink(req.file.path).catch(() => {});
+                const msg = tooLarge(req.file.originalname);
+                if (req.xhr || req.headers.accept?.includes('application/json')) return res.status(400).json({ error: msg });
+                return res.status(400).send(msg);
+            }
             const url = '/img/messages/' + req.file.filename;
-            if (MSG_IMAGE_EXT.test(path.extname(req.file.originalname))) {
+            if (kind === 'image') {
                 imageUrl = url;
                 const meta = await processImageMeta(req.file.path);
                 imageW = meta.width; imageH = meta.height; imagePlaceholder = meta.placeholder;
@@ -1014,6 +1089,10 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 fileUrl = url;
                 fileName = (req.file.originalname || 'file').substring(0, 255);
                 fileSize = req.file.size;
+                if (kind === 'video') {
+                    const dims = videoDimensions(req.file.path);
+                    if (dims) { imageW = dims.width; imageH = dims.height; }
+                }
             }
         }
 
@@ -1078,7 +1157,7 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
 
         // Notify other members
         let preview;
-        if (fileUrl) preview = fileName || '[File]';
+        if (fileUrl) preview = attachments.kindOf(fileName) === 'video' ? '[Video]' : (fileName || '[File]');
         else if (imageUrl && !content) preview = '[Image]';
         else preview = content.length > 80 ? content.substring(0, 80) + '...' : content;
         await notifications.createMessageNotifications(
@@ -1172,6 +1251,7 @@ router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, 
 
         const msg = await pool.query(
             `SELECT m.id, m.sender_id, m.conversation_id, m.created_at, m.deleted_at, m.content,
+                    m.file_url, m.file_name,
                     u.username AS sender_username, c.title AS conv_title
              FROM messages m
              LEFT JOIN users u ON u.id = m.sender_id
@@ -1213,6 +1293,7 @@ router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, 
             `UPDATE messages SET deleted_at = NOW(), content = '' WHERE id = $1`,
             [msgId]
         );
+        await removeVideoFile(m.file_url, m.file_name, msgId);
 
         broadcastToConversation(m.conversation_id, 'msg:delete',
             { conversationId: m.conversation_id, id: msgId }, userId).catch(() => {});
@@ -1978,4 +2059,4 @@ async function getUnreadMessageCount(userId) {
     }
 }
 
-module.exports = { router, getUnreadMessageCount };
+module.exports = { router, getUnreadMessageCount, closeStreams };

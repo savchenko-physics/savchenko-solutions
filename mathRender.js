@@ -136,22 +136,74 @@ function exToEm(html) {
         .replace(/vertical-align:\s*(-?[\d.]+)ex/g, (m, v) => `vertical-align: ${emLength(v)}`));
 }
 
-const formulaCache = new Map();
-const CACHE_MAX = 20000;
+// ── Memory ─────────────────────────────────────────────────────────────────────
+// From 2026-09-03, the day after this renderer went live, to 2026-09-19 the app died of
+// "Ineffective mark-compacts near heap limit" every 10–20 hours (the box gives V8 a 470 MB heap),
+// each death a 1.3 GB core dump on a 16 GB disk. Three causes, all in this function, found with a
+// sampling heap profile of the live process and reproduced offline (tests/math-memory.test.js):
+//  1. mathjax-full 3.2.2's textmacros package parses every \text{…} with a TextParser that the
+//     base TexParser constructor pushes onto the package's own ParseOptions and that, unlike
+//     TexParser, never pops itself in mml(); nothing clears that ParseOptions between conversions.
+//     Every \text{} ever rendered stayed in memory together with its whole formula tree (the
+//     parent chain of its nodes). Cleared after every conversion below.
+//  2. A cache key was a slice of the page HTML, which V8 keeps as a pointer into the page string,
+//     so each stored key pinned a whole rendered solution page (~200 KB). Keys are copied flat.
+//  3. 20,000 SVG strings, two bytes a character because of the Cyrillic units, were ~370 MB of
+//     heap on their own. An entry is now a UTF-8 buffer outside the heap, and the cache is bounded
+//     by bytes (MATH_CACHE_MB, 32 by default), least recently used out first.
+const CACHE_BYTES = Math.round((Number(process.env.MATH_CACHE_MB) || 32) * 1024 * 1024);
+const formulaCache = new Map(); // flat key → { key, svg: Buffer | null }; least recently used first
+let cacheBytes = 0;
+let cacheHits = 0, cacheMisses = 0;
+const textmacros = texInput.parseOptions.packageData.get('textmacros');
+
+// A fresh flat string with the same code units: never a slice or a cons string over its source.
+function flatString(s) {
+    return Buffer.from(s, 'utf16le').toString('utf16le');
+}
+function entryBytes(entry) {
+    return entry.key.length * 2 + (entry.svg ? entry.svg.length : 0);
+}
+function releaseTextParsers() {
+    if (textmacros) textmacros.parseOptions.clear();
+}
+
 function tex2svg(tex, display) {
-    const key = (display ? 'D|' : 'I|') + tex;
-    const hit = formulaCache.get(key);
-    if (hit !== undefined) return hit;
+    const lookup = (display ? 'D|' : 'I|') + tex;
+    const hit = formulaCache.get(lookup);
+    if (hit !== undefined) {
+        cacheHits++;
+        formulaCache.delete(hit.key);
+        formulaCache.set(hit.key, hit);   // most recently used last
+        return hit.svg ? hit.svg.toString('utf8') : null;
+    }
+    cacheMisses++;
     let out;
     try {
         const node = mathDoc.convert(normalizeTex(decodeEntities(tex).trim()), { display });
         out = exToEm(adaptor.outerHTML(node));
     } catch (err) {
         out = null; // signal failure → keep the raw delimiters untouched
+    } finally {
+        releaseTextParsers();
     }
-    if (formulaCache.size >= CACHE_MAX) formulaCache.delete(formulaCache.keys().next().value);
-    formulaCache.set(key, out);
+    const entry = { key: flatString(lookup), svg: out === null ? null : Buffer.from(out, 'utf8') };
+    formulaCache.set(entry.key, entry);
+    cacheBytes += entryBytes(entry);
+    while (cacheBytes > CACHE_BYTES && formulaCache.size > 1) {
+        const oldest = formulaCache.values().next().value;
+        formulaCache.delete(oldest.key);
+        cacheBytes -= entryBytes(oldest);
+    }
     return out;
+}
+
+/** Cache size, what MathJax's text parsers still hold, and the budget: for tests and for
+ *  reading the live process over the inspector. */
+function memoryStats() {
+    const held = textmacros ? textmacros.parseOptions.parsers.length
+        + Object.values(textmacros.parseOptions.nodeLists).reduce((n, list) => n + list.length, 0) : 0;
+    return { entries: formulaCache.size, bytes: cacheBytes, budget: CACHE_BYTES, hits: cacheHits, misses: cacheMisses, textParsersHeld: held };
 }
 
 const S = '\x01MJX'; // placeholder sentinel — cannot occur in real page text
@@ -239,4 +291,4 @@ function renderMathInHtml(html) {
     return restore(s, store);
 }
 
-module.exports = { renderMathInHtml, getMathCss, EX_IN_EM };
+module.exports = { renderMathInHtml, getMathCss, memoryStats, flatString, EX_IN_EM };

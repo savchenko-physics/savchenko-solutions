@@ -78,7 +78,7 @@ const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
-const { router: messagesRouter, getUnreadMessageCount } = require('./messages');
+const { router: messagesRouter, getUnreadMessageCount, closeStreams: closeMessageStreams } = require('./messages');
 const { pingIndexNow } = require('./indexnow');
 const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
 // One reaction vocabulary for the chat and the solution comments: the six Unicode emoji and
@@ -270,7 +270,13 @@ app.use("/img/profile_images", express.static(AVATAR_DIR, {
         res.setHeader("Cache-Control", avatarCacheControl(path.basename(filePath), Boolean(res.req.query.v)));
     },
 }));
-app.use("/img", express.static(path.join(__dirname, "img"), { maxAge: '30d' }));
+// /img holds what people upload to the chats too (img/messages: images, documents and, since
+// 2026-09-19, videos). nosniff keeps a browser from second-guessing the type of an uploaded file;
+// Range requests, which a <video> needs to seek, are express.static's default.
+app.use("/img", express.static(path.join(__dirname, "img"), {
+    maxAge: '30d',
+    setHeaders: (res) => res.setHeader('X-Content-Type-Options', 'nosniff'),
+}));
 // Site fonts are content-hashed (scripts/build-fonts.py), so a file name never changes meaning:
 // a year, immutable. Mounted before /css so its week-long max-age never applies to them. A stale
 // hash ends here as a plain 404: with fallthrough:false the static middleware handed its 404 to
@@ -3753,13 +3759,30 @@ app.use((err, req, res, next) => {
 // defeating the blocklist, the allowlists and the rate limiters in one header.
 // HOST is overridable so a container or a different proxy setup can still work.
 const HOST = process.env.BIND_HOST || '127.0.0.1';
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
     console.log(`Main server listening on ${HOST}:${PORT}`);
     // Watches posts/ for problems of «Последняя задача» that get solved (lastProblem.js).
     startLastProblem();
     // Sundays at 06:00 UTC: one summary email instead of one email per notification (digest.js).
     digest.startScheduler(pool);
 });
+
+// pm2 stops the app with SIGINT: on a deploy, and since 2026-09-19 whenever the process reaches
+// max_memory_restart (420 MB of RSS, well under the 470 MB heap V8 gets on the box), which
+// recycles it before it can die the way it did twice a day until then (see mathRender.js).
+// Node's default is to exit at once, cutting every request and chat stream mid-way; instead the
+// port closes, the streams end (their pages reconnect), what is in flight finishes, and the
+// deadline keeps one stuck response from holding the restart. pm2's kill_timeout is 8 s.
+function shutdown(signal) {
+    console.log(`${signal}: closing`);
+    const deadline = setTimeout(() => process.exit(0), 5000);
+    deadline.unref();
+    try { closeMessageStreams(); } catch (err) { console.error('closing message streams:', err); }
+    server.close(() => process.exit(0));
+    if (typeof server.closeIdleConnections === 'function') server.closeIdleConnections();
+}
+process.once('SIGINT', () => shutdown('SIGINT'));
+process.once('SIGTERM', () => shutdown('SIGTERM'));
 
 // Add this function near your other database query functions
 async function getRecentContributors(limit = 6) {

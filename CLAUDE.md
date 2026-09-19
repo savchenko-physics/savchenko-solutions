@@ -34,7 +34,26 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   the `@font-face` rules. Its `?v=` is the md5 of `getMathCss()` computed at boot
   (`app.locals.mathCssVersion`), so there is nothing to bump. Server formulas are sized in `em`
   at SS Text's x-height (0.431), not in `ex`, so they do not change size while the text font
-  loads. `tests/math-fallback.test.js`.
+  loads. `tests/math-fallback.test.js`. **Memory:** from 2026-09-03 to 2026-09-19 this renderer
+  killed the app every 10–20 hours ("Ineffective mark-compacts near heap limit", 596 restarts, a
+  1.3 GB core dump each): mathjax-full 3.2.2's textmacros package never releases the parser it
+  creates for each `\text{…}` (cleared after every conversion now), each cache key was a slice
+  pinning the whole page it came from (copied flat now), and 20,000 two-byte SVG strings were
+  ~370 MB by themselves (UTF-8 buffers under `MATH_CACHE_MB`, 32 by default, least recently
+  used out first). `memoryStats()` reports the cache and what MathJax still holds;
+  `tests/math-memory.test.js` renders a thousand `\text{}` formulas three times in a child
+  process with the garbage collector exposed and fails if pass three costs heap.
+- **Chat attachments** are stated once in `lib/messageAttachments.js`: images play inline, videos
+  (mp4, m4v, mov, webm) play inline in a `<video>` since 2026-09-19 (asked in the Russian chat),
+  mkv/avi and documents are download cards; 25 MB for a file, 100 MB for a video, both read by
+  `messages.js`, the page's composer and its tooltip from that module. A video's pixel size comes
+  from the container (`lib/videoMeta.js`, no ffprobe on the box: ISO BMFF `tkhd` with its rotation
+  matrix, or Matroska `PixelWidth`/`PixelHeight`) into `image_width`/`image_height`, so the bubble
+  reserves its box like an image does; a container the browser cannot decode falls back to the
+  card on the `error` event. Uploads go by XMLHttpRequest so the pending card shows progress; no
+  attachment is accepted with under 1 GB free on the disk (507); deleting a video message removes
+  its file unless a forward still shows it (other kinds keep their files, as before).
+  `tests/message-attachments.test.js`, `tests/video-meta.test.js` (runs ffmpeg when installed).
 - The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
   separate Express app on its own subdomain and would otherwise 404 on shared assets.
 - **Reactions** (chat and solution comments) have one vocabulary, `js/reactions.js`: six
@@ -462,6 +481,12 @@ hyphenation and a 1em paragraph indent, as journals set text.
 
 ## Deployment
 - Manual: `node index.js` (port 3000) + `node sandbox/sandbox-app.js` (port 4000)
+- Production is a pm2 process on a 915 MiB box where V8 gets a 470 MB heap. pm2 recycles it at
+  `max_memory_restart` 420M (set 2026-09-19, `pm2 save`d) with `kill_timeout` 8000: `index.js`
+  handles SIGINT by closing the port, ending the chat streams and exiting once what is in flight
+  is done (5 s deadline). The pm2 unit has `LimitCORE=0` and the on-box disk guard deletes
+  `/var/lib/apport/coredump/core.*`, so a crash can no longer fill the disk. Memory is sampled
+  every five minutes into `~/mem-samples.csv` on the box.
 - Database: AWS RDS PostgreSQL
 - No Docker, no CI/CD pipeline currently
 - Static assets served directly by Express (no CDN)
