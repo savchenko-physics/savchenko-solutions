@@ -101,10 +101,11 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   trading plus bounties (`earnedOf`, `rankBoard`); the demon is shown apart as the benchmark, never ranked.
 - **Birth-year turns, 2,007 and 2,008** (`lib/founderYear.js` `TURNS`, 2026-09-18). emixter's birth-year
   challenge in the chats says whoever was born in the year the solved count reaches solves the next problem.
-  While the count (the homepage's) is exactly 2,007, publishing, `/api/upload` and `/create-problem` answer 423
-  to everyone but astrosander (user 28); at exactly 2,008 to everyone but Valter (user 2543); 2,009 is open.
-  The editor, `/upload` and `/drafts` say why, and drafts keep saving. Inert past 2,008; delete it then.
-  `tests/founder-year.test.js`.
+  While the count (the homepage's) is exactly 2,007, a problem's **first post in either language** (`/api/upload`,
+  `/create-problem`) answers 423 to everyone but astrosander (user 28); at exactly 2,008 to everyone but Valter
+  (user 2543); 2,009 is open. Edits (the save route), translations and drafts are never held: holding edits on
+  the first day stopped Daniyar from correcting a solution (2026-09-19). `/upload` says why. Inert past 2,008;
+  delete it then. `tests/founder-year.test.js`.
 
 ## Tech Stack
 - **Runtime:** Node.js

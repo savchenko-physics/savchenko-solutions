@@ -8,15 +8,23 @@
 // to 2,008 and 2,009 be open, and the notice and the refusal must say the same thing in both
 // languages.
 //
-// Not covered, because there is no test database: the routes that ask (save, /api/upload,
-// /create-problem answer 423; the editor, /upload and /drafts show the notice) and the count
-// itself, which is the homepage's (unsolved.js getSolutionProgressStats). Drafts never ask: the
-// autosave endpoint is untouched, which is what "keep writing" in the notice promises.
+// Only a first post of a problem is held, because only that moves the count. On the first day the
+// editor's Publish was held too, and Daniyar could not correct a wrong solution (2026-09-19); the
+// count had reached 2,007 that morning. So: an edit is never a first post, a translation is never a
+// first post, and the notice says both work as usual.
+//
+// Not covered, because there is no test database: the routes that ask (/api/upload and
+// /create-problem answer 423; /upload shows the notice) and the count itself, which is the
+// homepage's (unsolved.js getSolutionProgressStats). The save route and the drafts endpoints do
+// not ask at all.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
-const { TURNS, CHALLENGE, founderYearGate, founderYearCopy, founderYearMessage } = require('../lib/founderYear');
+const { TURNS, CHALLENGE, founderYearGate, isFirstPost, founderYearCopy, founderYearMessage } = require('../lib/founderYear');
 
 const FOUNDER = 28;
 const VALTER = 2543;
@@ -77,7 +85,7 @@ for (const year of [2007, 2008]) {
                     assert.match(text, /2008/);
                 } else {
                     assert.ok(!hrefs.includes(`/${lang}/user/astrosander`), 'no turn after Valter');
-                    assert.match(text, lang === 'ru' ? /откроется для всех\.$/ : /reopens for everyone\.$/);
+                    assert.match(text, lang === 'ru' ? /снова смогут добавлять все\.$/ : /can add new solutions again\.$/);
                 }
             });
 
@@ -102,12 +110,34 @@ for (const year of [2007, 2008]) {
     }
 }
 
-test('everyone else is told their drafts are safe, the person whose turn it is that an edit does not count', () => {
+test('everyone else is told that edits, translations and drafts work, the person whose turn it is that an edit does not count', () => {
     for (const turn of TURNS) {
-        assert.match(founderYearMessage('en', turn, false), /drafts are saved/);
-        assert.match(founderYearMessage('ru', turn, false), /черновики сохраняются/);
+        assert.match(founderYearMessage('en', turn, false), /Editing published solutions, translations and drafts work as usual/);
+        assert.match(founderYearMessage('ru', turn, false), /Правки опубликованных решений, переводы и черновики работают как обычно/);
         assert.match(founderYearMessage('en', turn, true), /an edit or a translation does not change the count/);
         assert.match(founderYearMessage('ru', turn, true), /Правка или перевод число решённых не меняют/);
+    }
+});
+
+// What is held: only a post that would be the problem's first in either language.
+test('a first post is one with no file in either language; a translation or an edit is not', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'founder-year-'));
+    try {
+        for (const lang of ['en', 'ru']) fs.mkdirSync(path.join(dir, lang));
+        fs.writeFileSync(path.join(dir, 'ru', '5.8.9.md'), '# solved in Russian');
+        fs.writeFileSync(path.join(dir, 'en', '1.1.1.md'), '# solved in English');
+        fs.writeFileSync(path.join(dir, 'ru', '1.1.1.md'), '# and in Russian');
+        assert.equal(isFirstPost('14.3.6', dir), true, 'nothing in either language');
+        assert.equal(isFirstPost('5.8.9', dir), false, 'an English translation of a Russian solution');
+        assert.equal(isFirstPost('1.1.1', dir), false, 'an edit of a solution in both languages');
+    } finally {
+        fs.rmSync(dir, { recursive: true, force: true });
+    }
+});
+
+test('a name that is not a problem number is never a first post, so it is never held', () => {
+    for (const name of ['', '../x', '5.8', 'abc', null, undefined, '1.1.1.md']) {
+        assert.equal(isFirstPost(name, os.tmpdir()), false, String(name));
     }
 });
 

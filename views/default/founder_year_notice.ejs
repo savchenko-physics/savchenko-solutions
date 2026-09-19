@@ -1,15 +1,8 @@
 <%#
-  Why publishing waits at 2,007 (lib/founderYear.js). `founderYear` is founderYearFor(...) or null.
-  variant 'bar' is the editor's fixed bar under its toolbar (styled there, like the draft-restored
-  bar, and closable because it covers the top of the text); otherwise an .ss-alert in the page.
-%><% if (typeof founderYear !== 'undefined' && founderYear) { %><% const fyBar = typeof variant !== 'undefined' && variant === 'bar'; %>
-<div id="founder-year-notice" class="<%= fyBar ? 'draft-restored-bar show' : 'ss-alert ss-alert--info mb-4' %>" role="status">
+  Why adding a solution waits on a birth-year turn (lib/founderYear.js), on /upload.
+  `founderYear` is founderYearFor(...) or null.
+%><% if (typeof founderYear !== 'undefined' && founderYear) { %>
+<div id="founder-year-notice" class="ss-alert ss-alert--info mb-4" role="status">
   <span><strong><%= founderYear.copy.heading %>.</strong> <% founderYear.copy.body.forEach(function (part) { %><% if (typeof part === 'string') { %><%= part %><% } else { %><a href="<%= part.href %>"><%= part.text %></a><% } %><% }); %></span>
-  <% if (fyBar) { %><button type="button" id="founder-year-close" aria-label="close">&times;</button>
-  <script>
-    document.getElementById('founder-year-close').addEventListener('click', function () {
-      document.getElementById('founder-year-notice').classList.remove('show');
-    });
-  </script><% } %>
 </div>
 <% } %>

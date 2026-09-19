@@ -34,14 +34,6 @@ router.post("/api/upload", checkAuthenticated, async (req, res) => {
         
         const lang = req.body.lang || 'en';
 
-        // A new solution moves the count, so at 2,007 it waits for the founder's
-        // (lib/founderYear.js). Before any image is written; the page keeps what was typed.
-        const uiLang = req.body.uiLang === 'ru' ? 'ru' : (req.body.uiLang === 'en' ? 'en' : (lang === 'ru' ? 'ru' : 'en'));
-        const founderYear = await founderYearFor(req.session.userId, uiLang, { fresh: true });
-        if (founderYear && founderYear.blocked) {
-            return res.status(423).json({ success: false, founderYear: true, message: founderYear.message });
-        }
-
         if (!req.body.problemName || !req.body.method) {
             return res.status(400).json({
                 success: false,
@@ -99,6 +91,16 @@ router.post("/api/upload", checkAuthenticated, async (req, res) => {
                 success: false,
                 message: `Problem number (${probNum}) exceeds the maximum allowed (${maxProblems}) for Section ${chapterNum}.${sectionNum}.`
             });
+        }
+
+        // A first post of a problem moves the solved count, so on a birth-year turn it waits for
+        // that person (lib/founderYear.js). A translation of a solved problem is not held. Asked
+        // before any image is written; the page keeps what was typed. uiLang is the page's own
+        // language, which can differ from the solution's.
+        const uiLang = req.body.uiLang === 'ru' ? 'ru' : (req.body.uiLang === 'en' ? 'en' : (lang === 'ru' ? 'ru' : 'en'));
+        const founderYear = await founderYearFor(req.session.userId, uiLang, { fresh: true, problem: problemName });
+        if (founderYear && founderYear.blocked) {
+            return res.status(423).json({ success: false, founderYear: true, message: founderYear.message });
         }
 
         // Update the files check to properly handle FormData uploads
