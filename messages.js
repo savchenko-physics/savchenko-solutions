@@ -16,6 +16,7 @@ const { isKnownReaction, isPremium, reactionAction } = require('./js/reactions')
 const { ownsReaction } = require('./lib/reactionUnlocks');
 const attachments = require('./lib/messageAttachments');
 const { videoDimensions } = require('./lib/videoMeta');
+const transcode = require('./lib/videoTranscode');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -305,6 +306,98 @@ async function removeVideoFile(fileUrl, fileName, messageId) {
     }
 }
 
+// ── Videos: made playable everywhere ──────────────────────────────────────────
+// A video that is not already H.264 + AAC in an mp4 is converted after upload
+// (lib/videoTranscode.js). Until then its message carries attachment_status 'converting' and
+// shows a download card; when the playable file is ready every message with that upload (a
+// forward shares the file) gets the new URL, size and box, and its members are told over SSE.
+// VIDEO_CONVERT=off, or no ffmpeg on the box, leaves uploads as they are.
+const conversionQueue = transcode.createQueue();
+let conversionToolsPromise = null;
+function conversionTools() {
+    if (!conversionToolsPromise) {
+        conversionToolsPromise = process.env.VIDEO_CONVERT === 'off' ? Promise.resolve(false) : transcode.toolsAvailable();
+    }
+    return conversionToolsPromise;
+}
+
+async function messagesForUrl(fileUrl) {
+    const r = await pool.query(
+        `SELECT m.conversation_id, ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.file_url = $1 AND m.deleted_at IS NULL`,
+        [fileUrl]
+    );
+    return r.rows;
+}
+
+async function announceAttachment(rows) {
+    for (const m of rows) {
+        try {
+            await broadcastToConversation(m.conversation_id, 'msg:update', {
+                conversationId: m.conversation_id, id: m.id,
+                file_url: m.file_url, file_name: m.file_name, file_size: m.file_size,
+                image_width: m.image_width, image_height: m.image_height, image_placeholder: m.image_placeholder,
+                attachment_status: m.attachment_status,
+            });
+        } catch (e) { console.error('SSE broadcast (attachment) error:', e); }
+    }
+}
+
+function scheduleConversion(fileUrl, srcPath, mode) {
+    return conversionQueue.add(async () => {
+        const dst = transcode.outputPathFor(srcPath);
+        try {
+            const used = await transcode.convert(srcPath, dst, mode);
+            const dims = videoDimensions(dst);
+            const size = (await fs.promises.stat(dst)).size;
+            const placeholder = await transcode.posterPlaceholder(dst);
+            const newUrl = '/img/messages/' + path.basename(dst);
+            const r = await pool.query(
+                `UPDATE messages SET file_url = $1, file_size = $2, image_width = $3, image_height = $4,
+                        image_placeholder = $5, attachment_status = NULL
+                 WHERE file_url = $6 AND deleted_at IS NULL RETURNING id`,
+                [newUrl, size, dims ? dims.width : null, dims ? dims.height : null, placeholder, fileUrl]
+            );
+            if (r.rows.length === 0) {           // every message with it was deleted meanwhile
+                await fs.promises.unlink(dst).catch(() => {});
+                return;
+            }
+            await fs.promises.unlink(srcPath).catch(() => {});
+            console.log(`video ${used}: ${path.basename(srcPath)} → ${path.basename(dst)} (${Math.round(size / 1024)} KB)`);
+            await announceAttachment(await messagesForUrl(newUrl));
+        } catch (err) {
+            console.error(`video conversion failed for ${path.basename(srcPath)}:`, err && err.message);
+            await pool.query(
+                `UPDATE messages SET attachment_status = 'failed' WHERE file_url = $1 AND attachment_status = 'converting'`,
+                [fileUrl]
+            ).catch((e) => console.error('marking a failed conversion:', e));
+            await announceAttachment(await messagesForUrl(fileUrl).catch(() => []));
+        }
+    });
+}
+
+// At startup: whatever was converting when the process last stopped is converted now.
+async function resumeConversions() {
+    try {
+        if (!(await conversionTools())) return;
+        const r = await pool.query(
+            `SELECT DISTINCT file_url, file_name FROM messages WHERE attachment_status = 'converting' AND deleted_at IS NULL`
+        );
+        for (const row of r.rows) {
+            const src = path.join(msgImageDir, path.basename(row.file_url));
+            if (!row.file_url.startsWith('/img/messages/') || !fs.existsSync(src)) {
+                await pool.query(`UPDATE messages SET attachment_status = 'failed' WHERE file_url = $1`, [row.file_url]);
+                continue;
+            }
+            const info = await transcode.probe(src);
+            const mode = transcode.conversionNeeded(info, attachments.extensionOf(row.file_name));
+            scheduleConversion(row.file_url, src, mode === 'none' ? 'remux' : mode);
+        }
+        if (r.rows.length) console.log(`video: resuming ${r.rows.length} conversion(s)`);
+    } catch (err) {
+        console.error('resuming video conversions:', err);
+    }
+}
+
 // Attach a `reply` object to each message row that quotes another message.
 function attachReplyInfo(rows, userId, lang) {
     for (const m of rows) {
@@ -327,7 +420,7 @@ const PAGE_SIZE = 30; // messages loaded per page (initial view + each older pag
 // endpoints so all three return identically-shaped rows.
 const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
         m.image_width, m.image_height, m.image_placeholder,
-        m.file_url, m.file_name, m.file_size, m.pinned_at, m.forwarded_from_user_id,
+        m.file_url, m.file_name, m.file_size, m.attachment_status, m.pinned_at, m.forwarded_from_user_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
         fu.username AS forwarded_from_username,
@@ -1071,7 +1164,8 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
         // A video keeps the file columns (name, size, download fallback) and puts its pixel size
         // in image_width / image_height, which are the attachment's box for either kind.
         let imageUrl = null, imageW = null, imageH = null, imagePlaceholder = null;
-        let fileUrl = null, fileName = null, fileSize = null;
+        let fileUrl = null, fileName = null, fileSize = null, attachmentStatus = null;
+        let conversion = null;   // { mode } when the video must be converted before it can play
         if (req.file) {
             const kind = attachments.kindOf(req.file.originalname);
             if (req.file.size > attachments.limitFor(req.file.originalname)) {
@@ -1092,6 +1186,12 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 if (kind === 'video') {
                     const dims = videoDimensions(req.file.path);
                     if (dims) { imageW = dims.width; imageH = dims.height; }
+                    if (await conversionTools()) {
+                        const info = await transcode.probe(req.file.path);
+                        const mode = transcode.conversionNeeded(info, attachments.extensionOf(fileName));
+                        if (mode === 'none') imagePlaceholder = await transcode.posterPlaceholder(req.file.path);
+                        else { attachmentStatus = 'converting'; conversion = { mode }; }
+                    }
                 }
             }
         }
@@ -1136,10 +1236,11 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
 
         // Insert message and update conversation timestamp
         const inserted = await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url, reply_to_id, file_url, file_name, file_size, image_width, image_height, image_placeholder)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at`,
-            [convId, userId, content, imageUrl, replyToId, fileUrl, fileName, fileSize, imageW, imageH, imagePlaceholder]
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, reply_to_id, file_url, file_name, file_size, image_width, image_height, image_placeholder, attachment_status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, created_at`,
+            [convId, userId, content, imageUrl, replyToId, fileUrl, fileName, fileSize, imageW, imageH, imagePlaceholder, attachmentStatus]
         );
+        if (conversion) scheduleConversion(fileUrl, req.file.path, conversion.mode);
         await pool.query(
             `UPDATE conversations SET last_message_at = NOW() WHERE id = $1`,
             [convId]
@@ -1189,6 +1290,7 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
             return res.json({
                 ok: true, id: msg.id, created_at: msg.created_at,
                 image_url: imageUrl, file_url: fileUrl, file_name: fileName, file_size: fileSize,
+                attachment_status: attachmentStatus,
             });
         }
         res.redirect(messagesPath(lang, convId));
@@ -1448,7 +1550,7 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         // Source must be readable by the user (member of its conversation).
         const src = await pool.query(
             `SELECT m.id, m.sender_id, m.content, m.image_url, m.image_width, m.image_height,
-                    m.image_placeholder, m.file_url, m.file_name,
+                    m.image_placeholder, m.file_url, m.file_name, m.attachment_status,
                     m.file_size, m.forwarded_from_user_id, m.deleted_at
              FROM messages m
              JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
@@ -1486,9 +1588,9 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         const origin = s.forwarded_from_user_id || s.sender_id;
 
         const fwd = await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id, image_width, image_height, image_placeholder)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
-            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin, s.image_width, s.image_height, s.image_placeholder]
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id, image_width, image_height, image_placeholder, attachment_status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
+            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin, s.image_width, s.image_height, s.image_placeholder, s.attachment_status]
         );
         await pool.query(`UPDATE conversations SET last_message_at = NOW() WHERE id = $1`, [targetId]);
         await pool.query(
@@ -2059,4 +2161,4 @@ async function getUnreadMessageCount(userId) {
     }
 }
 
-module.exports = { router, getUnreadMessageCount, closeStreams };
+module.exports = { router, getUnreadMessageCount, closeStreams, resumeConversions };

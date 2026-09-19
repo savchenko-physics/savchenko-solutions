@@ -1913,7 +1913,7 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url && isVideoName(m.file_name)) { %><span class="msg-bubble-video-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %>"><video class="msg-bubble-video" src="<%= m.file_url %>" controls preload="metadata" playsinline data-name="<%= m.file_name %>" data-size="<%= m.file_size || 0 %>"></video></span><% } else if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url && isVideoName(m.file_name) && !m.attachment_status) { %><span class="msg-bubble-video-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><video class="msg-bubble-video" src="<%= m.file_url %>" controls preload="metadata" playsinline data-name="<%= m.file_name %>" data-size="<%= m.file_size || 0 %>"></video></span><% } else if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><% if (rxGlyph) { %><%- rxGlyph(r.emoji) %><% } else { %><%= r.emoji %><% } %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -2419,13 +2419,11 @@
     const ext = attachmentExtension(name);
     if (ATTACH_RULES.image.indexOf(ext) !== -1) return 'image';
     if (ATTACH_RULES.video.indexOf(ext) !== -1) return 'video';
-    if (ATTACH_RULES.videoFile.indexOf(ext) !== -1 || ATTACH_RULES.other.indexOf(ext) !== -1) return 'file';
+    if (ATTACH_RULES.other.indexOf(ext) !== -1) return 'file';
     return null;
   }
   function attachmentLimit(name) {
-    const ext = attachmentExtension(name);
-    if (ATTACH_RULES.video.indexOf(ext) !== -1 || ATTACH_RULES.videoFile.indexOf(ext) !== -1) return ATTACH_RULES.videoMaxBytes;
-    return ATTACH_RULES.maxBytes;
+    return attachmentKind(name) === 'video' ? ATTACH_RULES.videoMaxBytes : ATTACH_RULES.maxBytes;
   }
   function attachmentLimitText(name) {
     const mb = Math.round(attachmentLimit(name) / 1048576);
@@ -3349,7 +3347,8 @@
   function renderFileCardHTML(m) {
     if (!m.file_url) return '';
     const icon = '<span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>';
-    const size = m.file_size ? formatBytes(m.file_size) : '';
+    let size = m.file_size ? formatBytes(m.file_size) : '';
+    if (m.attachment_status === 'converting') size += (LANG === 'ru' ? ' · конвертируем видео…' : ' · converting the video…');
     const pending = m.file_url === '#';
     const href = pending ? '#' : esc(m.file_url);
     return '<a class="msg-bubble-file tex2jax_ignore" href="' + href + '" download="' + escAttr(m.file_name || '') + '">' +
@@ -3364,9 +3363,10 @@
   // with a progress bar until the server has it, and a container this browser cannot decode
   // becomes the download card again (the error listener below).
   function renderVideoHTML(m) {
-    if (!m.file_url || m.file_url === '#' || attachmentKind(m.file_name) !== 'video') return '';
+    if (!m.file_url || m.file_url === '#' || attachmentKind(m.file_name) !== 'video' || m.attachment_status) return '';
     const hasDims = m.image_width && m.image_height;
-    const style = hasDims ? 'width:min(' + m.image_width + 'px,280px);aspect-ratio:' + m.image_width + '/' + m.image_height + ';' : '';
+    let style = hasDims ? 'width:min(' + m.image_width + 'px,280px);aspect-ratio:' + m.image_width + '/' + m.image_height + ';' : '';
+    if (m.image_placeholder) style += 'background-image:url(' + m.image_placeholder + ');';
     return '<span class="msg-bubble-video-wrap' + (hasDims ? ' has-dims' : '') + '" style="' + style + '">' +
       '<video class="msg-bubble-video" src="' + esc(m.file_url) + '" controls preload="metadata" playsinline' +
       ' data-name="' + escAttr(m.file_name || '') + '" data-size="' + (Number(m.file_size) || 0) + '"></video></span>';
@@ -3587,7 +3587,7 @@
       const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
       const existingImg = bubble.querySelector('.msg-bubble-image-wrap');
       const imgHtml = existingImg ? existingImg.outerHTML : '';
-      const existingFile = bubble.querySelector('.msg-bubble-file');
+      const existingFile = bubble.querySelector('.msg-bubble-video-wrap') || bubble.querySelector('.msg-bubble-file');
       const fileHtml = existingFile ? existingFile.outerHTML : '';
       const existingReply = bubble.querySelector('.msg-reply-quote');
       const replyHtml = existingReply ? existingReply.outerHTML : '';
@@ -3598,6 +3598,20 @@
       const im2 = bubble.querySelector('.msg-bubble-image');
       if (im2) markImageLoaded(im2);
     }
+  }
+
+  // A video finished converting (or could not be): swap the card for the player, leaving the
+  // text, the reply quote and the reactions as they are.
+  function applyAttachmentUpdate(m) {
+    const row = document.querySelector('[data-msg-id="' + m.id + '"]');
+    if (!row) return;
+    const bubble = row.querySelector('.msg-bubble');
+    if (!bubble) return;
+    bubble.querySelectorAll('.msg-bubble-video-wrap, .msg-bubble-file').forEach(function(el) { el.remove(); });
+    const anchor = bubble.querySelector('.msg-bubble-edited') || bubble.querySelector('.msg-reaction-add');
+    const tmp = document.createElement('div');
+    tmp.innerHTML = renderVideoHTML(m) || renderFileCardHTML(m);
+    while (tmp.firstChild) bubble.insertBefore(tmp.firstChild, anchor);
   }
 
   // Mark the (visible) active conversation read, throttled — tells the server so
@@ -3688,6 +3702,11 @@
       const d = JSON.parse(e.data);
       if (d.conversationId === CONV_ID) applyMessageUpdate({ id: d.id, deleted_at: true });
       refreshConvList();
+    });
+    sse.addEventListener('msg:update', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) applyAttachmentUpdate(d);
     });
     sse.addEventListener('msg:react', function(e) {
       lastSseEventAt = Date.now();

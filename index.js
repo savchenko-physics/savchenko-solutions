@@ -78,7 +78,7 @@ const { router: trackingRouter } = require('./tracking');
 const { router: contestJudgeRouter } = require('./contestJudge');
 const { router: pathsRouter, getPathsForProblem } = require('./paths');
 const notifications = require('./notifications');
-const { router: messagesRouter, getUnreadMessageCount, closeStreams: closeMessageStreams } = require('./messages');
+const { router: messagesRouter, getUnreadMessageCount, closeStreams: closeMessageStreams, resumeConversions: resumeVideoConversions } = require('./messages');
 const { pingIndexNow } = require('./indexnow');
 const { router: brainstormRouter, renderRoom: renderBrainstormRoom } = require('./brainstorm');
 // One reaction vocabulary for the chat and the solution comments: the six Unicode emoji and
@@ -3743,6 +3743,8 @@ const server = app.listen(PORT, HOST, () => {
     startLastProblem();
     // Sundays at 06:00 UTC: one summary email instead of one email per notification (digest.js).
     digest.startScheduler(pool);
+    // Chat videos that were still being converted when the process last stopped (messages.js).
+    resumeVideoConversions();
 });
 
 // pm2 stops the app with SIGINT: on a deploy, and since 2026-09-19 whenever the process reaches

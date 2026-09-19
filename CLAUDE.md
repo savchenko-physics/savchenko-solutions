@@ -44,16 +44,25 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   `tests/math-memory.test.js` renders a thousand `\text{}` formulas three times in a child
   process with the garbage collector exposed and fails if pass three costs heap.
 - **Chat attachments** are stated once in `lib/messageAttachments.js`: images play inline, videos
-  (mp4, m4v, mov, webm) play inline in a `<video>` since 2026-09-19 (asked in the Russian chat),
-  mkv/avi and documents are download cards; 25 MB for a file, 100 MB for a video, both read by
-  `messages.js`, the page's composer and its tooltip from that module. A video's pixel size comes
-  from the container (`lib/videoMeta.js`, no ffprobe on the box: ISO BMFF `tkhd` with its rotation
-  matrix, or Matroska `PixelWidth`/`PixelHeight`) into `image_width`/`image_height`, so the bubble
-  reserves its box like an image does; a container the browser cannot decode falls back to the
-  card on the `error` event. Uploads go by XMLHttpRequest so the pending card shows progress; no
-  attachment is accepted with under 1 GB free on the disk (507); deleting a video message removes
-  its file unless a forward still shows it (other kinds keep their files, as before).
-  `tests/message-attachments.test.js`, `tests/video-meta.test.js` (runs ffmpeg when installed).
+  play inline in a `<video>` since 2026-09-19 (asked in the Russian chat), documents are download
+  cards; 25 MB for a file, 100 MB for a video, both read by `messages.js`, the page's composer and
+  its tooltip from that module. **Every video plays in every browser** because a video that is not
+  already H.264 4:2:0 + AAC in an mp4 (the one thing browsers agree on) is converted to it after
+  upload by `lib/videoTranscode.js` with the ffmpeg on the box (installed 2026-09-19; the first
+  video ever sent was OpenCV's MPEG-4 part 2, which nothing plays): re-encoded at up to 1280 px,
+  one thread, nice 19, choom 900, one job at a time, or only re-wrapped when just the container is
+  wrong (mov, mkv). Meanwhile the row has `attachment_status = 'converting'` (migration 057) and
+  shows a card saying so; on completion every message with that upload (forwards share it) gets
+  the `-web.mp4` URL, size, box and a blurred first-frame placeholder, members are told over SSE
+  `msg:update`, and the original is deleted; a failure leaves `'failed'` and the download card. A
+  restart resumes whatever was converting (`resumeConversions`); `VIDEO_CONVERT=off` disables it.
+  A video's pixel size comes from the container (`lib/videoMeta.js`: ISO BMFF `tkhd` with its
+  rotation matrix, or Matroska `PixelWidth`/`PixelHeight`) into `image_width`/`image_height`, so
+  the bubble reserves its box like an image does. Uploads go by XMLHttpRequest so the pending card
+  shows progress; no attachment is accepted with under 1 GB free on the disk (507); deleting a
+  video message removes its file unless a forward still shows it (other kinds keep their files,
+  as before). `tests/message-attachments.test.js`, `tests/video-meta.test.js`,
+  `tests/video-transcode.test.js` (the last two run ffmpeg when installed).
 - The sandbox app serves `/css`, `/js`, `/img` from the main app's directories — it is a
   separate Express app on its own subdomain and would otherwise 404 on shared assets.
 - **Reactions** (chat and solution comments) have one vocabulary, `js/reactions.js`: six

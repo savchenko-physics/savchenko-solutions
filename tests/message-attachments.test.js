@@ -12,13 +12,14 @@ const test = require('node:test');
 const assert = require('node:assert');
 const a = require('../lib/messageAttachments');
 
-test('a video plays inline, a document is a card, markup is never accepted', () => {
+test('a video is a video whatever its container, a document is a card, markup is never accepted', () => {
     assert.equal(a.kindOf('IMG_0042.MOV'), 'video');
     assert.equal(a.kindOf('screen.mp4'), 'video');
     assert.equal(a.kindOf('clip.webm'), 'video');
     assert.equal(a.kindOf('film.m4v'), 'video');
-    assert.equal(a.kindOf('obs.mkv'), 'file');           // accepted, but a download card
-    assert.equal(a.kindOf('old.avi'), 'file');
+    assert.equal(a.kindOf('obs.mkv'), 'video');          // converted after upload, then plays
+    assert.equal(a.kindOf('old.avi'), 'video');
+    assert.equal(a.kindOf('phone.3gp'), 'video');
     assert.equal(a.kindOf('photo.JPG'), 'image');
     assert.equal(a.kindOf('notes.pdf'), 'file');
     for (const bad of ['page.html', 'x.htm', 'icon.svg', 'run.js', 'data.xml', 'noext', '', 'a.mp4.exe']) {
@@ -50,6 +51,6 @@ test('what the page receives is the same rule set', () => {
     const rules = a.clientRules();
     assert.equal(rules.maxBytes, a.MAX_BYTES);
     assert.equal(rules.videoMaxBytes, a.VIDEO_MAX_BYTES);
-    assert.deepEqual([...rules.image, ...rules.video, ...rules.videoFile, ...rules.other], a.ALL_EXTENSIONS);
+    assert.deepEqual([...rules.image, ...rules.video, ...rules.other], a.ALL_EXTENSIONS);
     assert.ok(JSON.stringify(rules).length < 1000);
 });
