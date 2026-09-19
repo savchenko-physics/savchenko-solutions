@@ -103,6 +103,59 @@
       gap: var(--ss-space-2);
     }
 
+    .msg-search-wrap { position: relative; flex: 1; display: flex; }
+    .msg-search-clear {
+      position: absolute;
+      right: 4px;
+      top: 4px;                  /* a 28px button centred in the 36px field */
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 50%;
+      background: none;
+      color: var(--msg-muted);
+      font-size: var(--ss-fs-18);
+      line-height: 1;
+      cursor: pointer;
+    }
+    .msg-search-clear:hover { color: var(--msg-text); background: var(--msg-bg-alt); }
+    .msg-search-clear[hidden] { display: none; }
+
+    /* Searching: the matching chats stay at the top under "Chats", and below them the people
+       the site knows ("Global search results"), each a chat away — Telegram's sidebar search. */
+    .msg-list-section {
+      padding: var(--ss-space-1) var(--ss-space-3);
+      font-size: var(--ss-fs-12);
+      color: var(--msg-muted);
+      background: var(--msg-bg-alt);
+      border-bottom: 1px solid var(--ss-rule-soft);
+    }
+    .msg-list-section[hidden] { display: none; }
+    .msg-sidebar.is-searching .msg-conv-list { flex: 0 0 auto; max-height: 50%; }
+    .msg-sidebar.is-searching .msg-saved-item { display: none; }
+    .msg-search-global { flex: 1; overflow-y: auto; }
+    .msg-search-global[hidden] { display: none; }
+    .msg-search-global .msg-list-section { position: sticky; top: 0; }
+    .msg-search-hint { padding: var(--ss-space-4) var(--ss-space-3); font-size: var(--ss-fs-13); color: var(--msg-muted); text-align: center; }
+    .msg-search-user {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-3);
+      width: 100%;
+      padding: var(--ss-space-2) var(--ss-space-3);
+      border: none;
+      border-bottom: 1px solid var(--ss-rule-soft);
+      background: none;
+      text-align: left;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+    .msg-search-user:hover { background: var(--msg-bg-alt); }
+    .msg-search-user img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .msg-search-user-name { font-weight: var(--ss-fw-strong); font-size: var(--ss-text-ui); }
+    .msg-search-user-full { font-size: var(--ss-fs-13); color: var(--msg-muted); }
+
     .msg-search {
       flex: 1;
       height: 36px;
@@ -1626,25 +1679,164 @@
       100% { box-shadow: 0 0 0 3px rgba(26, 82, 118, 0); }
     }
 
-    .msg-image-overlay {
-      display: none;
+    /* ── The media viewer: Telegram Desktop's. A dark screen, the photo or video large in
+       the middle, its caption over the lower part, arrows and keys through the chat's media,
+       a strip of thumbnails, what and whose it is bottom left, download and close. ───────── */
+    .msg-viewer {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
-      z-index: 200;
+      inset: 0;
+      z-index: 1200;
+      background: rgba(0, 0, 0, 0.94);
+      color: var(--ss-on-navy);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .msg-viewer[hidden] { display: none; }
+    body.msg-viewer-open { overflow: hidden; }
+    .msg-viewer-stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
       align-items: center;
       justify-content: center;
-      cursor: zoom-out;
+      padding: 56px 72px 128px;
     }
-
-    .msg-image-overlay.show {
+    .msg-viewer-stage img,
+    .msg-viewer-stage video {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    .msg-viewer-stage video { min-width: min(640px, 100%); }
+    .msg-viewer-caption {
+      position: absolute;
+      left: 50%;
+      bottom: 128px;
+      transform: translateX(-50%);
+      max-width: min(1100px, calc(100vw - 144px));
+      max-height: 30vh;
+      overflow-y: auto;
+      padding: var(--ss-space-3) var(--ss-space-4);
+      border-radius: var(--ss-radius-lg);
+      background: rgba(0, 0, 0, 0.6);
+      font-size: var(--ss-text-ui);
+      line-height: var(--ss-lh-ui);
+      white-space: pre-wrap;
+      word-break: break-word;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .msg-viewer-caption:empty { display: none; }
+    .msg-viewer-caption a { color: var(--ss-on-navy-link); }
+    .msg-viewer-nav {
+      position: absolute;
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      margin-top: -24px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ss-on-navy);
       display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0.8;
     }
-
-    .msg-image-overlay img {
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: var(--ss-radius);
+    .msg-viewer-nav:hover { background: rgba(255, 255, 255, 0.16); opacity: 1; }
+    .msg-viewer-nav[disabled] { opacity: 0.2; cursor: default; }
+    .msg-viewer-nav.prev { left: var(--ss-space-4); }
+    .msg-viewer-nav.next { right: var(--ss-space-4); }
+    .msg-viewer-info {
+      position: absolute;
+      left: var(--ss-space-4);
+      bottom: var(--ss-space-4);
+      font-size: var(--ss-fs-13);
+      line-height: var(--ss-lh-ui);
+      color: rgba(255, 255, 255, 0.85);
+    }
+    .msg-viewer-info strong { font-weight: var(--ss-fw-strong); color: var(--ss-on-navy); }
+    .msg-viewer-tools {
+      position: absolute;
+      right: var(--ss-space-4);
+      bottom: var(--ss-space-4);
+      display: flex;
+      gap: var(--ss-space-2);
+    }
+    .msg-viewer-tools a,
+    .msg-viewer-tools button,
+    .msg-viewer-close {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ss-on-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .msg-viewer-tools a:hover, .msg-viewer-tools button:hover, .msg-viewer-close:hover { background: rgba(255, 255, 255, 0.16); }
+    .msg-viewer-close {
+      position: absolute;
+      top: var(--ss-space-3);
+      right: var(--ss-space-3);
+      font-size: var(--ss-fs-24);
+      line-height: 1;
+    }
+    .msg-viewer-strip {
+      position: absolute;
+      left: 50%;
+      bottom: var(--ss-space-3);
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-2);
+      max-width: min(60vw, 720px);
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 2px;
+    }
+    .msg-viewer-strip::-webkit-scrollbar { display: none; }
+    .msg-viewer-thumb {
+      position: relative;
+      flex: 0 0 auto;
+      width: 56px;
+      height: 72px;
+      border-radius: var(--ss-radius-sm);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.06);
+      background-size: cover;
+      background-position: center;
+      opacity: 0.55;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+      transition: width 0.15s ease, opacity 0.15s ease;
+    }
+    .msg-viewer-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .msg-viewer-thumb.is-current { width: 96px; opacity: 1; }
+    .msg-viewer-thumb .msg-viewer-thumb-play {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ss-on-navy);
+      background: rgba(0, 0, 0, 0.25);
+    }
+    @media (max-width: 767px) {
+      .msg-viewer-stage { padding: 48px 0 112px; }
+      .msg-viewer-caption { max-width: calc(100vw - 2 * var(--ss-space-3)); bottom: 112px; }
+      .msg-viewer-nav { display: none; }             /* swipe instead */
+      .msg-viewer-strip { max-width: calc(100vw - 2 * var(--ss-space-3)); bottom: 52px; }
+      .msg-viewer-info { bottom: var(--ss-space-3); font-size: var(--ss-fs-12); }
+      .msg-viewer-tools { bottom: var(--ss-space-3); }
     }
 
     /* Empty state */
@@ -1872,7 +2064,10 @@
     <!-- Sidebar: conversation list -->
     <div class="msg-sidebar">
       <div class="msg-sidebar-header">
-        <input type="text" class="msg-search" id="convSearch" placeholder="<%= lang === 'ru' ? 'Поиск...' : 'Search...' %>" />
+        <span class="msg-search-wrap">
+          <input type="text" class="msg-search" id="convSearch" placeholder="<%= lang === 'ru' ? 'Поиск...' : 'Search...' %>" autocomplete="off" />
+          <button type="button" class="msg-search-clear" id="convSearchClear" hidden aria-label="<%= lang === 'ru' ? 'Очистить' : 'Clear' %>">&times;</button>
+        </span>
         <button class="msg-new-btn" id="newMsgBtn" title="<%= lang === 'ru' ? 'Новое сообщение' : 'New message' %>">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -1901,6 +2096,7 @@
         </div>
       </a>
 
+      <div class="msg-list-section" id="convSearchChats" hidden><%= lang === 'ru' ? 'Чаты' : 'Chats' %></div>
       <div class="msg-conv-list tex2jax_ignore" id="convList">
         <% const nonSaved = conversations.filter(function(c){ return !c.isSaved; }); %>
         <% if (nonSaved.length === 0) { %>
@@ -1975,6 +2171,7 @@
           });
         })();
       </script>
+      <div class="msg-search-global tex2jax_ignore" id="convSearchResults" hidden></div>
     </div>
 
     <!-- Chat pane -->
@@ -2385,7 +2582,16 @@
   }
 %>
 
-<div class="msg-image-overlay" id="imageOverlay"><img id="imageOverlayImg" src="" alt="" /></div>
+<div class="msg-viewer" id="mediaViewer" hidden role="dialog" aria-modal="true">
+  <div class="msg-viewer-stage" id="viewerStage"></div>
+  <div class="msg-viewer-caption" id="viewerCaption"></div>
+  <button type="button" class="msg-viewer-nav prev" id="viewerPrev" aria-label="<%= lang === 'ru' ? 'Назад' : 'Previous' %>"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <button type="button" class="msg-viewer-nav next" id="viewerNext" aria-label="<%= lang === 'ru' ? 'Вперёд' : 'Next' %>"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+  <button type="button" class="msg-viewer-close" id="viewerClose" aria-label="<%= lang === 'ru' ? 'Закрыть' : 'Close' %>">&times;</button>
+  <div class="msg-viewer-info"><div id="viewerCount"></div><div id="viewerMeta"></div></div>
+  <div class="msg-viewer-tools"><a id="viewerDownload" href="#" download aria-label="<%= lang === 'ru' ? 'Скачать' : 'Download' %>"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a></div>
+  <div class="msg-viewer-strip" id="viewerStrip"></div>
+</div>
 
 <div class="msg-send-dialog" id="sendDialog" hidden>
   <div class="msg-send-backdrop" id="sendDialogBackdrop"></div>
@@ -2564,8 +2770,7 @@
   const sendAsFileRow = document.getElementById('sendAsFileRow');
   const sendAsFile = document.getElementById('sendAsFile');
   const sendCaption = document.getElementById('sendCaption');
-  const imageOverlay = document.getElementById('imageOverlay');
-  const imageOverlayImg = document.getElementById('imageOverlayImg');
+  const mediaViewer = document.getElementById('mediaViewer');
   let pendingImage = null;      // the pending attachment File (image, video, audio or document)
   let pendingName = '';         // its file name as sent (a pasted image may have none)
   let pendingAsFile = false;    // "send as a document": a picture or video shown as a file card
@@ -2919,7 +3124,133 @@
     }
   }
 
-  // Image overlay (lightbox) + reply-quote jump
+  /* ── The media viewer ─────────────────────────────────────────────────────────────────
+     A click on a picture or a video opens it here, the way Telegram Desktop does: the chat's
+     media in order, arrows and ← → keys between them, Esc or the backdrop to close, a swipe on a
+     phone. A video plays in the viewer with the browser's controls. The list is read from the
+     rows on screen each time the viewer opens, so what history has loaded is what it shows. */
+  const viewer = {
+    items: [], index: -1,
+    stage: document.getElementById('viewerStage'), caption: document.getElementById('viewerCaption'),
+    prev: document.getElementById('viewerPrev'), next: document.getElementById('viewerNext'),
+    count: document.getElementById('viewerCount'), meta: document.getElementById('viewerMeta'),
+    download: document.getElementById('viewerDownload'), strip: document.getElementById('viewerStrip'),
+  };
+  function viewerItemsFromChat() {
+    const items = [];
+    if (!chatEl) return items;
+    chatEl.querySelectorAll('.msg-bubble-row .msg-media').forEach(function(wrap) {
+      const row = wrap.closest('.msg-bubble-row');
+      const img = wrap.querySelector('.msg-bubble-image');
+      const video = wrap.querySelector('.msg-bubble-video');
+      if (!row || (!img && !video)) return;
+      const captionEl = row.querySelector('.msg-caption');
+      let caption = '';
+      if (captionEl) {
+        const c = captionEl.cloneNode(true);
+        c.querySelectorAll('.msg-bubble-time, .msg-bubble-edited').forEach(function(el) { el.remove(); });
+        caption = c.innerHTML;
+      }
+      items.push({
+        kind: img ? 'image' : 'video',
+        src: img ? (img.dataset.full || img.src) : video.getAttribute('src'),
+        name: img ? (img.dataset.full || img.src).split('/').pop() : (video.dataset.name || 'video.mp4'),
+        poster: wrap.style.backgroundImage || '',
+        caption: caption,
+        sender: row.dataset.senderName || '',
+        created: row.dataset.created || '',
+        wrap: wrap,
+      });
+    });
+    return items;
+  }
+  function viewerStopVideo() {
+    const v = viewer.stage.querySelector('video');
+    if (v) { try { v.pause(); } catch (e) {} v.removeAttribute('src'); v.load(); }
+    viewer.stage.innerHTML = '';
+  }
+  function viewerShow(i) {
+    const it = viewer.items[i];
+    if (!it) return;
+    viewer.index = i;
+    viewerStopVideo();
+    if (it.kind === 'image') {
+      const img = document.createElement('img');
+      img.src = it.src; img.alt = '';
+      viewer.stage.appendChild(img);
+    } else {
+      const v = document.createElement('video');
+      v.src = it.src; v.controls = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      viewer.stage.appendChild(v);
+      const p = v.play(); if (p && p.catch) p.catch(function() {});
+    }
+    viewer.caption.innerHTML = it.caption;
+    const n = viewer.items.length;
+    const what = it.kind === 'image' ? (LANG === 'ru' ? 'Фото' : 'Photo') : it.name;
+    viewer.count.innerHTML = '<strong>' + esc(what) + '</strong> ' + (i + 1) + ' ' + (LANG === 'ru' ? 'из' : 'of') + ' ' + n;
+    const when = it.created ? new Date(it.created) : null;
+    viewer.meta.textContent = [it.sender, when && !isNaN(when.getTime())
+      ? when.toLocaleDateString(TIME_LOCALE, { day: 'numeric', month: 'short', year: 'numeric' }) + ' ' + (LANG === 'ru' ? 'в' : 'at') + ' ' + fmtTime(it.created)
+      : ''].filter(Boolean).join(' • ');
+    viewer.download.href = it.src; viewer.download.setAttribute('download', it.name);
+    viewer.prev.disabled = i === 0; viewer.next.disabled = i === n - 1;
+    viewer.strip.querySelectorAll('.msg-viewer-thumb').forEach(function(t, k) { t.classList.toggle('is-current', k === i); });
+    const cur = viewer.strip.querySelector('.msg-viewer-thumb.is-current');
+    if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'center' });
+    // the neighbours, so the next step is instant
+    [i - 1, i + 1].forEach(function(k) { const o = viewer.items[k]; if (o && o.kind === 'image') { const pre = new Image(); pre.src = o.src; } });
+  }
+  function openViewer(wrap) {
+    if (!mediaViewer) return;
+    viewer.items = viewerItemsFromChat();
+    const i = viewer.items.findIndex(function(it) { return it.wrap === wrap; });
+    if (i < 0) return;
+    const playSvg = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+    viewer.strip.innerHTML = viewer.items.map(function(it, k) {
+      const inner = it.kind === 'image' ? '<img src="' + esc(it.src) + '" alt="" loading="lazy" />' : '<span class="msg-viewer-thumb-play">' + playSvg + '</span>';
+      const style = it.kind === 'video' && it.poster ? ' style="background-image:' + it.poster.replace(/"/g, '&quot;') + '"' : '';
+      return '<button type="button" class="msg-viewer-thumb" data-index="' + k + '"' + style + '>' + inner + '</button>';
+    }).join('');
+    mediaViewer.hidden = false;
+    document.body.classList.add('msg-viewer-open');
+    viewerShow(i);
+  }
+  function closeViewer() {
+    if (!mediaViewer || mediaViewer.hidden) return;
+    viewerStopVideo();
+    mediaViewer.hidden = true;
+    document.body.classList.remove('msg-viewer-open');
+    viewer.items = []; viewer.index = -1;
+  }
+  if (mediaViewer) {
+    viewer.prev.addEventListener('click', function() { if (viewer.index > 0) viewerShow(viewer.index - 1); });
+    viewer.next.addEventListener('click', function() { if (viewer.index < viewer.items.length - 1) viewerShow(viewer.index + 1); });
+    document.getElementById('viewerClose').addEventListener('click', closeViewer);
+    viewer.strip.addEventListener('click', function(e) {
+      const t = e.target.closest('.msg-viewer-thumb');
+      if (t) viewerShow(parseInt(t.dataset.index));
+    });
+    // The backdrop closes; the media, the caption and the controls do not.
+    mediaViewer.addEventListener('click', function(e) {
+      if (e.target === mediaViewer || e.target === viewer.stage) closeViewer();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (mediaViewer.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); closeViewer(); }
+      else if (e.key === 'ArrowLeft' && viewer.index > 0) { e.preventDefault(); viewerShow(viewer.index - 1); }
+      else if (e.key === 'ArrowRight' && viewer.index < viewer.items.length - 1) { e.preventDefault(); viewerShow(viewer.index + 1); }
+    });
+    let touchX = null;
+    mediaViewer.addEventListener('touchstart', function(e) { touchX = e.touches.length === 1 ? e.touches[0].clientX : null; }, { passive: true });
+    mediaViewer.addEventListener('touchend', function(e) {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX; touchX = null;
+      if (dx > 60 && viewer.index > 0) viewerShow(viewer.index - 1);
+      else if (dx < -60 && viewer.index < viewer.items.length - 1) viewerShow(viewer.index + 1);
+    }, { passive: true });
+  }
+
+  // Reply-quote jump, and the viewer on a picture or a video
   if (chatEl) {
     chatEl.addEventListener('click', function(e) {
       const quote = e.target.closest('.msg-reply-quote');
@@ -2927,37 +3258,18 @@
         jumpToMessage(parseInt(quote.dataset.target));
         return;
       }
-      const img = e.target.closest('.msg-bubble-image');
-      if (img && imageOverlay) {
-        imageOverlayImg.src = img.dataset.full || img.src;
-        imageOverlay.classList.add('show');
-      }
-    });
-  }
-  if (imageOverlay) {
-    imageOverlay.addEventListener('click', function() {
-      this.classList.remove('show');
-      imageOverlayImg.src = '';
+      const wrap = e.target.closest('.msg-media');
+      if (wrap) openViewer(wrap);
     });
   }
 
-  // A video: the first click starts it and hands over to the browser's controls; the badge
-  // shows its length once the metadata is in. Media events do not bubble: capture phase.
+  // A video in the chat shows its length once the metadata is in; it plays in the viewer.
   function fmtDuration(sec) {
     if (!isFinite(sec) || sec < 0) return '';
     const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
   }
   if (chatEl) {
-    chatEl.addEventListener('click', function(e) {
-      const wrap = e.target.closest('.msg-bubble-video-wrap');
-      if (!wrap) return;
-      const video = wrap.querySelector('.msg-bubble-video');
-      if (!video || video.controls) return;      // the browser's controls own the clicks from now on
-      video.controls = true;
-      const p = video.play();
-      if (p && p.catch) p.catch(function() {});
-    });
     chatEl.addEventListener('loadedmetadata', function(e) {
       const v = e.target;
       if (!v || !v.classList || !v.classList.contains('msg-bubble-video')) return;
@@ -3835,6 +4147,17 @@
   // The server wrote the times in the zone its cookie named. When that is this browser's zone
   // there is nothing to redo; otherwise (a first visit, a reader who travelled) they are
   // rewritten here, and the receipts stay in place because only the time's text changes.
+  // The sidebar's time for a chat: the time today, the weekday this week, else the date.
+  function convTimeText(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 86400000 && d.getDate() === now.getDate()) return d.toLocaleTimeString(TIME_LOCALE, { hour: '2-digit', minute: '2-digit' });
+    if (diff < 604800000) return d.toLocaleDateString(TIME_LOCALE, { weekday: 'short' });
+    return d.toLocaleDateString(TIME_LOCALE, { month: 'short', day: 'numeric' });
+  }
   function localizeSsrTimes() {
     const body = document.querySelector('.msg-body');
     if (!TIMES_ARE_LOCAL) {
@@ -3848,21 +4171,8 @@
         if (check) el.appendChild(check);
       });
       document.querySelectorAll('.msg-conv-time[data-iso]').forEach(el => {
-        const iso = el.getAttribute('data-iso');
-        if (!iso) return;
-        const d = new Date(iso);
-        if (isNaN(d.getTime())) return;
-        const now = new Date();
-        const diff = now - d;
-        let out;
-        if (diff < 86400000 && d.getDate() === now.getDate()) {
-          out = d.toLocaleTimeString(TIME_LOCALE, { hour: '2-digit', minute: '2-digit' });
-        } else if (diff < 604800000) {
-          out = d.toLocaleDateString(TIME_LOCALE, { weekday: 'short' });
-        } else {
-          out = d.toLocaleDateString(TIME_LOCALE, { month: 'short', day: 'numeric' });
-        }
-        el.textContent = out;
+        const out = convTimeText(el.getAttribute('data-iso'));
+        if (out) el.textContent = out;
       });
     }
     if (body) body.classList.remove('msg-times-utc');
@@ -4755,7 +5065,7 @@
       avatar +
       '<div class="msg-conv-info"><div class="msg-conv-name">' + esc(c.displayName || '') + '</div>' +
       '<div class="msg-conv-preview">' + preview + '</div></div>' +
-      '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '"></span>' +
+      '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '">' + esc(convTimeText(c.last_message_at)) + '</span>' +
       badge + '</div>' +
       '</a>';
   }
@@ -4798,10 +5108,8 @@
         localizeSsrTimes();
         // Re-apply the active search filter, if any.
         if (convSearch && convSearch.value) {
-          const q = convSearch.value.toLowerCase();
-          convListEl.querySelectorAll('.msg-conv-item').forEach(function(el) {
-            el.style.display = el.dataset.name.includes(q) ? '' : 'none';
-          });
+          const shown = filterConversations(convSearch.value.trim().toLowerCase());
+          if (convSearchChats) convSearchChats.hidden = shown === 0;
         }
       })
       .catch(function() {});
@@ -4811,15 +5119,65 @@
   // interval needed. A one-shot refresh keeps it correct right after load.
   refreshConvList();
 
-  // Conversation search/filter
+  // Sidebar search, as Telegram's: the chats that match stay at the top under "Chats", and
+  // below them, under "Global search results", the people the site knows, each a chat away.
   const convSearch = document.getElementById('convSearch');
-  if (convSearch) {
-    convSearch.addEventListener('input', function() {
-      const q = this.value.toLowerCase();
-      document.querySelectorAll('.msg-conv-item').forEach(function(el) {
-        el.style.display = el.dataset.name.includes(q) ? '' : 'none';
-      });
+  const convSearchClear = document.getElementById('convSearchClear');
+  const convSearchChats = document.getElementById('convSearchChats');
+  const convSearchResults = document.getElementById('convSearchResults');
+  const sidebarEl = document.querySelector('.msg-sidebar');
+  let convSearchTimer = null, convSearchSeq = 0;
+  function filterConversations(q) {
+    let shown = 0;
+    document.querySelectorAll('#convList .msg-conv-item').forEach(function(el) {
+      const on = !q || (el.dataset.name || '').includes(q);
+      el.style.display = on ? '' : 'none';
+      if (on) shown++;
     });
+    return shown;
+  }
+  function renderGlobalResults(q, users) {
+    const head = '<div class="msg-list-section">' + (LANG === 'ru' ? 'Глобальный поиск' : 'Global search results') + '</div>';
+    if (!users.length) {
+      convSearchResults.innerHTML = head + '<div class="msg-search-hint">' + esc(LANG === 'ru' ? 'Никого не найдено по запросу «' + q + '»' : 'Nobody found for "' + q + '"') + '</div>';
+      return;
+    }
+    convSearchResults.innerHTML = head + users.map(function(u) {
+      return '<form method="POST" action="/messages/new"><input type="hidden" name="recipientId" value="' + Number(u.id) + '" />' +
+        '<button type="submit" class="msg-search-user">' +
+        '<img src="' + escAttr(u.profile_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />' +
+        '<span><span class="msg-search-user-name">' + esc(u.username) + '</span>' +
+        (u.full_name ? '<br><span class="msg-search-user-full">' + esc(u.full_name) + '</span>' : '') + '</span></button></form>';
+    }).join('');
+  }
+  function runSidebarSearch() {
+    const q = convSearch.value.trim().toLowerCase();
+    const searching = q.length > 0;
+    if (sidebarEl) sidebarEl.classList.toggle('is-searching', searching);
+    if (convSearchClear) convSearchClear.hidden = !searching;
+    const shown = filterConversations(q);
+    if (convSearchChats) convSearchChats.hidden = !searching || shown === 0;   // no label over nothing
+    clearTimeout(convSearchTimer);
+    if (!searching) { convSearchResults.hidden = true; convSearchResults.innerHTML = ''; return; }
+    convSearchResults.hidden = false;
+    if (q.length < 2) {
+      convSearchResults.innerHTML = '<div class="msg-list-section">' + (LANG === 'ru' ? 'Глобальный поиск' : 'Global search results') + '</div><div class="msg-search-hint">' + (LANG === 'ru' ? 'Введите хотя бы две буквы' : 'Type at least two letters') + '</div>';
+      return;
+    }
+    const seq = ++convSearchSeq;
+    convSearchTimer = setTimeout(function() {
+      fetch('/messages/search-users?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (seq === convSearchSeq) renderGlobalResults(q, (data && data.users) || []); })
+        .catch(function() {});
+    }, 250);
+  }
+  if (convSearch) {
+    convSearch.addEventListener('input', runSidebarSearch);
+    convSearch.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') { convSearch.value = ''; runSidebarSearch(); }
+    });
+    if (convSearchClear) convSearchClear.addEventListener('click', function() { convSearch.value = ''; runSidebarSearch(); convSearch.focus(); });
   }
 
   // New message modal

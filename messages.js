@@ -670,7 +670,8 @@ async function findOrCreateSavedMessages(userId) {
 // auto-update endpoint so all three stay in sync.
 async function buildConversationList(userId, lang = 'en') {
     const conversations = await pool.query(
-        `SELECT c.id, c.title, c.is_group, c.last_message_at, c.saved_for_user_id, c.community_lang,
+        `SELECT c.id, c.title, c.is_group, c.saved_for_user_id, c.community_lang,
+                COALESCE(m.created_at, c.last_message_at) AS last_message_at,
                 m.content AS last_message_content,
                 m.image_url AS last_message_image,
                 m.file_name AS last_message_file,
@@ -679,16 +680,19 @@ async function buildConversationList(userId, lang = 'en') {
                 cm.last_read_at, cm.muted,
                 (SELECT COUNT(*) FROM messages mx
                  WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
+                   AND mx.deleted_at IS NULL
                 )::int AS unread_count
          FROM conversations c
          JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
+         -- The newest message still there: a deleted one showed as an empty line and kept the
+         -- chat at the top of the list (Dzmitrij's chat, 2026-09-19).
          LEFT JOIN LATERAL (
-             SELECT content, sender_id, image_url, file_name FROM messages
-             WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1
+             SELECT content, sender_id, image_url, file_name, created_at FROM messages
+             WHERE conversation_id = c.id AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1
          ) m ON TRUE
          LEFT JOIN users sender ON sender.id = m.sender_id
          WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id)
-         ORDER BY c.last_message_at DESC`,
+         ORDER BY COALESCE(m.created_at, c.last_message_at) DESC`,
         [userId]
     );
 
@@ -1433,6 +1437,12 @@ router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, 
         await pool.query(
             `UPDATE messages SET deleted_at = NOW(), content = '' WHERE id = $1`,
             [msgId]
+        );
+        await pool.query(
+            `UPDATE conversations c SET last_message_at = COALESCE(
+                 (SELECT MAX(created_at) FROM messages WHERE conversation_id = c.id AND deleted_at IS NULL), c.created_at)
+             WHERE c.id = $1`,
+            [m.conversation_id]
         );
         await removeVideoFile(m.file_url, m.file_name, msgId);
 

@@ -70,6 +70,13 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   bubble is `flow-root`) or in a pill on a caption-less picture, a video shows its first frame, its
   length and a play button and hands over to the browser's controls on the first click. The
   right-click / long-press menu carries the reactions strip on top, plus Copy Image and Save As.
+  A click on a picture or a video opens the viewer (`#mediaViewer`): the chat's media in order,
+  arrows, ← → and swipe between them, the caption over the lower part, "Photo N of M" with the
+  sender and time, a thumbnail strip, download, Esc or the backdrop to close; a video plays there
+  with the browser's controls. The sidebar search filters the chats under "Chats" and lists people
+  from `/messages/search-users` under "Global search results", each a chat away; the sidebar
+  shows and orders chats by their newest message that is not deleted, and deleting one moves
+  `conversations.last_message_at` back to the previous message.
   A file from the picker, a drop anywhere on the chat column or a paste opens the send dialog
   (preview — a video plays from the file itself, one the browser cannot decode says it will be
   converted — a caption, the "send as a document" choice). Uploads go by XMLHttpRequest so the
