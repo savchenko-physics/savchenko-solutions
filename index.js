@@ -2711,7 +2711,15 @@ async function getRecentContributions(limit) {
             pool.query(
                 `SELECT c.id, c.problem_name, c.language, c.user_id, c.edited_at AT TIME ZONE 'UTC' as edited_at, c.ip_address, c.invisible,
                         u.username,
-                        (SELECT COUNT(*) FROM contributions c2 WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE AND c2.edited_at <= c.edited_at) AS edit_number
+                        -- "Added" means the first edit of the problem on record, the record being
+                        -- contributions and the GitHub-Pages era's github_contributions together,
+                        -- as /contributions and the profile's "solved first" count read it. Counting
+                        -- only contributions called Daniyar's correction of 2.6.39, a solution from
+                        -- 2023, a new solution (2026-09-19); 71 solved problems have no row here.
+                        (NOT EXISTS (SELECT 1 FROM contributions c2
+                                      WHERE c2.problem_name = c.problem_name AND c2.invisible IS NOT TRUE
+                                        AND (c2.edited_at < c.edited_at OR (c2.edited_at = c.edited_at AND c2.id < c.id)))
+                         AND NOT EXISTS (SELECT 1 FROM github_contributions g WHERE g.problem_name = c.problem_name)) AS is_new
                  FROM contributions c
                  LEFT JOIN users u ON c.user_id = u.id
                  WHERE c.invisible IS NOT TRUE
@@ -2736,7 +2744,7 @@ async function getRecentContributions(limit) {
             lang: row.language || 'en',
             editor: row.username || 'Anonymous',
             hasUser: !!row.username,
-            isNew: parseInt(row.edit_number) === 1,
+            isNew: row.is_new === true,
             relativeTime: row.edited_at,
             sortAt: new Date(row.edited_at).getTime(),
             id: row.id,
