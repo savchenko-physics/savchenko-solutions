@@ -2368,7 +2368,7 @@
               </div>
               <% if (activeConversation.is_group && activeConversation.memberCount > 0) { %>
                 <div class="msg-chat-header-members" id="toggleMembers">
-                  <%= activeConversation.memberCount %> <%= lang === 'ru' ? 'участников' : 'members' %><% if (activeConversation.communityLang) { %> · <%= activeConversation.communityLang === 'ru' ? (lang === 'ru' ? 'на русском' : 'in Russian') : (lang === 'ru' ? 'на английском' : 'in English') %><% } %>
+                  <%= activeConversation.memberCount %> <%= pluralWord(activeConversation.memberCount, lang === 'ru' ? ['участник', 'участника', 'участников'] : ['member', 'members', 'members']) %><% if (activeConversation.communityLang) { %> · <%= activeConversation.communityLang === 'ru' ? (lang === 'ru' ? 'на русском' : 'in Russian') : (lang === 'ru' ? 'на английском' : 'in English') %><% } %>
                 </div>
               <% } %>
             </div>
@@ -2690,6 +2690,12 @@
   // An audio file's card; the page's script (renderAudioHTML) draws the same.
   function audioHTML(m) {
     return `<span class="msg-audio" data-src="${attrEsc(m.file_url)}" data-name="${attrEsc(m.file_name)}"><button type="button" class="msg-audio-play" aria-label="${lang === 'ru' ? 'Слушать' : 'Play'}"><svg class="msg-audio-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="msg-audio-pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg></button><span class="msg-audio-meta"><span class="msg-audio-name">${attrEsc(m.file_name)}</span><span class="msg-audio-time">${formatBytes(m.file_size)}</span><span class="msg-audio-bar"><span class="msg-audio-fill"></span></span></span></span>`;
+  }
+  // "1 участник, 2 участника, 5 участников" — the same rule the page's script uses (plural).
+  function pluralWord(n, forms) {
+    if (lang !== 'ru') return n === 1 ? forms[0] : forms[1];
+    const a = n % 10, b = n % 100;
+    return (a === 1 && b !== 11) ? forms[0] : (a >= 2 && a <= 4 && (b < 10 || b >= 20)) ? forms[1] : forms[2];
   }
   function attrEsc(v) {
     return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -3506,17 +3512,35 @@
       rows += '<button type="button" class="msg-info-row" data-kind="' + k + '">' + INFO_KINDS[k].icon + '<span>' + n + ' ' + plural(n, INFO_KINDS[k][ru ? 'ru' : 'en']) + '</span></button>';
     });
     html += '<div class="msg-info-section">' + (rows || '<div class="msg-info-empty">' + (chatInfoData ? (ru ? 'Здесь ещё не делились ни фото, ни файлами, ни ссылками' : 'No photos, files or links shared here yet') : '…') + '</div>') + '</div>';
-    // who is in it
+    // who is in it: the first dozen, then the rest of the loaded page, then more pages
     if (c.isGroup && d.members && d.members.length) {
-      const shown = d.members.slice(0, 12);
-      html += '<div class="msg-info-section"><div class="msg-info-month">' + d.members.length + ' ' + plural(d.members.length, ru ? ['участник', 'участника', 'участников'] : ['member', 'members', 'members']) + '</div>' +
-        d.members.map(function(m, i) {
-          return '<a class="msg-info-member" href="/user/' + encodeURIComponent(m.username) + '"' + (i >= 12 ? ' hidden data-extra' : '') + '><img src="' + escAttr(m.profile_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" /><span><span class="msg-info-member-name">' + esc(m.full_name || m.username) + (m.role === 'admin' ? ' <span class="msg-admin-badge">' + (ru ? 'модератор' : 'mod') + '</span>' : '') + '</span><span class="msg-info-member-sub">@' + esc(m.username) + (m.isOnline ? ' · ' + (ru ? 'в сети' : 'online') : '') + '</span></span></a>';
-        }).join('') +
-        (d.members.length > 12 ? '<button type="button" class="msg-info-more" data-action="all-members">' + (ru ? 'Показать всех' : 'Show all') + '</button>' : '') + '</div>';
+      const total = d.memberCount || c.memberCount || d.members.length;
+      html += '<div class="msg-info-section" id="chatInfoMembers"><div class="msg-info-month">' + total + ' ' + plural(total, ru ? ['участник', 'участника', 'участников'] : ['member', 'members', 'members']) + '</div>' +
+        d.members.map(function(m, i) { return memberRowHTML(m, i >= 12); }).join('') +
+        (d.members.length > 12 || total > d.members.length ? '<button type="button" class="msg-info-more" data-action="all-members">' + (ru ? 'Показать всех' : 'Show all') + '</button>' : '') + '</div>';
     }
     chatInfoBody.innerHTML = html;
     chatInfoBody.scrollTop = 0;
+  }
+  function memberRowHTML(m, hidden) {
+    const ru = LANG === 'ru';
+    return '<a class="msg-info-member" href="/user/' + encodeURIComponent(m.username) + '"' + (hidden ? ' hidden data-extra' : '') + '><img src="' + escAttr(m.profile_picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" loading="lazy" /><span><span class="msg-info-member-name">' + esc(m.full_name || m.username) + (m.role === 'admin' ? ' <span class="msg-admin-badge">' + (ru ? 'модератор' : 'mod') + '</span>' : '') + '</span><span class="msg-info-member-sub">@' + esc(m.username) + (m.isOnline ? ' · ' + (ru ? 'в сети' : 'online') : '') + '</span></span></a>';
+  }
+  // The next page of members, appended before the button that asked for it.
+  function loadMoreMembers(btn) {
+    const section = document.getElementById('chatInfoMembers');
+    if (!section) return;
+    const offset = section.querySelectorAll('.msg-info-member').length;
+    btn.disabled = true;
+    fetch('/messages/' + CONV_ID + '/members?offset=' + offset, { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (!d || !d.members) return;
+        if (chatInfoData) chatInfoData.members = chatInfoData.members.concat(d.members);
+        btn.insertAdjacentHTML('beforebegin', d.members.map(function(m) { return memberRowHTML(m, false); }).join(''));
+        if (d.more) btn.disabled = false; else btn.remove();
+      })
+      .catch(function() { btn.disabled = false; });
   }
   function renderInfoList(kind, items, more) {
     const ru = LANG === 'ru';
@@ -3601,7 +3625,13 @@
         else if (a === 'search') { closeChatInfo(); const b = document.getElementById('searchToggle'); if (b) b.click(); }
         else if (a === 'manage') { closeChatInfo(); const p = document.getElementById('membersPanel'); if (p) p.classList.add('show'); }
         else if (a === 'leave') { closeChatInfo(); const b = document.getElementById('groupLeaveBtn'); if (b) b.click(); }
-        else if (a === 'all-members') { chatInfoBody.querySelectorAll('[data-extra]').forEach(function(el) { el.hidden = false; }); act.remove(); }
+        else if (a === 'all-members') {
+          chatInfoBody.querySelectorAll('[data-extra]').forEach(function(el) { el.hidden = false; });
+          const total = (chatInfoData && chatInfoData.memberCount) || CHAT_INFO.memberCount || 0;
+          if (chatInfoData && chatInfoData.members.length < total) { act.dataset.action = 'more-members'; act.textContent = LANG === 'ru' ? 'Показать ещё' : 'Show more'; loadMoreMembers(act); }
+          else act.remove();
+        }
+        else if (a === 'more-members') loadMoreMembers(act);
         else if (a === 'more') loadInfoList(act.dataset.kind, act.dataset.before);
         return;
       }

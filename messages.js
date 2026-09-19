@@ -1860,19 +1860,35 @@ router.get('/:id(\\d+)/info', async (req, res) => {
              FROM messages m WHERE m.conversation_id = $1 AND m.deleted_at IS NULL`,
             [convId]
         );
-        const members = await pool.query(
-            `SELECT u.id, u.username, u.full_name, u.profile_picture, cm.role
-             FROM conversation_members cm JOIN users u ON u.id = cm.user_id
-             WHERE cm.conversation_id = $1
-             ORDER BY cm.role DESC, cm.joined_at ASC LIMIT 200`,
-            [convId]
-        );
-        const online = await getOnlineUsernames(pool, members.rows.map((m) => m.username).filter(Boolean));
-        res.json({
-            counts: counts.rows[0],
-            members: members.rows.map((m) => ({ ...m, isOnline: online.has(m.username) })),
-        });
+        const members = await membersPage(convId, 0);
+        const total = await pool.query('SELECT COUNT(*)::int AS n FROM conversation_members WHERE conversation_id = $1', [convId]);
+        res.json({ counts: counts.rows[0], memberCount: total.rows[0].n, members });
     } catch (e) { console.error('Chat info error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// The members, MEMBERS_PAGE at a time (the Russian community chat has over a thousand): the
+// moderators first, then by when they joined. GET /messages/:id/members?offset=N pages on.
+const MEMBERS_PAGE = 50;
+async function membersPage(convId, offset) {
+    const r = await pool.query(
+        `SELECT u.id, u.username, u.full_name, u.profile_picture, cm.role
+         FROM conversation_members cm JOIN users u ON u.id = cm.user_id
+         WHERE cm.conversation_id = $1
+         ORDER BY cm.role DESC, cm.joined_at ASC, u.id ASC LIMIT $2 OFFSET $3`,
+        [convId, MEMBERS_PAGE, offset]
+    );
+    const online = await getOnlineUsernames(pool, r.rows.map((m) => m.username).filter(Boolean));
+    return r.rows.map((m) => ({ ...m, isOnline: online.has(m.username) }));
+}
+
+router.get('/:id(\\d+)/members', async (req, res) => {
+    try {
+        const convId = parseInt(req.params.id);
+        if (!(await isMember(convId, req.session.userId))) return res.status(403).json({ error: 'Not a member' });
+        const offset = Math.max(0, parseInt(req.query.offset) || 0);
+        const members = await membersPage(convId, offset);
+        res.json({ members, more: members.length === MEMBERS_PAGE });
+    } catch (e) { console.error('Chat members error:', e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
 router.get('/:id(\\d+)/media', async (req, res) => {
