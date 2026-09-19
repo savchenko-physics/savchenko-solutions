@@ -41,7 +41,7 @@ function generateSlug(title) {
 }
 
 function getLang(req) {
-    return req.session.lang || 'en';
+    return req.urlLang || req.session.lang || 'en';
 }
 
 function requireAuth(req, res, next) {

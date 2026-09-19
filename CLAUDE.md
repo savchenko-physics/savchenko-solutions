@@ -102,6 +102,18 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
 ## Architecture
 Monolithic server-side rendered Express app. All pages are EJS templates. Client-side JS handles search, form validation, CodeMirror, and Chart.js. Entry point is `index.js` (~2200 lines). A separate sandbox app runs on port 4000 (`sandbox/sandbox-app.js`).
 
+**Languages in addresses.** Every page router is mounted at its bare address and under `/en`
+and `/ru` (`/blog` and `/ru/blog`, `/discuss` and `/en/discuss`, …). The bare address speaks the
+session's language; a prefixed one sets `req.urlLang` for that request, which the routers read
+before the session, so `/ru/blog` is Russian even for a visitor botgate does not count (the
+session is only written for counted visitors, to keep crawlers out of the session table). The
+header's RU / EN link is **this page in the other language**: `lib/langSwitch.js` computes it
+for every request from `req.originalUrl` (prefix swapped or added, query kept, `error` /
+`success` flashes dropped) and `index.js` puts it in `res.locals`; only the 404 page, the
+Russian-only `/summit` and the recovery pages (which say their language in `?lang=`) pass their
+own. Until 2026-09-19 the link went to the homepage from nearly every page, the solution page
+included. `tests/lang-switch.test.js` checks the rule, the mounts and the reads.
+
 ## File Structure
 ```
 index.js                          # Main Express app (all routes)

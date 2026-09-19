@@ -101,7 +101,7 @@ router.use(loadVerifiedStatus);
 // ─── API: latest posts for home page widget ────────────────────
 router.get('/api/posts', async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit, 10) || 3, 10);
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     try {
         const { rows } = await pool.query(
             `SELECT bp.id, bp.title, bp.slug, bp.excerpt, bp.published_at, bp.tags,
@@ -177,7 +177,7 @@ router.get('/', async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const perPage = 10;
     const offset = (page - 1) * perPage;
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -228,7 +228,7 @@ router.get('/tag/:tag', async (req, res) => {
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
     const perPage = 10;
     const offset = (page - 1) * perPage;
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -278,7 +278,7 @@ router.get('/tag/:tag', async (req, res) => {
 
 // ─── GET /blog/new — editor (create) ──────────────────────────
 router.get('/new', (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (!canCreatePost(req)) {
@@ -296,7 +296,7 @@ router.get('/new', (req, res) => {
 
 // ─── POST /blog — create post ─────────────────────────────────
 router.post('/', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (!canCreatePost(req)) {
@@ -342,7 +342,7 @@ router.post('/', async (req, res) => {
 
 // ─── GET /blog/:slug/edit — editor (edit) ─────────────────────
 router.get('/:slug/edit', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (!req.session.userId) {
@@ -376,7 +376,7 @@ router.get('/:slug/edit', async (req, res) => {
 
 // ─── POST /blog/:slug — update post ──────────────────────────
 router.post('/:slug', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     if (!req.session.userId) {
@@ -485,7 +485,7 @@ router.post('/:slug/comments', async (req, res) => {
 
 // ─── GET /blog/:slug — single post ───────────────────────────
 router.get('/:slug', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {

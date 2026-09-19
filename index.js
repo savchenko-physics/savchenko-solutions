@@ -71,6 +71,7 @@ const {
 const { ownsReaction } = require('./lib/reactionUnlocks');
 const { createAccountRecovery } = require('./accountRecovery');
 const { LIMITS: MAIL_LIMITS } = require('./lib/mailGuard');
+const { langSwitchUrls } = require('./lib/langSwitch');
 const digest = require('./digest');
 const { getWidgetCopy: getFeedbackCopy, getCategories: getFeedbackCategories } = require('./feedbackQuestions');
 const { router: trackingRouter } = require('./tracking');
@@ -407,6 +408,13 @@ app.locals.localTime = localTime;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
+    // The language the address asks for, for this request only: /ru/blog is Russian whether
+    // or not the session below may be written (a VPN on a datacenter address, a browser
+    // that strips client hints and any other visitor botgate does not count never had it
+    // written, and read every session-language page in English). The routers mounted under
+    // /en and /ru read this before the session; a bare address (/blog) still speaks the
+    // session's language.
+    req.urlLang = langMatch ? langMatch[1] : null;
     // Writing to the session marks it dirty, and express-session persists any session
     // that was modified — saveUninitialized:false does NOT save you here (shouldSave()
     // reduces to isModified() for a cookie-less request). With a 30-day cookie that used
@@ -416,18 +424,24 @@ app.use((req, res, next) => {
     if (langMatch && isCountable(req) && req.session.lang !== langMatch[1]) {
         req.session.lang = langMatch[1];
     }
+    // The RU / EN link in the header: this same page in the other language, query and all
+    // (lib/langSwitch.js). Computed here for every page, so no template has to know its
+    // own address; a page whose address breaks the rule passes its own to the header.
+    const langSwitch = langSwitchUrls(req.originalUrl);
+    res.locals.langSwitchEnUrl = langSwitch.en;
+    res.locals.langSwitchRuUrl = langSwitch.ru;
     next();
 });
 
 // Expose the active contest banner to every rendered page (cheap, no DB hit).
 app.use((req, res, next) => {
     try {
-        res.locals.activeContest = getActiveContestBanner(req.session.lang || 'en');
+        res.locals.activeContest = getActiveContestBanner(req.urlLang || req.session.lang || 'en');
     } catch (_err) {
         res.locals.activeContest = null;
     }
     try {
-        res.locals.practicumBanner = getPracticumBanner(req.session.lang || 'en');
+        res.locals.practicumBanner = getPracticumBanner(req.urlLang || req.session.lang || 'en');
     } catch (_err) {
         res.locals.practicumBanner = null;
     }
@@ -436,8 +450,7 @@ app.use((req, res, next) => {
     // search with an 'en' session from months ago, and the widget must speak the language
     // of the page they are actually looking at.
     try {
-        const pathLang = (req.path.match(/^\/(en|ru)(\/|$)/) || [])[1];
-        const fbLang = pathLang || req.session.lang || 'en';
+        const fbLang = req.urlLang || req.session.lang || 'en';
         res.locals.feedbackWidget = {
             lang: fbLang,
             copy: getFeedbackCopy(fbLang),
@@ -1952,8 +1965,8 @@ app.post("/api/notifications/read-all", checkAuthenticated, async (req, res) => 
 });
 
 // Full notifications page
-app.get("/notifications", checkAuthenticated, async (req, res) => {
-    const lang = normalizeLang(req.session.lang);
+app.get(["/notifications", "/:lang(en|ru)/notifications"], checkAuthenticated, async (req, res) => {
+    const lang = normalizeLang(req.params.lang || req.session.lang);
     i18n.setLocale(res, lang);
     try {
         const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -2811,6 +2824,12 @@ app.get("/ru", async (req, res) => {
 // Admin dashboard
 app.use('/admin', adminRouter);
 
+// Every page router is mounted under /en and /ru as well as at its bare address: the bare
+// one speaks the session's language, the prefixed one the address's (req.urlLang, set
+// above). The header's RU / EN link relies on it: it is this page's address with the prefix
+// swapped or added (lib/langSwitch.js), so a router mounted only at a bare address would
+// send the switch into the /:lang/:name solution route and a 404. tests/lang-switch.test.js
+// checks the mounts and that every such router reads req.urlLang before the session.
 // Blog
 app.use('/:lang(en|ru)/blog', blogRouter);
 app.use('/blog', blogRouter);
@@ -2847,6 +2866,7 @@ app.use('/:lang(en|ru)/recommendations', recommendationsRouter);
 app.use('/recommendations', recommendationsRouter);
 
 // Problem Bank
+app.use('/:lang(en|ru)/bank', bankRouter);
 app.use('/bank', bankRouter);
 
 // Problem difficulty finder + methodology
@@ -2854,6 +2874,7 @@ app.use('/:lang(en|ru)/problems', problemsRouter);
 app.use('/problems', problemsRouter);
 
 // Discussion Forum
+app.use('/:lang(en|ru)/discuss', forumRouter);
 app.use('/discuss', forumRouter);
 
 // Messages
@@ -2865,6 +2886,7 @@ app.use('/messages', messagesRouter);
 app.use('/api/brainstorm', brainstormRouter);
 
 // Weekly Challenges
+app.use('/:lang(en|ru)/compete', challengesRouter);
 app.use('/compete', challengesRouter);
 
 // Monthly Contest (live dashboard).
@@ -2876,6 +2898,7 @@ app.use('/:lang(en|ru)/challenge', contestRouter);
 app.use('/challenge', contestRouter);
 
 // Study Paths
+app.use('/:lang(en|ru)/paths', pathsRouter);
 app.use('/paths', pathsRouter);
 
 // Remove the old upload routes and add the new router

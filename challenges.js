@@ -62,7 +62,7 @@ async function hasChallengesTable() {
 }
 
 function getLang(req) {
-    return req.session.lang || 'en';
+    return req.urlLang || req.session.lang || 'en';
 }
 
 // Auth middleware

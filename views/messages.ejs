@@ -1603,10 +1603,7 @@
   <!-- Shared site header (same as the rest of the site) -->
   <%# The messenger has its own composer pinned to the bottom-right; a floating tab
       would sit on top of it. %>
-  <%# /en/messages/… and /ru/messages/… set the language and come straight back here, so the
-      switch changes this page's language instead of dropping the reader on the home page. %>
-  <% const _msgPath = activeConversation ? '/messages/' + activeConversation.id : '/messages'; %>
-  <%- include('default/main_site_header', { hideFeedbackTab: true, langSwitchEnUrl: '/en' + _msgPath, langSwitchRuUrl: '/ru' + _msgPath }) %>
+  <%- include('default/main_site_header', { hideFeedbackTab: true }) %>
 
   <!-- Main body -->
   <div class="msg-body<%= activeConversation ? ' has-active' : '' %>">

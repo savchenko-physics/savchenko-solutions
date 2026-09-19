@@ -86,7 +86,7 @@ function invalidateStandingsCache() {
 }
 
 function getLang(req) {
-    return req.session && req.session.lang ? req.session.lang : 'en';
+    return req.urlLang || (req.session && req.session.lang) || 'en';
 }
 
 // True when the logged-in user is one of the two contest organizers. Gate,

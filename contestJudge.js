@@ -75,7 +75,7 @@ async function ensureEvaluationsTable() {
 }
 
 function getLang(req) {
-    return req.session && req.session.lang ? req.session.lang : 'en';
+    return req.urlLang || (req.session && req.session.lang) || 'en';
 }
 
 // The organizer id that is NOT me — used to detect the second grade without

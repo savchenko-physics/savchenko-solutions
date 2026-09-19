@@ -19,8 +19,11 @@
   // one. Zero drafts means no extra chrome at all — which is most people, most of the time.
   const navDraftCount = (typeof unfinishedDraftCount !== 'undefined' && unfinishedDraftCount) ? unfinishedDraftCount : 0;
   const navDraftLabel = navLang === 'ru' ? 'Черновики' : 'Drafts';
-  const langHrefEn = typeof langSwitchEnUrl !== 'undefined' ? langSwitchEnUrl : '/en';
-  const langHrefRu = typeof langSwitchRuUrl !== 'undefined' ? langSwitchRuUrl : '/ru';
+  // This page in the other language. index.js computes both for every request from the
+  // address asked for (lib/langSwitch.js); a page whose address breaks that rule passes its
+  // own (404, summit, the recovery pages). The homepage is only for a render with neither.
+  const langHrefEn = (typeof langSwitchEnUrl !== 'undefined' && langSwitchEnUrl) ? langSwitchEnUrl : '/en';
+  const langHrefRu = (typeof langSwitchRuUrl !== 'undefined' && langSwitchRuUrl) ? langSwitchRuUrl : '/ru';
 %>
   <header class="hero-section">
     <nav class="navbar navbar-expand-lg navbar-light">

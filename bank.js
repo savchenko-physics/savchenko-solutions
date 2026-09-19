@@ -72,7 +72,7 @@ async function getProblemOfTheDay() {
 
 // ─── GET /bank — Landing page ────────────────────────────────
 router.get('/', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -124,7 +124,7 @@ router.get('/', async (req, res) => {
 
 // ─── GET /bank/source/:slug — problems by source ────────────
 router.get('/source/:slug', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
     const { slug } = req.params;
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -175,7 +175,7 @@ router.get('/source/:slug', async (req, res) => {
 
 // ─── GET /bank/topic/:topic — problems by topic ─────────────
 router.get('/topic/:topic', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
     const topic = req.params.topic.toLowerCase();
     const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
@@ -255,7 +255,7 @@ router.get('/random', async (req, res) => {
 
 // ─── GET /bank/problem/:id — single problem page ────────────
 router.get('/problem/:id', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
     const problemId = parseInt(req.params.id, 10);
     if (isNaN(problemId)) {
@@ -378,7 +378,7 @@ router.get('/problem/:id', async (req, res) => {
 
 // ─── GET /bank/submit — submission form ──────────────────────
 router.get('/submit', requireAuth, (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
     res.render('bank/submit', {
         __: i18n.__,
@@ -391,7 +391,7 @@ router.get('/submit', requireAuth, (req, res) => {
 
 // ─── POST /bank/submit — create problem ─────────────────────
 router.post('/submit', requireAuth, async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {

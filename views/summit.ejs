@@ -70,7 +70,9 @@
 </head>
 
 <body>
-  <%- include('default/main_site_header') %>
+  <%# This page exists in Russian only, so EN goes to the English homepage rather than to a
+      /en/summit that would 404 (lib/langSwitch.js). %>
+  <%- include('default/main_site_header', { langSwitchEnUrl: '/en', langSwitchRuUrl: '/ru/summit' }) %>
 
   <main>
     <section class="summit-hero">

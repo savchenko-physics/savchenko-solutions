@@ -306,7 +306,7 @@ test('no page local is called username, which the site header takes for the sign
     // to a visitor who was not signed in.
     const header = fs.readFileSync(path.join(ROOT, 'views/default/main_site_header.ejs'), 'utf8');
     assert.match(header, /typeof username !== 'undefined'/);
-    const locals = [...ROUTER.matchAll(/pageLocals\(res, lang, status, \{([^}]*)\}\)/g)].map((m) => m[1]);
+    const locals = [...ROUTER.matchAll(/pageLocals\(res, lang, status, [^,{]+, \{([^}]*)\}\)/g)].map((m) => m[1]);
     assert.equal(locals.length, 3);
     for (const l of locals) assert.doesNotMatch(l, /\busername\b/);
     for (const view of ['forgot_password', 'reset_password', 'recover_account']) {

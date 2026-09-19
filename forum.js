@@ -120,13 +120,13 @@ function translateTopicTitle(title, lang) {
 // Auth middleware for forum routes
 function requireAuth(req, res, next) {
     if (req.session.userId) return next();
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     res.redirect(`/${lang}/login?error=Please log in to access this page`);
 }
 
 // ─── GET /discuss — forum home ────────────────────────────────
 router.get('/', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -170,7 +170,7 @@ router.get('/', async (req, res) => {
 
 // ─── GET /discuss/new — new topic form ────────────────────────
 router.get('/new', requireAuth, async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -194,7 +194,7 @@ router.get('/new', requireAuth, async (req, res) => {
 
 // ─── POST /discuss — create topic + first post ───────────────
 router.post('/', requireAuth, async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     const { title, content, category_id } = req.body;
@@ -251,7 +251,7 @@ router.post('/', requireAuth, async (req, res) => {
 
 // ─── GET /discuss/:categorySlug — topic list ─────────────────
 router.get('/:categorySlug', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     try {
@@ -581,7 +581,7 @@ router.post('/:topicId/solution/:postId', requireAuth, async (req, res) => {
 
 // ─── GET /discuss/:categorySlug/:topicId-:topicSlug — topic page
 router.get('/:categorySlug/:topicParam', async (req, res) => {
-    const lang = req.session.lang || 'en';
+    const lang = req.urlLang || req.session.lang || 'en';
     i18n.setLocale(res, lang);
 
     // Parse topicId from "123-some-slug" format

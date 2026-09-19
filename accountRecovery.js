@@ -234,21 +234,28 @@ function createAccountRecovery({ pool }) {
 
     // The view names stay literal in the render calls: tests/site-styles.test.js finds the
     // pages to check by reading them.
-    function pageLocals(res, lang, status, locals) {
+    // `page` is the address the header's RU / EN link should keep: these pages say their
+    // language in ?lang= and have no /en/… twin, so the site-wide rule (lib/langSwitch.js)
+    // would send the switch to a /ru/forgot-password that does not exist.
+    function pageLocals(res, lang, status, page, locals) {
         i18n.setLocale(res, lang);
         res.status(status).set('Cache-Control', 'no-store');
         const t = policy.copyFor(lang);
-        return { __: i18n.__, lang, t, limits: LIMITS, ...locals, error: locals.error ? t.errors[locals.error] : '' };
+        return {
+            __: i18n.__, lang, t, limits: LIMITS,
+            langSwitchEnUrl: `${page}?lang=en`, langSwitchRuUrl: `${page}?lang=ru`,
+            ...locals, error: locals.error ? t.errors[locals.error] : '',
+        };
     }
 
     const renderForgot = (res, lang, { status = 200, state = 'form', error = null, identifier = '' } = {}) =>
-        res.render('forgot_password', pageLocals(res, lang, status, { state, error, identifier }));
+        res.render('forgot_password', pageLocals(res, lang, status, '/forgot-password', { state, error, identifier }));
     // accountName, not username: the site header reads a local called username as the
     // signed-in person, and would show this account's avatar and bell to a signed-out visitor.
     const renderReset = (res, lang, { status = 200, state, accountName = '', error = null }) =>
-        res.render('reset_password', pageLocals(res, lang, status, { state, accountName, error }));
+        res.render('reset_password', pageLocals(res, lang, status, COOKIE_PATH, { state, accountName, error }));
     const renderRecover = (res, lang, { status = 200, state = 'form', error = null, email = '', message = '' } = {}) =>
-        res.render('recover_account', pageLocals(res, lang, status, { state, error, email, message }));
+        res.render('recover_account', pageLocals(res, lang, status, '/recover-account', { state, error, email, message }));
 
     // Keyed like feedback.js: ipKeyGenerator puts a whole IPv6 /56 in one bucket, since one
     // client can pick a fresh address in its /64 for every request.

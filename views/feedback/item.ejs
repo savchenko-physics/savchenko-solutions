@@ -33,11 +33,7 @@
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
 </head>
 <body class="d-flex flex-column min-vh-100">
-  <%- include('../default/main_site_header', {
-    lang: pageLang,
-    langSwitchEnUrl: '/en/feedback/' + item.public_id,
-    langSwitchRuUrl: '/ru/feedback/' + item.public_id
-  }) %>
+  <%- include('../default/main_site_header', { lang: pageLang }) %>
 
   <main class="flex-grow-1">
     <div class="fb-board">

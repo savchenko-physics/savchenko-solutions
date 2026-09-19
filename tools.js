@@ -3,7 +3,7 @@ const router = express.Router();
 const i18n = require('i18n');
 
 function getLang(req) {
-    return req.params.lang === 'ru' ? 'ru' : (req.session.lang || 'en');
+    return req.urlLang || req.session.lang || 'en';
 }
 
 function buildHeaderLocals(req, res) {
