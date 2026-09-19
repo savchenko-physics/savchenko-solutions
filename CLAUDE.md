@@ -486,7 +486,9 @@ hyphenation and a 1em paragraph indent, as journals set text.
   handles SIGINT by closing the port, ending the chat streams and exiting once what is in flight
   is done (5 s deadline). The pm2 unit has `LimitCORE=0` and the on-box disk guard deletes
   `/var/lib/apport/coredump/core.*`, so a crash can no longer fill the disk. Memory is sampled
-  every five minutes into `~/mem-samples.csv` on the box.
+  every five minutes into `~/mem-samples.csv` on the box, and `/usr/local/bin/app-crash-alert.sh`
+  (root cron, every 5 min) mails the owner when pm2 logs an exit that is not its own SIGINT, or
+  when the memory recycle has fired three times in a day: a restart must never again go unseen.
 - Database: AWS RDS PostgreSQL
 - No Docker, no CI/CD pipeline currently
 - Static assets served directly by Express (no CDN)
