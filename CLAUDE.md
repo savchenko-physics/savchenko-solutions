@@ -58,7 +58,10 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   restart resumes whatever was converting (`resumeConversions`); `VIDEO_CONVERT=off` disables it.
   A video's pixel size comes from the container (`lib/videoMeta.js`: ISO BMFF `tkhd` with its
   rotation matrix, or Matroska `PixelWidth`/`PixelHeight`) into `image_width`/`image_height`, so
-  the bubble reserves its box like an image does. Uploads go by XMLHttpRequest so the pending card
+  the bubble reserves its box like an image does. The composer takes a file from the picker, from a
+  drop anywhere on the chat column or from a paste (a screenshot, or a file the browser passes on),
+  and previews a video from the file itself before anything is sent (one the browser cannot decode
+  says it will be converted after sending). Uploads go by XMLHttpRequest so the pending card
   shows progress; no attachment is accepted with under 1 GB free on the disk (507); deleting a
   video message removes its file unless a forward still shows it (other kinds keep their files,
   as before). `tests/message-attachments.test.js`, `tests/video-meta.test.js`,

@@ -237,6 +237,25 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      position: relative;
+    }
+
+    /* A file dragged over the chat: the column says where to drop it. */
+    .msg-chat.is-dropping::after {
+      content: attr(data-drop-text);
+      position: absolute;
+      inset: var(--ss-space-2);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed var(--ss-link);
+      border-radius: var(--ss-radius-lg);
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ss-link);
+      font-size: var(--ss-fs-16);
+      font-weight: var(--ss-fw-strong);
+      pointer-events: none;
     }
 
     .msg-chat-header-wrap {
@@ -987,6 +1006,15 @@
       border-radius: var(--ss-radius);
       border: 1px solid var(--msg-border);
       object-fit: cover;
+    }
+
+    /* The chosen video plays here from the file itself, before anything is uploaded. */
+    .msg-image-preview-video {
+      max-height: 160px;
+      max-width: min(280px, 60%);
+      border-radius: var(--ss-radius);
+      border: 1px solid var(--msg-border);
+      background: var(--ss-navy);
     }
 
     .msg-image-preview-remove {
@@ -1760,7 +1788,7 @@
     </div>
 
     <!-- Chat pane -->
-    <div class="msg-chat">
+    <div class="msg-chat" data-drop-text="<%= lang === 'ru' ? 'Отпустите, чтобы прикрепить' : 'Drop to attach' %>">
       <% if (activeConversation) { %>
         <!-- Chat header -->
         <div class="msg-chat-header-wrap">
@@ -1965,6 +1993,7 @@
         <!-- Attachment preview bar (image thumbnail or file card) -->
         <div class="msg-image-preview" id="imagePreview">
           <img id="imagePreviewImg" src="" alt="" />
+          <video class="msg-image-preview-video" id="imagePreviewVideo" controls playsinline preload="metadata" hidden></video>
           <span class="msg-image-preview-fileicon" id="imagePreviewFileIcon" style="display:none">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           </span>
@@ -2264,6 +2293,7 @@
   const fileInput = document.getElementById('imageFileInput');
   const imagePreview = document.getElementById('imagePreview');
   const imagePreviewImg = document.getElementById('imagePreviewImg');
+  const imagePreviewVideo = document.getElementById('imagePreviewVideo');
   const imagePreviewName = document.getElementById('imagePreviewName');
   const imagePreviewRemove = document.getElementById('imagePreviewRemove');
   const imageOverlay = document.getElementById('imageOverlay');
@@ -2446,9 +2476,11 @@
       alert(attachmentLimitText(name));
       return false;
     }
+    const kind = attachmentKind(name);
+    clearPreviewVideo();
     pendingImage = file;
     pendingName = name;
-    pendingIsImage = attachmentKind(name) === 'image';
+    pendingIsImage = kind === 'image';
     imagePreviewName.textContent = pendingIsImage ? name : (name + '  ·  ' + formatBytes(file.size));
     if (pendingIsImage) {
       if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
@@ -2464,6 +2496,23 @@
         imagePreview.classList.add('show');
       };
       reader.readAsDataURL(file);
+    } else if (kind === 'video' && imagePreviewVideo && window.URL && URL.createObjectURL) {
+      /* Plays from the file in memory: nothing is uploaded until Send. A video this browser
+         cannot decode (OpenCV's mp4v, an iPhone's HEVC in Firefox) shows as a file instead and
+         says it will be converted after sending — which is what the server then does. */
+      imagePreviewImg.style.display = 'none';
+      imagePreviewImg.src = '';
+      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
+      previewVideoUrl = URL.createObjectURL(file);
+      imagePreviewVideo.onerror = function() {
+        clearPreviewVideo();
+        if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'flex';
+        imagePreviewName.textContent = name + '  ·  ' + formatBytes(file.size) + '  ·  ' +
+          (LANG === 'ru' ? 'будет сконвертировано после отправки' : 'converted after sending');
+      };
+      imagePreviewVideo.src = previewVideoUrl;
+      imagePreviewVideo.hidden = false;
+      imagePreview.classList.add('show');
     } else {
       imagePreviewImg.style.display = 'none';
       imagePreviewImg.src = '';
@@ -2474,12 +2523,75 @@
     return true;
   }
 
+  let previewVideoUrl = null;
+  function clearPreviewVideo() {
+    if (!imagePreviewVideo) return;
+    imagePreviewVideo.onerror = null;
+    try { imagePreviewVideo.pause(); } catch (e) {}
+    imagePreviewVideo.removeAttribute('src');
+    imagePreviewVideo.load();
+    imagePreviewVideo.hidden = true;
+    if (previewVideoUrl) { URL.revokeObjectURL(previewVideoUrl); previewVideoUrl = null; }
+  }
+
+  /* Files arrive by the picker, by a drop anywhere on the chat column, and by paste (a screenshot
+     from the clipboard, or a file copied in a file manager where the browser passes it on). One
+     attachment per message: the first file of several is taken. */
+  function hasFiles(e) {
+    const t = e.dataTransfer;
+    return !!(t && t.types && Array.prototype.indexOf.call(t.types, 'Files') !== -1);
+  }
+  const dropZone = document.querySelector('.msg-chat');
+  let dragDepth = 0;
+  function endDrag() { dragDepth = 0; if (dropZone) dropZone.classList.remove('is-dropping'); }
+  document.addEventListener('dragenter', function(e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    if (!CONV_ID || !dropZone) return;
+    dragDepth++;
+    dropZone.classList.add('is-dropping');
+  });
+  document.addEventListener('dragover', function(e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = CONV_ID ? 'copy' : 'none';
+  });
+  document.addEventListener('dragleave', function(e) {
+    if (!hasFiles(e)) return;
+    dragDepth = Math.max(0, dragDepth - 1);
+    if (dragDepth === 0 || e.relatedTarget === null) endDrag();
+  });
+  document.addEventListener('drop', function(e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    endDrag();
+    if (!CONV_ID) return;
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file && setPendingAttachment(file) && msgInput) msgInput.focus();
+  });
+  document.addEventListener('paste', function(e) {
+    if (!CONV_ID) return;
+    const t = e.target;
+    if (t && t !== msgInput && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    const dt = e.clipboardData;
+    if (!dt) return;
+    let file = (dt.files && dt.files.length) ? dt.files[0] : null;
+    if (!file && dt.items) {
+      for (let i = 0; i < dt.items.length; i++) {
+        if (dt.items[i].kind === 'file') { file = dt.items[i].getAsFile(); if (file) break; }
+      }
+    }
+    if (!file) return;   // plain text: the textarea takes it as usual
+    if (setPendingAttachment(file)) { e.preventDefault(); if (msgInput) msgInput.focus(); }
+  });
+
   if (imagePreviewRemove) {
     imagePreviewRemove.addEventListener('click', function() {
       pendingImage = null;
       pendingName = '';
       pendingIsImage = false;
       pendingImageW = 0; pendingImageH = 0;
+      clearPreviewVideo();
       fileInput.value = '';
       imagePreview.classList.remove('show');
       imagePreviewImg.src = '';
@@ -2489,21 +2601,6 @@
     });
   }
 
-  // Paste image from clipboard
-  if (msgInput) {
-    msgInput.addEventListener('paste', function(e) {
-      const items = e.clipboardData && e.clipboardData.items;
-      if (!items) return;
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf('image/') === 0) {
-          const file = items[i].getAsFile();
-          if (!file) continue;
-          if (setPendingAttachment(file)) e.preventDefault();
-          break;
-        }
-      }
-    });
-  }
 
   // Jump to the quoted message when a reply preview is clicked.
   function jumpToMessage(targetId) {
@@ -2666,6 +2763,7 @@
     pendingName = '';
     pendingIsImage = false;
     pendingImageW = 0; pendingImageH = 0;
+    clearPreviewVideo();
     cancelReply();
     if (fileInput) fileInput.value = '';
     if (imagePreview) imagePreview.classList.remove('show');
