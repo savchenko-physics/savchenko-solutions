@@ -44,9 +44,14 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   `tests/math-memory.test.js` renders a thousand `\text{}` formulas three times in a child
   process with the garbage collector exposed and fails if pass three costs heap.
 - **Chat attachments** are stated once in `lib/messageAttachments.js`: images play inline, videos
-  play inline in a `<video>` since 2026-09-19 (asked in the Russian chat), documents are download
-  cards; 25 MB for a file, 100 MB for a video, both read by `messages.js`, the page's composer and
-  its tooltip from that module. **Every video plays in every browser** because a video that is not
+  play inline in a `<video>` since 2026-09-19 (asked in the Russian chat), audio files are a player
+  card (mp3, m4a, wav as they are; ogg, opus, flac converted to m4a), documents are download cards;
+  25 MB for a file, 100 MB for video or audio, all read by `messages.js`, the page's composer and
+  its tooltip from that module. A picture or a video sent "as a document" (the send dialog's
+  checkbox, `as_document=1`) is a card with `attachment_status = 'document'` and is never converted.
+  Browsers send file names in UTF-8 and busboy read them as Latin-1, so "Савченко.pdf" was stored
+  as mojibake until 2026-09-19: `fixFileName` in `messages.js` reads the bytes back
+  (`tests/message-file-names.test.js`); the rows from before were repaired in place. **Every video plays in every browser** because a video that is not
   already H.264 4:2:0 + AAC in an mp4 (the one thing browsers agree on) is converted to it after
   upload by `lib/videoTranscode.js` with the ffmpeg on the box (installed 2026-09-19; the first
   video ever sent was OpenCV's MPEG-4 part 2, which nothing plays): re-encoded at up to 1280 px,
@@ -58,11 +63,17 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   restart resumes whatever was converting (`resumeConversions`); `VIDEO_CONVERT=off` disables it.
   A video's pixel size comes from the container (`lib/videoMeta.js`: ISO BMFF `tkhd` with its
   rotation matrix, or Matroska `PixelWidth`/`PixelHeight`) into `image_width`/`image_height`, so
-  the bubble reserves its box like an image does. The composer takes a file from the picker, from a
-  drop anywhere on the chat column or from a paste (a screenshot, or a file the browser passes on),
-  and previews a video from the file itself before anything is sent (one the browser cannot decode
-  says it will be converted after sending). Uploads go by XMLHttpRequest so the pending card
-  shows progress; no attachment is accepted with under 1 GB free on the disk (507); deleting a
+  the bubble reserves its box like an image does. **The chat's look is Telegram Desktop's, with
+  the site's own left/right sides kept** (the owner, 2026-09-19): media fills the bubble edge to
+  edge up to a 430 × 430 box (`mediaBox`, the same in the template and the script), the caption
+  sits under it, the time and ticks sit inside the bubble after the last line (`float: right`, the
+  bubble is `flow-root`) or in a pill on a caption-less picture, a video shows its first frame, its
+  length and a play button and hands over to the browser's controls on the first click. The
+  right-click / long-press menu carries the reactions strip on top, plus Copy Image and Save As.
+  A file from the picker, a drop anywhere on the chat column or a paste opens the send dialog
+  (preview — a video plays from the file itself, one the browser cannot decode says it will be
+  converted — a caption, the "send as a document" choice). Uploads go by XMLHttpRequest so the
+  pending card shows progress; no attachment is accepted with under 1 GB free on the disk (507); deleting a
   video message removes its file unless a forward still shows it (other kinds keep their files,
   as before). `tests/message-attachments.test.js`, `tests/video-meta.test.js`,
   `tests/video-transcode.test.js` (the last two run ffmpeg when installed).
@@ -368,6 +379,11 @@ hyphenation and a 1em paragraph indent, as journals set text.
 - Use `<%- include() %>` for shared partials.
 - Escape all user-generated content with `<%= %>` (not `<%- %>`).
 - Keep logic minimal in templates. Compute values in the route handler.
+- `js/local-time.js` keeps the reader's zone in the `ss_tz` cookie (a year, `SameSite=Lax`); the
+  messenger reads it (`readerTimeZone` in `messages.js`) and writes its times and day separators
+  in that zone and the page's language from the start, and the page rewrites them only when its own
+  zone differs (`TIMES_ARE_LOCAL`). Until then they used to flip from UTC to local on every chat
+  switch. A first page without the cookie keeps them out of sight (`.msg-times-utc`) until rewritten.
 - **Every date or time of an event goes through `<%- localTime(value, kind, lang) %>`** (`lib/localTime.js`,
   kinds `date longdate day daytime datetime time month relative recent`): it writes a `<time data-local>` in UTC
   that `js/local-time.js` (loaded by the header, and by the few pages without it) rewrites in the reader's time

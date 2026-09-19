@@ -468,6 +468,7 @@
 
     .msg-bubble {
       position: relative;
+      display: flow-root;        /* contains the floated time after a card or a player */
       padding: var(--ss-space-2) var(--ss-space-3);
       border-radius: var(--ss-radius-lg);
       font-size: var(--ss-text-body);
@@ -510,16 +511,24 @@
     .msg-bubble-sender a:hover { text-decoration: underline; }
     .msg-bubble-avatar { cursor: pointer; }
 
+    /* The time sits inside the bubble after the last line of text, right-aligned, and drops to
+       its own line when the text leaves no room — as Telegram sets it. On a picture it is a
+       pill in the corner (below, with the media rules). */
     .msg-bubble-time {
+      float: right;
+      margin: var(--ss-space-2) 0 -2px var(--ss-space-2);
       font-size: var(--ss-fs-12);
+      line-height: 1;
       color: var(--msg-muted);
-      margin-top: 2px;
-      text-align: right;
+      white-space: nowrap;
+      -webkit-user-select: none;
+      user-select: none;
     }
-
-    .msg-bubble-row.sent .msg-bubble-time {
-      text-align: left;
-    }
+    .msg-bubble.sent .msg-bubble-time { color: rgba(255, 255, 255, 0.65); }
+    .msg-bubble.sent .msg-check { color: rgba(255, 255, 255, 0.55); }
+    .msg-bubble.sent .msg-check.read { color: var(--ss-on-navy); }
+    .msg-bubble > .msg-bubble-file + .msg-bubble-time,
+    .msg-bubble > .msg-audio + .msg-bubble-time { margin-top: var(--ss-space-1); }
 
     .msg-bubble-edited {
       font-size: var(--ss-fs-12);
@@ -541,6 +550,12 @@
       position: relative;
     }
 
+    /* Until the page's script has put them in the reader's zone (a first visit, before the zone
+       cookie exists), server-written times stay out of sight rather than showing UTC. */
+    .msg-times-utc .msg-bubble-time,
+    .msg-times-utc .msg-conv-time,
+    .msg-times-utc .msg-date-sep { visibility: hidden; }
+
     .msg-context-menu {
       display: none;
       position: fixed;
@@ -556,6 +571,25 @@
     .msg-context-menu.show {
       display: block;
     }
+
+    /* The reactions along the top of the menu, as Telegram shows them over its menu. */
+    .msg-context-reactions {
+      display: flex;
+      gap: 2px;
+      max-width: 296px;
+      padding: var(--ss-space-1) var(--ss-space-2);
+      margin-bottom: var(--ss-space-1);
+      border-bottom: 1px solid var(--msg-border);
+      overflow-x: auto;
+      scrollbar-width: none;
+      line-height: 1;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .msg-context-reactions::-webkit-scrollbar { display: none; }
+    .msg-context-reactions:empty { display: none; }
+    .msg-context-reactions .msg-reaction-sep { flex: 0 0 1px; width: 1px; height: 24px; align-self: center; margin: 0 var(--ss-space-1); background: var(--msg-border); }
+    .msg-context-reactions .msg-reaction-pick { flex: 0 0 auto; }
 
     .msg-context-item {
       display: flex;
@@ -987,120 +1021,289 @@
       color: var(--msg-primary);
     }
 
-    .msg-image-preview {
-      display: none;
-      padding: var(--ss-space-2) var(--ss-space-4) 0;
-      background: var(--msg-bg);
-      border-top: 1px solid var(--msg-border);
+    /* ── "Send a file": Telegram's dialog. What was chosen, with a caption to send along, and
+       for a picture or a video the choice to send it as a file instead. ───────────────────── */
+    .msg-send-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
     }
-
-    .msg-image-preview.show {
+    .msg-send-dialog[hidden] { display: none; }
+    .msg-send-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+    }
+    .msg-send-panel {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      max-height: 100%;
+      overflow-y: auto;
+      background: var(--ss-surface);
+      border-radius: var(--ss-radius-lg) var(--ss-radius-lg) 0 0;
+      box-shadow: var(--ss-shadow);
+      padding: var(--ss-space-4);
+    }
+    @media (min-width: 768px) {
+      .msg-send-dialog { align-items: center; }
+      .msg-send-panel { border-radius: var(--ss-radius-lg); max-height: calc(100% - 2 * var(--ss-space-6)); }
+    }
+    .msg-send-head {
       display: flex;
       align-items: center;
-      gap: var(--ss-space-2);
+      justify-content: space-between;
+      margin-bottom: var(--ss-space-3);
+      font-size: var(--ss-text-lead);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-text);
     }
-
-    .msg-image-preview img {
-      max-height: 80px;
-      max-width: 160px;
-      border-radius: var(--ss-radius);
-      border: 1px solid var(--msg-border);
-      object-fit: cover;
-    }
-
-    /* The chosen video plays here from the file itself, before anything is uploaded. */
-    .msg-image-preview-video {
-      max-height: 160px;
-      max-width: min(280px, 60%);
-      border-radius: var(--ss-radius);
-      border: 1px solid var(--msg-border);
-      background: var(--ss-navy);
-    }
-
-    .msg-image-preview-remove {
+    .msg-send-close {
       background: none;
       border: none;
-      color: var(--msg-muted);
-      cursor: pointer;
-      font-size: var(--ss-fs-18);
-      padding: 0 var(--ss-space-1);
+      color: var(--ss-text-secondary);
+      font-size: var(--ss-fs-24);
       line-height: 1;
-    }
-
-    .msg-image-preview-remove:hover {
-      color: var(--ss-error);
-    }
-
-    .msg-image-preview-name {
-      font-size: var(--ss-fs-12);
-      color: var(--msg-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 120px;
-    }
-
-    /* Image: the wrapper reserves the exact box (width + aspect-ratio) and shows
-       a blurred placeholder, so the bubble never reflows; the image fades in. */
-    .msg-bubble-image-wrap {
-      position: relative;
-      display: block;            /* own line — never inline with the caption text */
-      width: fit-content;        /* shrink-wrap legacy images; inline width wins for has-dims */
-      margin-top: var(--ss-space-1);
-      max-width: min(280px, 100%);
-      border-radius: 6px;
-      overflow: hidden;
+      padding: 0 var(--ss-space-1);
       cursor: pointer;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-color: rgba(0, 0, 0, 0.04);
     }
-
-    .msg-bubble-image {
-      display: block;
-      max-width: 100%;
-      height: auto;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-
-    /* When dimensions are known, the wrapper's inline width + aspect-ratio hold
-       the box and the image fills it. */
-    .msg-bubble-image-wrap.has-dims .msg-bubble-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .msg-bubble-image.loaded { opacity: 1; }
-    .msg-bubble-image-wrap:hover .msg-bubble-image.loaded { opacity: 0.92; }
-
-    /* A video plays inside its bubble. The wrapper reserves the box from the pixel size the
-       server read out of the container (inline width + aspect-ratio, as for images); a file whose
-       size could not be read sizes itself once the browser has its metadata. */
-    .msg-bubble-video-wrap {
-      display: block;
-      width: fit-content;
-      margin-top: var(--ss-space-1);
-      max-width: min(280px, 100%);
-      border-radius: 6px;
+    .msg-send-close:hover { color: var(--ss-text); }
+    .msg-send-preview {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80px;
+      margin-bottom: var(--ss-space-3);
+      border-radius: var(--ss-radius);
+      background: var(--ss-surface-alt);
       overflow: hidden;
-      background: var(--ss-navy);
     }
-
-    .msg-bubble-video {
+    .msg-send-preview img,
+    .msg-send-preview video {
       display: block;
       max-width: 100%;
       max-height: 360px;
-      height: auto;
+    }
+    .msg-send-preview video { background: var(--ss-navy); }
+    .msg-send-file {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-3);
+      width: 100%;
+      padding: var(--ss-space-3);
+    }
+    .msg-send-file .msg-bubble-file-icon { background: var(--ss-link); color: var(--ss-on-navy); }
+    .msg-send-file-meta { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .msg-send-file-name {
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .msg-send-file-size, .msg-send-note {
+      font-size: var(--ss-fs-13);
+      color: var(--ss-text-secondary);
+    }
+    .msg-send-note { padding: 0 var(--ss-space-3) var(--ss-space-3); width: 100%; }
+    .msg-send-option {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-2);
+      margin-bottom: var(--ss-space-3);
+      font-size: var(--ss-text-ui);
+      color: var(--ss-text);
+      cursor: pointer;
+    }
+    .msg-send-option[hidden] { display: none; }
+    .msg-send-caption-label {
+      display: block;
+      margin-bottom: var(--ss-space-1);
+      font-size: var(--ss-text-label);
+      font-weight: var(--ss-fw-strong);
+      color: var(--ss-link);
+    }
+    .msg-send-caption {
+      width: 100%;
+      min-height: 40px;
+      max-height: 160px;
+      resize: none;
+      font-family: inherit;
+      font-size: var(--ss-text-input);
+      line-height: var(--ss-lh-ui);
+      padding: var(--ss-space-2) var(--ss-space-3);
+      border: 1px solid var(--ss-rule);
+      border-radius: var(--ss-radius);
+      background: var(--ss-surface);
+      color: var(--ss-text);
+    }
+    .msg-send-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--ss-space-2);
+      margin-top: var(--ss-space-3);
     }
 
-    .msg-bubble-video-wrap.has-dims .msg-bubble-video {
+    /* ── Media in a bubble, the way Telegram Desktop lays it out ─────────────────────────
+       A photo or a video fills the bubble edge to edge, up to a 430 × 430 box (Telegram's
+       maxMediaSize), in the bubble's own rounded corners; the caption, if any, sits under it with
+       the usual padding; a message that is only media carries its time in a dark pill on the
+       picture. The wrapper reserves the exact box from the pixel size the server stored (inline
+       width + aspect-ratio) and shows the blurred placeholder until the picture arrives, so the
+       chat never reflows. Sent stays right, received stays left, as the site has always done. */
+    .msg-bubble-row.has-media { max-width: 85%; }
+    @media (min-width: 768px) { .msg-bubble-row.has-media { max-width: min(70%, 430px + 40px); } }
+
+    .msg-bubble.has-media { padding: 0; }
+    .msg-bubble.has-media > .msg-forwarded,
+    .msg-bubble.has-media > .msg-reply-quote {
+      margin: var(--ss-space-2) var(--ss-space-3) var(--ss-space-1);
+    }
+    .msg-bubble.has-media > .msg-reply-quote + .msg-media,
+    .msg-bubble.has-media > .msg-forwarded + .msg-media { border-radius: 0; }
+    .msg-caption {
+      display: flow-root;
+      padding: var(--ss-space-2) var(--ss-space-3);
+    }
+    .msg-bubble.has-media > .msg-media:not(:last-child) {
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .msg-media {
+      position: relative;
+      display: block;
+      width: fit-content;
+      max-width: 100%;
+      border-radius: inherit;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-color: rgba(0, 0, 0, 0.06);
+    }
+    .msg-bubble-image-wrap { cursor: pointer; }
+    .msg-bubble-video-wrap { cursor: pointer; background-color: var(--ss-navy); }
+
+    /* Without stored dimensions (older messages) the picture sizes itself, within the box. */
+    .msg-bubble-image,
+    .msg-bubble-video {
+      display: block;
+      max-width: min(430px, 100%);
+      max-height: 430px;
+      height: auto;
+    }
+    .msg-bubble-image {
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .msg-media.has-dims .msg-bubble-image,
+    .msg-media.has-dims .msg-bubble-video {
       width: 100%;
       height: 100%;
+      max-width: none;
       max-height: none;
+      object-fit: cover;
     }
+    .msg-bubble-image.loaded { opacity: 1; }
+    .msg-bubble-image-wrap:hover .msg-bubble-image.loaded { opacity: 0.92; }
+
+    /* The time (and receipts) on a media-only message: a pill on the picture, bottom right. */
+    .msg-media .msg-bubble-time,
+    .msg-video-badge {
+      position: absolute;
+      margin: 0;
+      padding: 2px var(--ss-space-2);
+      border-radius: var(--ss-radius);
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--ss-on-navy);
+      font-size: var(--ss-fs-12);
+      line-height: var(--ss-lh-tight);
+      white-space: nowrap;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .msg-media .msg-bubble-time { float: none; right: var(--ss-space-2); bottom: var(--ss-space-2); line-height: var(--ss-lh-tight); }
+    .msg-media .msg-bubble-time .msg-check { color: rgba(255, 255, 255, 0.7); }
+    .msg-media .msg-bubble-time .msg-check.read { color: var(--ss-on-navy); }
+
+    /* A video shows its first frame, its length top left and a play button in the middle;
+       one click starts it with the browser's controls. */
+    .msg-video-badge { top: var(--ss-space-2); left: var(--ss-space-2); }
+    .msg-video-badge:empty { display: none; }
+    .msg-video-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 56px;
+      height: 56px;
+      margin: -28px 0 0 -28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--ss-on-navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .msg-video-play svg { display: block; margin-left: 4px; }
+    .msg-bubble-video-wrap.is-playing .msg-video-play,
+    .msg-bubble-video-wrap.is-playing .msg-video-badge { display: none; }
+
+    /* An audio file: a play button, the name and the time, as Telegram's card. One player for
+       the page; starting one card stops another. */
+    .msg-audio {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-3);
+      margin-top: var(--ss-space-1);
+      min-width: 240px;
+      max-width: min(430px, 100%);
+    }
+    .msg-audio:first-child { margin-top: 0; }
+    .msg-audio-play {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .msg-audio-play svg { display: block; }
+    .msg-audio-play .msg-audio-pause-icon, .msg-audio.is-playing .msg-audio-play .msg-audio-play-icon { display: none; }
+    .msg-audio.is-playing .msg-audio-play .msg-audio-pause-icon { display: block; }
+    .msg-bubble.received .msg-audio-play { background: var(--ss-link); color: var(--ss-on-navy); }
+    .msg-bubble.sent .msg-audio-play { background: rgba(255, 255, 255, 0.9); color: var(--ss-navy); }
+    .msg-audio-meta { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .msg-audio-name {
+      font-size: var(--ss-fs-13);
+      font-weight: var(--ss-fw-strong);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .msg-audio-time { font-size: var(--ss-fs-12); }
+    .msg-bubble.received .msg-audio-time { color: var(--msg-muted); }
+    .msg-bubble.sent .msg-audio-time { color: rgba(255, 255, 255, 0.75); }
+    .msg-audio-bar {
+      display: block;
+      height: 3px;
+      border-radius: 2px;
+      overflow: hidden;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.12);
+    }
+    .msg-bubble.sent .msg-audio-bar { background: rgba(255, 255, 255, 0.3); }
+    .msg-audio-fill { display: block; height: 100%; width: 0; background: var(--ss-link); }
+    .msg-bubble.sent .msg-audio-fill { background: var(--ss-on-navy); }
 
     /* Upload progress under a pending attachment card */
     .msg-upload-bar {
@@ -1167,19 +1370,6 @@
     .msg-bubble-file-size { font-size: var(--ss-fs-12); }
     .msg-bubble.received .msg-bubble-file-size { color: var(--msg-muted); }
     .msg-bubble.sent .msg-bubble-file-size { color: rgba(255, 255, 255, 0.75); }
-
-    /* Compose-bar file (non-image) preview icon */
-    .msg-image-preview-fileicon {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--ss-radius-lg);
-      background: var(--ss-link);
-      color: var(--ss-on-navy);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
 
     /* Saved Messages (self-chat) bookmark avatar */
     .msg-saved-avatar {
@@ -1678,7 +1868,7 @@
   <%- include('default/main_site_header', { hideFeedbackTab: true }) %>
 
   <!-- Main body -->
-  <div class="msg-body<%= activeConversation ? ' has-active' : '' %>">
+  <div class="msg-body<%= activeConversation ? ' has-active' : '' %><%= (typeof timeZone === 'string' && timeZone) ? '' : ' msg-times-utc' %>" data-tz="<%= (typeof timeZone === 'string' && timeZone) ? timeZone : '' %>">
     <!-- Sidebar: conversation list -->
     <div class="msg-sidebar">
       <div class="msg-sidebar-header">
@@ -1929,7 +2119,10 @@
             <% if (typeof firstUnreadId !== 'undefined' && firstUnreadId && m.id === firstUnreadId) { %>
             <div class="msg-new-divider" id="newMessagesDivider"><%= lang === 'ru' ? 'Новые сообщения' : 'New messages' %></div>
             <% } %>
-            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %>" data-msg-id="<%= m.id %>" data-created="<%= new Date(m.created_at).toISOString() %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
+            <% const mediaKind = mediaKindOf(m); const hasText = !!(m.contentHtml || m.content); const mediaOnly = !!mediaKind && !hasText;
+               const editedHtml = `<span class="msg-bubble-edited">${lang === 'ru' ? ' (ред.)' : ' (edited)'}</span>`;
+               const timeHtml = `<div class="msg-bubble-time" data-iso="${new Date(m.created_at).toISOString()}">${formatMessageTime(m.created_at)}${(showReceipts && isSent) ? checkHTML(!!readCutoff && new Date(m.created_at) <= new Date(readCutoff)) : ''}</div>`; %>
+            <div class="msg-bubble-row <%= isSent ? 'sent' : 'received' %><%= mediaKind ? ' has-media' : '' %>" data-msg-id="<%= m.id %>" data-created="<%= new Date(m.created_at).toISOString() %>" data-sender-role="<%= m.sender_role || 'member' %>" data-sender-name="<%= senderDisplayName %>" data-pinned="<%= m.pinned_at ? '1' : '' %>">
               <% if (showAvatar) { %>
                 <span class="avatar-presence">
                   <a href="/user/<%= m.sender_username %>"><img class="msg-bubble-avatar"
@@ -1941,11 +2134,10 @@
                 <% if (showName) { %>
                   <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><%- m.contentHtml || m.content %><% if (m.image_url) { %><span class="msg-bubble-image-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><img class="msg-bubble-image" src="<%= m.image_url %>" alt="" data-full="<%= m.image_url %>" loading="lazy" /></span><% } %><% if (m.file_url && isVideoName(m.file_name) && !m.attachment_status) { %><span class="msg-bubble-video-wrap<%= (m.image_width && m.image_height) ? ' has-dims' : '' %>" style="<% if (m.image_width && m.image_height) { %>width:min(<%= m.image_width %>px,280px);aspect-ratio:<%= m.image_width %>/<%= m.image_height %>;<% } %><% if (m.image_placeholder) { %>background-image:url(<%= m.image_placeholder %>);<% } %>"><video class="msg-bubble-video" src="<%= m.file_url %>" controls preload="metadata" playsinline data-name="<%= m.file_name %>" data-size="<%= m.file_size || 0 %>"></video></span><% } else if (m.file_url) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (m.edited_at) { %><span class="msg-bubble-edited"><%= lang === 'ru' ? ' (ред.)' : ' (edited)' %></span><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %><%= mediaKind ? ' has-media' : '' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><% if (mediaKind) { %><%- mediaHTML(m, mediaKind, mediaOnly ? timeHtml : '') %><% } %><% if (hasText) { %><% if (mediaKind) { %><span class="msg-caption"><% } %><%- m.contentHtml || m.content %><% if (mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %></span><% } %><% } %><% if (m.file_url && !mediaKind && isAudioName(m.file_name) && !m.attachment_status) { %><%- audioHTML(m) %><% } else if (m.file_url && !mediaKind) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (!mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><% if (rxGlyph) { %><%- rxGlyph(r.emoji) %><% } else { %><%= r.emoji %><% } %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
-                <div class="msg-bubble-time" data-iso="<%= new Date(m.created_at).toISOString() %>"><%= formatMessageTime(m.created_at) %><% if (showReceipts && isSent) { %><%- checkHTML(!!readCutoff && new Date(m.created_at) <= new Date(readCutoff)) %><% } %></div>
               </div>
             </div>
           <% }); %>
@@ -1989,17 +2181,6 @@
           <button type="button" class="msg-lang-hint-close" id="langHintClose" title="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>" aria-label="<%= _hintInRussian ? 'Скрыть' : 'Dismiss' %>">&times;</button>
         </div>
         <% } %>
-
-        <!-- Attachment preview bar (image thumbnail or file card) -->
-        <div class="msg-image-preview" id="imagePreview">
-          <img id="imagePreviewImg" src="" alt="" />
-          <video class="msg-image-preview-video" id="imagePreviewVideo" controls playsinline preload="metadata" hidden></video>
-          <span class="msg-image-preview-fileicon" id="imagePreviewFileIcon" style="display:none">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </span>
-          <span class="msg-image-preview-name" id="imagePreviewName"></span>
-          <button class="msg-image-preview-remove" id="imagePreviewRemove" title="Remove">&times;</button>
-        </div>
 
         <!-- Input bar -->
         <div class="msg-input-bar">
@@ -2111,23 +2292,29 @@
 </div>
 
 <%
+  // Times are written in the reader's zone (the ss_tz cookie, `timeZone`) and the page's language,
+  // exactly as the page's script writes them, so nothing changes after load. Without the cookie
+  // (a first visit) they are written in UTC, kept out of sight, and rewritten by the script.
+  // (Functions, not consts: the sidebar above this block calls them before it has run.)
+  function TIME_ZONE() { return (typeof timeZone === 'string' && timeZone) ? timeZone : 'UTC'; }
+  function TIME_LOCALE() { return lang === 'ru' ? 'ru-RU' : 'en-US'; }
   function formatTime(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     const now = new Date();
     const diff = now - d;
-    if (diff < 86400000 && d.getDate() === now.getDate()) {
-      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diff < 86400000 && dayKeyOf(d) === dayKeyOf(now)) {
+      return d.toLocaleTimeString(TIME_LOCALE(), { hour: '2-digit', minute: '2-digit', timeZone: TIME_ZONE() });
     }
     if (diff < 604800000) {
-      return d.toLocaleDateString([], { weekday: 'short' });
+      return d.toLocaleDateString(TIME_LOCALE(), { weekday: 'short', timeZone: TIME_ZONE() });
     }
-    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(TIME_LOCALE(), { month: 'short', day: 'numeric', timeZone: TIME_ZONE() });
   }
 
   function formatMessageTime(dateStr) {
     if (!dateStr) return '';
-    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString(TIME_LOCALE(), { hour: '2-digit', minute: '2-digit', timeZone: TIME_ZONE() });
   }
 
   function formatBytes(n) {
@@ -2142,15 +2329,52 @@
     const m = /\.([A-Za-z0-9]+)$/.exec(String(name || ''));
     return !!m && attachmentRules.video.indexOf(m[1].toLowerCase()) !== -1;
   }
+  function isAudioName(name) {
+    const m = /\.([A-Za-z0-9]+)$/.exec(String(name || ''));
+    return !!m && attachmentRules.audio.indexOf(m[1].toLowerCase()) !== -1;
+  }
+  // An audio file's card; the page's script (renderAudioHTML) draws the same.
+  function audioHTML(m) {
+    return `<span class="msg-audio" data-src="${attrEsc(m.file_url)}" data-name="${attrEsc(m.file_name)}"><button type="button" class="msg-audio-play" aria-label="${lang === 'ru' ? 'Слушать' : 'Play'}"><svg class="msg-audio-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg><svg class="msg-audio-pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg></button><span class="msg-audio-meta"><span class="msg-audio-name">${attrEsc(m.file_name)}</span><span class="msg-audio-time">${formatBytes(m.file_size)}</span><span class="msg-audio-bar"><span class="msg-audio-fill"></span></span></span></span>`;
+  }
+  function attrEsc(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  // What a message shows inline: 'image', 'video' (converted and ready), or null (text, a card).
+  function mediaKindOf(m) {
+    if (m.image_url) return 'image';
+    if (m.file_url && isVideoName(m.file_name) && !m.attachment_status) return 'video';
+    return null;
+  }
+  // The box a picture gets: Telegram Desktop's 430 × 430 at most, never upscaled. The same rule
+  // is in the page's script (mediaBox) for messages that arrive live.
+  function mediaBox(w, h) {
+    if (!(w > 0 && h > 0)) return null;
+    return { width: Math.max(1, Math.min(w, 430, Math.round(430 * w / h))), w, h };
+  }
+  // The media of a bubble: the picture or the video, and for a media-only message its time in
+  // the corner (timeHtml), so the script and this template draw the same thing. (A function,
+  // not a const, so it is usable above this block: function declarations hoist, const does not.)
+  function mediaHTML(m, kind, timeHtml) {
+    const PLAY_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+    const box = mediaBox(m.image_width, m.image_height);
+    let style = box ? `width:${box.width}px;aspect-ratio:${box.w}/${box.h};` : '';
+    if (m.image_placeholder) style += `background-image:url(${m.image_placeholder});`;
+    const cls = 'msg-media ' + (kind === 'image' ? 'msg-bubble-image-wrap' : 'msg-bubble-video-wrap') + (box ? ' has-dims' : '');
+    const inner = kind === 'image'
+      ? `<img class="msg-bubble-image" src="${attrEsc(m.image_url)}" alt="" data-full="${attrEsc(m.image_url)}" loading="lazy" />`
+      : `<video class="msg-bubble-video" src="${attrEsc(m.file_url)}" preload="metadata" playsinline data-name="${attrEsc(m.file_name)}" data-size="${Number(m.file_size) || 0}"></video><span class="msg-video-badge"></span><span class="msg-video-play">${PLAY_SVG}</span>`;
+    return `<span class="${cls}" style="${style}">${inner}${timeHtml || ''}</span>`;
+  }
 
-  // The server can only group by its own day, UTC. The page redraws these separators by the
-  // reader's day as soon as it loads (regroupDaySeparators), so this is what shows without script.
+  // Day separators are grouped in the reader's zone when it is known; the page regroups them
+  // only when its zone differs from the one the page was written in (regroupDaySeparators).
+  // The reader's day (en-CA writes YYYY-MM-DD), the same key the page's clientDayKey computes.
   function dayKeyOf(dateStr) {
-    const d = new Date(dateStr);
-    return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0');
+    return new Date(dateStr).toLocaleDateString('en-CA', { timeZone: TIME_ZONE(), year: 'numeric', month: '2-digit', day: '2-digit' });
   }
   function daySepText(dateStr) {
-    return new Date(dateStr).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString(TIME_LOCALE(), { timeZone: TIME_ZONE(), month: 'short', day: 'numeric', year: 'numeric' });
   }
 
   function checkHTML(isRead) {
@@ -2163,7 +2387,32 @@
 
 <div class="msg-image-overlay" id="imageOverlay"><img id="imageOverlayImg" src="" alt="" /></div>
 
+<div class="msg-send-dialog" id="sendDialog" hidden>
+  <div class="msg-send-backdrop" id="sendDialogBackdrop"></div>
+  <div class="msg-send-panel" role="dialog" aria-modal="true" aria-labelledby="sendDialogTitle">
+    <div class="msg-send-head">
+      <span id="sendDialogTitle"></span>
+      <button type="button" class="msg-send-close" id="sendDialogClose" aria-label="<%= lang === 'ru' ? 'Закрыть' : 'Close' %>">&times;</button>
+    </div>
+    <div class="msg-send-preview">
+      <img id="sendPreviewImg" alt="" hidden />
+      <video id="sendPreviewVideo" controls playsinline preload="metadata" hidden></video>
+      <div class="msg-send-file" id="sendPreviewFile" hidden>
+        <span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        <span class="msg-send-file-meta"><span class="msg-send-file-name" id="sendPreviewName"></span><span class="msg-send-file-size" id="sendPreviewSize"></span></span>
+      </div>
+    </div>
+    <label class="msg-send-option" id="sendAsFileRow" hidden><input type="checkbox" id="sendAsFile"><span><%= lang === 'ru' ? 'Отправить как файл' : 'Send as a document' %></span></label>
+    <label class="msg-send-caption-label" for="sendCaption"><%= lang === 'ru' ? 'Подпись' : 'Caption' %></label>
+    <textarea class="msg-send-caption" id="sendCaption" rows="1"></textarea>
+    <div class="msg-send-actions">
+      <button type="button" class="btn btn-outline-dark" id="sendDialogCancel"><%= lang === 'ru' ? 'Отмена' : 'Cancel' %></button>
+      <button type="button" class="btn btn-primary" id="sendDialogSend"><%= lang === 'ru' ? 'Отправить' : 'Send' %></button>
+    </div>
+  </div>
+</div>
 <div class="msg-context-menu" id="msgContextMenu">
+  <div class="msg-context-reactions" id="ctxReactions"></div>
   <button class="msg-context-item" id="ctxReply">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
     <span><%= lang === 'ru' ? 'Ответить' : 'Reply' %></span>
@@ -2171,6 +2420,14 @@
   <button class="msg-context-item" id="ctxCopy">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
     <span><%= lang === 'ru' ? 'Копировать текст' : 'Copy Text' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxCopyImage">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <span><%= lang === 'ru' ? 'Копировать изображение' : 'Copy Image' %></span>
+  </button>
+  <button class="msg-context-item" id="ctxSave">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    <span><%= lang === 'ru' ? 'Сохранить как…' : 'Save As…' %></span>
   </button>
   <button class="msg-context-item" id="ctxPin">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.6-3.2V6a2 2 0 0 0-2-2H8.6a2 2 0 0 0-2 2v7.8z"/></svg>
@@ -2217,6 +2474,12 @@
   const IS_GROUP = <%= activeConversation ? activeConversation.is_group : false %>;
   const IS_ADMIN = <%= typeof isAdmin !== 'undefined' ? isAdmin : false %>;
   const LANG = '<%= typeof lang !== "undefined" ? lang : "en" %>';
+  const TIME_LOCALE = LANG === 'ru' ? 'ru-RU' : 'en-US';
+  // The zone the server wrote the page's times in ('' when it did not know one), and this browser's.
+  const SERVER_TZ = <%- JSON.stringify((typeof timeZone === 'string' && timeZone) ? timeZone : '') %>;
+  let LOCAL_TZ = '';
+  try { LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+  const TIMES_ARE_LOCAL = !!SERVER_TZ && SERVER_TZ === LOCAL_TZ;
   const USERNAME = <%- JSON.stringify(username || '') %>;
   // What may be attached and how large (lib/messageAttachments.js, the same rules the upload applies).
   const ATTACH_RULES = <%- JSON.stringify(attachmentRules) %>;
@@ -2291,16 +2554,22 @@
   // Image attachment elements
   const attachBtn = document.getElementById('attachBtn');
   const fileInput = document.getElementById('imageFileInput');
-  const imagePreview = document.getElementById('imagePreview');
-  const imagePreviewImg = document.getElementById('imagePreviewImg');
-  const imagePreviewVideo = document.getElementById('imagePreviewVideo');
-  const imagePreviewName = document.getElementById('imagePreviewName');
-  const imagePreviewRemove = document.getElementById('imagePreviewRemove');
+  const sendDialog = document.getElementById('sendDialog');
+  const sendDialogTitle = document.getElementById('sendDialogTitle');
+  const sendPreviewImg = document.getElementById('sendPreviewImg');
+  const sendPreviewVideo = document.getElementById('sendPreviewVideo');
+  const sendPreviewFile = document.getElementById('sendPreviewFile');
+  const sendPreviewName = document.getElementById('sendPreviewName');
+  const sendPreviewSize = document.getElementById('sendPreviewSize');
+  const sendAsFileRow = document.getElementById('sendAsFileRow');
+  const sendAsFile = document.getElementById('sendAsFile');
+  const sendCaption = document.getElementById('sendCaption');
   const imageOverlay = document.getElementById('imageOverlay');
   const imageOverlayImg = document.getElementById('imageOverlayImg');
-  const imagePreviewFileIcon = document.getElementById('imagePreviewFileIcon');
-  let pendingImage = null;      // the pending attachment File (image, video or document)
+  let pendingImage = null;      // the pending attachment File (image, video, audio or document)
   let pendingName = '';         // its file name as sent (a pasted image may have none)
+  let pendingAsFile = false;    // "send as a document": a picture or video shown as a file card
+  let pendingImageUrl = null;   // data URL of a pending picture, for the bubble drawn before the reply
   let pendingIsImage = false;   // whether that attachment renders inline as an image
   let pendingImageW = 0, pendingImageH = 0; // natural dimensions of a pending image
 
@@ -2449,17 +2718,21 @@
     const ext = attachmentExtension(name);
     if (ATTACH_RULES.image.indexOf(ext) !== -1) return 'image';
     if (ATTACH_RULES.video.indexOf(ext) !== -1) return 'video';
+    if (ATTACH_RULES.audio.indexOf(ext) !== -1) return 'audio';
     if (ATTACH_RULES.other.indexOf(ext) !== -1) return 'file';
     return null;
   }
   function attachmentLimit(name) {
-    return attachmentKind(name) === 'video' ? ATTACH_RULES.videoMaxBytes : ATTACH_RULES.maxBytes;
+    const kind = attachmentKind(name);
+    return (kind === 'video' || kind === 'audio') ? ATTACH_RULES.videoMaxBytes : ATTACH_RULES.maxBytes;
   }
   function attachmentLimitText(name) {
     const mb = Math.round(attachmentLimit(name) / 1048576);
-    const video = attachmentLimit(name) === ATTACH_RULES.videoMaxBytes;
-    if (LANG === 'ru') return (video ? 'Видео до ' : 'Файл до ') + mb + ' МБ';
-    return (video ? 'A video can be up to ' : 'A file can be up to ') + mb + ' MB';
+    const kind = attachmentKind(name);
+    const what = LANG === 'ru'
+      ? (kind === 'video' ? 'Видео до ' : kind === 'audio' ? 'Аудио до ' : 'Файл до ')
+      : (kind === 'video' ? 'A video can be up to ' : kind === 'audio' ? 'An audio file can be up to ' : 'A file can be up to ');
+    return what + mb + (LANG === 'ru' ? ' МБ' : ' MB');
   }
 
   // Stage an attachment (image → inline thumbnail; anything else → file card) in
@@ -2477,61 +2750,106 @@
       return false;
     }
     const kind = attachmentKind(name);
-    clearPreviewVideo();
     pendingImage = file;
     pendingName = name;
     pendingIsImage = kind === 'image';
-    imagePreviewName.textContent = pendingIsImage ? name : (name + '  ·  ' + formatBytes(file.size));
-    if (pendingIsImage) {
-      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
-      imagePreviewImg.style.display = '';
-      pendingImageW = 0; pendingImageH = 0;
-      imagePreviewImg.onload = function() {
-        pendingImageW = imagePreviewImg.naturalWidth || 0;
-        pendingImageH = imagePreviewImg.naturalHeight || 0;
-      };
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        imagePreviewImg.src = e.target.result;
-        imagePreview.classList.add('show');
-      };
-      reader.readAsDataURL(file);
-    } else if (kind === 'video' && imagePreviewVideo && window.URL && URL.createObjectURL) {
-      /* Plays from the file in memory: nothing is uploaded until Send. A video this browser
-         cannot decode (OpenCV's mp4v, an iPhone's HEVC in Firefox) shows as a file instead and
-         says it will be converted after sending — which is what the server then does. */
-      imagePreviewImg.style.display = 'none';
-      imagePreviewImg.src = '';
-      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
-      previewVideoUrl = URL.createObjectURL(file);
-      imagePreviewVideo.onerror = function() {
-        clearPreviewVideo();
-        if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'flex';
-        imagePreviewName.textContent = name + '  ·  ' + formatBytes(file.size) + '  ·  ' +
-          (LANG === 'ru' ? 'будет сконвертировано после отправки' : 'converted after sending');
-      };
-      imagePreviewVideo.src = previewVideoUrl;
-      imagePreviewVideo.hidden = false;
-      imagePreview.classList.add('show');
-    } else {
-      imagePreviewImg.style.display = 'none';
-      imagePreviewImg.src = '';
-      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'flex';
-      imagePreview.classList.add('show');
-    }
-    updateSendEnabled();
+    pendingAsFile = false;
+    pendingImageUrl = null;
+    pendingImageW = 0; pendingImageH = 0;
+    openSendDialog(file, name, kind);
     return true;
   }
 
+  /* "Send a file", as Telegram asks before sending: what was chosen, a caption, and for a picture
+     or a video whether to send it as a file instead. A video plays from the file in memory —
+     nothing is uploaded until Send; one this browser cannot decode (OpenCV's mp4v, an iPhone's
+     HEVC in Firefox) shows as a file and says it will be converted after sending, which is what
+     the server then does. The composer's text becomes the caption. */
   let previewVideoUrl = null;
   function clearPreviewVideo() {
-    if (!imagePreviewVideo) return;
-    imagePreviewVideo.onerror = null;
-    try { imagePreviewVideo.pause(); } catch (e) {}
-    imagePreviewVideo.removeAttribute('src');
-    imagePreviewVideo.load();
-    imagePreviewVideo.hidden = true;
+    if (!sendPreviewVideo) return;
+    sendPreviewVideo.onerror = null;
+    try { sendPreviewVideo.pause(); } catch (e) {}
+    sendPreviewVideo.removeAttribute('src');
+    sendPreviewVideo.load();
+    sendPreviewVideo.hidden = true;
     if (previewVideoUrl) { URL.revokeObjectURL(previewVideoUrl); previewVideoUrl = null; }
+  }
+  function showSendFile(name, size, note) {
+    sendPreviewName.textContent = name;
+    sendPreviewSize.textContent = formatBytes(size) + (note ? '  ·  ' + note : '');
+    sendPreviewFile.hidden = false;
+  }
+  function openSendDialog(file, name, kind) {
+    if (!sendDialog) return;
+    clearPreviewVideo();
+    sendPreviewImg.hidden = true; sendPreviewImg.removeAttribute('src');
+    sendPreviewFile.hidden = true;
+    const titles = {
+      image: LANG === 'ru' ? 'Отправить фото' : 'Send an image',
+      video: LANG === 'ru' ? 'Отправить видео' : 'Send a video',
+      audio: LANG === 'ru' ? 'Отправить аудио' : 'Send audio',
+      file: LANG === 'ru' ? 'Отправить файл' : 'Send a file',
+    };
+    sendDialogTitle.textContent = titles[kind] || titles.file;
+    if (kind === 'image') {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        pendingImageUrl = e.target.result;
+        sendPreviewImg.onload = function() { pendingImageW = sendPreviewImg.naturalWidth || 0; pendingImageH = sendPreviewImg.naturalHeight || 0; };
+        sendPreviewImg.src = pendingImageUrl;
+        sendPreviewImg.hidden = false;
+      };
+      reader.readAsDataURL(file);
+    } else if (kind === 'video' && window.URL && URL.createObjectURL) {
+      previewVideoUrl = URL.createObjectURL(file);
+      sendPreviewVideo.onerror = function() {
+        clearPreviewVideo();
+        showSendFile(name, file.size, LANG === 'ru' ? 'будет сконвертировано после отправки' : 'converted after sending');
+      };
+      sendPreviewVideo.src = previewVideoUrl;
+      sendPreviewVideo.hidden = false;
+    } else {
+      showSendFile(name, file.size, '');
+    }
+    sendAsFileRow.hidden = !(kind === 'image' || kind === 'video');
+    sendAsFile.checked = false;
+    sendCaption.value = msgInput ? msgInput.value : '';
+    sendDialog.hidden = false;
+    setTimeout(function() { sendCaption.focus(); }, 0);
+  }
+  function closeSendDialog(cancelled) {
+    if (!sendDialog) return;
+    sendDialog.hidden = true;
+    clearPreviewVideo();
+    if (cancelled) {
+      pendingImage = null; pendingName = ''; pendingIsImage = false; pendingAsFile = false; pendingImageUrl = null;
+      pendingImageW = 0; pendingImageH = 0;
+      if (fileInput) fileInput.value = '';
+      updateSendEnabled();
+      if (msgInput) msgInput.focus();
+    }
+  }
+  function submitSendDialog() {
+    if (!pendingImage) return closeSendDialog(true);
+    pendingAsFile = !sendAsFileRow.hidden && sendAsFile.checked;
+    if (msgInput) msgInput.value = sendCaption.value;
+    closeSendDialog(false);
+    sendMessage();
+  }
+  if (sendDialog) {
+    document.getElementById('sendDialogSend').addEventListener('click', submitSendDialog);
+    document.getElementById('sendDialogCancel').addEventListener('click', function() { closeSendDialog(true); });
+    document.getElementById('sendDialogClose').addEventListener('click', function() { closeSendDialog(true); });
+    document.getElementById('sendDialogBackdrop').addEventListener('click', function() { closeSendDialog(true); });
+    sendCaption.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); submitSendDialog(); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeSendDialog(true); }
+    });
+    sendCaption.addEventListener('input', function() {
+      sendCaption.style.height = 'auto';
+      sendCaption.style.height = Math.min(sendCaption.scrollHeight, 160) + 'px';
+    });
   }
 
   /* Files arrive by the picker, by a drop anywhere on the chat column, and by paste (a screenshot
@@ -2585,22 +2903,6 @@
     if (setPendingAttachment(file)) { e.preventDefault(); if (msgInput) msgInput.focus(); }
   });
 
-  if (imagePreviewRemove) {
-    imagePreviewRemove.addEventListener('click', function() {
-      pendingImage = null;
-      pendingName = '';
-      pendingIsImage = false;
-      pendingImageW = 0; pendingImageH = 0;
-      clearPreviewVideo();
-      fileInput.value = '';
-      imagePreview.classList.remove('show');
-      imagePreviewImg.src = '';
-      imagePreviewImg.style.display = '';
-      if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
-      updateSendEnabled();
-    });
-  }
-
 
   // Jump to the quoted message when a reply preview is clicked.
   function jumpToMessage(targetId) {
@@ -2639,6 +2941,93 @@
     });
   }
 
+  // A video: the first click starts it and hands over to the browser's controls; the badge
+  // shows its length once the metadata is in. Media events do not bubble: capture phase.
+  function fmtDuration(sec) {
+    if (!isFinite(sec) || sec < 0) return '';
+    const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  if (chatEl) {
+    chatEl.addEventListener('click', function(e) {
+      const wrap = e.target.closest('.msg-bubble-video-wrap');
+      if (!wrap) return;
+      const video = wrap.querySelector('.msg-bubble-video');
+      if (!video || video.controls) return;      // the browser's controls own the clicks from now on
+      video.controls = true;
+      const p = video.play();
+      if (p && p.catch) p.catch(function() {});
+    });
+    chatEl.addEventListener('loadedmetadata', function(e) {
+      const v = e.target;
+      if (!v || !v.classList || !v.classList.contains('msg-bubble-video')) return;
+      const badge = v.parentElement && v.parentElement.querySelector('.msg-video-badge');
+      if (badge) badge.textContent = fmtDuration(v.duration);
+    }, true);
+    chatEl.addEventListener('play', function(e) {
+      const wrap = e.target && e.target.closest && e.target.closest('.msg-bubble-video-wrap');
+      if (wrap) wrap.classList.add('is-playing');
+    }, true);
+    ['pause', 'ended'].forEach(function(name) {
+      chatEl.addEventListener(name, function(e) {
+        const wrap = e.target && e.target.closest && e.target.closest('.msg-bubble-video-wrap');
+        if (wrap) wrap.classList.remove('is-playing');
+      }, true);
+    });
+  }
+
+  // Audio cards share one player: starting a card stops whichever was playing.
+  let audioPlayer = null, audioCard = null;
+  function audioReset(card) {
+    if (!card) return;
+    card.classList.remove('is-playing');
+    const fill = card.querySelector('.msg-audio-fill'); if (fill) fill.style.width = '0';
+    const t = card.querySelector('.msg-audio-time');
+    if (t && audioPlayer && isFinite(audioPlayer.duration)) t.textContent = fmtDuration(audioPlayer.duration);
+  }
+  function audioTick() {
+    if (!audioCard || !audioPlayer) return;
+    const d = audioPlayer.duration, c = audioPlayer.currentTime;
+    const fill = audioCard.querySelector('.msg-audio-fill');
+    if (fill && isFinite(d) && d > 0) fill.style.width = Math.round(100 * c / d) + '%';
+    const t = audioCard.querySelector('.msg-audio-time');
+    if (t) t.textContent = fmtDuration(c) + (isFinite(d) ? ' / ' + fmtDuration(d) : '');
+  }
+  if (chatEl) {
+    chatEl.addEventListener('click', function(e) {
+      const card = e.target.closest('.msg-audio');
+      if (!card) return;
+      const bar = e.target.closest('.msg-audio-bar');
+      if (bar && card === audioCard && audioPlayer && isFinite(audioPlayer.duration)) {
+        const r = bar.getBoundingClientRect();
+        audioPlayer.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * audioPlayer.duration;
+        audioTick();
+        return;
+      }
+      if (!e.target.closest('.msg-audio-play') && !bar) return;
+      if (!audioPlayer) {
+        audioPlayer = new Audio();
+        audioPlayer.preload = 'metadata';
+        audioPlayer.addEventListener('timeupdate', audioTick);
+        audioPlayer.addEventListener('loadedmetadata', audioTick);
+        audioPlayer.addEventListener('play', function() { if (audioCard) audioCard.classList.add('is-playing'); });
+        audioPlayer.addEventListener('pause', function() { if (audioCard) audioCard.classList.remove('is-playing'); });
+        audioPlayer.addEventListener('ended', function() { audioReset(audioCard); });
+        audioPlayer.addEventListener('error', function() { if (audioCard) { const t = audioCard.querySelector('.msg-audio-time'); if (t) t.textContent = LANG === 'ru' ? 'не удалось воспроизвести' : 'cannot be played'; audioCard.classList.remove('is-playing'); } });
+      }
+      if (card === audioCard) {
+        if (audioPlayer.paused) { const p = audioPlayer.play(); if (p && p.catch) p.catch(function() {}); }
+        else audioPlayer.pause();
+        return;
+      }
+      if (audioCard) { audioPlayer.pause(); audioReset(audioCard); }
+      audioCard = card;
+      audioPlayer.src = card.dataset.src;
+      const p = audioPlayer.play();
+      if (p && p.catch) p.catch(function() {});
+    });
+  }
+
   // A video the browser cannot decode (an iPhone's HEVC in Firefox, say) shows as the download
   // card it would have been anyway. 'error' does not bubble: listen in the capture phase.
   if (chatEl) {
@@ -2647,9 +3036,21 @@
       if (!video || !video.classList || !video.classList.contains('msg-bubble-video')) return;
       const wrap = video.closest('.msg-bubble-video-wrap');
       if (!wrap) return;
+      const row = wrap.closest('.msg-bubble-row');
+      const bubble = wrap.closest('.msg-bubble');
+      const time = wrap.querySelector('.msg-bubble-time');
+      if (row) row.classList.remove('has-media');
+      if (bubble) bubble.classList.remove('has-media');
+      const caption = bubble && bubble.querySelector('.msg-caption');
+      if (caption) caption.replaceWith.apply(caption, Array.prototype.slice.call(caption.childNodes));
       const card = document.createElement('span');
       card.innerHTML = renderFileCardHTML({ file_url: video.getAttribute('src'), file_name: video.dataset.name, file_size: Number(video.dataset.size) || 0 });
-      wrap.replaceWith(card.firstChild);
+      const anchor = bubble && (bubble.querySelector('.msg-bubble-edited') || bubble.querySelector('.msg-reaction-add'));
+      wrap.remove();
+      if (bubble) {
+        bubble.insertBefore(card.firstChild, anchor);
+        if (time) bubble.insertBefore(time, bubble.querySelector('.msg-reaction-add'));   // after the card, as elsewhere
+      }
     }, true);
   }
 
@@ -2708,8 +3109,8 @@
        text was simply gone: "написал сообщение по каждому пункту, но пропал интернет и
        ничего не отправилось :(((". It is cleared once the server has the message. */
 
-    const localImageUrl = (pendingImage && pendingIsImage && imagePreviewImg.src) ? imagePreviewImg.src : null;
-    const localFile = (pendingImage && !pendingIsImage) ? pendingImage : null;
+    const localImageUrl = (pendingImage && pendingIsImage && !pendingAsFile) ? pendingImageUrl : null;
+    const localFile = (pendingImage && !localImageUrl) ? pendingImage : null;
     const replyData = replyingTo; // capture before it is cleared below
 
     /* A client-side id, so this particular bubble can be found again when the request
@@ -2741,6 +3142,7 @@
       const fd = new FormData();
       fd.append('content', content);
       fd.append('file', pendingImage, pendingName || pendingImage.name);
+      if (pendingAsFile) fd.append('as_document', '1');
       if (replyData) fd.append('reply_to_id', replyData.id);
       /* A video can be 100 MB: the pending card shows how much has gone up. */
       request = uploadWithProgress('/messages/' + CONV_ID + '/send', fd, function(loaded, total) {
@@ -2762,13 +3164,11 @@
     pendingImage = null;
     pendingName = '';
     pendingIsImage = false;
+    pendingAsFile = false;
+    pendingImageUrl = null;
     pendingImageW = 0; pendingImageH = 0;
-    clearPreviewVideo();
     cancelReply();
     if (fileInput) fileInput.value = '';
-    if (imagePreview) imagePreview.classList.remove('show');
-    if (imagePreviewImg) { imagePreviewImg.src = ''; imagePreviewImg.style.display = ''; }
-    if (imagePreviewFileIcon) imagePreviewFileIcon.style.display = 'none';
 
     request
     .then(function(r) {
@@ -2896,7 +3296,7 @@
     const bubble = row.querySelector('.msg-bubble');
     if (!bubble) return '';
     const clone = bubble.cloneNode(true);
-    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-bubble-image-wrap, .msg-bubble-image, .msg-bubble-file');
+    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-media, .msg-bubble-file, .msg-bubble-time');
     for (let i = 0; i < strip.length; i++) strip[i].remove();
     return clone.textContent.trim();
   }
@@ -2985,19 +3385,7 @@
         if (row) {
           const bubble = row.querySelector('.msg-bubble');
           if (bubble) {
-            const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-            const existingImg = bubble.querySelector('.msg-bubble-image-wrap');
-            const imgHtml = existingImg ? existingImg.outerHTML : '';
-            const existingFile = bubble.querySelector('.msg-bubble-file');
-            const fileHtml = existingFile ? existingFile.outerHTML : '';
-            const existingReply = bubble.querySelector('.msg-reply-quote');
-            const replyHtml = existingReply ? existingReply.outerHTML : '';
-            const existingFwd = bubble.querySelector('.msg-forwarded');
-            const fwdHtml = existingFwd ? existingFwd.outerHTML : '';
-            bubble.innerHTML = fwdHtml + replyHtml + esc(content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(msgId);
-            typesetMath(bubble);
-            const im2 = bubble.querySelector('.msg-bubble-image');
-            if (im2) markImageLoaded(im2);
+            rebuildBubbleText(bubble, msgId, content);
           }
         }
       } else if (data.error) {
@@ -3067,6 +3455,9 @@
   var ctxMenu = document.getElementById('msgContextMenu');
   var ctxReply = document.getElementById('ctxReply');
   var ctxCopy = document.getElementById('ctxCopy');
+  var ctxCopyImage = document.getElementById('ctxCopyImage');
+  var ctxSave = document.getElementById('ctxSave');
+  var ctxReactions = document.getElementById('ctxReactions');
   var ctxPin = document.getElementById('ctxPin');
   var ctxPinLabel = document.getElementById('ctxPinLabel');
   var ctxForward = document.getElementById('ctxForward');
@@ -3089,8 +3480,13 @@
     var hasText = extractMessageText(msgId).length > 0;
     var isPinned = row.dataset.pinned === '1';
     ctxMsgId = msgId;
+    if (ctxReactions) fillReactionPicker(ctxReactions);
+    var image = row.querySelector('.msg-bubble-image');
+    var saveable = row.querySelector('.msg-bubble-image, .msg-bubble-video, .msg-bubble-file, .msg-audio');
     ctxReply.style.display = '';               // reply is always available
     ctxCopy.style.display = hasText ? '' : 'none';
+    if (ctxCopyImage) ctxCopyImage.style.display = (image && navigator.clipboard && window.ClipboardItem) ? '' : 'none';
+    if (ctxSave) ctxSave.style.display = saveable ? '' : 'none';
     if (ctxPin) {
       ctxPin.style.display = CAN_PIN ? '' : 'none';
       if (ctxPinLabel) ctxPinLabel.textContent = isPinned
@@ -3187,6 +3583,67 @@
     }
     ctxMenu.classList.remove('show');
   });
+
+  // A reaction from the strip: the same as picking one from the button's picker.
+  if (ctxReactions) {
+    ctxReactions.addEventListener('click', function(e) {
+      var pick = e.target.closest('.msg-reaction-pick');
+      if (!pick || !ctxMsgId) return;
+      ctxMenu.classList.remove('show');
+      if (pick.classList.contains('is-locked') && window.SSApps) { window.SSApps.open({ tab: 'shop', rx: pick.dataset.emoji }); return; }
+      toggleReaction(ctxMsgId, pick.dataset.emoji);
+    });
+  }
+
+  // The file behind a message, with the name it was sent under.
+  function attachmentOf(row) {
+    var img = row.querySelector('.msg-bubble-image');
+    if (img) return { url: img.dataset.full || img.src, name: (img.dataset.full || img.src).split('/').pop() };
+    var video = row.querySelector('.msg-bubble-video');
+    if (video) return { url: video.getAttribute('src'), name: video.dataset.name || 'video.mp4' };
+    var audio = row.querySelector('.msg-audio');
+    if (audio) return { url: audio.dataset.src, name: audio.dataset.name || 'audio' };
+    var file = row.querySelector('.msg-bubble-file');
+    if (file && file.getAttribute('href') !== '#') return { url: file.getAttribute('href'), name: file.getAttribute('download') || 'file' };
+    return null;
+  }
+
+  if (ctxSave) {
+    ctxSave.addEventListener('click', function() {
+      var row = ctxMsgId && document.querySelector('[data-msg-id="' + ctxMsgId + '"]');
+      var a = row && attachmentOf(row);
+      ctxMenu.classList.remove('show');
+      if (!a) return;
+      var link = document.createElement('a');
+      link.href = a.url; link.download = a.name;
+      document.body.appendChild(link); link.click(); link.remove();
+    });
+  }
+
+  // Copy a picture to the clipboard as PNG (the only image type the clipboard takes).
+  if (ctxCopyImage) {
+    ctxCopyImage.addEventListener('click', function() {
+      var row = ctxMsgId && document.querySelector('[data-msg-id="' + ctxMsgId + '"]');
+      var img = row && row.querySelector('.msg-bubble-image');
+      ctxMenu.classList.remove('show');
+      if (!img || !navigator.clipboard || !window.ClipboardItem) return;
+      var src = img.dataset.full || img.src;
+      var blobPromise = fetch(src).then(function(r) { return r.blob(); }).then(function(blob) {
+        if (blob.type === 'image/png') return blob;
+        return new Promise(function(resolve, reject) {
+          var image = new Image();
+          image.onload = function() {
+            var c = document.createElement('canvas'); c.width = image.naturalWidth; c.height = image.naturalHeight;
+            c.getContext('2d').drawImage(image, 0, 0);
+            c.toBlob(function(b) { b ? resolve(b) : reject(new Error('no png')); }, 'image/png');
+          };
+          image.onerror = reject;
+          image.src = URL.createObjectURL(blob);
+        });
+      });
+      navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]).catch(function() {});
+    });
+  }
 
   if (ctxPin) {
     ctxPin.addEventListener('click', function() {
@@ -3372,36 +3829,43 @@
   }
 
   function fmtTime(dateStr) {
-    return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(dateStr).toLocaleTimeString(TIME_LOCALE, { hour: '2-digit', minute: '2-digit' });
   }
 
-  // Server renders timestamps in its own (UTC) timezone. Rewrite the
-  // SSR'd bubble + conversation times to the viewer's local timezone.
+  // The server wrote the times in the zone its cookie named. When that is this browser's zone
+  // there is nothing to redo; otherwise (a first visit, a reader who travelled) they are
+  // rewritten here, and the receipts stay in place because only the time's text changes.
   function localizeSsrTimes() {
-    document.querySelectorAll('.msg-bubble-time[data-iso]').forEach(el => {
-      const iso = el.getAttribute('data-iso');
-      if (!iso) return;
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return;
-      el.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    });
-    document.querySelectorAll('.msg-conv-time[data-iso]').forEach(el => {
-      const iso = el.getAttribute('data-iso');
-      if (!iso) return;
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return;
-      const now = new Date();
-      const diff = now - d;
-      let out;
-      if (diff < 86400000 && d.getDate() === now.getDate()) {
-        out = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } else if (diff < 604800000) {
-        out = d.toLocaleDateString([], { weekday: 'short' });
-      } else {
-        out = d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-      }
-      el.textContent = out;
-    });
+    const body = document.querySelector('.msg-body');
+    if (!TIMES_ARE_LOCAL) {
+      document.querySelectorAll('.msg-bubble-time[data-iso]').forEach(el => {
+        const iso = el.getAttribute('data-iso');
+        if (!iso) return;
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return;
+        const check = el.querySelector('.msg-check');
+        el.textContent = d.toLocaleTimeString(TIME_LOCALE, { hour: '2-digit', minute: '2-digit' });
+        if (check) el.appendChild(check);
+      });
+      document.querySelectorAll('.msg-conv-time[data-iso]').forEach(el => {
+        const iso = el.getAttribute('data-iso');
+        if (!iso) return;
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return;
+        const now = new Date();
+        const diff = now - d;
+        let out;
+        if (diff < 86400000 && d.getDate() === now.getDate()) {
+          out = d.toLocaleTimeString(TIME_LOCALE, { hour: '2-digit', minute: '2-digit' });
+        } else if (diff < 604800000) {
+          out = d.toLocaleDateString(TIME_LOCALE, { weekday: 'short' });
+        } else {
+          out = d.toLocaleDateString(TIME_LOCALE, { month: 'short', day: 'numeric' });
+        }
+        el.textContent = out;
+      });
+    }
+    if (body) body.classList.remove('msg-times-utc');
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', localizeSsrTimes);
@@ -3431,15 +3895,29 @@
       ' <a href="/user/' + encodeURIComponent(m.forwarded_from_username) + '">' + esc(m.forwarded_from_username) + '</a></div>';
   }
 
-  function renderImageHTML(m) {
-    if (!m.image_url) return '';
-    const hasDims = m.image_width && m.image_height;
-    let style = '';
-    if (hasDims) style += 'width:min(' + m.image_width + 'px,280px);aspect-ratio:' + m.image_width + '/' + m.image_height + ';';
+  // What a message shows inline: 'image', 'video' (converted and ready), or null.
+  function mediaKindOf(m) {
+    if (m.image_url) return 'image';
+    if (m.file_url && m.file_url !== '#' && attachmentKind(m.file_name) === 'video' && !m.attachment_status) return 'video';
+    return null;
+  }
+  // Telegram Desktop's box: 430 × 430 at most, never upscaled (the template's mediaBox).
+  function mediaBox(w, h) {
+    if (!(w > 0 && h > 0)) return null;
+    return { width: Math.max(1, Math.min(w, 430, Math.round(430 * w / h))), w: w, h: h };
+  }
+  const PLAY_SVG = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+  function renderMediaHTML(m, kind, timeHtml) {
+    const box = mediaBox(m.image_width, m.image_height);
+    let style = box ? 'width:' + box.width + 'px;aspect-ratio:' + box.w + '/' + box.h + ';' : '';
     if (m.image_placeholder) style += 'background-image:url(' + m.image_placeholder + ');';
-    return '<span class="msg-bubble-image-wrap' + (hasDims ? ' has-dims' : '') + '" style="' + style + '">' +
-      '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" data-full="' + esc(m.image_url) + '" alt="" loading="lazy" />' +
-      '</span>';
+    const cls = 'msg-media ' + (kind === 'image' ? 'msg-bubble-image-wrap' : 'msg-bubble-video-wrap') + (box ? ' has-dims' : '');
+    const inner = kind === 'image'
+      ? '<img class="msg-bubble-image" src="' + esc(m.image_url) + '" data-full="' + esc(m.image_url) + '" alt="" loading="lazy" />'
+      : '<video class="msg-bubble-video" src="' + esc(m.file_url) + '" preload="metadata" playsinline' +
+        ' data-name="' + escAttr(m.file_name || '') + '" data-size="' + (Number(m.file_size) || 0) + '"></video>' +
+        '<span class="msg-video-badge"></span><span class="msg-video-play">' + PLAY_SVG + '</span>';
+    return '<span class="' + cls + '" style="' + style + '">' + inner + (timeHtml || '') + '</span>';
   }
 
   function renderFileCardHTML(m) {
@@ -3457,21 +3935,55 @@
       '</span></a>';
   }
 
-  // A video plays in its bubble (the same box rule as an image); a pending upload is a card
-  // with a progress bar until the server has it, and a container this browser cannot decode
-  // becomes the download card again (the error listener below).
-  function renderVideoHTML(m) {
-    if (!m.file_url || m.file_url === '#' || attachmentKind(m.file_name) !== 'video' || m.attachment_status) return '';
-    const hasDims = m.image_width && m.image_height;
-    let style = hasDims ? 'width:min(' + m.image_width + 'px,280px);aspect-ratio:' + m.image_width + '/' + m.image_height + ';' : '';
-    if (m.image_placeholder) style += 'background-image:url(' + m.image_placeholder + ');';
-    return '<span class="msg-bubble-video-wrap' + (hasDims ? ' has-dims' : '') + '" style="' + style + '">' +
-      '<video class="msg-bubble-video" src="' + esc(m.file_url) + '" controls preload="metadata" playsinline' +
-      ' data-name="' + escAttr(m.file_name || '') + '" data-size="' + (Number(m.file_size) || 0) + '"></video></span>';
+  function renderAudioHTML(m) {
+    return '<span class="msg-audio" data-src="' + escAttr(m.file_url) + '" data-name="' + escAttr(m.file_name || '') + '">' +
+      '<button type="button" class="msg-audio-play" aria-label="' + (LANG === 'ru' ? 'Слушать' : 'Play') + '">' +
+      '<svg class="msg-audio-play-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>' +
+      '<svg class="msg-audio-pause-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg></button>' +
+      '<span class="msg-audio-meta"><span class="msg-audio-name">' + esc(m.file_name || 'audio') + '</span>' +
+      '<span class="msg-audio-time">' + esc(m.file_size ? formatBytes(m.file_size) : '') + '</span>' +
+      '<span class="msg-audio-bar"><span class="msg-audio-fill"></span></span></span></span>';
+  }
+  // A download card, or the player for an audio file that is ready.
+  function renderAttachmentCardHTML(m) {
+    if (m.file_url && m.file_url !== '#' && attachmentKind(m.file_name) === 'audio' && !m.attachment_status) return renderAudioHTML(m);
+    return renderFileCardHTML(m);
   }
 
-  function renderAttachmentHTML(m) {
-    return renderImageHTML(m) + (renderVideoHTML(m) || renderFileCardHTML(m));
+  // The inside of a bubble: forwarded line, reply quote, then the picture or video with the
+  // text as its caption, or the text and a download card. `timeHtml` goes onto the picture of
+  // a media-only message. `textHtml` is already safe HTML.
+  function bubbleInnerHTML(m, textHtml, timeHtml) {
+    const kind = mediaKindOf(m);
+    const hasText = !!textHtml;
+    const edited = m.edited_at ? '<span class="msg-bubble-edited">' + esc(LANG === 'ru' ? ' (ред.)' : ' (edited)') + '</span>' : '';
+    let html = renderForwardedHTML(m) + renderReplyQuoteHTML(m.reply);
+    if (kind) {
+      html += renderMediaHTML(m, kind, hasText ? '' : timeHtml);
+      if (hasText) html += '<span class="msg-caption">' + textHtml + edited + timeHtml + '</span>';
+    } else {
+      html += textHtml + renderAttachmentCardHTML(m) + edited + timeHtml;
+    }
+    html += renderReactionAddHTML(m.id);
+    return html;
+  }
+
+  // After an edit: the same bubble with new text, keeping what it showed.
+  function rebuildBubbleText(bubble, msgId, content) {
+    const keep = function(sel) { const el = bubble.querySelector(sel); return el ? el.outerHTML : ''; };
+    const mediaEl = bubble.querySelector('.msg-media');
+    const timeEl = bubble.querySelector('.msg-bubble-time');
+    const timeInMedia = !!(mediaEl && timeEl && mediaEl.contains(timeEl));
+    const mediaHtml = keep('.msg-media');
+    const timeHtml = timeInMedia ? '' : (timeEl ? timeEl.outerHTML : '');
+    const edited = '<span class="msg-bubble-edited">' + esc(LANG === 'ru' ? ' (ред.)' : ' (edited)') + '</span>';
+    const textHtml = esc(content);
+    bubble.innerHTML = keep('.msg-forwarded') + keep('.msg-reply-quote') + mediaHtml +
+      (mediaHtml ? '<span class="msg-caption">' + textHtml + edited + timeHtml + '</span>'
+                 : textHtml + keep('.msg-bubble-file') + keep('.msg-audio') + edited + timeHtml) +
+      renderReactionAddHTML(msgId);
+    typesetMath(bubble);
+    markLoadedImages(bubble);
   }
 
   // Days are the reader's own, in the browser's time zone: a message sent at 01:30 in Moscow
@@ -3483,10 +3995,11 @@
   function clientDaySepText(iso) {
     return new Date(iso).toLocaleDateString(LANG === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
-  // The server draws the separators by its own (UTC) day; redraw them by the reader's, before
-  // anything on the page is measured or scrolled to.
+  // The server draws the separators by the reader's day when it knows the zone (the ss_tz
+  // cookie); when it did not, or the browser's zone differs, redraw them here, before anything
+  // on the page is measured or scrolled to.
   function regroupDaySeparators() {
-    if (!chatEl) return;
+    if (!chatEl || TIMES_ARE_LOCAL) return;
     chatEl.querySelectorAll('.msg-date-sep').forEach(function (el) { el.remove(); });
     let last = null;
     chatEl.querySelectorAll('.msg-bubble-row[data-created]').forEach(function (row) {
@@ -3556,15 +4069,13 @@
       const modBadge = m.sender_role === 'admin' ? '<span class="msg-admin-badge">' + (LANG === 'ru' ? 'мод' : 'mod') + '</span>' : '';
       html += '<div class="msg-bubble-sender"><a href="' + senderHref + '">' + esc(m.sender_username) + '</a>' + modBadge + '</div>';
     }
-    const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' + renderForwardedHTML(m) + renderReplyQuoteHTML(m.reply) + linkify(m.content);
-    html += renderAttachmentHTML(m);
-    html += (isEdited ? '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' : '');
-    html += renderReactionAddHTML(m.id);
-    html += '</div>';
-    html += renderReactionsHTML(m.id, m.reactions || []);
+    const kind = mediaKindOf(m);
+    const textHtml = (m.content || '').trim() ? linkify(m.content) : '';
+    if (kind) row.classList.add('has-media');
     const receiptHtml = (isSent && SHOW_RECEIPTS) ? checkSpanHTML(isReadAt(m.created_at)) : '';
-    html += '<div class="msg-bubble-time">' + fmtTime(m.created_at) + receiptHtml + '</div>';
+    const timeHtml = '<div class="msg-bubble-time">' + fmtTime(m.created_at) + receiptHtml + '</div>';
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + (kind ? ' has-media' : '') + '">' + bubbleInnerHTML(m, textHtml, timeHtml) + '</div>';
+    html += renderReactionsHTML(m.id, m.reactions || []);
     html += '</div>';
 
     row.innerHTML = html;
@@ -3681,35 +4192,24 @@
       row.style.display = 'none';
       return;
     }
-    if (u.edited_at) {
-      const editedLabel = LANG === 'ru' ? ' (ред.)' : ' (edited)';
-      const existingImg = bubble.querySelector('.msg-bubble-image-wrap');
-      const imgHtml = existingImg ? existingImg.outerHTML : '';
-      const existingFile = bubble.querySelector('.msg-bubble-video-wrap') || bubble.querySelector('.msg-bubble-file');
-      const fileHtml = existingFile ? existingFile.outerHTML : '';
-      const existingReply = bubble.querySelector('.msg-reply-quote');
-      const replyHtml = existingReply ? existingReply.outerHTML : '';
-      const existingFwd = bubble.querySelector('.msg-forwarded');
-      const fwdHtml = existingFwd ? existingFwd.outerHTML : '';
-      bubble.innerHTML = fwdHtml + replyHtml + esc(u.content) + imgHtml + fileHtml + '<span class="msg-bubble-edited">' + esc(editedLabel) + '</span>' + renderReactionAddHTML(u.id);
-      typesetMath(bubble);
-      const im2 = bubble.querySelector('.msg-bubble-image');
-      if (im2) markImageLoaded(im2);
-    }
+    if (u.edited_at) rebuildBubbleText(bubble, u.id, u.content);
   }
 
-  // A video finished converting (or could not be): swap the card for the player, leaving the
-  // text, the reply quote and the reactions as they are.
+  // A video finished converting (or could not be): the server sends the message as it now is,
+  // and the row is drawn again from it, keeping the reactions people already left.
   function applyAttachmentUpdate(m) {
     const row = document.querySelector('[data-msg-id="' + m.id + '"]');
     if (!row) return;
-    const bubble = row.querySelector('.msg-bubble');
-    if (!bubble) return;
-    bubble.querySelectorAll('.msg-bubble-video-wrap, .msg-bubble-file').forEach(function(el) { el.remove(); });
-    const anchor = bubble.querySelector('.msg-bubble-edited') || bubble.querySelector('.msg-reaction-add');
-    const tmp = document.createElement('div');
-    tmp.innerHTML = renderVideoHTML(m) || renderFileCardHTML(m);
-    while (tmp.firstChild) bubble.insertBefore(tmp.firstChild, anchor);
+    const fresh = buildMessageRow(Object.assign({}, m, { reactions: [] }));
+    const reactions = row.querySelector('.msg-reactions');
+    if (reactions) {
+      const bubble = fresh.querySelector('.msg-bubble');
+      if (bubble) bubble.insertAdjacentElement('afterend', reactions);
+    }
+    if (row.dataset.pendingKey) fresh.dataset.pendingKey = row.dataset.pendingKey;
+    row.replaceWith(fresh);
+    typesetMath(fresh);
+    markLoadedImages(fresh);
   }
 
   // Mark the (visible) active conversation read, throttled — tells the server so

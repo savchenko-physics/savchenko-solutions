@@ -180,8 +180,21 @@
         }, 60 * 1000);
     }
 
+    // The reader's zone, for the server: with it, the next page is written in that zone from
+    // the start instead of in UTC and rewritten here (the chat's times used to flip from UTC to
+    // local on every chat switch, 2026-09-19). A year, the whole site, never sent cross-site.
+    function rememberTimeZone() {
+        try {
+            const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            if (!zone || !/^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+){0,2}$/.test(zone)) return;
+            if (document.cookie.split('; ').indexOf('ss_tz=' + encodeURIComponent(zone)) !== -1) return;
+            document.cookie = 'ss_tz=' + encodeURIComponent(zone) + '; path=/; max-age=31536000; samesite=lax';
+        } catch (e) { /* no cookies here */ }
+    }
+
     if (typeof document !== 'undefined' && typeof window !== 'undefined' && !window.__ssTimeStarted) {
         window.__ssTimeStarted = true;
+        rememberTimeZone();
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
         else start();
     }

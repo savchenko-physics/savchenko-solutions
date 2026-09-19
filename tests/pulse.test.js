@@ -73,6 +73,7 @@ test('the card shows one line of the message, or what was sent', () => {
     assert.equal(previewText('', { fileName: 'lecture.pdf', lang: 'ru' }), 'lecture.pdf');
     assert.equal(previewText('', { fileName: 'IMG_0042.MOV', lang: 'ru' }), 'Видео');
     assert.equal(previewText('', { fileName: 'clip.webm', lang: 'en' }), 'Video');
+    assert.equal(previewText('', { fileName: 'Berea College 58.m4a', lang: 'ru' }), 'Аудио');
     assert.equal(previewText('', { fileName: 'solution.pdf' }), 'solution.pdf');
     assert.equal(previewText(null), '');
 });

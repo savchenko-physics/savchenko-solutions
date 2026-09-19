@@ -20,6 +20,9 @@ test('a video is a video whatever its container, a document is a card, markup is
     assert.equal(a.kindOf('obs.mkv'), 'video');          // converted after upload, then plays
     assert.equal(a.kindOf('old.avi'), 'video');
     assert.equal(a.kindOf('phone.3gp'), 'video');
+    assert.equal(a.kindOf('Berea College 58.m4a'), 'audio');
+    assert.equal(a.kindOf('lecture.MP3'), 'audio');
+    assert.equal(a.kindOf('voice.ogg'), 'audio');
     assert.equal(a.kindOf('photo.JPG'), 'image');
     assert.equal(a.kindOf('notes.pdf'), 'file');
     for (const bad of ['page.html', 'x.htm', 'icon.svg', 'run.js', 'data.xml', 'noext', '', 'a.mp4.exe']) {
@@ -29,9 +32,10 @@ test('a video is a video whatever its container, a document is a card, markup is
     }
 });
 
-test('videos get the video limit, everything else the file limit', () => {
+test('videos and audio get the media limit, everything else the file limit', () => {
     assert.equal(a.limitFor('a.mov'), a.VIDEO_MAX_BYTES);
     assert.equal(a.limitFor('a.mkv'), a.VIDEO_MAX_BYTES);
+    assert.equal(a.limitFor('a.m4a'), a.MEDIA_MAX_BYTES);
     assert.equal(a.limitFor('a.png'), a.MAX_BYTES);
     assert.equal(a.limitFor('a.zip'), a.MAX_BYTES);
     assert.ok(a.VIDEO_MAX_BYTES > a.MAX_BYTES);
@@ -41,8 +45,8 @@ test('videos get the video limit, everything else the file limit', () => {
 
 test('the accept list names every accepted extension and nothing else', () => {
     const accept = a.acceptAttribute().split(',');
-    assert.deepEqual(accept.slice(0, 2), ['image/*', 'video/*']);
-    const exts = accept.slice(2).map((x) => x.replace(/^\./, ''));
+    assert.deepEqual(accept.slice(0, 3), ['image/*', 'video/*', 'audio/*']);
+    const exts = accept.slice(3).map((x) => x.replace(/^\./, ''));
     assert.deepEqual(new Set(exts), new Set(a.ALL_EXTENSIONS));
     for (const ext of exts) assert.ok(a.isAccepted(`f.${ext}`), ext);
 });
@@ -51,6 +55,6 @@ test('what the page receives is the same rule set', () => {
     const rules = a.clientRules();
     assert.equal(rules.maxBytes, a.MAX_BYTES);
     assert.equal(rules.videoMaxBytes, a.VIDEO_MAX_BYTES);
-    assert.deepEqual([...rules.image, ...rules.video, ...rules.other], a.ALL_EXTENSIONS);
+    assert.deepEqual([...rules.image, ...rules.video, ...rules.audio, ...rules.other], a.ALL_EXTENSIONS);
     assert.ok(JSON.stringify(rules).length < 1000);
 });

@@ -44,7 +44,24 @@ test('anything a browser may refuse is re-encoded', () => {
     assert.equal(t.conversionNeeded(info([stream({ width: 7680, height: 4320 })]), 'mp4'), 'transcode');
     assert.equal(t.conversionNeeded(info([stream(), audio(), { codec_type: 'subtitle', codec_name: 'mov_text' }]), 'mp4'), 'transcode');
     assert.equal(t.conversionNeeded(null, 'mp4'), 'transcode');                                   // ffprobe could not read it
-    assert.equal(t.summarize({ streams: [audio()] }), null);                                        // no video at all
+    assert.equal(t.summarize({ streams: [audio()] }).video, null);                                  // audio only: see below
+    assert.equal(t.summarize({ streams: [] }), null);                                               // nothing playable at all
+});
+
+test('audio: mp3, m4a and wav play everywhere; ogg, opus and flac become AAC in an m4a', () => {
+    const a = (codec, format) => t.summarize({ streams: [audio({ codec_name: codec })], format: { format_name: format, duration: '60' } });
+    assert.equal(t.conversionNeeded(a('mp3', 'mp3'), 'mp3'), 'none');
+    assert.equal(t.conversionNeeded(a('aac', 'mov,mp4,m4a,3gp,3g2,mj2'), 'm4a'), 'none');
+    assert.equal(t.conversionNeeded(a('pcm_s16le', 'wav'), 'wav'), 'none');
+    assert.equal(t.conversionNeeded(a('vorbis', 'ogg'), 'ogg'), 'audio');
+    assert.equal(t.conversionNeeded(a('opus', 'ogg'), 'opus'), 'audio');
+    assert.equal(t.conversionNeeded(a('flac', 'flac'), 'flac'), 'audio');
+    assert.equal(t.conversionNeeded(a('aac', 'aac'), 'aac'), 'audio');            // raw ADTS: wrap it
+    assert.equal(t.conversionNeeded(a('mp3', 'mov,mp4,m4a,3gp,3g2,mj2'), 'm4a'), 'audio');
+    const args = t.ffmpegArgs('audio', '/in/voice.ogg', '/out/voice-web.m4a');
+    assert.ok(args.includes('-vn') && args.includes('aac') && !args.includes('libx264') && args.includes('+faststart'));
+    assert.equal(t.outputPathFor('/img/messages/1-a.ogg', 'audio'), '/img/messages/1-a-web.m4a');
+    assert.equal(t.outputPathFor('/img/messages/1-a.mov', 'transcode'), '/img/messages/1-a-web.mp4');
 });
 
 test('the ffmpeg arguments produce H.264 4:2:0 + AAC in a faststart mp4, at most 1280 px, one thread', () => {
@@ -57,7 +74,7 @@ test('the ffmpeg arguments produce H.264 4:2:0 + AAC in a faststart mp4, at most
     assert.match(vf, /min\(1280,iw\)/); assert.match(vf, /force_divisible_by=2/); assert.match(vf, /setsar=1/);
     const remux = t.ffmpegArgs('remux', '/in/a.mov', '/out/a-web.mp4');
     assert.ok(remux.includes('copy') && !remux.includes('libx264') && remux.includes('+faststart'));
-    assert.equal(t.outputPathFor('/img/messages/1789850925987-0boc27.MOV'), '/img/messages/1789850925987-0boc27-web.mp4');
+    assert.equal(t.outputPathFor('/img/messages/1789850925987-0boc27.MOV', 'transcode'), '/img/messages/1789850925987-0boc27-web.mp4');
 });
 
 test('a remux that fails falls back to a transcode; a job that fails leaves no file behind', async () => {
@@ -95,7 +112,7 @@ test('with ffmpeg: an OpenCV-style mp4v file becomes a playable H.264 mp4 with a
     assert.equal(before.video.codec, 'mpeg4');
     const mode = t.conversionNeeded(before, 'mp4');
     assert.equal(mode, 'transcode');
-    const dst = t.outputPathFor(src);
+    const dst = t.outputPathFor(src, mode);
     assert.equal(await t.convert(src, dst, mode), 'transcode');
     const after = await t.probe(dst);
     assert.equal(after.video.codec, 'h264');
@@ -106,5 +123,18 @@ test('with ffmpeg: an OpenCV-style mp4v file becomes a playable H.264 mp4 with a
     const poster = await t.posterPlaceholder(dst);
     assert.match(poster, /^data:image\/jpeg;base64,/);
     assert.ok(poster.length < 8000);
+    // and a voice note in ogg/opus becomes an m4a
+    const ogg = path.join(dir, 'voice.ogg');
+    const tone = spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=2', '-c:a', 'libopus', ogg], { timeout: 60000 });
+    if (tone.status === 0) {
+        const info = await t.probe(ogg);
+        assert.equal(t.conversionNeeded(info, 'ogg'), 'audio');
+        const m4a = t.outputPathFor(ogg, 'audio');
+        assert.equal(await t.convert(ogg, m4a, 'audio'), 'audio');
+        const out = await t.probe(m4a);
+        assert.equal(out.video, null);
+        assert.equal(out.audio.codec, 'aac');
+        assert.equal(t.conversionNeeded(out, 'm4a'), 'none');
+    }
     fs.rmSync(dir, { recursive: true, force: true });
 });

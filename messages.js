@@ -21,9 +21,20 @@ const transcode = require('./lib/videoTranscode');
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
 
+// Browsers send the file name in UTF-8 and busboy reads it as Latin-1, so "Савченко.pdf" arrived
+// as "Ð¡Ð°Ð²ÑÐµÐ½ÐºÐ¾.pdf" (message 1181, 2026-08-14). Read the bytes back as UTF-8; a name that was
+// really Latin-1 and does not survive the round trip is kept as it came.
+function fixFileName(name) {
+    const s = String(name || '');
+    if (!/[\u0080-\u00ff]/.test(s) || /[^\u0000-\u00ff]/.test(s)) return s;
+    const decoded = Buffer.from(s, 'latin1').toString('utf8');
+    return decoded.includes('\ufffd') ? s : decoded;
+}
+
 const msgImageStorage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, msgImageDir),
     filename: (req, file, cb) => {
+        file.originalname = fixFileName(file.originalname);
         const ext = path.extname(file.originalname).toLowerCase() || '.png';
         cb(null, Date.now() + '-' + Math.random().toString(36).slice(2, 8) + ext);
     },
@@ -41,6 +52,7 @@ const msgFileUpload = multer({
     storage: msgImageStorage,
     limits: { fileSize: attachments.VIDEO_MAX_BYTES, files: 1 },
     fileFilter: (req, file, cb) => {
+        file.originalname = fixFileName(file.originalname);
         const limit = attachments.limitFor(file.originalname);
         if (!limit) return cb(new Error('File type not allowed'));
         // A request visibly larger than this type's limit is refused before the file is read.
@@ -60,6 +72,20 @@ async function freeDiskBytes() {
     } catch (err) {
         return Infinity;   // an unreadable statfs must not refuse every upload
     }
+}
+
+// The reader's time zone, which js/local-time.js keeps in a cookie, so the page is written in it
+// from the start (times, day separators) rather than in UTC and rewritten after load. null until
+// the first page of a visit has set the cookie; the page then keeps its times out of sight
+// until its script has rewritten them.
+function readerTimeZone(req) {
+    const m = /(?:^|;\s*)ss_tz=([^;]+)/.exec(req.get('cookie') || '');
+    if (!m) return null;
+    let zone;
+    try { zone = decodeURIComponent(m[1]); } catch (e) { return null; }
+    if (!/^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+){0,2}$/.test(zone)) return null;
+    try { new Intl.DateTimeFormat('en-US', { timeZone: zone }); } catch (e) { return null; }
+    return zone;
 }
 
 // Wrap the upload so a rejected/oversized file returns a clean 400 instead of
@@ -274,7 +300,10 @@ function groupAvatarSVG(convId, name, size, communityLang) {
 // name is a phone's IMG_0042.MOV, any other file by name.
 function attachmentLabel(fileName, lang) {
     if (!fileName) return fileName;
-    return attachments.kindOf(fileName) === 'video' ? (lang === 'ru' ? 'Видео' : 'Video') : fileName;
+    const kind = attachments.kindOf(fileName);
+    if (kind === 'video') return lang === 'ru' ? 'Видео' : 'Video';
+    if (kind === 'audio') return lang === 'ru' ? 'Аудио' : 'Audio';
+    return fileName;
 }
 
 // Short, plain-text preview of a message being quoted in a reply.
@@ -288,11 +317,12 @@ function buildReplyPreview(content, imageUrl, fileName, deleted, lang) {
 }
 
 // A deleted message keeps its row (and an image or document keeps its file, as before), but a
-// video is a hundred times the size, so its file goes when the last live message showing it is
-// deleted. Forwards share the file, hence the check for other messages.
+// video or audio file is many times the size, so its file goes when the last live message showing
+// it is deleted. Forwards share the file, hence the check for other messages.
 async function removeVideoFile(fileUrl, fileName, messageId) {
     try {
-        if (!fileUrl || attachments.kindOf(fileName) !== 'video') return;
+        const kind = attachments.kindOf(fileName);
+        if (!fileUrl || (kind !== 'video' && kind !== 'audio')) return;
         const base = path.basename(fileUrl);
         if (!fileUrl.startsWith('/img/messages/') || base !== fileUrl.slice('/img/messages/'.length)) return;
         const others = await pool.query(
@@ -323,33 +353,34 @@ function conversionTools() {
 
 async function messagesForUrl(fileUrl) {
     const r = await pool.query(
-        `SELECT m.conversation_id, ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.file_url = $1 AND m.deleted_at IS NULL`,
+        `SELECT m.conversation_id, c.community_lang, ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
+         JOIN conversations c ON c.id = m.conversation_id
+         WHERE m.file_url = $1 AND m.deleted_at IS NULL`,
         [fileUrl]
     );
     return r.rows;
 }
 
+// The page redraws the whole row from this (buildMessageRow), so it is the message as the
+// list endpoints send it, with the reply quote attached; reactions stay as the page has them.
 async function announceAttachment(rows) {
     for (const m of rows) {
         try {
-            await broadcastToConversation(m.conversation_id, 'msg:update', {
-                conversationId: m.conversation_id, id: m.id,
-                file_url: m.file_url, file_name: m.file_name, file_size: m.file_size,
-                image_width: m.image_width, image_height: m.image_height, image_placeholder: m.image_placeholder,
-                attachment_status: m.attachment_status,
-            });
+            attachReplyInfo([m], null, m.community_lang || 'en');
+            await broadcastToConversation(m.conversation_id, 'msg:update',
+                Object.assign({ conversationId: m.conversation_id, reactions: [] }, m));
         } catch (e) { console.error('SSE broadcast (attachment) error:', e); }
     }
 }
 
 function scheduleConversion(fileUrl, srcPath, mode) {
     return conversionQueue.add(async () => {
-        const dst = transcode.outputPathFor(srcPath);
+        const dst = transcode.outputPathFor(srcPath, mode);
         try {
             const used = await transcode.convert(srcPath, dst, mode);
-            const dims = videoDimensions(dst);
+            const dims = mode === 'audio' ? null : videoDimensions(dst);
             const size = (await fs.promises.stat(dst)).size;
-            const placeholder = await transcode.posterPlaceholder(dst);
+            const placeholder = mode === 'audio' ? null : await transcode.posterPlaceholder(dst);
             const newUrl = '/img/messages/' + path.basename(dst);
             const r = await pool.query(
                 `UPDATE messages SET file_url = $1, file_size = $2, image_width = $3, image_height = $4,
@@ -747,6 +778,7 @@ router.get('/', async (req, res) => {
             lang,
             attachmentRules: attachments.clientRules(),
             attachmentAccept: attachments.acceptAttribute(),
+            timeZone: readerTimeZone(req),
             conversations: convList,
             activeConversation: null,
             messages: [],
@@ -1022,6 +1054,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             lang,
             attachmentRules: attachments.clientRules(),
             attachmentAccept: attachments.acceptAttribute(),
+            timeZone: readerTimeZone(req),
             conversations: updatedConvList,
             activeConversation,
             messages: messagesResult.rows,
@@ -1175,7 +1208,9 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 return res.status(400).send(msg);
             }
             const url = '/img/messages/' + req.file.filename;
-            if (kind === 'image') {
+            // "Send as a document": a picture, video or audio file shown as a download card, untouched.
+            const asDocument = req.body.as_document === '1' && kind !== 'file';
+            if (kind === 'image' && !asDocument) {
                 imageUrl = url;
                 const meta = await processImageMeta(req.file.path);
                 imageW = meta.width; imageH = meta.height; imagePlaceholder = meta.placeholder;
@@ -1183,13 +1218,17 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 fileUrl = url;
                 fileName = (req.file.originalname || 'file').substring(0, 255);
                 fileSize = req.file.size;
-                if (kind === 'video') {
-                    const dims = videoDimensions(req.file.path);
-                    if (dims) { imageW = dims.width; imageH = dims.height; }
+                if (asDocument) {
+                    attachmentStatus = 'document';
+                } else if (kind === 'video' || kind === 'audio') {
+                    if (kind === 'video') {
+                        const dims = videoDimensions(req.file.path);
+                        if (dims) { imageW = dims.width; imageH = dims.height; }
+                    }
                     if (await conversionTools()) {
                         const info = await transcode.probe(req.file.path);
                         const mode = transcode.conversionNeeded(info, attachments.extensionOf(fileName));
-                        if (mode === 'none') imagePlaceholder = await transcode.posterPlaceholder(req.file.path);
+                        if (mode === 'none') { if (kind === 'video') imagePlaceholder = await transcode.posterPlaceholder(req.file.path); }
                         else { attachmentStatus = 'converting'; conversion = { mode }; }
                     }
                 }
@@ -1258,7 +1297,7 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
 
         // Notify other members
         let preview;
-        if (fileUrl) preview = attachments.kindOf(fileName) === 'video' ? '[Video]' : (fileName || '[File]');
+        if (fileUrl) preview = attachments.kindOf(fileName) === 'video' ? '[Video]' : attachments.kindOf(fileName) === 'audio' ? '[Audio]' : (fileName || '[File]');
         else if (imageUrl && !content) preview = '[Image]';
         else preview = content.length > 80 ? content.substring(0, 80) + '...' : content;
         await notifications.createMessageNotifications(
