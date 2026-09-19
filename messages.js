@@ -1827,6 +1827,75 @@ router.post('/:id(\\d+)/mute', async (req, res) => {
     } catch (e) { console.error('Mute error:', e); res.status(500).json({ error: 'Internal server error' }); }
 });
 
+// ── The chat's info panel (Telegram's "profile" of a chat) ─────────────────────────────
+// GET /messages/:id/info — who is in it and how much it holds: photos, videos, files, audio and
+// links, counted with the same extension lists the uploads use (lib/messageAttachments.js).
+// GET /messages/:id/media?kind=photos|videos|files|audio|links&before=<id> — one list, newest
+// first, 60 at a time, for the panel's sub-views. Both only for members.
+const extRegex = (list) => `\\.(${list.join('|')})$`;
+const MEDIA_WHERE = {
+    photos: `m.image_url IS NOT NULL`,
+    videos: `m.file_url IS NOT NULL AND m.file_name ~* '${extRegex(attachments.VIDEO_EXTENSIONS)}' AND m.attachment_status IS NULL`,
+    audio: `m.file_url IS NOT NULL AND m.file_name ~* '${extRegex(attachments.AUDIO_EXTENSIONS)}' AND m.attachment_status IS NULL`,
+    files: `m.file_url IS NOT NULL AND (m.file_name !~* '${extRegex([...attachments.VIDEO_EXTENSIONS, ...attachments.AUDIO_EXTENSIONS])}' OR m.attachment_status IS NOT NULL)`,
+    links: `m.content ~ 'https?://'`,
+};
+
+async function isMember(convId, userId) {
+    const r = await pool.query('SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2', [convId, userId]);
+    return r.rows.length > 0;
+}
+
+router.get('/:id(\\d+)/info', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const convId = parseInt(req.params.id);
+        if (!(await isMember(convId, userId))) return res.status(403).json({ error: 'Not a member' });
+        const counts = await pool.query(
+            `SELECT COUNT(*) FILTER (WHERE ${MEDIA_WHERE.photos})::int AS photos,
+                    COUNT(*) FILTER (WHERE ${MEDIA_WHERE.videos})::int AS videos,
+                    COUNT(*) FILTER (WHERE ${MEDIA_WHERE.files})::int AS files,
+                    COUNT(*) FILTER (WHERE ${MEDIA_WHERE.audio})::int AS audio,
+                    COUNT(*) FILTER (WHERE ${MEDIA_WHERE.links})::int AS links
+             FROM messages m WHERE m.conversation_id = $1 AND m.deleted_at IS NULL`,
+            [convId]
+        );
+        const members = await pool.query(
+            `SELECT u.id, u.username, u.full_name, u.profile_picture, cm.role
+             FROM conversation_members cm JOIN users u ON u.id = cm.user_id
+             WHERE cm.conversation_id = $1
+             ORDER BY cm.role DESC, cm.joined_at ASC LIMIT 200`,
+            [convId]
+        );
+        const online = await getOnlineUsernames(pool, members.rows.map((m) => m.username).filter(Boolean));
+        res.json({
+            counts: counts.rows[0],
+            members: members.rows.map((m) => ({ ...m, isOnline: online.has(m.username) })),
+        });
+    } catch (e) { console.error('Chat info error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
+router.get('/:id(\\d+)/media', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const convId = parseInt(req.params.id);
+        const kind = String(req.query.kind || '');
+        if (!MEDIA_WHERE[kind]) return res.status(400).json({ error: 'Unknown kind' });
+        if (!(await isMember(convId, userId))) return res.status(403).json({ error: 'Not a member' });
+        const before = parseInt(req.query.before) || null;
+        const r = await pool.query(
+            `SELECT m.id, m.created_at, m.content, m.image_url, m.image_width, m.image_height, m.image_placeholder,
+                    m.file_url, m.file_name, m.file_size, m.attachment_status, u.username AS sender_username
+             FROM messages m LEFT JOIN users u ON u.id = m.sender_id
+             WHERE m.conversation_id = $1 AND m.deleted_at IS NULL AND ${MEDIA_WHERE[kind]}
+               ${before ? 'AND m.id < $2' : ''}
+             ORDER BY m.created_at DESC, m.id DESC LIMIT 60`,
+            before ? [convId, before] : [convId]
+        );
+        res.json({ kind, items: r.rows, more: r.rows.length === 60 });
+    } catch (e) { console.error('Chat media error:', e); res.status(500).json({ error: 'Internal server error' }); }
+});
+
 // POST /:msgId/hide — "delete for me" (hide a message for the current user only)
 router.post('/:msgId(\\d+)/hide', async (req, res) => {
     try {

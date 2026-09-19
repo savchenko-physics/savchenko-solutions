@@ -76,7 +76,13 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   with the browser's controls. The sidebar search filters the chats under "Chats" and lists people
   from `/messages/search-users` under "Global search results", each a chat away; the sidebar
   shows and orders chats by their newest message that is not deleted, and deleting one moves
-  `conversations.last_message_at` back to the previous message.
+  `conversations.last_message_at` back to the previous message. The chat's name in the header
+  opens its info panel (`#chatInfo`, Telegram's "profile" of a chat): avatar, name, members or
+  handle, quick actions (mute, search, profile, manage or leave), then what the chat holds
+  (photos, videos, files, audio, links: `GET /messages/:id/info` counts them, `GET
+  /messages/:id/media?kind=` lists them 60 at a time, both members-only, kinds by the same
+  extension lists as the uploads) as lists inside the panel; a picture there opens the viewer,
+  a link entry jumps to its message.
   A file from the picker, a drop anywhere on the chat column or a paste opens the send dialog
   (preview — a video plays from the file itself, one the browser cannot decode says it will be
   converted — a caption, the "send as a document" choice). Uploads go by XMLHttpRequest so the
