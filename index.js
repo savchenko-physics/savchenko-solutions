@@ -247,6 +247,12 @@ const emailChangeLimiter = rateLimit({
 });
 
 app.set("view engine", "ejs");
+// Compiled templates are kept. Express only keeps them when NODE_ENV is "production", which
+// is not set on the box, so every solution page compiled its 1,700-line template and the
+// header again (about 15 ms of a page, seen in a CPU profile of the live process on
+// 2026-09-19). A template change therefore needs a restart, as a code change does;
+// VIEW_CACHE=off in the environment restores per-request compiling for local work.
+app.set("view cache", process.env.VIEW_CACHE !== "off");
 
 // Apply API rate limiter to all /api/* routes
 app.use('/api/', apiLimiter);

@@ -220,13 +220,23 @@ async function getBothLanguages() {
 }
 
 
-// Helper function to read CSV files and extract a specific column
+// Helper function to read CSV files and extract a specific column. Read once per file and
+// column: the book's structure does not change while the server runs, and a solution page
+// asked for it a dozen times per render (breadcrumb, prev/next, the section grid, related
+// problems), each a read and a parse of the same file. Callers get their own copy.
+const csvCache = new Map();
 function readCSV(filePath, column) {
-    const csvData = fs.readFileSync(filePath, "utf8");
-    return csvData
-        .trim()
-        .split("\n")
-        .map((line) => line.split(",")[column].trim());
+    const key = `${filePath}\0${column}`;
+    let rows = csvCache.get(key);
+    if (!rows) {
+        const csvData = fs.readFileSync(filePath, "utf8");
+        rows = csvData
+            .trim()
+            .split("\n")
+            .map((line) => line.split(",")[column].trim());
+        csvCache.set(key, rows);
+    }
+    return rows.slice();
 }
 
 /**
@@ -489,15 +499,22 @@ function getRelatedProblems(name, lang, count = 5) {
     return candidates.slice(0, count);
 }
 
+// The names of the solved problems of a language, from the files in posts/<lang>. Held for
+// a few seconds: a solution page's section grid asked for the other language's set on every
+// render, a readdir of a thousand names. A new solution shows in every grid within that time.
+const SOLVED_SET_TTL_MS = 5 * 1000;
+const solvedSetCache = new Map();
 function getSolvedSet(lang) {
+    const hit = solvedSetCache.get(lang);
+    if (hit && Date.now() - hit.at < SOLVED_SET_TTL_MS) return hit.value;
     const postsDir = path.join(__dirname, 'posts', lang);
-    if (!fs.existsSync(postsDir)) return new Set();
     const result = new Set();
     try {
         for (const file of fs.readdirSync(postsDir)) {
             if (file.endsWith('.md')) result.add(file.slice(0, -3));
         }
-    } catch (e) {}
+    } catch (e) { /* no such directory: nothing solved */ }
+    solvedSetCache.set(lang, { at: Date.now(), value: result });
     return result;
 }
 
