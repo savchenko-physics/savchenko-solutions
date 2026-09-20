@@ -131,16 +131,19 @@
         }
     }
 
-    // Fire the statement batch for the server-rendered first page IMMEDIATELY, in parallel
-    // with the dataset fetch above, instead of waiting for it. The server already rendered
-    // those 20 cards into the HTML, so their names are known before any JS data arrives —
-    // waiting would make the chain page -> dataset -> statements strictly sequential and add
-    // a whole round-trip to the time the first statement appears.
+    // The server renders the first page's statements into the HTML (problems.js). They are
+    // read into the cache here, so the first client render repaints them from memory and no
+    // request is made for them. A card the server could not fill (is-loading) is fetched at
+    // once, in parallel with the dataset, so that chain is never sequential.
     (function primeSsrStatements() {
         var names = [];
         Array.prototype.forEach.call(
             document.querySelectorAll('#pfCards .pf-card-statement[data-statement-for]'),
-            function (el) { names.push(el.getAttribute('data-statement-for')); }
+            function (el) {
+                var name = el.getAttribute('data-statement-for');
+                if (el.classList.contains('is-loading')) names.push(name);
+                else statementCache[name] = el.innerHTML;
+            }
         );
         if (names.length) fetchStatementsFor(names);
     })();
@@ -407,22 +410,26 @@
 
         var loadingText = LANG === 'ru' ? 'Загрузка условия…' : 'Loading statement…';
         // No solution in either language: /<lang>/<name> would only redirect to /unsolved, so
-        // the card leads to the upload form and says so where the arrow would be. The server
-        // renders the first page the same way (views/problems/index.ejs).
+        // the only way in is the upload button; a solved problem's number and "Solution" link
+        // open it. The card itself is not a link. The server renders the first page the same
+        // way (views/problems/index.ejs).
         var unsolved = !r[COL.SOLVED_EN] && !r[COL.SOLVED_RU];
         var href = unsolved ? '/' + LANG + '/upload?problem=' + encodeURIComponent(r[COL.NAME]) : '/' + LANG + '/' + esc(r[COL.NAME]);
+        var nameHtml = unsolved
+            ? '<span class="pf-card-name">' + esc(r[COL.NAME]) + '</span>'
+            : '<a class="pf-card-name" href="' + href + '">' + esc(r[COL.NAME]) + '</a>';
         var goHtml = unsolved
             ? '<a class="btn btn-sm btn-outline-dark pf-card-upload" href="' + href + '">' + (LANG === 'ru' ? 'Загрузить решение' : 'Upload a solution') + '</a>'
-            : '<span class="pf-card-go" aria-hidden="true">→</span>';
+            : '<a class="pf-card-go" href="' + href + '">' + (LANG === 'ru' ? 'Решение' : 'Solution') + ' →</a>';
         var snippet = SEARCH.q === state.q ? SEARCH.snippets[r[COL.NAME]] : null;
         // Marked by the search's own stems ("трен" in "трения"), not the words as typed.
         var snippetHtml = snippet ? '<p class="pf-card-snippet">' + highlight(snippet, SEARCH.terms.length ? SEARCH.terms.join(' ') : state.q) + '</p>' : '';
-        return '<div class="pf-card ' + heatClass + '" data-name="' + esc(r[COL.NAME]) + '" data-href="' + href + '" role="link" tabindex="0">'
-            + tagsHtml
+        return '<div class="pf-card ' + heatClass + '" data-name="' + esc(r[COL.NAME]) + '">'
             + '<div class="pf-card-head">'
-            + '<a class="pf-card-name" href="' + href + '">' + esc(r[COL.NAME]) + '</a>'
+            + nameHtml
             + (r[COL.STARRED] === 1 ? '<sup class="ss-star" title="Asterisked by Savchenko">∗</sup>' : '')
             + ratingHtml
+            + tagsHtml
             + '<span class="pf-card-status">' + statusHtml + '</span>'
             + voteHtml
             + goHtml
@@ -435,29 +442,12 @@
     // Event delegation, wired once on the stable container rather than per-button: Load
     // More appends new cards repeatedly, and re-attaching a listener to every button in the
     // container each time (including ones from earlier pages) would stack duplicate
-    // listeners on old cards and fire toggleTag() multiple times per click.
+    // listeners on old cards and fire toggleTag() multiple times per click. The tag buttons
+    // are the only thing the card handles: a click on the statement selects text and nothing
+    // else (the card was a link until 2026-09-19, and copying a line opened the problem).
     cardsEl.addEventListener('click', function (e) {
         var btn = e.target.closest('.pf-card-tag');
-        if (btn) { toggleTag(btn.getAttribute('data-tag')); return; }
-        // The card itself is the link to the problem. Real controls inside it (the number
-        // link, tag buttons, anything in the statement) keep their own behaviour, and a
-        // click that merely ends a text selection is not a navigation.
-        if (e.target.closest('a, button, input, select, textarea, label')) return;
-        var card = e.target.closest('.pf-card[data-href]');
-        if (!card) return;
-        var sel = window.getSelection ? String(window.getSelection()) : '';
-        if (sel) return;
-        var href = card.getAttribute('data-href');
-        if (e.ctrlKey || e.metaKey || e.shiftKey) window.open(href, '_blank'); else window.location.href = href;
-    });
-    cardsEl.addEventListener('auxclick', function (e) {
-        if (e.button !== 1 || e.target.closest('a, button')) return;
-        var card = e.target.closest('.pf-card[data-href]');
-        if (card) { e.preventDefault(); window.open(card.getAttribute('data-href'), '_blank'); }
-    });
-    cardsEl.addEventListener('keydown', function (e) {
-        if (e.key !== 'Enter' || !e.target.classList || !e.target.classList.contains('pf-card')) return;
-        window.location.href = e.target.getAttribute('data-href');
+        if (btn) toggleTag(btn.getAttribute('data-tag'));
     });
 
     function renderPage(rows, append) {
@@ -787,7 +777,9 @@
                 + ' title="' + removeLabel + '">' + esc(f.label) + '<span class="pf-chip-x" aria-hidden="true">×</span></button>';
         }).join('')
             + '<button type="button" class="pf-chip-action" data-action="clear">' + (RU ? 'Сбросить всё' : 'Clear all') + '</button>'
-            + '<button type="button" class="pf-chip-action" data-action="copy">' + (RU ? 'Скопировать ссылку' : 'Copy link') + '</button>';
+            + '<button type="button" class="pf-chip-action" data-action="copy">' + (RU ? 'Скопировать ссылку' : 'Copy link') + '</button>'
+            // The older page, /unsolved, still lists these by chapter with each chapter's progress.
+            + (state.lang === 'none' ? '<a class="pf-chip-action" href="/' + LANG + '/unsolved">' + (RU ? 'Нерешённые по главам' : 'Unsolved by chapter') + '</a>' : '');
     }
     function removeFilter(kind, value) {
         if (kind === 'q') {

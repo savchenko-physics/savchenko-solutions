@@ -327,7 +327,7 @@ router.get('/', async (req, res) => {
 
     if (!dataset) {
         return res.render('problems/index', {
-            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [], snippets: {}, hasFilters: false,
+            ...locals, dataset: null, ssrRows: [], total: 0, query: req.query, bookmarked: [], snippets: {}, statements: {}, hasFilters: false,
             axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },
             toRating, ratingFloor: RATING_FLOOR, ratingCeil: RATING_CEIL, ratingStep: RATING_STEP, pageSize: PAGE_SIZE,
         });
@@ -354,6 +354,17 @@ router.get('/', async (req, res) => {
     const ssrRows = sorted.slice(0, PAGE_SIZE);
     const snippets = {};
     if (hits) for (const r of ssrRows) if (hits.snippets[r[COL.NAME]]) snippets[r[COL.NAME]] = hits.snippets[r[COL.NAME]];
+    // The first page's statements go into the HTML. They used to be fetched by the script after
+    // the page arrived (GET /statements), one more round trip, ~0.85 s from outside the
+    // datacentre, before a single statement showed. This is the same renderer and cache; a page
+    // is 20 statements and a solution page carries as much maths. The dataset (2,023 rows)
+    // stays a fetch, see GET /data. If the render fails the cards fall back to the fetch.
+    let statements = {};
+    try {
+        statements = await getStatements(pool, ssrRows.map((r) => r[COL.NAME]), locals.lang);
+    } catch (err) {
+        console.error('finder statements:', err.message);
+    }
     // Reserves the chips' row before the script fills it, so the cards do not jump down.
     const hasFilters = ['q', 'chapter', 'tag', 'starred', 'min', 'max', 'rating', 'solved', 'bookmarked', 'sort']
         .some((k) => req.query[k]) || Object.keys(req.query).some((k) => k.startsWith('ax_'));
@@ -365,6 +376,7 @@ router.get('/', async (req, res) => {
         total: filtered.length,
         query: req.query,
         snippets,
+        statements,
         hasFilters,
         bookmarked,
         axisMeta: { cost: axesByCategory('cost'), shape: axesByCategory('shape'), reward: axesByCategory('reward') },

@@ -9,7 +9,7 @@
     <%# A results page for one query is not a page worth indexing; the finder itself is. %>
     <meta name="robots" content="noindex, follow" />
     <% } else { %>
-    <title><%= docTitle(lang === 'ru' ? 'Найти задачи по сложности' : 'Find problems by difficulty', 'Savchenko Solutions') %></title>
+    <title><%= docTitle(lang === 'ru' ? 'База задач Савченко' : 'Savchenko problem database', 'Savchenko Solutions') %></title>
     <% } %>
     <meta name="description" content="<%= lang === 'ru'
         ? 'Фильтруйте и сортируйте все 2023 задачи Савченко по сложности, теме и отдельным навыкам — идея, математика, вычисления, красота решения и другие.'
@@ -33,15 +33,16 @@
         /* Edge to edge: the problem text is the point of the page, so the chrome around it is
            kept to a few pixels. */
         .pf-wrap { width: 100%; margin: 0; padding: var(--ss-space-2) var(--ss-space-2) var(--ss-space-6); flex: 1 0 auto; box-sizing: border-box; }
-        .pf-crumb { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-bottom: 2px; }
-        .pf-crumb a { color: var(--ss-link); text-decoration: none; }
-        .pf-h1 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-20); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: 0; }
-        .pf-tabs { display: flex; gap: var(--ss-space-2); margin: 2px 0 var(--ss-space-1); border-bottom: 1px solid var(--ss-rule); }
-        .pf-tab { padding: var(--ss-space-1) var(--ss-space-1); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); text-decoration: none; border-bottom: 2px solid transparent; }
-        .pf-tab.on { color: var(--ss-navy); font-weight: var(--ss-fw-strong); border-bottom-color: var(--ss-navy); }
+        /* One line above the columns: the title, the record presets and the methodology link.
+           There were four (crumb, title, tabs, presets), 130px before the first statement on the
+           owner's screen, which the statements are the point of (2026-09-19). */
+        .pf-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2); margin-bottom: var(--ss-space-2); }
+        .pf-h1 { font-family: var(--ss-font-ui); font-size: var(--ss-fs-20); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: 0 var(--ss-space-2) 0 0; }
+        .pf-method { margin-left: auto; font-size: var(--ss-fs-13); color: var(--ss-text-secondary); text-decoration: none; white-space: nowrap; }
+        .pf-method:hover { color: var(--ss-link); text-decoration: underline; }
         .pf-stat-line { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: var(--ss-space-3) 0 var(--ss-space-4); }
 
-        .pf-records { display: flex; flex-wrap: wrap; gap: var(--ss-space-2); margin-bottom: var(--ss-space-2); }
+        .pf-records { display: contents; }
         .pf-record-chip {
             font-size: var(--ss-fs-13); padding: var(--ss-space-1) var(--ss-space-3); border-radius: var(--ss-radius);
             border: 1px solid var(--ss-rule); background: var(--ss-surface-alt); color: var(--ss-link); text-decoration: none; cursor: pointer;
@@ -122,7 +123,10 @@
         .pf-clear-btn:hover { background: var(--ss-surface-hover); }
 
         .pf-results { flex: 1 1 auto; min-width: 0; }
-        .pf-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2); min-height: 30px; margin-bottom: var(--ss-space-2); }
+        /* The active filters, the count and the sort share one row. */
+        .pf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ss-space-2) var(--ss-space-3); margin-bottom: var(--ss-space-2); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
+        .pf-chips { display: contents; }
+        .pf-chips[hidden] { display: none; }
         .pf-chip {
             display: inline-flex; align-items: center; gap: var(--ss-space-1); max-width: 100%;
             padding: 2px var(--ss-space-2) 2px var(--ss-space-3); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius);
@@ -134,27 +138,27 @@
         .pf-chip:hover .pf-chip-x { color: var(--ss-error); }
         .pf-chip-action { border: none; background: none; padding: 2px var(--ss-space-1); font-size: var(--ss-fs-13); color: var(--ss-link); cursor: pointer; }
         .pf-chip-action:hover { color: var(--ss-link-hover); text-decoration: underline; }
-        .pf-result-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--ss-space-2); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); gap: var(--ss-space-3); flex-wrap: wrap; }
+        .pf-sort { margin-left: auto; white-space: nowrap; }
         .pf-sort-label { color: var(--ss-text-secondary); }
         .pf-sort-select {
             height: 34px; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); padding: 0 var(--ss-space-2); font-size: var(--ss-fs-13);
             color: var(--ss-text); background: var(--ss-surface);
         }
 
-        /* ── Result cards: heat-coloured accent border, tags at the top (clickable filter
-           buttons — active tags render green), then the actual rendered problem statement.
+        /* ── Result cards: heat-coloured accent border, one head line (number, rating, the
+           tags as clickable filter buttons — active ones green — the solution languages and
+           the way in), then the rendered problem statement.
            No section/time badges: the chapter.section is already the leading two segments
            of the problem number, and the AI's minute estimate reads as more precise than it
            is once you're looking at the actual problem instead of a table cell.
-           The whole card is the link to the problem (data-href, wired in
-           problems-finder.js); the tags and the number stay real controls inside it. ── */
+           The card is not a link (it was until 2026-09-19): selecting or copying a line of the
+           statement used to open the problem. Only the number and the link or button at the
+           right lead anywhere. ── */
         .pf-card {
             border: 1px solid var(--ss-rule); border-left-width: 5px; border-radius: var(--ss-radius-lg); background: var(--ss-surface);
-            padding: var(--ss-space-2) var(--ss-space-3); margin-bottom: var(--ss-space-2); cursor: pointer;
+            padding: var(--ss-space-2) var(--ss-space-3); margin-bottom: var(--ss-space-2);
         }
-        .pf-card:hover { border-color: var(--ss-link); background: #fbfcfd; }
-        .pf-card:focus-visible { outline: 2px solid var(--ss-link); outline-offset: 1px; }
-        .pf-card-tags { display: flex; flex-wrap: wrap; gap: var(--ss-space-1); margin-bottom: var(--ss-space-1); }
+        .pf-card-tags { display: contents; }
         .pf-card-tag {
             font-size: var(--ss-fs-12); padding: 2px var(--ss-space-2); border-radius: var(--ss-radius); border: 1px solid var(--ss-rule);
             background: var(--ss-surface-alt); color: var(--ss-text-secondary); cursor: pointer; white-space: nowrap;
@@ -163,7 +167,8 @@
         .pf-card-tag.active { background: var(--ss-success); color: var(--ss-on-navy); border-color: var(--ss-success); }
         .pf-card-head { display: flex; align-items: center; gap: var(--ss-space-2); margin-bottom: var(--ss-space-1); flex-wrap: wrap; }
         .pf-card-name { font-family: var(--ss-font-ui); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-16); color: var(--ss-link); text-decoration: none; }
-        .pf-card-name:hover { color: var(--ss-link-hover); text-decoration: underline; }
+        a.pf-card-name:hover { color: var(--ss-link-hover); text-decoration: underline; }
+        span.pf-card-name { color: var(--ss-navy); }
         /* Raised like a footnote marker (LaTeX's $^*$), not sitting on the baseline — a
            centred asterisk at body size reads as a bullet, not Savchenko's own mark. */
         .pf-card-rating {
@@ -172,7 +177,8 @@
         }
         .pf-card-status { display: flex; gap: var(--ss-space-1); margin-left: auto; font-size: var(--ss-fs-12); }
         .pf-card-vote { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
-        .pf-card-go { color: var(--ss-link); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-16); }
+        .pf-card-go { color: var(--ss-link); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-13); text-decoration: none; white-space: nowrap; }
+        .pf-card-go:hover { color: var(--ss-link-hover); text-decoration: underline; }
         /* An unsolved problem has no page to go to; its card opens the upload form instead, and
            says so where the arrow would be. */
         .pf-card-upload { white-space: nowrap; }
@@ -246,18 +252,13 @@
 <%- include('../default/main_site_header', { finderSearch: true }) %>
 
 <div class="pf-wrap">
-    <div class="pf-crumb"><a href="/<%= lang %>">Savchenko Solutions</a>&nbsp;/&nbsp;<%= lang === 'ru' ? 'Задачи по сложности' : 'Problems by difficulty' %></div>
-    <h1 class="pf-h1"><%= lang === 'ru' ? 'Найти задачи' : 'Find problems' %></h1>
-
-    <div class="pf-tabs">
-        <a class="pf-tab on" href="/<%= lang %>/problems"><%= lang === 'ru' ? 'Найти задачи' : 'Find problems' %></a>
-        <a class="pf-tab" href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
-    </div>
-
     <% if (!dataset) { %>
+    <h1 class="pf-h1"><%= lang === 'ru' ? 'База задач' : 'Problem database' %></h1>
     <div class="pf-unavailable"><%= lang === 'ru' ? 'Данные о сложности временно недоступны.' : 'Difficulty data is temporarily unavailable.' %></div>
     <% } else { %>
 
+    <div class="pf-top">
+    <h1 class="pf-h1"><%= lang === 'ru' ? 'База задач' : 'Problem database' %></h1>
     <div class="pf-records">
         <button class="pf-record-chip" data-preset="hardest"><%= lang === 'ru' ? 'Сложнее всего' : 'Hardest' %></button>
         <button class="pf-record-chip" data-preset="easiest"><%= lang === 'ru' ? 'Легче всего' : 'Easiest' %></button>
@@ -265,6 +266,8 @@
         <button class="pf-record-chip" data-preset="elegant"><%= lang === 'ru' ? 'Красивее всего' : 'Most elegant' %></button>
         <button class="pf-record-chip" data-preset="starred"><%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></button>
         <button class="pf-record-chip" data-preset="unsolved"><%= lang === 'ru' ? 'Нерешённые' : 'Unsolved' %></button>
+    </div>
+    <a class="pf-method" href="/<%= lang %>/problems/methodology"><%= lang === 'ru' ? 'Как считается сложность' : 'How difficulty is scored' %></a>
     </div>
 
     <div class="pf-layout">
@@ -364,11 +367,12 @@
         </aside>
 
         <main class="pf-results">
-            <%# What is selected, each removable, with a link that reproduces it (js/problems-finder.js). %>
-            <div class="pf-chips" id="pfChips" aria-live="polite"<% if (!hasFilters) { %> hidden<% } %>></div>
-            <div class="pf-result-bar">
+            <div class="pf-bar">
+                <%# What is selected, each removable, with a link that reproduces it (js/problems-finder.js,
+                    which also draws the link to /unsolved when the unsolved filter is on). %>
+                <div class="pf-chips" id="pfChips" aria-live="polite"<% if (!hasFilters) { %> hidden<% } %>><% if (query && query.solved === 'none') { %><a class="pf-chip-action" href="/<%= lang %>/unsolved"><%= lang === 'ru' ? 'Нерешённые по главам' : 'Unsolved by chapter' %></a><% } %></div>
                 <span id="pfResultCount"><%= lang === 'ru' ? 'Показано' : 'Showing' %> <%= ssrRows.length %> <%= lang === 'ru' ? 'из' : 'of' %> <%= total %><% if (searchQuery) { %> <%= lang === 'ru' ? 'по запросу' : 'for' %> «<%= searchQuery %>»<% } %></span>
-                <span>
+                <span class="pf-sort">
                     <span class="pf-sort-label"><%= lang === 'ru' ? 'Сортировка:' : 'Sort:' %></span>
                     <select class="pf-sort-select" id="pfSortSelect">
                         <option value="" id="pfSortDefault" data-label="<%= lang === 'ru' ? 'По номеру' : 'Problem order' %>" data-label-search="<%= lang === 'ru' ? 'Лучшие совпадения' : 'Best match' %>"><%= searchQuery ? (lang === 'ru' ? 'Лучшие совпадения' : 'Best match') : (lang === 'ru' ? 'По номеру' : 'Problem order') %></option>
@@ -392,30 +396,39 @@
                     const isCanonical = r[8].length > 0;
                     const tagSource = isCanonical ? r[8] : r[7];
                     // No solution in either language: /<lang>/<name> would only redirect to
-                    // /unsolved, so the card leads to the upload form (js/problems-finder.js cardHtml
-                    // renders the same card after hydration).
+                    // /unsolved, so the only way in is the upload button; a solved problem's number
+                    // and "Solution" link open it (js/problems-finder.js cardHtml renders the same
+                    // card after hydration).
                     const unsolvedCard = !r[11] && !r[12];
                     const href = unsolvedCard ? `/${lang}/upload?problem=${encodeURIComponent(r[0])}` : `/${lang}/${r[0]}`;
+                    const statementHtml = statements[r[0]];
                 %>
-                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>" data-href="<%= href %>" role="link" tabindex="0">
-                    <% if (tagSource.length) { %>
-                    <div class="pf-card-tags">
-                        <% tagSource.forEach(function(t) { %><button type="button" class="pf-card-tag" data-tag="<%= t %>"><%= isCanonical ? (tagLabelMap[t] || t) : t %></button><% }); %>
-                    </div>
-                    <% } %>
+                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>">
                     <div class="pf-card-head">
-                        <a class="pf-card-name" href="<%= href %>"><%= r[0] %></a>
+                        <% if (unsolvedCard) { %><span class="pf-card-name"><%= r[0] %></span><% } else { %><a class="pf-card-name" href="<%= href %>"><%= r[0] %></a><% } %>
                         <% if (r[4] === 1) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Asterisked by Savchenko' %>">&#8727;</sup><% } %>
                         <% if (rating != null) { %><span class="pf-card-rating <%= heat ? 'pf-heat-bg-' + heat : 'pf-heat-none' %>"><%= rating %></span><% } %>
+                        <% if (tagSource.length) { %>
+                        <div class="pf-card-tags">
+                            <% tagSource.forEach(function(t) { %><button type="button" class="pf-card-tag" data-tag="<%= t %>"><%= isCanonical ? (tagLabelMap[t] || t) : t %></button><% }); %>
+                        </div>
+                        <% } %>
                         <span class="pf-card-status">
                             <% if (r[11]) { %><span class="en" title="English solution">EN</span><% } %>
                             <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
                         </span>
                         <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
-                        <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><span class="pf-card-go" aria-hidden="true">&rarr;</span><% } %>
+                        <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><a class="pf-card-go" href="<%= href %>"><%= lang === 'ru' ? 'Решение' : 'Solution' %> &rarr;</a><% } %>
                     </div>
                     <% if (snippets && snippets[r[0]]) { %><p class="pf-card-snippet"><%= snippets[r[0]] %></p><% } %>
+                    <%# The statement is rendered into the page (problems.js, one query and the shared
+                        cache), not fetched afterwards: the batch request alone was ~0.85 s of round trip
+                        on every visit. The script reads these into its cache (js/problems-finder.js). %>
+                    <% if (statementHtml) { %>
+                    <div class="pf-card-statement ss-prose ss-prose--compact" data-statement-for="<%= r[0] %>"><%- statementHtml %></div>
+                    <% } else { %>
                     <div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>
+                    <% } %>
                 </div>
                 <% }); %>
             </div>
