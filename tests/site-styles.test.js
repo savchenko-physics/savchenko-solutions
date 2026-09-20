@@ -224,7 +224,8 @@ test('site_styles renders the documented links in cascade order', () => {
         last = at;
     }
     const bare = render({ bootstrap: false }, 'en');
-    assert.doesNotMatch(bare, /bootstrap\.min\.css|mathjax\.css|\/pr\.woff2/);
+    assert.doesNotMatch(bare, /bootstrap\.min\.css|<link[^>]*mathjax\.css|\/pr\.woff2/);
+    assert.match(bare, /problem-peek\.js[^>]*data-math-css="\/css\/mathjax\.css\?v=/, 'the preview script is on every page and knows the maths stylesheet');
     assert.match(bare, /\/e\.woff2/);
     assert.match(bare, /\/css\/bundle\.css\?v=abc/);
 });

@@ -27,16 +27,33 @@
     var card = null, body = null, head = null, open = null;
     var showTimer = 0, hideTimer = 0, current = null, seq = 0;
 
-    // The problem a link leads to: /ru/5.8.5, /en/5.8.5#x, /ru/problems?q=5.8.5.
+    // The problem a link is about: its address (/ru/5.8.5, /en/5.8.5#x, /ru/problems?q=5.8.5)
+    // or, when the address is something else (a line of the recent changes leads to the
+    // diff, /ru/contributions/20835), its text when that is a bare problem number.
     function problemOf(link) {
         var href = link.getAttribute('href') || '';
         var m = /^\/(?:en|ru)\/(\d{1,2}\.\d{1,2}\.\d{1,3})(?:[?#]|$)/.exec(href)
             || /[?&]q=(\d{1,2}\.\d{1,2}\.\d{1,3})(?:[&#]|$)/.exec(href);
-        return m ? m[1] : null;
+        if (m) return m[1];
+        var text = (link.textContent || '').trim();
+        return /^\d{1,2}\.\d{1,2}\.\d{1,3}$/.test(text) ? text : null;
+    }
+
+    // The card's maths is SVG typeset on the server and needs /css/mathjax.css (its sizes, the
+    // fallback font for Cyrillic in formulas). Pages with formulas of their own link it; any
+    // other page gets it here on the first hover, from the address the script tag carries.
+    var MATH_CSS = document.currentScript && document.currentScript.getAttribute('data-math-css');
+    function ensureMathCss() {
+        if (!MATH_CSS || document.querySelector('link[href^="/css/mathjax.css"]')) return;
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = MATH_CSS;
+        document.head.appendChild(link);
     }
 
     function ensureCard() {
         if (card) return;
+        ensureMathCss();
         card = document.createElement('div');
         card.className = 'ss-peek';
         card.setAttribute('role', 'tooltip');
