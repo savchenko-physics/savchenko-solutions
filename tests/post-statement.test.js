@@ -30,6 +30,16 @@ test('every spelling of the heading the posts use; the number in its other forms
             assert.equal(postStatement('1.2.3', lang, root), 'Text $x$.', heading);
         });
     }
+    // The ∗ as a superscript goes with the number (265 posts write "$N^*.$"): left behind, its
+    // "^*.$" put a stray dollar in front of 3.5.32's statement (2026-09-20).
+    for (const head of ['$1.2.3^*.$', '$1.2.3^{∗}.$', '$ 1.2.3^∗ $', '$1.2.3$', '$1.2.3.$']) {
+        withPost('ru', '1.2.3', `### Условие\n${head} Текст $x$.\n### Решение\n`, (root) => {
+            assert.equal(postStatement('1.2.3', 'ru', root), 'Текст $x$.', head);
+        });
+    }
+    withPost('ru', '1.2.3', '### Условие\n$1.2.3. а.$ Текст $x$.\n### Решение\n', (root) => {
+        assert.equal(postStatement('1.2.3', 'ru', root), 'а. Текст $x$.', 'the sub-item letter stays');
+    });
 });
 
 test('no post, no statement heading, or an empty section: null, never a throw', () => {
@@ -46,6 +56,7 @@ test('a stray opening dollar left by the builder goes; balanced dollars are neve
     assert.equal(repairStrayDollar('а.$ Из вещества $l$.'), 'а. Из вещества $l$.');
     assert.equal(repairStrayDollar('*.$  Какую $x$'), 'Какую $x$');
     assert.equal(repairStrayDollar('^*$ В вакууме $y$'), 'В вакууме $y$');
+    assert.equal(repairStrayDollar('^*.$ В момент $t = 0$'), 'В момент $t = 0$');
     assert.equal(repairStrayDollar('а. $x$ и $y$'), 'а. $x$ и $y$', 'even count: as it is');
     assert.equal(repairStrayDollar('$x$ и $'), '$x$ и $', 'odd but not at the start: left for a person');
 });
