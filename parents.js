@@ -1,6 +1,10 @@
 const fs = require("fs");
 const path = require("path");
 
+// How long the listings of posts/ are held (getSolvedSet, getLanguageData): a new solution
+// shows everywhere within this time.
+const SOLVED_SET_TTL_MS = 5 * 1000;
+
 // Helper function to split a filename into numeric parts
 function splitNumbers(inputString) {
     return inputString.split(".").map(Number);
@@ -44,16 +48,12 @@ function isValidMarkdownFile(fileName, sections) {
 
 // Function to get markdown files sorted numerically
 function existedFolders(directory, sections) {
+    // One directory read with the entries' types: a stat per file was a thousand system
+    // calls per listing.
     const files = fs
-        .readdirSync(directory) // Get all files in the directory
-        .filter((f) => {
-            const fullPath = path.join(directory, f);
-            return (
-                fs.statSync(fullPath).isFile() &&
-                f.endsWith(".md") &&
-                isValidMarkdownFile(f, sections) // Validate filename
-            );
-        });
+        .readdirSync(directory, { withFileTypes: true })
+        .filter((d) => d.isFile() && d.name.endsWith(".md") && isValidMarkdownFile(d.name, sections))
+        .map((d) => d.name);
     if (!Array.isArray(files)) {
         throw new Error("Files is not an array. Received: " + typeof files);
     }
@@ -81,7 +81,21 @@ function distributeProblems(problems, columns = 3) {
 }
 
 // Main function to generate page data
+// The whole book with what is solved, for the homepage, the upload form and the unsolved
+// page: a readdir of posts/<lang> and a stat of every one of its thousand files, sorted
+// numerically. About 100 ms of CPU on the box per call, and the homepage made it on every
+// visit (CPU profile, 2026-09-19). Held for a few seconds, as the solved set is; the
+// callers only read it.
+const languageDataCache = new Map();
 async function getLanguageData(lang = 'en') {
+    const hit = languageDataCache.get(lang);
+    if (hit && Date.now() - hit.at < SOLVED_SET_TTL_MS) return hit.value;
+    const value = await loadLanguageData(lang);
+    languageDataCache.set(lang, { at: Date.now(), value });
+    return value;
+}
+
+async function loadLanguageData(lang = 'en') {
     const chaptersCSV = lang === 'ru' ? "src/ru/database/chapters.csv" : "src/database/chapters.csv"
     const sectionsCSV = lang === 'ru' ? "src/ru/database/sections.csv" : "src/database/sections.csv"
 
@@ -502,7 +516,6 @@ function getRelatedProblems(name, lang, count = 5) {
 // The names of the solved problems of a language, from the files in posts/<lang>. Held for
 // a few seconds: a solution page's section grid asked for the other language's set on every
 // render, a readdir of a thousand names. A new solution shows in every grid within that time.
-const SOLVED_SET_TTL_MS = 5 * 1000;
 const solvedSetCache = new Map();
 function getSolvedSet(lang) {
     const hit = solvedSetCache.get(lang);

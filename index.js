@@ -115,7 +115,7 @@ if (!process.env.SESSION_SECRET) {
 // The app's one connection pool (lib/db.js), shared with every module and the session store.
 const pool = require('./lib/db');
 const { SwrCache } = require('./lib/swr');
-const { preloadApis } = require('./lib/inProcess');
+const { preloadApis, runHandler, fakeRequest } = require('./lib/inProcess');
 
 // botgate and tracker need the shared pool for their cached IP lists and buffered writes.
 initBotgate(pool);
@@ -3764,15 +3764,28 @@ const server = app.listen(PORT, HOST, () => {
     // the port opens, so the first visitor after a restart is not the one who fills them:
     // the homepage's widgets in both languages (the leaderboard's summary with them), the
     // problem database's two datasets. Failures are logged; the caches then fill on demand.
-    setTimeout(() => {
-        Promise.allSettled([
+    setTimeout(async () => {
+        const results = await Promise.allSettled([
             getHomeWidgets('ru'), getHomeWidgets('en'),
             problemsRouter.warm(),
-        ]).then((results) => {
-            const failed = results.filter((r) => r.status === 'rejected');
-            if (failed.length) console.error('warm-up:', failed.map((r) => r.reason && r.reason.message).join('; '));
-            else console.log('warm-up: caches filled');
-        });
+        ]);
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length) console.error('warm-up:', failed.map((r) => r.reason && r.reason.message).join('; '));
+        else console.log('warm-up: caches filled');
+        // Then the profiles people open most, the leaderboard's top, one at a time: the first
+        // view of the busiest profile after a restart ran every one of its queries (the owner's
+        // took 6.5 s before the caches; 0.4–1.5 s with them filling behind a 400 ms budget).
+        try {
+            const h = app.locals.apiHandlers || {};
+            const board = await runHandler(h['/api/contributors/leaderboard'], fakeRequest(null, { query: { page: '1', limit: '12', sortBy: 'score', sortOrder: 'desc' } }));
+            const names = board && Array.isArray(board.rows) ? board.rows.map((r) => r.username).filter(Boolean) : [];
+            for (const username of names) {
+                for (const lang of ['ru', 'en']) await app.locals.loadUserProfileBundle(fakeRequest(null), username, lang);
+            }
+            if (names.length) console.log(`warm-up: ${names.length} profiles filled`);
+        } catch (err) {
+            console.error('warm-up profiles:', err.message);
+        }
     }, 3000);
     // Watches posts/ for problems of «Последняя задача» that get solved (lastProblem.js).
     startLastProblem();
