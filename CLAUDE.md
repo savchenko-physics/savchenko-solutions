@@ -491,6 +491,17 @@ hyphenation and a 1em paragraph indent, as journals set text.
   `build-statements.js` prefers these files when present. A problem the book does not mark
   ♦ gets no figure even if a `statement.png` exists — that fallback is how 8.3.3 showed
   8.3.4's circuit. Do not hand-edit `figures.json`; fix `OVERRIDES` in `figures.py`.
+  **Posts show the SVG** since 2026-09-20: the owner switched section 1.1 by hand and
+  `scripts/svg-statement-figures.js` did the other 848 posts on the server the same way
+  (`--apply`; a dry run by default; backup `~/deploy-backups/posts-before-svg-figures-20260920T072843Z.tgz`
+  on the box), with no `contributions` rows: `statement.png`, or a contributor's own crop of the
+  book figure captioned "К задаче N" / "For problem N" or with no alt, becomes
+  `![alt|<viewBox>, <pct>%](../../img/N/statement.svg)`, the share of the 800 px basis being half
+  the SVG's 300-dpi width (1.2 × the printed size) with a lift for small and flat figures, so every
+  figure shows the book at one magnification. It leaves a section with several images, a
+  contributor's own captioned drawing, and the twenty problems whose book bitmap was never split
+  from a neighbour's (`SHARED_BITMAP`; 5.4.6's SVG shows 5.4.7 too, `figures.py` OVERRIDES needed);
+  296 posts with an SVG show no figure at all. `tests/svg-statement-figures.test.js`.
 - Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24). `lib/bookProblems.js` `isBookProblem` says
   whether a number is one of the 2,023. A real problem's address with no post in that language redirects (302) to
   the other language's solution, or to `/:lang/problems?q=<number>` (its statement and the upload button) when there is none; only a non-problem is a 404
