@@ -76,7 +76,7 @@
   <script src="/js/analytics.js"></script>
 </head>
 
-<body>
+<body class="grid-heat">
   <%- include('default/main_site_header', { pageHasOwnH1: true, hideHeaderSearch: true }) %>
 
   <!-- ============================
@@ -285,32 +285,13 @@
           </p>
         </div>
 
-        <!-- Legend. Swatches mirror the dot shapes exactly, so the key works in
-             greyscale and for colour-deficient readers. Sits directly above the grid,
-             which is where it is needed. One key at a time: languages, or with the
-             difficulty switch on, the difficulty scale (grid-mode.js toggles them). -->
+        <!-- Legend: the difficulty scale, which is what the dots are coloured by (2026-09-19; the
+             language colouring and the switch between the two went with the owner's decision).
+             A dashed dot is unsolved; a heavy border is Savchenko's own ∗. -->
         <% const hasDifficultyKey = typeof difficultyGrid !== 'undefined' && difficultyGrid; %>
         <div class="grid-legend">
-          <span class="legend-set"<% if (hasDifficultyKey) { %> data-grid-mode-when="progress"<% } %>>
-            <span class="legend-item">
-              <span class="legend-swatch legend-both"></span>
-              <%= lang === 'ru' ? 'Оба языка' : 'Both languages' %>
-            </span>
-            <span class="legend-item">
-              <span class="legend-swatch legend-en"></span>
-              <%= lang === 'ru' ? 'Только английский' : 'English only' %>
-            </span>
-            <span class="legend-item">
-              <span class="legend-swatch legend-ru"></span>
-              <%= lang === 'ru' ? 'Только русский' : 'Russian only' %>
-            </span>
-            <span class="legend-item">
-              <span class="legend-swatch legend-unsolved"></span>
-              <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
-            </span>
-          </span>
           <% if (hasDifficultyKey) { %>
-          <span class="legend-set legend-set--heat" id="heatLegend" data-grid-mode-when="difficulty" hidden>
+          <span class="legend-set legend-set--heat" id="heatLegend">
             <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
             <span class="heat-ramp">
               <% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %>
@@ -320,14 +301,11 @@
               <span class="legend-swatch legend-star"></span>
               <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
             </span>
+            <span class="legend-item legend-item--apart">
+              <span class="legend-swatch legend-unsolved"></span>
+              <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
+            </span>
           </span>
-          <!-- Off by default: without it the grid is byte-identical to what it has always
-               been, and nobody has to opt out of a view they did not ask for. -->
-          <label class="ss-switch grid-mode-toggle" for="heatmapToggle">
-            <input type="checkbox" id="heatmapToggle" role="switch" data-grid-mode-toggle />
-            <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
-            <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
-          </label>
           <% } %>
         </div>
 
@@ -407,7 +385,6 @@
           </div>
           <% }); %>
         </div>
-        <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
         <script type="application/json" id="gridStates"><%- JSON.stringify(gridStates) %></script>
         <% if (typeof difficultyGrid !== 'undefined' && difficultyGrid) { %>
         <script type="application/json" id="gridDifficulty"><%- JSON.stringify(difficultyGrid) %></script>
@@ -1472,9 +1449,6 @@
     .legend-swatch {
       display: inline-block; width: 16px; height: 14px; border-radius: var(--ss-radius-sm); flex: 0 0 auto;
     }
-    .legend-both     { background: #7d3c98; border: 1px solid #7d3c98; }
-    .legend-en       { background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%); border: 1px solid #2471a3; }
-    .legend-ru       { background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%); border: 1px solid #27ae60; }
     .legend-unsolved { background: #ffffff; border: 1px dashed #c6ccd2; }
 
     .problem-dots {
@@ -1492,7 +1466,6 @@
        across all nine steps: it survives greyscale and red-green colour deficiency, which
        matters here for the same reason set out under the dot shapes below. */
     /* Layout only — the control itself is .ss-switch in design-system.css. */
-    .grid-mode-toggle { margin-left: auto; }
 
     /* The ramp itself now lives in design-system.css, shared with the section grid
        on every solution page so the two read as one scale. */
@@ -1506,65 +1479,14 @@
       border-radius: var(--ss-radius-sm);
       font-size: var(--ss-fs-12);
       text-decoration: none;
-      font-weight: var(--ss-fw-regular);
       line-height: 1;
       transition: opacity 0.15s ease;
     }
-    /* Shape carries the meaning; colour only reinforces it.
-       Purple, blue and green are exactly the three hues red-green colour deficiency
-       compresses — roughly one man in twelve, against an audience of mostly male
-       teenagers. For those readers the old grid was not low-contrast, it was unreadable.
-       So: solved-in-both is a solid block, a single language is half-filled (left half
-       for English, bottom half for Russian, so the two are distinguishable without any
-       colour at all), and unsolved is a hollow dashed outline. */
-    a.problem-dot.solved-both,
-    a.problem-dot.solved-both:link,
-    a.problem-dot.solved-both:visited,
-    a.problem-dot.solved-both:active {
-      background: #7d3c98;
-      color: #fff;
-      border: 1px solid #7d3c98;
-    }
-    a.problem-dot.solved-both:hover { opacity: 0.8; }
-
-    /* English only — left half filled. */
-    a.problem-dot.solved-en,
-    a.problem-dot.solved-en:link,
-    a.problem-dot.solved-en:visited,
-    a.problem-dot.solved-en:active {
-      background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%);
-      color: #17466b;
-      border: 1px solid #2471a3;
-      font-weight: var(--ss-fw-strong);
-    }
-    a.problem-dot.solved-en:hover { background: linear-gradient(to right, #b9d3e8 0 50%, #f2f7fb 50% 100%); }
-
-    /* Russian only — bottom half filled. */
-    a.problem-dot.solved-ru,
-    a.problem-dot.solved-ru:link,
-    a.problem-dot.solved-ru:visited,
-    a.problem-dot.solved-ru:active {
-      background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%);
-      color: #1b6b41;
-      border: 1px solid #27ae60;
-      font-weight: var(--ss-fw-strong);
-    }
-    a.problem-dot.solved-ru:hover { background: linear-gradient(to bottom, #f3faf6 0 50%, #b6e1c8 50% 100%); }
-
-    /* Unsolved — hollow, dashed. Nothing filled, so it reads as absent at a glance. */
-    a.problem-dot.unsolved,
-    a.problem-dot.unsolved:link,
-    a.problem-dot.unsolved:visited,
-    a.problem-dot.unsolved:active {
-      background: #ffffff;
-      color: #8c959f;
-      border: 1px dashed #c6ccd2;
-    }
-    a.problem-dot.unsolved:hover {
-      background: #f8f9fa;
-      border-color: #8c959f;
-      color: #6c757d;
-    }
+    /* The fill is the difficulty (design-system.css, body.grid-heat .heat-N); here only what
+       is not colour: a link, a hover, and the dashed outline of a problem with no solution. */
+    .problem-dot { border: 1px solid rgba(26, 26, 46, 0.18); font-weight: var(--ss-fw-strong); }
+    a.problem-dot:hover { opacity: 0.8; }
+    .problem-dot.unsolved { border: 1px dashed rgba(26, 26, 46, 0.45); }
 
     /* Overall progress bar */
     .overall-progress {
@@ -2099,9 +2021,6 @@
         container.appendChild(frag);
         container.dataset.filled = '1';
       }
-
-      // The switch itself is wired by /js/grid-mode.js, shared with the section grid on
-      // every solution page so the two can never disagree.
 
       function setChapterOpen(card, open) {
         const panel = document.getElementById(card.id + '-panel');

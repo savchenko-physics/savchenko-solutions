@@ -9,7 +9,8 @@
   ssStyles (all optional):
     bootstrap   false only for pages whose own .card/.btn would collide with Bootstrap 5
     math        true on pages with server-rendered formulas → /css/mathjax.css (content-versioned)
-                and js/math-select.js (a selected formula is painted as selected text is)
+                and js/math-select.js (a selected formula is painted as selected text is) and
+                js/problem-peek.js (a problem's statement above the cursor on a link to it)
     prose       true when SS Text is in the first screen → preload its latin (+cyrillic) subsets
     icons       'fa6' | 'fa6-subset' | 'fa4' | 'bi', or an array of them. 'fa6-subset' is the
                 twenty solid glyphs the solution page and the header use (3 KB of font against
@@ -56,4 +57,6 @@
 <link rel="stylesheet" href="/css/mathjax.css?v=<%= (typeof mathCssVersion !== 'undefined' && mathCssVersion) ? mathCssVersion : '1' %>">
 <%# Paints a formula that is inside the selection; the SVG is not highlighted by itself. %>
 <script src="<%= _asset('/js/math-select.js') %>" defer></script>
+<%# A problem's statement above the cursor on a link to it; the statement is maths, hence here. %>
+<script src="<%= _asset('/js/problem-peek.js') %>" defer></script>
 <% } %>

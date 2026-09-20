@@ -340,9 +340,6 @@
         }
         .sg-leg { display: flex; align-items: center; gap: var(--ss-space-1); }
         .sg-sw { display: inline-block; width: 12px; height: 11px; border-radius: var(--ss-radius-sm); flex: 0 0 auto; }
-        .sg-sw-both { background: #7d3c98; border: 1px solid #7d3c98; }
-        .sg-sw-en   { background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%); border: 1px solid #2471a3; }
-        .sg-sw-ru   { background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%); border: 1px solid #27ae60; }
         .sg-sw-un   { background: #ffffff; border: 1px dashed #c6ccd2; }
 
         .problem-grid-item {
@@ -352,12 +349,10 @@
             align-items: center;
             justify-content: center;
             font-size: var(--ss-fs-12);
-            font-weight: var(--ss-fw-regular);
             border-radius: var(--ss-radius-sm);
             text-decoration: none;
             transition: opacity 0.15s;
         }
-        .sg-heat-switch { margin-top: var(--ss-space-2); }
         .sg-heat-legend { align-items: center; gap: var(--ss-space-2); }
 
         .problem-grid-item:hover {
@@ -365,49 +360,11 @@
             text-decoration: none;
         }
 
-        /* Shape-coded to match the homepage grid: solid = both languages, left-half =
-           English only, bottom-half = Russian only, hollow dashed = unsolved. Purple,
-           blue and green are the three hues red-green colour deficiency compresses, and
-           this audience is mostly male teenagers — roughly one in twelve could not read
-           the old colour-only version at all. */
-        a.problem-grid-item--solved-both,
-        a.problem-grid-item--solved-both:link,
-        a.problem-grid-item--solved-both:visited,
-        a.problem-grid-item--solved-both:active {
-            background: #7d3c98;
-            color: #ffffff;
-            border: 1px solid #7d3c98;
-        }
-        a.problem-grid-item--solved-both:hover { opacity: 0.8; }
-        a.problem-grid-item--solved-en,
-        a.problem-grid-item--solved-en:link,
-        a.problem-grid-item--solved-en:visited,
-        a.problem-grid-item--solved-en:active {
-            background: linear-gradient(to right, #cfe0ee 0 50%, #ffffff 50% 100%);
-            color: #17466b;
-            border: 1px solid #2471a3;
-            font-weight: var(--ss-fw-strong);
-        }
-        a.problem-grid-item--solved-en:hover { background: linear-gradient(to right, #b9d3e8 0 50%, #f2f7fb 50% 100%); opacity: 1; }
-        a.problem-grid-item--solved-ru,
-        a.problem-grid-item--solved-ru:link,
-        a.problem-grid-item--solved-ru:visited,
-        a.problem-grid-item--solved-ru:active {
-            background: linear-gradient(to bottom, #ffffff 0 50%, #cdebd9 50% 100%);
-            color: #1b6b41;
-            border: 1px solid #27ae60;
-            font-weight: var(--ss-fw-strong);
-        }
-        a.problem-grid-item--solved-ru:hover { background: linear-gradient(to bottom, #f3faf6 0 50%, #b6e1c8 50% 100%); opacity: 1; }
-        a.problem-grid-item--unsolved,
-        a.problem-grid-item--unsolved:link,
-        a.problem-grid-item--unsolved:visited,
-        a.problem-grid-item--unsolved:hover,
-        a.problem-grid-item--unsolved:active {
-            background: #ffffff;
-            color: #8c959f;
-            border: 1px dashed #c6ccd2;
-        }
+        /* The fill is the difficulty (design-system.css, body.grid-heat .heat-N); here only what
+           is not colour: a link, a hover, and the dashed outline of a problem with no solution. */
+        .problem-grid-item { border: 1px solid rgba(26, 26, 46, 0.18); font-weight: var(--ss-fw-strong); }
+        a.problem-grid-item:hover { opacity: 0.8; }
+        .problem-grid-item--unsolved { border: 1px dashed rgba(26, 26, 46, 0.45); }
         .problem-grid-item--current {
             background: #1a5276;
             color: #ffffff;
@@ -1280,7 +1237,7 @@
     <script src="/js/analytics.js"></script>
 </head>
 
-<body>
+<body class="grid-heat">
     <%- include('default/main_site_header', { showViewsButton: true, hidePracticumStrip: true, pageHasOwnH1: true }) %>
 
     <!-- Mobile Navigation -->
@@ -1688,24 +1645,15 @@
                         <% } %>
                     <% }); %>
                 </div>
-                <div class="sg-legend"<% if (sectionGrid.hasDifficulty) { %> data-grid-mode-when="progress"<% } %>>
-                    <span class="sg-leg"><span class="sg-sw sg-sw-both"></span><%= lang === 'ru' ? 'Оба' : 'Both' %></span>
-                    <span class="sg-leg"><span class="sg-sw sg-sw-en"></span>EN</span>
-                    <span class="sg-leg"><span class="sg-sw sg-sw-ru"></span>RU</span>
-                    <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет' : 'None' %></span>
-                </div>
                 <% if (sectionGrid.hasDifficulty) { %>
-                <div class="sg-legend sg-heat-legend" id="sgHeatLegend" data-grid-mode-when="difficulty" hidden>
+                <%# The difficulty scale the dots are coloured by; dashed = unsolved, heavy border = ∗. %>
+                <div class="sg-legend sg-heat-legend" id="sgHeatLegend">
                     <span class="sg-leg"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
                     <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
                     <span class="sg-leg"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+                    <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет решения' : 'Unsolved' %></span>
                     <a href="/<%= lang %>/problems/methodology" class="sg-heat-methodology-link"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
                 </div>
-                <label class="ss-switch sg-heat-switch" for="sgHeatToggle">
-                    <input type="checkbox" id="sgHeatToggle" role="switch" data-grid-mode-toggle />
-                    <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
-                    <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
-                </label>
                 <% } %>
             </div>
             <% if (typeof relatedProblems !== 'undefined' && relatedProblems && relatedProblems.length > 0) { %>
@@ -3024,7 +2972,6 @@
            are still pending. The route itself is left in place so any cached page still
            works, but nothing on the site calls it any more. */
     </script>
-    <script src="<%= asset('/js/grid-mode.js') %>" defer></script>
     <script src="<%= asset('/js/difficulty-vote.js') %>" defer></script>
     <% if (typeof figure !== 'undefined' && figure) { %>
     <script src="<%= asset(figure.script) %>" defer></script>

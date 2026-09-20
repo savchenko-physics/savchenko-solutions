@@ -2637,6 +2637,28 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .online-dot--lg { width: 12px; height: 12px; border-width: 2px; }
 .online-dot--xl { width: 18px; height: 18px; border-width: 3px; }
 
+/* ── A problem's statement above the cursor on a link to it (js/problem-peek.js) ─────────
+   Placed by the script (position, width); the card is the site's surface with its one shadow,
+   the statement set as the book sets it. A long statement scrolls inside the card. */
+.ss-peek {
+    position: fixed; z-index: 1045; box-sizing: border-box;
+    background: var(--ss-surface); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg);
+    box-shadow: var(--ss-shadow); padding: var(--ss-space-2) var(--ss-space-4) var(--ss-space-3);
+    pointer-events: auto;
+}
+.ss-peek[hidden] { display: none; }
+.ss-peek-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: var(--ss-space-3);
+    font-family: var(--ss-font-ui); font-size: var(--ss-fs-13); margin-bottom: var(--ss-space-1);
+}
+.ss-peek-num { font-weight: var(--ss-fw-strong); color: var(--ss-navy); }
+.ss-peek-open { color: var(--ss-link); text-decoration: none; white-space: nowrap; }
+.ss-peek-open:hover { text-decoration: underline; }
+.ss-peek-body { max-height: 320px; overflow-y: auto; overflow-x: hidden; overflow-wrap: anywhere; }
+.ss-peek-body p:last-child { margin-bottom: 0; }
+.ss-peek-body figure { margin: var(--ss-space-2) 0 0; text-align: center; }
+.ss-peek-body img { max-width: 100%; height: auto; }
+
 /* ── Problem statement preview ────────────────────────────────────────────────
    Shown under the problem-number input on /upload and in the create-problem
    popup, so people can see the problem they are being asked to solve. Maths
@@ -2822,41 +2844,41 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 }
 
 /* ── Difficulty heat ramp ─────────────────────────────────────────────────────
-   Shared by the homepage chapter grid and the section grid on every solution
-   page, so the two read as one scale. Defined once here rather than inline in
-   each template.
+   Shared by the homepage chapter grid, the section grid on every solution page and
+   the chips of /unsolved, so the three read as one scale. Defined once here rather
+   than inline in each template.
 
    ColorBrewer YlOrRd: its lightness falls monotonically across all nine steps,
    so it survives greyscale and red-green colour deficiency — which matters for
-   an audience that is mostly teenage boys, roughly one in twelve of whom cannot
-   separate the purple/blue/green the solved-status colours use.
+   an audience that is mostly teenage boys.
 
-   `!important` is deliberate, and is the honest way to say what this is: a mode
-   switch. When difficulty is on, difficulty owns the fill — it has to outrank
-   every state variant of the progress colours on both grids, and those are
-   written out as :link, :visited, :active and :hover. `a.problem-dot.solved-both:link`
-   scores (0,3,1), which ties any selector short enough to be readable here and
-   then wins on document order, because the homepage's rules sit in an inline
-   <style> that loads after this file. Chasing that with ever-longer selectors is
-   an arms race; stating the precedence once is clearer and cannot be lost by a
-   later :hover rule.
+   Since 2026-09-19 difficulty is the grids' only colouring (every grid page's body
+   carries grid-heat; the language colouring and the switch between the two are gone,
+   the owner's decision). What is not colour stays in the page: a dashed outline for a
+   problem with no solution, a heavier border for Savchenko's own ∗, bold numerals —
+   navy on the yellow-to-orange steps was hard to read at 12 px regular, and white does
+   not reach 4.5:1 on them (2.3:1 and 3.4:1, tests/design-tokens.test.js), so the weight
+   carries it.
 
-   Colour takes the fill only; the borders those rules set are left alone, so
-   language status still reads while difficulty is showing. */
-body.grid-heat .heat-1 { background: var(--ss-heat-1) !important; color: var(--ss-heat-1-ink) !important; }
-body.grid-heat .heat-2 { background: var(--ss-heat-2) !important; color: var(--ss-heat-2-ink) !important; }
-body.grid-heat .heat-3 { background: var(--ss-heat-3) !important; color: var(--ss-heat-3-ink) !important; }
-body.grid-heat .heat-4 { background: var(--ss-heat-4) !important; color: var(--ss-heat-4-ink) !important; }
-body.grid-heat .heat-5 { background: var(--ss-heat-5) !important; color: var(--ss-heat-5-ink) !important; }
-body.grid-heat .heat-6 { background: var(--ss-heat-6) !important; color: var(--ss-heat-6-ink) !important; }
-body.grid-heat .heat-7 { background: var(--ss-heat-7) !important; color: var(--ss-heat-7-ink) !important; }
-body.grid-heat .heat-8 { background: var(--ss-heat-8) !important; color: var(--ss-heat-8-ink) !important; }
-body.grid-heat .heat-9 { background: var(--ss-heat-9) !important; color: var(--ss-heat-9-ink) !important; }
+   The dots are links, and the site's own a:link rule (0,2,1) sets their colour; the
+   selectors here are written with the `a` so they outrank it (0,2,2) without !important,
+   and a second, plain form covers the one dot that is a span. */
+body.grid-heat a.heat-1, body.grid-heat .heat-1 { background: var(--ss-heat-1); color: var(--ss-heat-1-ink); }
+body.grid-heat a.heat-2, body.grid-heat .heat-2 { background: var(--ss-heat-2); color: var(--ss-heat-2-ink); }
+body.grid-heat a.heat-3, body.grid-heat .heat-3 { background: var(--ss-heat-3); color: var(--ss-heat-3-ink); }
+body.grid-heat a.heat-4, body.grid-heat .heat-4 { background: var(--ss-heat-4); color: var(--ss-heat-4-ink); }
+body.grid-heat a.heat-5, body.grid-heat .heat-5 { background: var(--ss-heat-5); color: var(--ss-heat-5-ink); }
+body.grid-heat a.heat-6, body.grid-heat .heat-6 { background: var(--ss-heat-6); color: var(--ss-heat-6-ink); }
+body.grid-heat a.heat-7, body.grid-heat .heat-7 { background: var(--ss-heat-7); color: var(--ss-heat-7-ink); }
+body.grid-heat a.heat-8, body.grid-heat .heat-8 { background: var(--ss-heat-8); color: var(--ss-heat-8-ink); }
+body.grid-heat a.heat-9, body.grid-heat .heat-9 { background: var(--ss-heat-9); color: var(--ss-heat-9-ink); }
 /* Not yet scored — shown as absent rather than as easy. */
-body.grid-heat .heat-none { background: var(--ss-heat-none) !important; color: var(--ss-heat-none-ink) !important; }
+body.grid-heat a.heat-none, body.grid-heat .heat-none { background: var(--ss-heat-none); color: var(--ss-heat-none-ink); }
 /* Savchenko's own ∗: a heavier dark border rather than a hue, so his judgement
    and the model's stay separable and the marker survives greyscale. */
-body.grid-heat .heat-starred { border: 2px solid #1a1a2e !important; font-weight: var(--ss-fw-strong); }
+body.grid-heat a.heat-starred, body.grid-heat .heat-starred { border: 2px solid var(--ss-navy); }
+/* The problem being read keeps its own mark in the section grid. */
+body.grid-heat .problem-grid-item--current { background: var(--ss-link); color: var(--ss-on-navy); border-color: var(--ss-link); }
 
 /* Legend swatches: always coloured, regardless of whether heat mode is on. */
 .heat-chip { width: 14px; height: 12px; border-radius: var(--ss-radius-sm); display: inline-block; }

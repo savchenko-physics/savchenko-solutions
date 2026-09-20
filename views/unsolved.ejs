@@ -15,7 +15,8 @@
   <link rel="apple-touch-icon" href="/img/logo.png" />
   <title><%= titleText(__('unsolved.title')) %></title>
 
-  <%- include('default/site_styles', { ssStyles: { icons: 'bi' } }) %>
+  <%# math: the chips preview their statement on hover (js/problem-peek.js). %>
+  <%- include('default/site_styles', { ssStyles: { math: true, icons: 'bi' } }) %>
   <% var av = (typeof asset === 'function') ? asset : function (p) { return p; }; %>
 
   <style>
@@ -304,9 +305,8 @@
     }
 
     /* Difficulty heatmap — the same YlOrRd scale as the homepage. The heat-N /
-       heat-none / heat-starred colour rules live in design-system.css and only bite
-       under body.grid-heat; grid-mode.js drives the toggle and shares its on/off choice
-       with the homepage via localStorage, so the reader's setting follows them here. */
+       heat-none / heat-starred colour rules live in design-system.css under
+       body.grid-heat, which every grid page's body carries (the only colouring since 2026-09-19). */
     .unsolved-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -331,7 +331,6 @@
       border-radius: var(--ss-radius-sm);
       flex: 0 0 auto;
     }
-    .unsolved-heat-toggle { margin-left: auto; }
     body.grid-heat .problem-chip {
       border-color: transparent;
       font-weight: var(--ss-fw-strong);
@@ -357,7 +356,7 @@
   </style>
   <script src="/js/analytics.js"></script>
 </head>
-<body>
+<body class="grid-heat">
   <%- include('default/main_site_header') %>
 
   <div class="unsolved-page">
@@ -383,7 +382,7 @@
 
     <% if (typeof hasDifficulty !== 'undefined' && hasDifficulty) { %>
     <div class="unsolved-toolbar">
-      <div class="grid-legend heat-legend" data-grid-mode-when="difficulty" hidden>
+      <div class="grid-legend heat-legend">
         <span class="legend-item"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
         <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
         <span class="legend-item"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
@@ -392,11 +391,6 @@
           <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
         </span>
       </div>
-      <label class="ss-switch unsolved-heat-toggle" for="heatmapToggle">
-        <input type="checkbox" id="heatmapToggle" role="switch" data-grid-mode-toggle />
-        <span class="ss-switch-track" aria-hidden="true"><span class="ss-switch-knob"></span></span>
-        <span class="ss-switch-label"><%= lang === 'ru' ? 'Сложность' : 'Difficulty' %></span>
-      </label>
     </div>
     <% } %>
 
@@ -484,7 +478,6 @@
   <%- include('default/modern_footer') %>
 
   <script src="/js/vendor/bootstrap.bundle.min.js"></script>
-  <script src="<%= av('/js/grid-mode.js') %>" defer></script>
   <script>
     document.querySelectorAll('button.chapter-header').forEach(function(btn) {
       btn.addEventListener('click', function() {
