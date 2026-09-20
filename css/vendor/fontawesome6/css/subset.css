@@ -1,0 +1,25 @@
+/* Font Awesome 6 Free (solid), only the glyphs the solution page and the header use. */
+/* Built by scripts/build-fa-subset.py from all.min.css and fa-solid-900.woff2; do not edit. */
+@font-face{font-family:"Font Awesome 6 Free";font-style:normal;font-weight:900;font-display:block;src:url(../webfonts/fa-solid-900-subset.woff2) format("woff2")}
+.fa,.fa-solid,.fas{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;display:var(--fa-display,inline-block);font-style:normal;font-variant:normal;line-height:1;text-rendering:auto;font-family:"Font Awesome 6 Free";font-weight:900}
+.fa-fw{text-align:center;width:1.25em}
+.fa-star:before{content:"\f005"}
+.fa-user:before{content:"\f007"}
+.fa-cog:before,.fa-gear:before{content:"\f013"}
+.fa-home:before,.fa-home-alt:before,.fa-home-lg-alt:before,.fa-house:before{content:"\f015"}
+.fa-bold:before{content:"\f032"}
+.fa-italic:before{content:"\f033"}
+.fa-edit:before,.fa-pen-to-square:before{content:"\f044"}
+.fa-eye:before{content:"\f06e"}
+.fa-chain:before,.fa-link:before{content:"\f0c1"}
+.fa-list-dots:before,.fa-list-ul:before{content:"\f0ca"}
+.fa-list-1-2:before,.fa-list-numeric:before,.fa-list-ol:before{content:"\f0cb"}
+.fa-strikethrough:before{content:"\f0cc"}
+.fa-quote-left:before,.fa-quote-left-alt:before{content:"\f10d"}
+.fa-code:before{content:"\f121"}
+.fa-thumbs-up:before{content:"\f164"}
+.fa-thumbs-down:before{content:"\f165"}
+.fa-clock-rotate-left:before,.fa-history:before{content:"\f1da"}
+.fa-right-to-bracket:before,.fa-sign-in-alt:before{content:"\f2f6"}
+.fa-square-root-alt:before,.fa-square-root-variable:before{content:"\f698"}
+.fa-blog:before{content:"\f781"}

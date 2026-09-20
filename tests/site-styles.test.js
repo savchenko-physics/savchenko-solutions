@@ -228,3 +228,19 @@ test('site_styles renders the documented links in cascade order', () => {
     assert.match(bare, /\/e\.woff2/);
     assert.match(bare, /\/css\/bundle\.css\?v=abc/);
 });
+
+// The solution page's icon subset (scripts/build-fa-subset.py) must cover every icon the
+// page and the header write, or an icon renders as an empty box after the next added one.
+test('the Font Awesome subset covers every icon the solution page and the header use', () => {
+    const subset = fs.readFileSync(path.join(ROOT, 'css/vendor/fontawesome6/css/subset.css'), 'utf8');
+    const have = new Set([...subset.matchAll(/\.fa-([a-z0-9-]+):before/g)].map((m) => m[1]));
+    const modifiers = /^(fw|lg|xs|sm|xl|\dx|spin|pulse|solid|regular|brands|subset)$/; // fa6-subset is the option's own name
+    for (const f of ['views/solution_post.ejs', 'views/default/main_site_header.ejs', 'views/default/modern_footer.ejs']) {
+        const used = new Set([...fs.readFileSync(path.join(ROOT, f), 'utf8').matchAll(/\bfa-([a-z0-9][a-z0-9-]*)/g)].map((m) => m[1]));
+        for (const icon of used) {
+            if (modifiers.test(icon)) continue;
+            assert.ok(have.has(icon), `${f} uses fa-${icon}, which the subset lacks: run scripts/build-fa-subset.py`);
+        }
+    }
+    assert.ok(fs.statSync(path.join(ROOT, 'css/vendor/fontawesome6/webfonts/fa-solid-900-subset.woff2')).size < 20000, 'the subset font is small');
+});

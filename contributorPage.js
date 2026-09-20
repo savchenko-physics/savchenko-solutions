@@ -17,17 +17,9 @@
 //
 // If a difficulty rating is ever added, "hardest solved" belongs here and should replace
 // the reach figure.
-const { Pool } = require('pg');
 const i18n = require('i18n');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 const CHAPTER_NAMES = [
     'Kinematics', 'Dynamics', 'Oscillations and Waves', 'Fluid Mechanics',

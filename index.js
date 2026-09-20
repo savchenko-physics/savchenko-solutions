@@ -23,7 +23,6 @@ const { getLanguageData, getSolvedSet } = require("./parents"); // generating co
 
 const bcrypt = require("bcrypt");
 const session = require("express-session"); // Import express-session for session management
-const { Pool } = require("pg");
 require("dotenv").config();
 const i18n = require('i18n');
 const connectPgSimple = require('connect-pg-simple'); // Add this import
@@ -113,15 +112,10 @@ if (!process.env.SESSION_SECRET) {
     throw new Error('SESSION_SECRET environment variable is required. The server will not start without it.');
 }
 
-// PostgreSQL setup (move this BEFORE session configuration)
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
+// The app's one connection pool (lib/db.js), shared with every module and the session store.
+const pool = require('./lib/db');
+const { SwrCache } = require('./lib/swr');
+const { preloadApis } = require('./lib/inProcess');
 
 // botgate and tracker need the shared pool for their cached IP lists and buffered writes.
 initBotgate(pool);
@@ -285,7 +279,12 @@ app.use("/css/vendor/fonts/h", express.static(path.join(__dirname, "css", "vendo
     immutable: true, maxAge: '365d', index: false,
 }));
 app.use("/css/vendor/fonts/h", (req, res) => res.sendStatus(404));
-app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d' }));
+// A stylesheet or script asked for with its content hash (asset(), `?v=`) can be kept for a
+// year: the URL changes with the file. Without one, a week, as before.
+const versionedAssetHeaders = (res) => {
+    if (res.req && res.req.query && res.req.query.v) res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+};
+app.use("/css", express.static(path.join(__dirname, "css"), { maxAge: '7d', setHeaders: versionedAssetHeaders }));
 app.use("/en", express.static(path.join(__dirname, "en")));
 app.use("/theory", express.static(path.join(__dirname, "theory")));
 app.use("/ru/theory", express.static(path.join(__dirname, "ru", "theory")));
@@ -332,7 +331,7 @@ app.get('/js/analytics.js', (req, res) => {
     return res.sendFile(path.join(__dirname, 'js', 'analytics.js'));
 });
 
-app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d' }));
+app.use("/js", express.static(path.join(__dirname, "js"), { maxAge: '7d', setHeaders: versionedAssetHeaders }));
 // Self-hosted video. express.static answers Range requests, which is what a <video>
 // element needs in order to seek, so a file dropped in here plays on the site with no
 // third-party player involved. Empty until someone puts a file in it — see
@@ -533,7 +532,8 @@ app.use((req, res, next) => {
 // The same show_online_status preference governs all three. It already covers "last seen"
 // as well as the online dot (see user_settings.ejs), so this exposes nothing that opting in
 // did not already cover.
-app.get("/api/online-users", async (req, res) => {
+app.locals.apiHandlers = app.locals.apiHandlers || {};
+app.locals.apiHandlers['/api/online-users'] = async function onlineUsers(req, res) {
     try {
         const limit = Math.min(60, Math.max(1, parseInt(req.query.limit, 10) || 40));
         const visible = `COALESCE(p.show_online_status, true) = true`;
@@ -584,7 +584,8 @@ app.get("/api/online-users", async (req, res) => {
         console.error("Failed to load online users:", error.message);
         res.status(500).json({ error: "Failed to load online users" });
     }
-});
+};
+app.get("/api/online-users", app.locals.apiHandlers['/api/online-users']);
 
 
 // Authentication middleware
@@ -2653,12 +2654,14 @@ async function getProofNumbers() {
 // pay on every single request. None of it changes by the second, so it is held briefly
 // and shared. Sixty seconds keeps "Последние изменения" honest while taking the
 // queries off the hot path for essentially everyone.
+// Stale-while-revalidate (lib/swr.js): past the minute the held set is still answered at
+// once and refreshed behind the visitor, so the first visitor of a quiet minute no longer
+// pays those queries either (770 ms cold against 89 ms warm, 2026-09-19).
 const HOME_WIDGET_TTL_MS = 60 * 1000;
-const homeWidgetCache = new Map();   // lang -> { at, value }
+const homeWidgetCache = new SwrCache({ ttlMs: HOME_WIDGET_TTL_MS, name: 'home widgets' });
 
 async function getHomeWidgets(lang) {
-    const hit = homeWidgetCache.get(lang);
-    const widgets = (hit && Date.now() - hit.at < HOME_WIDGET_TTL_MS) ? hit.value : await loadHomeWidgets(lang);
+    const widgets = await homeWidgetCache.get(lang, () => loadHomeWidgets(lang));
     return withPeopleNow(widgets);
 }
 
@@ -2695,12 +2698,10 @@ async function loadHomeWidgets(lang) {
         .catch(() => []);
     const [proofNumbers, difficultyGrid] = await Promise.all([getProofNumbers(), getDifficultyGrid()]);
 
-    const value = {
+    return {
         recentContributions, topAuthors, solutionProgress, challengeWidget,
         recentContributors, mostWanted, proofNumbers, difficultyGrid,
     };
-    homeWidgetCache.set(lang, { at: Date.now(), value });
-    return value;
 }
 
 async function getRecentContributions(limit) {
@@ -3060,11 +3061,27 @@ async function handleContributorsRanking(req, res) {
         } catch (err) {
             console.error("contributors summary for the description:", err.message);
         }
+        // The five answers the page's script asks for on load, inside the HTML (lib/inProcess.js):
+        // they were five round trips after the page arrived. The URLs are exactly the ones the
+        // script builds (contributors_ranking.ejs fetchJSON), which reads them from
+        // window.__PRELOADED__ first.
+        const h = app.locals.apiHandlers || {};
+        const country = typeof req.query.country === 'string' ? req.query.country : '';
+        const leaderboardQuery = { page: '1', limit: '25', sortBy: 'score', sortOrder: 'desc' };
+        if (country) leaderboardQuery.country = country;
+        const preloaded = await preloadApis(req, {
+            '/api/contributors/stats': { handler: h['/api/contributors/stats'], query: {} },
+            [`/api/contributors/leaderboard?${new URLSearchParams(leaderboardQuery)}`]: { handler: h['/api/contributors/leaderboard'], query: leaderboardQuery },
+            '/api/contributors/heatmap': { handler: h['/api/contributors/heatmap'], query: {} },
+            '/api/contributors/map': { handler: h['/api/contributors/map'], query: {} },
+            '/api/online-users?limit=24': { handler: h['/api/online-users'], query: { limit: '24' } },
+        });
         res.render("contributors_ranking", {
             __: i18n.__,
             lang,
             metaDescription,
             metaTitle,
+            preloaded,
             username: req.session.username || null,
             userId: req.session.userId || null,
         });
@@ -3691,18 +3708,8 @@ app.get("/api/contributors/:problemRef", async (req, res) => {
     }
 });
 
-// Update the sandbox server import to pass the session pool
-const sandboxPool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
-
-// Pass the pool to the sandbox app
-require('./sandbox/sandbox-app')(sandboxPool);
+// The sandbox app runs in this process and shares the pool.
+require('./sandbox/sandbox-app')(pool);
 
 // Build search index before starting server
 searchIndex.buildIndex();
@@ -3747,6 +3754,20 @@ app.use((err, req, res, next) => {
 const HOST = process.env.BIND_HOST || '127.0.0.1';
 const server = app.listen(PORT, HOST, () => {
     console.log(`Main server listening on ${HOST}:${PORT}`);
+    // The caches every visitor reads (lib/swr.js) are filled once here, a few seconds after
+    // the port opens, so the first visitor after a restart is not the one who fills them:
+    // the homepage's widgets in both languages (the leaderboard's summary with them), the
+    // problem database's two datasets. Failures are logged; the caches then fill on demand.
+    setTimeout(() => {
+        Promise.allSettled([
+            getHomeWidgets('ru'), getHomeWidgets('en'),
+            problemsRouter.warm(),
+        ]).then((results) => {
+            const failed = results.filter((r) => r.status === 'rejected');
+            if (failed.length) console.error('warm-up:', failed.map((r) => r.reason && r.reason.message).join('; '));
+            else console.log('warm-up: caches filled');
+        });
+    }, 3000);
     // Watches posts/ for problems of «Последняя задача» that get solved (lastProblem.js).
     startLastProblem();
     // Sundays at 06:00 UTC: one summary email instead of one email per notification (digest.js).

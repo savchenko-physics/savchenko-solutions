@@ -2070,52 +2070,6 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .online-dot--lg { width: 12px; height: 12px; border-width: 2px; }
 .online-dot--xl { width: 18px; height: 18px; border-width: 3px; }
 
-/* ── Contest quality-judging widget (solution page, organizers only) ──
-   Blind dual-judge evaluation card. Academic look: flat, thin borders,
-   design tokens only. Shares the .cj-* namespace with the widget markup. */
-.cj-widget {
-  border: 1px solid var(--ss-border-card);
-  border-radius: var(--ss-radius-lg);
-  background: var(--ss-card-bg);
-  padding: var(--ss-space-4) var(--ss-space-5);
-  margin: var(--ss-space-7) 0;
-}
-.cj-widget.cj-both { border-color: var(--ss-success); }
-.cj-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ss-space-4); }
-.cj-title { font-family: var(--ss-font-ui); font-size: var(--ss-fs-16); font-weight: var(--ss-fw-strong); color: var(--ss-navy); margin: 0; }
-.cj-sub { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: 2px 0 0; }
-.cj-combined { text-align: center; min-width: 84px; }
-.cj-combined-value { display: block; font-family: var(--ss-font-ui); font-size: var(--ss-fs-24); font-weight: var(--ss-fw-strong); line-height: 1; color: var(--ss-text-secondary); }
-.cj-widget.cj-both .cj-combined-value { color: var(--ss-navy); }
-.cj-combined-label { display: block; font-size: var(--ss-fs-12); text-transform: uppercase; letter-spacing: 0.4px; color: var(--ss-text-secondary); margin-top: var(--ss-space-1); }
-
-.cj-meta { display: flex; flex-wrap: wrap; gap: var(--ss-space-2) var(--ss-space-4); align-items: center; font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: var(--ss-space-3) 0 var(--ss-space-4); }
-.cj-meta a { color: var(--ss-link); text-decoration: none; }
-.cj-meta strong { color: var(--ss-body-text); }
-.cj-table-link { margin-left: auto; font-size: var(--ss-fs-13); color: var(--ss-link); text-decoration: none; }
-.cj-table-link:hover { color: var(--ss-link-hover); }
-
-.cj-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ss-space-2) var(--ss-space-5); }
-@media (max-width: 560px) { .cj-criteria { grid-template-columns: 1fr; } }
-.cj-crit { display: flex; align-items: center; justify-content: space-between; gap: var(--ss-space-2); }
-.cj-crit-label { font-size: var(--ss-fs-13); color: var(--ss-body-text); }
-.cj-crit-input { width: 72px; height: 38px; border: 1px solid var(--ss-border-card); border-radius: var(--ss-radius); padding: 0 var(--ss-space-2); font-size: var(--ss-fs-16); text-align: center; color: var(--ss-body-text); background: var(--ss-surface); }
-.cj-crit-input:focus { outline: none; border-color: var(--ss-link); }
-
-.cj-total-row { display: flex; align-items: center; justify-content: flex-end; gap: var(--ss-space-2); border-top: 1px dashed var(--ss-border-card); margin-top: var(--ss-space-3); padding-top: var(--ss-space-2); font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
-.cj-total-value { font-family: var(--ss-font-ui); font-size: var(--ss-fs-18); font-weight: var(--ss-fw-strong); color: var(--ss-navy); }
-
-.cj-comment-label { display: block; font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin: var(--ss-space-2) 0 var(--ss-space-1); }
-.cj-comment { width: 100%; min-height: 84px; resize: vertical; border: 1px solid var(--ss-border-card); border-radius: var(--ss-radius); padding: var(--ss-space-3) var(--ss-space-3); font-size: var(--ss-fs-14); line-height: 1.5; color: var(--ss-body-text); font-family: inherit; background: var(--ss-surface); }
-.cj-comment:focus { outline: none; border-color: var(--ss-link); }
-
-.cj-actions { display: flex; align-items: center; gap: var(--ss-space-3); margin-top: var(--ss-space-3); }
-.cj-status { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-right: auto; }
-.cj-status.cj-status-ok { color: var(--ss-success-strong); }
-.cj-save-btn { background: var(--ss-primary-btn); color: var(--ss-on-navy); border: none; border-radius: var(--ss-radius); height: 40px; padding: 0 var(--ss-space-5); font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); cursor: pointer; }
-.cj-save-btn:hover { background: var(--ss-primary-btn-hover); }
-.cj-save-btn:disabled { opacity: 0.6; cursor: default; }
-
 /* ── Problem statement preview ────────────────────────────────────────────────
    Shown under the problem-number input on /upload and in the create-problem
    popup, so people can see the problem they are being asked to solve. Maths

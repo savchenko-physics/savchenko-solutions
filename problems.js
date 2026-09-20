@@ -2,7 +2,6 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const i18n = require('i18n');
-const { Pool } = require('pg');
 const { AXIS_META, axesByCategory } = require('./lib/difficultyAxes');
 const { AXIS_KEYS } = require('./difficultyRubric');
 const { readCSV, getSolvedSet } = require('./parents');
@@ -11,6 +10,7 @@ const { heatColor, heatTextColor } = require('./lib/heatColor');
 const { getStatements } = require('./lib/statementRender');
 const rateLimit = require('express-rate-limit');
 const { searchProblems } = require('./lib/problemSearch');
+const { SwrCache } = require('./lib/swr');
 
 // mergeParams so :lang from the mount path ('/:lang(en|ru)/problems') reaches
 // handlers here — same reasoning as recommendations.js's router.
@@ -21,11 +21,7 @@ const router = express.Router({ mergeParams: true });
 // ever hold a stale copy across a deploy.
 router.use((req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
-const pool = new Pool({
-    user: process.env.PG_USER, host: process.env.PG_HOST, database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD, port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 const getLang = (req) => (req.params.lang === 'ru' ? 'ru' : (req.session?.lang || 'en'));
 
@@ -112,15 +108,17 @@ const PAGE_SIZE = 20;
 // Cached per language: statement_tex and chapter/section titles are language-specific
 // (problem_statements has one row per problem per lang), so a single shared cache would
 // leak English statement text onto the Russian page — confirmed live on /ru/problems.
-const _finderCache = { en: { at: 0, value: undefined }, ru: { at: 0, value: undefined } };
+// Stale-while-revalidate (lib/swr.js): the ten minutes are how old the set may be before it
+// is rebuilt behind a reader, never how long a reader waits.
 const FINDER_CACHE_MS = 10 * 60 * 1000;
+const finderCache = new SwrCache({ ttlMs: FINDER_CACHE_MS, name: 'finder dataset' });
 
 async function getProblemFinderDataset(lang) {
     lang = lang === 'ru' ? 'ru' : 'en';
-    const slot = _finderCache[lang];
-    if (slot.value !== undefined && Date.now() - slot.at < FINDER_CACHE_MS) {
-        return slot.value;
-    }
+    return finderCache.get(lang, () => loadProblemFinderDataset(lang));
+}
+
+async function loadProblemFinderDataset(lang) {
     let value = null;
     try {
         const { rows } = await pool.query(
@@ -161,7 +159,6 @@ async function getProblemFinderDataset(lang) {
     } catch (err) {
         if (err.code !== '42P01') console.error('problem finder dataset:', err.message);
     }
-    _finderCache[lang] = { at: Date.now(), value };
     return value;
 }
 
@@ -461,3 +458,6 @@ module.exports = router;
 // Exported for tests: the URL a shared link carries must filter the same on the server as in the page.
 module.exports.applyFilters = applyFilters;
 module.exports.COL = COL;
+// For the warm-up at boot (index.js): the two datasets, so the first reader after a restart
+// does not build them.
+module.exports.warm = () => Promise.all(['en', 'ru'].map((lang) => getProblemFinderDataset(lang)));

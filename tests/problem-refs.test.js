@@ -32,9 +32,14 @@ test('what is not a problem of the book stays text: versions, decimals, numbers 
     }
 });
 
-test('tags, attributes, existing links and typeset formulas are never touched', () => {
-    const html = '<img alt="1.1.1" src="/img/1.1.1/a.svg"><a href="/x">1.1.1</a><svg viewBox="0 0 1.1.1"><text>1.1.1</text></svg>';
+test('tags, attributes, existing links, typeset formulas, scripts, titles and controls are never touched', () => {
+    const html = '<img alt="1.1.1" src="/img/1.1.1/a.svg"><a href="/x">1.1.1</a><svg viewBox="0 0 1.1.1"><text>1.1.1</text></svg>'
+        + '<mjx-container><svg></svg><span class="mjx-tex">$1.1.1$</span></mjx-container>'
+        + '<title>Problem 1.1.1</title><script type="application/ld+json">{"n":"1.1.1"}</script><style>.a{}</style>'
+        + '<textarea>1.1.1</textarea><pre>1.1.1</pre><code>1.1.1</code><select><option>1.1.1</option></select><button>1.1.1</button>';
     assert.equal(linkProblemRefs(html, 'ru'), html);
+    assert.equal(linkProblemRefs('<h1>Задача 1.1.2</h1><p>см. 1.1.1</p>', 'ru', { self: '1.1.2' }),
+        `<h1>Задача 1.1.2</h1><p>см. ${link('1.1.1')}</p>`, 'a whole page: the heading is its own number, the text links');
     assert.equal(linkProblemRefs('', 'ru'), '');
     assert.equal(linkProblemRefs(null, 'ru'), null);
 });

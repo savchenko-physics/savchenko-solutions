@@ -1,13 +1,5 @@
-const { Pool } = require('pg');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 // Notifications no longer send an email of their own. Every one of these used to mail the
 // moment it happened, which made three replies in a discussion three emails nine minutes apart

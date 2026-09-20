@@ -1,4 +1,6 @@
 const fs = require("fs");
+const { SwrCache } = require('./lib/swr');
+const { runHandler } = require('./lib/inProcess');
 const path = require("path");
 const { flagEmojiForCountryName, countryCodeForName } = require("./lib/countries");
 const { getPeopleNow } = require("./lib/presence");
@@ -13,39 +15,16 @@ const { getSolvedSet } = require("./parents");
 const CACHE_TTL_MS = 60 * 60 * 1000;
 // A user counts as "online" while their last_seen_at is within this window.
 const ONLINE_WINDOW_MS = 5 * 60 * 1000;
-const cache = new Map();
+// Stale-while-revalidate (lib/swr.js): past the hour the held payload is still answered at
+// once and refreshed behind the reader. The first view of the busiest profile after the
+// hourly expiry ran every query from scratch and took 6.5 s (the owner's own, 2026-09-19).
+// Concurrent misses share one load: the leaderboard's rows also feed the homepage's numbers,
+// so after a restart every early homepage request would otherwise start its own copy.
+const cache = new SwrCache({ ttlMs: CACHE_TTL_MS, name: 'contributors cache' });
 const geoCache = new Map();
 
-function getCached(key) {
-    const item = cache.get(key);
-    if (!item) return null;
-    if (Date.now() - item.createdAt > CACHE_TTL_MS) {
-        cache.delete(key);
-        return null;
-    }
-    return item.value;
-}
-
-// Concurrent misses share one load. The leaderboard's rows now also feed the homepage's
-// numbers, so after a restart every early homepage request would otherwise start its own
-// copy of the leaderboard query.
-const inflight = new Map();
-
 async function withCache(key, loader) {
-    const cached = getCached(key);
-    if (cached) return cached;
-    if (inflight.has(key)) return inflight.get(key);
-    const pending = (async () => {
-        try {
-            const value = await loader();
-            cache.set(key, { createdAt: Date.now(), value });
-            return value;
-        } finally {
-            inflight.delete(key);
-        }
-    })();
-    inflight.set(key, pending);
-    return pending;
+    return cache.get(key, loader);
 }
 
 // A cached person with the name and picture they have now (`now` is from getPeopleNow).
@@ -433,27 +412,19 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         app.get(`/api/user/:username/${name}`, handler);
     }
 
-    // Runs a handler with a stub response and hands back whatever it would have sent.
-    // Anything that errors or 404s resolves to null rather than taking the page down.
+    // Runs a handler with a stub response and hands back whatever it would have sent
+    // (lib/inProcess.js). Anything that errors or 404s resolves to null rather than taking
+    // the page down.
     function runUserEndpoint(name, req) {
-        const handler = userEndpoints[name];
-        if (!handler) return Promise.resolve(null);
-        return new Promise((resolve) => {
-            let settled = false;
-            const done = (value) => { if (!settled) { settled = true; resolve(value); } };
-            const res = {
-                statusCode: 200,
-                set() { return this; },
-                setHeader() { return this; },
-                status(code) { this.statusCode = code; return this; },
-                json(body) { done(this.statusCode >= 400 ? null : body); return this; },
-                send(body) { done(this.statusCode >= 400 ? null : body); return this; },
-            };
-            Promise.resolve()
-                .then(() => handler(req, res))
-                .then(() => done(null))
-                .catch(() => done(null));
-        });
+        return runHandler(userEndpoints[name], req);
+    }
+
+    // The contributors page's own endpoints, kept by path so the page can pre-answer them
+    // (index.js, /:lang/contributors) the way the profile does above.
+    app.locals.apiHandlers = app.locals.apiHandlers || {};
+    function defineApi(path, handler) {
+        app.locals.apiHandlers[path] = handler;
+        app.get(path, handler);
     }
 
     // Everything the profile page renders, gathered in one pass. Measured at 63 ms
@@ -520,7 +491,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
     }
     app.locals.loadContributorsSummary = contributorsSummary;
 
-    app.get("/api/contributors/stats", async (_req, res) => {
+    defineApi("/api/contributors/stats", async (_req, res) => {
         try {
             await hydrateCountriesHourly();
             const summary = await contributorsSummary();
@@ -538,7 +509,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/contributors/map", async (_req, res) => {
+    defineApi("/api/contributors/map", async (_req, res) => {
         try {
             await hydrateCountriesHourly();
             const summary = await contributorsSummary();
@@ -550,7 +521,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/contributors/heatmap", async (req, res) => {
+    defineApi("/api/contributors/heatmap", async (req, res) => {
         try {
             const rawYear = req.query.year;
             const parsedYear = rawYear !== undefined && rawYear !== "" ? parseInt(String(rawYear), 10) : NaN;
@@ -646,7 +617,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
         }
     });
 
-    app.get("/api/contributors/leaderboard", async (req, res) => {
+    defineApi("/api/contributors/leaderboard", async (req, res) => {
         try {
             const page = Math.max(1, parseInt(req.query.page, 10) || 1);
             const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 25));

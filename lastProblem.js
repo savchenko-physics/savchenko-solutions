@@ -35,7 +35,6 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { ipKeyGenerator } = require('express-rate-limit');
 const i18n = require('i18n');
-const { Pool } = require('pg');
 const LMSR = require('./js/lmsr');
 const Reactions = require('./js/reactions');
 const LP = require('./lib/lastProblem');
@@ -46,14 +45,7 @@ const { ownedReactions } = require('./lib/reactionUnlocks');
 const { isBookProblem } = require('./lib/bookProblems');
 const notifications = require('./notifications');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 // The kill switch: LAST_PROBLEM=off in the environment and a restart take the app, its card and
 // its sync off the site without a deploy. Premium reactions people own keep working.

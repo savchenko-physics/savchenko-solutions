@@ -2,27 +2,20 @@ const path = require('path');
 const fs = require('fs');
 const { getLanguageData } = require('./parents');
 const i18n = require('i18n');
-const { Pool } = require('pg');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
+const pool = require('./lib/db');
+const { SwrCache } = require('./lib/swr');
 
 // Same 1-9 difficulty bucket the homepage heatmap uses (index.js getDifficultyGrid),
 // keyed per problem so the unsolved chips can be coloured on the same YlOrRd scale.
 // `calibrated` is 0-100; bucket = ceil(calibrated/100 * 9), clamped to 1-9. `starred`
 // is Savchenko's own ∗ marker. Cached 10 min — this page is far cooler than the homepage
 // but there is no reason to re-run the 2k-row scan on every hit.
-let _diffByProblemCache = { at: 0, value: null };
+const caches = new SwrCache({ ttlMs: 10 * 60 * 1000, name: 'unsolved page' });
 async function getDifficultyByProblem() {
-    if (_diffByProblemCache.value && Date.now() - _diffByProblemCache.at < 10 * 60 * 1000) {
-        return _diffByProblemCache.value;
-    }
+    return caches.get('difficulty', loadDifficultyByProblem);
+}
+async function loadDifficultyByProblem() {
     const map = new Map();
     try {
         const { rows } = await pool.query(
@@ -36,7 +29,6 @@ async function getDifficultyByProblem() {
         // A missing table must not take the unsolved page down.
         if (err.code !== '42P01') console.error('difficulty by problem:', err.message);
     }
-    _diffByProblemCache = { at: Date.now(), value: map };
     return map;
 }
 
@@ -133,7 +125,11 @@ function computeTotalProblems(chapters) {
  */
 async function getMostWantedProblems(allSolvedProblems, limit = 10) {
     try {
-        const result = await pool.query(`
+        // The sum over every view row of every problem (page_views and page_views_old, 1.8M
+        // rows) is the one heavy query of the site, and it ran on every visit to /unsolved
+        // (530–625 ms, 2026-09-19). The totals are held for ten minutes and refreshed behind
+        // the reader; which of them are unsolved is still decided per call, from the set given.
+        const result = await caches.get('views-by-problem', () => pool.query(`
             SELECT problem_name, SUM(views) AS total_views
             FROM (
                 SELECT problem_name, views FROM page_views
@@ -142,7 +138,7 @@ async function getMostWantedProblems(allSolvedProblems, limit = 10) {
             ) combined
             GROUP BY problem_name
             ORDER BY total_views DESC
-        `);
+        `));
 
         // Filter to only unsolved problems and take top N.
         // page_views contains legacy zero-padded names ("04.1.3") alongside the canonical

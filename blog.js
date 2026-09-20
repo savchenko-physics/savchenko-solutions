@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const i18n = require('i18n');
 const path = require('path');
 const fs = require('fs');
@@ -11,14 +10,7 @@ const { getOnlineUsernames } = require('./lib/presence');
 
 router.use(fileUpload());
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 // Helper: transliterate Cyrillic to Latin for URL slugs
 const CYRILLIC_MAP = {

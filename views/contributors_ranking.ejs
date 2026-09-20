@@ -781,6 +781,7 @@
     <%- include('default/main_site_footer_scripts') %>
 
     <script src="/js/vendor/d3.min.js"></script>
+    <script>window.__PRELOADED__ = <%- JSON.stringify(typeof preloaded !== 'undefined' && preloaded ? preloaded : {}).replace(/</g, '\\u003c') %>;</script>
     <script>
         const lang = "<%= lang %>";
         const dateLocale = lang === "ru" ? "ru-RU" : "en-US";
@@ -1108,7 +1109,15 @@
             }
         }
 
+        // The answers the server put into the page (window.__PRELOADED__, index.js) are used
+        // once, for the load; every later call (a sort, a year, the 45-second refresh) fetches.
+        const preloaded = window.__PRELOADED__ || {};
         async function fetchJSON(url) {
+            if (Object.prototype.hasOwnProperty.call(preloaded, url)) {
+                const data = preloaded[url];
+                delete preloaded[url];
+                return data;
+            }
             const res = await fetch(url);
             if (!res.ok) throw new Error(`Failed: ${url}`);
             return res.json();

@@ -237,7 +237,7 @@
           <ul class="most-wanted-list">
             <% mostWanted.forEach(w => { %>
             <li>
-              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(w.problem_name) %>" class="most-wanted-item">
+              <a href="/<%= lang %>/problems?q=<%= encodeURIComponent(w.problem_name) %>" class="most-wanted-item">
                 <span class="mw-num"><%= w.problem_name %></span>
                 <span class="mw-demand">
                   <%= w.total_views.toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US') %>
@@ -2052,7 +2052,7 @@
         if (state === '3') return '/' + LANG + '/' + problem;   // both — stay in this language
         if (state === '2') return '/en/' + problem;             // English only
         if (state === '1') return '/ru/' + problem;             // Russian only
-        return '/' + LANG + '/upload';                          // unsolved — offer to write it
+        return '/' + LANG + '/problems?q=' + problem;          // unsolved — its statement and the upload button
       }
 
       // One character per problem again, this time difficulty: '0' unknown, '1'-'9' the

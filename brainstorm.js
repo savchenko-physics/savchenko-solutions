@@ -10,7 +10,6 @@
 
 const express = require('express');
 const router = express.Router();
-const { Pool } = require('pg');
 const rateLimit = require('express-rate-limit');
 const i18n = require('i18n');
 const notifications = require('./notifications');
@@ -18,14 +17,7 @@ const { getProblemBreadcrumbParts } = require('./parents');
 const { getOnlineUsernames } = require('./lib/presence');
 const { docTitle } = require('./lib/pageTitle');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 const DEFAULT_PROFILE_AVATAR = '/img/profile_images/Default_placeholder.svg';
 

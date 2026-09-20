@@ -19,7 +19,6 @@
 // Every step of the bookkeeping fails open: a database that cannot be read must cost the site
 // its limits, never its mail.
 
-const { Pool } = require("pg");
 const {
     LIMITS, normalizeAddress, normalizeKind, isCapped, overRecipientCap, maskAddress,
 } = require("./lib/mailGuard");
@@ -44,20 +43,10 @@ function getClient() {
     return sesClient;
 }
 
-// Its own pool, as every module here has one; no connection is opened until a send happens.
-let pool = null;
+// The app's one pool (lib/db.js); required lazily, so a script that only formats mail never
+// opens the database.
 function getPool() {
-    if (!pool) {
-        pool = new Pool({
-            user: process.env.PG_USER,
-            host: process.env.PG_HOST,
-            database: process.env.PG_DATABASE,
-            password: process.env.PG_PASSWORD,
-            port: process.env.PG_PORT,
-            ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-        });
-    }
-    return pool;
+    return require('./lib/db');
 }
 
 /** Sends to this address in the last hour and day, or null when the log cannot be read. */

@@ -11,7 +11,9 @@
     math        true on pages with server-rendered formulas → /css/mathjax.css (content-versioned)
                 and js/math-select.js (a selected formula is painted as selected text is)
     prose       true when SS Text is in the first screen → preload its latin (+cyrillic) subsets
-    icons       'fa6' | 'fa4' | 'bi', or an array of them
+    icons       'fa6' | 'fa6-subset' | 'fa4' | 'bi', or an array of them. 'fa6-subset' is the
+                twenty solid glyphs the solution page and the header use (3 KB of font against
+                150 KB; scripts/build-fa-subset.py)
     codemirror  true → CodeMirror's stylesheet
     stix        true → STIX Two Math for the editor's symbol palette
 
@@ -42,6 +44,8 @@
 <link rel="stylesheet" href="<%= _asset('/css/vendor/fonts/stix-two-math.css') %>">
 <% } %><% if (_icons.indexOf('fa6') !== -1) { %>
 <link rel="stylesheet" href="/css/vendor/fontawesome6/css/all.min.css">
+<% } else if (_icons.indexOf('fa6-subset') !== -1) { %>
+<link rel="stylesheet" href="<%= _asset('/css/vendor/fontawesome6/css/subset.css') %>">
 <% } %><% if (_icons.indexOf('fa4') !== -1) { %>
 <link rel="stylesheet" href="/css/vendor/fontawesome4/css/font-awesome.min.css">
 <% } %><% if (_icons.indexOf('bi') !== -1) { %>

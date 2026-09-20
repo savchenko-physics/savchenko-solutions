@@ -5,21 +5,13 @@ const path = require('path');
 const fs = require('fs');
 const sharp = require('sharp');
 const fileUpload = require('express-fileupload');
-const { Pool } = require("pg");
 require("dotenv").config();
 const { getLanguageData} = require("./parents");
 const searchIndex = require('./searchIndex');
 const { founderYearFor } = require('./lib/founderYear');
 
 // Add pool configuration
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
+const pool = require('./lib/db');
 
 // Add this near the top of the file, after the requires
 router.use(fileUpload());

@@ -1,17 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { formatISO } = require('date-fns');
-const { Pool } = require('pg');
 require('dotenv').config();
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === 'true' },
-});
+const pool = require('./lib/db');
 
 const BASE_URL = 'https://savchenkosolutions.com';
 const publicDir = path.join(__dirname, 'public');

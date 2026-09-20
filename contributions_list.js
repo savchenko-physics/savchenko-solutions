@@ -1,15 +1,7 @@
-const { Pool } = require("pg");
 const i18n = require('i18n');
 const { getOnlineUsernames } = require('./lib/presence');
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: { rejectUnauthorized: process.env.PG_SSL_REJECT_UNAUTHORIZED === "true" },
-});
+const pool = require('./lib/db');
 
 // Human-readable duration between two edits. Mirrors the client-side fmtGap on
 // the user profile: shows the two most significant units (e.g. "2 days 5 hours"),
