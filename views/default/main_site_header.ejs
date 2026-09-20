@@ -120,6 +120,15 @@
                     </div>
                   </a>
                 </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="/<%= navLang %>/problems">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#6c757d" class="mt-1 flex-shrink-0"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+                    <div>
+                      <div class="ss-menu-item-title"><%= navLang === 'ru' ? 'База задач' : 'Problem database' %></div>
+                      <div class="ss-menu-item-desc"><%= navLang === 'ru' ? 'Условия, поиск, фильтры' : 'Statements, search, filters' %></div>
+                    </div>
+                  </a>
+                </li>
                 <!-- Problempedia link removed for now -->
                 <li>
                   <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="/<%= navLang %>/unsolved">
@@ -163,15 +172,6 @@
                     <div>
                       <div class="ss-menu-item-title"><%= navLang === 'ru' ? 'Инструменты' : 'Tools' %></div>
                       <div class="ss-menu-item-desc"><%= navLang === 'ru' ? 'Формулы, единицы, LaTeX' : 'Formulas, units, LaTeX' %></div>
-                    </div>
-                  </a>
-                </li>
-                <li>
-                  <a class="dropdown-item d-flex align-items-start gap-2 py-2" href="/<%= navLang %>/problems">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="#6c757d" class="mt-1 flex-shrink-0"><path d="M8.5 1.5A.5.5 0 0 1 9 1h4a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V2.707L9.354 5.854a.5.5 0 1 1-.708-.708L11.793 2H9a.5.5 0 0 1-.5-.5zM1 3a1 1 0 0 1 1-1h4a.5.5 0 0 1 0 1H2v10h10V9a.5.5 0 0 1 1 0v4a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V3z"/></svg>
-                    <div>
-                      <div class="ss-menu-item-title"><%= navLang === 'ru' ? 'Задачи по сложности' : 'Browse by Difficulty' %></div>
-                      <div class="ss-menu-item-desc"><%= navLang === 'ru' ? 'Фильтры, сортировка, навыки' : 'Filter, sort, find' %></div>
                     </div>
                   </a>
                 </li>
@@ -363,6 +363,7 @@
                   </button>
                   <div class="collapse" id="mobileProblems">
                     <a href="/<%= navLang %>/" class="mobile-nav-link"><%= navLang === 'ru' ? 'Савченко' : 'Savchenko' %></a>
+                    <a href="/<%= navLang %>/problems" class="mobile-nav-link"><%= navLang === 'ru' ? 'База задач' : 'Problem database' %></a>
                     <!-- Problempedia link removed for now -->
                     <a href="/<%= navLang %>/unsolved" class="mobile-nav-link"><%= navLang === 'ru' ? 'Нерешённые' : 'Unsolved' %></a>
                   </div>
@@ -378,7 +379,6 @@
                     <a href="/<%= navLang %>/study-guide" class="mobile-nav-link"><%= navLang === 'ru' ? 'Руководство' : 'Study Guide' %></a>
                     <a href="/paths" class="mobile-nav-link"><%= navLang === 'ru' ? 'Учебные пути' : 'Study Paths' %></a>
                     <a href="/tools" class="mobile-nav-link"><%= navLang === 'ru' ? 'Инструменты' : 'Tools' %></a>
-                    <a href="/<%= navLang %>/problems" class="mobile-nav-link"><%= navLang === 'ru' ? 'Задачи по сложности' : 'Browse by Difficulty' %></a>
                     <a href="/recommendations" class="mobile-nav-link"><%= navLang === 'ru' ? 'Рекомендации' : 'Recommendations' %></a>
                   </div>
                 </div>

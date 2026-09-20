@@ -406,7 +406,14 @@
             ? '<span class="pf-card-vote">' + esc(r[COL.VOTE_AVG]) + '/10 (' + r[COL.VOTE_COUNT] + ')</span>' : '';
 
         var loadingText = LANG === 'ru' ? 'Загрузка условия…' : 'Loading statement…';
-        var href = '/' + LANG + '/' + esc(r[COL.NAME]);
+        // No solution in either language: /<lang>/<name> would only redirect to /unsolved, so
+        // the card leads to the upload form and says so where the arrow would be. The server
+        // renders the first page the same way (views/problems/index.ejs).
+        var unsolved = !r[COL.SOLVED_EN] && !r[COL.SOLVED_RU];
+        var href = unsolved ? '/' + LANG + '/upload?problem=' + encodeURIComponent(r[COL.NAME]) : '/' + LANG + '/' + esc(r[COL.NAME]);
+        var goHtml = unsolved
+            ? '<a class="btn btn-sm btn-outline-dark pf-card-upload" href="' + href + '">' + (LANG === 'ru' ? 'Загрузить решение' : 'Upload a solution') + '</a>'
+            : '<span class="pf-card-go" aria-hidden="true">→</span>';
         var snippet = SEARCH.q === state.q ? SEARCH.snippets[r[COL.NAME]] : null;
         // Marked by the search's own stems ("трен" in "трения"), not the words as typed.
         var snippetHtml = snippet ? '<p class="pf-card-snippet">' + highlight(snippet, SEARCH.terms.length ? SEARCH.terms.join(' ') : state.q) + '</p>' : '';
@@ -418,7 +425,7 @@
             + ratingHtml
             + '<span class="pf-card-status">' + statusHtml + '</span>'
             + voteHtml
-            + '<span class="pf-card-go" aria-hidden="true">→</span>'
+            + goHtml
             + '</div>'
             + snippetHtml
             + '<div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="' + esc(r[COL.NAME]) + '">' + loadingText + '</div>'
@@ -646,17 +653,31 @@
     if (bookmarkedCb) bookmarkedCb.checked = state.bookmarked; else state.bookmarked = false;
     if (bookmarkedCb) bookmarkedCb.addEventListener('change', function () { state.bookmarked = bookmarkedCb.checked; applyState(); });
 
+    // One state for two controls: the segment picks the solution's language, the box below it
+    // asks for the problems with no solution at all (state.lang 'none', solved=none in the
+    // URL). A problem with no solution has no solution language, so the segment is disabled
+    // while the box is ticked.
     var langSeg = document.getElementById('pfLangSeg');
+    var unsolvedCb = document.getElementById('pfUnsolved');
     function syncLangSeg() {
-        Array.prototype.forEach.call(langSeg.querySelectorAll('button'), function (b) { b.classList.toggle('on', b.getAttribute('data-val') === state.lang); });
+        var unsolved = state.lang === 'none';
+        unsolvedCb.checked = unsolved;
+        Array.prototype.forEach.call(langSeg.querySelectorAll('button'), function (b) {
+            b.classList.toggle('on', !unsolved && b.getAttribute('data-val') === state.lang);
+            b.disabled = unsolved;
+        });
     }
     syncLangSeg();
     langSeg.addEventListener('click', function (e) {
         var btn = e.target.closest('button');
-        if (!btn) return;
-        Array.prototype.forEach.call(langSeg.querySelectorAll('button'), function (b) { b.classList.remove('on'); });
-        btn.classList.add('on');
+        if (!btn || btn.disabled) return;
         state.lang = btn.getAttribute('data-val');
+        syncLangSeg();
+        applyState();
+    });
+    unsolvedCb.addEventListener('change', function () {
+        state.lang = unsolvedCb.checked ? 'none' : 'any';
+        syncLangSeg();
         applyState();
     });
 
@@ -710,6 +731,7 @@
             else if (preset === 'quickest') { state.sort = 'est_minutes'; state.dir = 'asc'; }
             else if (preset === 'elegant') { state.sort = 'elegance'; state.dir = 'desc'; sortSelect.value = 'elegance:desc'; }
             else if (preset === 'starred') { state.starred = true; starredCb.checked = true; }
+            else if (preset === 'unsolved') { state.lang = 'none'; syncLangSeg(); }
             applyState();
         });
     });
@@ -738,7 +760,7 @@
         if (state.starred) list.push({ kind: 'starred', label: RU ? 'Со звёздочкой ∗' : 'Asterisked ∗' });
         if (state.bookmarked) list.push({ kind: 'bookmarked', label: RU ? 'Мои закладки' : 'My bookmarks' });
         if (state.lang !== 'any') {
-            var solved = { en: RU ? 'Решение на английском' : 'Solved in English', ru: RU ? 'Решение на русском' : 'Solved in Russian', none: RU ? 'Без решения' : 'Unsolved' };
+            var solved = { en: RU ? 'Решение на английском' : 'Solved in English', ru: RU ? 'Решение на русском' : 'Solved in Russian', none: RU ? 'Ещё не решены' : 'Not yet solved' };
             list.push({ kind: 'solved', label: solved[state.lang] });
         }
         Object.keys(state.axisRanges).forEach(function (k) {

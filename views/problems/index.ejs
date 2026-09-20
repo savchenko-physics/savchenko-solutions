@@ -97,6 +97,7 @@
         }
         .pf-seg button:last-child { border-right: none; }
         .pf-seg button.on { background: var(--ss-navy); color: var(--ss-on-navy); }
+        .pf-seg button:disabled { color: var(--ss-text-tertiary); cursor: default; }
 
         .pf-chapter-list { max-height: 160px; overflow-y: auto; border: 1px solid var(--ss-rule-soft); border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-2); background: var(--ss-surface); }
 
@@ -172,6 +173,9 @@
         .pf-card-status { display: flex; gap: var(--ss-space-1); margin-left: auto; font-size: var(--ss-fs-12); }
         .pf-card-vote { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
         .pf-card-go { color: var(--ss-link); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-16); }
+        /* An unsolved problem has no page to go to; its card opens the upload form instead, and
+           says so where the arrow would be. */
+        .pf-card-upload { white-space: nowrap; }
         .pf-card-status span { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: var(--ss-radius-sm); }
         .pf-card-status .en { background: var(--ss-surface-hover); color: var(--ss-link); }
         .pf-card-status .ru { background: var(--ss-warning-soft); color: var(--ss-warning); }
@@ -260,6 +264,7 @@
         <button class="pf-record-chip" data-preset="quickest"><%= lang === 'ru' ? 'Быстрее всего' : 'Quickest' %></button>
         <button class="pf-record-chip" data-preset="elegant"><%= lang === 'ru' ? 'Красивее всего' : 'Most elegant' %></button>
         <button class="pf-record-chip" data-preset="starred"><%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></button>
+        <button class="pf-record-chip" data-preset="unsolved"><%= lang === 'ru' ? 'Нерешённые' : 'Unsolved' %></button>
     </div>
 
     <div class="pf-layout">
@@ -296,8 +301,11 @@
                     <button data-val="any" class="on"><%= lang === 'ru' ? 'Все' : 'Any' %></button>
                     <button data-val="en">EN</button>
                     <button data-val="ru">RU</button>
-                    <button data-val="none"><%= lang === 'ru' ? 'Нет' : 'Unsolved' %></button>
                 </div>
+                <%# The problems nobody has written up in either language (solved=none in the URL).
+                    It used to be a fourth button of the segment above; a problem with no solution
+                    has no solution language, so while this is ticked the segment is disabled. %>
+                <label class="pf-check-row"><input type="checkbox" id="pfUnsolved" /> <%= lang === 'ru' ? 'Ещё не решены' : 'Not yet solved' %></label>
             </div>
 
             <div class="pf-filter-group">
@@ -383,15 +391,20 @@
                     const heat = heatOf(r[5]); const rating = toRating(r[5]);
                     const isCanonical = r[8].length > 0;
                     const tagSource = isCanonical ? r[8] : r[7];
+                    // No solution in either language: /<lang>/<name> would only redirect to
+                    // /unsolved, so the card leads to the upload form (js/problems-finder.js cardHtml
+                    // renders the same card after hydration).
+                    const unsolvedCard = !r[11] && !r[12];
+                    const href = unsolvedCard ? `/${lang}/upload?problem=${encodeURIComponent(r[0])}` : `/${lang}/${r[0]}`;
                 %>
-                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>" data-href="/<%= lang %>/<%= r[0] %>" role="link" tabindex="0">
+                <div class="pf-card <%= heat ? 'pf-heat-' + heat : '' %>" data-name="<%= r[0] %>" data-href="<%= href %>" role="link" tabindex="0">
                     <% if (tagSource.length) { %>
                     <div class="pf-card-tags">
                         <% tagSource.forEach(function(t) { %><button type="button" class="pf-card-tag" data-tag="<%= t %>"><%= isCanonical ? (tagLabelMap[t] || t) : t %></button><% }); %>
                     </div>
                     <% } %>
                     <div class="pf-card-head">
-                        <a class="pf-card-name" href="/<%= lang %>/<%= r[0] %>"><%= r[0] %></a>
+                        <a class="pf-card-name" href="<%= href %>"><%= r[0] %></a>
                         <% if (r[4] === 1) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Asterisked by Savchenko' %>">&#8727;</sup><% } %>
                         <% if (rating != null) { %><span class="pf-card-rating <%= heat ? 'pf-heat-bg-' + heat : 'pf-heat-none' %>"><%= rating %></span><% } %>
                         <span class="pf-card-status">
@@ -399,7 +412,7 @@
                             <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
                         </span>
                         <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
-                        <span class="pf-card-go" aria-hidden="true">&rarr;</span>
+                        <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><span class="pf-card-go" aria-hidden="true">&rarr;</span><% } %>
                     </div>
                     <% if (snippets && snippets[r[0]]) { %><p class="pf-card-snippet"><%= snippets[r[0]] %></p><% } %>
                     <div class="pf-card-statement ss-prose ss-prose--compact is-loading" data-statement-for="<%= r[0] %>"><%= lang === 'ru' ? 'Загрузка условия…' : 'Loading statement…' %></div>

@@ -372,7 +372,7 @@
       <ul class="most-wanted-list">
         <% mostWanted.forEach(function(mw) { %>
         <li class="most-wanted-item">
-          <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(mw.problem) %>"><%= mw.problem %></a>
+          <a href="/<%= lang %>/problems?q=<%= encodeURIComponent(mw.problem) %>"><%= mw.problem %></a>
           <span class="most-wanted-context"><%= mw.chapter %> &mdash; <%= mw.section %></span>
           <span class="most-wanted-views"><%= lang === 'ru' ? 'просмотров: ' + mw.views : 'viewed ' + mw.views + ' times' %></span>
         </li>
@@ -430,8 +430,11 @@
               <span class="section-stats"><%= sec.solved %> / <%= sec.total %></span>
             </div>
             <div class="problem-grid">
+              <%# A chip opens the problem in the finder, where its statement is shown and an
+                  unsolved card carries the upload button (2026-09-19). Before, it went straight
+                  to the upload form, so nobody could read the problem before committing to it. %>
               <% sec.unsolved.forEach(function(prob) { %>
-              <a href="/<%= lang %>/upload?problem=<%= encodeURIComponent(prob.problem) %>" class="problem-chip <%= prob.heat ? 'heat-' + prob.heat + (prob.starred ? ' heat-starred' : '') : 'heat-none' %>" title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.problem + (prob.heat ? (lang === 'ru' ? ' · сложность ' : ' · difficulty ') + prob.heat + '/9' + (prob.starred ? (lang === 'ru' ? ', отмечена ∗ Савченко' : ', marked ∗ by Savchenko') : '') : '') %>"><%= prob.problem %></a>
+              <a href="/<%= lang %>/problems?q=<%= encodeURIComponent(prob.problem) %>" class="problem-chip <%= prob.heat ? 'heat-' + prob.heat + (prob.starred ? ' heat-starred' : '') : 'heat-none' %>" title="<%= (lang === 'ru' ? 'Задача ' : 'Problem ') + prob.problem + (prob.heat ? (lang === 'ru' ? ' · сложность ' : ' · difficulty ') + prob.heat + '/9' + (prob.starred ? (lang === 'ru' ? ', отмечена ∗ Савченко' : ', marked ∗ by Savchenko') : '') : '') %>"><%= prob.problem %></a>
               <% }); %>
             </div>
           </div>
