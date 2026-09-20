@@ -618,6 +618,8 @@
       box-shadow: var(--ss-shadow);
       z-index: 100;
       min-width: 140px;
+      max-height: calc(100vh - 16px);
+      overflow-y: auto;
       padding: var(--ss-space-1) 0;
     }
 
@@ -625,24 +627,61 @@
       display: block;
     }
 
-    /* The reactions along the top of the menu, as Telegram shows them over its menu. */
+    /* The reactions along the top of the menu, as Telegram shows them over its menu: a row of
+       six and a half (the cut one says there are more), scrolled by the wheel or a swipe, and a
+       chevron that opens the whole set as the grid the picker uses. */
     .msg-context-reactions {
       display: flex;
-      gap: 2px;
-      max-width: 296px;
+      align-items: center;
+      gap: var(--ss-space-1);
+      max-width: 324px;
       padding: var(--ss-space-1) var(--ss-space-2);
       margin-bottom: var(--ss-space-1);
       border-bottom: 1px solid var(--msg-border);
-      overflow-x: auto;
-      scrollbar-width: none;
       line-height: 1;
       -webkit-user-select: none;
       user-select: none;
     }
-    .msg-context-reactions::-webkit-scrollbar { display: none; }
-    .msg-context-reactions:empty { display: none; }
-    .msg-context-reactions .msg-reaction-sep { flex: 0 0 1px; width: 1px; height: 24px; align-self: center; margin: 0 var(--ss-space-1); background: var(--msg-border); }
-    .msg-context-reactions .msg-reaction-pick { flex: 0 0 auto; }
+    .msg-context-reactions-list {
+      display: flex;
+      gap: 2px;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      overscroll-behavior-x: contain;
+    }
+    .msg-context-reactions-list::-webkit-scrollbar { display: none; }
+    .msg-context-reactions-list:empty { display: none; }
+    .msg-context-reactions-list .msg-reaction-sep { flex: 0 0 1px; width: 1px; height: 24px; align-self: center; margin: 0 var(--ss-space-1); background: var(--msg-border); }
+    .msg-context-reactions-list .msg-reaction-pick { flex: 0 0 auto; }
+    .msg-context-reactions-more {
+      flex: 0 0 auto;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: var(--msg-bg-alt);
+      color: var(--msg-muted);
+      cursor: pointer;
+    }
+    .msg-context-reactions-more:hover { color: var(--msg-text); }
+    .msg-context-reactions-more svg { transition: transform 0.15s; }
+    .msg-context-reactions.is-expanded { align-items: flex-start; }
+    .msg-context-reactions.is-expanded .msg-context-reactions-list {
+      display: grid;
+      grid-template-columns: repeat(6, 36px);
+      align-items: center;
+      justify-items: center;
+      overflow: visible;
+    }
+    .msg-context-reactions.is-expanded .msg-context-reactions-list .msg-reaction-sep { width: auto; height: 1px; align-self: auto; margin: 1px var(--ss-space-1); }
+    .msg-context-reactions.is-expanded .msg-context-reactions-more { margin-top: var(--ss-space-1); }
+    .msg-context-reactions.is-expanded .msg-context-reactions-more svg { transform: rotate(180deg); }
 
     .msg-context-item {
       display: flex;
@@ -838,7 +877,8 @@
     }
 
     @media (pointer: coarse) {
-      .msg-reaction-picker {
+      .msg-reaction-picker,
+      .msg-context-reactions.is-expanded .msg-context-reactions-list {
         grid-template-columns: repeat(6, 40px);
       }
 
@@ -2792,7 +2832,10 @@
   </div>
 </div>
 <div class="msg-context-menu" id="msgContextMenu">
-  <div class="msg-context-reactions" id="ctxReactions"></div>
+  <div class="msg-context-reactions" id="ctxReactions">
+    <div class="msg-context-reactions-list" id="ctxReactionsList"></div>
+    <button type="button" class="msg-context-reactions-more" id="ctxReactionsMore" aria-expanded="false" title="<%= lang === 'ru' ? 'Все реакции' : 'All reactions' %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+  </div>
   <button class="msg-context-item" id="ctxReply">
     <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>
     <span><%= lang === 'ru' ? 'Ответить' : 'Reply' %></span>
@@ -4169,6 +4212,8 @@
   var ctxCopyImage = document.getElementById('ctxCopyImage');
   var ctxSave = document.getElementById('ctxSave');
   var ctxReactions = document.getElementById('ctxReactions');
+  var ctxReactionsList = document.getElementById('ctxReactionsList');
+  var ctxReactionsMore = document.getElementById('ctxReactionsMore');
   var ctxPin = document.getElementById('ctxPin');
   var ctxPinLabel = document.getElementById('ctxPinLabel');
   var ctxForward = document.getElementById('ctxForward');
@@ -4191,7 +4236,11 @@
     var hasText = extractMessageText(msgId).length > 0;
     var isPinned = row.dataset.pinned === '1';
     ctxMsgId = msgId;
-    if (ctxReactions) fillReactionPicker(ctxReactions);
+    if (ctxReactionsList) {
+      fillReactionPicker(ctxReactionsList);
+      setReactionsExpanded(false);
+      ctxReactionsList.scrollLeft = 0;
+    }
     var image = row.querySelector('.msg-bubble-image');
     var saveable = row.querySelector('.msg-bubble-image, .msg-bubble-video, .msg-bubble-file, .msg-audio');
     ctxReply.style.display = '';               // reply is always available
@@ -4211,12 +4260,42 @@
     if (ctxHide) ctxHide.style.display = '';         // "delete for me" is always available
     ctxDelete.style.display = canDelete ? '' : 'none';
     ctxMenu.classList.add('show');
-    // Keep the menu inside the viewport.
+    placeContextMenu(x, y);
+  }
+
+  // Keep the menu inside the viewport, at the point asked for or as close as it fits.
+  function placeContextMenu(x, y) {
     var mw = ctxMenu.offsetWidth, mh = ctxMenu.offsetHeight;
     if (x + mw > window.innerWidth) x = window.innerWidth - mw - 8;
     if (y + mh > window.innerHeight) y = window.innerHeight - mh - 8;
     ctxMenu.style.left = Math.max(8, x) + 'px';
     ctxMenu.style.top = Math.max(8, y) + 'px';
+  }
+
+  // The chevron opens the strip into the full grid and back; the menu is moved up if the grid
+  // would run off the bottom.
+  function setReactionsExpanded(open) {
+    if (!ctxReactions) return;
+    ctxReactions.classList.toggle('is-expanded', open);
+    if (ctxReactionsMore) ctxReactionsMore.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  if (ctxReactionsMore) {
+    ctxReactionsMore.addEventListener('click', function(e) {
+      e.stopPropagation(); // the document's click closes the menu
+      setReactionsExpanded(!ctxReactions.classList.contains('is-expanded'));
+      placeContextMenu(parseFloat(ctxMenu.style.left) || 8, parseFloat(ctxMenu.style.top) || 8);
+    });
+  }
+  // A mouse wheel has no horizontal axis: its turn scrolls the strip sideways.
+  if (ctxReactionsList) {
+    ctxReactionsList.addEventListener('wheel', function(e) {
+      if (ctxReactions.classList.contains('is-expanded')) return;
+      if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) return; // a trackpad already scrolls sideways
+      var max = ctxReactionsList.scrollWidth - ctxReactionsList.clientWidth;
+      if (max <= 0) return;
+      e.preventDefault();
+      ctxReactionsList.scrollLeft = Math.max(0, Math.min(max, ctxReactionsList.scrollLeft + e.deltaY));
+    }, { passive: false });
   }
 
   var suppressNextClick = false;
