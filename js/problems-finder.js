@@ -420,7 +420,7 @@
             : '<a class="pf-card-name" href="' + href + '">' + esc(r[COL.NAME]) + '</a>';
         var goHtml = unsolved
             ? '<a class="btn btn-sm btn-outline-dark pf-card-upload" href="' + href + '">' + (LANG === 'ru' ? 'Загрузить решение' : 'Upload a solution') + '</a>'
-            : '<a class="pf-card-go" href="' + href + '">' + (LANG === 'ru' ? 'Решение' : 'Solution') + ' →</a>';
+            : '<a class="btn btn-sm btn-dark pf-card-open" href="' + href + '">' + (LANG === 'ru' ? 'Решение' : 'Solution') + '</a>';
         var snippet = SEARCH.q === state.q ? SEARCH.snippets[r[COL.NAME]] : null;
         // Marked by the search's own stems ("трен" in "трения"), not the words as typed.
         var snippetHtml = snippet ? '<p class="pf-card-snippet">' + highlight(snippet, SEARCH.terms.length ? SEARCH.terms.join(' ') : state.q) + '</p>' : '';

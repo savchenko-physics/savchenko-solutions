@@ -177,11 +177,10 @@
         }
         .pf-card-status { display: flex; gap: var(--ss-space-1); margin-left: auto; font-size: var(--ss-fs-12); }
         .pf-card-vote { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
-        .pf-card-go { color: var(--ss-link); font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-13); text-decoration: none; white-space: nowrap; }
-        .pf-card-go:hover { color: var(--ss-link-hover); text-decoration: underline; }
-        /* An unsolved problem has no page to go to; its card opens the upload form instead, and
-           says so where the arrow would be. */
-        .pf-card-upload { white-space: nowrap; }
+        /* The way in, at the right of the head line: a button, not a link with an arrow, which
+           was missed (the owner, 2026-09-20). The solution in the primary style; an unsolved
+           problem has no page, so its button is the upload form. */
+        .pf-card-open, .pf-card-upload { white-space: nowrap; }
         .pf-card-status span { display: inline-block; width: 20px; height: 20px; line-height: 20px; text-align: center; border-radius: var(--ss-radius-sm); }
         .pf-card-status .en { background: var(--ss-surface-hover); color: var(--ss-link); }
         .pf-card-status .ru { background: var(--ss-warning-soft); color: var(--ss-warning); }
@@ -418,7 +417,7 @@
                             <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
                         </span>
                         <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
-                        <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><a class="pf-card-go" href="<%= href %>"><%= lang === 'ru' ? 'Решение' : 'Solution' %> &rarr;</a><% } %>
+                        <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><a class="btn btn-sm btn-dark pf-card-open" href="<%= href %>"><%= lang === 'ru' ? 'Решение' : 'Solution' %></a><% } %>
                     </div>
                     <% if (snippets && snippets[r[0]]) { %><p class="pf-card-snippet"><%= snippets[r[0]] %></p><% } %>
                     <%# The statement is rendered into the page (problems.js, one query and the shared

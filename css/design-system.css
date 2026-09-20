@@ -2075,6 +2075,7 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
    the statement set as the book sets it. A long statement scrolls inside the card. */
 .ss-peek {
     position: fixed; z-index: 1045; box-sizing: border-box;
+    display: flex; flex-direction: column;
     background: var(--ss-surface); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg);
     box-shadow: var(--ss-shadow); padding: var(--ss-space-2) var(--ss-space-4) var(--ss-space-3);
     pointer-events: auto;
@@ -2083,11 +2084,14 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
 .ss-peek-head {
     display: flex; align-items: baseline; justify-content: space-between; gap: var(--ss-space-3);
     font-family: var(--ss-font-ui); font-size: var(--ss-fs-13); margin-bottom: var(--ss-space-1);
+    flex: 0 0 auto;
 }
 .ss-peek-num { font-weight: var(--ss-fw-strong); color: var(--ss-navy); }
 .ss-peek-open { color: var(--ss-link); text-decoration: none; white-space: nowrap; }
 .ss-peek-open:hover { text-decoration: underline; }
-.ss-peek-body { max-height: 320px; overflow-y: auto; overflow-x: hidden; overflow-wrap: anywhere; }
+/* The card's max-height is the room above the link (set by the script); the statement takes
+   what is left under the head and scrolls. */
+.ss-peek-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overflow-wrap: anywhere; }
 .ss-peek-body p:last-child { margin-bottom: 0; }
 .ss-peek-body figure { margin: var(--ss-space-2) 0 0; text-align: center; }
 .ss-peek-body img { max-width: 100%; height: auto; }
@@ -2335,15 +2339,18 @@ body.grid-heat .problem-grid-item--current { background: var(--ss-link); color: 
    Mobile is not an afterthought here: roughly half of term-time sessions are phones and
    the panel becomes a bottom sheet rather than a floating card below 576px. */
 
+/* Quieter since 2026-09-20 (the owner): smaller, closer to the corner, and translucent until
+   the cursor reaches it, so it does not sit on the page like a call to action. */
 .fb-tab {
-  position: fixed; right: 16px; bottom: 16px; z-index: 1035;
-  display: inline-flex; align-items: center; gap: var(--ss-space-2);
+  position: fixed; right: 12px; bottom: 12px; z-index: 1035;
+  display: inline-flex; align-items: center; gap: var(--ss-space-1);
   background: var(--ss-primary-btn); color: var(--ss-white);
-  border: none; border-radius: var(--ss-radius); padding: var(--ss-space-2) var(--ss-space-4);
-  font-family: inherit; font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); line-height: 1.2;
-  cursor: pointer; box-shadow: var(--ss-shadow);
+  border: none; border-radius: var(--ss-radius); padding: var(--ss-space-1) var(--ss-space-3);
+  font-family: inherit; font-size: var(--ss-fs-13); font-weight: var(--ss-fw-regular); line-height: 1.2;
+  cursor: pointer; box-shadow: var(--ss-shadow); opacity: 0.6;
+  transition: opacity 0.15s ease;
 }
-.fb-tab:hover { background: var(--ss-primary-btn-hover); color: var(--ss-white); }
+.fb-tab:hover, .fb-tab:focus-visible { background: var(--ss-primary-btn-hover); color: var(--ss-white); opacity: 1; }
 .fb-tab:focus-visible { outline: 2px solid var(--ss-link); outline-offset: 2px; }
 /* Over the navy footer the navy tab would vanish, so the part of it the footer is behind shows
    an inverted copy of its contents: .fb-tab-invert, clipped from the top and bottom by
@@ -2365,7 +2372,7 @@ body.grid-heat .problem-grid-item--current { background: var(--ss-link); color: 
 /* Filled, sized in px, and inheriting the button's colour. The previous glyph was the
    U+270E character, which most fonts draw as a hairline and which vanished against the
    navy at this size. */
-.fb-tab-icon { width: 15px; height: 15px; display: block; fill: currentColor; }
+.fb-tab-icon { width: 13px; height: 13px; display: block; fill: currentColor; }
 
 .fb-panel {
   position: fixed; right: 16px; bottom: 16px; z-index: 1040;

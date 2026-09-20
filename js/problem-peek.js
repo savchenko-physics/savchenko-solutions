@@ -16,6 +16,7 @@
     var HIDE_DELAY = 140;   // long enough to move from the link into the card
     var WIDTH = 640;
     var MARGIN = 12;
+    var GAP = 8;         // between the link and the card
 
     var cache = Object.create(null);   // problem -> HTML (null: none on record)
     var card = null, body = null, head = null, open = null;
@@ -60,8 +61,13 @@
             .catch(function () { return null; });
     }
 
-    // Above the link, centred on it and kept inside the viewport; below it when the space
-    // above is not enough.
+    // Strictly above the link, centred on it and kept inside the viewport, never over the
+    // link: the card is anchored by its bottom edge, so a figure that arrives after the
+    // card is placed grows it upward, and its height is capped to the room above, the
+    // statement scrolling inside. (Measured once from the top and grown downward, a card
+    // with a figure covered the link and the cursor with it, 2026-09-20.) Only when there
+    // is no room above at all does it go below, anchored by its top edge.
+    var MIN_ROOM = 140;
     function place(link) {
         var r = link.getBoundingClientRect();
         var vw = document.documentElement.clientWidth;
@@ -69,12 +75,18 @@
         var w = Math.min(WIDTH, vw - 2 * MARGIN);
         card.style.width = w + 'px';
         card.style.left = Math.max(MARGIN, Math.min(r.left + r.width / 2 - w / 2, vw - w - MARGIN)) + 'px';
-        card.style.top = '0px';
+        var roomAbove = r.top - GAP - MARGIN;
+        var roomBelow = vh - r.bottom - GAP - MARGIN;
+        if (roomAbove >= MIN_ROOM || roomAbove >= roomBelow) {
+            card.style.top = 'auto';
+            card.style.bottom = (vh - r.top + GAP) + 'px';
+            card.style.maxHeight = Math.max(MIN_ROOM, roomAbove) + 'px';
+        } else {
+            card.style.bottom = 'auto';
+            card.style.top = (r.bottom + GAP) + 'px';
+            card.style.maxHeight = Math.max(MIN_ROOM, roomBelow) + 'px';
+        }
         card.hidden = false;
-        var h = card.offsetHeight;
-        var above = r.top - h - 8;
-        var top = above >= MARGIN ? above : (r.bottom + 8 + h <= vh - MARGIN ? r.bottom + 8 : Math.max(MARGIN, above));
-        card.style.top = top + 'px';
     }
 
     function show(link, problem) {
