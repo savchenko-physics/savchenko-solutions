@@ -114,8 +114,9 @@ function getMathCss() {
         '   overflow:hidden inline-block of zero width holds, and a positioned span becomes a block\n' +
         '   and puts line breaks around itself in the copied text (both browsers, 2026-09-19). */\n' +
         '.mjx-tex { font-size: 0; line-height: 0; }\n' +
-        '/* A formula inside the selection, painted like the selected text around it (js/math-select.js). */\n' +
-        'mjx-container.mjx-selected { background-color: Highlight; color: HighlightText; }\n' +
+        '/* A formula inside the selection, painted like the selected text around it (js/math-select.js):\n' +
+        '   the site\'s own ::selection wash (design-system.css), not the system Highlight. */\n' +
+        'mjx-container.mjx-selected { background-color: rgba(26, 82, 118, 0.18); }\n' +
         '\n/* Glyphs the TeX font lacks (Cyrillic, µ, ², …): Computer Modern Unicode, laid out\n' +
         '   server-side from lib/mathFallbackFont.json (scripts/build-math-fallback-font.py). */\n' +
         faces + '\n';
