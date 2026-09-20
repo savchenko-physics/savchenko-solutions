@@ -114,6 +114,11 @@
     }
 
     document.addEventListener('mouseover', function (e) {
+        // A problem named inside the card ("см. задачу 12.1.19") is a link too, and it must
+        // not open a preview of its own: that replaced the card's content under the cursor,
+        // which then counted as leaving the link, and both vanished (2026-09-20). Inside the
+        // card the cursor keeps the card; the link there opens the page when clicked.
+        if (card && card.contains(e.target)) { clearTimeout(hideTimer); return; }
         var link = e.target.closest && e.target.closest(LINKS);
         if (!link) return;
         var problem = problemOf(link);
@@ -125,6 +130,7 @@
         showTimer = setTimeout(function () { if (current === link) show(link, problem); }, SHOW_DELAY);
     });
     document.addEventListener('mouseout', function (e) {
+        if (card && card.contains(e.target)) return;   // the card's own mouseleave decides
         var link = e.target.closest && e.target.closest(LINKS);
         if (!link || link !== current) return;
         var to = e.relatedTarget;
