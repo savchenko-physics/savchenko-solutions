@@ -279,7 +279,15 @@
           <div style="height: 8px; border-radius: var(--ss-radius-sm); background: var(--ss-surface-hover); overflow: hidden;">
             <div style="height: 100%; width: <%= _overallPct %>%; background: var(--ss-navy); border-radius: var(--ss-radius-sm); transition: width 0.6s ease;"></div>
           </div>
+          <%# The count above is solved in either language; how many each language has, from the same
+              listing (unsolved.js: currentLangSolutions is this page's language). %>
+          <%
+            const _n = (x) => Number(x || 0).toLocaleString(lang === 'ru' ? 'ru-RU' : 'en-US');
+            const _ruSolved = lang === 'ru' ? solutionProgress.currentLangSolutions : solutionProgress.otherLangSolutions;
+            const _enSolved = lang === 'ru' ? solutionProgress.otherLangSolutions : solutionProgress.currentLangSolutions;
+          %>
           <p style="font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: var(--ss-space-2) 0 0;">
+            <%= lang === 'ru' ? `На русском ${_n(_ruSolved)}, на английском ${_n(_enSolved)}.` : `${_n(_enSolved)} in English, ${_n(_ruSolved)} in Russian.` %>
             <%= _totalUnsolved %> <%= lang === 'ru' ? 'задач ещё не решены.' : 'problems still unsolved.' %>
             <a href="/<%= lang %>/problems?solved=none" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Сможете решить одну?' : 'Can you solve one?' %></a>
           </p>
@@ -302,6 +310,10 @@
               <%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Marked ∗ by Savchenko' %>
             </span>
             <span class="legend-item legend-item--apart">
+              <span class="legend-swatch legend-faded"></span>
+              <%= lang === 'ru' ? 'Нет решения на русском' : 'No English solution' %>
+            </span>
+            <span class="legend-item">
               <span class="legend-swatch legend-unsolved"></span>
               <%= lang === 'ru' ? 'Не решено' : 'Unsolved' %>
             </span>

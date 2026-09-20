@@ -2316,6 +2316,23 @@ body.grid-heat a.heat-none, body.grid-heat .heat-none { background: var(--ss-hea
 body.grid-heat a.heat-starred, body.grid-heat .heat-starred { border: 2px solid var(--ss-navy); }
 /* The problem being read keeps its own mark in the section grid. */
 body.grid-heat .problem-grid-item--current { background: var(--ss-link); color: var(--ss-on-navy); border-color: var(--ss-link); }
+/* A problem with no solution in the page's language is faded: solved in the other language
+   only, or in none (the owner, 2026-09-20: on /ru/ a chapter's "78 / 129" left the 51 without
+   a Russian solution looking like the rest). The dashed outline still says "none at all". */
+html[lang="ru"] body.grid-heat .problem-dot.solved-en,
+html[lang="en"] body.grid-heat .problem-dot.solved-ru,
+html[lang="ru"] body.grid-heat .problem-grid-item--solved-en,
+html[lang="en"] body.grid-heat .problem-grid-item--solved-ru,
+body.grid-heat .problem-dot.unsolved,
+body.grid-heat .problem-grid-item--unsolved { opacity: 0.4; }
+html[lang="ru"] body.grid-heat a.problem-dot.solved-en:hover,
+html[lang="en"] body.grid-heat a.problem-dot.solved-ru:hover,
+html[lang="ru"] body.grid-heat a.problem-grid-item--solved-en:hover,
+html[lang="en"] body.grid-heat a.problem-grid-item--solved-ru:hover,
+body.grid-heat a.problem-dot.unsolved:hover,
+body.grid-heat a.problem-grid-item--unsolved:hover { opacity: 0.75; }
+/* The legend's swatch for it. */
+.legend-faded, .sg-sw-faded { background: var(--ss-heat-5); opacity: 0.4; }
 
 /* Legend swatches: always coloured, regardless of whether heat mode is on. */
 .heat-chip { width: 14px; height: 12px; border-radius: var(--ss-radius-sm); display: inline-block; }

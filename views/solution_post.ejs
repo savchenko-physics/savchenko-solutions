@@ -1647,6 +1647,7 @@
                     <span class="sg-leg"><%= lang === 'ru' ? 'Легче' : 'Easier' %></span>
                     <span class="heat-ramp"><% for (let i = 1; i <= 9; i++) { %><span class="heat-chip heat-<%= i %>"></span><% } %></span>
                     <span class="sg-leg"><%= lang === 'ru' ? 'Труднее' : 'Harder' %></span>
+                    <span class="sg-leg"><span class="sg-sw sg-sw-faded"></span><%= lang === 'ru' ? 'Нет на русском' : 'Not in English' %></span>
                     <span class="sg-leg"><span class="sg-sw sg-sw-un"></span><%= lang === 'ru' ? 'Нет решения' : 'Unsolved' %></span>
                     <a href="/<%= lang %>/problems/methodology" class="sg-heat-methodology-link"><%= lang === 'ru' ? 'Как это считается' : 'How this is scored' %></a>
                 </div>
