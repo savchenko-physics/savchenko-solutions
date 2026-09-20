@@ -27,8 +27,13 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   (`lib/problemRefs.js`, on the HTML after the maths; the book's 2,023 numbers only, never inside a
   formula, a script or an existing link). While the cursor rests on any link to a problem (that, a
   grid dot, an unsolved chip) `js/problem-peek.js` shows its statement above the cursor, as a PDF
-  reader previews a reference, from `/:lang/problems/statements`. An unsolved problem's address
-  and every dot for one open `/:lang/problems?q=<number>`: the statement and the upload button.
+  reader previews a reference, from `/:lang/problems/statements`; the card sits strictly above
+  the link (anchored by its bottom edge, capped to the room) and its figures carry width and
+  height. An unsolved problem's address and every dot for one open `/:lang/problems?q=<number>`:
+  the statement and the upload button. `lib/statementRender.js` shows a still-flattened row
+  (`needs_review`) from the post's own statement section (`lib/postStatement.js`), repairs a
+  stray opening `$` and opens a paragraph at "б." — the four rows that had the stray `$` were
+  fixed in migration 059, and `scripts/build-statements.js` no longer produces it.
 - **Grids** (homepage chapters, a solution page's section, `/unsolved`) are coloured by difficulty
   only, `body.grid-heat` on those pages (2026-09-19: the language colouring and its switch are
   gone); dashed = unsolved, heavy border = Savchenko's ∗, bold numerals; the heat rules outrank
