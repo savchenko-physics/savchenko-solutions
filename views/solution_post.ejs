@@ -1031,34 +1031,30 @@
             background: var(--ss-surface-hover);
         }
 
-        /* Views Chart Modal */
+        /* Views chart: a card beside the count that was clicked, not a dimmed screen with a
+           window in the middle (the owner, 2026-09-20). Placed by the script (below the count,
+           above it when there is no room), closed by a click elsewhere or Esc. */
         .views-modal {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
+            z-index: 1045;
+            width: 440px;
+            max-width: calc(100vw - 24px);
         }
 
         .views-modal-content {
             background: var(--ss-surface);
+            border: 1px solid var(--ss-rule);
             border-radius: var(--ss-radius-lg);
-            padding: var(--ss-space-7);
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
+            box-shadow: var(--ss-shadow);
+            padding: var(--ss-space-3) var(--ss-space-4) var(--ss-space-4);
         }
+        .views-modal-content h4 { font-size: var(--ss-fs-14); margin: 0; }
 
         .views-chart {
             width: 100%;
-            height: 300px;
-            margin-top: var(--ss-space-4);
+            height: 220px;
+            margin-top: var(--ss-space-2);
         }
 
         /* Mobile Burger Menu */
@@ -2885,22 +2881,41 @@
             const viewsModal = document.getElementById('viewsModal');
             const closeViewsModal = document.getElementById('closeViewsModal');
 
-            function openModal() {
-                viewsModal.style.display = 'flex';
+            let openedBy = null;
+            function closeModal() { viewsModal.style.display = 'none'; openedBy = null; }
+            // Beside the count that was clicked: its left edge, below it when there is room
+            // for the card, above it otherwise, and inside the viewport either way.
+            function place(trigger) {
+                const r = trigger.getBoundingClientRect();
+                const vw = document.documentElement.clientWidth;
+                const vh = document.documentElement.clientHeight;
+                viewsModal.style.display = 'block';
+                const w = viewsModal.offsetWidth;
+                const h = viewsModal.offsetHeight;
+                viewsModal.style.left = Math.max(12, Math.min(r.left, vw - w - 12)) + 'px';
+                const below = r.bottom + 8;
+                viewsModal.style.top = (below + h <= vh - 12 || r.top - h - 8 < 12 ? below : r.top - h - 8) + 'px';
+            }
+            function openModal(e) {
+                const trigger = e.currentTarget;
+                if (openedBy === trigger) { closeModal(); return; }
+                openedBy = trigger;
+                place(trigger);
                 loadViewsChart();
             }
 
             if (viewsButton) viewsButton.addEventListener('click', openModal);
             if (viewsAction) viewsAction.addEventListener('click', openModal);
 
-            closeViewsModal.addEventListener('click', function() { viewsModal.style.display = 'none'; });
-            viewsModal.addEventListener('click', function(e) {
-                if (e.target === viewsModal) viewsModal.style.display = 'none';
+            closeViewsModal.addEventListener('click', closeModal);
+            document.addEventListener('click', function(e) {
+                if (!openedBy) return;
+                if (viewsModal.contains(e.target) || openedBy.contains(e.target)) return;
+                closeModal();
             });
+            window.addEventListener('scroll', function() { if (openedBy) place(openedBy); }, { passive: true });
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && viewsModal.style.display === 'flex') {
-                    viewsModal.style.display = 'none';
-                }
+                if (e.key === 'Escape' && openedBy) closeModal();
             });
         }
 
