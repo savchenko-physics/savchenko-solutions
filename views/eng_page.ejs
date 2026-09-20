@@ -289,7 +289,8 @@
           <p style="font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin: var(--ss-space-2) 0 0;">
             <%= lang === 'ru' ? `На русском ${_n(_ruSolved)}, на английском ${_n(_enSolved)}.` : `${_n(_enSolved)} in English, ${_n(_ruSolved)} in Russian.` %>
             <%= _totalUnsolved %> <%= lang === 'ru' ? 'задач ещё не решены.' : 'problems still unsolved.' %>
-            <a href="/<%= lang %>/problems?solved=none" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Сможете решить одну?' : 'Can you solve one?' %></a>
+            <%# The easiest unsolved problems first, so the first one shown is one a reader can take. %>
+            <a href="/<%= lang %>/problems?sort=calibrated&amp;dir=asc&amp;solved=none" style="color: var(--ss-link);"><%= lang === 'ru' ? 'Сможете решить одну?' : 'Can you solve one?' %></a>
           </p>
         </div>
 
