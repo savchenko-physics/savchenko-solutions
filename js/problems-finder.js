@@ -247,6 +247,7 @@
         starred: !!Q.starred,
         bookmarked: Q.bookmarked === '1',
         lang: ['en', 'ru', 'none'].indexOf(Q.solved) !== -1 ? Q.solved : 'any',
+        rated: Q.rated === '1',
         chapters: new Set(Q.chapter ? String(Q.chapter).split(',').map(Number).filter(function (n) { return n >= 1 && n <= 14; }) : []),
         tags: new Set(Q.tag ? String(Q.tag).split(',').filter(Boolean) : []),
         tagMode: Q.tagMode === 'and' ? 'and' : 'or',
@@ -311,6 +312,7 @@
         } else if (state.min > 0) return false;
 
         if (state.starred && r[COL.STARRED] !== 1) return false;
+        if (state.rated && !(r[COL.VOTE_COUNT] > 0)) return false;
         if (state.bookmarked && !BOOKMARKED.has(r[COL.NAME])) return false;
 
         if (state.lang === 'en' && !r[COL.SOLVED_EN]) return false;
@@ -339,6 +341,10 @@
     }
 
     function sortRows(rows) {
+        // The readers' mode orders by their rating unless another order or a search is chosen.
+        if (!state.sort && state.rated && !state.q) {
+            return rows.slice().sort(function (a, b) { return (b[COL.VOTE_AVG] || 0) - (a[COL.VOTE_AVG] || 0) || (b[COL.VOTE_COUNT] - a[COL.VOTE_COUNT]); });
+        }
         if (!state.sort) {
             var rank = searchActive() ? SEARCH.rank : null;
             var last = rank ? rank.size : 0;
@@ -385,9 +391,16 @@
     var currentRows = [];   // full filtered+sorted set for the active query
     var shownCount = 0;     // how many of currentRows are in the DOM right now
 
+    function votesWord(n) {
+        if (LANG !== 'ru') return n === 1 ? 'rating' : 'ratings';
+        if (n % 10 === 1 && n % 100 !== 11) return 'оценка';
+        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'оценки';
+        return 'оценок';
+    }
     function cardHtml(r) {
-        var heat = heatOf(r[COL.CALIBRATED]);
-        var rating = toRating(r[COL.CALIBRATED]);
+        // The readers' mode: their rating in place of the model's, and no model colouring.
+        var heat = state.rated ? null : heatOf(r[COL.CALIBRATED]);
+        var rating = state.rated ? null : toRating(r[COL.CALIBRATED]);
         var heatClass = heat ? 'pf-heat-' + heat : '';
         var tagSource = r[COL.CANONICAL_TAGS].length ? r[COL.CANONICAL_TAGS] : r[COL.PREREQUISITES];
         var isCanonical = r[COL.CANONICAL_TAGS].length > 0;
@@ -403,9 +416,13 @@
 
         var ratingHtml = rating != null
             ? '<span class="pf-card-rating ' + (heat ? 'pf-heat-bg-' + heat : 'pf-heat-none') + '">' + rating + '</span>' : '';
+        if (state.rated && r[COL.VOTE_COUNT]) {
+            ratingHtml = '<span class="pf-card-rating pf-card-readers">' + esc(r[COL.VOTE_AVG]) + ' / 10</span>'
+                + '<span class="pf-card-vote">' + r[COL.VOTE_COUNT] + ' ' + votesWord(r[COL.VOTE_COUNT]) + '</span>';
+        }
         var statusHtml = (r[COL.SOLVED_EN] ? '<span class="en" title="English solution">EN</span>' : '')
             + (r[COL.SOLVED_RU] ? '<span class="ru" title="Russian solution">RU</span>' : '');
-        var voteHtml = r[COL.VOTE_COUNT]
+        var voteHtml = r[COL.VOTE_COUNT] && !state.rated
             ? '<span class="pf-card-vote">' + esc(r[COL.VOTE_AVG]) + '/10 (' + r[COL.VOTE_COUNT] + ')</span>' : '';
 
         var loadingText = LANG === 'ru' ? 'Загрузка условия…' : 'Loading statement…';
@@ -467,7 +484,9 @@
         emptyEl.hidden = rows.length !== 0;
         countEl.textContent = (LANG === 'ru' ? 'Показано ' : 'Showing ') + shownCount + (LANG === 'ru' ? ' из ' : ' of ') + rows.length
             + (state.q ? (LANG === 'ru' ? ' по запросу «' : ' for «') + state.q + '»' : '');
-        if (sortDefaultOpt) sortDefaultOpt.textContent = sortDefaultOpt.getAttribute(state.q && !isNumberQuery(state.q) ? 'data-label-search' : 'data-label');
+        if (sortDefaultOpt) sortDefaultOpt.textContent = state.rated && !state.q
+            ? (LANG === 'ru' ? 'По оценке читателей' : "By readers' rating")
+            : sortDefaultOpt.getAttribute(state.q && !isNumberQuery(state.q) ? 'data-label-search' : 'data-label');
     }
     var sortDefaultOpt = document.getElementById('pfSortDefault');
 
@@ -485,6 +504,7 @@
         if (state.tags.size && state.tagMode === 'and') params.set('tagMode', 'and');
         if (state.sort) { params.set('sort', state.sort); params.set('dir', state.dir); }
         if (state.lang !== 'any') params.set('solved', state.lang);
+        if (state.rated) params.set('rated', '1');
         if (state.bookmarked) params.set('bookmarked', '1');
         Object.keys(state.axisRanges).forEach(function (k) {
             var r = state.axisRanges[k];
@@ -639,6 +659,10 @@
     starredCb.checked = state.starred;
     starredCb.addEventListener('change', function () { state.starred = starredCb.checked; applyState(); });
 
+    var ratedCb = document.getElementById('pfRated');
+    ratedCb.checked = state.rated;
+    ratedCb.addEventListener('change', function () { state.rated = ratedCb.checked; applyState(); });
+
     var bookmarkedCb = document.getElementById('pfBookmarked');
     if (bookmarkedCb) bookmarkedCb.checked = state.bookmarked; else state.bookmarked = false;
     if (bookmarkedCb) bookmarkedCb.addEventListener('change', function () { state.bookmarked = bookmarkedCb.checked; applyState(); });
@@ -748,6 +772,7 @@
             list.push({ kind: 'difficulty', label: (RU ? 'Сложность ' : 'Difficulty ') + calibLoEl.value + '–' + calibHiEl.value });
         }
         if (state.starred) list.push({ kind: 'starred', label: RU ? 'Со звёздочкой ∗' : 'Asterisked ∗' });
+        if (state.rated) list.push({ kind: 'rated', label: RU ? 'Оценённые читателями' : 'Rated by readers' });
         if (state.bookmarked) list.push({ kind: 'bookmarked', label: RU ? 'Мои закладки' : 'My bookmarks' });
         if (state.lang !== 'any') {
             var solved = { en: RU ? 'Решение на английском' : 'Solved in English', ru: RU ? 'Решение на русском' : 'Solved in Russian', none: RU ? 'Ещё не решены' : 'Not yet solved' };
@@ -799,6 +824,8 @@
             state.min = 0; state.max = 100;
         } else if (kind === 'starred') {
             state.starred = false; starredCb.checked = false;
+        } else if (kind === 'rated') {
+            state.rated = false; ratedCb.checked = false;
         } else if (kind === 'bookmarked') {
             state.bookmarked = false; if (bookmarkedCb) bookmarkedCb.checked = false;
         } else if (kind === 'solved') {
@@ -845,6 +872,7 @@
             r.loEl.value = r.loEl.min; r.hiEl.value = r.hiEl.max; r.render(false);
         });
         state.starred = false; starredCb.checked = false;
+        state.rated = false; ratedCb.checked = false;
         if (bookmarkedCb) { state.bookmarked = false; bookmarkedCb.checked = false; }
         state.lang = 'any';
         syncLangSeg();

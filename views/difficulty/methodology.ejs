@@ -106,14 +106,14 @@
     <% if (lang === 'ru') { %>
 
         <h2>Это ИИ?</h2>
-        <p>Да, прямо и без экивоков: языковая модель оценивает каждую из 2023 задач Савченко по 22 осям — от того, насколько задача требует «озарения», до того, насколько красиво устроено решение. Оценки помогают читателю выбрать, за что браться дальше, — они не заменяют и не проверяют сами решения.</p>
+        <p>Да, прямо и без экивоков. Языковая модель оценивает каждую из 2023 задач Савченко по 22 осям, от того, насколько задача требует «озарения», до того, насколько красиво устроено решение. Оценки помогают читателю выбрать, за что браться дальше. Они не заменяют и не проверяют сами решения.</p>
 
-        <h2>Почему «сложность» — не сырая оценка модели</h2>
-        <p>Модель сначала выставляет каждой задаче число 0–100 по оси <code>overall_difficulty</code>. Это ещё не то число, которое видно на странице задачи, — сначала оно превращается в процентиль относительно всех 2023 задач книги: «эта задача труднее, чем N% остальных». Так шкала использует весь диапазон 0–100, а не собирается там, где модель просто была щедрее на баллы.</p>
-        <p>Показанное же число — <strong>рейтинг от <%= ratingFloor %> до <%= ratingCeil %></strong>: ничего никогда не читается как «0» (что звучало бы как «вообще не сложно», а не «самая простая в книге»). Само распределение этого рейтинга не растянуто линейно — иначе получилась бы неестественно ровная гистограмма, ведь процентиль по построению равномерен, — а намеренно смещено так, чтобы выглядеть как настоящая шкала сложности: большое скопление лёгких задач внизу, широкое плато в середине, длинный редеющий хвост наверху.</p>
+        <h2>Почему «сложность» не сырая оценка модели</h2>
+        <p>Модель сначала выставляет каждой задаче число от 0 до 100 по оси <code>overall_difficulty</code>. Это ещё не то число, которое видно на странице задачи. Сначала оно превращается в процентиль относительно всех 2023 задач книги, то есть «эта задача труднее, чем N% остальных». Так шкала использует весь диапазон от 0 до 100, а не собирается там, где модель просто была щедрее на баллы.</p>
+        <p>Показанное же число, <strong>рейтинг от <%= ratingFloor %> до <%= ratingCeil %></strong>, никогда не читается как «0» (что звучало бы как «вообще не сложно», а не «самая простая в книге»). Само распределение этого рейтинга не растянуто линейно, иначе получилась бы неестественно ровная гистограмма, ведь процентиль по построению равномерен. Оно намеренно смещено так, чтобы выглядеть как настоящая шкала сложности, с большим скоплением лёгких задач внизу, широким плато в середине и длинным редеющим хвостом наверху.</p>
 
         <h2>22 оси, по группам</h2>
-        <p>На странице задачи показаны 9 из них — панель шириной около 280&nbsp;пикселей не выдержит больше и остаться читаемой. Вот все 22, с пояснением, что каждая на самом деле измеряет.</p>
+        <p>На странице задачи показаны 9 из них. Панель шириной около 280&nbsp;пикселей не выдержит больше и остаться читаемой. Вот все 22, с пояснением, что каждая на самом деле измеряет.</p>
 
         <h3>Итог</h3>
         <table class="diffm-axis-table">
@@ -142,18 +142,18 @@
             <tr><td class="label"><%= a.labelRu %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">на странице</span><% } %></td><td class="explain"><%= a.explainRu %></td></tr>
             <% }); %>
         </table>
-        <p>Пять осей «формы задачи» и ещё несколько из «Чего стоит» / «Что даёт» на странице решения не показаны — они здесь и в <a href="/<%= lang %>/problems">панели фильтров</a> для тех, кому интересно глубже.</p>
+        <p>Пять осей «формы задачи» и ещё несколько из «Чего стоит» и «Что даёт» на странице решения не показаны. Они здесь и в <a href="/<%= lang %>/problems">панели фильтров</a> для тех, кому интересно глубже.</p>
 
         <h2>Бывает ли когда-нибудь максимальный рейтинг?</h2>
         <% if (topRatingProblems.length) { %>
-        <p>Да. Прямо сейчас ровно <strong><%= topRatingProblems.length %></strong> <%= topRatingProblems.length === 1 ? 'задача набирает' : 'задач набирают' %> максимум — <strong><%= maxRating %></strong> — потому что несколько эффектов складываются на самом верху шкалы: сырые оценки модели совпадают у нескольких задач сразу, а деление на рейтинговые «сотни» ещё и объединяет соседние процентили в одну ступень. Вот они:</p>
+        <p>Да. Прямо сейчас ровно <strong><%= topRatingProblems.length %></strong> <%= topRatingProblems.length === 1 ? 'задача набирает' : 'задач набирают' %> максимум, <strong><%= maxRating %></strong>, потому что несколько эффектов складываются на самом верху шкалы. Сырые оценки модели совпадают у нескольких задач сразу, а деление на рейтинговые «сотни» ещё и объединяет соседние процентили в одну ступень. Вот они.</p>
         <div class="diffm-100-list">
             <% topRatingProblems.forEach(function(p) { %>
             <a class="diffm-100-item" style="background:<%= p.bg %>;color:<%= p.fg %>;" href="/<%= lang %>/<%= p.problem_name %>"><%= p.problem_name %><% if (p.starred) { %><sup class="ss-star">&#8727;</sup><% } %></a>
             <% }); %>
         </div>
         <% } else { %>
-        <p>Пока ни одна задача не достигла верхней ступени шкалы — но по мере переоценки задач это меняется.</p>
+        <p>Пока ни одна задача не достигла верхней ступени шкалы, но по мере переоценки задач это меняется.</p>
         <% } %>
 
         <h2>Рекорды</h2>
@@ -166,28 +166,28 @@
         </div>
 
         <h2>Насколько это надёжно</h2>
-        <p>У Савченко в книге отмечены звёздочкой 565 из 2023 задач — «труднее своих соседей по разделу». Это единственная независимая точка отсчёта, которая есть у проекта, и модели она никогда не показывается: иначе оценка просто повторяла бы звёздочку. Проверка — сравнить, ставит ли модель отмеченные задачи выше неотмеченных <em>внутри того же раздела</em>, где это верно чаще случайного.</p>
+        <p>У Савченко в книге отмечены звёздочкой 565 из 2023 задач, «труднее своих соседей по разделу». Это единственная независимая точка отсчёта, которая есть у проекта, и модели она никогда не показывается, иначе оценка просто повторяла бы звёздочку. Проверка в том, ставит ли модель отмеченные задачи выше неотмеченных <em>внутри того же раздела</em> чаще случайного.</p>
         <div class="diffm-stat-row">
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.auc.toFixed(3) %></div><div class="diffm-stat-label">AUC модели</div></div>
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.baselineAuc.toFixed(3) %></div><div class="diffm-stat-label">базовый уровень (по длине решения)</div></div>
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.pairs.toLocaleString('ru-RU') %></div><div class="diffm-stat-label">пар внутри разделов</div></div>
         </div>
-        <p>0,714 — не идеально, но заметно выше 0,584, того уровня, который даёт одна лишь длина опубликованного решения. Модель угадывает не потому, что решения подлиннее у отмеченных задач.</p>
+        <p>0,714 не идеально, но заметно выше 0,584, того уровня, который даёт одна лишь длина опубликованного решения. Модель угадывает не потому, что решения подлиннее у отмеченных задач.</p>
 
         <h2>Чего это не утверждает</h2>
-        <p>Это суждение модели, а не человека — значок «i» рядом со сложностью на странице каждой задачи ведёт сюда. Она пока не сверена с тем, сколько реального времени решение занимает у живых читателей; с этого и начинается <a href="/<%= lang %>/problems">оценка читателей</a> прямо под панелью ИИ. Звёздочка Савченко — относительная метка внутри раздела, «труднее своих соседей», а не абсолютная шкала: раздел 14 по природе своей труднее раздела 1, и это никогда не сравнивается напрямую.</p>
+        <p>Это суждение модели, а не человека. Значок «i» рядом со сложностью на странице каждой задачи ведёт сюда. Она пока не сверена с тем, сколько реального времени решение занимает у живых читателей. С этого и начинается <a href="/<%= lang %>/problems?rated=1">оценка читателей</a> прямо под панелью ИИ. Звёздочка Савченко относительная метка внутри раздела, «труднее своих соседей», а не абсолютная шкала. Раздел 14 по природе своей труднее раздела 1, и это никогда не сравнивается напрямую.</p>
 
     <% } else { %>
 
         <h2>Is this AI?</h2>
-        <p>Yes, plainly: a language model rates each of the 2,023 Savchenko problems on 22 axes — from how much of an "aha" a problem takes, to how beautiful the solution turns out to be. The scores help a reader choose what to attempt next. They do not replace or check the solutions themselves.</p>
+        <p>Yes, plainly. A language model rates each of the 2,023 Savchenko problems on 22 axes, from how much of an "aha" a problem takes to how beautiful the solution turns out to be. The scores help a reader choose what to attempt next. They do not replace or check the solutions themselves.</p>
 
         <h2>Why "difficulty" isn't the raw model score</h2>
-        <p>The model first gives every problem a 0-100 number on the <code>overall_difficulty</code> axis. That still isn't the number shown on the problem page — it first becomes a <strong>percentile rank</strong> across all 2,023 problems in the book: "harder than N% of the rest." That way the scale uses its full 0-100 width instead of clustering wherever the model happened to be generous.</p>
-        <p>The number actually shown is a <strong>rating from <%= ratingFloor %> to <%= ratingCeil %></strong> — nothing ever reads as "0" (which sounds like "no difficulty at all" rather than "easiest in the book"). That rating's own distribution isn't stretched linearly, which would produce an artificially flat histogram (a percentile is uniform by construction) — it's deliberately reshaped to look like a real difficulty scale: a large cluster of easy problems at the bottom, a broad plateau in the middle, a long declining tail at the top.</p>
+        <p>The model first gives every problem a number from 0 to 100 on the <code>overall_difficulty</code> axis. That still isn't the number shown on the problem page. It first becomes a <strong>percentile rank</strong> across all 2,023 problems in the book, "harder than N% of the rest." That way the scale uses its full width instead of clustering wherever the model happened to be generous.</p>
+        <p>The number actually shown is a <strong>rating from <%= ratingFloor %> to <%= ratingCeil %></strong>, so nothing ever reads as "0" (which sounds like "no difficulty at all" rather than "easiest in the book"). That rating's own distribution isn't stretched linearly, which would produce an artificially flat histogram (a percentile is uniform by construction). It is deliberately reshaped to look like a real difficulty scale, with a large cluster of easy problems at the bottom, a broad plateau in the middle and a long declining tail at the top.</p>
 
         <h2>The 22 axes, grouped</h2>
-        <p>The problem page shows 9 of these — a panel about 280px wide can't fit more and stay legible. Here are all 22, with what each one actually measures.</p>
+        <p>The problem page shows 9 of these. A panel about 280px wide can't fit more and stay legible. Here are all 22, with what each one actually measures.</p>
 
         <h3>Headline</h3>
         <table class="diffm-axis-table">
@@ -216,18 +216,18 @@
             <tr><td class="label"><%= a.labelEn %><% if (widgetKeys.has(a.key)) { %><span class="diffm-axis-badge">on the page</span><% } %></td><td class="explain"><%= a.explainEn %></td></tr>
             <% }); %>
         </table>
-        <p>The five "shape of the problem" axes, and a few more from "costs"/"repays", aren't shown on the solution page — they're here and in the <a href="/<%= lang %>/problems">finder's filter panel</a> for anyone who wants to go deeper.</p>
+        <p>The five "shape of the problem" axes, and a few more from "costs" and "repays", aren't shown on the solution page. They're here and in the <a href="/<%= lang %>/problems">finder's filter panel</a> for anyone who wants to go deeper.</p>
 
         <h2>Is there ever a maximum rating?</h2>
         <% if (topRatingProblems.length) { %>
-        <p>Yes. Right now exactly <strong><%= topRatingProblems.length %></strong> problem<%= topRatingProblems.length === 1 ? '' : 's' %> reach<%= topRatingProblems.length === 1 ? 'es' : '' %> the maximum — <strong><%= maxRating %></strong> — because two effects compound at the very top of the scale: the model's raw scores genuinely tie across several problems, and rounding into rating buckets merges neighbouring percentiles into the same step. Here they are:</p>
+        <p>Yes. Right now exactly <strong><%= topRatingProblems.length %></strong> problem<%= topRatingProblems.length === 1 ? '' : 's' %> reach<%= topRatingProblems.length === 1 ? 'es' : '' %> the maximum, <strong><%= maxRating %></strong>, because two effects compound at the very top of the scale. The model's raw scores genuinely tie across several problems, and rounding into rating buckets merges neighbouring percentiles into the same step. Here they are.</p>
         <div class="diffm-100-list">
             <% topRatingProblems.forEach(function(p) { %>
             <a class="diffm-100-item" style="background:<%= p.bg %>;color:<%= p.fg %>;" href="/<%= lang %>/<%= p.problem_name %>"><%= p.problem_name %><% if (p.starred) { %><sup class="ss-star">&#8727;</sup><% } %></a>
             <% }); %>
         </div>
         <% } else { %>
-        <p>Not right now — but that changes as problems get rescored.</p>
+        <p>Not right now, but that changes as problems get rescored.</p>
         <% } %>
 
         <h2>Records</h2>
@@ -240,16 +240,16 @@
         </div>
 
         <h2>How reliable this is</h2>
-        <p>Savchenko marked 565 of 2,023 problems with his own ∗ in the printed book — "harder than its neighbours in that section." It's the only independent ground truth this project has, and the model is never shown it — otherwise the score would just echo the star back. The check is whether the model ranks starred problems above unstarred ones <em>within the same section</em> more often than chance.</p>
+        <p>Savchenko marked 565 of 2,023 problems with his own ∗ in the printed book, "harder than its neighbours in that section." It's the only independent ground truth this project has, and the model is never shown it, otherwise the score would just echo the star back. The check is whether the model ranks starred problems above unstarred ones <em>within the same section</em> more often than chance.</p>
         <div class="diffm-stat-row">
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.auc.toFixed(3) %></div><div class="diffm-stat-label">model AUC</div></div>
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.baselineAuc.toFixed(3) %></div><div class="diffm-stat-label">baseline (solution length alone)</div></div>
             <div class="diffm-stat"><div class="diffm-stat-n"><%= reliability.pairs.toLocaleString('en-US') %></div><div class="diffm-stat-label">within-section pairs</div></div>
         </div>
-        <p>0.714 isn't perfect, but it's clearly above 0.584 — what solution length alone predicts. The model isn't just guessing that starred problems have longer solutions.</p>
+        <p>0.714 isn't perfect, but it's clearly above 0.584, what solution length alone predicts. The model isn't just guessing that starred problems have longer solutions.</p>
 
         <h2>What this does not claim</h2>
-        <p>This is a model's judgement, not a person's — the small info link beside the difficulty on every problem page leads here. It hasn't yet been checked against how long solving actually takes real readers; that's what <a href="/<%= lang %>/problems">readers' ratings</a> right below the AI panel start to collect. Savchenko's ∗ is a within-section relative marker — "harder than its neighbours" — never an absolute scale: chapter 14 is intrinsically harder than chapter 1, and the two are never compared directly.</p>
+        <p>This is a model's judgement, not a person's. The small info link beside the difficulty on every problem page leads here. It hasn't yet been checked against how long solving actually takes real readers. That's what <a href="/<%= lang %>/problems?rated=1">readers' ratings</a> right below the AI panel start to collect. Savchenko's ∗ is a within-section relative marker, "harder than its neighbours", never an absolute scale. Chapter 14 is intrinsically harder than chapter 1, and the two are never compared directly.</p>
 
     <% } %>
     </div>

@@ -47,3 +47,10 @@ test('solved=en|ru|none, bookmarked=1 and ax_<axis>=lo-hi filter on the server a
     assert.deepEqual(names(applyFilters(rows, { bookmarked: '1' }, null, { ...AXES, bookmarked: new Set(['1.1.2']) })), ['1.1.2']);
     assert.equal(applyFilters(rows, { ax_elegance: 'nonsense', solved: 'fr' }, null, AXES).length, 3, 'a malformed link filters nothing rather than everything');
 });
+
+test('rated=1 keeps the problems readers have rated, and no others', () => {
+    const rows = [row('1.1.1'), row('1.1.2'), row('1.1.3')];
+    rows[1][COL.VOTE_AVG] = 7.5; rows[1][COL.VOTE_COUNT] = 3;
+    assert.deepEqual(names(applyFilters(rows, { rated: '1' }, null, AXES)), ['1.1.2']);
+    assert.equal(applyFilters(rows, { rated: '0' }, null, AXES).length, 3, 'only "1" is the switch');
+});

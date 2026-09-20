@@ -200,6 +200,10 @@ function applyFilters(rows, q, hits, { axisKeys = [], bookmarked = null } = {}) 
             : tags.some((t) => r[COL.CANONICAL_TAGS].includes(t))));
     }
     if (q.starred) out = out.filter((r) => r[COL.STARRED] === 1);
+    // rated=1: the problems readers have rated (the votes under the AI panel of a solution
+    // page); the page then shows that rating and not the model's (the methodology page's
+    // "оценка читателей" leads here, 2026-09-20).
+    if (q.rated === '1') out = out.filter((r) => r[COL.VOTE_COUNT] > 0);
     // "rating=1200-2400" is what the page writes; min/max percentiles are what older links carry.
     let min = q.min ? Number(q.min) : null;
     let max = q.max ? Number(q.max) : null;
@@ -347,7 +351,11 @@ router.get('/', async (req, res) => {
     }
 
     const filtered = applyFilters(dataset.rows, req.query, hits, { axisKeys: dataset.axisKeys, bookmarked: new Set(bookmarked) });
-    const sorted = req.query.sort ? applySort(filtered, req.query.sort, req.query.dir || 'desc', dataset.axisKeys) : orderByRelevance(filtered, hits);
+    // In the readers' mode the default order is by their rating, as the page sorts it.
+    const defaultSort = req.query.rated === '1' && !req.query.q ? 'vote_avg' : null;
+    const sorted = req.query.sort || defaultSort
+        ? applySort(filtered, req.query.sort || defaultSort, req.query.dir || 'desc', dataset.axisKeys)
+        : orderByRelevance(filtered, hits);
     const ssrRows = sorted.slice(0, PAGE_SIZE);
     const snippets = {};
     if (hits) for (const r of ssrRows) if (hits.snippets[r[COL.NAME]]) snippets[r[COL.NAME]] = hits.snippets[r[COL.NAME]];
@@ -363,7 +371,7 @@ router.get('/', async (req, res) => {
         console.error('finder statements:', err.message);
     }
     // Reserves the chips' row before the script fills it, so the cards do not jump down.
-    const hasFilters = ['q', 'chapter', 'tag', 'starred', 'min', 'max', 'rating', 'solved', 'bookmarked', 'sort']
+    const hasFilters = ['q', 'chapter', 'tag', 'starred', 'rated', 'min', 'max', 'rating', 'solved', 'bookmarked', 'sort']
         .some((k) => req.query[k]) || Object.keys(req.query).some((k) => k.startsWith('ax_'));
 
     res.render('problems/index', {

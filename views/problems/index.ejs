@@ -177,6 +177,8 @@
         }
         .pf-card-status { display: flex; gap: var(--ss-space-1); margin-left: auto; font-size: var(--ss-fs-12); }
         .pf-card-vote { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
+        /* The readers' rating, shown in place of the model's in the readers' mode (rated=1). */
+        .pf-card-readers { background: var(--ss-navy); color: var(--ss-on-navy); }
         /* The way in, at the right of the head line: a button, not a link with an arrow, which
            was missed (the owner, 2026-09-20). The solution in the primary style; an unsolved
            problem has no page, so its button is the upload form. */
@@ -292,6 +294,8 @@
 
             <div class="pf-filter-group">
                 <label class="pf-check-row"><input type="checkbox" id="pfStarred" /> <%= lang === 'ru' ? 'Задачи со звёздочкой ∗' : 'Asterisked problems' %></label>
+                <%# Only the problems readers have rated, and then their rating in place of the model's. %>
+                <label class="pf-check-row"><input type="checkbox" id="pfRated" /> <%= lang === 'ru' ? 'Оценённые читателями' : 'Rated by readers' %></label>
                 <% if (userId) { %>
                 <label class="pf-check-row"><input type="checkbox" id="pfBookmarked" /> <%= lang === 'ru' ? 'Мои закладки' : 'My bookmarks' %></label>
                 <% } %>
@@ -374,7 +378,7 @@
                 <span class="pf-sort">
                     <span class="pf-sort-label"><%= lang === 'ru' ? 'Сортировка:' : 'Sort:' %></span>
                     <select class="pf-sort-select" id="pfSortSelect">
-                        <option value="" id="pfSortDefault" data-label="<%= lang === 'ru' ? 'По номеру' : 'Problem order' %>" data-label-search="<%= lang === 'ru' ? 'Лучшие совпадения' : 'Best match' %>"><%= searchQuery ? (lang === 'ru' ? 'Лучшие совпадения' : 'Best match') : (lang === 'ru' ? 'По номеру' : 'Problem order') %></option>
+                        <option value="" id="pfSortDefault" data-label="<%= lang === 'ru' ? 'По номеру' : 'Problem order' %>" data-label-search="<%= lang === 'ru' ? 'Лучшие совпадения' : 'Best match' %>"><%= searchQuery ? (lang === 'ru' ? 'Лучшие совпадения' : 'Best match') : (query && query.rated === '1' ? (lang === 'ru' ? 'По оценке читателей' : "By readers' rating") : (lang === 'ru' ? 'По номеру' : 'Problem order')) %></option>
                         <option value="calibrated:desc"><%= lang === 'ru' ? 'Сложнее сначала' : 'Hardest first' %></option>
                         <option value="calibrated:asc"><%= lang === 'ru' ? 'Легче сначала' : 'Easiest first' %></option>
                         <option value="elegance:desc"><%= lang === 'ru' ? 'Красивее сначала' : 'Most elegant first' %></option>
@@ -384,6 +388,9 @@
             </div>
             <%
             const heatOf = (c) => c == null ? null : Math.min(9, Math.max(1, Math.ceil((c / 100) * 9) || 1));
+            // rated=1: the readers' rating and no model colouring (js/problems-finder.js does the same).
+            const ratedMode = query && query.rated === '1';
+            const votesWord = (n) => lang === 'ru' ? (n % 10 === 1 && n % 100 !== 11 ? 'оценка' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 'оценки' : 'оценок')) : (n === 1 ? 'rating' : 'ratings');
             // dataset.tags is [key, labelEn, labelRu] — SSR cards need the same localized
             // label the client JS shows after hydration, not the raw snake_case key.
             const tagLabelMap = {};
@@ -391,7 +398,7 @@
             %>
             <div id="pfCards">
                 <% ssrRows.forEach(function(r) {
-                    const heat = heatOf(r[5]); const rating = toRating(r[5]);
+                    const heat = ratedMode ? null : heatOf(r[5]); const rating = ratedMode ? null : toRating(r[5]);
                     const isCanonical = r[8].length > 0;
                     const tagSource = isCanonical ? r[8] : r[7];
                     // No solution in either language: /<lang>/<name> would only redirect to
@@ -406,6 +413,7 @@
                     <div class="pf-card-head">
                         <% if (unsolvedCard) { %><span class="pf-card-name"><%= r[0] %></span><% } else { %><a class="pf-card-name" href="<%= href %>"><%= r[0] %></a><% } %>
                         <% if (r[4] === 1) { %><sup class="ss-star" title="<%= lang === 'ru' ? 'Отмечена ∗ Савченко' : 'Asterisked by Savchenko' %>">&#8727;</sup><% } %>
+                        <% if (ratedMode && r[10]) { %><span class="pf-card-rating pf-card-readers"><%= r[9] %> / 10</span><span class="pf-card-vote"><%= r[10] %> <%= votesWord(r[10]) %></span><% } %>
                         <% if (rating != null) { %><span class="pf-card-rating <%= heat ? 'pf-heat-bg-' + heat : 'pf-heat-none' %>"><%= rating %></span><% } %>
                         <% if (tagSource.length) { %>
                         <div class="pf-card-tags">
@@ -416,7 +424,7 @@
                             <% if (r[11]) { %><span class="en" title="English solution">EN</span><% } %>
                             <% if (r[12]) { %><span class="ru" title="Russian solution">RU</span><% } %>
                         </span>
-                        <% if (r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
+                        <% if (!ratedMode && r[10]) { %><span class="pf-card-vote"><%= r[9] %>/10 (<%= r[10] %>)</span><% } %>
                         <% if (unsolvedCard) { %><a class="btn btn-sm btn-outline-dark pf-card-upload" href="<%= href %>"><%= lang === 'ru' ? 'Загрузить решение' : 'Upload a solution' %></a><% } else { %><a class="btn btn-sm btn-dark pf-card-open" href="<%= href %>"><%= lang === 'ru' ? 'Решение' : 'Solution' %></a><% } %>
                     </div>
                     <% if (snippets && snippets[r[0]]) { %><p class="pf-card-snippet"><%= snippets[r[0]] %></p><% } %>
