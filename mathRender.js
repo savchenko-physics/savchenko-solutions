@@ -11,6 +11,14 @@
 // with a placeholder; scan the remaining text for math; and inside each formula any
 // leftover placeholder (a <br>) becomes a space. Each formula is rendered
 // individually and cached by its TeX, so the ~100% hit rate survives dynamic pages.
+//
+// A formula never crosses a block: block-level tags (<p>, <div>, <h2>, <li>, <td>, …) get a
+// placeholder of their own, and no pass may span one. The scan runs over the whole solution
+// page, so before 2026-09-20 a `$$` left open in a post paired with the next `$$` anywhere
+// below it, and every tag in between (the answer box's close, the footer's nav, the comment
+// form's open) was dropped as a stray <br>: /ru/1.4.18's answer, `$\alpha = 60^{\circ}$$l =
+// 200\sqrt{3}$`, ate the rest of the page. Now `$$…$$` is looked for inside one block, and
+// that line falls through to the inline pass, which reads it as TeX does — two formulas.
 
 const { mathjax } = require('mathjax-full/js/mathjax.js');
 const { TeX } = require('mathjax-full/js/input/tex.js');
@@ -227,7 +235,9 @@ function memoryStats() {
 }
 
 const S = '\x01MJX'; // placeholder sentinel — cannot occur in real page text
-const PLACEHOLDER_G = new RegExp(S + '(\\d+)' + S, 'g');
+const B = '\x02MJX'; // the same, for a block-level tag: no formula may span one
+const PLACEHOLDER_G = new RegExp('[' + S[0] + B[0] + ']MJX(\\d+)[' + S[0] + B[0] + ']MJX', 'g');
+const BLOCK_TAG_RE = /^<\/?(?:p|div|section|article|aside|header|footer|main|nav|h[1-6]|ul|ol|li|dl|dt|dd|table|thead|tbody|tfoot|tr|td|th|caption|blockquote|figure|figcaption|hr|form|fieldset|legend|details|summary|body|html)\b/i;
 
 function protect(html, store) {
     // Whole blocks whose contents must never be scanned. A formula already typeset carries its
@@ -243,9 +253,11 @@ function protect(html, store) {
         const t = S + store.length + S; store.push('$'); return t;
     });
     // Every remaining tag: hides attributes (e.g. img alt) and turns inline tags
-    // (<br>) that sit inside a formula into a placeholder we drop later.
+    // (<br>) that sit inside a formula into a placeholder we drop later. A block tag's
+    // placeholder is a wall instead: no formula may reach across it.
     html = html.replace(/<[^>]+>/g, (m) => {
-        const t = S + store.length + S; store.push(m); return t;
+        const wall = BLOCK_TAG_RE.test(m) ? B : S;
+        const t = wall + store.length + wall; store.push(m); return t;
     });
     return html;
 }
@@ -268,7 +280,7 @@ function renderInlineDollar(s, render) {
             let j = i + 1, depth = 0, close = -1;
             while (j < n) {
                 const cj = s[j];
-                if (cj === '\n') break;                 // inline math is single-line
+                if (cj === '\n' || cj === B[0]) break;  // inline math is single-line, inside one block
                 else if (cj === '{') depth++;
                 else if (cj === '}') { if (depth > 0) depth--; }
                 else if (cj === '$' && depth === 0) { close = j; break; }
@@ -296,7 +308,7 @@ function renderInlineDollar(s, render) {
     return out;
 }
 
-const DISPLAY_ENV_RE = /\\begin\{(equation|align|alignat|flalign|gather|multline|eqnarray|displaymath)(\*?)\}[\s\S]*?\\end\{\1\2\}/g;
+const DISPLAY_ENV_RE = /\\begin\{(equation|align|alignat|flalign|gather|multline|eqnarray|displaymath)(\*?)\}[^\x02]*?\\end\{\1\2\}/g;
 
 /** Render every math span on an HTML page to inline SVG. Idempotent. */
 function renderMathInHtml(html) {
@@ -311,16 +323,17 @@ function renderMathInHtml(html) {
     const D = (tex) => keep(tex2svg(cleanTex(tex), true));
     const I = (tex) => keep(tex2svg(cleanTex(tex), false));
 
-    // Display first (so $$ isn't split by the inline $ pass), then inline.
-    s = s.replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => D(tex) || m);
-    s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => D(tex) || m);
+    // Display first (so $$ isn't split by the inline $ pass), then inline. `[^\x02]` in
+    // every pass: a formula ends inside the block it began in, or it is not a formula.
+    s = s.replace(/\$\$([^\x02]+?)\$\$/g, (m, tex) => D(tex) || m);
+    s = s.replace(/\\\[([^\x02]+?)\\\]/g, (m, tex) => D(tex) || m);
     // A display environment with no delimiters around it, as MathJax's own finder takes it
     // (processEnvironments) and as the editor's preview therefore showed it: 40 posts write
     // \begin{equation} … \end{equation} bare, and until 2026-09-19 the server left every one
     // as text (/en/14.3.7). The environment is passed whole; MathJax typesets it.
     s = s.replace(DISPLAY_ENV_RE, (m) => D(m) || m);
     s = renderInlineDollar(s, (tex) => I(tex));
-    s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => I(tex) || m);
+    s = s.replace(/\\\(([^\x02]+?)\\\)/g, (m, tex) => I(tex) || m);
 
     return restore(s, store);
 }

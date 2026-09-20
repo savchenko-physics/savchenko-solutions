@@ -42,7 +42,11 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   (`$…$`, `$$…$$`, or the environment) in a `font-size: 0` span — the one hiding Chrome keeps in
   a copy — and `js/math-select.js` paints a selected formula in the site's selection colour.
   Already typeset containers are protected from a second pass, so rendering stays idempotent.
-  A bare `\begin{equation}…\end{equation}` is typeset as display maths.
+  A bare `\begin{equation}…\end{equation}` is typeset as display maths. **A formula never
+  crosses a block-level tag** (2026-09-20): the maths pass runs over the whole solution page, and
+  `$\alpha$$l$` in /ru/1.4.18's answer paired its `$$` with one further down and ate the rest of
+  the page. Block tags get their own placeholder in `protect()` and every pass stops at it, so
+  what a post file holds can drop no tag outside its own paragraph. `tests/math-blocks.test.js`.
 - MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`
   (mounted in `index.js` and `sandbox/sandbox-app.js`); keep that dependency installed.
 - Server-rendered maths (`mathRender.js`) sets the glyphs MathJax's TeX font lacks — the
