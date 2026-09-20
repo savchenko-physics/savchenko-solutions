@@ -20,7 +20,24 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   `include('default/site_styles', { ssStyles: { math: true, prose: true, icons: 'fa6' } })`.
   `tests/site-styles.test.js` finds every rendered page and enforces it.
 - `js/vendor/` — Bootstrap JS, Popper, Chart.js, D3, marked, html2canvas, jQuery,
-  CodeMirror JS + modes/addons.
+  CodeMirror JS + modes/addons. The solution page loads `icons: 'fa6-subset'`: the twenty
+  Font Awesome glyphs it and the header use, 3 KB of font instead of 150 (`scripts/build-fa-subset.py`;
+  `tests/site-styles.test.js` fails when a template uses an icon the subset lacks).
+- **Problem links.** A problem number in a rendered statement or solution is a link to that problem
+  (`lib/problemRefs.js`, on the HTML after the maths; the book's 2,023 numbers only, never inside a
+  formula, a script or an existing link). While the cursor rests on any link to a problem (that, a
+  grid dot, an unsolved chip) `js/problem-peek.js` shows its statement above the cursor, as a PDF
+  reader previews a reference, from `/:lang/problems/statements`. An unsolved problem's address
+  and every dot for one open `/:lang/problems?q=<number>`: the statement and the upload button.
+- **Grids** (homepage chapters, a solution page's section, `/unsolved`) are coloured by difficulty
+  only, `body.grid-heat` on those pages (2026-09-19: the language colouring and its switch are
+  gone); dashed = unsolved, heavy border = Savchenko's ∗, bold numerals; the heat rules outrank
+  `a:link` by specificity, not `!important`.
+- **Formulas copy as TeX.** Every server-typeset formula carries its source beside the SVG
+  (`$…$`, `$$…$$`, or the environment) in a `font-size: 0` span — the one hiding Chrome keeps in
+  a copy — and `js/math-select.js` paints a selected formula in the site's selection colour.
+  Already typeset containers are protected from a second pass, so rendering stays idempotent.
+  A bare `\begin{equation}…\end{equation}` is typeset as display maths.
 - MathJax 3 is served from the installed `mathjax-full` package at `/vendor/mathjax/`
   (mounted in `index.js` and `sandbox/sandbox-app.js`); keep that dependency installed.
 - Server-rendered maths (`mathRender.js`) sets the glyphs MathJax's TeX font lacks — the
@@ -169,6 +186,24 @@ for every request from `req.originalUrl` (prefix swapped or added, query kept, `
 Russian-only `/summit` and the recovery pages (which say their language in `?lang=`) pass their
 own. Until 2026-09-19 the link went to the homepage from nearly every page, the solution page
 included. `tests/lang-switch.test.js` checks the rule, the mounts and the reads.
+
+**Server speed (2026-09-19).** Every page renders in tens of milliseconds on the box; what made
+them slow was never the work. (1) **One connection pool**, `lib/db.js`, for every module and the
+session store (scripts keep their own): 53 module pools each dropped their connection after 10 s
+idle and a new one costs ~95 ms of TCP + TLS to RDS against 1–2 ms per query, so a solution page
+paid several handshakes; the pool keeps two connections for good, the rest for 30 min, runs
+without parallel query (RDS spent 20 ms launching workers for 0.4 ms of work) and logs a dropped
+idle connection instead of crashing on it. (2) **Stale-while-revalidate caches**, `lib/swr.js`:
+a held value is served at once and refreshed behind the reader once older than its ttl — the
+homepage widgets, the profile and contributors payloads, the finder datasets, the unsolved page's
+view totals; the homepage, the datasets and the twelve top profiles are filled at boot. (3) The
+**view cache is on** regardless of NODE_ENV (`VIEW_CACHE=off` for local work): a template change
+needs a restart. (4) The solution page gathers its lookups in one `Promise.all` and records the
+view after answering; the contributors page ships its five API answers in the HTML
+(`lib/inProcess.js`, as the profile does). `parents.js` holds the CSVs and the posts listing (5 s).
+Measure with `curl -w %{time_starttransfer}` on the box and a CPU profile through the inspector
+(`kill -USR1`), never guess: the "slow query" was worker start-up, the "slow render" was EJS
+compiling.
 
 ## File Structure
 ```
