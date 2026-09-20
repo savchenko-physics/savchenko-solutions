@@ -148,3 +148,14 @@ test('the site link rule stays at (0,0,1), so containers and buttons can colour 
     // Hover and visited are wrapped in :where() so they add nothing to the specificity.
     assert.match(ds, /a:where\(:hover\) \{/);
 });
+
+// The blog's linkers touch the text between tags only: the username linker once matched "igor"
+// inside a figure's alt text and put an <a> into the <img>, which ended the tag early and spilled
+// the caption onto the page (the chain-reaction post, 2026-09-20).
+test('blog auto-links never reach into a tag, an existing link or code', () => {
+    const html = '<p>igor и emixter решили 14.2.1.</p><img src="/img/a.svg" alt="igor работает утром, 14.2.1." /><p><a href="/x">igor</a> <code>emixter 1.1.1</code></p>';
+    const out = linkifyBlogHtml(html, 'ru');
+    assert.match(out, /<img src="\/img\/a\.svg" alt="igor работает утром, 14\.2\.1\." \/>/, 'the tag is untouched');
+    assert.match(out, /<a href="\/x">igor<\/a> <code>emixter 1\.1\.1<\/code>/, 'a link and code are untouched');
+    assert.match(out, /<a href="\/user\/igor"[^>]*>igor<\/a> и <a href="\/user\/emixter"[^>]*>emixter<\/a> решили <a href="\/ru\/14\.2\.1"[^>]*>14\.2\.1<\/a>\./, 'the text is linked, the number at the end of the sentence too');
+});

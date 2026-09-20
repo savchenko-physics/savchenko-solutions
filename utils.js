@@ -629,19 +629,30 @@ function withMathPreserved(html, fn) {
     return out.replace(/ MATH[DI](\d+) /g, (_, n) => tokens[+n]);
 }
 
+// Applies fn to the text between tags only: never inside a tag (an attribute), an existing
+// link, code or a script. The username linker used to match "igor" inside a figure's alt text
+// and put an <a> into the <img> tag, which ended the tag early and spilled the rest of the
+// caption onto the page as text (the chain-reaction post, 2026-09-20).
+const KEEP_WHOLE_RE = /(<a\b[\s\S]*?<\/a>|<(?:code|pre|script|style|textarea)\b[\s\S]*?<\/(?:code|pre|script|style|textarea)>|<[^>]+>)/g;
+function onTextBetweenTags(html, fn) {
+    return String(html).split(KEEP_WHOLE_RE).map((part, i) => (i % 2 ? part : fn(part))).join('');
+}
+
 /**
  * Auto-link bare problem references (e.g. "14.2.1") in rendered HTML to
  * /<lang>/<ref>. Used by the blog renderer so authors don't need to mark
  * them up. Skips refs already inside <a> tags, attribute values, and math.
  */
 function autoLinkBareProblemRefs(html, lang = 'en') {
-    return withMathPreserved(html, (h) =>
-        h.replace(
-            /(?<![\d.\w])(\d{1,2}\.\d{1,2}\.\d{1,3})(?![\d.\w])(?![^<]*<\/a>)/g,
+    return withMathPreserved(html, (h) => onTextBetweenTags(h, (text) =>
+        text.replace(
+            // A number at the end of a sentence ("решили 14.2.1.") is a reference too; one
+            // followed by ".5" is a longer number and is not.
+            /(?<![\d.\w])(\d{1,2}\.\d{1,2}\.\d{1,3})(?![\w])(?!\.\d)/g,
             (_, ref) =>
                 `<a href="/${lang}/${ref}" class="problem-ref" style="${AUTO_LINK_COLOR}text-decoration:none;">${ref}</a>`
         )
-    );
+    ));
 }
 
 /** Whitelisted usernames that should be auto-linked in blog post bodies. */
@@ -662,13 +673,13 @@ const BLOG_RUSSIAN_NAME_TO_USERNAME = [
  * Skips matches already inside <a> tags or math.
  */
 function autoLinkBlogUsernames(html) {
-    return withMathPreserved(html, (h) => {
+    return withMathPreserved(html, (h) => onTextBetweenTags(h, (text) => {
         // Latin usernames (case-insensitive, but preserve original text)
         const userRe = new RegExp(
-            `(?<![\\w])(${BLOG_AUTO_LINK_USERNAMES.join('|')})(?![\\w])(?![^<]*<\\/a>)`,
+            `(?<![\\w])(${BLOG_AUTO_LINK_USERNAMES.join('|')})(?![\\w])`,
             'gi'
         );
-        let result = h.replace(userRe, (match) => {
+        let result = text.replace(userRe, (match) => {
             const lower = match.toLowerCase();
             return `<a href="/user/${lower}" class="user-mention" style="${AUTO_LINK_COLOR}text-decoration:none;">${match}</a>`;
         });
@@ -679,7 +690,7 @@ function autoLinkBlogUsernames(html) {
             );
         }
         return result;
-    });
+    }));
 }
 
 /**
