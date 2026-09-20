@@ -2022,10 +2022,17 @@
         container.dataset.filled = '1';
       }
 
+      // One chapter open at a time (the owner, 2026-09-20): opening one closes the one
+      // that was open, so the grid never shows two chapters' sections stacked.
       function setChapterOpen(card, open) {
         const panel = document.getElementById(card.id + '-panel');
         if (!panel) return;
-        if (open) panel.querySelectorAll('.problem-dots').forEach(fillSection);
+        if (open) {
+          document.querySelectorAll('.chapter-card.open').forEach((other) => {
+            if (other !== card) setChapterOpen(other, false);
+          });
+          panel.querySelectorAll('.problem-dots').forEach(fillSection);
+        }
         card.classList.toggle('open', open);
         panel.classList.toggle('open', open);
         const header = card.querySelector('.chapter-card-header');

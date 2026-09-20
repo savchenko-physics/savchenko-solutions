@@ -19,10 +19,14 @@
 }(typeof self !== 'undefined' ? self : this, function () {
     'use strict';
 
-    // 9-step YlOrRd ramp for difficulty (0-100 → 1…9). Navy ink on steps 1-6, white on 7-9: the
-    // ink with the better contrast on each step (white on step 6 was 3.35:1, navy is 5.1:1).
+    // 9-step YlOrRd ramp for difficulty (0-100 → 1…9). Navy ink on steps 1-5, white on 6-9.
+    // Step 6 is the one judgement call: navy on its red-orange measures 5.1:1 against white's
+    // 3.35:1, and yet the owner could not read the navy numerals there (2026-09-20); the
+    // numerals are bold, for which 3:1 is the threshold, and a red-orange field reads as one
+    // that carries white. A red dark enough for 4.5:1 would be step 7's colour. Step 5 stays
+    // navy: white on its orange is 2.3:1, unreadable by any measure.
     const HEAT = ['#ffffcc', '#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a', '#e31a1c', '#bd0026', '#800026'];
-    const HEAT_INK = ['#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#ffffff', '#ffffff', '#ffffff'];
+    const HEAT_INK = ['#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#1a1a2e', '#ffffff', '#ffffff', '#ffffff', '#ffffff'];
     const HEAT_NONE = { fill: '#ffffff', ink: '#8c959f' };
 
     // Which languages a solution exists in. Shape carries the meaning as well as hue (solid = both,

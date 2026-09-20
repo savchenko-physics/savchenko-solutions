@@ -38,3 +38,22 @@ test('no post, no statement heading, or an empty section: null, never a throw', 
     withPost('ru', '1.1.1', '### Решение\n\nТолько решение.\n', (root) => assert.equal(postStatement('1.1.1', 'ru', root), null));
     withPost('ru', '1.1.1', '### Условие\n\n$1.1.1.$\n\n### Решение\n', (root) => assert.equal(postStatement('1.1.1', 'ru', root), null));
 });
+
+// lib/statementRender.js's two text repairs, pure and exported.
+const { repairStrayDollar, breakSubItems } = require('../lib/statementRender');
+
+test('a stray opening dollar left by the builder goes; balanced dollars are never touched', () => {
+    assert.equal(repairStrayDollar('а.$ Из вещества $l$.'), 'а. Из вещества $l$.');
+    assert.equal(repairStrayDollar('*.$  Какую $x$'), 'Какую $x$');
+    assert.equal(repairStrayDollar('^*$ В вакууме $y$'), 'В вакууме $y$');
+    assert.equal(repairStrayDollar('а. $x$ и $y$'), 'а. $x$ и $y$', 'even count: as it is');
+    assert.equal(repairStrayDollar('$x$ и $'), '$x$ и $', 'odd but not at the start: left for a person');
+});
+
+test('a sub-item after a sentence end opens a paragraph; an abbreviation does not', () => {
+    assert.equal(breakSubItems('…со скоростью $\\beta c$? б. Решите задачу.'), '…со скоростью $\\beta c$?\n\nб. Решите задачу.');
+    assert.equal(breakSubItems('Find the force. b. The velocity of the body.'), 'Find the force.\n\nb. The velocity of the body.');
+    assert.equal(breakSubItems('увеличивается и т. д. Чем объясняется'), 'увеличивается и т. д. Чем объясняется');
+    assert.equal(breakSubItems('а. Первый.\n\nб. Второй.'), 'а. Первый.\n\nб. Второй.', 'already separate');
+    assert.equal(breakSubItems('при $t = 0$. в. Найдите $v$.'), 'при $t = 0$.\n\nв. Найдите $v$.');
+});

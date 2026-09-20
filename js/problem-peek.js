@@ -11,7 +11,12 @@
     if (!window.fetch || !document.querySelector) return;
 
     var LANG = document.documentElement.lang === 'ru' ? 'ru' : 'en';
-    var LINKS = 'a.problem-ref, a.problem-dot, a.problem-grid-item, a.problem-chip';
+    // Any link to a problem's page: a number in a text, a grid dot, an unsolved chip, the
+    // previous/next problem, the related problems, a line of the recent changes — whatever
+    // its class (the owner, 2026-09-20). Not the problem database's own card, whose number
+    // and buttons stand beside the statement they would preview.
+    var LINKS = 'a[href]';
+    var NOT = '.pf-card-name, .pf-card-open, .pf-card-upload, .ss-peek-open';
     var SHOW_DELAY = 220;   // a cursor passing over a link is not a request
     var HIDE_DELAY = 140;   // long enough to move from the link into the card
     var WIDTH = 640;
@@ -89,6 +94,24 @@
         card.hidden = false;
     }
 
+    // The card appears with its figure already drawn: its <img> carry width and height
+    // (lib/statementRender.js), so nothing moves when the file arrives, and the card waits
+    // for the files up to a short limit before it shows, so a figure does not pop into an
+    // empty box. A cached figure resolves at once.
+    var IMAGE_WAIT = 600;
+    function imagesReady(root) {
+        var imgs = Array.prototype.slice.call(root.querySelectorAll('img'));
+        if (!imgs.length) return Promise.resolve();
+        var all = Promise.all(imgs.map(function (img) {
+            if (img.complete) return Promise.resolve();
+            return new Promise(function (resolve) {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true });
+            });
+        }));
+        return Promise.race([all, new Promise(function (resolve) { setTimeout(resolve, IMAGE_WAIT); })]);
+    }
+
     function show(link, problem) {
         var my = ++seq;
         load(problem).then(function (html) {
@@ -98,8 +121,13 @@
             open.href = link.getAttribute('href');
             open.textContent = LANG === 'ru' ? 'Открыть →' : 'Open →';
             body.innerHTML = html;
+            // Lazy images never start loading in a hidden card; they are wanted now.
+            Array.prototype.forEach.call(body.querySelectorAll('img[loading]'), function (img) { img.loading = 'eager'; });
             body.scrollTop = 0;
-            place(link);
+            imagesReady(body).then(function () {
+                if (my !== seq) return;
+                place(link);
+            });
         });
     }
 
@@ -120,7 +148,7 @@
         // card the cursor keeps the card; the link there opens the page when clicked.
         if (card && card.contains(e.target)) { clearTimeout(hideTimer); return; }
         var link = e.target.closest && e.target.closest(LINKS);
-        if (!link) return;
+        if (!link || link.matches(NOT)) return;
         var problem = problemOf(link);
         if (!problem) return;
         clearTimeout(hideTimer);

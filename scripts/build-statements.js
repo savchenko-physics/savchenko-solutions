@@ -178,7 +178,10 @@ const SOLUTION_H = /^#{2,6}[ \t]*(Решение|Решения|Альтерна
 // the caret-star is Savchenko's harder-problem marker carried over from the book. The
 // English TeX has no such prefix, so it is stripped for consistency — but the star has to
 // be consumed with it. Miss it and 2.2.24 begins with the debris "^*.$".
-const NUMBER_PREFIX = /^\s*\$?\s*\d{1,2}\.\d{1,2}\.\d{1,3}\s*(?:\^\s*\{?\s*[*∗]\s*\}?)?\s*\.?\s*\$?[.\s]*/;
+// A sub-item letter may sit inside the same dollars, "$1.1.9. а.$ Из…": it stays, and the
+// closing dollar goes with the number, or the statement opened with "а.$ Из…" and everything
+// up to its next dollar was set as maths (1.1.9, 1.5.11, 3.6.11, 5.6.31; 2026-09-20).
+const NUMBER_PREFIX = /^\s*\$?\s*\d{1,2}\.\d{1,2}\.\d{1,3}\s*(?:\^\s*\{?\s*[*∗]\s*\}?)?\s*\.?\s*(?:([а-яa-z])\s*\.\s*)?\$?[.\s]*/i;
 const MD_STAR = /^\s*\$?\s*\d{1,2}\.\d{1,2}\.\d{1,3}\s*\^\s*\{?\s*[*∗]/;
 
 // The statement ends at the NEXT heading, whatever it says. SOLUTION_H lists the headings
@@ -196,7 +199,7 @@ function markdownStatement(md) {
     const end = Math.min(e ? e.index : Infinity, any ? any.index : Infinity);
     if (end !== Infinity) body = body.slice(0, end);
     const starred = MD_STAR.test(body);
-    return { text: body.replace(NUMBER_PREFIX, '').trim(), mdStarred: starred };
+    return { text: body.replace(NUMBER_PREFIX, (m, letter) => (letter ? `${letter}. ` : '')).trim(), mdStarred: starred };
 }
 
 function fromMarkdown(lang) {
