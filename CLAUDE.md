@@ -180,6 +180,10 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
 ## Architecture
 Monolithic server-side rendered Express app. All pages are EJS templates. Client-side JS handles search, form validation, CodeMirror, and Chart.js. Entry point is `index.js` (~2200 lines). A separate sandbox app runs on port 4000 (`sandbox/sandbox-app.js`).
 
+**The problem database's readers' mode.** `/:lang/problems?rated=1` keeps only the problems readers
+have rated (the votes under the AI panel of a solution page) and shows that rating in place of the
+model's, ordered by it; the methodology page's "оценка читателей" leads there.
+
 **Languages in addresses.** Every page router is mounted at its bare address and under `/en`
 and `/ru` (`/blog` and `/ru/blog`, `/discuss` and `/en/discuss`, …). The bare address speaks the
 session's language; a prefixed one sets `req.urlLang` for that request, which the routers read
@@ -399,6 +403,11 @@ hyphenation and a 1em paragraph indent, as journals set text.
   «Последняя задача», which sells the premium ones. Its own art (the ħ coin, Laplace's demon)
   follows the same drawing rules (`scripts/lib/svg-art.js`)
 - No "Built with love" or similar filler copy
+- **No em dash, colon or semicolon in the site's own prose either** (the owner, 2026-09-20): the
+  methodology page, the 22 axis explanations (`lib/difficultyAxes.js`) and every blog post by
+  astrosander were rewritten that way (the posts live in `blog_posts`; the rows before the rewrite are
+  in `~/deploy-backups/blog-posts-before-*.json` on the box). Times (23:59), URLs, TeX and table
+  syntax keep theirs. Write new copy the same way.
 - **Page titles** (`<title>`, og:title, twitter:title) contain no em dash, en dash, colon or
   semicolon; parts are joined with ` | `. Build them with `docTitle(...parts)` and pass any
   database or user text through `titleText()` (`lib/pageTitle.js`, both `app.locals`).
