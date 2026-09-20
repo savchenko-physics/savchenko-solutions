@@ -57,3 +57,13 @@ test('a sub-item after a sentence end opens a paragraph; an abbreviation does no
     assert.equal(breakSubItems('а. Первый.\n\nб. Второй.'), 'а. Первый.\n\nб. Второй.', 'already separate');
     assert.equal(breakSubItems('при $t = 0$. в. Найдите $v$.'), 'при $t = 0$.\n\nв. Найдите $v$.');
 });
+
+test('a single line break inside a paragraph is a space; blank lines, blocks and hard breaks keep theirs', () => {
+    const { joinSoftBreaks } = require('../lib/statementRender');
+    assert.equal(joinSoftBreaks('в любой момент\r\nвремени равна\r\n\r\nВторой абзац.'), 'в любой момент времени равна\n\nВторой абзац.');
+    assert.equal(joinSoftBreaks('Текст:\n$$x = 1$$\nдалее'), 'Текст:\n$$x = 1$$\nдалее', 'display maths keeps its lines');
+    assert.equal(joinSoftBreaks('Текст\n![рис](a.png)'), 'Текст\n![рис](a.png)');
+    assert.equal(joinSoftBreaks('Первая  \nвторая'), 'Первая  \nвторая', 'two trailing spaces are a hard break');
+    assert.equal(joinSoftBreaks('а. Один.\nб. Два.'), 'а. Один. б. Два.', 'then breakSubItems opens the paragraph');
+    assert.equal(joinSoftBreaks(''), '');
+});
