@@ -30,16 +30,18 @@ test('a problem of the book is a known section and a number within it, written t
     }
 });
 
-test('the solution page sends a real problem with no page to its other language or the unsolved list, before any 404', () => {
+test('the solution page sends a real problem with no page to its other language or the problem database, before any 404', () => {
     const post = fs.readFileSync(path.join(ROOT, 'post.js'), 'utf8');
     const start = post.indexOf('async function renderPost(');
     const body = post.slice(start, post.indexOf('\nasync function ', start + 10));
     const redirect = body.indexOf('isBookProblem(name)');
     assert.ok(redirect > 0, 'renderPost checks the problem number');
     const other = body.indexOf('return res.redirect(302, `/${alternateLang}/${name}`)', redirect);
-    const unsolved = body.indexOf('return res.redirect(302, `/${lang}/unsolved`)', redirect);
+    // Its statement and the upload button are there; /unsolved, where it went until 2026-09-19,
+    // was a grid of 150 numbers with the one asked for nowhere in particular.
+    const unsolved = body.indexOf('return res.redirect(302, `/${lang}/problems?q=${encodeURIComponent(name)}`)', redirect);
     const notFound = body.indexOf('res.status(404)', redirect);
-    assert.ok(other > redirect && unsolved > other && notFound > unsolved, 'other language, then the unsolved list, then 404');
+    assert.ok(other > redirect && unsolved > other && notFound > unsolved, 'other language, then the problem database, then 404');
     assert.match(body.slice(redirect - 80, redirect), /lang === 'en' \|\| lang === 'ru'/, 'only for the two languages the site has');
 });
 

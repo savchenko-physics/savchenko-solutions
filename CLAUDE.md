@@ -444,7 +444,7 @@ hyphenation and a 1em paragraph indent, as journals set text.
   8.3.4's circuit. Do not hand-edit `figures.json`; fix `OVERRIDES` in `figures.py`.
 - Problem naming: `chapter.section.problem` (e.g., 1.1.1, 14.5.24). `lib/bookProblems.js` `isBookProblem` says
   whether a number is one of the 2,023. A real problem's address with no post in that language redirects (302) to
-  the other language's solution, or to `/:lang/unsolved` when there is none; only a non-problem is a 404
+  the other language's solution, or to `/:lang/problems?q=<number>` (its statement and the upload button) when there is none; only a non-problem is a 404
   (`post.js` renderPost, since 2026-09-15).
 - Solutions stored as markdown files in `posts/en/` and `posts/ru/`. **`posts/` on the
   server is the contributors' work and the only authoritative copy**: the site's editor

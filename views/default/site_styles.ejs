@@ -9,6 +9,7 @@
   ssStyles (all optional):
     bootstrap   false only for pages whose own .card/.btn would collide with Bootstrap 5
     math        true on pages with server-rendered formulas → /css/mathjax.css (content-versioned)
+                and js/math-select.js (a selected formula is painted as selected text is)
     prose       true when SS Text is in the first screen → preload its latin (+cyrillic) subsets
     icons       'fa6' | 'fa4' | 'bi', or an array of them
     codemirror  true → CodeMirror's stylesheet
@@ -49,4 +50,6 @@
 <link rel="stylesheet" href="<%= _asset('/css/bundle.css') %>">
 <% if (_ss.math) { %>
 <link rel="stylesheet" href="/css/mathjax.css?v=<%= (typeof mathCssVersion !== 'undefined' && mathCssVersion) ? mathCssVersion : '1' %>">
+<%# Paints a formula that is inside the selection; the SVG is not highlighted by itself. %>
+<script src="<%= _asset('/js/math-select.js') %>" defer></script>
 <% } %>

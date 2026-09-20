@@ -557,10 +557,11 @@ async function renderPost(req, res) {
     } else {
         // A real problem of the book with nothing written in this language is not a broken link
         // (the owner, 2026-09-15). If the other language has the solution, that is the page; with
-        // none at all, the unsolved list is where someone might write one. Anything else is a 404.
+        // none at all, the problem database shows its statement and the upload button (since
+        // 2026-09-19; the unsolved list before). Anything else is a 404.
         if ((lang === 'en' || lang === 'ru') && isBookProblem(name)) {
             if (fs.existsSync(alternateFilePath)) return res.redirect(302, `/${alternateLang}/${name}`);
-            return res.redirect(302, `/${lang}/unsolved`);
+            return res.redirect(302, `/${lang}/problems?q=${encodeURIComponent(name)}`);
         }
         i18n.setLocale(res, lang);
         res.status(404).render("404", {

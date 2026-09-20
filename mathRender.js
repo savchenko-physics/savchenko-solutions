@@ -88,6 +88,18 @@ adaptor.nodeSize = function (node, em = 1, local = null) {
  * `overflow: visible` that lets a glyph show past its box) plus the @font-face for the
  * fallback glyphs. Served as /css/mathjax.css; link it once per page that has maths.
  */
+// The TeX goes into the page beside its SVG, as `$…$` (`$$…$$` for display, an environment as
+// itself), in a span that takes no room and is not seen but is part of any selection across it:
+// a formula copied off a solution page used to come out as nothing at all, the SVG having no
+// text (the owner, 2026-09-19). `tex` is the source as it stands in the HTML, entities and all,
+// so it is safe to put back. js/math-select.js paints the container while it is selected.
+function withSource(svg, tex, display) {
+    const src = tex.trim();
+    const shown = /^\\begin\{/.test(src) ? src : (display ? `$$${src}$$` : `$${src}$`);
+    const i = svg.lastIndexOf('</mjx-container>');
+    return i === -1 ? svg : `${svg.slice(0, i)}<span class="mjx-tex" aria-hidden="true">${shown}</span>${svg.slice(i)}`;
+}
+
 function getMathCss() {
     const { family, unicodeRange, styles } = fallbackFont;
     const faces = Object.values(styles).map((s) =>
@@ -97,6 +109,13 @@ function getMathCss() {
     return adaptor.textContent(svgOutput.styleSheet(mathDoc)) +
         '\n\n/* An inline formula and the punctuation after it never split across lines. */\n' +
         '.mjx-nobr { white-space: nowrap; }\n' +
+        '\n/* The TeX source beside each formula (withSource): copied with a selection, never seen.\n' +
+        '   Only font-size 0: Chrome leaves out of a copy what display:none, a clipped box or an\n' +
+        '   overflow:hidden inline-block of zero width holds, and a positioned span becomes a block\n' +
+        '   and puts line breaks around itself in the copied text (both browsers, 2026-09-19). */\n' +
+        '.mjx-tex { font-size: 0; line-height: 0; }\n' +
+        '/* A formula inside the selection, painted like the selected text around it (js/math-select.js). */\n' +
+        'mjx-container.mjx-selected { background-color: Highlight; color: HighlightText; }\n' +
         '\n/* Glyphs the TeX font lacks (Cyrillic, µ, ², …): Computer Modern Unicode, laid out\n' +
         '   server-side from lib/mathFallbackFont.json (scripts/build-math-fallback-font.py). */\n' +
         faces + '\n';
@@ -181,7 +200,7 @@ function tex2svg(tex, display) {
     let out;
     try {
         const node = mathDoc.convert(normalizeTex(decodeEntities(tex).trim()), { display });
-        out = exToEm(adaptor.outerHTML(node));
+        out = withSource(exToEm(adaptor.outerHTML(node)), tex, display);
     } catch (err) {
         out = null; // signal failure → keep the raw delimiters untouched
     } finally {
@@ -210,7 +229,11 @@ const S = '\x01MJX'; // placeholder sentinel — cannot occur in real page text
 const PLACEHOLDER_G = new RegExp(S + '(\\d+)' + S, 'g');
 
 function protect(html, store) {
-    // Whole blocks whose contents must never be scanned.
+    // Whole blocks whose contents must never be scanned. A formula already typeset carries its
+    // TeX source as text (withSource), so a second pass over the same page must not see it.
+    html = html.replace(/<mjx-container\b[\s\S]*?<\/mjx-container>/g, (m) => {
+        const t = S + store.length + S; store.push(m); return t;
+    });
     html = html.replace(/<(pre|code|script|style|textarea)\b[\s\S]*?<\/\1>/gi, (m) => {
         const t = S + store.length + S; store.push(m); return t;
     });
@@ -272,19 +295,29 @@ function renderInlineDollar(s, render) {
     return out;
 }
 
+const DISPLAY_ENV_RE = /\\begin\{(equation|align|alignat|flalign|gather|multline|eqnarray|displaymath)(\*?)\}[\s\S]*?\\end\{\1\2\}/g;
+
 /** Render every math span on an HTML page to inline SVG. Idempotent. */
 function renderMathInHtml(html) {
     if (!html) return html;
-    if (html.indexOf('$') === -1 && html.indexOf('\\(') === -1 && html.indexOf('\\[') === -1) return html;
+    if (html.indexOf('$') === -1 && html.indexOf('\\(') === -1 && html.indexOf('\\[') === -1 && html.indexOf('\\begin{') === -1) return html;
 
     const store = [];
     let s = protect(html, store);
-    const D = (tex) => tex2svg(cleanTex(tex), true);
-    const I = (tex) => tex2svg(cleanTex(tex), false);
+    // A typeset formula goes into the store at once: it carries its TeX as text (withSource),
+    // which the later passes must not find ($$x$$ became a formula inside a formula).
+    const keep = (svg) => { if (!svg) return svg; const t = S + store.length + S; store.push(svg); return t; };
+    const D = (tex) => keep(tex2svg(cleanTex(tex), true));
+    const I = (tex) => keep(tex2svg(cleanTex(tex), false));
 
     // Display first (so $$ isn't split by the inline $ pass), then inline.
     s = s.replace(/\$\$([\s\S]+?)\$\$/g, (m, tex) => D(tex) || m);
     s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, tex) => D(tex) || m);
+    // A display environment with no delimiters around it, as MathJax's own finder takes it
+    // (processEnvironments) and as the editor's preview therefore showed it: 40 posts write
+    // \begin{equation} … \end{equation} bare, and until 2026-09-19 the server left every one
+    // as text (/en/14.3.7). The environment is passed whole; MathJax typesets it.
+    s = s.replace(DISPLAY_ENV_RE, (m) => D(m) || m);
     s = renderInlineDollar(s, (tex) => I(tex));
     s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, tex) => I(tex) || m);
 
