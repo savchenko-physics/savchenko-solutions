@@ -1196,6 +1196,8 @@
     .msg-info-avatar img, .msg-info-avatar svg { width: 100%; height: 100%; object-fit: cover; display: block; }
     .msg-info-avatar-saved { padding: 24px; background: var(--ss-navy); color: var(--ss-on-navy); }
     .msg-info-name { display: inline-block; font-size: var(--ss-text-lead); font-weight: var(--ss-fw-strong); color: var(--ss-rank-current, var(--ss-text)); }
+    .msg-info-hero-link { text-decoration: none; color: inherit; }
+    .msg-info-hero-link:hover { text-decoration: none; }
     .msg-info-sub { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-top: 2px; }
     .msg-info-actions {
       display: grid;
@@ -3724,7 +3726,10 @@
       : '<img src="' + escAttr(c.picture || '/img/profile_images/Default_placeholder.svg') + '" alt="" />';
     const heroName = c.other ? c.other : c.name;
     const heroClass = c.other && c.otherRankKey ? ' ss-rank-c-' + c.otherRankKey + ' ss-rank-' + c.otherRankKey : '';
-    let html = '<div class="msg-info-hero"><div class="msg-info-avatar">' + avatar + '</div><div class="msg-info-name' + heroClass + '">' + esc(heroName) + '</div>' + (sub ? '<div class="msg-info-sub">' + esc(sub) + '</div>' : '') + '</div>';
+    /* A person's name (and picture) open their profile. */
+    const heroLink = c.other ? '/user/' + encodeURIComponent(c.other) : null;
+    const wrap = function(inner) { return heroLink ? '<a class="msg-info-hero-link" href="' + escAttr(heroLink) + '" data-no-rank>' + inner + '</a>' : inner; };
+    let html = '<div class="msg-info-hero">' + wrap('<div class="msg-info-avatar">' + avatar + '</div>') + wrap('<div class="msg-info-name' + heroClass + '">' + esc(heroName) + '</div>') + (sub ? '<div class="msg-info-sub">' + esc(sub) + '</div>' : '') + '</div>';
     const bell = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
     const bellOff = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
     const search = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
