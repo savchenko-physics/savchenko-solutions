@@ -571,6 +571,11 @@
     }
   </style>
 
+  <%# Every username on every page in its rank's colour, as on Codeforces (the owner, 2026-09-21):
+      the contributors' tiers are inlined here and js/user-ranks.js paints every link to a profile,
+      on load and as pages add links (chat, comments). Names not in the map are newbies. %>
+  <script>window.__USER_RANKS__ = <%- JSON.stringify((typeof userRanksNow === 'function' ? userRanksNow() : {})).replace(/</g, '\\u003c') %>;</script>
+  <script src="<%= asset('/js/user-ranks.js') %>" defer></script>
   <% if (navUser) { %>
   <%# Live alerts and badges on every page: new DMs, replies and mentions (js/pulse.js, lib/pulse.js). %>
   <script src="<%= asset('/js/pulse.js') %>" defer data-lang="<%= navLang === 'ru' ? 'ru' : 'en' %>"></script>

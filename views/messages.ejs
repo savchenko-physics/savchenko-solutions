@@ -1120,7 +1120,7 @@
       padding: 0;
       font: inherit;
       font-weight: inherit;
-      color: inherit;
+      color: var(--ss-rank-current, inherit);   /* the rank's colour when the name carries one */
       cursor: pointer;
       text-align: left;
     }
@@ -1145,7 +1145,7 @@
     .msg-info-panel {
       position: relative;
       width: 100%;
-      max-width: 440px;
+      max-width: 600px;   /* five action tiles in a DM, each label on one line (2026-09-21) */
       max-height: calc(100% - 2 * var(--ss-space-4));
       display: flex;
       flex-direction: column;
@@ -1217,9 +1217,8 @@
       font-family: inherit;
       text-decoration: none;
       cursor: pointer;
-      min-width: 0;
     }
-    .msg-info-action span { max-width: 100%; overflow-wrap: anywhere; text-align: center; line-height: 1.2; }
+    .msg-info-action span { white-space: nowrap; }
     .msg-info-action:hover { background: var(--ss-surface-alt); }
     .msg-info-action.danger { color: var(--ss-error); }
     .msg-info-section { border-bottom: 8px solid var(--ss-surface-alt); }

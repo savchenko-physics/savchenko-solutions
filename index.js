@@ -426,6 +426,11 @@ app.locals.usernamePattern = USERNAME_PATTERN;
 app.locals.localTime = localTime;
 // A rank tier for a score (js/palettes.js), for templates that colour a username by rank.
 app.locals.rankTierFor = require('./js/palettes').rankFor;
+// Every contributor's tier, for the header to inline (js/user-ranks.js colours every username
+// link on every page by it). Filled at boot, then refreshed behind the reader.
+const { rankMap: loadUserRanks, rankMapNow: userRanksNow } = require('./lib/userRank');
+app.locals.userRanksNow = userRanksNow;
+loadUserRanks().catch((err) => console.error('user ranks: first load failed:', err.message));
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);
