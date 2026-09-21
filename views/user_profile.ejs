@@ -371,15 +371,32 @@
             flex-shrink: 0;
         }
 
-        .edit-link {
-            color: var(--sv-primary);
-            font-size: var(--ss-fs-13);
+        /* The owner's way to their settings: a real button, not a 13 px link (the owner, 2026-09-21). */
+        .profile-actions a.edit-link,
+        .profile-actions a.edit-link:link,
+        .profile-actions a.edit-link:visited {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--ss-space-2);
+            height: 40px;
+            padding: 0 var(--ss-space-5);
+            background: var(--ss-navy);
+            color: var(--ss-on-navy);
+            border: 1px solid var(--ss-navy);
+            border-radius: var(--ss-radius);
+            font-size: var(--ss-text-ui);
+            font-weight: var(--ss-fw-strong);
             text-decoration: none;
             white-space: nowrap;
+            transition: background 0.15s;
         }
-
-        .edit-link:hover {
-            text-decoration: underline;
+        .edit-link i { font-size: var(--ss-fs-16); }
+        .profile-actions a.edit-link:hover,
+        .profile-actions a.edit-link:focus-visible {
+            background: var(--ss-link);
+            border-color: var(--ss-link);
+            color: var(--ss-on-navy);
+            text-decoration: none;
         }
 
         .follow-btn {
@@ -1372,7 +1389,7 @@
                     </div>
                 </div>
                 <div class="profile-actions">
-                    <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;"><%= lang === 'ru' ? 'Редактировать профиль' : 'Edit Profile' %></a>
+                    <a id="edit-profile-link" class="edit-link" href="/<%= lang %>/settings?tab=profile" style="display:none;"><i class="bi bi-pencil-fill" aria-hidden="true"></i><%= lang === 'ru' ? 'Редактировать профиль' : 'Edit profile' %></a>
                     <button id="follow-btn" class="follow-btn" style="display:none;" data-user-id="<%= profileUserId %>"></button>
                     <form id="message-form" action="/messages/new" method="POST" style="display:none;margin:0;">
                         <input type="hidden" name="recipientId" value="<%= profileUserId %>">
@@ -2242,7 +2259,7 @@
 
             // Edit Profile or Follow/Message buttons
             if (data.isOwnProfile) {
-                document.getElementById("edit-profile-link").style.display = "inline";
+                document.getElementById("edit-profile-link").style.display = "inline-flex";
             } else if (sessionUsername) {
                 const followBtn = document.getElementById("follow-btn");
                 followBtn.style.display = "inline-block";

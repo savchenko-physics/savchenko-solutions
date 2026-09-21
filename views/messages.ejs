@@ -1363,6 +1363,59 @@
       color: var(--ss-text-secondary);
     }
     .msg-send-note { padding: 0 var(--ss-space-3) var(--ss-space-3); width: 100%; }
+    /* Several attachments at once: a tile each, a picture as its thumbnail, the rest as a file
+       glyph with the name, and a cross to leave one out. */
+    .msg-send-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--ss-space-2);
+      width: 100%;
+      padding: var(--ss-space-2);
+    }
+    .msg-send-grid[hidden] { display: none; }
+    .msg-send-tile {
+      position: relative;
+      aspect-ratio: 1;
+      min-width: 0;
+      border-radius: var(--ss-radius);
+      background: var(--ss-surface);
+      border: 1px solid var(--ss-rule);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--ss-space-1);
+      padding: var(--ss-space-2);
+    }
+    .msg-send-tile img, .msg-send-tile video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .msg-send-tile .msg-bubble-file-icon { background: var(--ss-link); color: var(--ss-on-navy); }
+    .msg-send-tile-name {
+      max-width: 100%;
+      font-size: var(--ss-fs-12);
+      color: var(--ss-text-secondary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .msg-send-tile-remove {
+      position: absolute; top: 4px; right: 4px;
+      width: 24px; height: 24px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      color: var(--ss-on-navy);
+      font-size: var(--ss-fs-16);
+      line-height: 1;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .msg-send-tile-remove:hover { background: var(--ss-navy); }
+
     .msg-send-option {
       display: flex;
       align-items: center;
@@ -2578,7 +2631,7 @@
 
         <!-- Input bar -->
         <div class="msg-input-bar">
-          <input type="file" id="imageFileInput" accept="<%= attachmentAccept %>" style="display:none" />
+          <input type="file" id="imageFileInput" accept="<%= attachmentAccept %>" multiple style="display:none" />
           <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru'
             ? `Прикрепить файл (до ${Math.round(attachmentRules.maxBytes / 1048576)} МБ, видео до ${Math.round(attachmentRules.videoMaxBytes / 1048576)} МБ)`
             : `Attach a file (up to ${Math.round(attachmentRules.maxBytes / 1048576)} MB, a video up to ${Math.round(attachmentRules.videoMaxBytes / 1048576)} MB)` %>">
@@ -2806,6 +2859,7 @@
     <div class="msg-send-preview">
       <img id="sendPreviewImg" alt="" hidden />
       <video id="sendPreviewVideo" controls playsinline preload="metadata" hidden></video>
+      <div class="msg-send-grid" id="sendPreviewGrid" hidden></div>
       <div class="msg-send-file" id="sendPreviewFile" hidden>
         <span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
         <span class="msg-send-file-meta"><span class="msg-send-file-name" id="sendPreviewName"></span><span class="msg-send-file-size" id="sendPreviewSize"></span></span>
@@ -3003,15 +3057,18 @@
   const sendAsFile = document.getElementById('sendAsFile');
   const sendCaption = document.getElementById('sendCaption');
   const mediaViewer = document.getElementById('mediaViewer');
-  let pendingImage = null;      // the pending attachment File (image, video, audio or document)
-  let pendingName = '';         // its file name as sent (a pasted image may have none)
-  let pendingAsFile = false;    // "send as a document": a picture or video shown as a file card
-  let pendingImageUrl = null;   // data URL of a pending picture, for the bubble drawn before the reply
-  let pendingIsImage = false;   // whether that attachment renders inline as an image
-  let pendingImageW = 0, pendingImageH = 0; // natural dimensions of a pending image
+  const sendPreviewGrid = document.getElementById('sendPreviewGrid');
+  /* The attachments staged for the next send, in the order chosen (several at once since
+     2026-09-21; up to ATTACH_MAX_AT_ONCE). Each: { file, name (a pasted image has none, so
+     one is given), kind ('image' | 'video' | 'audio' | 'file'), isImage, url (an object URL
+     for a picture or a video: the preview and the bubble drawn before the reply), w, h (a
+     picture's natural size, once known) }. Every one becomes its own message. */
+  const ATTACH_MAX_AT_ONCE = 10;
+  let pendingQueue = [];
+  let pendingAsFile = false;    // "send as a document": pictures and videos shown as file cards
 
   function updateSendEnabled() {
-    sendBtn.disabled = !msgInput.value.trim() && !pendingImage;
+    sendBtn.disabled = !msgInput.value.trim() && !pendingQueue.length;
   }
 
   if (msgInput) {
@@ -3026,7 +3083,7 @@
     msgInput.addEventListener('keydown', function(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        if (msgInput.value.trim() || pendingImage) {
+        if (msgInput.value.trim() || pendingQueue.length) {
           if (editingMsgId) {
             submitEdit();
           } else {
@@ -3068,7 +3125,7 @@
 
   if (sendBtn) {
     sendBtn.addEventListener('click', function() {
-      if (msgInput.value.trim() || pendingImage) {
+      if (msgInput.value.trim() || pendingQueue.length) {
         if (editingMsgId) {
           submitEdit();
         } else {
@@ -3140,9 +3197,8 @@
     });
 
     fileInput.addEventListener('change', function() {
-      const file = this.files[0];
-      if (!file) return;
-      if (!setPendingAttachment(file)) this.value = '';
+      if (!this.files || !this.files.length) return;
+      if (!stageAttachments(this.files)) this.value = '';
     });
   }
 
@@ -3172,36 +3228,72 @@
     return what + mb + (LANG === 'ru' ? ' МБ' : ' MB');
   }
 
-  // Stage an attachment (image → inline thumbnail; anything else → file card) in
-  // the compose preview. Returns false if rejected (not accepted, or too large).
-  function setPendingAttachment(file) {
-    if (!file) return false;
-    // A pasted image has no name; it arrives as image/* and is sent as png.
-    const name = file.name || (/^image\//.test(file.type) ? 'pasted.png' : '');
-    if (!attachmentKind(name)) {
-      alert(LANG === 'ru' ? 'Такой тип файла нельзя отправить' : 'This file type cannot be sent');
-      return false;
-    }
-    if (file.size > attachmentLimit(name)) {
-      alert(attachmentLimitText(name));
-      return false;
-    }
-    const kind = attachmentKind(name);
-    pendingImage = file;
-    pendingName = name;
-    pendingIsImage = kind === 'image';
+  /* Stage attachments for the next send: each one checked by the same lists and limits the
+     server applies, the ones that fail named in one alert, the rest shown in the send dialog.
+     Returns false when nothing was accepted. A drop or a paste while the dialog is open adds
+     to what is there. */
+  function ruPlural(n, one, few, many) {
+    const m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+  function releaseQueue() {
+    pendingQueue.forEach(function(it) { if (it.url) { try { URL.revokeObjectURL(it.url); } catch (e) {} } });
+    pendingQueue = [];
     pendingAsFile = false;
-    pendingImageUrl = null;
-    pendingImageW = 0; pendingImageH = 0;
-    openSendDialog(file, name, kind);
+  }
+  function stageAttachments(files) {
+    const list = Array.prototype.slice.call(files || []).filter(Boolean);
+    if (!list.length) return false;
+    const rejected = [];
+    let accepted = [];
+    list.forEach(function(file) {
+      // A pasted image has no name; it arrives as image/* and is sent as png.
+      const name = file.name || (/^image\//.test(file.type) ? 'pasted.png' : '');
+      const kind = attachmentKind(name);
+      if (!kind) {
+        rejected.push((name || '?') + ' — ' + (LANG === 'ru' ? 'такой тип файла нельзя отправить' : 'this file type cannot be sent'));
+        return;
+      }
+      if (file.size > attachmentLimit(name)) {
+        rejected.push(name + ' — ' + attachmentLimitText(name));
+        return;
+      }
+      accepted.push({ file: file, name: name, kind: kind, isImage: kind === 'image', url: null, w: 0, h: 0 });
+    });
+    const room = ATTACH_MAX_AT_ONCE - pendingQueue.length;
+    if (accepted.length > room) {
+      rejected.push(LANG === 'ru'
+        ? 'Не больше ' + ATTACH_MAX_AT_ONCE + ' файлов за раз'
+        : 'Up to ' + ATTACH_MAX_AT_ONCE + ' files at a time');
+      accepted = accepted.slice(0, Math.max(0, room));
+    }
+    if (rejected.length) alert(rejected.join('\n'));
+    if (!accepted.length) return false;
+    accepted.forEach(function(it) {
+      if ((it.isImage || it.kind === 'video') && window.URL && URL.createObjectURL) {
+        it.url = URL.createObjectURL(it.file);
+      }
+      if (it.isImage && it.url) {
+        const probe = new Image();
+        probe.onload = function() { it.w = probe.naturalWidth || 0; it.h = probe.naturalHeight || 0; };
+        probe.src = it.url;
+      }
+    });
+    pendingQueue = pendingQueue.concat(accepted);
+    pendingAsFile = false;
+    openSendDialog();
+    updateSendEnabled();
     return true;
   }
 
   /* "Send a file", as Telegram asks before sending: what was chosen, a caption, and for a picture
-     or a video whether to send it as a file instead. A video plays from the file in memory —
-     nothing is uploaded until Send; one this browser cannot decode (OpenCV's mp4v, an iPhone's
-     HEVC in Firefox) shows as a file and says it will be converted after sending, which is what
-     the server then does. The composer's text becomes the caption. */
+     or a video whether to send it as a file instead. One attachment shows large: a video plays from
+     the file in memory — nothing is uploaded until Send; one this browser cannot decode (OpenCV's
+     mp4v, an iPhone's HEVC in Firefox) shows as a file and says it will be converted after sending,
+     which is what the server then does. Several show as tiles, each with a cross to leave it out.
+     The composer's text becomes the caption, which goes with the first. */
   let previewVideoUrl = null;
   function clearPreviewVideo() {
     if (!sendPreviewVideo) return;
@@ -3210,46 +3302,90 @@
     sendPreviewVideo.removeAttribute('src');
     sendPreviewVideo.load();
     sendPreviewVideo.hidden = true;
-    if (previewVideoUrl) { URL.revokeObjectURL(previewVideoUrl); previewVideoUrl = null; }
+    previewVideoUrl = null; // the object URL belongs to the queue item and is released with it
   }
   function showSendFile(name, size, note) {
     sendPreviewName.textContent = name;
     sendPreviewSize.textContent = formatBytes(size) + (note ? '  ·  ' + note : '');
     sendPreviewFile.hidden = false;
   }
-  function openSendDialog(file, name, kind) {
-    if (!sendDialog) return;
-    clearPreviewVideo();
-    sendPreviewImg.hidden = true; sendPreviewImg.removeAttribute('src');
-    sendPreviewFile.hidden = true;
-    const titles = {
+  function sendDialogTitleFor(items) {
+    const n = items.length;
+    const single = {
       image: LANG === 'ru' ? 'Отправить фото' : 'Send an image',
       video: LANG === 'ru' ? 'Отправить видео' : 'Send a video',
       audio: LANG === 'ru' ? 'Отправить аудио' : 'Send audio',
       file: LANG === 'ru' ? 'Отправить файл' : 'Send a file',
     };
-    sendDialogTitle.textContent = titles[kind] || titles.file;
-    if (kind === 'image') {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        pendingImageUrl = e.target.result;
-        sendPreviewImg.onload = function() { pendingImageW = sendPreviewImg.naturalWidth || 0; pendingImageH = sendPreviewImg.naturalHeight || 0; };
-        sendPreviewImg.src = pendingImageUrl;
-        sendPreviewImg.hidden = false;
-      };
-      reader.readAsDataURL(file);
-    } else if (kind === 'video' && window.URL && URL.createObjectURL) {
-      previewVideoUrl = URL.createObjectURL(file);
-      sendPreviewVideo.onerror = function() {
-        clearPreviewVideo();
-        showSendFile(name, file.size, LANG === 'ru' ? 'будет сконвертировано после отправки' : 'converted after sending');
-      };
-      sendPreviewVideo.src = previewVideoUrl;
-      sendPreviewVideo.hidden = false;
-    } else {
-      showSendFile(name, file.size, '');
+    if (n === 1) return single[items[0].kind] || single.file;
+    const allImages = items.every(function(it) { return it.isImage; });
+    if (LANG === 'ru') {
+      return 'Отправить ' + n + ' ' + (allImages ? 'фото' : ruPlural(n, 'файл', 'файла', 'файлов'));
     }
-    sendAsFileRow.hidden = !(kind === 'image' || kind === 'video');
+    return 'Send ' + n + ' ' + (allImages ? 'photos' : 'files');
+  }
+  function fileGlyph() {
+    return '<span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>';
+  }
+  function renderSendGrid() {
+    sendPreviewGrid.innerHTML = '';
+    pendingQueue.forEach(function(it, index) {
+      const tile = document.createElement('div');
+      tile.className = 'msg-send-tile';
+      if (it.isImage && it.url) {
+        tile.innerHTML = '<img src="' + escAttr(it.url) + '" alt="" />';
+      } else if (it.kind === 'video' && it.url) {
+        tile.innerHTML = '<video src="' + escAttr(it.url) + '" muted playsinline preload="metadata"></video>';
+      } else {
+        tile.innerHTML = fileGlyph() + '<span class="msg-send-tile-name"></span>';
+        tile.querySelector('.msg-send-tile-name').textContent = it.name;
+      }
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'msg-send-tile-remove';
+      remove.setAttribute('aria-label', LANG === 'ru' ? 'Убрать' : 'Remove');
+      remove.textContent = '×';
+      remove.addEventListener('click', function() {
+        const gone = pendingQueue.splice(index, 1)[0];
+        if (gone && gone.url) { try { URL.revokeObjectURL(gone.url); } catch (e) {} }
+        if (!pendingQueue.length) return closeSendDialog(true);
+        openSendDialog();
+      });
+      tile.appendChild(remove);
+      sendPreviewGrid.appendChild(tile);
+    });
+    sendPreviewGrid.hidden = false;
+  }
+  function openSendDialog() {
+    if (!sendDialog) return;
+    clearPreviewVideo();
+    sendPreviewImg.hidden = true; sendPreviewImg.removeAttribute('src');
+    sendPreviewFile.hidden = true;
+    sendPreviewGrid.hidden = true;
+    const items = pendingQueue;
+    if (!items.length) return closeSendDialog(true);
+    sendDialogTitle.textContent = sendDialogTitleFor(items);
+    if (items.length > 1) {
+      renderSendGrid();
+    } else {
+      const it = items[0];
+      if (it.isImage && it.url) {
+        sendPreviewImg.src = it.url;
+        sendPreviewImg.hidden = false;
+      } else if (it.kind === 'video' && it.url) {
+        previewVideoUrl = it.url;
+        sendPreviewVideo.onerror = function() {
+          clearPreviewVideo();
+          showSendFile(it.name, it.file.size, LANG === 'ru' ? 'будет сконвертировано после отправки' : 'converted after sending');
+        };
+        sendPreviewVideo.src = previewVideoUrl;
+        sendPreviewVideo.hidden = false;
+      } else {
+        showSendFile(it.name, it.file.size, '');
+      }
+    }
+    sendAsFileRow.hidden = !items.some(function(it) { return it.isImage || it.kind === 'video'; });
+    if (!sendDialog.hidden) return; // adding to an open dialog keeps its caption and choice
     sendAsFile.checked = false;
     sendCaption.value = msgInput ? msgInput.value : '';
     sendDialog.hidden = false;
@@ -3260,15 +3396,14 @@
     sendDialog.hidden = true;
     clearPreviewVideo();
     if (cancelled) {
-      pendingImage = null; pendingName = ''; pendingIsImage = false; pendingAsFile = false; pendingImageUrl = null;
-      pendingImageW = 0; pendingImageH = 0;
+      releaseQueue();
       if (fileInput) fileInput.value = '';
       updateSendEnabled();
       if (msgInput) msgInput.focus();
     }
   }
   function submitSendDialog() {
-    if (!pendingImage) return closeSendDialog(true);
+    if (!pendingQueue.length) return closeSendDialog(true);
     pendingAsFile = !sendAsFileRow.hidden && sendAsFile.checked;
     if (msgInput) msgInput.value = sendCaption.value;
     closeSendDialog(false);
@@ -3290,8 +3425,8 @@
   }
 
   /* Files arrive by the picker, by a drop anywhere on the chat column, and by paste (a screenshot
-     from the clipboard, or a file copied in a file manager where the browser passes it on). One
-     attachment per message: the first file of several is taken. */
+     from the clipboard, or a file copied in a file manager where the browser passes it on). All of
+     them are staged; each becomes its own message. */
   function hasFiles(e) {
     const t = e.dataTransfer;
     return !!(t && t.types && Array.prototype.indexOf.call(t.types, 'Files') !== -1);
@@ -3321,8 +3456,8 @@
     e.preventDefault();
     endDrag();
     if (!CONV_ID) return;
-    const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (file && setPendingAttachment(file) && msgInput) msgInput.focus();
+    const files = e.dataTransfer.files;
+    if (files && files.length && stageAttachments(files) && msgInput) msgInput.focus();
   });
   document.addEventListener('paste', function(e) {
     if (!CONV_ID) return;
@@ -3330,14 +3465,14 @@
     if (t && t !== msgInput && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     const dt = e.clipboardData;
     if (!dt) return;
-    let file = (dt.files && dt.files.length) ? dt.files[0] : null;
-    if (!file && dt.items) {
+    let files = (dt.files && dt.files.length) ? Array.prototype.slice.call(dt.files) : [];
+    if (!files.length && dt.items) {
       for (let i = 0; i < dt.items.length; i++) {
-        if (dt.items[i].kind === 'file') { file = dt.items[i].getAsFile(); if (file) break; }
+        if (dt.items[i].kind === 'file') { const f = dt.items[i].getAsFile(); if (f) files.push(f); }
       }
     }
-    if (!file) return;   // plain text: the textarea takes it as usual
-    if (setPendingAttachment(file)) { e.preventDefault(); if (msgInput) msgInput.focus(); }
+    if (!files.length) return;   // plain text: the textarea takes it as usual
+    if (stageAttachments(files)) { e.preventDefault(); if (msgInput) msgInput.focus(); }
   });
 
 
@@ -3852,7 +3987,8 @@
 
   function sendMessage() {
     const content = msgInput.value.trim();
-    if ((!content && !pendingImage) || !CONV_ID) return;
+    const items = pendingQueue;
+    if ((!content && !items.length) || !CONV_ID) return;
 
     sendBtn.disabled = true;
     msgInput.value = '';
@@ -3863,15 +3999,38 @@
        text was simply gone: "написал сообщение по каждому пункту, но пропал интернет и
        ничего не отправилось :(((". It is cleared once the server has the message. */
 
-    const localImageUrl = (pendingImage && pendingIsImage && !pendingAsFile) ? pendingImageUrl : null;
-    const localFile = (pendingImage && !localImageUrl) ? pendingImage : null;
     const replyData = replyingTo; // capture before it is cleared below
+    const asFile = pendingAsFile;
 
-    /* A client-side id, so this particular bubble can be found again when the request
-       resolves. Without one, a failed send left a bubble that looked delivered forever:
-       the id-0 rows are only reaped by a *successful* later poll. */
+    // Clear attachment + reply state
+    pendingQueue = [];
+    pendingAsFile = false;
+    cancelReply();
+    if (fileInput) fileInput.value = '';
+
+    if (!items.length) {
+      dispatchMessage(stagePendingBubble(content, null, replyData, false));
+      return;
+    }
+    /* Every attachment is its own message. The bubbles all appear now, in the order chosen,
+       and the uploads go one after another so they arrive in that order too; the caption and
+       the reply go with the first. */
+    const jobs = items.map(function(it, index) {
+      return stagePendingBubble(index === 0 ? content : '', it, index === 0 ? replyData : null, asFile);
+    });
+    jobs.reduce(function(chain, job) {
+      return chain.then(function() { return dispatchMessage(job); });
+    }, Promise.resolve());
+  }
+
+  /* Draw the bubble of a message about to be sent and return the job that sends it.
+     A client-side id, so this particular bubble can be found again when the request
+     resolves. Without one, a failed send left a bubble that looked delivered forever:
+     the id-0 rows are only reaped by a *successful* later poll. */
+  function stagePendingBubble(content, attachment, replyData, asFile) {
+    const localImageUrl = (attachment && attachment.isImage && !asFile) ? attachment.url : null;
+    const localFile = (attachment && !localImageUrl) ? attachment.file : null;
     const pendingKey = 'p' + (++pendingSeq);
-
     appendMessage({
       id: 0,
       content: content,
@@ -3879,10 +4038,10 @@
       sender_username: USERNAME,
       created_at: new Date().toISOString(),
       image_url: localImageUrl,
-      image_width: localImageUrl ? (pendingImageW || null) : null,
-      image_height: localImageUrl ? (pendingImageH || null) : null,
+      image_width: localImageUrl ? (attachment.w || null) : null,
+      image_height: localImageUrl ? (attachment.h || null) : null,
       file_url: localFile ? '#' : null,
-      file_name: localFile ? pendingName : null,
+      file_name: localFile ? attachment.name : null,
       file_size: localFile ? localFile.size : null,
       reply: replyData,
     });
@@ -3890,13 +4049,19 @@
       ? Array.prototype.slice.call(chatEl.querySelectorAll('[data-msg-id="0"]')).pop()
       : null;
     if (pendingRow) pendingRow.dataset.pendingKey = pendingKey;
+    return { content: content, attachment: attachment, replyData: replyData, asFile: asFile, pendingKey: pendingKey, pendingRow: pendingRow };
+  }
 
+  /* Send one job. Resolves whatever happens: a failure marks the bubble unsent and the
+     next attachment in a batch still goes. */
+  function dispatchMessage(job) {
+    const content = job.content, replyData = job.replyData, pendingRow = job.pendingRow, pendingKey = job.pendingKey;
     let request;
-    if (pendingImage) {
+    if (job.attachment) {
       const fd = new FormData();
       fd.append('content', content);
-      fd.append('file', pendingImage, pendingName || pendingImage.name);
-      if (pendingAsFile) fd.append('as_document', '1');
+      fd.append('file', job.attachment.file, job.attachment.name || job.attachment.file.name);
+      if (job.asFile) fd.append('as_document', '1');
       if (replyData) fd.append('reply_to_id', replyData.id);
       /* A video can be 100 MB: the pending card shows how much has gone up. */
       request = uploadWithProgress('/messages/' + CONV_ID + '/send', fd, function(loaded, total) {
@@ -3914,17 +4079,7 @@
       });
     }
 
-    // Clear attachment + reply state
-    pendingImage = null;
-    pendingName = '';
-    pendingIsImage = false;
-    pendingAsFile = false;
-    pendingImageUrl = null;
-    pendingImageW = 0; pendingImageH = 0;
-    cancelReply();
-    if (fileInput) fileInput.value = '';
-
-    request
+    return request
     .then(function(r) {
       /* r.json() used to be called unconditionally. A 403 "Not a member", a 500 or a
          429 from the rate limiter are all sent as plain text, so parsing them threw
