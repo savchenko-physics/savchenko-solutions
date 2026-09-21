@@ -13,9 +13,11 @@ const SOURCES = ['design-system.css', 'main_page.css'];
 
 function paletteBlock() {
     delete require.cache[require.resolve('../js/palettes')];
-    const vars = require('../js/palettes').cssVariables();
+    const palettes = require('../js/palettes');
+    const vars = palettes.cssVariables();
     const body = Object.entries(vars).map(([k, v]) => `  ${k}: ${v};`).join('\n');
-    return `/* Data palettes — generated from js/palettes.js by scripts/build-css.js. */\n:root {\n${body}\n}`;
+    // The rank tiers' rules follow the variables so a tier is one entry in js/palettes.js.
+    return `/* Data palettes — generated from js/palettes.js by scripts/build-css.js. */\n:root {\n${body}\n}\n${palettes.rankCss()}`;
 }
 
 function fontsBlock() {

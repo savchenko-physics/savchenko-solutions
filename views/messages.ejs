@@ -36,6 +36,7 @@
                             : document.getElementById('newMessagesDivider');
               if (el) el.scrollIntoView({ block: 'center' });
               else chat.scrollTop = chat.scrollHeight;
+              chat.classList.remove('msg-chat-loading');
             });
           });
         }
@@ -457,6 +458,7 @@
     }
     .msg-scroll-down[hidden] { display: none; }
     .msg-scroll-down:hover { color: var(--ss-text); }
+    .msg-chat-messages.msg-chat-loading { visibility: hidden; }
     .msg-chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -2747,7 +2749,11 @@
         </div>
 
         <!-- Messages -->
-        <div class="msg-chat-messages" id="chatMessages">
+        <%# The list is invisible until it is scrolled to the end and typeset, so a chat opens on
+            its last messages at once instead of showing the top and jumping (the owner, 2026-09-21).
+            The inline script below scrolls it before the first paint; MathJax's pageReady (in the
+            head) reveals it, and a timer does if MathJax is slow or missing. %>
+        <div class="msg-chat-messages msg-chat-loading" id="chatMessages">
           <div class="msg-history-loader" id="historyLoader"><%= lang === 'ru' ? 'Загрузка…' : 'Loading…' %></div>
           <%
             let lastDate = '';
@@ -2795,6 +2801,16 @@
           <% }); %>
         </div>
 
+        <script>
+          (function() {
+            var c = document.getElementById('chatMessages');
+            if (!c) return;
+            var hash = (location.hash.match(/^#msg-(\d+)$/) || [])[1];
+            var el = hash ? c.querySelector('.msg-bubble-row[data-msg-id="' + hash + '"]') : document.getElementById('newMessagesDivider');
+            if (el) el.scrollIntoView({ block: 'center' }); else c.scrollTop = c.scrollHeight;
+            setTimeout(function() { c.classList.remove('msg-chat-loading'); }, 1500);
+          })();
+        </script>
         <%# Scrolled up: a round button in the corner takes the reader back down (Telegram's). %>
         <button type="button" class="msg-scroll-down" id="scrollDownBtn" hidden aria-label="<%= lang === 'ru' ? 'К последним сообщениям' : 'To the latest messages' %>">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>

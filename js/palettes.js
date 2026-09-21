@@ -75,6 +75,20 @@
         return RANKS[RANKS.length - 1];
     }
 
+    /** The per-tier rules scripts/build-css.js writes into the bundle: the colour as a class (with
+     *  link states, so a page's own a:hover cannot take it back, and --ss-rank-current for an
+     *  element whose own rule says color: inherit), and the first letter's colour where a tier
+     *  has one (the legendary grandmaster's black, as on Codeforces). */
+    function rankCss() {
+        const lines = [];
+        for (const r of [...RANKS, RANK_HQ]) {
+            const c = `.ss-rank-c-${r.key}`;
+            lines.push(`${c}, a${c}:link, a${c}:visited, a${c}:hover { --ss-rank-current: var(--ss-rank-${r.key}); color: var(--ss-rank-${r.key}); }`);
+            if (r.first) lines.push(`${c}::first-letter, .ss-rank-${r.key}::first-letter { color: var(--ss-rank-${r.key}-first); }`);
+        }
+        return lines.join('\n');
+    }
+
     /** CSS custom properties for every palette, as `name: value` pairs (used by scripts/build-css.js). */
     function cssVariables() {
         const vars = {};
@@ -96,5 +110,5 @@
         return vars;
     }
 
-    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, SERIES, RANKS, RANK_HQ, rankFor, cssVariables };
+    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, SERIES, RANKS, RANK_HQ, rankFor, rankCss, cssVariables };
 }));

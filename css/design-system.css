@@ -3246,28 +3246,10 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
   padding: 0 var(--ss-space-1);
 }
 
-/* Rank titles (js/palettes.js RANKS, Codeforces' colours). The colour itself is set inline where
-   the badge is drawn; only the first-letter treatment lives here: a legendary grandmaster's first
-   letter is black, as on Codeforces. ::first-letter needs a block box, which the badge elements
-   are (div, p). */
-.ss-rank-legendaryGrandmaster::first-letter { color: var(--ss-rank-legendaryGrandmaster-first); }
-/* The colour itself as a class, for server-rendered names (the homepage, a DM's header), with
-   link states too so a page's own a:hover rule (0,2,0) does not take it back. Each also sets
-   --ss-rank-current, for an element whose own rule says color: inherit (a DM's header). */
-.ss-rank-c-legendaryGrandmaster, a.ss-rank-c-legendaryGrandmaster:link, a.ss-rank-c-legendaryGrandmaster:visited, a.ss-rank-c-legendaryGrandmaster:hover { --ss-rank-current: var(--ss-rank-legendaryGrandmaster); color: var(--ss-rank-legendaryGrandmaster); }
-.ss-rank-c-internationalGrandmaster, a.ss-rank-c-internationalGrandmaster:link, a.ss-rank-c-internationalGrandmaster:visited, a.ss-rank-c-internationalGrandmaster:hover { --ss-rank-current: var(--ss-rank-internationalGrandmaster); color: var(--ss-rank-internationalGrandmaster); }
-.ss-rank-c-grandmaster, a.ss-rank-c-grandmaster:link, a.ss-rank-c-grandmaster:visited, a.ss-rank-c-grandmaster:hover { --ss-rank-current: var(--ss-rank-grandmaster); color: var(--ss-rank-grandmaster); }
-.ss-rank-c-internationalMaster, a.ss-rank-c-internationalMaster:link, a.ss-rank-c-internationalMaster:visited, a.ss-rank-c-internationalMaster:hover { --ss-rank-current: var(--ss-rank-internationalMaster); color: var(--ss-rank-internationalMaster); }
-.ss-rank-c-master, a.ss-rank-c-master:link, a.ss-rank-c-master:visited, a.ss-rank-c-master:hover { --ss-rank-current: var(--ss-rank-master); color: var(--ss-rank-master); }
-.ss-rank-c-candidateMaster, a.ss-rank-c-candidateMaster:link, a.ss-rank-c-candidateMaster:visited, a.ss-rank-c-candidateMaster:hover { --ss-rank-current: var(--ss-rank-candidateMaster); color: var(--ss-rank-candidateMaster); }
-.ss-rank-c-expert, a.ss-rank-c-expert:link, a.ss-rank-c-expert:visited, a.ss-rank-c-expert:hover { --ss-rank-current: var(--ss-rank-expert); color: var(--ss-rank-expert); }
-.ss-rank-c-specialist, a.ss-rank-c-specialist:link, a.ss-rank-c-specialist:visited, a.ss-rank-c-specialist:hover { --ss-rank-current: var(--ss-rank-specialist); color: var(--ss-rank-specialist); }
-.ss-rank-c-pupil, a.ss-rank-c-pupil:link, a.ss-rank-c-pupil:visited, a.ss-rank-c-pupil:hover { --ss-rank-current: var(--ss-rank-pupil); color: var(--ss-rank-pupil); }
-.ss-rank-c-newbie, a.ss-rank-c-newbie:link, a.ss-rank-c-newbie:visited, a.ss-rank-c-newbie:hover { --ss-rank-current: var(--ss-rank-newbie); color: var(--ss-rank-newbie); }
-.ss-rank-c-headquarters, a.ss-rank-c-headquarters:link, a.ss-rank-c-headquarters:visited, a.ss-rank-c-headquarters:hover { --ss-rank-current: var(--ss-rank-headquarters); color: var(--ss-rank-headquarters); }
-/* A username link js/user-ranks.js painted: an inline-block box for ::first-letter. */
-.ss-ranked { display: inline-block; }
-/* Every painted username is bold and never underlined, as Codeforces sets handles (the owner,
+/* Rank colours: the per-tier rules (.ss-rank-c-<key> and the first-letter treatment) are
+   generated from js/palettes.js by scripts/build-css.js, so a tier added or recoloured there
+   reaches every username on the site with one build. What is not per tier lives here: every
+   painted username is bold and never underlined, as Codeforces sets handles (the owner,
    2026-09-21). a[class*=] is (0,1,1), the same as a page's ".x a" rules, and this file loads
    first, so the important one here is the hover: pages underline on hover with (0,2,1) at most. */
 [class*="ss-rank-c-"], a[class*="ss-rank-c-"], a[class*="ss-rank-c-"]:link, a[class*="ss-rank-c-"]:visited {
@@ -3277,6 +3259,9 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
 a[class*="ss-rank-c-"]:hover, a[class*="ss-rank-c-"]:focus, .msg-conv-item:hover [class*="ss-rank-c-"] {
   text-decoration: none;
 }
+/* A name in running text (a link or a span) gets an inline-block box, which ::first-letter
+   needs; a block (a sidebar row's name with its ellipsis) already has one. */
+:where(a, span)[class*="ss-rank-c-"] { display: inline-block; }
 
 .msg-input-bar[hidden] { display: none; }
 
