@@ -1505,6 +1505,8 @@ router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, 
 router.post('/:msgId(\\d+)/react', rateLimit('react', 40, 10000), async (req, res) => {
     try {
         const userId = req.session.userId;
+        const reactBlocked = await postingBlockFor(userId, null);
+        if (reactBlocked) return res.status(403).json({ error: blockedNotice(reactBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
         const msgId = parseInt(req.params.msgId);
         const { emoji } = req.body;
 

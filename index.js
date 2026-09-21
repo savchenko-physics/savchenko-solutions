@@ -43,7 +43,7 @@ const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { founderYearFor } = require("./lib/founderYear");
 const { createAccount } = require("./lib/accounts");
 const { holdFor, holdNotice } = require("./lib/signupHolds");
-const { isPostingBlocked, blockedNotice } = require("./lib/chatRestrictions");
+const { writeGuard } = require("./lib/chatRestrictions");
 const { sendEmail } = require("./email");
 const {
     processAvatar, versionedAvatarUrl, avatarCacheControl, acceptAvatarFile, avatarUploadProblem,
@@ -119,6 +119,9 @@ if (!process.env.SESSION_SECRET) {
 
 // The app's one connection pool (lib/db.js), shared with every module and the session store.
 const pool = require('./lib/db');
+// Refuses an account kept from writing (users.posting_blocked_until, lib/chatRestrictions.js) on
+// every route below that writes content. Passes everyone else, and passes on any error.
+const blockedWriter = writeGuard((sql, params) => pool.query(sql, params));
 const { SwrCache } = require('./lib/swr');
 const { preloadApis, runHandler, fakeRequest } = require('./lib/inProcess');
 
@@ -688,7 +691,7 @@ function normalizeProfileUrl(val) {
 }
 
 // Add this route to handle image uploads
-app.post('/upload-image/:name', checkAuthenticated, upload.single('image'), (req, res) => {
+app.post('/upload-image/:name', checkAuthenticated, blockedWriter, upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded.' });
     }
@@ -1339,7 +1342,7 @@ app.post("/api/follow/:userId", checkAuthenticated, followLimiter, async (req, r
 });
 
 // Like/Unlike solution
-app.post("/api/solutions/:problemName/:language/like", checkAuthenticated, async (req, res) => {
+app.post("/api/solutions/:problemName/:language/like", checkAuthenticated, blockedWriter, async (req, res) => {
     const { problemName, language } = req.params;
     const { isLike } = req.body; // true for like, false for dislike
     const userId = req.session.userId;
@@ -1635,7 +1638,7 @@ app.get("/api/solutions/:problemName/:language/comments", async (req, res) => {
 // :shortcode: set) and the same toggle semantics: pressing the one you already left removes
 // it. The value is checked against that vocabulary rather than stored as sent, because this
 // is a public write path; the column is VARCHAR(32) since migration 052.
-app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, async (req, res) => {
+app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, blockedWriter, async (req, res) => {
     const commentId = parseInt(req.params.commentId, 10);
     const emoji = req.body?.emoji;
     const userId = req.session.userId;
@@ -1728,7 +1731,7 @@ app.post("/api/solutions/comments/:commentId/reactions", checkAuthenticated, asy
 });
 
 // Add comment to solution
-app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, async (req, res) => {
+app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, blockedWriter, async (req, res) => {
     const { problemName, language } = req.params;
     const { content, parentId } = req.body;
     // Replies are always plain comments; only top-level comments carry the brainstorm mark.
@@ -1740,12 +1743,6 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
     }
 
     try {
-        // An account kept from writing (users.posting_blocked_until, lib/chatRestrictions.js).
-        const blocked = await pool.query("SELECT posting_blocked_until FROM users WHERE id = $1", [userId]);
-        if (blocked.rows.length && isPostingBlocked(blocked.rows[0].posting_blocked_until)) {
-            return res.status(403).json({ error: blockedNotice(blocked.rows[0].posting_blocked_until, language === 'ru' ? 'ru' : 'en') });
-        }
-
         const result = await pool.query(
             "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id, is_brainstorm) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at",
             [userId, problemName, language, content.trim(), parentId || null, isBrainstorm]
@@ -1824,7 +1821,7 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
 });
 
 // Edit a comment (within 24 hours)
-app.put("/api/solutions/:problemName/:language/comments/:commentId", checkAuthenticated, async (req, res) => {
+app.put("/api/solutions/:problemName/:language/comments/:commentId", checkAuthenticated, blockedWriter, async (req, res) => {
     const { commentId } = req.params;
     const { content } = req.body;
     const userId = req.session.userId;
@@ -2067,7 +2064,7 @@ app.get(["/user/:username", "/:lang(en|ru)/user/:username"], getUserProfile);
 // leaderboard stops at the edge of the site; this is the part they can show someone.
 app.get("/contributor/:username", renderContributorPage);
 
-app.post("/create-problem", checkAuthenticated, async (req, res) => {
+app.post("/create-problem", checkAuthenticated, blockedWriter, async (req, res) => {
     const { problemName, chapter } = req.body;
     // Becomes a directory under posts/, so only "en" or "ru" may pass.
     const lang = normalizeLang(req.body.lang);
@@ -3248,7 +3245,7 @@ const draftSaveLimiter = rateLimit({
     handler: (req, res) => res.status(429).json({ error: "rate_limited" }),
 });
 
-app.post("/api/drafts", requireAuthJson, draftSaveLimiter, async (req, res) => {
+app.post("/api/drafts", requireAuthJson, blockedWriter, draftSaveLimiter, async (req, res) => {
     const problemName = String(req.body?.problemName || "").trim();
     const language = String(req.body?.language || "").trim();
     const content = String(req.body?.content || "");
@@ -3329,7 +3326,7 @@ app.get("/api/drafts/:problemName/:language/count", async (req, res) => {
     }
 });
 
-app.post("/:lang/save/:name", checkAuthenticated, editSaveLimiter, async (req, res) => {
+app.post("/:lang/save/:name", checkAuthenticated, blockedWriter, editSaveLimiter, async (req, res) => {
     const { lang, name } = req.params;
     const { content } = req.body;
     // Seconds of actual composition, as counted by the editor (it stops the clock when
@@ -3927,7 +3924,7 @@ app.get("/api/related-problems/:problemName", async (req, res) => {
 });
 
 // Add API endpoint for reporting solutions
-app.post("/api/report-solution", async (req, res) => {
+app.post("/api/report-solution", blockedWriter, async (req, res) => {
     const { problemName, language, reason } = req.body;
     const userId = req.session.userId;
     const clientIp = req.ip;

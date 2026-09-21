@@ -11,7 +11,7 @@ const test = require('node:test');
 const fs = require('fs');
 const path = require('path');
 const assert = require('node:assert');
-const { isPostingBlocked, isPermanent, effectiveBlock, blockedNotice, blockNotification, CONTACT } = require('../lib/chatRestrictions');
+const { isPostingBlocked, isPermanent, effectiveBlock, blockedNotice, blockNotification, writeGuard, CONTACT } = require('../lib/chatRestrictions');
 
 const NOW = new Date('2026-09-21T13:00:00Z');
 
@@ -93,4 +93,86 @@ test('the message projection yields NULL, not the clamp, for a member with no bl
     const col = messages.slice(messages.indexOf('AS sender_blocked_until') - 400, messages.indexOf('AS sender_blocked_until'));
     assert.doesNotMatch(col, /LEAST\(GREATEST\(/, 'LEAST over a possibly-NULL GREATEST returns the clamp');
     assert.match(col, /WHERE b IS NOT NULL/);
+});
+
+// ── The write guard on the editor, uploads, comments, reactions and reports (2026-09-21) ──
+// The owner's condition when the block was widened from the chat to every route that writes
+// content: it must never hold anyone else. So every case but a live block calls next().
+
+function fakeRes() {
+    const res = { code: 200, body: null, kind: null };
+    res.status = (c) => { res.code = c; return res; };
+    res.json = (b) => { res.kind = 'json'; res.body = b; return res; };
+    res.type = () => res;
+    res.send = (b) => { res.kind = 'text'; res.body = b; return res; };
+    return res;
+}
+const rowsOf = (v) => async () => ({ rows: v === undefined ? [] : [{ posting_blocked_until: v }] });
+async function run(query, req) {
+    const res = fakeRes();
+    let passed = false;
+    await writeGuard(query)(req, res, () => { passed = true; });
+    return { passed, res };
+}
+const signedIn = (extra = {}) => ({ session: { userId: 7, lang: 'ru' }, params: {}, body: {}, get: () => '', originalUrl: '/ru/save/1.1.1', ...extra });
+
+test('the write guard passes everyone who is not blocked', async () => {
+    for (const [label, query] of [
+        ['no row for the user', rowsOf(undefined)],
+        ['NULL', rowsOf(null)],
+        ['a block that has ended', rowsOf(new Date(Date.now() - 60_000))],
+        ['a string that is not a date', rowsOf('garbage')],
+        ['a result with no rows array', async () => ({})],
+    ]) {
+        const { passed, res } = await run(query, signedIn());
+        assert.equal(passed, true, label);
+        assert.equal(res.kind, null, label);
+    }
+});
+
+test('the write guard passes a visitor with no session (the auth middleware answers those)', async () => {
+    let queried = false;
+    const { passed } = await run(async () => { queried = true; return { rows: [] }; }, { session: {}, params: {}, body: {}, get: () => '' });
+    assert.equal(passed, true);
+    assert.equal(queried, false, 'no lookup without a user');
+});
+
+test('the write guard fails open when the database errors', async () => {
+    const { passed, res } = await run(async () => { throw new Error('connection reset'); }, signedIn());
+    assert.equal(passed, true);
+    assert.equal(res.kind, null);
+});
+
+test('the write guard refuses a live block, as JSON for the API and the editor, as text otherwise', async () => {
+    const blocked = rowsOf(Infinity);
+    let r = await run(blocked, signedIn({ originalUrl: '/api/upload' }));
+    assert.equal(r.passed, false);
+    assert.equal(r.res.code, 403);
+    assert.equal(r.res.kind, 'json');
+    assert.match(r.res.body.error, new RegExp(`@${CONTACT}`));
+    assert.equal(r.res.body.success, false);
+    r = await run(blocked, signedIn({ get: (h) => h === 'Accept' ? 'application/json' : '' }));
+    assert.equal(r.res.kind, 'json', 'the editor asks for JSON');
+    r = await run(blocked, signedIn({ get: () => 'text/html', originalUrl: '/create-problem' }));
+    assert.equal(r.res.kind, 'text');
+    assert.equal(r.res.code, 403);
+    r = await run(rowsOf(new Date(Date.now() + 3600_000)), signedIn({ params: { lang: 'en' } }));
+    assert.equal(r.passed, false);
+    assert.match(r.res.body, /^You cannot write in this chat until/);
+});
+
+test('every content route in index.js and upload.js carries the guard', () => {
+    const index = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
+    for (const route of ['app.post("/:lang/save/:name"', 'app.post("/create-problem"', 'app.post("/api/drafts", requireAuthJson', "app.post('/upload-image/:name'",
+        'app.post("/api/solutions/:problemName/:language/comments"', 'app.put("/api/solutions/:problemName/:language/comments/:commentId"',
+        'app.post("/api/solutions/comments/:commentId/reactions"', 'app.post("/api/solutions/:problemName/:language/like"', 'app.post("/api/report-solution"']) {
+        const i = index.indexOf(route);
+        assert.ok(i > 0, route);
+        assert.match(index.slice(i, i + 200), /blockedWriter/, route);
+    }
+    const upload = fs.readFileSync(path.join(__dirname, '..', 'upload.js'), 'utf8');
+    assert.match(upload, /router\.post\("\/api\/upload", checkAuthenticated, blockedWriter,/);
+    const messages = fs.readFileSync(path.join(__dirname, '..', 'messages.js'), 'utf8');
+    const react = messages.slice(messages.indexOf("router.post('/:msgId(\\\\d+)/react'"));
+    assert.match(react.slice(0, 600), /postingBlockFor\(userId, null\)/);
 });

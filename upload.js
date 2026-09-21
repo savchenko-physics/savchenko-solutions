@@ -9,9 +9,12 @@ require("dotenv").config();
 const { getLanguageData} = require("./parents");
 const searchIndex = require('./searchIndex');
 const { founderYearFor } = require('./lib/founderYear');
+const { writeGuard } = require('./lib/chatRestrictions');
 
 // Add pool configuration
 const pool = require('./lib/db');
+// A blocked account (users.posting_blocked_until) may not upload; everyone else passes.
+const blockedWriter = writeGuard((sql, params) => pool.query(sql, params));
 
 // Add this near the top of the file, after the requires
 router.use(fileUpload());
@@ -19,7 +22,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 // Handle file upload
-router.post("/api/upload", checkAuthenticated, async (req, res) => {
+router.post("/api/upload", checkAuthenticated, blockedWriter, async (req, res) => {
     try {
         console.log("Request body:", req.body);
         console.log("Request files:", req.files);
