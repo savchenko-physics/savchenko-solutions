@@ -186,13 +186,22 @@
         @media (min-width: 768px) {
             .profile-main {
                 flex-direction: row;
-                align-items: center;
+                align-items: stretch;   /* the picture is as tall as the text beside it (the owner, 2026-09-21) */
                 text-align: left;
                 gap: var(--ss-space-5);
             }
+            /* A square as tall as the row: the wrap stretches to the row's height and its
+               aspect ratio gives the width; the image fills it. Capped so a long bio does
+               not make a poster of it. */
+            .profile-avatar-wrap {
+                align-self: stretch;
+                aspect-ratio: 1 / 1;
+                min-height: 200px;
+                max-height: 380px;
+            }
             .profile-avatar {
-                width: 200px;
-                height: 200px;
+                width: 100%;
+                height: 100%;
             }
             .name-line {
                 justify-content: flex-start;
