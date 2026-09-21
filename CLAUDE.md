@@ -277,8 +277,11 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   notification per member, only to members who have posted there (`notifications.js:84`).
   **Blocks on writing** (2026-09-21, after Бека's evening): `conversation_members.posting_blocked_until`
   (migration 061) keeps a member out of one chat for a while, `users.posting_blocked_until` (062,
-  `'infinity'` for good) out of every chat, DM, new conversation and solution comment; the later end
-  wins (`lib/chatRestrictions.js`). The person sees a notice in place of the composer naming the end
+  `'infinity'` for good) out of every chat, DM, new conversation, chat reaction, and every route that
+  writes content (`writeGuard` on the editor's save, `/api/upload`, `/create-problem`, image
+  uploads, drafts, comments and their reactions, likes, reports); the later end wins
+  (`lib/chatRestrictions.js`). The guard fails open (no row, NULL, past, a database error all pass),
+  so it can never hold anyone else. The person sees a notice in place of the composer naming the end
   and @astrosander, everyone else sees a red badge on their messages, a 403 carries the same text.
   Reading and signing in are never restricted. `scripts/chat-restrict.js --user <id> [--conversation
   <id>] --hours n | --permanent | --lift [--apply]`, which also leaves a bell notification.
