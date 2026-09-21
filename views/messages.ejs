@@ -54,6 +54,10 @@
       would sit on top of it. %>
   <%- include('default/main_site_header', { hideFeedbackTab: true }) %>
 
+  <%# Everything the page's script binds to sits in #messengerApp: a chat switch fetches the
+      next page and swaps this one element in place (js/messages-page.js switchTo), so the
+      header stays, nothing reloads and nothing flashes (the owner, 2026-09-21). %>
+  <div id="messengerApp">
   <!-- Main body -->
   <div class="msg-body<%= activeConversation ? ' has-active' : '' %><%= (typeof timeZone === 'string' && timeZone) ? '' : ' msg-times-utc' %>" data-tz="<%= (typeof timeZone === 'string' && timeZone) ? timeZone : '' %>">
     <!-- Sidebar: conversation list -->
@@ -175,7 +179,7 @@
         <!-- Chat header -->
         <div class="msg-chat-header-wrap">
           <div class="msg-chat-header">
-            <button class="msg-back-btn" onclick="window.location.href='/<%= lang %>/messages'">
+            <button class="msg-back-btn" data-switch="/<%= lang %>/messages">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="15 18 9 12 15 6"></polyline>
               </svg>
@@ -443,7 +447,6 @@
       <% } %>
     </div>
   </div>
-</div>
 
 <%# New poll (lib/polls.js has the rules; POST /messages/:id/poll). %>
 <div class="msg-modal-backdrop" id="pollModal">
@@ -747,6 +750,8 @@
     <span id="ctxDeleteLabel"><%= lang === 'ru' ? 'Удалить у всех' : 'Delete for everyone' %></span>
   </button>
 </div>
+  </div><%# #messengerApp %>
+</div><%# .msg-app %>
 
 <script src="<%= av('/js/chat-language.js') %>"></script>
 <script src="<%= av('/js/reactions.js') %>"></script>

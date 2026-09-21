@@ -3,6 +3,73 @@
 // written by a small inline script just before this one loads.
 (function() {
   const M = window.__MSG__ || {};
+  /* ── Runs once per chat. A chat switch (switchTo, below) swaps #messengerApp for the next
+     page's and runs this file again, so everything bound outside that element is registered
+     through these three and undone by window.__MSG_TEARDOWN__ first: document and window
+     listeners, intervals, and the SSE stream. Element listeners go with the elements. */
+  const _teardown = [];
+  const onDoc = function(t, h, o) { document.addEventListener(t, h, o); _teardown.push(function() { document.removeEventListener(t, h, o); }); };
+  const onWin = function(t, h, o) { window.addEventListener(t, h, o); _teardown.push(function() { window.removeEventListener(t, h, o); }); };
+  const every = function(fn, ms) { const id = setInterval(fn, ms); _teardown.push(function() { clearInterval(id); }); return id; };
+  if (typeof window.__MSG_TEARDOWN__ === 'function') { try { window.__MSG_TEARDOWN__(); } catch (e) {} }
+  window.__MSG_TEARDOWN__ = function() {
+    _teardown.splice(0).forEach(function(f) { try { f(); } catch (e) {} });
+    try { if (sse) sse.close(); } catch (e) {}
+  };
+  const SELF_SRC = document.currentScript && document.currentScript.src;
+
+  /* The switch itself: the next page is fetched, its #messengerApp replaces this one, its
+     window.__MSG__ block is run, and this script is run again on the new elements. The
+     header, the fonts, MathJax and every other script stay where they are; the URL and the
+     title follow. Anything unexpected falls back to an ordinary navigation. */
+  function switchTo(url, push) {
+    const app = document.getElementById('messengerApp');
+    if (!app || !window.DOMParser) { location.href = url; return; }
+    const sidebar = document.getElementById('convList');
+    const sidebarTop = sidebar ? sidebar.scrollTop : 0;
+    fetch(url, { headers: { 'Accept': 'text/html' }, credentials: 'same-origin' })
+      .then(function(r) { if (!r.ok) throw new Error('nav'); return r.text().then(function(t) { return { html: t, url: r.url }; }); })
+      .then(function(res) {
+        const doc = new DOMParser().parseFromString(res.html, 'text/html');
+        const next = doc.getElementById('messengerApp');
+        const state = Array.prototype.find.call(doc.querySelectorAll('script:not([src])'), function(x) { return x.textContent.indexOf('window.__MSG__ =') !== -1; });
+        if (!next || !state) throw new Error('shape');
+        if (typeof window.__MSG_TEARDOWN__ === 'function') { try { window.__MSG_TEARDOWN__(); } catch (e) {} }
+        app.replaceWith(document.adoptNode(next));
+        document.title = doc.title;
+        const shown = res.url && res.url.indexOf(location.origin) === 0 ? res.url.slice(location.origin.length) : url;
+        if (push !== false) history.pushState({ messenger: true }, '', shown);
+        (0, eval)(state.textContent);
+        const c = document.getElementById('chatMessages');
+        if (c) { c.scrollTop = c.scrollHeight; c.classList.remove('msg-chat-loading'); }
+        const nextSidebar = document.getElementById('convList');
+        if (nextSidebar) nextSidebar.scrollTop = sidebarTop;
+        const again = document.createElement('script');
+        again.src = SELF_SRC || '/js/messages-page.js';
+        again.onload = function() { again.remove(); };
+        document.body.appendChild(again);
+        if (c && window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise([c]).then(function() { if (c.scrollHeight - c.scrollTop - c.clientHeight < 400) c.scrollTop = c.scrollHeight; }).catch(function() {});
+        }
+      })
+      .catch(function() { location.href = url; });
+  }
+  onDoc('click', function(e) {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target.closest('a.msg-conv-item, a.msg-lang-hint-link, [data-switch]');
+    if (!a) return;
+    const url = a.getAttribute('data-switch') || a.getAttribute('href');
+    if (!url || !/^\/(?:ru\/|en\/)?messages(?:\/|$)/.test(url)) return;
+    e.preventDefault();
+    switchTo(url, true);
+  });
+  if (!window.__MSG_NAV__) {
+    window.__MSG_NAV__ = true;
+    window.addEventListener('popstate', function(e) {
+      if (e.state && e.state.messenger) switchTo(location.pathname + location.search, false);
+    });
+    history.replaceState({ messenger: true }, '', location.href);
+  }
   const CONV_ID = M.CONV_ID;
   const COMMUNITY_LANG = M.COMMUNITY_LANG;
   const REACTION_URLS = M.REACTION_URLS;
@@ -252,8 +319,8 @@
         fileInput.setAttribute('accept', item.dataset.attach === 'media' ? 'image/*,video/*' : ATTACH_ACCEPT_ALL);
         fileInput.click();
       });
-      document.addEventListener('click', function(e) { if (!attachMenu.hidden && !e.target.closest('#attachMenu')) attachMenu.hidden = true; });
-      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') attachMenu.hidden = true; });
+      onDoc('click', function(e) { if (!attachMenu.hidden && !e.target.closest('#attachMenu')) attachMenu.hidden = true; });
+      onDoc('keydown', function(e) { if (e.key === 'Escape') attachMenu.hidden = true; });
     }
 
     fileInput.addEventListener('change', function() {
@@ -515,24 +582,24 @@
   const dropZone = document.querySelector('.msg-chat');
   let dragDepth = 0;
   function endDrag() { dragDepth = 0; if (dropZone) dropZone.classList.remove('is-dropping'); }
-  document.addEventListener('dragenter', function(e) {
+  onDoc('dragenter', function(e) {
     if (!hasFiles(e)) return;
     e.preventDefault();
     if (!CONV_ID || !dropZone) return;
     dragDepth++;
     dropZone.classList.add('is-dropping');
   });
-  document.addEventListener('dragover', function(e) {
+  onDoc('dragover', function(e) {
     if (!hasFiles(e)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = CONV_ID ? 'copy' : 'none';
   });
-  document.addEventListener('dragleave', function(e) {
+  onDoc('dragleave', function(e) {
     if (!hasFiles(e)) return;
     dragDepth = Math.max(0, dragDepth - 1);
     if (dragDepth === 0 || e.relatedTarget === null) endDrag();
   });
-  document.addEventListener('drop', function(e) {
+  onDoc('drop', function(e) {
     if (!hasFiles(e)) return;
     e.preventDefault();
     endDrag();
@@ -540,7 +607,7 @@
     const files = e.dataTransfer.files;
     if (files && files.length && stageAttachments(files) && msgInput) msgInput.focus();
   });
-  document.addEventListener('paste', function(e) {
+  onDoc('paste', function(e) {
     if (!CONV_ID) return;
     const t = e.target;
     if (t && t !== msgInput && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
@@ -685,7 +752,7 @@
     mediaViewer.addEventListener('click', function(e) {
       if (e.target === mediaViewer || e.target === viewer.stage) closeViewer();
     });
-    document.addEventListener('keydown', function(e) {
+    onDoc('keydown', function(e) {
       if (mediaViewer.hidden) return;
       e.stopImmediatePropagation();          // the panel under it must not act on the same key
       if (e.key === 'Escape') { e.preventDefault(); closeViewer(); }
@@ -891,7 +958,7 @@
     document.getElementById('chatInfoClose').addEventListener('click', closeChatInfo);
     document.getElementById('chatInfoBackdrop').addEventListener('click', closeChatInfo);
     chatInfoBack.addEventListener('click', renderInfoMain);
-    document.addEventListener('keydown', function(e) {
+    onDoc('keydown', function(e) {
       if (chatInfo.hidden || e.key !== 'Escape' || (mediaViewer && !mediaViewer.hidden)) return;
       if (!chatInfoBack.hidden) renderInfoMain(); else closeChatInfo();
     });
@@ -1322,7 +1389,7 @@
     readFailed().forEach(function(item) { retryOne(item.key); });
   }
 
-  window.addEventListener('online', flushFailed);
+  onWin('online', flushFailed);
 
   // ── Reply flow ──────────────────────────────────────────────────────
   // Plain-text of a message with the quote / meta / image chrome stripped.
@@ -1633,11 +1700,11 @@
     }, true);
   }
 
-  document.addEventListener('click', function() {
+  onDoc('click', function() {
     ctxMenu.classList.remove('show');
   });
 
-  document.addEventListener('contextmenu', function(e) {
+  onDoc('contextmenu', function(e) {
     if (!e.target.closest('.msg-bubble-row')) {
       ctxMenu.classList.remove('show');
     }
@@ -1938,7 +2005,7 @@
     if (body) body.classList.remove('msg-times-utc');
   }
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', localizeSsrTimes);
+    onDoc('DOMContentLoaded', localizeSsrTimes);
   } else {
     localizeSsrTimes();
   }
@@ -2662,12 +2729,12 @@
   // stream is likely dead/buffered — do a catch-up fetch as a fallback.
   function startPollFallback() {
     if (pollTimer) return;
-    pollTimer = setInterval(function() { pollMessages(); refreshConvList(); }, 4000);
+    pollTimer = every(function() { pollMessages(); refreshConvList(); }, 4000);
   }
   function stopPollFallback() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
-  setInterval(function() {
+  every(function() {
     if (Date.now() - lastSseEventAt > 45000) { pollMessages(); refreshConvList(); }
   }, 15000);
 
