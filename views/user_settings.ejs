@@ -198,17 +198,41 @@
         }
         .avatar-wrap:hover .avatar-overlay { opacity: 1; }
         .avatar-overlay i { font-size: var(--ss-fs-20); margin-bottom: var(--ss-space-1); }
-        .remove-photo {
-            display: inline-block;
-            margin-top: var(--ss-space-1);
-            font-size: var(--ss-fs-13);
-            color: var(--text-secondary);
-            background: none; border: none; cursor: pointer;
-            font-family: inherit;
-            text-decoration: underline;
-            padding: 0;
+        /* The two things you can do with the photo are buttons, not a hover overlay: on a phone
+           there is no hover, and until 2026-09-21 nothing on the page said the picture could be
+           changed at all. */
+        .avatar-file-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .avatar-actions {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: var(--ss-space-2);
+            margin-top: var(--ss-space-2);
         }
-        .remove-photo:hover { color: var(--heading); }
+        .avatar-actions .btn-secondary { font-size: var(--ss-fs-13); }
+        .avatar-hint {
+            margin: var(--ss-space-2) 0 0;
+            font-size: var(--ss-fs-12);
+            color: var(--text-secondary);
+        }
+        /* Shown once a new photo is chosen or removal asked for: what will happen, and the
+           button that makes it happen. The form's Save at the bottom does the same, but the
+           photo sits at the top of a long form and its own button leaves nothing to look for. */
+        .avatar-pending {
+            display: none;
+            margin: var(--ss-space-3) auto 0;
+            max-width: 420px;
+            padding: var(--ss-space-3) var(--ss-space-4);
+            border: 1px solid var(--border);
+            border-radius: var(--ss-radius);
+            background: var(--ss-surface-alt);
+            text-align: left;
+        }
+        .avatar-pending.is-visible { display: block; }
+        .avatar-pending p { margin: 0 0 var(--ss-space-2); font-size: var(--ss-fs-14); }
+        .avatar-pending .avatar-file { color: var(--text-secondary); font-size: var(--ss-fs-13); overflow-wrap: anywhere; }
+        .avatar-pending-actions { display: flex; gap: var(--ss-space-2); align-items: center; }
+        .avatar-pending .btn-primary { width: auto; height: 40px; margin: 0; padding: 0 var(--ss-space-4); }
+        .avatar-error { display: none; margin: var(--ss-space-2) 0 0; font-size: var(--ss-fs-13); color: var(--error); }
+        .avatar-error.is-visible { display: block; }
 
         .username-status { font-size: var(--ss-fs-12); margin-top: var(--ss-space-2); min-height: 18px; }
         .username-status.ok { color: var(--success); }
@@ -404,8 +428,20 @@
                                     <%= __('settings.profile.changePhoto') %>
                                 </span>
                             </div>
-                            <input type="file" id="profilePicture" name="profilePicture" accept="image/png,image/jpeg,image/webp" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">
-                            <button type="button" class="remove-photo" id="btnRemovePhoto"><%= __('settings.profile.removePhoto') %></button>
+                            <input type="file" id="profilePicture" name="profilePicture" accept="image/png,image/jpeg,image/webp,image/gif" class="avatar-file-input" tabindex="-1" data-max-bytes="<%= avatarMaxUploadBytes %>">
+                            <div class="avatar-actions">
+                                <button type="button" class="btn-secondary" id="btnChangePhoto"><%= __('settings.profile.changePhoto') %></button>
+                                <button type="button" class="btn-secondary" id="btnRemovePhoto"<%= profilePicture === '/img/profile_images/Default_placeholder.svg' ? ' hidden' : '' %>><%= __('settings.profile.removePhoto') %></button>
+                            </div>
+                            <p class="avatar-hint"><%= __('settings.profile.photoHint', { mb: String(Math.round(avatarMaxUploadBytes / 1048576)) }) %></p>
+                            <p class="avatar-error" id="avatarError" role="alert"></p>
+                            <div class="avatar-pending" id="avatarPending">
+                                <p id="avatarPendingText"></p>
+                                <div class="avatar-pending-actions">
+                                    <button type="submit" class="btn-primary" id="btnSavePhoto"><%= __('settings.profile.savePhoto') %></button>
+                                    <button type="button" class="btn-secondary" id="btnCancelPhoto"><%= __('settings.profile.cancelPhoto') %></button>
+                                </div>
+                            </div>
                         </div>
 
                         <h2 class="section-heading"><%= __('settings.profile.personalInfo') %></h2>
@@ -732,7 +768,12 @@
         usernameOk: <%- JSON.stringify(__('settings.profile.usernameAvailable')) %>,
         usernameTaken: <%- JSON.stringify(__('settings.profile.usernameTaken')) %>,
         usernameRules: <%- JSON.stringify(__('settings.errors.invalidUsername')) %>,
-        saved: <%- JSON.stringify(__('settings.profile.saved')) %>
+        saved: <%- JSON.stringify(__('settings.profile.saved')) %>,
+        saving: <%- JSON.stringify(__('settings.profile.saving')) %>,
+        photoChosen: <%- JSON.stringify(__('settings.profile.photoChosen')) %>,
+        photoRemoval: <%- JSON.stringify(__('settings.profile.photoRemoval')) %>,
+        photoTooLarge: <%- JSON.stringify(__('settings.errors.photoTooLarge', { mb: String(Math.round(avatarMaxUploadBytes / 1048576)) })) %>,
+        photoNotImage: <%- JSON.stringify(__('settings.errors.photoNotImage')) %>
     };
     var initialSnapshot = '';
 
@@ -758,31 +799,78 @@
         btn.addEventListener('click', function () { tab(btn.getAttribute('data-tab')); });
     });
 
-    // Avatar
+    // Avatar. Choosing a file or asking for removal is a change like any other: it shows
+    // in the preview, is named in the pending box with its own Save button, and enables the
+    // form's Save. Before 2026-09-21 the file was left out of the form's change detection,
+    // so a chosen photo left Save disabled and there was no way to submit it.
+    var PLACEHOLDER = '/img/profile_images/Default_placeholder.svg';
     var fileInput = document.getElementById('profilePicture');
     var avatarPreview = document.getElementById('avatarPreview');
+    var avatarOriginalSrc = avatarPreview.getAttribute('src');
     var removeField = document.getElementById('removeProfilePicture');
     var avatarWrap = document.getElementById('avatarWrap');
+    var avatarPending = document.getElementById('avatarPending');
+    var avatarPendingText = document.getElementById('avatarPendingText');
+    var avatarError = document.getElementById('avatarError');
+    var btnRemovePhoto = document.getElementById('btnRemovePhoto');
+    var maxBytes = parseInt(fileInput.getAttribute('data-max-bytes'), 10) || (12 * 1024 * 1024);
     function openPicker() { fileInput.click(); }
     avatarWrap.addEventListener('click', openPicker);
     avatarWrap.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPicker(); }
     });
-    fileInput.addEventListener('change', function () {
-        if (fileInput.files && fileInput.files[0]) {
-            removeField.value = '0';
-            var r = new FileReader();
-            r.onload = function (ev) { avatarPreview.src = ev.target.result; };
-            r.readAsDataURL(fileInput.files[0]);
-            markProfileDirty();
-        }
-    });
-    document.getElementById('btnRemovePhoto').addEventListener('click', function () {
-        removeField.value = '1';
-        avatarPreview.src = '/img/profile_images/Default_placeholder.svg';
+    document.getElementById('btnChangePhoto').addEventListener('click', openPicker);
+    function showAvatarError(text) {
+        avatarError.textContent = text || '';
+        avatarError.classList.toggle('is-visible', Boolean(text));
+    }
+    function fileSizeText(bytes) {
+        return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
+    }
+    function showPending(text) {
+        avatarPendingText.textContent = text;
+        avatarPending.classList.add('is-visible');
+    }
+    function resetPhotoChoice() {
         fileInput.value = '';
+        removeField.value = '0';
+        avatarPreview.src = avatarOriginalSrc;
+        avatarPending.classList.remove('is-visible');
+        showAvatarError('');
+        markProfileDirty();
+    }
+    fileInput.addEventListener('change', function () {
+        var f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        // The same two rules the server applies, checked here so a phone photo over the
+        // limit is refused before it is sent.
+        if (f.size > maxBytes) {
+            resetPhotoChoice();
+            showAvatarError(MSG.photoTooLarge);
+            return;
+        }
+        if (!/\.(jpe?g|png|gif|webp)$/i.test(f.name) || (f.type && !/^image\/(jpeg|pjpeg|png|gif|webp)$/i.test(f.type))) {
+            resetPhotoChoice();
+            showAvatarError(MSG.photoNotImage);
+            return;
+        }
+        showAvatarError('');
+        removeField.value = '0';
+        var r = new FileReader();
+        r.onload = function (ev) { avatarPreview.src = ev.target.result; };
+        r.readAsDataURL(f);
+        showPending(MSG.photoChosen + ': ' + f.name + ' (' + fileSizeText(f.size) + ')');
         markProfileDirty();
     });
+    btnRemovePhoto.addEventListener('click', function () {
+        removeField.value = '1';
+        avatarPreview.src = PLACEHOLDER;
+        fileInput.value = '';
+        showAvatarError('');
+        showPending(MSG.photoRemoval);
+        markProfileDirty();
+    });
+    document.getElementById('btnCancelPhoto').addEventListener('click', resetPhotoChoice);
 
     // Bio counter
     var bio = document.getElementById('bio');
@@ -800,6 +888,9 @@
         var fd = new FormData(formProfile);
         var parts = [];
         fd.forEach(function (v, k) { if (k !== 'profilePicture') parts.push(k + '=' + v); });
+        // A chosen file is a change too; its name, size and date stand in for its bytes.
+        var f = fileInput.files && fileInput.files[0];
+        parts.push('profilePicture=' + (f ? f.name + ':' + f.size + ':' + f.lastModified : ''));
         parts.sort();
         return parts.join('&');
     }
@@ -810,8 +901,13 @@
     markProfileDirty();
 
     formProfile.addEventListener('submit', function () {
+        // One submit only: the picture goes up once, however the form was sent.
         var btn = document.getElementById('btnSaveProfile');
+        var btnPhoto = document.getElementById('btnSavePhoto');
         btn.disabled = true;
+        btnPhoto.disabled = true;
+        btnPhoto.textContent = MSG.saving;
+        btn.textContent = MSG.saving;
     });
 
     // Username availability

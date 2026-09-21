@@ -15,6 +15,42 @@ const AVATAR_DIR = path.join(__dirname, 'img', 'profile_images');
 const MAIN_SIZE = 320;
 const THUMB_SIZE = 96;
 const RASTER_RE = /\.(jpe?g|png|gif|webp)$/i;
+const RASTER_MIME_RE = /^image\/(jpeg|pjpeg|png|gif|webp)$/i;
+
+// ── What an upload may be ─────────────────────────────────────────────────────
+// A phone photo is 3–8 MB straight from the camera, and the old 5 MB ceiling turned one
+// into multer's LIMIT_FILE_SIZE, which nothing caught: the visitor got the 500 page for
+// choosing a picture (2026-09-21). The file is resized to 320 px the moment it lands, so
+// the ceiling only bounds one decode, and 12 MB covers every phone. The settings page
+// reads the same number, so the browser refuses a bigger file before sending it.
+const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
+
+/**
+ * multer's fileFilter for an avatar: the browser's type when it gives one, and the
+ * extension either way. A file that fails is reported by name, not thrown as a bare
+ * Error, so the route can tell the person which of the two rules it broke.
+ */
+function acceptAvatarFile(file) {
+    const okExt = RASTER_RE.test(file.originalname || '');
+    const okMime = !file.mimetype || RASTER_MIME_RE.test(file.mimetype);
+    if (okExt && okMime) return null;
+    const err = new Error('Only image files are allowed');
+    err.code = 'AVATAR_NOT_IMAGE';
+    return err;
+}
+
+/**
+ * Classify the error multer (or the filter above) raised while receiving an avatar:
+ * 'tooLarge', 'notImage', or null for anything the person did not cause (disk, network).
+ * The route maps the first two onto a flash message; null keeps going to the 500 page,
+ * which is the right answer for a real fault.
+ */
+function avatarUploadProblem(err) {
+    if (!err) return null;
+    if (err.code === 'LIMIT_FILE_SIZE') return 'tooLarge';
+    if (err.code === 'AVATAR_NOT_IMAGE') return 'notImage';
+    return null;
+}
 
 // ── Cache busting ─────────────────────────────────────────────────────────────
 // An avatar's URL is derived from the user id, so it does NOT change when the picture
@@ -96,5 +132,6 @@ function thumbUrl(url) {
 
 module.exports = {
     processAvatar, thumbUrl, versionedAvatarUrl, avatarCacheControl,
-    AVATAR_DIR, MAIN_SIZE, THUMB_SIZE, RASTER_RE,
+    acceptAvatarFile, avatarUploadProblem,
+    AVATAR_DIR, MAIN_SIZE, THUMB_SIZE, RASTER_RE, MAX_UPLOAD_BYTES,
 };

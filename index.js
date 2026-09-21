@@ -43,7 +43,10 @@ const { isValidNewUsername, resolveUsernameChange, USERNAME_PATTERN } = require(
 const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { founderYearFor } = require("./lib/founderYear");
 const { sendEmail } = require("./email");
-const { processAvatar, versionedAvatarUrl, avatarCacheControl, AVATAR_DIR } = require("./avatar");
+const {
+    processAvatar, versionedAvatarUrl, avatarCacheControl, acceptAvatarFile, avatarUploadProblem,
+    AVATAR_DIR, MAX_UPLOAD_BYTES: AVATAR_MAX_UPLOAD_BYTES,
+} = require("./avatar");
 
 const rateLimit = require('express-rate-limit');
 const { botgate, botgateAfterSession, isCountable, isTaggable, init: initBotgate } = require('./botgate');
@@ -646,20 +649,33 @@ const profileStorage = multer.diskStorage({
     }
 });
 
-const profileUpload = multer({ 
+const profileUpload = multer({
     storage: profileStorage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: AVATAR_MAX_UPLOAD_BYTES, files: 1 },
     fileFilter: (req, file, cb) => {
-        const allowedExt = /\.(jpe?g|png|gif|webp)$/i.test(file.originalname);
-        const okMime = !file.mimetype || /image\/(jpeg|png|gif|webp)/i.test(file.mimetype);
-
-        if (okMime && allowedExt) {
-            return cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed'));
-        }
+        const problem = acceptAvatarFile(file);
+        if (problem) return cb(problem);
+        cb(null, true);
     }
 });
+
+// Receive the profile form's picture. multer reports a file it refused (too big, not an
+// image) as an error, and until 2026-09-21 that error went straight to the 500 page, so
+// a phone photo over the old 5 MB ceiling looked like the site had broken. Here the two
+// things a person can do wrong become the form's own flash message; a real fault still
+// goes to the error handler.
+function receiveProfilePicture(req, res, next) {
+    profileUpload.single("profilePicture")(req, res, (err) => {
+        if (!err) return next();
+        const problem = avatarUploadProblem(err);
+        if (!problem) return next(err);
+        const lang = req.params.lang === "ru" ? "ru" : "en";
+        i18n.setLocale(res, lang);
+        const key = problem === "tooLarge" ? "settings.errors.photoTooLarge" : "settings.errors.photoNotImage";
+        const message = i18n.__(key, { mb: String(Math.round(AVATAR_MAX_UPLOAD_BYTES / 1048576)) });
+        res.redirect(`/${lang}/settings?tab=profile&error=${encodeURIComponent(message)}`);
+    });
+}
 
 function normalizeProfileUrl(val) {
     if (val == null) return null;
@@ -741,7 +757,8 @@ app.get(["/settings", "/:lang/settings"], checkAuthenticated, async (req, res) =
             linkedin: user.linkedin,
             github: user.github,
             personalWebsite: user.personal_website,
-            profilePicture: user.profile_picture || `/img/profile_images/${user.id}.png`,
+            profilePicture: user.profile_picture || DEFAULT_PROFILE_AVATAR,
+            avatarMaxUploadBytes: AVATAR_MAX_UPLOAD_BYTES,
             preferences,
             notificationSettings,
             countryNames: getSortedCountryNames(),
@@ -800,7 +817,7 @@ async function getAllContributors(limit = 50, offset = 0) {
     }
 }
 // Profile settings update (profile + links; email is changed from Account tab only)
-app.post("/:lang/settings/profile", checkAuthenticated, profileUpload.single("profilePicture"), async (req, res) => {
+app.post("/:lang/settings/profile", checkAuthenticated, receiveProfilePicture, async (req, res) => {
     const { lang } = req.params;
     i18n.setLocale(res, lang);
     const {
