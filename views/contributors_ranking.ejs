@@ -395,7 +395,9 @@
 
         .contributor-handle {
             display: inline-block;
+            text-decoration: none;
         }
+        .contributor-handle:hover { text-decoration: none; }
 
         .contributor-name {
             color: var(--sv-secondary);
@@ -1154,8 +1156,16 @@
 
             rows.forEach((row) => {
                 const tr = document.createElement("tr");
-                tr.addEventListener("click", () => {
-                    window.location.href = `/user/${row.username}`;
+                // A real link on the name (middle click, Ctrl+click, "open in new tab" all work);
+                // the rest of the row follows it, with Ctrl / Cmd / Shift opening a new tab too.
+                tr.addEventListener("click", (e) => {
+                    if (e.target.closest("a")) return;
+                    const url = `/user/${row.username}`;
+                    if (e.ctrlKey || e.metaKey || e.shiftKey) window.open(url, "_blank");
+                    else window.location.href = url;
+                });
+                tr.addEventListener("auxclick", (e) => {
+                    if (e.button === 1 && !e.target.closest("a")) window.open(`/user/${row.username}`, "_blank");
                 });
 
                 // row.rank is null for the site owner (no place number assigned).
@@ -1176,7 +1186,7 @@
                                 ${row.isOnline ? `<span class="online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>` : ""}
                             </span>
                             <div class="contributor-main">
-                                <div class="contributor-username" style="color: ${badge.color};" title="${badge.label}"><span class="contributor-handle ss-rank-${badge.key}">${row.username}</span></div>
+                                <div class="contributor-username" title="${badge.label}"><a class="contributor-handle ss-rank-${badge.key} ss-rank-c-${badge.key}" href="/user/${encodeURIComponent(row.username)}" data-no-rank>${row.username}</a></div>
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
                             </div>
                         </div>
