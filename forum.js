@@ -635,10 +635,14 @@ router.get('/:categorySlug/:topicParam', async (req, res) => {
         // Compute reputation for each unique poster
         const userIds = [...new Set(posts.map(p => p.user_id))];
         const reputations = {};
-        for (const uid of userIds) {
-            const rep = await getUserReputation(uid);
-            reputations[uid] = { score: rep, ...getReputationBadge(rep, lang) };
-        }
+        // One source for the score and the tier (lib/userRank.js): the owner is "Headquarters"
+        // there, not a tier by score (2026-09-21, the forum showed him as a legendary grandmaster).
+        const { scoreFor, rankFor: rankTierFor } = require('./lib/userRank');
+        await Promise.all(userIds.map(async (uid) => {
+            const rep = await scoreFor(uid);
+            const tier = await rankTierFor(uid, rep);
+            reputations[uid] = { score: rep, label: i18n.__({ phrase: `badges.${tier.key}`, locale: lang || 'en' }), color: tier.color, key: tier.key };
+        }));
 
         // Get current user's votes on these posts
         let userVotes = {};

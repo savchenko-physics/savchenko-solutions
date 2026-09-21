@@ -417,7 +417,8 @@
             <div class="msg-sticker-grid" id="stickerGrid"></div>
           </div>
           <button class="msg-sticker-btn" id="stickerBtn" title="<%= lang === 'ru' ? 'Стикеры' : 'Stickers' %>" aria-label="<%= lang === 'ru' ? 'Стикеры' : 'Stickers' %>">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/><path d="M14 21a7 7 0 0 0 7-7"/></svg>
+            <%# A peeling sticker (SVG Repo, CC0), filled with the button's colour. %>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10.0653519,3.20844432 C6.0245904,4.09358572 3,7.69357739 3,12 C3,16.9705627 7.02943725,21 12,21 C16.3064226,21 19.9064143,17.9754096 20.7915557,13.9346481 C20.0701655,14.124108 19.3199641,14.2222222 18.5555556,14.2222222 C13.7077228,14.2222222 9.77777778,10.2922772 9.77777778,5.44444444 C9.77777778,4.68003592 9.87589197,3.9298345 10.0653519,3.20844432 Z M12.066347,3.48056053 C11.8765083,4.10911934 11.7777778,4.76909243 11.7777778,5.44444444 C11.7777778,9.18770775 14.8122923,12.2222222 18.5555556,12.2222222 C19.2309076,12.2222222 19.8908807,12.1234917 20.5194395,11.933653 L12.066347,3.48056053 Z M12,23 C5.92486775,23 1,18.0751322 1,12 C1,5.92486775 5.92486775,1 12,1 L12.4142136,1 L23,11.5857864 L23,12 C23,18.0751322 18.0751322,23 12,23 Z"/></svg>
           </button>
           <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru'
             ? `Прикрепить файл (до ${Math.round(attachmentRules.maxBytes / 1048576)} МБ, видео до ${Math.round(attachmentRules.videoMaxBytes / 1048576)} МБ)`

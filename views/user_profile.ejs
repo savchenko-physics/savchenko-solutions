@@ -2433,9 +2433,12 @@
             pupil: ["Pupil", "Ученик"],
             newbie: ["Newbie", "Новичок"],
         };
-        function getReputationBadge(score) {
-            const tier = window.SSPalettes.rankFor(score);
-            const names = RANK_LABELS[tier.key];
+        // The header's map (window.__USER_RANKS__) knows the site's exceptions, Headquarters
+        // above all; a name found there takes its tier from it, the rest from the score.
+        function getReputationBadge(score, who) {
+            const known = who && window.__USER_RANKS__ ? window.__USER_RANKS__[who] : null;
+            const tier = known === "headquarters" ? window.SSPalettes.RANK_HQ : window.SSPalettes.rankFor(score);
+            const names = RANK_LABELS[tier.key] || (tier.key === "headquarters" ? ["Headquarters", "Штаб-квартира"] : [tier.key, tier.key]);
             return { label: lang === "ru" ? names[1] : names[0], color: tier.color, key: tier.key };
         }
 
@@ -2462,9 +2465,8 @@
             // "Headquarters" title (matching the leaderboard) instead of a tier.
             const titleEl = document.getElementById("rank-title-line");
             if (titleEl) {
-                const badge = username === "astrosander"
-                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", ...window.SSPalettes.RANK_HQ }
-                    : (cur.score != null ? getReputationBadge(cur.score) : null);
+                const badge = cur.score != null || (window.__USER_RANKS__ || {})[username] === "headquarters"
+                    ? getReputationBadge(cur.score || 0, username) : null;
                 if (badge) {
                     titleEl.textContent = badge.label;
                     titleEl.style.color = badge.color;

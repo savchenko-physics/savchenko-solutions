@@ -1155,9 +1155,17 @@
         }
 
         // The tiers and their colours live in js/palettes.js (shared with forum.js and the profile).
-        function getReputationBadge(score) {
-            const tier = window.SSPalettes.rankFor(score);
-            return { label: t[tier.key], color: tier.color, key: tier.key };
+        // The header's map (window.__USER_RANKS__, lib/userRank.js) knows the site's own
+        // exceptions, Headquarters above all, so a name found there takes its tier from it.
+        function tierFor(username, score) {
+            const known = username && window.__USER_RANKS__ ? window.__USER_RANKS__[username] : null;
+            if (known === "headquarters") return window.SSPalettes.RANK_HQ;
+            return window.SSPalettes.rankFor(score);
+        }
+        function getReputationBadge(score, username) {
+            const tier = tierFor(username, score);
+            const label = t[tier.key] || (tier.key === "headquarters" ? (lang === "ru" ? "Штаб-квартира" : "Headquarters") : tier.key);
+            return { label: label, color: tier.color, key: tier.key };
         }
 
         function renderRows(rows) {
@@ -1184,9 +1192,7 @@
                 const countryPrefix = row.countryFlag ? `${row.countryFlag} ` : "";
                 // Site owner shows a fixed black "Headquarters" title instead of a
                 // score-based rank badge.
-                const badge = row.username === "astrosander"
-                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", ...window.SSPalettes.RANK_HQ }
-                    : getReputationBadge(Number(row.score || 0));
+                const badge = getReputationBadge(Number(row.score || 0), row.username);
                 tr.innerHTML = `
                     <td class="${rankClass}">${hasRank ? row.rank : ""}</td>
                     <td>
