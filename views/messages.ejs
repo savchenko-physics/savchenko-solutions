@@ -1368,6 +1368,9 @@
     .msg-send-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
+    }
+    .msg-send-grid.is-few { grid-template-columns: repeat(2, 1fr); }
+    .msg-send-grid {
       gap: var(--ss-space-2);
       width: 100%;
       padding: var(--ss-space-2);
@@ -1393,6 +1396,15 @@
       width: 100%; height: 100%;
       object-fit: cover;
     }
+    /* A picture or a video tile, and the single preview, open the viewer on click. */
+    .msg-send-tile.is-media, .msg-send-preview img, .msg-send-preview video { cursor: zoom-in; }
+    .msg-send-tile-open {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      border: none; background: transparent; padding: 0; margin: 0;
+      cursor: zoom-in;
+    }
+    .msg-send-tile-open:focus-visible { outline: 2px solid var(--ss-link); outline-offset: -2px; }
     .msg-send-tile .msg-bubble-file-icon { background: var(--ss-link); color: var(--ss-on-navy); }
     .msg-send-tile-name {
       max-width: 100%;
@@ -3292,8 +3304,9 @@
      or a video whether to send it as a file instead. One attachment shows large: a video plays from
      the file in memory — nothing is uploaded until Send; one this browser cannot decode (OpenCV's
      mp4v, an iPhone's HEVC in Firefox) shows as a file and says it will be converted after sending,
-     which is what the server then does. Several show as tiles, each with a cross to leave it out.
-     The composer's text becomes the caption, which goes with the first. */
+     which is what the server then does. Several show as tiles, each with a cross to leave it out,
+     and a picture or a video among them opens in the viewer on click. The composer's text becomes
+     the caption, which goes under the last. */
   let previewVideoUrl = null;
   function clearPreviewVideo() {
     if (!sendPreviewVideo) return;
@@ -3336,6 +3349,15 @@
         tile.innerHTML = '<img src="' + escAttr(it.url) + '" alt="" />';
       } else if (it.kind === 'video' && it.url) {
         tile.innerHTML = '<video src="' + escAttr(it.url) + '" muted playsinline preload="metadata"></video>';
+      }
+      if ((it.isImage || it.kind === 'video') && it.url) {
+        tile.classList.add('is-media');
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'msg-send-tile-open';
+        open.setAttribute('aria-label', LANG === 'ru' ? 'Посмотреть' : 'View');
+        open.addEventListener('click', function() { openPendingInViewer(it); });
+        tile.appendChild(open);
       } else {
         tile.innerHTML = fileGlyph() + '<span class="msg-send-tile-name"></span>';
         tile.querySelector('.msg-send-tile-name').textContent = it.name;
@@ -3354,7 +3376,17 @@
       tile.appendChild(remove);
       sendPreviewGrid.appendChild(tile);
     });
+    sendPreviewGrid.classList.toggle('is-few', pendingQueue.length <= 4);
     sendPreviewGrid.hidden = false;
+  }
+  /* A click on a staged picture or video shows it full size in the media viewer, with the
+     batch's other media beside it (arrows, ← →); Esc or the backdrop comes back to the dialog. */
+  function openPendingInViewer(it) {
+    const items = pendingQueue.filter(function(q) { return (q.isImage || q.kind === 'video') && q.url; }).map(function(q) {
+      return { kind: q.isImage ? 'image' : 'video', src: q.url, name: q.name, poster: '', caption: '', sender: '', created: '', wrap: null };
+    });
+    const i = items.findIndex(function(v) { return v.src === it.url; });
+    if (i >= 0) openViewerItems(items, i);
   }
   function openSendDialog() {
     if (!sendDialog) return;
@@ -3372,6 +3404,7 @@
       if (it.isImage && it.url) {
         sendPreviewImg.src = it.url;
         sendPreviewImg.hidden = false;
+        sendPreviewImg.onclick = function() { openPendingInViewer(it); };
       } else if (it.kind === 'video' && it.url) {
         previewVideoUrl = it.url;
         sendPreviewVideo.onerror = function() {
@@ -4014,9 +4047,11 @@
     }
     /* Every attachment is its own message. The bubbles all appear now, in the order chosen,
        and the uploads go one after another so they arrive in that order too; the caption and
-       the reply go with the first. */
+       the reply go with the last, so the text sits under the pictures as under a Telegram
+       album (on the first it landed between them, the owner, 2026-09-21). */
+    const last = items.length - 1;
     const jobs = items.map(function(it, index) {
-      return stagePendingBubble(index === 0 ? content : '', it, index === 0 ? replyData : null, asFile);
+      return stagePendingBubble(index === last ? content : '', it, index === last ? replyData : null, asFile);
     });
     jobs.reduce(function(chain, job) {
       return chain.then(function() { return dispatchMessage(job); });

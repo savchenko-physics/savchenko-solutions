@@ -114,7 +114,8 @@ All render-critical third-party libraries are **self-hosted**, not loaded from a
   converted — a caption, the "send as a document" choice). **Several at once** (2026-09-21, up to
   10 by any of the three routes): the dialog shows them as tiles, each with a cross, and every one
   becomes its own message, uploaded one after another so they arrive in the order chosen, the
-  caption and the reply on the first. Uploads go by XMLHttpRequest so the
+  caption and the reply on the last (under the pictures, as under a Telegram album); a picture
+  or video tile opens in the media viewer on click. Uploads go by XMLHttpRequest so the
   pending card shows progress; no attachment is accepted with under 1 GB free on the disk (507); deleting a
   video message removes its file unless a forward still shows it (other kinds keep their files,
   as before). `tests/message-attachments.test.js`, `tests/video-meta.test.js`,
