@@ -2462,3 +2462,10 @@
         font-size: var(--ss-fs-16);
       }
     }
+
+    /* A sticker (attachment_status = 'sticker'): a transparent picture standing on its own, no
+       bubble behind it, 256 px at most, the time in its pill as on a photo (2026-09-21). */
+    .msg-bubble.is-sticker, .msg-bubble.is-sticker.sent { background: transparent; box-shadow: none; border: none; }
+    .msg-bubble.is-sticker > .msg-media { max-width: 256px; border-radius: 0; }
+    .msg-bubble.is-sticker .msg-bubble-image { border-radius: 0; }
+    .msg-bubble.is-sticker .msg-reaction-add { display: none; }

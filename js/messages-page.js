@@ -2230,7 +2230,7 @@
     if (kind) row.classList.add('has-media');
     const receiptHtml = (isSent && SHOW_RECEIPTS) ? checkSpanHTML(isReadAt(m.created_at)) : '';
     const timeHtml = '<div class="msg-bubble-time">' + fmtTime(m.created_at) + receiptHtml + '</div>';
-    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + (kind ? ' has-media' : '') + '">' + bubbleInnerHTML(m, textHtml, timeHtml) + '</div>';
+    html += '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + (kind ? ' has-media' : '') + (m.attachment_status === 'sticker' ? ' is-sticker' : '') + '">' + bubbleInnerHTML(m, textHtml, timeHtml) + '</div>';
     html += renderReactionsHTML(m.id, m.reactions || []);
     html += '</div>';
 
