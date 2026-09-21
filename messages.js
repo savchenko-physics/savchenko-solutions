@@ -1215,6 +1215,9 @@ router.get('/:id(\\d+)/history', async (req, res) => {
                  SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
                  WHERE m.conversation_id = $1
                    AND (m.created_at, m.id) < (SELECT cur.created_at, cur.id FROM messages cur WHERE cur.id = $2)
+                   -- Deleted rows are skipped by the client, and a page of nothing but them
+                   -- (Бека's 32 in the English chat) left the scroll stuck (2026-09-21).
+                   AND m.deleted_at IS NULL
                    AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $4)
                    AND ${afterHidden('$4')}
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $3

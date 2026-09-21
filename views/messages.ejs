@@ -441,6 +441,22 @@
       background: var(--msg-bg);
     }
 
+    .msg-scroll-down {
+      position: absolute;
+      right: var(--ss-space-4);
+      bottom: 88px;   /* above the composer */
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--ss-rule);
+      background: var(--ss-surface);
+      color: var(--ss-text-secondary);
+      box-shadow: var(--ss-shadow);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .msg-scroll-down[hidden] { display: none; }
+    .msg-scroll-down:hover { color: var(--ss-text); }
     .msg-chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -2779,6 +2795,10 @@
           <% }); %>
         </div>
 
+        <%# Scrolled up: a round button in the corner takes the reader back down (Telegram's). %>
+        <button type="button" class="msg-scroll-down" id="scrollDownBtn" hidden aria-label="<%= lang === 'ru' ? 'К последним сообщениям' : 'To the latest messages' %>">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
         <!-- Typing indicator -->
         <div class="msg-typing" id="typingBar">
           <span id="typingText"></span>
@@ -5924,14 +5944,30 @@
           oldestMsgId = parseInt(msgs[0].id) || oldestMsgId;
         }
         hasMoreHistory = !!(data && data.hasMore);
+        /* A page that shows nothing (all deleted, or hidden for this member) leaves the
+           scroll where it was, so no scroll event would ask for the next one: ask now. */
+        if (hasMoreHistory && !msgs.some(function(m) { return !m.deleted_at; })) return loadOlder.__again = true;
       })
       .catch(function() { if (historyLoader) historyLoader.classList.remove('show'); })
-      .then(function() { loadingHistory = false; });
+      .then(function() {
+        loadingHistory = false;
+        if (loadOlder.__again) { loadOlder.__again = false; return loadOlder(); }
+      });
   }
 
+  const scrollDownBtn = document.getElementById('scrollDownBtn');
+  function updateScrollDown() {
+    if (!scrollDownBtn || !chatEl) return;
+    scrollDownBtn.hidden = chatEl.scrollHeight - chatEl.scrollTop - chatEl.clientHeight < 300;
+  }
+  if (scrollDownBtn && chatEl) {
+    scrollDownBtn.addEventListener('click', function() { chatEl.scrollTo({ top: chatEl.scrollHeight, behavior: 'smooth' }); });
+    setTimeout(updateScrollDown, 800);
+  }
   if (chatEl) {
     chatEl.addEventListener('scroll', function() {
       if (chatEl.scrollTop < 80 && hasMoreHistory && !loadingHistory) loadOlder();
+      updateScrollDown();
     });
   }
 
