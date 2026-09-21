@@ -1459,13 +1459,13 @@
                 <% if (attribution) { %>
                 <span>
                     <%= lang === 'ru' ? 'Автор' : 'Contributed by' %>
-                    <% if (attribution.originalAuthor.userId) { %><a href="/user/<%= attribution.originalAuthor.username %>">@<%= attribution.originalAuthor.username %></a><% } else { %><%= attribution.originalAuthor.username %><% } %>
+                    <% if (attribution.originalAuthor.userId) { %><a href="/user/<%= attribution.originalAuthor.username %>" class="<%= rankClass(attribution.originalAuthor.username) %>"><%= attribution.originalAuthor.username %></a><% } else { %><%= attribution.originalAuthor.username %><% } %>
                 </span>
                 <% if (attribution.editors.length > 0) { %>
                 <span class="attribution-sep" aria-hidden="true">&middot;</span>
                 <span>
                     <%= lang === 'ru' ? 'Редакторы:' : 'Edited by' %>
-                    <% attribution.editors.forEach(function(editor, i) { %><% if (i > 0) { %>, <% } %><% if (editor.userId) { %><a href="/user/<%= editor.username %>">@<%= editor.username %></a><% } else { %><%= editor.username %><% } %><% }); %>
+                    <% attribution.editors.forEach(function(editor, i) { %><% if (i > 0) { %>, <% } %><% if (editor.userId) { %><a href="/user/<%= editor.username %>" class="<%= rankClass(editor.username) %>"><%= editor.username %></a><% } else { %><%= editor.username %><% } %><% }); %>
                     <% if (attribution.extraEditors > 0) { %>+ <%= attribution.extraEditors %> <%= lang === 'ru' ? 'других' : 'others' %><% } %>
                 </span>
                 <% } %>

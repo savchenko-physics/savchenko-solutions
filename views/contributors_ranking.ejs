@@ -357,8 +357,8 @@
         }
 
         .avatar {
-            width: 32px;
-            height: 32px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             border: 1px solid var(--sv-border);
@@ -404,6 +404,14 @@
             font-size: var(--ss-fs-12);
             margin-top: 1px;
         }
+
+        /* When the person was last here (their presence setting respected), under the name. */
+        .contributor-seen {
+            color: var(--ss-text-tertiary);
+            font-size: var(--ss-fs-12);
+            margin-top: 1px;
+        }
+        .contributor-seen-online { color: var(--ss-success-strong); }
 
         .pagination-row {
             margin-top: var(--ss-space-3);
@@ -660,24 +668,6 @@
         <h1 class="page-title"><%= __('contributorsPage.title') %></h1>
         <p id="contributors-subtitle" class="page-subtitle skeleton"><%= __('contributorsPage.loadingSummary') %></p>
 
-        <section class="stats-row">
-            <article class="stat-tile stat-tile-clickable" id="contributorsTile" style="cursor:pointer; position:relative;">
-                <div id="stat-contributors" class="stat-value skeleton">0000</div>
-                <div class="stat-label"><%= __('contributorsPage.statContributors') %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-solutions" class="stat-value skeleton">0000</div>
-                <div class="stat-label"><%= __('contributorsPage.statSolutions') %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-countries" class="stat-value skeleton">0000</div>
-                <div class="stat-label"><%= __('contributorsPage.statCountries') %></div>
-            </article>
-            <article class="stat-tile">
-                <div id="stat-languages" class="stat-value" style="font-size: var(--ss-fs-20);"><%= __('contributorsPage.languagesValue') %></div>
-                <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
-            </article>
-        </section>
 
         <section class="card" id="onlineNowCard" style="display:none;">
             <h2 class="section-title"><%= lang === 'ru' ? 'Сейчас в сети' : 'Online now' %> <span id="onlineNowCount" class="online-now-count"></span></h2>
@@ -693,17 +683,6 @@
             </button>
         </section>
 
-        <section class="card">
-            <h2 class="section-title"><%= __('contributorsPage.geoDistribution') %></h2>
-            <div class="geo-globe-wrap">
-                <svg id="world-map" viewBox="0 0 960 460" preserveAspectRatio="xMidYMid meet"></svg>
-                <div class="geo-legend">
-                    <span><%= lang === 'ru' ? 'меньше' : 'less' %></span>
-                    <span class="bar"></span>
-                    <span><%= lang === 'ru' ? 'больше' : 'more' %></span>
-                </div>
-            </div>
-        </section>
 
         <section class="card">
             <h2 class="section-title"><%= __('contributorsPage.leaderboard') %></h2>
@@ -777,6 +756,37 @@
                 <ul id="platform-heatmap-year-nav" class="heatmap-year-nav" aria-label="Contribution period"></ul>
             </div>
             <div id="platform-heatmap-tooltip" class="heatmap-cell-tooltip" role="tooltip" hidden aria-hidden="true"></div>
+        </section>
+
+        <section class="card">
+            <h2 class="section-title"><%= __('contributorsPage.geoDistribution') %></h2>
+            <div class="geo-globe-wrap">
+                <svg id="world-map" viewBox="0 0 960 460" preserveAspectRatio="xMidYMid meet"></svg>
+                <div class="geo-legend">
+                    <span><%= lang === 'ru' ? 'меньше' : 'less' %></span>
+                    <span class="bar"></span>
+                    <span><%= lang === 'ru' ? 'больше' : 'more' %></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats-row">
+            <article class="stat-tile stat-tile-clickable" id="contributorsTile" style="cursor:pointer; position:relative;">
+                <div id="stat-contributors" class="stat-value skeleton">0000</div>
+                <div class="stat-label"><%= __('contributorsPage.statContributors') %></div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-solutions" class="stat-value skeleton">0000</div>
+                <div class="stat-label"><%= __('contributorsPage.statSolutions') %></div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-countries" class="stat-value skeleton">0000</div>
+                <div class="stat-label"><%= __('contributorsPage.statCountries') %></div>
+            </article>
+            <article class="stat-tile">
+                <div id="stat-languages" class="stat-value" style="font-size: var(--ss-fs-20);"><%= __('contributorsPage.languagesValue') %></div>
+                <div class="stat-label"><%= __('contributorsPage.statLanguages') %></div>
+            </article>
         </section>
     </main>
 
@@ -1188,6 +1198,11 @@
                             <div class="contributor-main">
                                 <div class="contributor-username" title="${badge.label}"><a class="contributor-handle ss-rank-${badge.key} ss-rank-c-${badge.key}" href="/user/${encodeURIComponent(row.username)}" data-no-rank>${row.username}</a></div>
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
+                                <div class="contributor-seen">${row.isOnline
+                                    ? `<span class="contributor-seen-online">${lang === "ru" ? "в сети" : "online"}</span>`
+                                    : row.lastSeenAt
+                                        ? `${lang === "ru" ? "был(а) " : "seen "}<time datetime="${new Date(row.lastSeenAt).toISOString()}" data-local="relative" data-lang="${lang}">${new Date(row.lastSeenAt).toLocaleDateString(dateLocale, { month: "short", day: "numeric" })}</time>`
+                                        : ""}</div>
                             </div>
                         </div>
                     </td>
@@ -1675,9 +1690,11 @@
             const card = document.getElementById("onlineNowCard");
             const list = document.getElementById("onlineNowList");
             const countEl = document.getElementById("onlineNowCount");
-            const users = data.users || [];
+            // Only the green and the orange tiers (the owner, 2026-09-21): whoever is here now or
+            // was within the hour. "Here today" is not shown.
+            const users = (data.users || []).filter((u) => u.tier !== "today");
             const counts = data.counts || { online: data.total || 0, recent: 0, today: 0 };
-            const shown = counts.online + counts.recent + counts.today;
+            const shown = counts.online + counts.recent;
             if (!shown) {
                 card.style.display = "none";
                 return;
@@ -1694,7 +1711,7 @@
             };
             const legend = document.getElementById("onlineNowLegend");
             if (legend) {
-                legend.innerHTML = [["recent", counts.recent], ["today", counts.today]]
+                legend.innerHTML = [["recent", counts.recent]]
                     .filter(([, n]) => n > 0)
                     .map(([tier, n]) => `<span class="online-legend-item">`
                         + `<span class="online-dot online-dot--${tier}" aria-hidden="true"></span>`

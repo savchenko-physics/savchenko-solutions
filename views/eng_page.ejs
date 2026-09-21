@@ -1696,7 +1696,7 @@
       display: flex;
       align-items: flex-start;
       gap: var(--ss-space-3);
-      padding: var(--ss-space-2) 0;
+      padding: var(--ss-space-1) 0;   /* tighter since 2026-09-21 (the owner) */
       position: relative;
     }
     .commit-dot-wrapper {
@@ -1736,13 +1736,13 @@
     .commit-entry-body {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 0;
       flex: 1;
       min-width: 0;
     }
     .commit-entry-main {
       font-size: var(--ss-fs-13);
-      line-height: 1.4;
+      line-height: 1.3;
       color: var(--ss-text);
     }
     .commit-problem {
@@ -1781,6 +1781,7 @@
       display: flex;
       align-items: center;
       gap: var(--ss-space-2);
+      line-height: 1.3;
     }
     .commit-time {
       font-size: var(--ss-fs-12);
@@ -2096,8 +2097,8 @@
             const excerpt = (p.excerpt || '').length > 120 ? p.excerpt.slice(0, 120) + '...' : (p.excerpt || '');
             const author = p.author_username || '';
             html += '<a href="/blog/' + p.slug + '" style="display: block; padding: var(--ss-space-4); background: var(--ss-surface-alt); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); text-decoration: none; transition: border-color 0.15s;">' +
-              '<div style="font-weight: var(--ss-fw-strong); color: var(--ss-text); font-size: var(--ss-fs-14); margin-bottom: var(--ss-space-1); line-height: 1.4;">' + p.title + '</div>' +
-              '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-13); line-height: 1.5; margin-bottom: var(--ss-space-2);">' + excerpt + '</div>' +
+              '<div style="font-weight: var(--ss-fw-strong); color: var(--ss-text); font-size: var(--ss-fs-14); margin-bottom: var(--ss-space-1); line-height: 1.4;">' + (p.title_html || p.title) + '</div>' +
+              '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-13); line-height: 1.5; margin-bottom: var(--ss-space-2);">' + (p.excerpt_html || excerpt) + '</div>' +
               '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-12);">' + (author ? author + ' · ' : '') + date + '</div>' +
               '</a>';
           });

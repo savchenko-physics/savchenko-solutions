@@ -655,6 +655,19 @@ function autoLinkBareProblemRefs(html, lang = 'en') {
     ));
 }
 
+// The rank map is loaded lazily: lib/userRank needs the pool, and utils.js is also required by
+// scripts that have no database.
+function rankMapSafe() {
+    try { return require('./lib/userRank').rankMapNow() || {}; } catch (e) { return {}; }
+}
+function rankClassOf(username) {
+    const map = rankMapSafe();
+    const key = map[username] || map[Object.keys(map).find((k) => k.toLowerCase() === String(username).toLowerCase())] || 'newbie';
+    return `ss-rank-c-${key} ss-rank-${key}`;
+}
+function rankedNames() {
+    return Object.keys(rankMapSafe()).filter((n) => n.length >= 4).sort((a, b) => b.length - a.length);
+}
 /** Whitelisted usernames that should be auto-linked in blog post bodies. */
 const BLOG_AUTO_LINK_USERNAMES = ['emixter', 'igor', 'astrosander'];
 
@@ -679,10 +692,18 @@ function autoLinkBlogUsernames(html) {
             `(?<![\\w])(${BLOG_AUTO_LINK_USERNAMES.join('|')})(?![\\w])`,
             'gi'
         );
+        // A username link is coloured by its rank (lib/userRank.js, the site-wide rule since
+        // 2026-09-21), a Russian name alias by the ordinary link colour.
         let result = text.replace(userRe, (match) => {
             const lower = match.toLowerCase();
-            return `<a href="/user/${lower}" class="user-mention" style="${AUTO_LINK_COLOR}text-decoration:none;">${match}</a>`;
+            return `<a href="/user/${lower}" class="user-mention ${rankClassOf(lower)}" data-no-rank>${match}</a>`;
         });
+        // Every other contributor with a tier, by their exact username.
+        for (const name of rankedNames()) {
+            if (BLOG_AUTO_LINK_USERNAMES.includes(name.toLowerCase())) continue;
+            const re = new RegExp(`(?<![\\w])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])(?![^<]*<\\/a>)`, 'g');
+            result = result.replace(re, (match) => `<a href="/user/${encodeURIComponent(name)}" class="user-mention ${rankClassOf(name)}" data-no-rank>${match}</a>`);
+        }
         // Russian name aliases
         for (const { pattern, username } of BLOG_RUSSIAN_NAME_TO_USERNAME) {
             result = result.replace(pattern, (match) =>

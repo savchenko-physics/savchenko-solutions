@@ -428,8 +428,9 @@ app.locals.localTime = localTime;
 app.locals.rankTierFor = require('./js/palettes').rankFor;
 // Every contributor's tier, for the header to inline (js/user-ranks.js colours every username
 // link on every page by it). Filled at boot, then refreshed behind the reader.
-const { rankMap: loadUserRanks, rankMapNow: userRanksNow } = require('./lib/userRank');
+const { rankMap: loadUserRanks, rankMapNow: userRanksNow, paintUsernames } = require('./lib/userRank');
 app.locals.userRanksNow = userRanksNow;
+app.locals.paintUsernames = paintUsernames;
 // The classes a username link carries, written by the server so nothing flashes before
 // js/user-ranks.js runs (the chat's sidebar and sender names, the homepage).
 app.locals.rankClass = (username) => {

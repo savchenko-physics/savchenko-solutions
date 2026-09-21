@@ -700,7 +700,7 @@
 
         <div class="blog-post-header">
             <div class="blog-post-title-row">
-                <h1><%= post.title %></h1>
+                <h1><%- paintUsernames(post.title) %></h1>
                 <% if (userId && (post.author_id === userId || username === 'astrosander')) { %>
                 <a href="/blog/<%= post.slug %>/edit" class="blog-post-edit">
                     <i class="fas fa-pen" aria-hidden="true"></i> <%= lang === 'ru' ? 'Редактировать' : 'Edit' %>

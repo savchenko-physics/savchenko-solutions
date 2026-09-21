@@ -659,6 +659,7 @@ module.exports = function registerContributorAndUserMetricsApi({ app, pool, base
             const rows = pageRows.map((r) => ({
                 ...withFaceNow(r, now),
                 isOnline: now.get(r.username)?.isOnline === true,
+                lastSeenAt: now.get(r.username)?.lastSeenAt || null,
             }));
 
             // no-cache rather than a max-age: the rankings are cached server-side for

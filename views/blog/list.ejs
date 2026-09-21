@@ -220,9 +220,9 @@
             <% posts.forEach(post => { %>
             <div class="blog-post-card">
                 <h2 class="blog-post-title">
-                    <a href="/blog/<%= post.slug %>"><%= post.title %></a>
+                    <a href="/blog/<%= post.slug %>"><%- paintUsernames(post.title, { link: false }) %></a>
                 </h2>
-                <p class="blog-post-excerpt"><%= post.excerpt %></p>
+                <p class="blog-post-excerpt"><%- paintUsernames(post.excerpt) %></p>
                 <div class="blog-post-meta">
                     <span>
                         <a href="/user/<%= post.author_username %>"><%= post.author_username %></a>

@@ -62,8 +62,9 @@ test('server auto-links take their colour from --auto-link-color', () => {
         linkifyMessageContent('см. https://www.youtube.com/watch?v=czU5ylX6_AM, @igor и #1.1.1', 'ru'),
         linkifyBlogHtml('<p>#2.1.1, 3.3.3, astrosander, спасибо Игорю</p>', 'ru'),
     ].join('\n');
+    // 6 since 2026-09-21: a username link is coloured by its rank class, not an inline style.
     const styles = html.match(/style="[^"]*"/g) || [];
-    assert.equal(styles.length, 7, html);
+    assert.equal(styles.length, 6, html);
     for (const s of styles) assert.match(s, LINK_STYLE);
 });
 

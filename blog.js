@@ -105,6 +105,13 @@ router.get('/api/posts', async (req, res) => {
              LIMIT $1`,
             [limit, lang]
         );
+        // Titles and excerpts with usernames in their rank's colour, for the homepage's cards
+        // (spans, since each card is itself a link).
+        const { paintUsernames } = require('./lib/userRank');
+        for (const r of rows) {
+            r.title_html = paintUsernames(r.title, { link: false });
+            r.excerpt_html = paintUsernames((r.excerpt || '').length > 120 ? r.excerpt.slice(0, 120) + '...' : (r.excerpt || ''), { link: false });
+        }
         res.json(rows);
     } catch (err) {
         console.error('Blog API error:', err);
