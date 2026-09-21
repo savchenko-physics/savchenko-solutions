@@ -2591,7 +2591,7 @@
               <% } %>
               <div>
                 <% if (showName) { %>
-                  <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %></div>
+                  <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %><% if (m.senderSuspendedUntil) { %><span class="msg-suspended-badge"><%= lang === 'ru' ? 'не может писать до' : 'cannot post until' %> <%- localTime(m.senderSuspendedUntil, 'daytime', lang) %></span><% } %></div>
                 <% } %>
                 <div class="msg-bubble <%= isSent ? 'sent' : 'received' %><%= mediaKind ? ' has-media' : '' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><% if (mediaKind) { %><%- mediaHTML(m, mediaKind, mediaOnly ? timeHtml : '') %><% } %><% if (hasText) { %><% if (mediaKind) { %><span class="msg-caption"><% } %><%- m.contentHtml || m.content %><% if (mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %></span><% } %><% } %><% if (m.file_url && !mediaKind && isAudioName(m.file_name) && !m.attachment_status) { %><%- audioHTML(m) %><% } else if (m.file_url && !mediaKind) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (!mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
@@ -5058,7 +5058,13 @@
     html += '<div>';
     if (!isSent && IS_GROUP) {
       const modBadge = m.sender_role === 'admin' ? '<span class="msg-admin-badge">' + (LANG === 'ru' ? 'мод' : 'mod') + '</span>' : '';
-      html += '<div class="msg-bubble-sender"><a href="' + senderHref + '">' + esc(m.sender_username) + '</a>' + modBadge + '</div>';
+      /* A member kept from writing here for now: others see it on their messages (the server
+         template does the same); js/local-time.js fills the <time> in the reader's zone. */
+      const suspended = m.sender_blocked_until && new Date(m.sender_blocked_until) > new Date()
+        ? '<span class="msg-suspended-badge">' + (LANG === 'ru' ? 'не может писать до ' : 'cannot post until ')
+          + '<time datetime="' + esc(new Date(m.sender_blocked_until).toISOString()) + '" data-local="daytime" data-lang="' + LANG + '">' + esc(new Date(m.sender_blocked_until).toLocaleString(TIME_LOCALE, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</time></span>'
+        : '';
+      html += '<div class="msg-bubble-sender"><a href="' + senderHref + '">' + esc(m.sender_username) + '</a>' + modBadge + suspended + '</div>';
     }
     const kind = mediaKindOf(m);
     const textHtml = (m.content || '').trim() ? linkify(m.content) : '';

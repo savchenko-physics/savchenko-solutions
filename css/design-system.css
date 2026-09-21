@@ -3245,6 +3245,18 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
 
 .msg-input-bar[hidden] { display: none; }
 
+/* On a suspended member's messages, for everyone else (they see .msg-posting-blocked instead). */
+.msg-suspended-badge {
+  display: inline-block;
+  font-size: var(--ss-fs-12);
+  color: var(--ss-error);
+  background: var(--ss-error-soft);
+  padding: 1px var(--ss-space-1);
+  border-radius: var(--ss-radius-sm);
+  margin-left: var(--ss-space-1);
+  vertical-align: middle;
+}
+
 .msg-posting-blocked {
   border-top: 1px solid var(--ss-rule);
   padding: var(--ss-space-3) var(--ss-space-4);

@@ -447,6 +447,7 @@ const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at
         m.file_url, m.file_name, m.file_size, m.attachment_status, m.pinned_at, m.forwarded_from_user_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
+        cm.posting_blocked_until AS sender_blocked_until,
         fu.username AS forwarded_from_username,
         m.reply_to_id,
         rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
@@ -1048,6 +1049,9 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         for (const m of messagesResult.rows) {
             m.senderOnline = m.sender_id !== userId && !!m.sender_username && online.has(m.sender_username);
+            // Others see on a suspended member's messages that they cannot write here for now;
+            // the member's own messages are on the "sent" side, which carries no sender line.
+            m.senderSuspendedUntil = m.sender_id !== userId && isPostingBlocked(m.sender_blocked_until) ? m.sender_blocked_until : null;
         }
 
         res.render('messages', {
