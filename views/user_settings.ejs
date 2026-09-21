@@ -896,9 +896,10 @@
         showAvatarError('');
         markProfileDirty();
     }
-    // The crop stage. The chosen file is shown in the frame; on save the frame's contents
-    // replace the file in the input (a browser that cannot rewrite a file input sends the
-    // original, which the server centre-crops as before).
+    // The crop stage. The chosen file is shown in the frame; on save the frame's contents,
+    // always the full square (the circle is a preview of the round surfaces), replace the file
+    // in the input (a browser that cannot rewrite a file input sends the original, which the
+    // server centre-crops as before).
     var avatarStage = document.getElementById('avatarStage');
     var crop = (window.AvatarCrop && avatarStage) ? window.AvatarCrop.mount(avatarStage) : null;
     var cropSource = null;    // the File in the stage, or null when the stage is closed

@@ -5,9 +5,10 @@
  * keyboard) and turn in quarter turns. The frame is a circle or a square, and over it lie
  * the composition guides a photo editor offers: rule of thirds, the golden ratio (phi grid),
  * the diagonals with the centre cross, and the golden spiral. What is uploaded is the crop
- * itself, rendered here at up to 800 px: a circle with transparent corners, so it stays round
- * on the profile page's rounded-square hero too; a square as an opaque JPEG. The server then
- * makes its 320 px WebP and 96 px thumbnail from that as before (avatar.js).
+ * itself, rendered here at up to 800 px, always the full square as an opaque JPEG (the owner,
+ * 2026-09-21: every avatar is stored square; the circle is a preview of how the round surfaces
+ * show it, and a round version can be cut from a square at any time, never the reverse). The
+ * server then makes its 320 px WebP and 96 px thumbnail from that as before (avatar.js).
  *
  * The geometry (fit, clamping, zoom about a point, the crop rectangle, the guide lines and
  * the spiral's arcs) is pure and exported for tests/avatar-crop.test.js; the DOM part is
@@ -415,7 +416,7 @@
             });
         }
 
-        /** The crop as a File-like { blob, name }: a PNG with transparent corners for a circle, a JPEG for a square. */
+        /** The crop as a File-like { blob, name, type }: always the full square, as a JPEG, whatever the preview mask. */
         function exportCrop() {
             return new Promise(function (resolve, reject) {
                 if (!img || !state) { reject(new Error('nothing loaded')); return; }
@@ -426,16 +427,13 @@
                 const octx = out.getContext('2d');
                 const k = E / V;
                 octx.setTransform(k, 0, 0, k, 0, 0);
-                if (shape === 'circle') {
-                    maskPath(octx, 'circle', V);
-                    octx.clip();
-                }
+                octx.fillStyle = '#ffffff'; // a PNG's transparent areas end up white, as on the page
+                octx.fillRect(0, 0, V, V);
                 drawImage(octx, img, state, V);
-                const type = shape === 'circle' ? 'image/png' : 'image/jpeg';
                 out.toBlob(function (blob) {
                     if (!blob) { reject(new Error('export failed')); return; }
-                    resolve({ blob, name: shape === 'circle' ? 'avatar.png' : 'avatar.jpg', type });
-                }, type, 0.92);
+                    resolve({ blob, name: 'avatar.jpg', type: 'image/jpeg' });
+                }, 'image/jpeg', 0.92);
             });
         }
 
