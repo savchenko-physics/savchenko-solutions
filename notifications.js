@@ -86,7 +86,13 @@ async function createNotification(userId, type, title, message, link, performerI
  *
  * Returns the number of notifications created.
  */
+const MESSAGE_BELL = process.env.MESSAGE_BELL === 'on';
+
 async function createMessageNotifications(conversationId, senderId, title, preview, link, messageId = null) {
+    // Since 2026-09-21 a chat message is not a bell notification at all (the owner): the
+    // messages badge, the sidebar and js/pulse.js already carry it, and the bell was a second
+    // copy of every DM. The rows from before stay in the table and are left out of the bell.
+    if (!MESSAGE_BELL) return 0;
     try {
         const result = await pool.query(
             `INSERT INTO notifications (user_id, type, title, message, link, message_id)
@@ -136,7 +142,7 @@ async function removeForMessage(messageId) {
 async function getUnreadCount(userId) {
     try {
         const result = await pool.query(
-            'SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = false',
+            "SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = false AND type <> 'new_message'",
             [userId]
         );
         return parseInt(result.rows[0].count);
@@ -151,7 +157,7 @@ async function getUnreadCount(userId) {
  */
 async function getNotifications(userId, limit = 20, offset = 0) {
     const result = await pool.query(
-        'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3',
+        "SELECT * FROM notifications WHERE user_id = $1 AND type <> 'new_message' ORDER BY created_at DESC LIMIT $2 OFFSET $3",
         [userId, limit, offset]
     );
     return result.rows;
@@ -162,7 +168,7 @@ async function getNotifications(userId, limit = 20, offset = 0) {
  */
 async function getNotificationCount(userId) {
     const result = await pool.query(
-        'SELECT COUNT(*) FROM notifications WHERE user_id = $1',
+        "SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND type <> 'new_message'",
         [userId]
     );
     return parseInt(result.rows[0].count);
