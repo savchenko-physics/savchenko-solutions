@@ -342,7 +342,9 @@
         .then(function() { if (replyingTo) cancelReply(); pollMessages(); refreshConvList(); })
         .catch(function() {});
     });
-    onDoc('click', function(e) { if (!stickerPanel.hidden && !e.target.closest('#stickerPanel') && !e.target.closest('#stickerBtn')) stickerPanel.hidden = true; });
+    /* Closes on a click elsewhere; a click on a sticker in the chat is what opens it, so it
+       is not "elsewhere" (the two handlers fire in the same click). */
+    onDoc('click', function(e) { if (!stickerPanel.hidden && !e.target.closest('#stickerPanel') && !e.target.closest('#stickerBtn') && !e.target.closest('.is-sticker')) stickerPanel.hidden = true; });
   }
 
   // The attach button opens a small menu: a photo or video, a document, a poll (Telegram's).
