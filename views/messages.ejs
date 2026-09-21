@@ -1363,6 +1363,8 @@
       color: var(--ss-text-secondary);
     }
     .msg-send-note { padding: 0 var(--ss-space-3) var(--ss-space-3); width: 100%; }
+    .msg-send-paste-note { padding: 0; margin: 0 0 var(--ss-space-3); }
+    .msg-send-paste-note[hidden] { display: none; }
     /* Several attachments at once: a tile each, a picture as its thumbnail, the rest as a file
        glyph with the name, and a cross to leave one out. */
     .msg-send-grid {
@@ -2865,6 +2867,7 @@
         <span class="msg-send-file-meta"><span class="msg-send-file-name" id="sendPreviewName"></span><span class="msg-send-file-size" id="sendPreviewSize"></span></span>
       </div>
     </div>
+    <p class="msg-send-note msg-send-paste-note" id="sendPasteNote" hidden></p>
     <label class="msg-send-option" id="sendAsFileRow" hidden><input type="checkbox" id="sendAsFile"><span><%= lang === 'ru' ? 'Отправить как файл' : 'Send as a document' %></span></label>
     <label class="msg-send-caption-label" for="sendCaption"><%= lang === 'ru' ? 'Подпись' : 'Caption' %></label>
     <textarea class="msg-send-caption" id="sendCaption" rows="1"></textarea>
@@ -3243,7 +3246,13 @@
     pendingQueue = [];
     pendingAsFile = false;
   }
-  function stageAttachments(files) {
+  /* Firefox on Linux hands a page only the first of several files copied in a file manager:
+     its widget/gtk/nsClipboard.cpp GetFileData() reads the copied URI list and uses uris[0]
+     (the owner pasted two screenshots and got one, 2026-09-21; Chrome passes both). Nothing a
+     page can do about it, so the dialog says so when a paste in that browser brings one file. */
+  const PASTES_ONE_FILE = /Firefox\//.test(navigator.userAgent) && /Linux|X11/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
+  const sendPasteNote = document.getElementById('sendPasteNote');
+  function stageAttachments(files, route) {
     const list = Array.prototype.slice.call(files || []).filter(Boolean);
     if (!list.length) return false;
     const rejected = [];
@@ -3284,6 +3293,13 @@
     pendingQueue = pendingQueue.concat(accepted);
     pendingAsFile = false;
     openSendDialog();
+    if (sendPasteNote) {
+      const show = route === 'paste' && PASTES_ONE_FILE && list.length === 1 && pendingQueue.length === 1;
+      sendPasteNote.textContent = show ? (LANG === 'ru'
+        ? 'Firefox вставляет только один файл. Чтобы отправить несколько, перетащите их в чат или выберите через скрепку.'
+        : 'Firefox pastes one file only. To send several, drag them into the chat or choose them with the paperclip.') : '';
+      sendPasteNote.hidden = !show;
+    }
     updateSendEnabled();
     return true;
   }
@@ -3472,7 +3488,7 @@
       }
     }
     if (!files.length) return;   // plain text: the textarea takes it as usual
-    if (stageAttachments(files)) { e.preventDefault(); if (msgInput) msgInput.focus(); }
+    if (stageAttachments(files, 'paste')) { e.preventDefault(); if (msgInput) msgInput.focus(); }
   });
 
 
