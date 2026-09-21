@@ -430,6 +430,12 @@ app.locals.rankTierFor = require('./js/palettes').rankFor;
 // link on every page by it). Filled at boot, then refreshed behind the reader.
 const { rankMap: loadUserRanks, rankMapNow: userRanksNow } = require('./lib/userRank');
 app.locals.userRanksNow = userRanksNow;
+// The classes a username link carries, written by the server so nothing flashes before
+// js/user-ranks.js runs (the chat's sidebar and sender names, the homepage).
+app.locals.rankClass = (username) => {
+    const key = (userRanksNow() || {})[username] || 'newbie';
+    return `ss-rank-c-${key} ss-rank-${key}`;
+};
 loadUserRanks().catch((err) => console.error('user ranks: first load failed:', err.message));
 
 app.use((req, res, next) => {

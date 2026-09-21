@@ -468,17 +468,17 @@
             <p class="info-team-members">
               <% if (lang === 'en') { %>
                 <span class="info-team-label-inline">Core Team:</span>
-                <a href="/user/astrosander/">astrosander</a>,
-                <a href="/user/emixter/">emixter</a>,
-                <a href="/user/igor/">igor</a>,
-                <a href="/user/Ismail">Ismail</a>
+                <a href="/user/astrosander/" class="<%= rankClass('astrosander') %>">astrosander</a>,
+                <a href="/user/emixter/" class="<%= rankClass('emixter') %>">emixter</a>,
+                <a href="/user/igor/" class="<%= rankClass('igor') %>">igor</a>,
+                <a href="/user/Ismail" class="<%= rankClass('Ismail') %>">Ismail</a>
                 <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+more</a>
               <% } else { %>
                 <span class="info-team-label-inline">Команда:</span>
-                <a href="/user/astrosander/">astrosander</a>,
-                <a href="/user/emixter/">emixter</a>,
-                <a href="/user/igor/">igor</a>,
-                <a href="/user/Ismail">Ismail</a>
+                <a href="/user/astrosander/" class="<%= rankClass('astrosander') %>">astrosander</a>,
+                <a href="/user/emixter/" class="<%= rankClass('emixter') %>">emixter</a>,
+                <a href="/user/igor/" class="<%= rankClass('igor') %>">igor</a>,
+                <a href="/user/Ismail" class="<%= rankClass('Ismail') %>">Ismail</a>
                 <a href="<%= lang === 'en' ? '/about#team' : '/ru/about#team' %>" class="info-more">+ещё</a>
               <% } %>
             </p>
@@ -619,7 +619,7 @@
                     <% } %>
                   </span>
                   <% const _tier = rankTierFor(Number(author.rank)); %>
-                  <a href="/user/<%= author.username %>" class="ta-username ss-rank-<%= _tier.key %> ss-rank-c-<%= _tier.key %>"><%= author.username %></a>
+                  <a href="/user/<%= author.username %>" class="ta-username ss-rank-<%= _tier.key %> ss-rank-c-<%= _tier.key %>" data-no-rank><%= author.username %></a>
                 </span>
                 <span class="ta-score-col ta-score-value"><%= author.rank %></span>
               </div>
@@ -635,7 +635,7 @@
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:var(--ss-space-3); padding-top:var(--ss-space-1);">
               <% recentContributors.forEach(function(rc) { %>
-                <a href="/user/<%= rc.username %>" title="<%= rc.full_name || rc.username %>" style="display:inline-flex; align-items:center; gap:var(--ss-space-2); text-decoration:none; color:var(--ss-text); font-size:var(--ss-fs-13);">
+                <a href="/user/<%= rc.username %>" title="<%= rc.full_name || rc.username %>" class="<%= rankClass(rc.username) %>" style="display:inline-flex; align-items:center; gap:var(--ss-space-2); text-decoration:none; font-size:var(--ss-fs-13);">
                   <img src="<%= rc.profile_picture || '/img/profile_images/Default_placeholder.svg' %>" alt="" width="24" height="24" style="border-radius:50%; object-fit:cover; flex-shrink:0;" />
                   <span><%= rc.username %></span>
                 </a>
@@ -669,7 +669,7 @@
                       } else { %><%= lang === 'ru' ? 'изменена' : 'edited' %><% } %></span>
                     <span class="commit-by"><%= lang === 'ru' ? '' : 'by' %></span>
                     <% if (contribution.hasUser) { %>
-                      <a href="/user/<%= contribution.editor %>" class="commit-author"><%= contribution.editor %></a>
+                      <a href="/user/<%= contribution.editor %>" class="commit-author <%= rankClass(contribution.editor) %>"><%= contribution.editor %></a>
                     <% } else { %>
                       <span class="commit-author-anon"><%= lang === 'ru' ? 'Аноним' : 'Anonymous' %></span>
                     <% } %>
@@ -1169,8 +1169,7 @@
     }
 
     .info-team-members a:hover {
-      color: var(--ss-link);
-      text-decoration: underline;
+      text-decoration: none;
     }
 
     .info-more {

@@ -3843,6 +3843,16 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
 .ss-rank-c-headquarters, a.ss-rank-c-headquarters:link, a.ss-rank-c-headquarters:visited, a.ss-rank-c-headquarters:hover { --ss-rank-current: var(--ss-rank-headquarters); color: var(--ss-rank-headquarters); }
 /* A username link js/user-ranks.js painted: an inline-block box for ::first-letter. */
 .ss-ranked { display: inline-block; }
+/* Every painted username is bold and never underlined, as Codeforces sets handles (the owner,
+   2026-09-21). a[class*=] is (0,1,1), the same as a page's ".x a" rules, and this file loads
+   first, so the important one here is the hover: pages underline on hover with (0,2,1) at most. */
+[class*="ss-rank-c-"], a[class*="ss-rank-c-"], a[class*="ss-rank-c-"]:link, a[class*="ss-rank-c-"]:visited {
+  font-weight: var(--ss-fw-strong);
+  text-decoration: none;
+}
+a[class*="ss-rank-c-"]:hover, a[class*="ss-rank-c-"]:focus, .msg-conv-item:hover [class*="ss-rank-c-"] {
+  text-decoration: none;
+}
 
 .msg-input-bar[hidden] { display: none; }
 

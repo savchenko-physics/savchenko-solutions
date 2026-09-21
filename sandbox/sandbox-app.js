@@ -43,6 +43,7 @@ module.exports = function(mainPool) {
     // Dates in the reader's time zone, as on the main site (lib/localTime.js, js/local-time.js).
     app.locals.localTime = require('../lib/localTime').localTime;
     app.locals.userRanksNow = () => ({});
+    app.locals.rankClass = () => 'ss-rank-c-newbie ss-rank-newbie';
 
     // Set the views directory (could also leave as default 'views')
     app.set('views', path.join(__dirname, 'views'));

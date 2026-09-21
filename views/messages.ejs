@@ -562,7 +562,7 @@
     }
 
     .msg-bubble-sender a { color: inherit; text-decoration: none; }
-    .msg-bubble-sender a:hover { text-decoration: underline; }
+    .msg-bubble-sender a:hover { text-decoration: none; }
     .msg-bubble-avatar { cursor: pointer; }
 
     /* The time sits inside the bubble after the last line of text, right-aligned, and drops to
@@ -1129,8 +1129,152 @@
     /* A DM's header: the username big in its rank's colour, the full name small under it
        (2026-09-21, the owner). inline-block for the legendary tier's ::first-letter. */
     .msg-chat-header-open[class*="ss-rank-"] { display: inline-block; font-size: var(--ss-fs-18); line-height: 1.1; }
-    .msg-chat-header-fullname { cursor: default; line-height: 1.2; margin-top: -1px; }
+    .msg-chat-header-fullname { line-height: 1.2; margin-top: -1px; }
     .msg-chat-header-fullname:hover { text-decoration: none; }
+
+    /* ── Polls (lib/polls.js, migration 065), Telegram's look ──────────────────────────── */
+    .msg-input-bar { position: relative; }
+    .msg-attach-menu {
+      position: absolute;
+      left: var(--ss-space-3);
+      bottom: calc(100% + var(--ss-space-1));
+      background: var(--ss-surface);
+      border: 1px solid var(--ss-rule);
+      border-radius: var(--ss-radius-lg);
+      box-shadow: var(--ss-shadow);
+      padding: var(--ss-space-1);
+      z-index: 30;
+      min-width: 190px;
+    }
+    .msg-attach-menu[hidden] { display: none; }
+    .msg-attach-menu-item {
+      display: flex;
+      align-items: center;
+      gap: var(--ss-space-3);
+      width: 100%;
+      padding: var(--ss-space-2) var(--ss-space-3);
+      background: none;
+      border: none;
+      border-radius: var(--ss-radius);
+      font: inherit;
+      font-size: var(--ss-fs-14);
+      color: var(--ss-text);
+      cursor: pointer;
+      text-align: left;
+    }
+    .msg-attach-menu-item:hover { background: var(--ss-surface-alt); }
+    .msg-poll-modal { width: 480px; max-height: 88vh; }
+    .msg-poll-label { font-size: var(--ss-fs-13); font-weight: var(--ss-fw-strong); color: var(--ss-link); margin: var(--ss-space-3) 0 var(--ss-space-2); }
+    .msg-poll-label:first-child { margin-top: 0; }
+    .msg-poll-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 var(--ss-space-3);
+      border: 1px solid var(--ss-rule);
+      border-radius: var(--ss-radius);
+      font: inherit;
+      font-size: var(--ss-fs-16);
+    }
+    .msg-poll-options-edit { display: flex; flex-direction: column; gap: var(--ss-space-2); }
+    .msg-poll-option-edit { display: flex; align-items: center; gap: var(--ss-space-2); }
+    .msg-poll-option-edit input[type="text"] { flex: 1; }
+    .msg-poll-option-edit input[type="radio"] { flex-shrink: 0; width: 18px; height: 18px; margin: 0; accent-color: var(--ss-success-strong); }
+    .msg-poll-option-remove {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      background: none; border: none;
+      color: var(--ss-text-tertiary);
+      font-size: var(--ss-fs-20);
+      line-height: 1;
+      cursor: pointer;
+      border-radius: var(--ss-radius);
+    }
+    .msg-poll-option-remove:hover { color: var(--ss-error); background: var(--ss-surface-alt); }
+    .msg-poll-hint { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-top: var(--ss-space-2); }
+    .msg-poll-setting {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--ss-space-3);
+      padding: var(--ss-space-2) 0;
+      border-bottom: 1px solid var(--ss-rule);
+      cursor: pointer;
+    }
+    .msg-poll-setting:last-of-type { border-bottom: none; }
+    .msg-poll-setting span { display: flex; flex-direction: column; min-width: 0; }
+    .msg-poll-setting b { font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-14); }
+    .msg-poll-setting small { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }
+    .msg-poll-setting input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; margin: 0; accent-color: var(--ss-navy); }
+    .msg-poll-select { height: 36px; border: 1px solid var(--ss-rule); border-radius: var(--ss-radius); font: inherit; font-size: var(--ss-fs-14); padding: 0 var(--ss-space-2); background: var(--ss-surface); }
+    .msg-poll-error { color: var(--ss-error); font-size: var(--ss-fs-13); margin-top: var(--ss-space-3); }
+    .msg-poll-error[hidden] { display: none; }
+    .msg-poll-footer { display: flex; justify-content: flex-end; gap: var(--ss-space-2); padding: var(--ss-space-3) var(--ss-space-4); border-top: 1px solid var(--msg-border); }
+
+    /* The poll in a bubble */
+    .msg-poll { min-width: 260px; max-width: 100%; }
+    .msg-poll-question { font-weight: var(--ss-fw-strong); font-size: var(--ss-fs-16); line-height: 1.35; }
+    .msg-poll-kind { font-size: var(--ss-fs-12); color: var(--msg-muted); margin: 2px 0 var(--ss-space-2); }
+    .msg-bubble.sent .msg-poll-kind, .msg-bubble.sent .msg-poll-meta { color: rgba(255,255,255,0.7); }
+    .msg-poll-option {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--ss-space-2);
+      width: 100%;
+      padding: var(--ss-space-2) 0;
+      background: none; border: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      line-height: 1.35;
+    }
+    .msg-poll-option[disabled] { cursor: default; }
+    .msg-poll-box {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      margin-top: 2px;
+      border: 2px solid currentColor;
+      border-radius: 50%;
+      opacity: 0.6;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .msg-poll-box.square { border-radius: var(--ss-radius-sm); }
+    .msg-poll-option.on .msg-poll-box { opacity: 1; background: currentColor; }
+    .msg-poll-option.on .msg-poll-box::after { content: ''; width: 5px; height: 9px; border: solid var(--ss-surface); border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+    .msg-bubble.sent .msg-poll-option.on .msg-poll-box::after { border-color: var(--ss-navy); }
+    .msg-poll-result { padding: var(--ss-space-2) 0; }
+    .msg-poll-result-head { display: flex; align-items: baseline; gap: var(--ss-space-2); line-height: 1.35; }
+    .msg-poll-percent { flex-shrink: 0; width: 40px; font-weight: var(--ss-fw-strong); text-align: right; font-variant-numeric: tabular-nums; }
+    .msg-poll-result-text { flex: 1; min-width: 0; }
+    .msg-poll-mark { flex-shrink: 0; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); }
+    .msg-poll-mark.right { color: var(--ss-success-strong); }
+    .msg-poll-mark.wrong { color: var(--ss-error); }
+    .msg-bubble.sent .msg-poll-mark.right { color: #7ee2a8; }
+    .msg-bubble.sent .msg-poll-mark.wrong { color: #ff9b8f; }
+    .msg-poll-bar { height: 4px; border-radius: 2px; margin: var(--ss-space-1) 0 0 48px; position: relative; }
+    .msg-poll-bar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--ss-link); }
+    .msg-bubble.sent .msg-poll-bar > i { background: var(--ss-surface); }
+    .msg-poll-bar { opacity: 1; background: rgba(0,0,0,0.08); }
+    .msg-bubble.sent .msg-poll-bar { background: rgba(255,255,255,0.2); }
+    .msg-poll-result.mine .msg-poll-percent::before { content: '✓ '; font-size: var(--ss-fs-12); }
+    .msg-poll-meta { display: flex; align-items: center; gap: var(--ss-space-3); margin-top: var(--ss-space-2); font-size: var(--ss-fs-12); color: var(--msg-muted); }
+    .msg-poll-meta button {
+      background: none; border: none; padding: 0;
+      font: inherit; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong);
+      color: var(--ss-link); cursor: pointer;
+    }
+    .msg-bubble.sent .msg-poll-meta button { color: var(--ss-surface); }
+    .msg-poll-vote-btn {
+      display: block; width: 100%; margin-top: var(--ss-space-2);
+      padding: var(--ss-space-2) 0;
+      background: none; border: 1px solid currentColor; border-radius: var(--ss-radius);
+      font: inherit; font-size: var(--ss-fs-14); font-weight: var(--ss-fw-strong); color: var(--ss-link);
+      cursor: pointer;
+    }
+    .msg-bubble.sent .msg-poll-vote-btn { color: var(--ss-surface); }
+    .msg-poll-vote-btn[disabled] { opacity: 0.5; cursor: default; }
+    .msg-poll-voters { font-size: var(--ss-fs-12); color: var(--msg-muted); padding: 0 0 var(--ss-space-1) 48px; }
+    .msg-poll-voters a { color: inherit; }
 
     /* ── The chat's info panel, Telegram's: who it is, what to do with it, what it holds. ──── */
     .msg-info {
@@ -2394,7 +2538,7 @@
                 </span>
               <% } %>
               <div class="msg-conv-info">
-                <div class="msg-conv-name"<% if (!c.is_group && !c.isSaved && c.otherUser) { %> data-username="<%= c.otherUser.username %>"<% } %>><%= c.displayName %></div>
+                <div class="msg-conv-name<% if (!c.is_group && !c.isSaved && c.otherUser) { %> <%= rankClass(c.otherUser.username) %><% } %>"><%= c.displayName %></div>
                 <div class="msg-conv-preview">
                   <% if (c.last_message_content || c.last_message_image || c.last_message_file) { %>
                     <% if (c.last_message_sender_id === userId) { %><%= lang === 'ru' ? 'Вы: ' : 'You: ' %><% } %>
@@ -2604,9 +2748,9 @@
               <% } %>
               <div>
                 <% if (showName) { %>
-                  <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %><% if (m.senderSuspendedForGood) { %><span class="msg-suspended-badge"><%= lang === 'ru' ? 'не может писать' : 'cannot post' %></span><% } else if (m.senderSuspendedUntil) { %><span class="msg-suspended-badge"><%= lang === 'ru' ? 'не может писать до' : 'cannot post until' %> <%- localTime(m.senderSuspendedUntil, 'daytime', lang) %></span><% } %></div>
+                  <div class="msg-bubble-sender"><a href="/user/<%= m.sender_username %>" class="<%= rankClass(m.sender_username) %>"><%= m.sender_username %></a><% if (m.sender_role === 'admin') { %><span class="msg-admin-badge"><%= lang === 'ru' ? 'мод' : 'mod' %></span><% } %><% if (m.senderSuspendedForGood) { %><span class="msg-suspended-badge"><%= lang === 'ru' ? 'не может писать' : 'cannot post' %></span><% } else if (m.senderSuspendedUntil) { %><span class="msg-suspended-badge"><%= lang === 'ru' ? 'не может писать до' : 'cannot post until' %> <%- localTime(m.senderSuspendedUntil, 'daytime', lang) %></span><% } %></div>
                 <% } %>
-                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %><%= mediaKind ? ' has-media' : '' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><% if (mediaKind) { %><%- mediaHTML(m, mediaKind, mediaOnly ? timeHtml : '') %><% } %><% if (hasText) { %><% if (mediaKind) { %><span class="msg-caption"><% } %><%- m.contentHtml || m.content %><% if (mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %></span><% } %><% } %><% if (m.file_url && !mediaKind && isAudioName(m.file_name) && !m.attachment_status) { %><%- audioHTML(m) %><% } else if (m.file_url && !mediaKind) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (!mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
+                <div class="msg-bubble <%= isSent ? 'sent' : 'received' %><%= mediaKind ? ' has-media' : '' %>"><% if (m.forwarded_from_username) { %><div class="msg-forwarded tex2jax_ignore"><%= lang === 'ru' ? 'Переслано от' : 'Forwarded from' %> <a href="/user/<%= m.forwarded_from_username %>"><%= m.forwarded_from_username %></a></div><% } %><% if (m.reply) { %><div class="msg-reply-quote tex2jax_ignore" data-target="<%= m.reply.id %>"><div class="msg-reply-quote-name"><%= m.reply.sender %></div><div class="msg-reply-quote-text"><%= m.reply.isImage ? (lang === 'ru' ? 'Фото' : 'Photo') : m.reply.preview %></div></div><% } %><% if (mediaKind) { %><%- mediaHTML(m, mediaKind, mediaOnly ? timeHtml : '') %><% } %><% if (m.poll) { %><div class="msg-poll tex2jax_ignore" data-poll="<%= JSON.stringify(m.poll) %>"></div><% } %><% if (hasText) { %><% if (mediaKind) { %><span class="msg-caption"><% } %><%- m.contentHtml || m.content %><% if (mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %></span><% } %><% } %><% if (m.file_url && !mediaKind && isAudioName(m.file_name) && !m.attachment_status) { %><%- audioHTML(m) %><% } else if (m.file_url && !mediaKind) { %><a class="msg-bubble-file tex2jax_ignore" href="<%= m.file_url %>" download="<%= m.file_name %>"><span class="msg-bubble-file-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="msg-bubble-file-meta"><span class="msg-bubble-file-name"><%= m.file_name %></span><span class="msg-bubble-file-size"><%= formatBytes(m.file_size) %><%= m.attachment_status === 'converting' ? (lang === 'ru' ? ' · конвертируем видео…' : ' · converting the video…') : '' %></span></span></a><% } %><% if (!mediaKind) { %><%- m.edited_at ? editedHtml : '' %><%- timeHtml %><% } %><div class="msg-reaction-add" data-msg-id="<%= m.id %>"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><div class="msg-reaction-picker"></div></div></div>
                 <% if (m.reactions && m.reactions.length > 0) { %>
                 <div class="msg-reactions" data-msg-id="<%= m.id %>"><% m.reactions.forEach(function(r) { %><span class="msg-reaction<%= r.me ? ' me' : '' %>" data-emoji="<%= r.emoji %>" data-msg-id="<%= m.id %>"><% if (rxGlyph) { %><%- rxGlyph(r.emoji) %><% } else { %><%= r.emoji %><% } %><span class="msg-reaction-count"><%= r.count %></span></span><% }); %></div>
                 <% } %>
@@ -2663,6 +2807,12 @@
         <!-- Input bar -->
         <div class="msg-input-bar"<%- (typeof postingBlocked === 'string' && postingBlocked) ? ' hidden' : '' %>>
           <input type="file" id="imageFileInput" accept="<%= attachmentAccept %>" multiple style="display:none" />
+          <%# The attach button opens a small menu (photo or video, document, poll), Telegram's. %>
+          <div class="msg-attach-menu" id="attachMenu" hidden>
+            <button type="button" class="msg-attach-menu-item" data-attach="media"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><%= lang === 'ru' ? 'Фото или видео' : 'Photo or video' %></button>
+            <button type="button" class="msg-attach-menu-item" data-attach="file"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><%= lang === 'ru' ? 'Документ' : 'Document' %></button>
+            <button type="button" class="msg-attach-menu-item" data-attach="poll"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><%= lang === 'ru' ? 'Опрос' : 'Poll' %></button>
+          </div>
           <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru'
             ? `Прикрепить файл (до ${Math.round(attachmentRules.maxBytes / 1048576)} МБ, видео до ${Math.round(attachmentRules.videoMaxBytes / 1048576)} МБ)`
             : `Attach a file (up to ${Math.round(attachmentRules.maxBytes / 1048576)} MB, a video up to ${Math.round(attachmentRules.videoMaxBytes / 1048576)} MB)` %>">
@@ -2697,6 +2847,43 @@
           <div class="msg-empty-sub"><%= lang === 'ru' ? 'или начните новый' : 'or start a new one' %></div>
         </div>
       <% } %>
+    </div>
+  </div>
+</div>
+
+<%# New poll (lib/polls.js has the rules; POST /messages/:id/poll). %>
+<div class="msg-modal-backdrop" id="pollModal">
+  <div class="msg-modal msg-poll-modal">
+    <div class="msg-modal-header">
+      <h3><%= lang === 'ru' ? 'Новый опрос' : 'New poll' %></h3>
+      <button type="button" class="msg-modal-close" id="pollModalClose" aria-label="<%= lang === 'ru' ? 'Закрыть' : 'Close' %>">&times;</button>
+    </div>
+    <div class="msg-modal-body">
+      <label class="msg-poll-label" for="pollQuestion"><%= lang === 'ru' ? 'Вопрос' : 'Question' %></label>
+      <input type="text" class="msg-poll-input" id="pollQuestion" maxlength="300" placeholder="<%= lang === 'ru' ? 'Задайте вопрос' : 'Ask a question' %>" />
+      <div class="msg-poll-label"><%= lang === 'ru' ? 'Варианты ответа' : 'Poll options' %></div>
+      <div id="pollOptions" class="msg-poll-options-edit"></div>
+      <div class="msg-poll-hint" id="pollOptionsHint"></div>
+      <div class="msg-poll-label"><%= lang === 'ru' ? 'Настройки' : 'Settings' %></div>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Анонимный опрос' : 'Anonymous poll' %></b><small><%= lang === 'ru' ? 'Никто не видит, кто как ответил.' : 'Nobody sees who chose what.' %></small></span><input type="checkbox" id="pollAnonymous" checked /></label>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Несколько ответов' : 'Allow multiple answers' %></b><small><%= lang === 'ru' ? 'Можно выбрать больше одного варианта.' : 'Voters can select more than one option.' %></small></span><input type="checkbox" id="pollMultiple" /></label>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Можно переголосовать' : 'Allow revoting' %></b><small><%= lang === 'ru' ? 'Голос можно отозвать и отдать заново.' : 'Voters can change their vote.' %></small></span><input type="checkbox" id="pollRevote" checked /></label>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Перемешать варианты' : 'Shuffle options' %></b><small><%= lang === 'ru' ? 'Каждый видит варианты в своём порядке.' : 'Answers appear in a different order for each voter.' %></small></span><input type="checkbox" id="pollShuffle" /></label>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Викторина' : 'Quiz mode' %></b><small><%= lang === 'ru' ? 'Один правильный ответ, отметьте его слева от варианта. Один ответ, без переголосования.' : 'One right answer, marked to the left of an option. One vote, no revoting.' %></small></span><input type="checkbox" id="pollQuiz" /></label>
+      <label class="msg-poll-setting"><span><b><%= lang === 'ru' ? 'Ограничить по времени' : 'Limit duration' %></b><small><%= lang === 'ru' ? 'Опрос закроется сам.' : 'The poll closes by itself.' %></small></span>
+        <select id="pollDuration" class="msg-poll-select">
+          <option value=""><%= lang === 'ru' ? 'Без ограничения' : 'No limit' %></option>
+          <option value="60"><%= lang === 'ru' ? '1 час' : '1 hour' %></option>
+          <option value="360"><%= lang === 'ru' ? '6 часов' : '6 hours' %></option>
+          <option value="1440"><%= lang === 'ru' ? '1 день' : '1 day' %></option>
+          <option value="4320"><%= lang === 'ru' ? '3 дня' : '3 days' %></option>
+          <option value="10080"><%= lang === 'ru' ? '7 дней' : '7 days' %></option>
+        </select></label>
+      <div class="msg-poll-error" id="pollError" hidden></div>
+    </div>
+    <div class="msg-poll-footer">
+      <button type="button" class="btn btn-outline-dark" id="pollCancel"><%= lang === 'ru' ? 'Отмена' : 'Cancel' %></button>
+      <button type="button" class="btn btn-primary" id="pollCreate"><%= lang === 'ru' ? 'Создать' : 'Create' %></button>
     </div>
   </div>
 </div>
@@ -2989,6 +3176,9 @@
   try { LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
   const TIMES_ARE_LOCAL = !!SERVER_TZ && SERVER_TZ === LOCAL_TZ;
   const USERNAME = <%- JSON.stringify(username || '') %>;
+  // A username's rank classes from the map the header inlined (js/user-ranks.js paints the
+  // rest of the page; the chat writes them itself so nothing flashes on a chat switch).
+  function rankClassFor(name) { const k = (window.__USER_RANKS__ || {})[name] || 'newbie'; return 'ss-rank-c-' + k + ' ss-rank-' + k; }
   // What may be attached and how large (lib/messageAttachments.js, the same rules the upload applies).
   const ATTACH_RULES = <%- JSON.stringify(attachmentRules) %>;
   const OTHER_NAME = <%- JSON.stringify(activeConversation && activeConversation.otherUser ? activeConversation.otherUser.username : '') %>;
@@ -3224,11 +3414,27 @@
     replyCancel.addEventListener('click', cancelReply);
   }
 
-  // Attach button opens file picker
+  // The attach button opens a small menu: a photo or video, a document, a poll (Telegram's).
+  const attachMenu = document.getElementById('attachMenu');
+  const ATTACH_ACCEPT_ALL = fileInput ? fileInput.getAttribute('accept') : '';
   if (attachBtn && fileInput) {
-    attachBtn.addEventListener('click', function() {
-      fileInput.click();
+    attachBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!attachMenu) { fileInput.click(); return; }
+      attachMenu.hidden = !attachMenu.hidden;
     });
+    if (attachMenu) {
+      attachMenu.addEventListener('click', function(e) {
+        const item = e.target.closest('[data-attach]');
+        if (!item) return;
+        attachMenu.hidden = true;
+        if (item.dataset.attach === 'poll') { openPollModal(); return; }
+        fileInput.setAttribute('accept', item.dataset.attach === 'media' ? 'image/*,video/*' : ATTACH_ACCEPT_ALL);
+        fileInput.click();
+      });
+      document.addEventListener('click', function(e) { if (!attachMenu.hidden && !e.target.closest('#attachMenu')) attachMenu.hidden = true; });
+      document.addEventListener('keydown', function(e) { if (e.key === 'Escape') attachMenu.hidden = true; });
+    }
 
     fileInput.addEventListener('change', function() {
       if (!this.files || !this.files.length) return;
@@ -3856,6 +4062,12 @@
     if (opener) opener.addEventListener('click', openChatInfo);
     const headerAvatar = document.querySelector('.msg-chat-header .msg-conv-avatar-group, .msg-chat-header .msg-saved-avatar');
     if (headerAvatar) { headerAvatar.style.cursor = 'pointer'; headerAvatar.addEventListener('click', openChatInfo); }
+    /* A person's picture and full name in the header open the panel too (the owner, 2026-09-21);
+       the panel's own name and picture lead to the profile. */
+    const headerPersonAvatar = document.querySelector('.msg-chat-header .msg-chat-header-avatar-link');
+    if (headerPersonAvatar) headerPersonAvatar.addEventListener('click', function(e) { e.preventDefault(); openChatInfo(); });
+    const headerFullName = document.querySelector('.msg-chat-header .msg-chat-header-fullname');
+    if (headerFullName) { headerFullName.style.cursor = 'pointer'; headerFullName.addEventListener('click', openChatInfo); }
     document.getElementById('chatInfoClose').addEventListener('click', closeChatInfo);
     document.getElementById('chatInfoBackdrop').addEventListener('click', closeChatInfo);
     chatInfoBack.addEventListener('click', renderInfoMain);
@@ -5000,7 +5212,7 @@
       html += renderMediaHTML(m, kind, hasText ? '' : timeHtml);
       if (hasText) html += '<span class="msg-caption">' + textHtml + edited + timeHtml + '</span>';
     } else {
-      html += textHtml + renderAttachmentCardHTML(m) + edited + timeHtml;
+      html += (m.poll ? '<div class="msg-poll tex2jax_ignore"></div>' : '') + textHtml + renderAttachmentCardHTML(m) + edited + timeHtml;
     }
     html += renderReactionAddHTML(m.id);
     return html;
@@ -5113,7 +5325,7 @@
           ? '<span class="msg-suspended-badge">' + (LANG === 'ru' ? 'не может писать' : 'cannot post') + '</span>'
           : '<span class="msg-suspended-badge">' + (LANG === 'ru' ? 'не может писать до ' : 'cannot post until ')
             + '<time datetime="' + esc(blockedUntil.toISOString()) + '" data-local="daytime" data-lang="' + LANG + '">' + esc(blockedUntil.toLocaleString(TIME_LOCALE, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</time></span>';
-      html += '<div class="msg-bubble-sender"><a href="' + senderHref + '">' + esc(m.sender_username) + '</a>' + modBadge + suspended + '</div>';
+      html += '<div class="msg-bubble-sender"><a href="' + senderHref + '" class="' + rankClassFor(m.sender_username) + '">' + esc(m.sender_username) + '</a>' + modBadge + suspended + '</div>';
     }
     const kind = mediaKindOf(m);
     const textHtml = (m.content || '').trim() ? linkify(m.content) : '';
@@ -5125,6 +5337,7 @@
     html += '</div>';
 
     row.innerHTML = html;
+    if (m.poll) renderPoll(row.querySelector('.msg-poll'), m.poll);
     return row;
   }
 
@@ -5146,6 +5359,241 @@
     if (bubbleEl) typesetMath(bubbleEl);
     const im = row.querySelector('.msg-bubble-image');
     if (im) markImageLoaded(im);
+  }
+
+  /* ── Polls (lib/polls.js, migration 065) ────────────────────────────────────────────
+     One renderer for both the server-rendered page (a .msg-poll placeholder with the state
+     in data-poll) and messages the client builds. Votes go to /messages/poll/:id/vote; the
+     answer, and 'poll:update' over SSE for everyone else, carry the new state. */
+  const POLL_MAX_OPTIONS = 10;
+  const pollModal = document.getElementById('pollModal');
+  const pollOptionsEl = document.getElementById('pollOptions');
+  function pollT(ru, en) { return LANG === 'ru' ? ru : en; }
+
+  function pollOptionRow(value) {
+    const row = document.createElement('div');
+    row.className = 'msg-poll-option-edit';
+    row.innerHTML = '<input type="radio" name="pollCorrect" title="' + escAttr(pollT('Правильный ответ', 'Right answer')) + '" hidden />' +
+      '<input type="text" class="msg-poll-input" maxlength="100" placeholder="' + escAttr(pollT('Вариант ответа', 'Add an option')) + '" />' +
+      '<button type="button" class="msg-poll-option-remove" aria-label="' + escAttr(pollT('Убрать', 'Remove')) + '">&times;</button>';
+    row.querySelector('input[type="text"]').value = value || '';
+    return row;
+  }
+  function pollRows() { return Array.from(pollOptionsEl.querySelectorAll('.msg-poll-option-edit')); }
+  function pollValues() { return pollRows().map(function(r) { return r.querySelector('input[type="text"]').value.trim(); }); }
+  // The last row is always an empty one to type into, up to the limit.
+  function settlePollRows() {
+    const rows = pollRows();
+    const filled = rows.filter(function(r) { return r.querySelector('input[type="text"]').value.trim(); });
+    const empties = rows.filter(function(r) { return !r.querySelector('input[type="text"]').value.trim(); });
+    if (rows.length < POLL_MAX_OPTIONS && !empties.length) pollOptionsEl.appendChild(pollOptionRow(''));
+    for (let i = 1; i < empties.length; i++) if (empties[i] !== document.activeElement.closest('.msg-poll-option-edit')) empties[i].remove();
+    const left = POLL_MAX_OPTIONS - filled.length;
+    document.getElementById('pollOptionsHint').textContent = left > 0
+      ? pollT('Можно добавить ещё ' + left + ' ' + plural(left, ['вариант', 'варианта', 'вариантов']), 'You can add ' + left + ' more ' + (left === 1 ? 'option' : 'options'))
+      : pollT('Больше вариантов добавить нельзя', 'No more options can be added');
+    const quiz = document.getElementById('pollQuiz').checked;
+    pollRows().forEach(function(r) { r.querySelector('input[type="radio"]').hidden = !quiz; });
+  }
+  function openPollModal() {
+    if (!pollModal) return;
+    document.getElementById('pollQuestion').value = '';
+    pollOptionsEl.innerHTML = '';
+    pollOptionsEl.appendChild(pollOptionRow(''));
+    pollOptionsEl.appendChild(pollOptionRow(''));
+    ['pollMultiple', 'pollShuffle', 'pollQuiz'].forEach(function(id) { document.getElementById(id).checked = false; });
+    document.getElementById('pollAnonymous').checked = true;
+    document.getElementById('pollRevote').checked = true;
+    document.getElementById('pollDuration').value = '';
+    document.getElementById('pollError').hidden = true;
+    settlePollRows();
+    pollModal.classList.add('show');
+    setTimeout(function() { document.getElementById('pollQuestion').focus(); }, 50);
+  }
+  function closePollModal() { if (pollModal) pollModal.classList.remove('show'); }
+  if (pollModal) {
+    document.getElementById('pollModalClose').addEventListener('click', closePollModal);
+    document.getElementById('pollCancel').addEventListener('click', closePollModal);
+    pollModal.addEventListener('click', function(e) { if (e.target === pollModal) closePollModal(); });
+    pollOptionsEl.addEventListener('input', settlePollRows);
+    pollOptionsEl.addEventListener('click', function(e) {
+      const rm = e.target.closest('.msg-poll-option-remove');
+      if (rm) { rm.closest('.msg-poll-option-edit').remove(); settlePollRows(); }
+    });
+    pollOptionsEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && e.target.matches('input[type="text"]')) {
+        e.preventDefault();
+        settlePollRows();
+        const inputs = pollRows().map(function(r) { return r.querySelector('input[type="text"]'); });
+        const i = inputs.indexOf(e.target);
+        if (inputs[i + 1]) inputs[i + 1].focus();
+      }
+    });
+    document.getElementById('pollQuiz').addEventListener('change', function() {
+      const quiz = this.checked;
+      if (quiz) { document.getElementById('pollMultiple').checked = false; document.getElementById('pollRevote').checked = false; }
+      settlePollRows();
+    });
+    document.getElementById('pollMultiple').addEventListener('change', function() { if (this.checked) { document.getElementById('pollQuiz').checked = false; settlePollRows(); } });
+    document.getElementById('pollCreate').addEventListener('click', function() {
+      const btn = this;
+      const rows = pollRows().filter(function(r) { return r.querySelector('input[type="text"]').value.trim(); });
+      const options = rows.map(function(r) { return r.querySelector('input[type="text"]').value.trim(); });
+      const quiz = document.getElementById('pollQuiz').checked;
+      const correctIndex = quiz ? rows.findIndex(function(r) { return r.querySelector('input[type="radio"]').checked; }) : null;
+      const body = {
+        question: document.getElementById('pollQuestion').value.trim(),
+        options: options,
+        anonymous: document.getElementById('pollAnonymous').checked,
+        multiple: document.getElementById('pollMultiple').checked,
+        revote: document.getElementById('pollRevote').checked,
+        shuffle: document.getElementById('pollShuffle').checked,
+        quiz: quiz,
+        correctIndex: correctIndex,
+        durationMinutes: document.getElementById('pollDuration').value || null,
+      };
+      const errEl = document.getElementById('pollError');
+      const say = function(t) { errEl.textContent = t; errEl.hidden = false; };
+      if (!body.question) return say(pollT('Напишите вопрос.', 'Write the question.'));
+      if (options.length < 2) return say(pollT('Нужно хотя бы два варианта.', 'At least two options are needed.'));
+      if (quiz && correctIndex < 0) return say(pollT('Отметьте правильный ответ.', 'Mark the right answer.'));
+      btn.disabled = true;
+      fetch('/messages/' + CONV_ID + '/poll', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body) })
+        .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+        .then(function(x) {
+          btn.disabled = false;
+          if (!x.ok) return say(x.d && x.d.error && x.d.error.length > 20 ? x.d.error : pollT('Не получилось создать опрос.', 'Could not create the poll.'));
+          closePollModal();
+          if (x.d.message && !document.querySelector('[data-msg-id="' + x.d.message.id + '"]')) { appendMessage(x.d.message); lastMsgId = Math.max(lastMsgId, x.d.message.id); }
+          refreshConvList();
+        })
+        .catch(function() { btn.disabled = false; say(pollT('Нет связи.', 'No connection.')); });
+    });
+  }
+
+  // The bubble's poll. `el` is the .msg-poll placeholder; `p` the state from the server.
+  function pollHTML(p) {
+    const closed = p.closed;
+    const showResults = p.voted || closed;
+    const kind = (p.quiz ? pollT('Викторина', 'Quiz') : p.anonymous ? pollT('Анонимный опрос', 'Anonymous poll') : pollT('Открытый опрос', 'Public poll')) +
+      (closed ? ' · ' + pollT('завершён', 'closed') : '');
+    let html = '<div class="msg-poll-question tex2jax_ignore">' + esc(p.question) + '</div><div class="msg-poll-kind">' + esc(kind) + '</div>';
+    if (showResults) {
+      p.options.forEach(function(o) {
+        let mark = '';
+        if (p.quiz && p.correct != null) {
+          if (o.id === p.correct) mark = '<span class="msg-poll-mark right">✓</span>';
+          else if (o.mine) mark = '<span class="msg-poll-mark wrong">✕</span>';
+        }
+        html += '<div class="msg-poll-result' + (o.mine ? ' mine' : '') + '" data-option="' + o.id + '">' +
+          '<div class="msg-poll-result-head"><span class="msg-poll-percent">' + o.percent + '%</span><span class="msg-poll-result-text">' + esc(o.text) + '</span>' + mark + '</div>' +
+          '<div class="msg-poll-bar"><i style="width:' + o.percent + '%"></i></div>' +
+          (!p.anonymous && o.votes ? '<div class="msg-poll-voters" data-voters="' + o.id + '"></div>' : '') +
+          '</div>';
+      });
+    } else {
+      p.options.forEach(function(o) {
+        html += '<button type="button" class="msg-poll-option" data-option="' + o.id + '"><span class="msg-poll-box' + (p.multiple ? ' square' : '') + '"></span><span>' + esc(o.text) + '</span></button>';
+      });
+      if (p.multiple) html += '<button type="button" class="msg-poll-vote-btn" data-poll-vote disabled>' + esc(pollT('Голосовать', 'Vote')) + '</button>';
+    }
+    const n = p.voters;
+    let meta = closed ? pollT('Опрос завершён', 'Final results') + ' · ' : '';
+    meta += n ? n + ' ' + plural(n, pollT(['голос', 'голоса', 'голосов'], ['vote', 'votes', 'votes'])) : pollT('Пока нет голосов', 'No votes yet');
+    html += '<div class="msg-poll-meta"><span>' + esc(meta) + '</span>';
+    if (p.canRetract) html += '<button type="button" data-poll-retract>' + esc(pollT('Отозвать голос', 'Retract vote')) + '</button>';
+    if (p.canClose) html += '<button type="button" data-poll-close>' + esc(pollT('Завершить', 'Close poll')) + '</button>';
+    if (p.closesAt && !closed) html += '<span>' + esc(pollT('до ', 'until ')) + '<time datetime="' + escAttr(p.closesAt) + '" data-local="daytime" data-lang="' + LANG + '">' + esc(new Date(p.closesAt).toLocaleString(TIME_LOCALE, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</time></span>';
+    html += '</div>';
+    return html;
+  }
+  function renderPoll(el, p) {
+    if (!el || !p) return;
+    el.__poll = p;
+    el.dataset.pollId = p.id;
+    el.innerHTML = pollHTML(p);
+    if (!p.anonymous && (p.voted || p.closed) && p.voters) loadPollVoters(el, p);
+  }
+  function loadPollVoters(el, p) {
+    fetch('/messages/poll/' + p.id + '/voters', { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        if (!d || el.__poll !== p) return;
+        const by = {};
+        (d.voters || []).forEach(function(v) { (by[v.option_id] = by[v.option_id] || []).push(v.username); });
+        el.querySelectorAll('[data-voters]').forEach(function(box) {
+          const names = by[box.dataset.voters] || [];
+          box.innerHTML = names.map(function(u) { return '<a href="/user/' + encodeURIComponent(u) + '">' + esc(u) + '</a>'; }).join(', ');
+        });
+      }).catch(function() {});
+  }
+  function pollFromPlaceholder(el) {
+    if (el.__poll) return;
+    try { renderPoll(el, JSON.parse(el.dataset.poll)); } catch (e) {}
+  }
+  document.querySelectorAll('.msg-poll[data-poll]').forEach(pollFromPlaceholder);
+
+  function pollRequest(el, path, body) {
+    const p = el.__poll;
+    if (!p) return;
+    fetch('/messages/poll/' + p.id + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify(body || {}) })
+      .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, d: d }; }); })
+      .then(function(x) {
+        if (x.ok && x.d.poll) { renderPoll(el, x.d.poll); return; }
+        const err = x.d && x.d.error;
+        if (err === 'closed') { p.closed = true; renderPoll(el, p); }
+        else if (err && err.length > 20) alert(err);
+      })
+      .catch(function() {});
+  }
+  if (chatEl) {
+    chatEl.addEventListener('click', function(e) {
+      const el = e.target.closest('.msg-poll');
+      if (!el || !el.__poll) return;
+      const p = el.__poll;
+      const opt = e.target.closest('.msg-poll-option');
+      if (opt) {
+        e.preventDefault();
+        if (p.multiple) {
+          opt.classList.toggle('on');
+          const any = el.querySelector('.msg-poll-option.on');
+          const btn = el.querySelector('[data-poll-vote]');
+          if (btn) btn.disabled = !any;
+        } else {
+          pollRequest(el, '/vote', { optionIds: [parseInt(opt.dataset.option)] });
+        }
+        return;
+      }
+      if (e.target.closest('[data-poll-vote]')) {
+        const ids = Array.from(el.querySelectorAll('.msg-poll-option.on')).map(function(o) { return parseInt(o.dataset.option); });
+        if (ids.length) pollRequest(el, '/vote', { optionIds: ids });
+        return;
+      }
+      if (e.target.closest('[data-poll-retract]')) { pollRequest(el, '/retract'); return; }
+      if (e.target.closest('[data-poll-close]')) {
+        if (confirm(pollT('Завершить опрос? Голосовать больше нельзя будет.', 'Close the poll? Nobody will be able to vote after that.'))) pollRequest(el, '/close');
+      }
+    });
+  }
+  // Counts from someone else's vote: keep what this viewer chose, the rest is the server's.
+  function applyPollUpdate(d) {
+    const row = document.querySelector('[data-msg-id="' + d.messageId + '"]');
+    const el = row && row.querySelector('.msg-poll');
+    if (!el || !el.__poll || !d.poll) return;
+    const old = el.__poll;
+    const next = Object.assign({}, old, d.poll, { mine: old.mine, voted: old.voted, canRetract: old.canRetract && !d.poll.closed, canClose: old.canClose && !d.poll.closed });
+    next.options = d.poll.options.map(function(o) { return Object.assign({}, o, { mine: (old.mine || []).indexOf(o.id) !== -1 }); });
+    if (old.options.length === next.options.length) {
+      // the server's order is this viewer's own shuffle; a broadcast has the creator's order
+      const pos = {}; old.options.forEach(function(o, i) { pos[o.id] = i; });
+      next.options.sort(function(a, b) { return (pos[a.id] || 0) - (pos[b.id] || 0); });
+    }
+    if (next.quiz && !next.voted && !next.closed) next.correct = null;
+    // A multiple-answer poll being filled in keeps its ticks.
+    const ticked = Array.from(el.querySelectorAll('.msg-poll-option.on')).map(function(o) { return o.dataset.option; });
+    renderPoll(el, next);
+    ticked.forEach(function(id) { const o = el.querySelector('.msg-poll-option[data-option="' + id + '"]'); if (o) o.classList.add('on'); });
+    const btn = el.querySelector('[data-poll-vote]'); if (btn && ticked.length) btn.disabled = false;
   }
 
   /* ── Reactions ─────────────────────────────────────────────────────
@@ -5351,6 +5799,11 @@
       lastSseEventAt = Date.now();
       const d = JSON.parse(e.data);
       if (d.conversationId === CONV_ID) applyAttachmentUpdate(d);
+    });
+    sse.addEventListener('poll:update', function(e) {
+      lastSseEventAt = Date.now();
+      const d = JSON.parse(e.data);
+      if (d.conversationId === CONV_ID) applyPollUpdate(d);
     });
     sse.addEventListener('msg:react', function(e) {
       lastSseEventAt = Date.now();
@@ -5799,7 +6252,7 @@
     return '<a href="/' + LANG + '/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
       '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
       avatar +
-      '<div class="msg-conv-info"><div class="msg-conv-name"' + (!c.is_group && !c.isSaved && c.displayName ? ' data-username="' + escAttr(c.displayName) + '"' : '') + '>' + esc(c.displayName || '') + '</div>' +
+      '<div class="msg-conv-info"><div class="msg-conv-name' + (!c.is_group && !c.isSaved && c.displayName ? ' ' + rankClassFor(c.displayName) : '') + '">' + esc(c.displayName || '') + '</div>' +
       '<div class="msg-conv-preview">' + preview + '</div></div>' +
       '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '">' + esc(convTimeText(c.last_message_at)) + '</span>' +
       badge + '</div>' +
