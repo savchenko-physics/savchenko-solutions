@@ -1431,7 +1431,10 @@ textarea.ss-input { min-height: 96px; resize: vertical; }
   text-indent: 0;
 }
 .ss-inline-control svg { width: 14px; height: 14px; }
-.ss-latex-logo { display: inline-block; height: 1.05em; width: auto; vertical-align: -0.28em; }
+/* Sized by the text; .ss-prose img (0,1,1) sets height: auto and would blow it up to its
+   45 px attribute width... at the SVG's own ratio, which on the about page came out as a
+   banner (2026-09-21), hence the img selector here. */
+img.ss-latex-logo, .ss-prose img.ss-latex-logo { display: inline-block; height: 1.05em; width: auto; vertical-align: -0.28em; }
 
 /* ss-codemod: on */
 
