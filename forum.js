@@ -58,7 +58,7 @@ async function getUserReputation(userId) {
 function getReputationBadge(score, lang) {
     const __ = (key) => i18n.__({ phrase: key, locale: lang || 'en' });
     const tier = Palettes.rankFor(score);
-    return { label: __(`badges.${tier.key}`), color: tier.color };
+    return { label: __(`badges.${tier.key}`), color: tier.color, key: tier.key };
 }
 
 // Helper: render forum post content as markdown with auto-linked references

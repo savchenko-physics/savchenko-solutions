@@ -1142,7 +1142,7 @@
         // The tiers and their colours live in js/palettes.js (shared with forum.js and the profile).
         function getReputationBadge(score) {
             const tier = window.SSPalettes.rankFor(score);
-            return { label: t[tier.key], color: tier.color };
+            return { label: t[tier.key], color: tier.color, key: tier.key };
         }
 
         function renderRows(rows) {
@@ -1162,7 +1162,7 @@
                 // Site owner shows a fixed black "Headquarters" title instead of a
                 // score-based rank badge.
                 const badge = row.username === "astrosander"
-                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", color: "#2d2d2d" }
+                    ? { label: lang === "ru" ? "Штаб-квартира" : "Headquarters", ...window.SSPalettes.RANK_HQ }
                     : getReputationBadge(Number(row.score || 0));
                 tr.innerHTML = `
                     <td class="${rankClass}">${hasRank ? row.rank : ""}</td>
@@ -1175,7 +1175,7 @@
                             <div class="contributor-main">
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
                                 <div class="contributor-username">@${row.username}</div>
-                                <div class="contributor-badge" style="color: ${badge.color};">${badge.label}</div>
+                                <div class="contributor-badge ss-rank-${badge.key}" style="color: ${badge.color};">${badge.label}</div>
                             </div>
                         </div>
                     </td>

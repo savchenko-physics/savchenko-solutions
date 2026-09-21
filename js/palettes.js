@@ -49,11 +49,16 @@
     // The site's own navy and link blue fail as series colours (too dark and grey to tell apart).
     const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#7d3c98'];
 
-    // Codeforces-style rank tiers (deliberately the Codeforces colours, which this audience knows).
+    // Codeforces-style rank tiers (deliberately the Codeforces colours, which this audience knows):
+    // the three grandmaster tiers are one red, and a legendary grandmaster's first letter is black,
+    // as on Codeforces (the `first` colour, drawn by the .ss-rank-<key>::first-letter rules in
+    // design-system.css; grandmaster was a darker #CC0000 until 2026-09-21). The site's owner has
+    // no tier: "Headquarters" is black with a red first letter, the mirror of the legendary one.
+    const RANK_HQ = { key: 'headquarters', color: '#000000', first: '#FF0000' };
     const RANKS = [
-        { min: 200, key: 'legendaryGrandmaster', color: '#FF0000' },
+        { min: 200, key: 'legendaryGrandmaster', color: '#FF0000', first: '#000000' },
         { min: 160, key: 'internationalGrandmaster', color: '#FF0000' },
-        { min: 130, key: 'grandmaster', color: '#CC0000' },
+        { min: 130, key: 'grandmaster', color: '#FF0000' },
         { min: 110, key: 'internationalMaster', color: '#FF8C00' },
         { min: 90, key: 'master', color: '#FF8C00' },
         { min: 70, key: 'candidateMaster', color: '#AA00AA' },
@@ -83,8 +88,12 @@
         }
         ACTIVITY.forEach((c, i) => { vars[`--ss-activity-${i}`] = c; });
         SERIES.forEach((c, i) => { vars[`--ss-series-${i + 1}`] = c; });
+        for (const r of [...RANKS, RANK_HQ]) {
+            vars[`--ss-rank-${r.key}`] = r.color;
+            if (r.first) vars[`--ss-rank-${r.key}-first`] = r.first;
+        }
         return vars;
     }
 
-    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, SERIES, RANKS, rankFor, cssVariables };
+    return { HEAT, HEAT_INK, HEAT_NONE, LANG, ACTIVITY, SERIES, RANKS, RANK_HQ, rankFor, cssVariables };
 }));

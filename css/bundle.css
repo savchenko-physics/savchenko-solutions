@@ -562,6 +562,19 @@
   --ss-series-2: #eb6834;
   --ss-series-3: #1baf7a;
   --ss-series-4: #7d3c98;
+  --ss-rank-legendaryGrandmaster: #FF0000;
+  --ss-rank-legendaryGrandmaster-first: #000000;
+  --ss-rank-internationalGrandmaster: #FF0000;
+  --ss-rank-grandmaster: #FF0000;
+  --ss-rank-internationalMaster: #FF8C00;
+  --ss-rank-master: #FF8C00;
+  --ss-rank-candidateMaster: #AA00AA;
+  --ss-rank-expert: #0000FF;
+  --ss-rank-specialist: #03A89E;
+  --ss-rank-pupil: #008000;
+  --ss-rank-newbie: #808080;
+  --ss-rank-headquarters: #000000;
+  --ss-rank-headquarters-first: #FF0000;
 }
 
 /* === design-system.css === */
@@ -3809,6 +3822,13 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
   line-height: 1;
   padding: 0 var(--ss-space-1);
 }
+
+/* Rank titles (js/palettes.js RANKS, Codeforces' colours). The colour itself is set inline where
+   the badge is drawn; only the first-letter treatment lives here: a legendary grandmaster's first
+   letter is black, as on Codeforces, and Headquarters (the owner, black) opens with a red one.
+   ::first-letter needs a block box, which the badge elements are (div, p). */
+.ss-rank-legendaryGrandmaster::first-letter { color: var(--ss-rank-legendaryGrandmaster-first); }
+.ss-rank-headquarters::first-letter { color: var(--ss-rank-headquarters-first); }
 
 .msg-input-bar[hidden] { display: none; }
 

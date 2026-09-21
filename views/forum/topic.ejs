@@ -355,7 +355,7 @@
                     <a href="/user/<%= post.username %>"><%= post.username %></a>
                 </p>
                 <% if (reputations[post.user_id]) { %>
-                <div class="post-author-badge" style="color: <%= reputations[post.user_id].color %>;">
+                <div class="post-author-badge ss-rank-<%= reputations[post.user_id].key %>" style="color: <%= reputations[post.user_id].color %>;">
                     <%= reputations[post.user_id].label %>
                     <span style="font-weight: 400; color: var(--ss-text-secondary);">(<%= reputations[post.user_id].score %>)</span>
                 </div>

@@ -3243,6 +3243,13 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
   padding: 0 var(--ss-space-1);
 }
 
+/* Rank titles (js/palettes.js RANKS, Codeforces' colours). The colour itself is set inline where
+   the badge is drawn; only the first-letter treatment lives here: a legendary grandmaster's first
+   letter is black, as on Codeforces, and Headquarters (the owner, black) opens with a red one.
+   ::first-letter needs a block box, which the badge elements are (div, p). */
+.ss-rank-legendaryGrandmaster::first-letter { color: var(--ss-rank-legendaryGrandmaster-first); }
+.ss-rank-headquarters::first-letter { color: var(--ss-rank-headquarters-first); }
+
 .msg-input-bar[hidden] { display: none; }
 
 /* On a suspended member's messages, for everyone else (they see .msg-posting-blocked instead). */
