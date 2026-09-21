@@ -230,6 +230,32 @@
         .avatar-pending p { margin: 0 0 var(--ss-space-2); font-size: var(--ss-fs-14); }
         .avatar-pending .avatar-file { color: var(--text-secondary); font-size: var(--ss-fs-13); overflow-wrap: anywhere; }
         .avatar-pending-actions { display: flex; gap: var(--ss-space-2); align-items: center; }
+        /* The crop stage (js/avatar-crop.js): the frame with the picture, then the controls. */
+        .avatar-stage { display: none; margin: 0 0 var(--ss-space-3); }
+        .avatar-stage.is-visible { display: block; }
+        .avatar-stage-frame { display: flex; justify-content: center; }
+        .avatar-stage canvas {
+            display: block;
+            border-radius: var(--ss-radius);
+            background: var(--ss-surface-hover);
+            cursor: grab;
+            touch-action: none;
+            max-width: 100%;
+        }
+        .avatar-stage canvas:active { cursor: grabbing; }
+        .avatar-stage-hint { margin: var(--ss-space-2) 0 var(--ss-space-3); font-size: var(--ss-fs-12); color: var(--text-secondary); text-align: center; }
+        .avatar-stage-row {
+            display: flex; align-items: center; gap: var(--ss-space-3);
+            margin-bottom: var(--ss-space-2);
+        }
+        .avatar-stage-row > label, .avatar-stage-row > .avatar-stage-label {
+            flex: 0 0 72px; font-size: var(--ss-fs-13); color: var(--text-secondary);
+        }
+        .avatar-stage-row .select { flex: 1 1 auto; width: auto; min-width: 0; }
+        .avatar-stage-row input[type="range"] { flex: 1 1 auto; min-width: 0; accent-color: var(--btn); }
+        .avatar-stage-row .btn-secondary { padding: var(--ss-space-2) var(--ss-space-3); font-size: var(--ss-fs-13); line-height: 1.2; }
+        .avatar-stage-row .btn-secondary.is-active { background: var(--btn); color: var(--ss-on-navy); border-color: var(--btn); }
+        .avatar-segment { display: flex; gap: var(--ss-space-1); }
         .avatar-pending .btn-primary { width: auto; height: 40px; margin: 0; padding: 0 var(--ss-space-4); }
         .avatar-error { display: none; margin: var(--ss-space-2) 0 0; font-size: var(--ss-fs-13); color: var(--error); }
         .avatar-error.is-visible { display: block; }
@@ -437,6 +463,35 @@
                             <p class="avatar-error" id="avatarError" role="alert"></p>
                             <div class="avatar-pending" id="avatarPending">
                                 <p id="avatarPendingText"></p>
+                                <div class="avatar-stage" id="avatarStage">
+                                    <div class="avatar-stage-frame">
+                                        <canvas data-crop-canvas tabindex="0" aria-label="<%= __('settings.profile.crop.adjust') %>"></canvas>
+                                    </div>
+                                    <p class="avatar-stage-hint"><%= __('settings.profile.crop.hint') %></p>
+                                    <div class="avatar-stage-row">
+                                        <span class="avatar-stage-label"><%= __('settings.profile.crop.shape') %></span>
+                                        <div class="avatar-segment" role="group" aria-label="<%= __('settings.profile.crop.shape') %>">
+                                            <button type="button" class="btn-secondary" data-crop-shape="circle" aria-pressed="true"><%= __('settings.profile.crop.circle') %></button>
+                                            <button type="button" class="btn-secondary" data-crop-shape="square" aria-pressed="false"><%= __('settings.profile.crop.square') %></button>
+                                        </div>
+                                    </div>
+                                    <div class="avatar-stage-row">
+                                        <label for="cropGrid"><%= __('settings.profile.crop.grid') %></label>
+                                        <select class="select" id="cropGrid" data-crop-grid>
+                                            <option value="none"><%= __('settings.profile.crop.gridNone') %></option>
+                                            <option value="thirds" selected><%= __('settings.profile.crop.gridThirds') %></option>
+                                            <option value="golden"><%= __('settings.profile.crop.gridGolden') %></option>
+                                            <option value="diagonals"><%= __('settings.profile.crop.gridDiagonals') %></option>
+                                            <option value="spiral"><%= __('settings.profile.crop.gridSpiral') %></option>
+                                        </select>
+                                    </div>
+                                    <div class="avatar-stage-row">
+                                        <label for="cropZoom"><%= __('settings.profile.crop.zoom') %></label>
+                                        <input type="range" id="cropZoom" data-crop-zoom min="0" max="100" value="0">
+                                        <button type="button" class="btn-secondary" data-crop-rotate="-1" title="<%= __('settings.profile.crop.rotateLeft') %>" aria-label="<%= __('settings.profile.crop.rotateLeft') %>"><i class="fas fa-rotate-left" aria-hidden="true"></i></button>
+                                        <button type="button" class="btn-secondary" data-crop-rotate="1" title="<%= __('settings.profile.crop.rotateRight') %>" aria-label="<%= __('settings.profile.crop.rotateRight') %>"><i class="fas fa-rotate-right" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
                                 <div class="avatar-pending-actions">
                                     <button type="submit" class="btn-primary" id="btnSavePhoto"><%= __('settings.profile.savePhoto') %></button>
                                     <button type="button" class="btn-secondary" id="btnCancelPhoto"><%= __('settings.profile.cancelPhoto') %></button>
@@ -761,6 +816,7 @@
         </div>
     </div>
 
+    <script src="<%= asset('/js/avatar-crop.js') %>"></script>
     <script>
 (function () {
     var lang = '<%= lang %>';
@@ -832,12 +888,50 @@
         avatarPending.classList.add('is-visible');
     }
     function resetPhotoChoice() {
+        closeStage();
         fileInput.value = '';
         removeField.value = '0';
         avatarPreview.src = avatarOriginalSrc;
         avatarPending.classList.remove('is-visible');
         showAvatarError('');
         markProfileDirty();
+    }
+    // The crop stage. The chosen file is shown in the frame; on save the frame's contents
+    // replace the file in the input (a browser that cannot rewrite a file input sends the
+    // original, which the server centre-crops as before).
+    var avatarStage = document.getElementById('avatarStage');
+    var crop = (window.AvatarCrop && avatarStage) ? window.AvatarCrop.mount(avatarStage) : null;
+    var cropSource = null;    // the File in the stage, or null when the stage is closed
+    var cropExported = false; // the input already holds the crop of cropSource
+    function closeStage() {
+        cropSource = null;
+        cropExported = false;
+        avatarStage.classList.remove('is-visible');
+        if (crop) crop.unload();
+    }
+    function openStage(f) {
+        closeStage();
+        if (!crop) return;
+        avatarStage.classList.add('is-visible');
+        crop.load(f).then(function () {
+            cropSource = f;
+        }).catch(function () {
+            // Not decodable here (a format the browser lacks): the server still gets the file.
+            closeStage();
+        });
+    }
+    function canRewriteInput() {
+        try { return typeof DataTransfer === 'function' && 'files' in new DataTransfer(); } catch (e) { return false; }
+    }
+    // Put the crop into the input and resolve; on any failure leave the original file.
+    function exportCropIntoInput() {
+        if (!crop || !cropSource || cropExported || !canRewriteInput()) return Promise.resolve();
+        return crop.export().then(function (out) {
+            var dt = new DataTransfer();
+            dt.items.add(new File([out.blob], out.name, { type: out.type }));
+            fileInput.files = dt.files;
+            cropExported = true;
+        }).catch(function () {});
     }
     fileInput.addEventListener('change', function () {
         var f = fileInput.files && fileInput.files[0];
@@ -860,9 +954,11 @@
         r.onload = function (ev) { avatarPreview.src = ev.target.result; };
         r.readAsDataURL(f);
         showPending(MSG.photoChosen + ': ' + f.name + ' (' + fileSizeText(f.size) + ')');
+        openStage(f);
         markProfileDirty();
     });
     btnRemovePhoto.addEventListener('click', function () {
+        closeStage();
         removeField.value = '1';
         avatarPreview.src = PLACEHOLDER;
         fileInput.value = '';
@@ -900,7 +996,7 @@
     formProfile.addEventListener('change', markProfileDirty);
     markProfileDirty();
 
-    formProfile.addEventListener('submit', function () {
+    formProfile.addEventListener('submit', function (e) {
         // One submit only: the picture goes up once, however the form was sent.
         var btn = document.getElementById('btnSaveProfile');
         var btnPhoto = document.getElementById('btnSavePhoto');
@@ -908,6 +1004,13 @@
         btnPhoto.disabled = true;
         btnPhoto.textContent = MSG.saving;
         btn.textContent = MSG.saving;
+        if (crop && cropSource && !cropExported && canRewriteInput()) {
+            // Render the frame's contents into the input first, then send.
+            e.preventDefault();
+            exportCropIntoInput().then(function () {
+                if (formProfile.requestSubmit) formProfile.requestSubmit(); else formProfile.submit();
+            });
+        }
     });
 
     // Username availability
