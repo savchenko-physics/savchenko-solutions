@@ -53,8 +53,8 @@
     // the three grandmaster tiers are one red, and a legendary grandmaster's first letter is black,
     // as on Codeforces (the `first` colour, drawn by the .ss-rank-<key>::first-letter rules in
     // design-system.css; grandmaster was a darker #CC0000 until 2026-09-21). The site's owner has
-    // no tier: "Headquarters" is black with a red first letter, the mirror of the legendary one.
-    const RANK_HQ = { key: 'headquarters', color: '#000000', first: '#FF0000' };
+    // no tier: "Headquarters" is plain black.
+    const RANK_HQ = { key: 'headquarters', color: '#000000' };
     const RANKS = [
         { min: 200, key: 'legendaryGrandmaster', color: '#FF0000', first: '#000000' },
         { min: 160, key: 'internationalGrandmaster', color: '#FF0000' },
