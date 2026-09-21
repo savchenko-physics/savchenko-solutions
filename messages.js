@@ -949,6 +949,8 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         const prevLastRead = membership.rows[0].last_read_at;
         const activeMuted = !!membership.rows[0].muted;
+        // MSG_TIMING=1 logs the page's phases, for finding where a slow chat page spends its time.
+        const t0 = Date.now(); const mark = process.env.MSG_TIMING ? (label) => console.log(`msg page ${convId} ${label} +${Date.now() - t0}ms`) : () => {};
 
         // Everything that does not depend on anything else goes to the database at once
         // (2026-09-21: eight queries in a row cost ~60 ms of round trips on a warm page).
@@ -981,6 +983,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         broadcastToConversation(convId, 'read',
             { conversationId: convId, readCutoff: new Date().toISOString() }, userId).catch(() => {});
         const { rows: convRows, memberMap, convList } = listResult;
+        mark('list+blocks');
 
         // Active conversation: get info and messages
         let activeConvRow = convRows.find(c => c.id === convId);
@@ -1069,6 +1072,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         // The most recent page (queried above, in parallel); older messages load on scroll-up.
         // One extra row detects whether older history exists.
         const messagesResult = await messagesPromise;
+        mark('conversation+messages');
         let hasMoreHistory = false;
         if (messagesResult.rows.length > PAGE_SIZE) {
             hasMoreHistory = true;
@@ -1084,6 +1088,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             activeConversation ? getPinnedSummary(convId, lang) : Promise.resolve(null),
         ]);
         attachReplyInfo(messagesResult.rows, userId, lang);
+        mark('reactions+polls+pinned');
         for (const m of messagesResult.rows) {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) {
@@ -1167,6 +1172,8 @@ router.get('/:id(\\d+)', async (req, res) => {
             m.senderSuspendedForGood = !!m.senderSuspendedUntil && isPermanent(m.senderSuspendedUntil);
         }
 
+        mark('presence');
+        if (process.env.MSG_TIMING) res.on('finish', () => mark('rendered'));
         res.render('messages', {
             __: req.__,
             lang,
