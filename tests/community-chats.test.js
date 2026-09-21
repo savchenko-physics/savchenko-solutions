@@ -218,3 +218,18 @@ test('the hint has only three possible answers, and never throws on what people 
         }
     }
 });
+
+// 2026-09-21: a moderator deleted a 32-message spree and every member kept 32 bell entries and a
+// header count that included the deleted messages.
+test('a deleted message leaves no unread count and takes its notifications with it', () => {
+    const messages = fs.readFileSync(path.join(ROOT, 'messages.js'), 'utf8');
+    const total = messages.slice(messages.indexOf('async function getUnreadMessageCount'));
+    assert.match(total.slice(0, 900), /mx\.deleted_at IS NULL/, 'the header total skips deleted messages');
+    const del = messages.slice(messages.indexOf("router.delete('/:msgId(\\\\d+)/delete'"));
+    assert.match(del.slice(0, 3500), /notifications\.removeForMessage\(msgId\)/);
+    const notif = fs.readFileSync(path.join(ROOT, 'notifications.js'), 'utf8');
+    assert.match(notif, /INSERT INTO notifications \(user_id, type, title, message, link, message_id\)/);
+    for (const call of messages.matchAll(/createMessageNotifications\(([\s\S]*?)\);/g)) {
+        assert.match(call[1], /\.rows\[0\]\.id\s*$/, 'every fan-out names its message: ' + call[1].replace(/\s+/g, ' '));
+    }
+});

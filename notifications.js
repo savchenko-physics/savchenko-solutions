@@ -86,11 +86,11 @@ async function createNotification(userId, type, title, message, link, performerI
  *
  * Returns the number of notifications created.
  */
-async function createMessageNotifications(conversationId, senderId, title, preview, link) {
+async function createMessageNotifications(conversationId, senderId, title, preview, link, messageId = null) {
     try {
         const result = await pool.query(
-            `INSERT INTO notifications (user_id, type, title, message, link)
-             SELECT cm.user_id, 'new_message', $3, $4, $5
+            `INSERT INTO notifications (user_id, type, title, message, link, message_id)
+             SELECT cm.user_id, 'new_message', $3, $4, $5, $7
              FROM conversation_members cm
              LEFT JOIN user_preferences up ON up.user_id = cm.user_id
              WHERE cm.conversation_id = $1
@@ -107,11 +107,25 @@ async function createMessageNotifications(conversationId, senderId, title, previ
                      )
                    )
              RETURNING id`,
-            [conversationId, senderId, title, preview, link, LARGE_CONVERSATION_MEMBERS]
+            [conversationId, senderId, title, preview, link, LARGE_CONVERSATION_MEMBERS, messageId]
         );
         return result.rowCount;
     } catch (err) {
         console.error('Error creating message notifications:', err);
+        return 0;
+    }
+}
+
+/**
+ * Drop the notifications a message created (notifications.message_id, migration 063) when it
+ * is deleted. Rows from before the column was filled are not found and stay.
+ */
+async function removeForMessage(messageId) {
+    try {
+        const r = await pool.query('DELETE FROM notifications WHERE message_id = $1', [messageId]);
+        return r.rowCount;
+    } catch (err) {
+        console.error('Error removing message notifications:', err);
         return 0;
     }
 }
@@ -214,6 +228,7 @@ async function hasRecentLikeNotification(userId, problemName) {
 }
 
 module.exports = {
+    removeForMessage,
     createNotification,
     createMessageNotifications,
     getUnreadCount,

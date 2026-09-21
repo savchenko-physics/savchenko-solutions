@@ -1330,7 +1330,8 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
             userId,
             `New message from ${req.session.username}`,
             preview,
-            `/messages/${convId}`
+            `/messages/${convId}`,
+            inserted.rows[0].id
         );
 
         // Live-push the new message to the other members (the sender's own tab
@@ -1459,6 +1460,9 @@ router.delete('/:msgId(\\d+)/delete', rateLimit('edit', 30, 10000), async (req, 
             `UPDATE messages SET deleted_at = NOW(), content = '' WHERE id = $1`,
             [msgId]
         );
+        // The bell rows this message put in other people's headers go with it (a moderator
+        // deleting a spree used to leave every member 32 "New message from" entries, 2026-09-21).
+        await notifications.removeForMessage(msgId);
         await pool.query(
             `UPDATE conversations c SET last_message_at = COALESCE(
                  (SELECT MAX(created_at) FROM messages WHERE conversation_id = c.id AND deleted_at IS NULL), c.created_at)
@@ -1676,7 +1680,7 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         const preview = s.file_url ? (s.file_name || '[File]')
             : (s.image_url && !s.content ? '[Image]' : (s.content || '').substring(0, 80));
         await notifications.createMessageNotifications(
-            targetId, userId, `New message from ${req.session.username}`, preview, `/messages/${targetId}`
+            targetId, userId, `New message from ${req.session.username}`, preview, `/messages/${targetId}`, fwd.rows[0].id
         );
 
         // Live-push into the target conversation (the forwarder gets it on nav).
@@ -2309,7 +2313,8 @@ async function getUnreadMessageCount(userId) {
                 (SELECT COUNT(*) FROM messages mx
                  WHERE mx.conversation_id = c.id
                    AND mx.created_at > cm.last_read_at
-                   AND mx.sender_id != $1)
+                   AND mx.sender_id != $1
+                   AND mx.deleted_at IS NULL)
              ), 0)::int AS total
              FROM conversations c
              JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
