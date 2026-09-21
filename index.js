@@ -424,6 +424,8 @@ app.locals.usernamePattern = USERNAME_PATTERN;
 // Dates and times in the reader's own time zone: <%- localTime(value, 'relative', lang) %> writes a
 // <time data-local> in UTC that js/local-time.js (loaded by the header) rewrites in the browser.
 app.locals.localTime = localTime;
+// A rank tier for a score (js/palettes.js), for templates that colour a username by rank.
+app.locals.rankTierFor = require('./js/palettes').rankFor;
 
 app.use((req, res, next) => {
     const langMatch = req.path.match(/^\/(en|ru)(\/|$)/);

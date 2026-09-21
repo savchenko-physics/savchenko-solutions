@@ -17,6 +17,7 @@ const attachments = require('./lib/messageAttachments');
 const { videoDimensions } = require('./lib/videoMeta');
 const transcode = require('./lib/videoTranscode');
 const { isPostingBlocked, isPermanent, blockedNotice, effectiveBlock, PERMANENT_YEAR } = require('./lib/chatRestrictions');
+const { rankFor: userRankFor } = require('./lib/userRank');
 
 // The end of a member's block on writing, account-wide and in one conversation combined
 // (lib/chatRestrictions.js): null when they may write. `convId` may be null.
@@ -28,6 +29,30 @@ async function postingBlockFor(userId, convId) {
     if (!r.rows.length) return null;
     const until = effectiveBlock(r.rows[0].account, r.rows[0].member);
     return isPostingBlocked(until) ? until : null;
+}
+
+// "Delete chat" (one-to-one chats, migration 064) removes nothing: it stamps the member's own
+// conversation_members.hidden_at, and every query that shows that member a chat's messages
+// keeps only what arrived after the stamp. This is the WHERE fragment; `$n` is the viewer's id.
+function afterHidden(userParam) {
+    return `m.created_at > COALESCE((SELECT hidden_at FROM conversation_members
+                WHERE conversation_id = m.conversation_id AND user_id = ${userParam}), '-infinity'::timestamptz)`;
+}
+
+// A one-to-one chat where the other member has blocked `userId` (user_blocks): the text they
+// are shown, or null. `convId` may be null when the target is a person (a new DM).
+async function dmBlockNotice(userId, { convId = null, otherId = null }, lang) {
+    const r = otherId
+        ? await pool.query('SELECT 1 FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2', [otherId, userId])
+        : await pool.query(
+            `SELECT 1 FROM user_blocks ub
+             JOIN conversation_members cm ON cm.user_id = ub.blocker_id AND cm.conversation_id = $1
+             JOIN conversations c ON c.id = cm.conversation_id AND c.is_group = FALSE AND c.saved_for_user_id IS NULL
+             WHERE ub.blocked_id = $2`, [convId, userId]);
+    if (!r.rows.length) return null;
+    return lang === 'ru'
+        ? 'Вы не можете писать этому пользователю.'
+        : 'You cannot message this person.';
 }
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
@@ -689,17 +714,22 @@ async function buildConversationList(userId, lang = 'en') {
                 (SELECT COUNT(*) FROM messages mx
                  WHERE mx.conversation_id = c.id AND mx.created_at > cm.last_read_at AND mx.sender_id != $1
                    AND mx.deleted_at IS NULL
+                   AND (cm.hidden_at IS NULL OR mx.created_at > cm.hidden_at)
                 )::int AS unread_count
          FROM conversations c
          JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1
          -- The newest message still there: a deleted one showed as an empty line and kept the
-         -- chat at the top of the list (Dzmitrij's chat, 2026-09-19).
+         -- chat at the top of the list (Dzmitrij's chat, 2026-09-19). A chat this member
+         -- "deleted" (cm.hidden_at) counts only what came after.
          LEFT JOIN LATERAL (
              SELECT content, sender_id, image_url, file_name, created_at FROM messages
-             WHERE conversation_id = c.id AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 1
+             WHERE conversation_id = c.id AND deleted_at IS NULL
+               AND (cm.hidden_at IS NULL OR created_at > cm.hidden_at)
+             ORDER BY created_at DESC LIMIT 1
          ) m ON TRUE
          LEFT JOIN users sender ON sender.id = m.sender_id
-         WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id)
+         WHERE EXISTS (SELECT 1 FROM messages WHERE conversation_id = c.id
+                       AND (cm.hidden_at IS NULL OR created_at > cm.hidden_at))
          ORDER BY COALESCE(m.created_at, c.last_message_at) DESC`,
         [userId]
     );
@@ -869,7 +899,9 @@ router.get('/:id(\\d+)', async (req, res) => {
         const activeMuted = !!membership.rows[0].muted;
         // A member kept from writing here, or anywhere, sees a notice in place of the composer.
         const postingBlockedUntil = await postingBlockFor(userId, convId);
-        const postingBlocked = postingBlockedUntil ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
+        let postingBlocked = postingBlockedUntil ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
+        // A DM whose other member has blocked this one reads the same way (user_blocks).
+        if (!postingBlocked) postingBlocked = await dmBlockNotice(userId, { convId }, lang);
 
         // Mark as read
         await pool.query(
@@ -945,6 +977,12 @@ router.get('/:id(\\d+)', async (req, res) => {
                     : (activeOther ? (activeOther.full_name || activeOther.username) : 'Deleted User')),
             displayPicture: (activeIsSaved || activeConvRow.is_group) ? null : (activeOther ? activeOther.profile_picture : null),
             otherUser: activeIsSaved ? null : activeOther,
+            // A DM's header shows the username in its rank's colour, the full name under it.
+            otherRank: (!activeIsSaved && !activeConvRow.is_group && activeOther) ? await userRankFor(activeOther.id) : null,
+            // Whether this member has blocked the other (the info panel's Block / Unblock).
+            blockedByMe: (!activeIsSaved && !activeConvRow.is_group && activeOther)
+                ? (await pool.query('SELECT 1 FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2', [userId, activeOther.id])).rows.length > 0
+                : false,
             memberCount: activeMemberCount,
             communityLang: activeConvRow.community_lang || null,
         } : null;
@@ -969,6 +1007,7 @@ router.get('/:id(\\d+)', async (req, res) => {
                  SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
                  WHERE m.conversation_id = $1
                    AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
+                   AND ${afterHidden('$3')}
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $2
              ) sub ORDER BY created_at ASC, id ASC`,
             [convId, PAGE_SIZE + 1, userId]
@@ -1124,6 +1163,7 @@ router.get('/:id(\\d+)/history', async (req, res) => {
                  WHERE m.conversation_id = $1
                    AND (m.created_at, m.id) < (SELECT cur.created_at, cur.id FROM messages cur WHERE cur.id = $2)
                    AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $4)
+                   AND ${afterHidden('$4')}
                  ORDER BY m.created_at DESC, m.id DESC LIMIT $3
              ) sub ORDER BY created_at ASC, id ASC`,
             [convId, beforeId, PAGE_SIZE + 1, userId]
@@ -1156,6 +1196,10 @@ router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
         const { recipientId, recipientIds, title } = req.body;
         const newBlocked = await postingBlockFor(userId, null);
         if (newBlocked) return res.status(403).json({ error: blockedNotice(newBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
+        if (recipientId && !(recipientIds && recipientIds.length > 1)) {
+            const dmBlocked = await dmBlockNotice(userId, { otherId: parseInt(recipientId) }, normalizeLang(req.session.lang));
+            if (dmBlocked) return res.status(403).json({ error: dmBlocked, blocked: true });
+        }
 
         if (recipientIds && recipientIds.length > 1) {
             // Group conversation
@@ -1273,6 +1317,11 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
         if (blockedUntil) {
             if (req.file) await fs.promises.unlink(req.file.path).catch(() => {});
             return res.status(403).json({ error: blockedNotice(blockedUntil, lang, readerTimeZone(req)), blocked: true });
+        }
+        const dmBlocked = await dmBlockNotice(userId, { convId }, lang);
+        if (dmBlocked) {
+            if (req.file) await fs.promises.unlink(req.file.path).catch(() => {});
+            return res.status(403).json({ error: dmBlocked, blocked: true });
         }
 
         // Optional reply target — only honored if it's a message in this conversation.
@@ -1666,6 +1715,8 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         if (fwdBlocked) {
             return res.status(403).json({ error: blockedNotice(fwdBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
         }
+        const fwdDmBlocked = await dmBlockNotice(userId, { convId: targetId }, normalizeLang(req.session.lang));
+        if (fwdDmBlocked) return res.status(403).json({ error: fwdDmBlocked, blocked: true });
 
         // Preserve the original author across forward chains.
         const origin = s.forwarded_from_user_id || s.sender_id;
@@ -1848,6 +1899,53 @@ router.post('/:id(\\d+)/group/leave', rateLimit('group', 20, 60000), async (req,
 });
 
 // POST /:id/mute — toggle mute for the current member
+// POST /messages/block/:userId and /unblock/:userId — user_blocks (migration 064). The
+// blocked person can no longer write to this one; nothing about the messages changes.
+router.post('/block/:userId(\\d+)', rateLimit('block', 20, 60000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const otherId = parseInt(req.params.userId);
+        if (otherId === userId) return res.status(400).json({ error: 'Cannot block yourself' });
+        const u = await pool.query('SELECT 1 FROM users WHERE id = $1', [otherId]);
+        if (!u.rows.length) return res.status(404).json({ error: 'User not found' });
+        await pool.query('INSERT INTO user_blocks (blocker_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [userId, otherId]);
+        res.json({ ok: true, blocked: true });
+    } catch (err) {
+        console.error('Block error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+router.post('/unblock/:userId(\\d+)', rateLimit('block', 20, 60000), async (req, res) => {
+    try {
+        await pool.query('DELETE FROM user_blocks WHERE blocker_id = $1 AND blocked_id = $2', [req.session.userId, parseInt(req.params.userId)]);
+        res.json({ ok: true, blocked: false });
+    } catch (err) {
+        console.error('Unblock error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /messages/:id/delete-chat — a one-to-one chat leaves this member's view: their own
+// membership row is stamped (hidden_at), nothing is deleted, the other member sees everything.
+router.post('/:id(\\d+)/delete-chat', rateLimit('block', 20, 60000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const convId = parseInt(req.params.id);
+        const c = await pool.query(
+            `SELECT c.is_group, c.saved_for_user_id FROM conversations c
+             JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $2
+             WHERE c.id = $1`, [convId, userId]);
+        if (!c.rows.length) return res.status(403).json({ error: 'Not a member' });
+        if (c.rows[0].is_group || c.rows[0].saved_for_user_id) return res.status(400).json({ error: 'Only a one-to-one chat can be deleted' });
+        await pool.query('UPDATE conversation_members SET hidden_at = NOW(), last_read_at = NOW() WHERE conversation_id = $1 AND user_id = $2', [convId, userId]);
+        res.json({ ok: true, redirect: messagesPath(normalizeLang(req.session.lang)) });
+    } catch (err) {
+        console.error('Delete chat error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 router.post('/:id(\\d+)/mute', async (req, res) => {
     try {
         const convId = parseInt(req.params.id);
@@ -1891,8 +1989,8 @@ router.get('/:id(\\d+)/info', async (req, res) => {
                     COUNT(*) FILTER (WHERE ${MEDIA_WHERE.files})::int AS files,
                     COUNT(*) FILTER (WHERE ${MEDIA_WHERE.audio})::int AS audio,
                     COUNT(*) FILTER (WHERE ${MEDIA_WHERE.links})::int AS links
-             FROM messages m WHERE m.conversation_id = $1 AND m.deleted_at IS NULL`,
-            [convId]
+             FROM messages m WHERE m.conversation_id = $1 AND m.deleted_at IS NULL AND ${afterHidden('$2')}`,
+            [convId, userId]
         );
         const members = await membersPage(convId, 0);
         const total = await pool.query('SELECT COUNT(*)::int AS n FROM conversation_members WHERE conversation_id = $1', [convId]);
@@ -1938,9 +2036,10 @@ router.get('/:id(\\d+)/media', async (req, res) => {
                     m.file_url, m.file_name, m.file_size, m.attachment_status, u.username AS sender_username
              FROM messages m LEFT JOIN users u ON u.id = m.sender_id
              WHERE m.conversation_id = $1 AND m.deleted_at IS NULL AND ${MEDIA_WHERE[kind]}
-               ${before ? 'AND m.id < $2' : ''}
+               AND ${afterHidden('$2')}
+               ${before ? 'AND m.id < $3' : ''}
              ORDER BY m.created_at DESC, m.id DESC LIMIT 60`,
-            before ? [convId, before] : [convId]
+            before ? [convId, userId, before] : [convId, userId]
         );
         res.json({ kind, items: r.rows, more: r.rows.length === 60 });
     } catch (e) { console.error('Chat media error:', e); res.status(500).json({ error: 'Internal server error' }); }
@@ -2007,6 +2106,7 @@ router.get('/:id(\\d+)/search', async (req, res) => {
              FROM messages m LEFT JOIN users u ON u.id = m.sender_id
              WHERE m.conversation_id = $1 AND m.deleted_at IS NULL AND m.content ILIKE $2
                AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
+               AND ${afterHidden('$3')}
              ORDER BY m.created_at DESC LIMIT 30`,
             [convId, '%' + q + '%', userId]
         );
@@ -2092,6 +2192,7 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
             `SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
              WHERE m.conversation_id = $1 AND m.id > $2
                AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
+               AND ${afterHidden('$3')}
              ORDER BY m.created_at ASC, m.id ASC`,
             [convId, afterId, userId]
         );
@@ -2318,7 +2419,8 @@ async function getUnreadMessageCount(userId) {
                  WHERE mx.conversation_id = c.id
                    AND mx.created_at > cm.last_read_at
                    AND mx.sender_id != $1
-                   AND mx.deleted_at IS NULL)
+                   AND mx.deleted_at IS NULL
+                   AND (cm.hidden_at IS NULL OR mx.created_at > cm.hidden_at))
              ), 0)::int AS total
              FROM conversations c
              JOIN conversation_members cm ON cm.conversation_id = c.id AND cm.user_id = $1

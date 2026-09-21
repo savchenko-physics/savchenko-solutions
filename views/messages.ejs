@@ -1125,6 +1125,11 @@
       text-align: left;
     }
     .msg-chat-header-open:hover { text-decoration: underline; }
+    /* A DM's header: the username big in its rank's colour, the full name small under it
+       (2026-09-21, the owner). inline-block for the legendary tier's ::first-letter. */
+    .msg-chat-header-open[class*="ss-rank-"] { display: inline-block; font-size: var(--ss-fs-18); }
+    .msg-chat-header-fullname { cursor: default; }
+    .msg-chat-header-fullname:hover { text-decoration: none; }
 
     /* ── The chat's info panel, Telegram's: who it is, what to do with it, what it holds. ──── */
     .msg-info {
@@ -1193,7 +1198,7 @@
     .msg-info-sub { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); margin-top: 2px; }
     .msg-info-actions {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(0, 1fr));   /* four tiles in a group, five in a DM */
       gap: var(--ss-space-2);
       padding: 0 var(--ss-space-3) var(--ss-space-3);
       border-bottom: 8px solid var(--ss-surface-alt);
@@ -1212,7 +1217,9 @@
       font-family: inherit;
       text-decoration: none;
       cursor: pointer;
+      min-width: 0;
     }
+    .msg-info-action span { max-width: 100%; overflow-wrap: anywhere; text-align: center; line-height: 1.2; }
     .msg-info-action:hover { background: var(--ss-surface-alt); }
     .msg-info-action.danger { color: var(--ss-error); }
     .msg-info-section { border-bottom: 8px solid var(--ss-surface-alt); }
@@ -2468,9 +2475,13 @@
               <% if (_hdrProfileHref) { %></a><% } %>
             <% } %>
             <div>
+              <% const _dmRank = activeConversation.otherRank && activeConversation.otherUser ? activeConversation.otherRank : null; %>
               <div class="msg-chat-header-name">
-                <button type="button" class="msg-chat-header-open" id="chatInfoOpen" title="<%= lang === 'ru' ? 'О чате' : 'Chat info' %>"><%= activeConversation.displayName %></button>
+                <button type="button" class="msg-chat-header-open<%= _dmRank ? ' ss-rank-' + _dmRank.key + ' ss-rank-c-' + _dmRank.key : '' %>" id="chatInfoOpen" title="<%= lang === 'ru' ? 'О чате' : 'Chat info' %>"><%= _dmRank ? activeConversation.otherUser.username : activeConversation.displayName %></button>
               </div>
+              <% if (_dmRank && activeConversation.otherUser.full_name && activeConversation.otherUser.full_name !== activeConversation.otherUser.username) { %>
+                <div class="msg-chat-header-members msg-chat-header-fullname"><%= activeConversation.otherUser.full_name %></div>
+              <% } %>
               <% if (activeConversation.is_group && activeConversation.memberCount > 0) { %>
                 <div class="msg-chat-header-members" id="toggleMembers">
                   <%= activeConversation.memberCount %> <%= pluralWord(activeConversation.memberCount, lang === 'ru' ? ['участник', 'участника', 'участников'] : ['member', 'members', 'members']) %><% if (activeConversation.communityLang) { %> · <%= activeConversation.communityLang === 'ru' ? (lang === 'ru' ? 'на русском' : 'in Russian') : (lang === 'ru' ? 'на английском' : 'in English') %><% } %>
@@ -2992,6 +3003,8 @@
     memberCount: activeConversation.memberCount || 0,
     other: (!activeConversation.is_group && activeConversation.otherUser) ? activeConversation.otherUser.username : null,
     otherFull: (!activeConversation.is_group && activeConversation.otherUser) ? (activeConversation.otherUser.full_name || '') : '',
+    otherId: (!activeConversation.is_group && activeConversation.otherUser) ? activeConversation.otherUser.id : null,
+    blockedByMe: !!activeConversation.blockedByMe,
     isOnline: !!activeConversation.isOnline,
     muted: !!(typeof muted !== 'undefined' && muted),
     isAdmin: !!(typeof isAdmin !== 'undefined' && isAdmin),
@@ -3720,6 +3733,15 @@
     if (c.other) actions.push(actionHTML('profile', person, ru ? 'Профиль' : 'Profile', '', '/user/' + encodeURIComponent(c.other)));
     if (c.isGroup && c.isAdmin) actions.push(actionHTML('manage', gear, ru ? 'Управление' : 'Manage'));
     if (c.isGroup && !c.community && document.getElementById('groupLeaveBtn')) actions.push(actionHTML('leave', leave, ru ? 'Выйти' : 'Leave', ' danger'));
+    /* A one-to-one chat: block the person (they can no longer write to you) and delete the chat
+       (it leaves your list and opens empty; nothing is deleted on the server, the other person
+       keeps everything). Groups have neither. */
+    const blockIcon = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>';
+    const trash = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>';
+    if (!c.isGroup && !c.isSaved && c.otherId) {
+      actions.push(actionHTML('block', blockIcon, c.blockedByMe ? (ru ? 'Разблокировать' : 'Unblock') : (ru ? 'Заблокировать' : 'Block'), c.blockedByMe ? '' : ' danger'));
+      actions.push(actionHTML('delete-chat', trash, ru ? 'Удалить чат' : 'Delete chat', ' danger'));
+    }
     html += '<div class="msg-info-actions">' + actions.join('') + '</div>';
     // what the chat holds
     let rows = '';
@@ -3842,6 +3864,22 @@
         else if (a === 'search') { closeChatInfo(); const b = document.getElementById('searchToggle'); if (b) b.click(); }
         else if (a === 'manage') { closeChatInfo(); const p = document.getElementById('membersPanel'); if (p) p.classList.add('show'); }
         else if (a === 'leave') { closeChatInfo(); const b = document.getElementById('groupLeaveBtn'); if (b) b.click(); }
+        else if (a === 'block') {
+          const ru = LANG === 'ru';
+          if (!CHAT_INFO.blockedByMe && !confirm(ru ? 'Заблокировать ' + CHAT_INFO.name + '? Этот человек больше не сможет вам писать.' : 'Block ' + CHAT_INFO.name + '? They will no longer be able to message you.')) return;
+          fetch('/messages/' + (CHAT_INFO.blockedByMe ? 'unblock' : 'block') + '/' + CHAT_INFO.otherId, { method: 'POST', headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d && d.ok) { CHAT_INFO.blockedByMe = !!d.blocked; renderInfoMain(); } })
+            .catch(function() {});
+        }
+        else if (a === 'delete-chat') {
+          const ru = LANG === 'ru';
+          if (!confirm(ru ? 'Удалить чат с ' + CHAT_INFO.name + '? Он исчезнет из вашего списка. У собеседника переписка останется.' : 'Delete the chat with ' + CHAT_INFO.name + '? It leaves your list. The other person keeps it.')) return;
+          fetch('/messages/' + CONV_ID + '/delete-chat', { method: 'POST', headers: { 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(d) { if (d && d.ok) window.location.href = d.redirect || '/messages'; })
+            .catch(function() {});
+        }
         else if (a === 'all-members') {
           chatInfoBody.querySelectorAll('[data-extra]').forEach(function(el) { el.hidden = false; });
           const total = (chatInfoData && chatInfoData.memberCount) || CHAT_INFO.memberCount || 0;

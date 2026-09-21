@@ -245,9 +245,14 @@
             margin: var(--ss-space-2) 0 0;
         }
 
+        .name-text {
+            display: inline-block;
+        }
+
+        /* The full name, under the username. */
         .username-line {
             margin: var(--ss-space-1) 0 0;
-            font-size: var(--ss-fs-14);
+            font-size: var(--ss-fs-16);
             color: var(--sv-secondary);
         }
 
@@ -1354,8 +1359,12 @@
                         <span id="profile-online-dot" class="profile-online-dot" title="<%= lang === 'ru' ? 'В сети' : 'Online' %>" style="display:none;"></span>
                     </span>
                     <div class="profile-names">
-                        <h1 id="name-line" class="name-line skeleton"><%= lang === 'ru' ? 'Имя участника' : 'Contributor Name' %></h1>
-                        <p id="username-line" class="username-line">@<%= username %></p>
+                        <%# The username leads, big and in its rank's colour once the score is known
+                            (2026-09-21, the owner, as on the contributors page); the full name
+                            follows small. The text sits in its own inline-block so the legendary
+                            tier's ::first-letter rule can reach it (a flex h1 has no first letter). %>
+                        <h1 id="name-line" class="name-line"><span id="name-text" class="name-text"><%= username %></span></h1>
+                        <p id="username-line" class="username-line"></p>
                         <p id="rank-title-line" class="rank-title-line" style="display:none;"></p>
                         <p id="presence-line" class="presence-line" style="display:none;">
                             <span id="presence-dot" class="presence-dot"></span>
@@ -2189,7 +2198,7 @@
             };
             const nameEl = document.getElementById("name-line");
             nameEl.classList.remove("skeleton");
-            nameEl.textContent = user.fullName || user.username;
+            document.getElementById("name-text").textContent = user.username;
             if (user.isVerifiedUser) {
                 const badge = document.createElement("span");
                 badge.className = "verified-check";
@@ -2199,7 +2208,9 @@
             }
 
             document.getElementById("profile-avatar").src = user.profilePicture || "/img/profile_images/Default_placeholder.svg";
-            document.getElementById("username-line").textContent = `@${user.username}`;
+            const fullNameEl = document.getElementById("username-line");
+            fullNameEl.textContent = user.fullName && user.fullName !== user.username ? user.fullName : "";
+            fullNameEl.style.display = fullNameEl.textContent ? "" : "none";
 
             // Online presence (respects the user's show_online_status preference)
             const presence = data.presence;
@@ -2450,6 +2461,11 @@
                     titleEl.style.color = badge.color;
                     titleEl.className = "rank-title-line ss-rank-" + badge.key;
                     titleEl.style.display = "block";
+                    const nameText = document.getElementById("name-text");
+                    if (nameText) {
+                        nameText.style.color = badge.color;
+                        nameText.className = "name-text ss-rank-" + badge.key;
+                    }
                 }
             }
 

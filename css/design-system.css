@@ -3248,6 +3248,19 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
    letter is black, as on Codeforces. ::first-letter needs a block box, which the badge elements
    are (div, p). */
 .ss-rank-legendaryGrandmaster::first-letter { color: var(--ss-rank-legendaryGrandmaster-first); }
+/* The colour itself as a class, for server-rendered names (the homepage, a DM's header), with
+   link states too so a page's own a:hover rule (0,2,0) does not take it back. */
+.ss-rank-c-legendaryGrandmaster, a.ss-rank-c-legendaryGrandmaster:link, a.ss-rank-c-legendaryGrandmaster:visited, a.ss-rank-c-legendaryGrandmaster:hover { color: var(--ss-rank-legendaryGrandmaster); }
+.ss-rank-c-internationalGrandmaster, a.ss-rank-c-internationalGrandmaster:link, a.ss-rank-c-internationalGrandmaster:visited, a.ss-rank-c-internationalGrandmaster:hover { color: var(--ss-rank-internationalGrandmaster); }
+.ss-rank-c-grandmaster, a.ss-rank-c-grandmaster:link, a.ss-rank-c-grandmaster:visited, a.ss-rank-c-grandmaster:hover { color: var(--ss-rank-grandmaster); }
+.ss-rank-c-internationalMaster, a.ss-rank-c-internationalMaster:link, a.ss-rank-c-internationalMaster:visited, a.ss-rank-c-internationalMaster:hover { color: var(--ss-rank-internationalMaster); }
+.ss-rank-c-master, a.ss-rank-c-master:link, a.ss-rank-c-master:visited, a.ss-rank-c-master:hover { color: var(--ss-rank-master); }
+.ss-rank-c-candidateMaster, a.ss-rank-c-candidateMaster:link, a.ss-rank-c-candidateMaster:visited, a.ss-rank-c-candidateMaster:hover { color: var(--ss-rank-candidateMaster); }
+.ss-rank-c-expert, a.ss-rank-c-expert:link, a.ss-rank-c-expert:visited, a.ss-rank-c-expert:hover { color: var(--ss-rank-expert); }
+.ss-rank-c-specialist, a.ss-rank-c-specialist:link, a.ss-rank-c-specialist:visited, a.ss-rank-c-specialist:hover { color: var(--ss-rank-specialist); }
+.ss-rank-c-pupil, a.ss-rank-c-pupil:link, a.ss-rank-c-pupil:visited, a.ss-rank-c-pupil:hover { color: var(--ss-rank-pupil); }
+.ss-rank-c-newbie, a.ss-rank-c-newbie:link, a.ss-rank-c-newbie:visited, a.ss-rank-c-newbie:hover { color: var(--ss-rank-newbie); }
+.ss-rank-c-headquarters, a.ss-rank-c-headquarters:link, a.ss-rank-c-headquarters:visited, a.ss-rank-c-headquarters:hover { color: var(--ss-rank-headquarters); }
 
 .msg-input-bar[hidden] { display: none; }
 
