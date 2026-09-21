@@ -2461,9 +2461,3 @@
         font-size: var(--ss-fs-16);
       }
     }
-
-    /* The verified mark after a name in the list and the header (the profile's, smaller). */
-    .msg-conv-name .verified-check, .msg-chat-header-name .verified-check {
-      display: inline-flex; align-items: center; vertical-align: -3px; margin-left: 4px;
-    }
-    .msg-conv-name .verified-check svg, .msg-chat-header-name .verified-check svg { width: 14px; height: 14px; }

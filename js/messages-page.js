@@ -3,8 +3,6 @@
 // written by a small inline script just before this one loads.
 (function() {
   const M = window.__MSG__ || {};
-  // The verified mark, as the profile draws it, after a verified person's name.
-  const VERIFIED_HTML = '<span class="verified-check" title="Verified"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#1a1a2e"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
   const CONV_ID = M.CONV_ID;
   const COMMUNITY_LANG = M.COMMUNITY_LANG;
   const REACTION_URLS = M.REACTION_URLS;
@@ -3095,7 +3093,7 @@
     return '<a href="/' + LANG + '/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
       '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
       avatar +
-      '<div class="msg-conv-info"><div class="msg-conv-name' + (!c.is_group && !c.isSaved && c.displayName ? ' ' + rankClassFor(c.displayName) : '') + '">' + esc(c.displayName || '') + (c.verified ? VERIFIED_HTML : '') + '</div>' +
+      '<div class="msg-conv-info"><div class="msg-conv-name' + (!c.is_group && !c.isSaved && c.displayName ? ' ' + rankClassFor(c.displayName) : '') + '">' + esc(c.displayName || '') + '</div>' +
       '<div class="msg-conv-preview">' + preview + '</div></div>' +
       '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '">' + esc(convTimeText(c.last_message_at)) + '</span>' +
       badge + '</div>' +

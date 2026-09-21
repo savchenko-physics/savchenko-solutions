@@ -114,7 +114,7 @@
                 </span>
               <% } %>
               <div class="msg-conv-info">
-                <div class="msg-conv-name<% if (!c.is_group && !c.isSaved && c.otherUser) { %> <%= rankClass(c.otherUser.username) %><% } %>"><%= c.displayName %><% if (!c.is_group && c.otherUser && c.otherUser.is_verified_user) { %><span class="verified-check" title="Verified"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#1a1a2e"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><% } %></div>
+                <div class="msg-conv-name<% if (!c.is_group && !c.isSaved && c.otherUser) { %> <%= rankClass(c.otherUser.username) %><% } %>"><%= c.displayName %></div>
                 <div class="msg-conv-preview">
                   <% if (c.last_message_content || c.last_message_image || c.last_message_file) { %>
                     <% if (c.last_message_sender_id === userId) { %><%= lang === 'ru' ? 'Вы: ' : 'You: ' %><% } %>
@@ -199,7 +199,7 @@
             <div>
               <% const _dmRank = activeConversation.otherRank && activeConversation.otherUser ? activeConversation.otherRank : null; %>
               <div class="msg-chat-header-name">
-                <button type="button" class="msg-chat-header-open<%= _dmRank ? ' ss-rank-' + _dmRank.key + ' ss-rank-c-' + _dmRank.key : '' %>" id="chatInfoOpen" title="<%= lang === 'ru' ? 'О чате' : 'Chat info' %>"><%= _dmRank ? activeConversation.otherUser.username : activeConversation.displayName %></button><% if (_dmRank && activeConversation.otherUser.is_verified_user) { %><span class="verified-check" title="Verified"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="#1a1a2e"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><% } %>
+                <button type="button" class="msg-chat-header-open<%= _dmRank ? ' ss-rank-' + _dmRank.key + ' ss-rank-c-' + _dmRank.key : '' %>" id="chatInfoOpen" title="<%= lang === 'ru' ? 'О чате' : 'Chat info' %>"><%= _dmRank ? activeConversation.otherUser.username : activeConversation.displayName %></button>
               </div>
               <% if (_dmRank && activeConversation.otherUser.full_name && activeConversation.otherUser.full_name !== activeConversation.otherUser.username) { %>
                 <div class="msg-chat-header-members msg-chat-header-fullname"><%= activeConversation.otherUser.full_name %></div>

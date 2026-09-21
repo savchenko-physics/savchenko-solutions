@@ -949,24 +949,38 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         const prevLastRead = membership.rows[0].last_read_at;
         const activeMuted = !!membership.rows[0].muted;
-        // A member kept from writing here, or anywhere, sees a notice in place of the composer.
-        const postingBlockedUntil = await postingBlockFor(userId, convId);
-        let postingBlocked = postingBlockedUntil ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
-        // A DM whose other member has blocked this one reads the same way (user_blocks).
-        if (!postingBlocked) postingBlocked = await dmBlockNotice(userId, { convId }, lang);
 
-        // Mark as read
-        await pool.query(
-            `UPDATE conversation_members SET last_read_at = NOW()
-             WHERE conversation_id = $1 AND user_id = $2`,
-            [convId, userId]
+        // Everything that does not depend on anything else goes to the database at once
+        // (2026-09-21: eight queries in a row cost ~60 ms of round trips on a warm page).
+        const messagesPromise = pool.query(
+            `SELECT * FROM (
+                 SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
+                 WHERE m.conversation_id = $1
+                   AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
+                   AND ${afterHidden('$3')}
+                 ORDER BY m.created_at DESC, m.id DESC LIMIT $2
+             ) sub ORDER BY created_at ASC, id ASC`,
+            [convId, PAGE_SIZE + 1, userId]
         );
+        const [postingBlockedUntil, dmBlocked, , listResult] = await Promise.all([
+            postingBlockFor(userId, convId),
+            dmBlockNotice(userId, { convId }, lang),
+            // Mark as read
+            pool.query(
+                `UPDATE conversation_members SET last_read_at = NOW()
+                 WHERE conversation_id = $1 AND user_id = $2`,
+                [convId, userId]
+            ),
+            // Get conversation list (same as inbox)
+            buildConversationList(userId, lang),
+        ]);
+        // A member kept from writing here, or anywhere, sees a notice in place of the composer;
+        // a DM whose other member has blocked this one reads the same way (user_blocks).
+        const postingBlocked = postingBlockedUntil ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : dmBlocked;
         // Advance other members' read receipts (correct for DMs; groups ignore it).
         broadcastToConversation(convId, 'read',
             { conversationId: convId, readCutoff: new Date().toISOString() }, userId).catch(() => {});
-
-        // Get conversation list (same as inbox)
-        const { rows: convRows, memberMap, convList } = await buildConversationList(userId, lang);
+        const { rows: convRows, memberMap, convList } = listResult;
 
         // Active conversation: get info and messages
         let activeConvRow = convRows.find(c => c.id === convId);
@@ -1052,18 +1066,9 @@ router.get('/:id(\\d+)', async (req, res) => {
             otherCommunity = other.rows[0] || null;
         }
 
-        // Load only the most recent page; older messages load on scroll-up.
-        // Fetch one extra row to detect whether older history exists.
-        const messagesResult = await pool.query(
-            `SELECT * FROM (
-                 SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS}
-                 WHERE m.conversation_id = $1
-                   AND NOT EXISTS (SELECT 1 FROM message_hidden mh WHERE mh.message_id = m.id AND mh.user_id = $3)
-                   AND ${afterHidden('$3')}
-                 ORDER BY m.created_at DESC, m.id DESC LIMIT $2
-             ) sub ORDER BY created_at ASC, id ASC`,
-            [convId, PAGE_SIZE + 1, userId]
-        );
+        // The most recent page (queried above, in parallel); older messages load on scroll-up.
+        // One extra row detects whether older history exists.
+        const messagesResult = await messagesPromise;
         let hasMoreHistory = false;
         if (messagesResult.rows.length > PAGE_SIZE) {
             hasMoreHistory = true;
@@ -1071,9 +1076,14 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
 
         const msgIds = messagesResult.rows.map(m => m.id);
-        const reactionsMap = await getReactionsForMessages(msgIds, userId);
+        const showReceipts = !!(activeConversation && !activeConversation.is_group && !activeConversation.isSaved);
+        const [reactionsMap, , readCutoffDate, pinnedMessage] = await Promise.all([
+            getReactionsForMessages(msgIds, userId),
+            attachPolls(messagesResult.rows, userId, { isModerator: isAdmin }),
+            showReceipts ? getReadCutoff(convId, userId) : Promise.resolve(null),
+            activeConversation ? getPinnedSummary(convId, lang) : Promise.resolve(null),
+        ]);
         attachReplyInfo(messagesResult.rows, userId, lang);
-        await attachPolls(messagesResult.rows, userId, { isModerator: isAdmin });
         for (const m of messagesResult.rows) {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) {
@@ -1094,11 +1104,8 @@ router.get('/:id(\\d+)', async (req, res) => {
             }
         }
 
-        // Read receipts (DMs only — not groups or the Saved self-chat).
-        const showReceipts = !!(activeConversation && !activeConversation.is_group && !activeConversation.isSaved);
-        const readCutoffDate = showReceipts ? await getReadCutoff(convId, userId) : null;
+        // Read receipts (DMs only — not groups or the Saved self-chat), fetched above.
         const readCutoff = readCutoffDate ? new Date(readCutoffDate).toISOString() : null;
-        const pinnedMessage = activeConversation ? await getPinnedSummary(convId, lang) : null;
 
         // Force unread_count to 0 for active conversation in the list
         let updatedConvList = convList.map(c => {
