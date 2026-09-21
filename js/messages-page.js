@@ -48,8 +48,16 @@
         again.src = SELF_SRC || '/js/messages-page.js';
         again.onload = function() { again.remove(); };
         document.body.appendChild(again);
-        if (c && window.MathJax && MathJax.typesetPromise) {
-          MathJax.typesetPromise([c]).then(function() { if (c.scrollHeight - c.scrollTop - c.clientHeight < 400) c.scrollTop = c.scrollHeight; }).catch(function() {});
+        /* Pinned to the end while the maths, the pictures and any first history page settle,
+           unless the reader has started scrolling up. */
+        if (c) {
+          let touched = false;
+          const touch = function() { touched = true; };
+          c.addEventListener('wheel', touch, { passive: true, once: true });
+          c.addEventListener('touchmove', touch, { passive: true, once: true });
+          const pin = function() { if (!touched) c.scrollTop = c.scrollHeight; };
+          [150, 400, 900, 1600].forEach(function(ms) { setTimeout(pin, ms); });
+          if (window.MathJax && MathJax.typesetPromise) MathJax.typesetPromise([c]).then(pin).catch(function() {});
         }
       })
       .catch(function() { location.href = url; });
