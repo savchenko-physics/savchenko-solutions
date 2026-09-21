@@ -793,7 +793,7 @@ async function buildConversationList(userId, lang = 'en') {
     let memberMap = {};
     if (convIds.length > 0) {
         const members = await pool.query(
-            `SELECT cm.conversation_id, u.id, u.username, u.full_name, u.profile_picture
+            `SELECT cm.conversation_id, u.id, u.username, u.full_name, u.profile_picture, u.is_verified_user
              FROM conversation_members cm
              JOIN users u ON u.id = cm.user_id
              WHERE cm.conversation_id = ANY($1) AND cm.user_id != $2`,
@@ -984,7 +984,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         if (!activeOther && activeConvRow && !activeConvRow.is_group) {
             const otherResult = await pool.query(
-                `SELECT u.id, u.username, u.full_name, u.profile_picture
+                `SELECT u.id, u.username, u.full_name, u.profile_picture, u.is_verified_user
                  FROM conversation_members cm
                  JOIN users u ON u.id = cm.user_id
                  WHERE cm.conversation_id = $1 AND cm.user_id != $2
@@ -2394,6 +2394,7 @@ router.get('/list-data', async (req, res) => {
             groupAvatarSvg: c.is_group ? groupAvatarSVG(c.id, c.displayName, 44, c.community_lang) : null,
             community_lang: c.community_lang || null,
             muted: !!c.muted,
+            verified: !!(c.otherUser && c.otherUser.is_verified_user),
             last_message_content: c.last_message_content,
             last_message_image: !!c.last_message_image,
             last_message_file: c.last_message_file || null,

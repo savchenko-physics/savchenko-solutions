@@ -236,7 +236,7 @@ test('the templates load the registry and hold no copy of the list', () => {
 
 test('both pickers follow the design rules', () => {
     const rules = [
-        [read('views', 'messages.ejs'), '    .msg-reaction-picker {'],
+        [read('css', 'messages.css'), '    .msg-reaction-picker {'],
         [read('views', 'solution_post.ejs'), '        .comment-react-picker {'],
     ];
     for (const [source, selector] of rules) {

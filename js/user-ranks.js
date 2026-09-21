@@ -45,14 +45,17 @@
         scope.querySelectorAll('a[href^="/user/"], [data-username]').forEach(paint);
     }
 
-    function start() {
-        paintAll(document);
-        if (typeof MutationObserver === 'function') {
-            new MutationObserver(function (records) {
-                for (const r of records) for (const node of r.addedNodes) if (node.nodeType === 1) paintAll(node);
-            }).observe(document.documentElement, { childList: true, subtree: true });
-        }
+    // Started at once, while the page is still being parsed: the observer paints every link
+    // the parser adds, so a name has its colour before the first paint (the owner, 2026-09-21).
+    // getComputedStyle on a node still being parsed is fine; a node painted before its own
+    // text arrived is painted again by the name check on DOMContentLoaded.
+    paintAll(document);
+    if (typeof MutationObserver === 'function') {
+        new MutationObserver(function (records) {
+            for (const r of records) for (const node of r.addedNodes) if (node.nodeType === 1) paintAll(node);
+        }).observe(document.documentElement, { childList: true, subtree: true });
     }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
-    else start();
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('a[href^="/user/"], [data-username]').forEach(function (el) { el.__ranked = false; paint(el); });
+    });
 })();

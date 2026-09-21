@@ -117,12 +117,12 @@ test('every page that shows such a time loads the script that makes it local', (
 });
 
 test('the chat puts its day separators on the reader\'s days', () => {
-    const chat = read('views', 'messages.ejs');
+    const chat = read('js', 'messages-page.js');   // the chat's script, since 2026-09-21
     const key = chat.slice(chat.indexOf('function clientDayKey('), chat.indexOf('function clientDaySepText('));
     assert.doesNotMatch(key, /getUTC/);
     const text = chat.slice(chat.indexOf('function clientDaySepText('), chat.indexOf('function regroupDaySeparators('));
     assert.doesNotMatch(text, /timeZone/);
     const start = chat.indexOf("const rowEls = chatEl ? chatEl.querySelectorAll('.msg-bubble-row[data-msg-id]') : [];");
     assert.ok(start > 0 && chat.indexOf('regroupDaySeparators();', start) - start < 200, 'regrouped as soon as the rows are found');
-    assert.match(chat, /data-created="<%= new Date\(m\.created_at\)\.toISOString\(\) %>"/);
+    assert.match(read('views', 'messages.ejs'), /data-created="<%= new Date\(m\.created_at\)\.toISOString\(\) %>"/);
 });

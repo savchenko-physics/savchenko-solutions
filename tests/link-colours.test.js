@@ -72,15 +72,16 @@ test('server auto-links take their colour from --auto-link-color', () => {
 // ── 2. The chat client ──────────────────────────────────────────────────────────────────
 
 test('the chat client linkify() matches, and the sent bubble repaints its links legibly', () => {
-    const src = fs.readFileSync(path.join(ROOT, 'views/messages.ejs'), 'utf8');
+    const src = fs.readFileSync(path.join(ROOT, 'js/messages-page.js'), 'utf8');   // the chat's script, since 2026-09-21
     const fn = src.slice(src.indexOf('function linkify('), src.indexOf('function fmtTime('));
     const styles = fn.match(/style="[^"]*"/g) || [];
     assert.equal(styles.length, 2, 'URL and #ref links (an @mention is coloured by its rank class since 2026-09-21)');
     assert.match(fn, /class="user-mention ' \+ rankClassFor\(name\)/, 'the @mention carries its rank');
     for (const s of styles) assert.match(s, LINK_STYLE);
 
-    const sentBg = src.match(/--msg-sent:\s*(#[0-9a-f]{6})/i)[1];
-    const sentRule = src.match(/\.msg-bubble\.sent \{[^}]*\}/)[0];
+    const css = fs.readFileSync(path.join(ROOT, 'css/messages.css'), 'utf8');   // and its styles
+    const sentBg = css.match(/--msg-sent:\s*(#[0-9a-f]{6})/i)[1];
+    const sentRule = css.match(/\.msg-bubble\.sent \{[^}]*\}/)[0];
     const linkColour = (sentRule.match(/--auto-link-color:\s*(#[0-9a-f]{6})/i) || [])[1];
     assert.ok(linkColour, '.msg-bubble.sent must set --auto-link-color');
     assert.ok(contrast(linkColour, sentBg) >= 4.5,

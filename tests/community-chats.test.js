@@ -196,9 +196,10 @@ test('the wiring: registration, the header badge and the history pager', () => {
 // ── Must never block a real person ──────────────────────────────────────────────────────
 
 test('sending a message never depends on its language', () => {
-    const view = fs.readFileSync(path.join(ROOT, 'views', 'messages.ejs'), 'utf8');
+    // The chat's script is js/messages-page.js since 2026-09-21 (it was inlined in the template).
+    const view = fs.readFileSync(path.join(ROOT, 'js', 'messages-page.js'), 'utf8');
     const start = view.indexOf('function sendMessage()');
-    assert.ok(start > 0, 'sendMessage() not found in views/messages.ejs');
+    assert.ok(start > 0, 'sendMessage() not found in js/messages-page.js');
     // The function body, up to the next top-level function of the inline script.
     const body = view.slice(start, view.indexOf('\n  function ', start + 1));
     assert.doesNotMatch(body, /languageHint|textLanguage|ChatLanguage|langHint|COMMUNITY_LANG/);

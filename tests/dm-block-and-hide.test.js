@@ -40,7 +40,7 @@ test('a blocked person is refused on send, forward and a new DM, and told why in
 });
 
 test('the info panel offers Block and Delete chat only in a one-to-one chat', () => {
-    const view = fs.readFileSync(path.join(__dirname, '..', 'views', 'messages.ejs'), 'utf8');
+    const view = fs.readFileSync(path.join(__dirname, '..', 'js', 'messages-page.js'), 'utf8');
     const i = view.indexOf("actionHTML('block'");
     assert.ok(i > 0);
     const guard = view.slice(view.lastIndexOf('if (', i), i);

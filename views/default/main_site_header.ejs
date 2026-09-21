@@ -575,7 +575,9 @@
       the contributors' tiers are inlined here and js/user-ranks.js paints every link to a profile,
       on load and as pages add links (chat, comments). Names not in the map are newbies. %>
   <script>window.__USER_RANKS__ = <%- JSON.stringify((typeof userRanksNow === 'function' ? userRanksNow() : {})).replace(/</g, '\\u003c') %>;</script>
-  <script src="<%= asset('/js/user-ranks.js') %>" defer></script>
+  <%# Not deferred: it is 3 KB, cached, and it paints names as the parser adds them, before
+      the first paint, so no name shows in the plain link colour first. %>
+  <script src="<%= asset('/js/user-ranks.js') %>"></script>
   <% if (navUser) { %>
   <%# Live alerts and badges on every page: new DMs, replies and mentions (js/pulse.js, lib/pulse.js). %>
   <script src="<%= asset('/js/pulse.js') %>" defer data-lang="<%= navLang === 'ru' ? 'ru' : 'en' %>"></script>

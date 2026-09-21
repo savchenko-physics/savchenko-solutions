@@ -1372,7 +1372,7 @@
                             (2026-09-21, the owner, as on the contributors page); the full name
                             follows small. The text sits in its own inline-block so the legendary
                             tier's ::first-letter rule can reach it (a flex h1 has no first letter). %>
-                        <h1 id="name-line" class="name-line"><span id="name-text" class="name-text"><%= username %></span></h1>
+                        <h1 id="name-line" class="name-line"><span id="name-text" class="name-text <%= rankClass(username) %>"><%= username %></span></h1>
                         <p id="username-line" class="username-line"></p>
                         <p id="rank-title-line" class="rank-title-line" style="display:none;"></p>
                         <p id="presence-line" class="presence-line" style="display:none;">
