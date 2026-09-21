@@ -385,9 +385,9 @@
         }
 
         /* The username leads, in its rank's colour (js/palettes.js), and the full name follows in
-           small grey; the rank's name is the line's title (2026-09-21, the owner: no title text,
-           the colour says it, as on Codeforces). The handle is its own inline-block so the
-           legendary tier's ::first-letter rule paints the letter after the @, not the @. */
+           small grey; the rank's name is the line's title (2026-09-21, the owner: no title text and
+           no @, the colour says it, as on Codeforces). The handle is its own inline-block for the
+           legendary tier's ::first-letter rule. */
         .contributor-username {
             font-size: var(--ss-fs-14);
             font-weight: var(--ss-fw-strong);
@@ -1176,7 +1176,7 @@
                                 ${row.isOnline ? `<span class="online-dot" title="${lang === 'ru' ? 'В сети' : 'Online'}"></span>` : ""}
                             </span>
                             <div class="contributor-main">
-                                <div class="contributor-username" style="color: ${badge.color};" title="${badge.label}">@<span class="contributor-handle ss-rank-${badge.key}">${row.username}</span></div>
+                                <div class="contributor-username" style="color: ${badge.color};" title="${badge.label}"><span class="contributor-handle ss-rank-${badge.key}">${row.username}</span></div>
                                 <div class="contributor-name">${countryPrefix}${row.fullName}</div>
                             </div>
                         </div>
