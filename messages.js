@@ -1482,7 +1482,7 @@ router.put('/:msgId(\\d+)/edit', rateLimit('edit', 30, 10000), async (req, res) 
         }
 
         const msg = await pool.query(
-            `SELECT id, sender_id, conversation_id, created_at, deleted_at FROM messages WHERE id = $1`,
+            `SELECT id, sender_id, conversation_id, created_at, deleted_at, poll_id FROM messages WHERE id = $1`,
             [msgId]
         );
         if (msg.rows.length === 0) {
@@ -1495,6 +1495,8 @@ router.put('/:msgId(\\d+)/edit', rateLimit('edit', 30, 10000), async (req, res) 
         if (m.deleted_at) {
             return res.status(400).json({ error: 'Message was deleted' });
         }
+        // A poll is not editable (as on Telegram): the bubble is its options, not text.
+        if (m.poll_id) return res.status(400).json({ error: 'A poll cannot be edited' });
         const ageMs = Date.now() - new Date(m.created_at).getTime();
         if (ageMs > 24 * 60 * 60 * 1000) {
             return res.status(403).json({ error: 'Can only edit messages within 24 hours' });

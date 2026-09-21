@@ -168,8 +168,8 @@ test('getPeopleNow applies the fallbacks every list uses', async () => {
         { username: 'igor', full_name: 'Igor Kravchenko', profile_picture: '/img/profile_images/176.webp?v=1', is_online: true },
     ] }) };
     const now = await getPeopleNow(pool, ['Tete', 'igor']);
-    assert.deepEqual(now.get('Tete'), { fullName: 'Tete', profilePicture: DEFAULT_PROFILE_PICTURE, isOnline: false });
-    assert.deepEqual(now.get('igor'), { fullName: 'Igor Kravchenko', profilePicture: '/img/profile_images/176.webp?v=1', isOnline: true });
+    assert.deepEqual(now.get('Tete'), { fullName: 'Tete', profilePicture: DEFAULT_PROFILE_PICTURE, isOnline: false, lastSeenAt: null });
+    assert.deepEqual(now.get('igor'), { fullName: 'Igor Kravchenko', profilePicture: '/img/profile_images/176.webp?v=1', isOnline: true, lastSeenAt: null });
 });
 
 test('getPeopleNow asks once per person, and not at all for nobody', async () => {

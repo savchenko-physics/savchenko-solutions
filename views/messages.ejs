@@ -1246,19 +1246,34 @@
     .msg-bubble.sent .msg-poll-option.on .msg-poll-box::after { border-color: var(--ss-navy); }
     .msg-poll-result { padding: var(--ss-space-2) 0; }
     .msg-poll-result-head { display: flex; align-items: baseline; gap: var(--ss-space-2); line-height: 1.35; }
-    .msg-poll-percent { flex-shrink: 0; width: 40px; font-weight: var(--ss-fw-strong); text-align: right; font-variant-numeric: tabular-nums; }
+    .msg-poll-percent { flex-shrink: 0; width: 48px; font-weight: var(--ss-fw-strong); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .msg-poll-count { flex-shrink: 0; font-size: var(--ss-fs-12); color: var(--msg-muted); min-width: 16px; text-align: right; }
+    .msg-poll-bar-row { display: flex; align-items: center; gap: var(--ss-space-1); margin-top: 2px; }
     .msg-poll-result-text { flex: 1; min-width: 0; }
-    .msg-poll-mark { flex-shrink: 0; font-size: var(--ss-fs-12); font-weight: var(--ss-fw-strong); }
-    .msg-poll-mark.right { color: var(--ss-success-strong); }
-    .msg-poll-mark.wrong { color: var(--ss-error); }
-    .msg-bubble.sent .msg-poll-mark.right { color: #7ee2a8; }
-    .msg-bubble.sent .msg-poll-mark.wrong { color: #ff9b8f; }
-    .msg-poll-bar { height: 4px; border-radius: 2px; margin: var(--ss-space-1) 0 0 48px; position: relative; }
+    .msg-poll-dot {
+      flex-shrink: 0;
+      width: 16px; height: 16px;
+      margin-left: 28px;
+      border-radius: 50%;
+      background: var(--ss-link);
+      color: var(--ss-surface);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: var(--ss-fs-12); line-height: 1; font-weight: var(--ss-fw-strong);
+    }
+    .msg-poll-dot.none { background: none; }
+    .msg-poll-dot:not(.none):not(.wrong)::after { content: ''; width: 4px; height: 8px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg) translate(-1px, -1px); }
+    .msg-poll-dot.right, .msg-poll-result.right .msg-poll-bar > i { background: var(--ss-success-strong); }
+    .msg-poll-dot.wrong, .msg-poll-result.wrong .msg-poll-bar > i { background: var(--ss-error); }
+    .msg-bubble.sent .msg-poll-dot { background: var(--ss-surface); color: var(--ss-navy); }
+    .msg-bubble.sent .msg-poll-dot.none { background: none; }
+    .msg-bubble.sent .msg-poll-dot.right, .msg-bubble.sent .msg-poll-result.right .msg-poll-bar > i { background: #7ee2a8; }
+    .msg-bubble.sent .msg-poll-dot.wrong, .msg-bubble.sent .msg-poll-result.wrong .msg-poll-bar > i { background: #ff9b8f; }
+    .msg-poll-bar { flex: 1; height: 4px; border-radius: 2px; position: relative; }
     .msg-poll-bar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--ss-link); }
     .msg-bubble.sent .msg-poll-bar > i { background: var(--ss-surface); }
     .msg-poll-bar { opacity: 1; background: rgba(0,0,0,0.08); }
     .msg-bubble.sent .msg-poll-bar { background: rgba(255,255,255,0.2); }
-    .msg-poll-result.mine .msg-poll-percent::before { content: '✓ '; font-size: var(--ss-fs-12); }
+
     .msg-poll-meta { display: flex; align-items: center; gap: var(--ss-space-3); margin-top: var(--ss-space-2); font-size: var(--ss-fs-12); color: var(--msg-muted); }
     .msg-poll-meta button {
       background: none; border: none; padding: 0;
@@ -4514,7 +4529,7 @@
     const bubble = row.querySelector('.msg-bubble');
     if (!bubble) return '';
     const clone = bubble.cloneNode(true);
-    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-media, .msg-bubble-file, .msg-bubble-time');
+    const strip = clone.querySelectorAll('.msg-reply-quote, .msg-bubble-edited, .msg-reaction-add, .msg-media, .msg-bubble-file, .msg-bubble-time, .msg-poll, .msg-forwarded');
     for (let i = 0; i < strip.length; i++) strip[i].remove();
     return clone.textContent.trim();
   }
@@ -5074,7 +5089,7 @@
       return '<a href="' + clean + '" target="_blank" rel="noopener noreferrer" style="color:var(--auto-link-color,#1a5276);text-decoration:underline;">' + clean + '</a>' + trailing;
     });
     html = html.replace(/(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
-      '<a href="/user/$1" class="user-mention" style="color:var(--auto-link-color,#1a5276);font-weight:var(--ss-fw-regular);text-decoration:none;">@$1</a>');
+      function(_, name) { return '<a href="/user/' + name + '" class="user-mention ' + rankClassFor(name) + '" data-no-rank>' + name + '</a>'; });
     html = html.replace(/(?<![&\w])#(\d{1,2}\.\d{1,2}\.\d{1,3})(?![^<]*<\/a>)/g,
       '<a href="/' + LANG + '/$1" class="problem-ref" style="color:var(--auto-link-color,#1a5276);font-weight:var(--ss-fw-regular);text-decoration:none;">#$1</a>');
     html = html.replace(/\*\*([^\n*][^*]*?)\*\*/g, '<strong>$1</strong>');
@@ -5230,7 +5245,7 @@
     const timeHtml = timeInMedia ? '' : (timeEl ? timeEl.outerHTML : '');
     const edited = '<span class="msg-bubble-edited">' + esc(LANG === 'ru' ? ' (ред.)' : ' (edited)') + '</span>';
     const textHtml = esc(content);
-    bubble.innerHTML = keep('.msg-forwarded') + keep('.msg-reply-quote') + mediaHtml +
+    bubble.innerHTML = keep('.msg-forwarded') + keep('.msg-reply-quote') + mediaHtml + keep('.msg-poll') +
       (mediaHtml ? '<span class="msg-caption">' + textHtml + edited + timeHtml + '</span>'
                  : textHtml + keep('.msg-bubble-file') + keep('.msg-audio') + edited + timeHtml) +
       renderReactionAddHTML(msgId);
@@ -5481,15 +5496,16 @@
       (closed ? ' · ' + pollT('завершён', 'closed') : '');
     let html = '<div class="msg-poll-question tex2jax_ignore">' + esc(p.question) + '</div><div class="msg-poll-kind">' + esc(kind) + '</div>';
     if (showResults) {
+      /* Telegram's results: the percentage, the option, its votes; under it a bar, and on the
+         option this viewer chose a filled dot with a check. In a quiz the right answer's bar is
+         green and a wrong choice's bar red, the dot saying which with a check or a cross. */
       p.options.forEach(function(o) {
-        let mark = '';
-        if (p.quiz && p.correct != null) {
-          if (o.id === p.correct) mark = '<span class="msg-poll-mark right">✓</span>';
-          else if (o.mine) mark = '<span class="msg-poll-mark wrong">✕</span>';
-        }
-        html += '<div class="msg-poll-result' + (o.mine ? ' mine' : '') + '" data-option="' + o.id + '">' +
-          '<div class="msg-poll-result-head"><span class="msg-poll-percent">' + o.percent + '%</span><span class="msg-poll-result-text">' + esc(o.text) + '</span>' + mark + '</div>' +
-          '<div class="msg-poll-bar"><i style="width:' + o.percent + '%"></i></div>' +
+        let tone = '';
+        if (p.quiz && p.correct != null) tone = o.id === p.correct ? ' right' : (o.mine ? ' wrong' : '');
+        const dot = o.mine ? '<span class="msg-poll-dot' + tone + '">' + (tone === ' wrong' ? '✕' : '') + '</span>' : '<span class="msg-poll-dot none"></span>';
+        html += '<div class="msg-poll-result' + (o.mine ? ' mine' : '') + tone + '" data-option="' + o.id + '">' +
+          '<div class="msg-poll-result-head"><span class="msg-poll-percent">' + o.percent + '%</span><span class="msg-poll-result-text">' + esc(o.text) + '</span><span class="msg-poll-count">' + (o.votes || '') + '</span></div>' +
+          '<div class="msg-poll-bar-row">' + dot + '<div class="msg-poll-bar"><i style="width:' + o.percent + '%"></i></div></div>' +
           (!p.anonymous && o.votes ? '<div class="msg-poll-voters" data-voters="' + o.id + '"></div>' : '') +
           '</div>';
       });

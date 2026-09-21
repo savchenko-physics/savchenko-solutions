@@ -559,7 +559,8 @@ function autoLinkProblemRefs(html, lang = 'en') {
 function autoLinkUserMentions(html) {
     return html.replace(
         /(?<![&\w])@([a-zA-Z0-9_]{2,30})(?![^<]*<\/a>)/g,
-        `<a href="/user/$1" class="user-mention" style="${AUTO_LINK_COLOR}font-weight:500;text-decoration:none;">@$1</a>`
+        // The name alone, in its rank's colour (the owner, 2026-09-21); the @ is typed, not shown.
+        (_, name) => `<a href="/user/${name}" class="user-mention ${rankClassOf(name)}" data-no-rank>${name}</a>`
     );
 }
 

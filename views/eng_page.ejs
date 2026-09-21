@@ -2081,6 +2081,7 @@
       window.addEventListener('hashchange', openFromHash);
 
       // Blog widget (main column cards)
+      function rankClassFor(name) { const k = (window.__USER_RANKS__ || {})[name] || 'newbie'; return 'ss-rank-c-' + k + ' ss-rank-' + k; }
       fetch('/blog/api/posts?limit=3')
         .then(r => r.json())
         .then(posts => {
@@ -2099,7 +2100,7 @@
             html += '<a href="/blog/' + p.slug + '" style="display: block; padding: var(--ss-space-4); background: var(--ss-surface-alt); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg); text-decoration: none; transition: border-color 0.15s;">' +
               '<div style="font-weight: var(--ss-fw-strong); color: var(--ss-text); font-size: var(--ss-fs-14); margin-bottom: var(--ss-space-1); line-height: 1.4;">' + (p.title_html || p.title) + '</div>' +
               '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-13); line-height: 1.5; margin-bottom: var(--ss-space-2);">' + (p.excerpt_html || excerpt) + '</div>' +
-              '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-12);">' + (author ? author + ' · ' : '') + date + '</div>' +
+              '<div style="color: var(--ss-text-secondary); font-size: var(--ss-fs-12);">' + (author ? '<span class="' + rankClassFor(author) + '">' + author + '</span> · ' : '') + date + '</div>' +
               '</a>';
           });
           list.innerHTML = html;

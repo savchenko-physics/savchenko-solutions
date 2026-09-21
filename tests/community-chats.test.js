@@ -120,8 +120,8 @@ test('writesLanguage counts group-chat messages and contributed solutions', () =
 });
 
 test('community chat titles and avatars follow the design rules', () => {
-    assert.equal(COMMUNITY_TITLES.en, 'Savchenko Solutions · English');
-    assert.equal(COMMUNITY_TITLES.ru, 'Savchenko Solutions · Русский');
+    assert.equal(COMMUNITY_TITLES.en, 'Savchenko Solutions English');
+    assert.equal(COMMUNITY_TITLES.ru, 'Savchenko Solutions Русский');
     for (const lang of ['en', 'ru']) {
         const svg = communityAvatarSVG(lang, 44);
         assert.match(svg, lang === 'en' ? />EN</ : />RU</);

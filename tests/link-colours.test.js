@@ -62,9 +62,10 @@ test('server auto-links take their colour from --auto-link-color', () => {
         linkifyMessageContent('см. https://www.youtube.com/watch?v=czU5ylX6_AM, @igor и #1.1.1', 'ru'),
         linkifyBlogHtml('<p>#2.1.1, 3.3.3, astrosander, спасибо Игорю</p>', 'ru'),
     ].join('\n');
-    // 6 since 2026-09-21: a username link is coloured by its rank class, not an inline style.
+    // 5 since 2026-09-21: a username link (a blog mention, a chat @mention) is coloured by its
+    // rank class, not an inline style; the problem refs, the URL and the Russian alias keep theirs.
     const styles = html.match(/style="[^"]*"/g) || [];
-    assert.equal(styles.length, 6, html);
+    assert.equal(styles.length, 5, html);
     for (const s of styles) assert.match(s, LINK_STYLE);
 });
 
@@ -74,7 +75,8 @@ test('the chat client linkify() matches, and the sent bubble repaints its links 
     const src = fs.readFileSync(path.join(ROOT, 'views/messages.ejs'), 'utf8');
     const fn = src.slice(src.indexOf('function linkify('), src.indexOf('function fmtTime('));
     const styles = fn.match(/style="[^"]*"/g) || [];
-    assert.equal(styles.length, 3, 'URL, @mention and #ref links');
+    assert.equal(styles.length, 2, 'URL and #ref links (an @mention is coloured by its rank class since 2026-09-21)');
+    assert.match(fn, /class="user-mention ' \+ rankClassFor\(name\)/, 'the @mention carries its rank');
     for (const s of styles) assert.match(s, LINK_STYLE);
 
     const sentBg = src.match(/--msg-sent:\s*(#[0-9a-f]{6})/i)[1];
