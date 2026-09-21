@@ -2641,8 +2641,14 @@
         </div>
         <% } %>
 
+        <%# A member kept from writing here (conversation_members.posting_blocked_until) gets this
+            in place of the composer. The composer stays in the DOM, hidden, because the script
+            wires its controls without guards. %>
+        <% if (typeof postingBlocked === 'string' && postingBlocked) { %>
+        <div class="msg-posting-blocked" id="postingBlocked" role="status"><%= postingBlocked %></div>
+        <% } %>
         <!-- Input bar -->
-        <div class="msg-input-bar">
+        <div class="msg-input-bar"<%- (typeof postingBlocked === 'string' && postingBlocked) ? ' hidden' : '' %>>
           <input type="file" id="imageFileInput" accept="<%= attachmentAccept %>" multiple style="display:none" />
           <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru'
             ? `Прикрепить файл (до ${Math.round(attachmentRules.maxBytes / 1048576)} МБ, видео до ${Math.round(attachmentRules.videoMaxBytes / 1048576)} МБ)`
@@ -4174,9 +4180,16 @@
         const note = document.createElement('div');
         note.className = 'msg-unsent-note';
         const label = document.createElement('span');
-        label.textContent = (err && err.status && err.status !== 0)
-          ? (LANG === 'ru' ? 'Не отправлено' : 'Not sent')
-          : (LANG === 'ru' ? 'Не отправлено — нет связи' : 'Not sent — no connection');
+        /* A refusal that says why (403 with a JSON error, the posting block) shows its reason. */
+        let reason = null;
+        if (err && err.status === 403 && err.message) {
+          try { reason = JSON.parse(err.message).error || null; } catch (e) {}
+        }
+        label.textContent = reason
+          ? reason
+          : (err && err.status && err.status !== 0)
+            ? (LANG === 'ru' ? 'Не отправлено' : 'Not sent')
+            : (LANG === 'ru' ? 'Не отправлено — нет связи' : 'Not sent — no connection');
         const retry = document.createElement('button');
         retry.type = 'button';
         retry.className = 'msg-unsent-retry';

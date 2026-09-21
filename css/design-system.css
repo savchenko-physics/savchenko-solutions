@@ -3243,6 +3243,17 @@ a.drafts-btn.drafts-btn-primary:focus { background: var(--ss-navy-hover); color:
   padding: 0 var(--ss-space-1);
 }
 
+.msg-input-bar[hidden] { display: none; }
+
+.msg-posting-blocked {
+  border-top: 1px solid var(--ss-rule);
+  padding: var(--ss-space-3) var(--ss-space-4);
+  background: var(--ss-surface-alt);
+  flex-shrink: 0;
+  font-size: var(--ss-fs-14);
+  color: var(--ss-text-secondary);
+}
+
 @media (min-width: 768px) {
   .msg-lang-hint {
     grid-template-columns: 1fr auto auto;

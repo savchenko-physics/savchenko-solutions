@@ -16,6 +16,7 @@ const { ownsReaction } = require('./lib/reactionUnlocks');
 const attachments = require('./lib/messageAttachments');
 const { videoDimensions } = require('./lib/videoMeta');
 const transcode = require('./lib/videoTranscode');
+const { isPostingBlocked, blockedNotice } = require('./lib/chatRestrictions');
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -843,7 +844,7 @@ router.get('/:id(\\d+)', async (req, res) => {
 
         // Check membership (and capture read/mute state before marking read)
         const membership = await pool.query(
-            `SELECT last_read_at, muted FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            `SELECT last_read_at, muted, posting_blocked_until FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
         if (membership.rows.length === 0) {
@@ -851,6 +852,10 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         const prevLastRead = membership.rows[0].last_read_at;
         const activeMuted = !!membership.rows[0].muted;
+        // A member kept from writing here for a while sees a notice in place of the composer.
+        const postingBlockedUntil = membership.rows[0].posting_blocked_until;
+        const postingBlocked = isPostingBlocked(postingBlockedUntil)
+            ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
 
         // Mark as read
         await pool.query(
@@ -1066,6 +1071,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             firstUnreadId,
             muted: activeMuted,
             otherCommunity,
+            postingBlocked,
         });
     } catch (err) {
         console.error('Messages conversation error:', err);
@@ -1237,11 +1243,15 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
 
         // Check membership
         const membership = await pool.query(
-            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            `SELECT posting_blocked_until FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
         if (membership.rows.length === 0) {
             return res.status(403).send('Not a member');
+        }
+        if (isPostingBlocked(membership.rows[0].posting_blocked_until)) {
+            if (req.file) await fs.promises.unlink(req.file.path).catch(() => {});
+            return res.status(403).json({ error: blockedNotice(membership.rows[0].posting_blocked_until, lang, readerTimeZone(req)), blocked: true });
         }
 
         // Optional reply target — only honored if it's a message in this conversation.
@@ -1608,10 +1618,13 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
             targetId = await findOrCreateSavedMessages(userId);
         } else if (toConversationId) {
             const t = await pool.query(
-                `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+                `SELECT posting_blocked_until FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
                 [toConversationId, userId]
             );
             if (t.rows.length === 0) return res.status(403).json({ error: 'Not a member of target' });
+            if (isPostingBlocked(t.rows[0].posting_blocked_until)) {
+                return res.status(403).json({ error: blockedNotice(t.rows[0].posting_blocked_until, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
+            }
             targetId = toConversationId;
         } else if (toUserId) {
             if (toUserId === userId) {
