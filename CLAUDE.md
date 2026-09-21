@@ -275,7 +275,7 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   instead). The split itself was a one-off, `scripts/split-community-chat.js` (`--undo` with
   the backup in `deploy-backups/`). Above 25 members a conversation does not fan out one
   notification per member, only to members who have posted there (`notifications.js:84`).
-  **Blocks on writing** (2026-09-21, after Бека's evening): `conversation_members.posting_blocked_until`
+  **Blocks on writing** (2026-09-21, after one evening of abuse in the chats): `conversation_members.posting_blocked_until`
   (migration 061) keeps a member out of one chat for a while, `users.posting_blocked_until` (062,
   `'infinity'` for good) out of every chat, DM, new conversation, chat reaction, and every route that
   writes content (`writeGuard` on the editor's save, `/api/upload`, `/create-problem`, image
@@ -289,9 +289,10 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
 - `signup_ip_holds` / `signup_holds` — registrations from a listed IPv4 address or CIDR are not
   created but held for `/admin/signups` (migration 062, `lib/signupHolds.js`): the form says the
   account is checked by hand, Approve creates it through `lib/accounts.js` (the same code the
-  registration route uses, verification email included), Reject keeps the row. Seeded with Tele2
-  Kazakhstan's mobile pool `188.124.224.0/19`, Бека's; one registration in the fortnight before was
-  from there, his. A hold delays, it never turns anyone away. `tests/signup-holds.test.js`
+  registration route uses, verification email included), Reject keeps the row. The list is kept
+  in the database (the admin page adds and releases ranges; the first entry was one mobile
+  carrier's pool, where one address changes by the hour). A hold delays, it never turns anyone
+  away. `tests/signup-holds.test.js`
 - `page_views` / `recent_views` — view tracking
 - `user_preferences` — privacy and notification settings (**only 19 rows for 964 users**)
 - `user_activities` — activity log (follows, likes, stars, comments)

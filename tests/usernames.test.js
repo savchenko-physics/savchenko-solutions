@@ -86,7 +86,7 @@ test('registration and settings use the rule, and the forms carry it', () => {
 
 // Never block a real person: every account from before the rule keeps its name and can save.
 test('an unchanged username is always kept, whatever it is', () => {
-    for (const existing of ['Бека', 'Newton fanboy frfr', 'KayirbekIsmailZver’', 'vannguyen@3k53', 'NOT_CHESNOCK', 'x']) {
+    for (const existing of ['Бек', 'Newton fanboy frfr', 'KayirbekIsmailZver’', 'vannguyen@3k53', 'NOT_CHESNOCK', 'x']) {
         assert.deepEqual(resolveUsernameChange(existing, existing), { ok: true, username: existing, changed: false }, existing);
     }
 });

@@ -1,5 +1,5 @@
 // A member kept from writing in one chat for a while (lib/chatRestrictions.js, migration 061).
-// On 2026-09-21 the owner asked that Бека be unable to post in the Russian community chat for
+// On 2026-09-21 the owner asked that one member be unable to post in the Russian community chat for
 // 24 hours after two messages there, and that the notice point them at @astrosander. Routes are
 // not integration-tested (no test database); what is checked here is the decision and the copy.
 // The same evening he moved to the English chat and a DM, so the block became account-wide and

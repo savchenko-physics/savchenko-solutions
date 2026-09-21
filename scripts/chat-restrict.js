@@ -11,7 +11,7 @@
 // (migration 062, 'infinity' for good); messages.js and the comments route refuse writes until
 // then and show why (lib/chatRestrictions.js). --apply also leaves a bell notification saying
 // until when and whom to ask. Reading and signing in are never restricted. First used on
-// 2026-09-21 for Бека in the Russian chat (24 h), then account-wide for good the same evening.
+// 2026-09-21 for one member of the Russian chat (24 h), then account-wide for good the same evening.
 'use strict';
 
 const path = require('path');

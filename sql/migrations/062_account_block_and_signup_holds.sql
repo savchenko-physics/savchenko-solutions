@@ -36,9 +36,5 @@ CREATE TABLE IF NOT EXISTS signup_holds (
 );
 CREATE INDEX IF NOT EXISTS idx_signup_holds_status ON signup_holds (status, created_at DESC);
 
--- Tele2 Kazakhstan's mobile pool (RDAP: 188.124.246.0/24 "pool-net-kar", KZ). Бека (user 2621)
--- registered from 188.124.234.11 and wrote from .246.196 and .236.204 within one day; the one
--- registration from this range in the two weeks before was his.
-INSERT INTO signup_ip_holds (cidr, reason, created_by) VALUES
-    ('188.124.224.0/19', 'Tele2 KZ mobile pool of user 2621 (Бека), blocked for abuse in the chats on 2026-09-21', 28)
-ON CONFLICT (cidr) DO NOTHING;
+-- The list itself is data, kept in the database and managed on /admin/signups (the first entry,
+-- one mobile carrier's pool, was added by hand on 2026-09-21); nothing is seeded here.
