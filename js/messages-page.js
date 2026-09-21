@@ -708,6 +708,7 @@
       const img = wrap.querySelector('.msg-bubble-image');
       const video = wrap.querySelector('.msg-bubble-video');
       if (!row || (!img && !video)) return;
+      if (wrap.closest('.is-sticker')) return;   // a sticker is not a photo: it opens the sticker panel
       const captionEl = row.querySelector('.msg-caption');
       let caption = '';
       if (captionEl) {
@@ -1070,6 +1071,11 @@
         return;
       }
       const wrap = e.target.closest('.msg-media');
+      if (wrap && wrap.closest('.is-sticker')) {
+        /* A sticker opens the sticker panel, as tapping one in Telegram opens its pack. */
+        if (stickerPanel) { stickerPanel.hidden = false; loadStickers(); }
+        return;
+      }
       if (wrap) openViewer(wrap);
     });
   }
