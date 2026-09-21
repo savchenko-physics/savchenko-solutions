@@ -56,7 +56,8 @@
     // no tier: "Headquarters" is plain black.
     const RANK_HQ = { key: 'headquarters', color: '#000000' };
     const RANKS = [
-        { min: 200, key: 'legendaryGrandmaster', color: '#FF0000', first: '#000000' },
+        // 170 since 2026-09-21 (was 200, which nobody had reached): the top scorer is legendary.
+        { min: 170, key: 'legendaryGrandmaster', color: '#FF0000', first: '#000000' },
         { min: 160, key: 'internationalGrandmaster', color: '#FF0000' },
         { min: 130, key: 'grandmaster', color: '#FF0000' },
         { min: 110, key: 'internationalMaster', color: '#FF8C00' },
