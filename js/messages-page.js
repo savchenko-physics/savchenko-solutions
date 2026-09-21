@@ -185,6 +185,7 @@
   const ATTACH_MAX_AT_ONCE = 10;
   let pendingQueue = [];
   let pendingAsFile = false;    // "send as a document": pictures and videos shown as file cards
+  let pendingAsSticker = false; // "send as a sticker": a transparent picture on its own, no bubble
 
   function updateSendEnabled() {
     sendBtn.disabled = !msgInput.value.trim() && !pendingQueue.length;
@@ -307,6 +308,41 @@
 
   if (replyCancel) {
     replyCancel.addEventListener('click', cancelReply);
+  }
+
+  // The sticker button: a panel of the stickers already used in this member's chats; one
+  // click sends one again (POST /send with sticker_url, no upload).
+  const stickerBtn = document.getElementById('stickerBtn');
+  const stickerPanel = document.getElementById('stickerPanel');
+  function loadStickers() {
+    const grid = document.getElementById('stickerGrid');
+    if (!grid) return;
+    fetch('/messages/stickers', { headers: { 'Accept': 'application/json' } })
+      .then(function(r) { return r.ok ? r.json() : { stickers: [] }; })
+      .then(function(d) {
+        const list = (d && d.stickers) || [];
+        grid.innerHTML = list.length
+          ? list.map(function(st) { return '<button type="button" data-sticker="' + escAttr(st.url) + '" title=""><img src="' + escAttr(st.url) + '" alt="" loading="lazy" /></button>'; }).join('')
+          : '<div class="msg-sticker-empty">' + esc(LANG === 'ru' ? 'Стикеров пока нет. Отправьте прозрачный PNG или WebP и отметьте «как стикер».' : 'No stickers yet. Send a transparent PNG or WebP and tick "as a sticker".') + '</div>';
+      })
+      .catch(function() {});
+  }
+  if (stickerBtn && stickerPanel) {
+    stickerBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      stickerPanel.hidden = !stickerPanel.hidden;
+      if (!stickerPanel.hidden) loadStickers();
+    });
+    stickerPanel.addEventListener('click', function(e) {
+      const b = e.target.closest('[data-sticker]');
+      if (!b || !CONV_ID) return;
+      stickerPanel.hidden = true;
+      fetch('/messages/' + CONV_ID + '/send', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ sticker_url: b.dataset.sticker, reply_to_id: replyingTo ? replyingTo.id : undefined }) })
+        .then(function(r) { if (!r.ok) throw new Error('send'); return r.json(); })
+        .then(function() { if (replyingTo) cancelReply(); pollMessages(); refreshConvList(); })
+        .catch(function() {});
+    });
+    onDoc('click', function(e) { if (!stickerPanel.hidden && !e.target.closest('#stickerPanel') && !e.target.closest('#stickerBtn')) stickerPanel.hidden = true; });
   }
 
   // The attach button opens a small menu: a photo or video, a document, a poll (Telegram's).
@@ -541,6 +577,9 @@
       }
     }
     sendAsFileRow.hidden = !items.some(function(it) { return it.isImage || it.kind === 'video'; });
+    /* "As a sticker" is offered for a PNG or WebP, the formats that carry transparency. */
+    const stickerRow = document.getElementById('sendAsStickerRow');
+    if (stickerRow) stickerRow.hidden = !items.some(function(it) { return it.isImage && /\.(png|webp)$/i.test(it.name || (it.file && it.file.name) || ''); });
     if (!sendDialog.hidden) return; // adding to an open dialog keeps its caption and choice
     sendAsFile.checked = false;
     sendCaption.value = msgInput ? msgInput.value : '';
@@ -561,6 +600,8 @@
   function submitSendDialog() {
     if (!pendingQueue.length) return closeSendDialog(true);
     pendingAsFile = !sendAsFileRow.hidden && sendAsFile.checked;
+    const stickerBox = document.getElementById('sendAsSticker');
+    pendingAsSticker = !!(stickerBox && !document.getElementById('sendAsStickerRow').hidden && stickerBox.checked);
     if (msgInput) msgInput.value = sendCaption.value;
     closeSendDialog(false);
     sendMessage();
@@ -1194,6 +1235,8 @@
 
     const replyData = replyingTo; // capture before it is cleared below
     const asFile = pendingAsFile;
+    const asSticker = pendingAsSticker;
+    pendingAsSticker = false;
 
     // Clear attachment + reply state
     pendingQueue = [];
@@ -1211,7 +1254,9 @@
        album (on the first it landed between them, the owner, 2026-09-21). */
     const last = items.length - 1;
     const jobs = items.map(function(it, index) {
-      return stagePendingBubble(index === last ? content : '', it, index === last ? replyData : null, asFile);
+      const job = stagePendingBubble(index === last ? content : '', it, index === last ? replyData : null, asFile);
+      job.asSticker = asSticker;
+      return job;
     });
     jobs.reduce(function(chain, job) {
       return chain.then(function() { return dispatchMessage(job); });
@@ -1257,6 +1302,7 @@
       fd.append('content', content);
       fd.append('file', job.attachment.file, job.attachment.name || job.attachment.file.name);
       if (job.asFile) fd.append('as_document', '1');
+      if (job.asSticker) fd.append('as_sticker', '1');
       if (replyData) fd.append('reply_to_id', replyData.id);
       /* A video can be 100 MB: the pending card shows how much has gone up. */
       request = uploadWithProgress('/messages/' + CONV_ID + '/send', fd, function(loaded, total) {

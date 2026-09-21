@@ -1351,6 +1351,12 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                 imageUrl = url;
                 const meta = await processImageMeta(req.file.path);
                 imageW = meta.width; imageH = meta.height; imagePlaceholder = meta.placeholder;
+                // "Send as a sticker": a transparent PNG or WebP shown on its own, no bubble
+                // (attachment_status = 'sticker', 2026-09-21); no blurred placeholder behind it.
+                if (req.body.as_sticker === '1' && /\.(png|webp)$/i.test(req.file.originalname)) {
+                    attachmentStatus = 'sticker';
+                    imagePlaceholder = null;
+                }
             } else {
                 fileUrl = url;
                 fileName = (req.file.originalname || 'file').substring(0, 255);
@@ -1370,6 +1376,19 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
                     }
                 }
             }
+        }
+
+        // A sticker sent again from the picker: the picture of a sticker message in one of
+        // this member's conversations, reused by its address (no upload).
+        if (!req.file && req.body.sticker_url) {
+            const st = await pool.query(
+                `SELECT m.image_url, m.image_width, m.image_height FROM messages m
+                 JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
+                 WHERE m.image_url = $1 AND m.attachment_status = 'sticker' LIMIT 1`,
+                [String(req.body.sticker_url).slice(0, 300), userId]);
+            if (!st.rows.length) return res.status(400).json({ error: 'Unknown sticker' });
+            imageUrl = st.rows[0].image_url; imageW = st.rows[0].image_width; imageH = st.rows[0].image_height;
+            attachmentStatus = 'sticker';
         }
 
         if (!content && !imageUrl && !fileUrl) {
@@ -1973,6 +1992,23 @@ router.post('/:id(\\d+)/group/leave', rateLimit('group', 20, 60000), async (req,
 });
 
 // POST /:id/mute — toggle mute for the current member
+// GET /messages/stickers — every sticker this member has seen, newest first, for the picker.
+router.get('/stickers', async (req, res) => {
+    try {
+        const r = await pool.query(
+            `SELECT m.image_url, MAX(m.image_width) AS w, MAX(m.image_height) AS h, MAX(m.created_at) AS last_used
+             FROM messages m
+             JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $1
+             WHERE m.attachment_status = 'sticker' AND m.image_url IS NOT NULL AND m.deleted_at IS NULL
+             GROUP BY m.image_url ORDER BY MAX(m.created_at) DESC LIMIT 120`, [req.session.userId]);
+        res.set('Cache-Control', 'no-store');
+        res.json({ stickers: r.rows.map((x) => ({ url: x.image_url, w: x.w, h: x.h })) });
+    } catch (err) {
+        console.error('Stickers error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // ── Polls ───────────────────────────────────────────────────────────────────────────────────
 // POST /messages/:id/poll — a new poll in a conversation (JSON body, lib/polls.js validates).
 router.post('/:id(\\d+)/poll', rateLimit('send', 25, 10000), async (req, res) => {

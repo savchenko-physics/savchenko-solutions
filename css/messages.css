@@ -2469,3 +2469,28 @@
     .msg-bubble.is-sticker > .msg-media { max-width: 256px; border-radius: 0; background: transparent; }
     .msg-bubble.is-sticker .msg-bubble-image { border-radius: 0; }
     .msg-bubble.is-sticker .msg-reaction-add { display: none; }
+
+    /* The sticker button and its panel (the stickers already used in this member's chats). */
+    .msg-sticker-btn {
+      height: 38px; width: 38px; border-radius: 50%;
+      border: 1px solid var(--msg-border); background: var(--msg-bg); color: var(--msg-muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .msg-sticker-btn:hover { color: var(--ss-text); }
+    .msg-sticker-panel {
+      position: absolute; left: var(--ss-space-3); right: var(--ss-space-3); bottom: calc(100% + var(--ss-space-1));
+      max-width: 520px; max-height: 320px; overflow-y: auto;
+      background: var(--ss-surface); border: 1px solid var(--ss-rule); border-radius: var(--ss-radius-lg);
+      box-shadow: var(--ss-shadow); padding: var(--ss-space-3); z-index: 30;
+    }
+    .msg-sticker-panel[hidden] { display: none; }
+    .msg-sticker-panel-title { font-size: var(--ss-fs-12); color: var(--ss-text-secondary); margin-bottom: var(--ss-space-2); }
+    .msg-sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--ss-space-2); }
+    .msg-sticker-grid button {
+      aspect-ratio: 1; background: none; border: 1px solid transparent; border-radius: var(--ss-radius); padding: var(--ss-space-1); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .msg-sticker-grid button:hover { border-color: var(--ss-rule); background: var(--ss-surface-alt); }
+    .msg-sticker-grid img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    .msg-sticker-empty { font-size: var(--ss-fs-13); color: var(--ss-text-secondary); }
+    .msg-send-option small { display: block; font-size: var(--ss-fs-12); color: var(--ss-text-secondary); }

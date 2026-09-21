@@ -411,6 +411,14 @@
             <button type="button" class="msg-attach-menu-item" data-attach="file"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><%= lang === 'ru' ? 'Документ' : 'Document' %></button>
             <button type="button" class="msg-attach-menu-item" data-attach="poll"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><%= lang === 'ru' ? 'Опрос' : 'Poll' %></button>
           </div>
+          <%# The stickers already used in this member's chats, sent again with one click. %>
+          <div class="msg-sticker-panel" id="stickerPanel" hidden>
+            <div class="msg-sticker-panel-title"><%= lang === 'ru' ? 'Стикеры' : 'Stickers' %></div>
+            <div class="msg-sticker-grid" id="stickerGrid"></div>
+          </div>
+          <button class="msg-sticker-btn" id="stickerBtn" title="<%= lang === 'ru' ? 'Стикеры' : 'Stickers' %>" aria-label="<%= lang === 'ru' ? 'Стикеры' : 'Stickers' %>">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/><path d="M14 21a7 7 0 0 0 7-7"/></svg>
+          </button>
           <button class="msg-attach-btn" id="attachBtn" title="<%= lang === 'ru'
             ? `Прикрепить файл (до ${Math.round(attachmentRules.maxBytes / 1048576)} МБ, видео до ${Math.round(attachmentRules.videoMaxBytes / 1048576)} МБ)`
             : `Attach a file (up to ${Math.round(attachmentRules.maxBytes / 1048576)} MB, a video up to ${Math.round(attachmentRules.videoMaxBytes / 1048576)} MB)` %>">
@@ -681,6 +689,7 @@
       </div>
     </div>
     <label class="msg-send-option" id="sendAsFileRow" hidden><input type="checkbox" id="sendAsFile"><span><%= lang === 'ru' ? 'Отправить как файл' : 'Send as a document' %></span></label>
+    <label class="msg-send-option" id="sendAsStickerRow" hidden><input type="checkbox" id="sendAsSticker"><span><%= lang === 'ru' ? 'Отправить как стикер' : 'Send as a sticker' %><small><%= lang === 'ru' ? 'Прозрачный PNG или WebP, без пузыря' : 'A transparent PNG or WebP, no bubble' %></small></span></label>
     <label class="msg-send-caption-label" for="sendCaption"><%= lang === 'ru' ? 'Подпись' : 'Caption' %></label>
     <textarea class="msg-send-caption" id="sendCaption" rows="1"></textarea>
     <div class="msg-send-actions">
