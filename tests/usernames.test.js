@@ -65,7 +65,8 @@ test('registration and settings use the rule, and the forms carry it', () => {
     const register = index.slice(index.indexOf('app.post("/register"'), index.indexOf('// Login Route'));
     assert.match(register, /isValidNewUsername\(username\)/);
     assert.match(register, /LOWER\(username\) = \$1/);
-    assert.ok(register.indexOf('isValidNewUsername') < register.indexOf('INSERT INTO users'));
+    // The INSERT itself is in lib/accounts.js since 2026-09-21; the route calls createAccount().
+    assert.ok(register.indexOf('isValidNewUsername') < register.indexOf('createAccount({'));
     assert.match(index, /resolveUsernameChange\(currentUsername, newUsername\)/);
     assert.doesNotMatch(index, /a-zA-Z0-9\._-/);
 

@@ -374,6 +374,20 @@
       .chart-grid { grid-template-columns: 1fr; }
       .diff-pane { font-size: var(--ss-fs-12); }
     }
+    /* Held Signups tab (2026-09-21). Classes rather than style attributes: design-rules ratchet. */
+    .admin-note { font-size: var(--ss-fs-13); color: var(--admin-muted); margin-bottom: var(--ss-space-4); }
+    .admin-error { color: var(--ss-error); margin-bottom: var(--ss-space-4); }
+    .admin-muted { color: var(--admin-muted); }
+    .admin-h2 { font-size: var(--ss-fs-18); margin: var(--ss-space-4) 0 var(--ss-space-3); }
+    .admin-h2-later { margin-top: var(--ss-space-5); }
+    .admin-input-wide { width: 300px; }
+    .admin-btn-tall { height: 40px; }
+    .admin-nowrap { white-space: nowrap; }
+    .admin-inline { display: inline; }
+    .admin-toolbar { margin-bottom: var(--ss-space-4); }
+    .admin-plain-link { text-decoration: none; }
+    .admin-sub { font-size: var(--ss-fs-12); color: var(--admin-muted); }
+    .admin-cell-clip { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   </style>
 </head>
 <body>
@@ -411,6 +425,14 @@
       <% } %>
     </a>
     <a href="/admin/users" class="<%= tab === 'users' ? 'active' : '' %>">Users</a>
+    <a href="/admin/signups" class="<%= tab === 'signups' ? 'active' : '' %>">
+      Held Signups
+      <% if (typeof pendingSignupsCount !== 'undefined' && pendingSignupsCount > 0) { %>
+        <span class="badge-count"><%= pendingSignupsCount %></span>
+      <% } else if (typeof stats !== 'undefined' && stats.pendingSignups > 0) { %>
+        <span class="badge-count"><%= stats.pendingSignups %></span>
+      <% } %>
+    </a>
     <a href="/admin/blocked-ips" class="<%= tab === 'blocked-ips' ? 'active' : '' %>">IP Blocklist</a>
     <a href="/admin/stats" class="<%= tab === 'stats' ? 'active' : '' %>">Platform Stats</a>
     <a href="/admin/challenges" class="<%= tab === 'challenges' ? 'active' : '' %>">Challenges</a>
@@ -851,6 +873,100 @@
             <form method="POST" action="/admin/blocked-ips/<%= ip.id %>/remove" style="display:inline;">
               <button type="submit" class="btn-admin-danger">Remove</button>
             </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+<% } else if (tab === 'signups') { %>
+    <!-- ═══ HELD SIGNUPS (lib/signupHolds.js) ═══ -->
+    <h1>Held Signups</h1>
+    <p class="admin-note">
+      A registration from one of the networks below is not created. It waits here. Approve creates the account as the registration page would have and sends the verification email; the person signs in with the password they chose. Reject keeps the row for the record. Nobody is refused at the form, they are told the account is checked by hand.
+    </p>
+    <% if (typeof adminError !== 'undefined' && adminError) { %>
+      <p class="admin-error"><%= adminError %></p>
+    <% } %>
+
+    <h2 class="admin-h2">Held networks</h2>
+    <form class="ip-add-form" method="POST" action="/admin/signups/ranges/add">
+      <div>
+        <label>IPv4 address or CIDR</label>
+        <input type="text" name="cidr" placeholder="e.g. 188.124.224.0/19" required />
+      </div>
+      <div>
+        <label>Reason (optional)</label>
+        <input type="text" name="reason" class="admin-input-wide" placeholder="Why registrations from here wait" />
+      </div>
+      <button type="submit" class="btn-admin-danger admin-btn-tall">Hold registrations</button>
+    </form>
+    <% if (signupRanges.length === 0) { %>
+      <p class="admin-muted">No held networks.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr><th>Network</th><th>Reason</th><th>Added by</th><th>Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <% signupRanges.forEach(function(r) { %>
+        <tr>
+          <td><code><%= r.cidr %></code></td>
+          <td><%= r.reason || '' %></td>
+          <td><%= r.created_by_name || '' %></td>
+          <td class="admin-nowrap"><%- localTime(r.created_at, 'date', 'en') %></td>
+          <td>
+            <form method="POST" action="/admin/signups/ranges/<%= r.id %>/remove" class="admin-inline">
+              <button type="submit" class="btn-admin-outline">Release</button>
+            </form>
+          </td>
+        </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <% } %>
+
+    <h2 class="admin-h2 admin-h2-later">Registrations waiting</h2>
+    <div class="admin-toolbar">
+      <% if (showAll) { %>
+        <a href="/admin/signups" class="btn-admin-outline admin-plain-link">Show pending only</a>
+      <% } else { %>
+        <a href="/admin/signups?all=1" class="btn-admin-outline admin-plain-link">Show all</a>
+      <% } %>
+    </div>
+    <% if (signupHolds.length === 0) { %>
+      <p class="admin-muted">Nothing waiting.</p>
+    <% } else { %>
+    <table class="admin-table">
+      <thead>
+        <tr><th>When</th><th>Username</th><th>Name</th><th>Email</th><th>IP</th><th>Network</th><th>Browser</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <% signupHolds.forEach(function(h) { %>
+        <tr>
+          <td class="admin-nowrap"><%- localTime(h.created_at, 'datetime', 'en') %></td>
+          <td><code><%= h.username %></code> <span class="admin-sub">(<%= h.lang %>)</span></td>
+          <td><%= h.full_name || '' %></td>
+          <td><%= h.email %></td>
+          <td><code><%= h.ip || '' %></code></td>
+          <td><code><%= h.matched_cidr || '' %></code></td>
+          <td class="admin-cell-clip" title="<%= h.user_agent || '' %>"><%= h.user_agent || '' %></td>
+          <td>
+            <span class="status-badge"><%= h.status %></span>
+            <% if (h.status !== 'pending') { %>
+              <div class="admin-sub"><%= h.reviewed_by_name || '' %><% if (h.created_username) { %>, <a href="/user/<%= h.created_username %>"><%= h.created_username %></a><% } %></div>
+            <% } %>
+          </td>
+          <td class="admin-nowrap">
+            <% if (h.status === 'pending') { %>
+              <form method="POST" action="/admin/signups/<%= h.id %>/approve" class="admin-inline">
+                <button type="submit" class="btn-admin-success">Approve</button>
+              </form>
+              <form method="POST" action="/admin/signups/<%= h.id %>/reject" class="admin-inline">
+                <button type="submit" class="btn-admin-danger">Reject</button>
+              </form>
+            <% } %>
           </td>
         </tr>
         <% }); %>

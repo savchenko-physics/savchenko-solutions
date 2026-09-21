@@ -274,7 +274,21 @@ added after the GitHub-Pages migration, so `users`, `contributions`, `solution_c
   header badges in place. Leaving a community chat is refused (mute
   instead). The split itself was a one-off, `scripts/split-community-chat.js` (`--undo` with
   the backup in `deploy-backups/`). Above 25 members a conversation does not fan out one
-  notification per member, only to members who have posted there (`notifications.js:84`)
+  notification per member, only to members who have posted there (`notifications.js:84`).
+  **Blocks on writing** (2026-09-21, after Бека's evening): `conversation_members.posting_blocked_until`
+  (migration 061) keeps a member out of one chat for a while, `users.posting_blocked_until` (062,
+  `'infinity'` for good) out of every chat, DM, new conversation and solution comment; the later end
+  wins (`lib/chatRestrictions.js`). The person sees a notice in place of the composer naming the end
+  and @astrosander, everyone else sees a red badge on their messages, a 403 carries the same text.
+  Reading and signing in are never restricted. `scripts/chat-restrict.js --user <id> [--conversation
+  <id>] --hours n | --permanent | --lift [--apply]`, which also leaves a bell notification.
+  `tests/chat-restrictions.test.js`
+- `signup_ip_holds` / `signup_holds` — registrations from a listed IPv4 address or CIDR are not
+  created but held for `/admin/signups` (migration 062, `lib/signupHolds.js`): the form says the
+  account is checked by hand, Approve creates it through `lib/accounts.js` (the same code the
+  registration route uses, verification email included), Reject keeps the row. Seeded with Tele2
+  Kazakhstan's mobile pool `188.124.224.0/19`, Бека's; one registration in the fortnight before was
+  from there, his. A hold delays, it never turns anyone away. `tests/signup-holds.test.js`
 - `page_views` / `recent_views` — view tracking
 - `user_preferences` — privacy and notification settings (**only 19 rows for 964 users**)
 - `user_activities` — activity log (follows, likes, stars, comments)

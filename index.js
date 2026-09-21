@@ -15,7 +15,6 @@ const {
 } = require("./utils"); // Importing functions from utils.js
 const { docTitle, titleText } = require("./lib/pageTitle");
 const { localTime } = require("./lib/localTime");
-const { COMMUNITY_LANGS, mutedByDefault } = require("./lib/communityChats");
 // Shared with the browser (views/edit_post.ejs loads the same file) so that "did this
 // text actually change?" has exactly one answer on both sides. See js/draft-state.js.
 const { isSameContent } = require("./js/draft-state");
@@ -42,6 +41,9 @@ const { ruPlural } = require("./lib/ruPlural");
 const { isValidNewUsername, resolveUsernameChange, USERNAME_PATTERN } = require("./lib/usernames");
 const { getOnlineUsernames, getPeopleNow } = require("./lib/presence");
 const { founderYearFor } = require("./lib/founderYear");
+const { createAccount } = require("./lib/accounts");
+const { holdFor, holdNotice } = require("./lib/signupHolds");
+const { isPostingBlocked, blockedNotice } = require("./lib/chatRestrictions");
 const { sendEmail } = require("./email");
 const {
     processAvatar, versionedAvatarUrl, avatarCacheControl, acceptAvatarFile, avatarUploadProblem,
@@ -1738,6 +1740,12 @@ app.post("/api/solutions/:problemName/:language/comments", checkAuthenticated, a
     }
 
     try {
+        // An account kept from writing (users.posting_blocked_until, lib/chatRestrictions.js).
+        const blocked = await pool.query("SELECT posting_blocked_until FROM users WHERE id = $1", [userId]);
+        if (blocked.rows.length && isPostingBlocked(blocked.rows[0].posting_blocked_until)) {
+            return res.status(403).json({ error: blockedNotice(blocked.rows[0].posting_blocked_until, language === 'ru' ? 'ru' : 'en') });
+        }
+
         const result = await pool.query(
             "INSERT INTO solution_comments (user_id, problem_name, language, content, parent_id, is_brainstorm) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, created_at",
             [userId, problemName, language, content.trim(), parentId || null, isBrainstorm]
@@ -2376,63 +2384,27 @@ app.post("/register", registerLimiter, async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert into the database
-        const newUser = await pool.query(
-            // created_at is set explicitly rather than left to the column DEFAULT so the
-            // provenance is recorded too: 'exact' distinguishes real signup times from the
-            // dates scripts/backfill-user-created-at.js inferred for pre-existing accounts,
-            // which are only upper bounds.
-            "INSERT INTO users (username, email, full_name, password, created_at, created_at_source) VALUES ($1, $2, $3, $4, now(), 'exact') RETURNING id",
-            [username, email, fullname, hashedPassword]
-        );
-
-        // Join both community chats (conversations.community_lang). The one in the language
-        // of the page they signed up on is live; the other starts muted, so it doesn't add
-        // to their unread count until they unmute it. See lib/communityChats.js.
-        try {
-            const communityChats = await pool.query(
-                `SELECT id, community_lang FROM conversations WHERE community_lang = ANY($1)`,
-                [COMMUNITY_LANGS]
-            );
-            for (const chat of communityChats.rows) {
-                await pool.query(
-                    `INSERT INTO conversation_members (conversation_id, user_id, muted) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-                    [chat.id, newUser.rows[0].id, !!mutedByDefault({ chatLang: chat.community_lang, userLang: lang })]
-                );
-            }
-        } catch (e) {
-            console.error('Failed to add user to the community chats:', e);
-        }
-
-        // Send a verification email (soft: the account works right away; the user
-        // shows as unverified until they click the link). Failures are swallowed.
-        try {
-            const verifyToken = crypto.randomBytes(32).toString("hex");
-            const verifyExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        // A registration from a listed network is held for a person to look at
+        // (/admin/signups, lib/signupHolds.js), never refused: the account is created on approval.
+        const holds = await pool.query('SELECT cidr FROM signup_ip_holds');
+        const matched = holdFor(req.ip, holds.rows.map((r) => r.cidr));
+        if (matched) {
             await pool.query(
-                "UPDATE users SET email_verification_token = $1, email_verification_expires = $2 WHERE id = $3",
-                [verifyToken, verifyExpires, newUser.rows[0].id]
+                `INSERT INTO signup_holds (username, email, full_name, password_hash, lang, ip, user_agent, matched_cidr)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [username, email, fullname, hashedPassword, lang, String(req.ip || '').slice(0, 64),
+                    String(req.headers['user-agent'] || '').slice(0, 300), matched]
             );
-            const verifyUrl = `${req.protocol}://${req.get("host")}/verify-email?token=${verifyToken}&lang=${lang}`;
-            await sendEmail({
-                to: email,
-                kind: 'email_verify',
-                userId: newUser.rows[0].id,
-                subject: lang === 'ru'
-                    ? 'Подтвердите ваш email — Savchenko Solutions'
-                    : 'Confirm your email — Savchenko Solutions',
-                html: `<p>${lang === 'ru'
-                    ? 'Добро пожаловать в Savchenko Solutions! Подтвердите свой адрес электронной почты (ссылка действительна 7 дней):'
-                    : 'Welcome to Savchenko Solutions! Please confirm your email address (this link is valid for 7 days):'}</p>
-                       <p><a href="${verifyUrl}">${verifyUrl}</a></p>`,
-                text: verifyUrl,
-            });
-        } catch (mailErr) {
-            console.error('Verification email failed:', mailErr);
+            return res.redirect(`/${lang}/register?success=${encodeURIComponent(holdNotice(lang))}`);
         }
+
+        const newUserId = await createAccount({
+            username, email, fullName: fullname, passwordHash: hashedPassword, lang,
+            baseUrl: `${req.protocol}://${req.get("host")}`,
+        });
 
         // Log the new user straight in instead of bouncing them to the login page
-        req.session.userId = newUser.rows[0].id;
+        req.session.userId = newUserId;
         req.session.username = username;
         req.session.lang = lang;
         res.redirect(`/${lang}/profile`);

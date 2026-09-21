@@ -16,7 +16,19 @@ const { ownsReaction } = require('./lib/reactionUnlocks');
 const attachments = require('./lib/messageAttachments');
 const { videoDimensions } = require('./lib/videoMeta');
 const transcode = require('./lib/videoTranscode');
-const { isPostingBlocked, blockedNotice } = require('./lib/chatRestrictions');
+const { isPostingBlocked, isPermanent, blockedNotice, effectiveBlock, PERMANENT_YEAR } = require('./lib/chatRestrictions');
+
+// The end of a member's block on writing, account-wide and in one conversation combined
+// (lib/chatRestrictions.js): null when they may write. `convId` may be null.
+async function postingBlockFor(userId, convId) {
+    const r = await pool.query(
+        `SELECT u.posting_blocked_until AS account, cm.posting_blocked_until AS member
+         FROM users u LEFT JOIN conversation_members cm ON cm.user_id = u.id AND cm.conversation_id = $2
+         WHERE u.id = $1`, [userId, convId]);
+    if (!r.rows.length) return null;
+    const until = effectiveBlock(r.rows[0].account, r.rows[0].member);
+    return isPostingBlocked(until) ? until : null;
+}
 
 const msgImageDir = path.join(__dirname, 'img', 'messages');
 fs.mkdirSync(msgImageDir, { recursive: true });
@@ -447,7 +459,7 @@ const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at
         m.file_url, m.file_name, m.file_size, m.attachment_status, m.pinned_at, m.forwarded_from_user_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
-        cm.posting_blocked_until AS sender_blocked_until,
+        LEAST(GREATEST(cm.posting_blocked_until, u.posting_blocked_until), TIMESTAMPTZ '${PERMANENT_YEAR}-12-31T00:00:00Z') AS sender_blocked_until,
         fu.username AS forwarded_from_username,
         m.reply_to_id,
         rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
@@ -853,10 +865,9 @@ router.get('/:id(\\d+)', async (req, res) => {
         }
         const prevLastRead = membership.rows[0].last_read_at;
         const activeMuted = !!membership.rows[0].muted;
-        // A member kept from writing here for a while sees a notice in place of the composer.
-        const postingBlockedUntil = membership.rows[0].posting_blocked_until;
-        const postingBlocked = isPostingBlocked(postingBlockedUntil)
-            ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
+        // A member kept from writing here, or anywhere, sees a notice in place of the composer.
+        const postingBlockedUntil = await postingBlockFor(userId, convId);
+        const postingBlocked = postingBlockedUntil ? blockedNotice(postingBlockedUntil, lang, readerTimeZone(req)) : null;
 
         // Mark as read
         await pool.query(
@@ -1052,6 +1063,7 @@ router.get('/:id(\\d+)', async (req, res) => {
             // Others see on a suspended member's messages that they cannot write here for now;
             // the member's own messages are on the "sent" side, which carries no sender line.
             m.senderSuspendedUntil = m.sender_id !== userId && isPostingBlocked(m.sender_blocked_until) ? m.sender_blocked_until : null;
+            m.senderSuspendedForGood = !!m.senderSuspendedUntil && isPermanent(m.senderSuspendedUntil);
         }
 
         res.render('messages', {
@@ -1140,6 +1152,8 @@ router.post('/new', rateLimit('new', 15, 60000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const { recipientId, recipientIds, title } = req.body;
+        const newBlocked = await postingBlockFor(userId, null);
+        if (newBlocked) return res.status(403).json({ error: blockedNotice(newBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
 
         if (recipientIds && recipientIds.length > 1) {
             // Group conversation
@@ -1247,15 +1261,16 @@ router.post('/:id(\\d+)/send', rateLimit('send', 25, 10000), msgUploadMiddleware
 
         // Check membership
         const membership = await pool.query(
-            `SELECT posting_blocked_until FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+            `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
             [convId, userId]
         );
         if (membership.rows.length === 0) {
             return res.status(403).send('Not a member');
         }
-        if (isPostingBlocked(membership.rows[0].posting_blocked_until)) {
+        const blockedUntil = await postingBlockFor(userId, convId);
+        if (blockedUntil) {
             if (req.file) await fs.promises.unlink(req.file.path).catch(() => {});
-            return res.status(403).json({ error: blockedNotice(membership.rows[0].posting_blocked_until, lang, readerTimeZone(req)), blocked: true });
+            return res.status(403).json({ error: blockedNotice(blockedUntil, lang, readerTimeZone(req)), blocked: true });
         }
 
         // Optional reply target — only honored if it's a message in this conversation.
@@ -1622,13 +1637,10 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
             targetId = await findOrCreateSavedMessages(userId);
         } else if (toConversationId) {
             const t = await pool.query(
-                `SELECT posting_blocked_until FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
+                `SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2`,
                 [toConversationId, userId]
             );
             if (t.rows.length === 0) return res.status(403).json({ error: 'Not a member of target' });
-            if (isPostingBlocked(t.rows[0].posting_blocked_until)) {
-                return res.status(403).json({ error: blockedNotice(t.rows[0].posting_blocked_until, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
-            }
             targetId = toConversationId;
         } else if (toUserId) {
             if (toUserId === userId) {
@@ -1640,6 +1652,11 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
             }
         } else {
             return res.status(400).json({ error: 'No target' });
+        }
+
+        const fwdBlocked = await postingBlockFor(userId, targetId);
+        if (fwdBlocked) {
+            return res.status(403).json({ error: blockedNotice(fwdBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
         }
 
         // Preserve the original author across forward chains.
@@ -2237,6 +2254,8 @@ router.post('/new-group', rateLimit('new', 15, 60000), async (req, res) => {
     try {
         const userId = req.session.userId;
         const { memberIds, title } = req.body;
+        const newBlocked = await postingBlockFor(userId, null);
+        if (newBlocked) return res.status(403).json({ error: blockedNotice(newBlocked, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
 
         if (!memberIds || !Array.isArray(memberIds) || memberIds.length < 1) {
             return res.status(400).json({ error: 'Need at least 1 other member' });

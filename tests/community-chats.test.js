@@ -177,10 +177,14 @@ test('the split script cuts bilingual posts only where the author put the separa
 });
 
 test('the wiring: registration, the header badge and the history pager', () => {
+    // Since 2026-09-21 the account itself is created by lib/accounts.js (the registration route
+    // and an admin approving a held signup share it), so the chat wiring lives there.
     const index = fs.readFileSync(path.join(ROOT, 'index.js'), 'utf8');
-    assert.doesNotMatch(index, /title = 'Savchenko Solutions'/, 'registration must not find the chat by a title moderators can rename');
-    assert.match(index, /community_lang = ANY\(\$1\)/);
-    assert.match(index, /!!mutedByDefault\(/);
+    const accounts = fs.readFileSync(path.join(ROOT, 'lib', 'accounts.js'), 'utf8');
+    assert.match(index, /await createAccount\(\{/, 'registration creates the account through lib/accounts.js');
+    assert.doesNotMatch(accounts, /title = 'Savchenko Solutions'/, 'registration must not find the chat by a title moderators can rename');
+    assert.match(accounts, /community_lang = ANY\(\$1\)/);
+    assert.match(accounts, /!!mutedByDefault\(/);
 
     const messages = fs.readFileSync(path.join(ROOT, 'messages.js'), 'utf8');
     const badge = messages.slice(messages.indexOf('async function getUnreadMessageCount'));

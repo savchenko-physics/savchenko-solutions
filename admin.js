@@ -7,6 +7,8 @@ const { isValidSolutionLang, isValidSolutionProblemName } = require('./utils');
 const { invalidateStandingsCache } = require('./contest');
 const { notifyShipped } = require('./feedback');
 const { sendEmail } = require('./email');
+const { createAccount } = require('./lib/accounts');
+const { isValidCidr } = require('./lib/signupHolds');
 
 const pool = require('./lib/db');
 
@@ -89,6 +91,7 @@ router.get('/', async (req, res) => {
             recentActions,
             solutionsCount,
             pendingResets,
+            pendingSignups,
         ] = await Promise.all([
             pool.query('SELECT COUNT(*) FROM users'),
             pool.query("SELECT COUNT(*) FROM solution_reports WHERE status = 'pending'"),
@@ -107,6 +110,7 @@ router.get('/', async (req, res) => {
             canReadResets
                 ? pool.query("SELECT COUNT(*) FROM password_reset_requests WHERE status = 'pending'")
                 : Promise.resolve({ rows: [{ count: '0' }] }),
+            pool.query("SELECT COUNT(*) FROM signup_holds WHERE status = 'pending'").catch(() => ({ rows: [{ count: '0' }] })),
         ]);
 
         res.render('admin/dashboard', {
@@ -121,6 +125,7 @@ router.get('/', async (req, res) => {
                 contributionsToday: parseInt(contributionsToday.rows[0].count),
                 activeUsersWeek: parseInt(activeUsersWeek.rows[0].count),
                 pendingResets: parseInt(pendingResets.rows[0].count),
+                pendingSignups: parseInt(pendingSignups.rows[0].count),
             },
             recentActions: recentActions.rows,
         });
@@ -570,6 +575,105 @@ router.post('/blocked-ips/:id/remove', async (req, res) => {
         res.redirect('/admin/blocked-ips');
     } catch (err) {
         console.error('Error removing blocked IP:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// ─── Held registrations (lib/signupHolds.js, migration 062) ────────────────────────
+// A signup from a listed network waits here. Approve creates the account exactly as the
+// registration route would (lib/accounts.js) and the person gets the verification email;
+// reject leaves the row, marked, so the same name coming back is visible.
+router.get('/signups', async (req, res) => {
+    try {
+        const showAll = req.query.all === '1';
+        const [holds, ranges, pending] = await Promise.all([
+            pool.query(
+                `SELECT h.*, u.username AS reviewed_by_name, nu.username AS created_username
+                 FROM signup_holds h
+                 LEFT JOIN users u ON u.id = h.reviewed_by
+                 LEFT JOIN users nu ON nu.id = h.user_id
+                 ${showAll ? '' : "WHERE h.status = 'pending'"}
+                 ORDER BY h.created_at DESC LIMIT 200`),
+            pool.query(
+                `SELECT r.*, u.username AS created_by_name FROM signup_ip_holds r
+                 LEFT JOIN users u ON u.id = r.created_by ORDER BY r.created_at DESC`),
+            pool.query("SELECT COUNT(*) FROM signup_holds WHERE status = 'pending'"),
+        ]);
+        res.render('admin/dashboard', {
+            __: req.__,
+            lang: 'en',
+            tab: 'signups',
+            signupHolds: holds.rows,
+            signupRanges: ranges.rows,
+            showAll,
+            pendingSignupsCount: parseInt(pending.rows[0].count),
+            adminError: typeof req.query.error === 'string' ? req.query.error.slice(0, 300) : '',
+        });
+    } catch (err) {
+        console.error('Admin signups error:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/signups/:id/approve', async (req, res) => {
+    try {
+        const h = await pool.query(`SELECT * FROM signup_holds WHERE id = $1 AND status = 'pending'`, [req.params.id]);
+        if (!h.rows.length) return res.redirect('/admin/signups');
+        const hold = h.rows[0];
+        const clash = await pool.query("SELECT 1 FROM users WHERE LOWER(username) = LOWER($1) OR email = $2 LIMIT 1", [hold.username, hold.email]);
+        if (clash.rows.length) {
+            return res.redirect(`/admin/signups?error=${encodeURIComponent(`${hold.username} or ${hold.email} is already taken`)}`);
+        }
+        const userId = await createAccount({
+            username: hold.username, email: hold.email, fullName: hold.full_name, passwordHash: hold.password_hash,
+            lang: hold.lang === 'ru' ? 'ru' : 'en', baseUrl: `${req.protocol}://${req.get('host')}`,
+        });
+        await pool.query(
+            `UPDATE signup_holds SET status = 'approved', reviewed_by = $1, reviewed_at = NOW(), user_id = $2 WHERE id = $3`,
+            [req.session.userId, userId, hold.id]);
+        await logAdminAction(req.session.userId, 'approve_signup', 'signup_hold', hold.id, { username: hold.username, userId });
+        res.redirect('/admin/signups');
+    } catch (err) {
+        console.error('Error approving held signup:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/signups/:id/reject', async (req, res) => {
+    try {
+        const r = await pool.query(
+            `UPDATE signup_holds SET status = 'rejected', reviewed_by = $1, reviewed_at = NOW() WHERE id = $2 AND status = 'pending' RETURNING username`,
+            [req.session.userId, req.params.id]);
+        if (r.rows.length) await logAdminAction(req.session.userId, 'reject_signup', 'signup_hold', parseInt(req.params.id), { username: r.rows[0].username });
+        res.redirect('/admin/signups');
+    } catch (err) {
+        console.error('Error rejecting held signup:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/signups/ranges/add', async (req, res) => {
+    try {
+        const cidr = String(req.body.cidr || '').trim();
+        if (!isValidCidr(cidr)) return res.redirect(`/admin/signups?error=${encodeURIComponent(`${cidr || '(empty)'} is not an IPv4 address or CIDR`)}`);
+        const r = await pool.query(
+            'INSERT INTO signup_ip_holds (cidr, reason, created_by) VALUES ($1, $2, $3) ON CONFLICT (cidr) DO NOTHING RETURNING id',
+            [cidr, (req.body.reason || '').trim() || null, req.session.userId]);
+        if (r.rows.length) await logAdminAction(req.session.userId, 'hold_signup_range', 'signup_ip_hold', r.rows[0].id, { cidr, reason: req.body.reason });
+        res.redirect('/admin/signups');
+    } catch (err) {
+        console.error('Error adding signup hold range:', err);
+        res.status(500).send('Internal server error');
+    }
+});
+
+router.post('/signups/ranges/:id/remove', async (req, res) => {
+    try {
+        const r = await pool.query('DELETE FROM signup_ip_holds WHERE id = $1 RETURNING cidr', [req.params.id]);
+        if (r.rows.length) await logAdminAction(req.session.userId, 'release_signup_range', 'signup_ip_hold', parseInt(req.params.id), { cidr: r.rows[0].cidr });
+        res.redirect('/admin/signups');
+    } catch (err) {
+        console.error('Error removing signup hold range:', err);
         res.status(500).send('Internal server error');
     }
 });
