@@ -459,7 +459,9 @@ const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at
         m.file_url, m.file_name, m.file_size, m.attachment_status, m.pinned_at, m.forwarded_from_user_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
-        LEAST(GREATEST(cm.posting_blocked_until, u.posting_blocked_until), TIMESTAMPTZ '${PERMANENT_YEAR}-12-31T00:00:00Z') AS sender_blocked_until,
+        (SELECT LEAST(b, TIMESTAMPTZ '${PERMANENT_YEAR}-12-31T00:00:00Z')
+           FROM (SELECT GREATEST(cm.posting_blocked_until, u.posting_blocked_until) AS b) g
+          WHERE b IS NOT NULL) AS sender_blocked_until,
         fu.username AS forwarded_from_username,
         m.reply_to_id,
         rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,

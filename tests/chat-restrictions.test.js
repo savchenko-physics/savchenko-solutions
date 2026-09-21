@@ -8,6 +8,8 @@
 'use strict';
 
 const test = require('node:test');
+const fs = require('fs');
+const path = require('path');
 const assert = require('node:assert');
 const { isPostingBlocked, isPermanent, effectiveBlock, blockedNotice, blockNotification, CONTACT } = require('../lib/chatRestrictions');
 
@@ -81,4 +83,14 @@ test('a permanent block\'s copy names no date, and the bell says the site rather
         assert.match(n.message, new RegExp(`@${CONTACT}`));
         for (const t of [notice, n.title, n.message]) assert.doesNotMatch(t.replace(/\d{1,2}:\d{2}/g, ''), /[—:;]/, t);
     }
+});
+
+// 2026-09-21, 20:05 in the Russian chat: "у меня у всех такая надпись". Postgres's LEAST
+// skips NULLs, so LEAST(GREATEST(NULL, NULL), '9999-12-31') was 9999-12-31 for everyone and
+// every member wore the "не может писать" badge for a quarter of an hour.
+test('the message projection yields NULL, not the clamp, for a member with no block', () => {
+    const messages = fs.readFileSync(path.join(__dirname, '..', 'messages.js'), 'utf8');
+    const col = messages.slice(messages.indexOf('AS sender_blocked_until') - 400, messages.indexOf('AS sender_blocked_until'));
+    assert.doesNotMatch(col, /LEAST\(GREATEST\(/, 'LEAST over a possibly-NULL GREATEST returns the clamp');
+    assert.match(col, /WHERE b IS NOT NULL/);
 });
