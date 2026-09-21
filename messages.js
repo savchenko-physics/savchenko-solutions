@@ -18,6 +18,7 @@ const { videoDimensions } = require('./lib/videoMeta');
 const transcode = require('./lib/videoTranscode');
 const { isPostingBlocked, isPermanent, blockedNotice, effectiveBlock, PERMANENT_YEAR } = require('./lib/chatRestrictions');
 const { rankFor: userRankFor } = require('./lib/userRank');
+const pollRules = require('./lib/polls');
 
 // The end of a member's block on writing, account-wide and in one conversation combined
 // (lib/chatRestrictions.js): null when they may write. `convId` may be null.
@@ -337,9 +338,9 @@ function attachmentLabel(fileName, lang) {
 }
 
 // Short, plain-text preview of a message being quoted in a reply.
-function buildReplyPreview(content, imageUrl, fileName, deleted, lang) {
+function buildReplyPreview(content, imageUrl, fileName, deleted, lang, pollQuestion) {
     if (deleted) return lang === 'ru' ? 'Удалённое сообщение' : 'Deleted message';
-    const t = (content || '').trim();
+    const t = (content || '').trim() || (pollQuestion ? (lang === 'ru' ? 'Опрос: ' : 'Poll: ') + pollQuestion : '');
     if (t) return t.length > 80 ? t.substring(0, 80) + '…' : t;
     if (fileName) return attachmentLabel(fileName, lang);
     if (imageUrl) return lang === 'ru' ? 'Фото' : 'Photo';
@@ -466,13 +467,54 @@ function attachReplyInfo(rows, userId, lang) {
             m.reply = {
                 id: m.reply_to_id,
                 sender: m.reply_sender_username || (lang === 'ru' ? 'Пользователь' : 'User'),
-                preview: buildReplyPreview(m.reply_content, m.reply_image, m.reply_file, m.reply_deleted, lang),
+                preview: buildReplyPreview(m.reply_content, m.reply_image, m.reply_file, m.reply_deleted, lang, m.reply_poll_question),
                 mine: m.reply_sender_id === userId,
                 isImage: !m.reply_content && !!m.reply_image && !m.reply_deleted,
                 isFile: !m.reply_content && !!m.reply_file && !m.reply_deleted,
             };
         }
     }
+}
+
+// ── Polls (lib/polls.js, migration 065) ─────────────────────────────────────────────────────
+// Every message row with a poll_id gets `poll`: the state the viewer is shown. One query per
+// table for all the polls in `rows`. A broadcast passes viewerId null: the counts are the same
+// for everyone and each client keeps its own `mine`.
+async function loadPollState(pollIds, viewerId, { managerOf = new Set() } = {}) {
+    const ids = [...new Set(pollIds.filter(Boolean))];
+    if (!ids.length) return {};
+    const [polls, options, counts, voters, mine] = await Promise.all([
+        pool.query('SELECT * FROM polls WHERE id = ANY($1)', [ids]),
+        pool.query('SELECT id, poll_id, text FROM poll_options WHERE poll_id = ANY($1) ORDER BY poll_id, position', [ids]),
+        pool.query('SELECT option_id, COUNT(*)::int AS n FROM poll_votes WHERE poll_id = ANY($1) GROUP BY option_id', [ids]),
+        pool.query('SELECT poll_id, COUNT(DISTINCT user_id)::int AS n FROM poll_votes WHERE poll_id = ANY($1) GROUP BY poll_id', [ids]),
+        viewerId ? pool.query('SELECT poll_id, option_id FROM poll_votes WHERE poll_id = ANY($1) AND user_id = $2', [ids, viewerId]) : Promise.resolve({ rows: [] }),
+    ]);
+    const countMap = {}; for (const r of counts.rows) countMap[r.option_id] = r.n;
+    const voterMap = {}; for (const r of voters.rows) voterMap[r.poll_id] = r.n;
+    const mineMap = {}; for (const r of mine.rows) (mineMap[r.poll_id] = mineMap[r.poll_id] || []).push(r.option_id);
+    const optMap = {}; for (const o of options.rows) (optMap[o.poll_id] = optMap[o.poll_id] || []).push(o);
+    const out = {};
+    for (const poll of polls.rows) {
+        const canManage = !!viewerId && (poll.created_by === viewerId || managerOf.has(poll.id));
+        out[poll.id] = pollRules.pollState(poll, optMap[poll.id] || [], countMap, voterMap[poll.id] || 0, mineMap[poll.id] || [], viewerId, { canManage });
+    }
+    return out;
+}
+
+async function attachPolls(rows, viewerId, { isModerator = false } = {}) {
+    const ids = rows.map((m) => m.poll_id).filter(Boolean);
+    if (!ids.length) return;
+    const managerOf = isModerator ? new Set(ids) : new Set();
+    const states = await loadPollState(ids, viewerId, { managerOf });
+    for (const m of rows) if (m.poll_id && states[m.poll_id]) m.poll = states[m.poll_id];
+}
+
+// Whether `userId` moderates `convId` (a group's admin role) or the site (astrosander).
+async function moderatesConversation(convId, userId, username) {
+    if (username === 'astrosander') return true;
+    const r = await pool.query('SELECT role FROM conversation_members WHERE conversation_id = $1 AND user_id = $2', [convId, userId]);
+    return r.rows.length > 0 && r.rows[0].role === 'admin';
 }
 
 const PAGE_SIZE = 30; // messages loaded per page (initial view + each older page)
@@ -482,6 +524,7 @@ const PAGE_SIZE = 30; // messages loaded per page (initial view + each older pag
 const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at, m.deleted_at, m.image_url,
         m.image_width, m.image_height, m.image_placeholder,
         m.file_url, m.file_name, m.file_size, m.attachment_status, m.pinned_at, m.forwarded_from_user_id,
+        m.poll_id,
         u.username AS sender_username, u.profile_picture AS sender_picture,
         cm.role AS sender_role,
         (SELECT LEAST(b, TIMESTAMPTZ '${PERMANENT_YEAR}-12-31T00:00:00Z')
@@ -490,6 +533,7 @@ const MESSAGE_COLUMNS = `m.id, m.content, m.created_at, m.sender_id, m.edited_at
         fu.username AS forwarded_from_username,
         m.reply_to_id,
         rm.content AS reply_content, rm.image_url AS reply_image, rm.file_name AS reply_file,
+        rp.question AS reply_poll_question,
         rm.deleted_at AS reply_deleted, rm.sender_id AS reply_sender_id,
         ru.username AS reply_sender_username`;
 
@@ -497,6 +541,7 @@ const MESSAGE_JOINS = `FROM messages m
         LEFT JOIN users u ON u.id = m.sender_id
         LEFT JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = m.sender_id
         LEFT JOIN messages rm ON rm.id = m.reply_to_id
+        LEFT JOIN polls rp ON rp.id = rm.poll_id
         LEFT JOIN users ru ON ru.id = rm.sender_id
         LEFT JOIN users fu ON fu.id = m.forwarded_from_user_id`;
 
@@ -706,6 +751,7 @@ async function buildConversationList(userId, lang = 'en') {
         `SELECT c.id, c.title, c.is_group, c.saved_for_user_id, c.community_lang,
                 COALESCE(m.created_at, c.last_message_at) AS last_message_at,
                 m.content AS last_message_content,
+                m.poll_question,
                 m.image_url AS last_message_image,
                 m.file_name AS last_message_file,
                 m.sender_id AS last_message_sender_id,
@@ -722,7 +768,9 @@ async function buildConversationList(userId, lang = 'en') {
          -- chat at the top of the list (Dzmitrij's chat, 2026-09-19). A chat this member
          -- "deleted" (cm.hidden_at) counts only what came after.
          LEFT JOIN LATERAL (
-             SELECT content, sender_id, image_url, file_name, created_at FROM messages
+             SELECT content, sender_id, image_url, file_name, created_at,
+                    (SELECT question FROM polls WHERE polls.id = messages.poll_id) AS poll_question
+             FROM messages
              WHERE conversation_id = c.id AND deleted_at IS NULL
                AND (cm.hidden_at IS NULL OR created_at > cm.hidden_at)
              ORDER BY created_at DESC LIMIT 1
@@ -735,7 +783,10 @@ async function buildConversationList(userId, lang = 'en') {
     );
 
     // The list shows a video as "Video", as the reply quote and the alert card do, not by file name.
-    for (const c of conversations.rows) c.last_message_file = attachmentLabel(c.last_message_file, lang);
+    for (const c of conversations.rows) {
+        c.last_message_file = attachmentLabel(c.last_message_file, lang);
+        if (!c.last_message_content && c.poll_question) c.last_message_content = (lang === 'ru' ? 'Опрос: ' : 'Poll: ') + c.poll_question;
+    }
 
     // For each 1:1 conversation, get the other user's info
     const convIds = conversations.rows.filter(c => !c.is_group).map(c => c.id);
@@ -779,9 +830,10 @@ async function buildConversationList(userId, lang = 'en') {
             memberCount: groupMemberCountMap[c.id] || 0,
             displayName: isSaved
                 ? (lang === 'ru' ? 'Избранное' : 'Saved Messages')
+                // A person by username (the owner, 2026-09-21; the full name is on the profile).
                 : (c.is_group
                     ? (c.title || 'Group')
-                    : (other ? (other.full_name || other.username) : 'Deleted User')),
+                    : (other ? other.username : 'Deleted User')),
             displayPicture: (isSaved || c.is_group)
                 ? null
                 : (other ? other.profile_picture : null),
@@ -1021,6 +1073,7 @@ router.get('/:id(\\d+)', async (req, res) => {
         const msgIds = messagesResult.rows.map(m => m.id);
         const reactionsMap = await getReactionsForMessages(msgIds, userId);
         attachReplyInfo(messagesResult.rows, userId, lang);
+        await attachPolls(messagesResult.rows, userId, { isModerator: isAdmin });
         for (const m of messagesResult.rows) {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) {
@@ -1177,6 +1230,7 @@ router.get('/:id(\\d+)/history', async (req, res) => {
         const ids = result.rows.map(m => m.id);
         const reactionsMap = await getReactionsForMessages(ids, userId);
         attachReplyInfo(result.rows, userId, lang);
+        await attachPolls(result.rows, userId, { isModerator: await moderatesConversation(convId, userId, req.session.username) });
         for (const m of result.rows) {
             m.reactions = reactionsMap[m.id] || [];
             if (m.content) m.contentHtml = linkifyMessageContent(m.content, lang);
@@ -1678,7 +1732,7 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         const src = await pool.query(
             `SELECT m.id, m.sender_id, m.content, m.image_url, m.image_width, m.image_height,
                     m.image_placeholder, m.file_url, m.file_name, m.attachment_status,
-                    m.file_size, m.forwarded_from_user_id, m.deleted_at
+                    m.file_size, m.forwarded_from_user_id, m.deleted_at, m.poll_id
              FROM messages m
              JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
              WHERE m.id = $1`,
@@ -1722,9 +1776,9 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
         const origin = s.forwarded_from_user_id || s.sender_id;
 
         const fwd = await pool.query(
-            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id, image_width, image_height, image_placeholder, attachment_status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`,
-            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin, s.image_width, s.image_height, s.image_placeholder, s.attachment_status]
+            `INSERT INTO messages (conversation_id, sender_id, content, image_url, file_url, file_name, file_size, forwarded_from_user_id, image_width, image_height, image_placeholder, attachment_status, poll_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+            [targetId, userId, s.content, s.image_url, s.file_url, s.file_name, s.file_size, origin, s.image_width, s.image_height, s.image_placeholder, s.attachment_status, s.poll_id || null]
         );
         await pool.query(`UPDATE conversations SET last_message_at = NOW() WHERE id = $1`, [targetId]);
         await pool.query(
@@ -1747,6 +1801,7 @@ router.post('/forward', rateLimit('forward', 20, 10000), async (req, res) => {
             );
             if (full.rows.length) {
                 attachReplyInfo(full.rows, userId, lang);
+                await attachPolls(full.rows, null);
                 full.rows[0].reactions = [];
                 await broadcastToConversation(targetId, 'msg:new',
                     { conversationId: targetId, message: full.rows[0] }, userId);
@@ -1899,6 +1954,183 @@ router.post('/:id(\\d+)/group/leave', rateLimit('group', 20, 60000), async (req,
 });
 
 // POST /:id/mute — toggle mute for the current member
+// ── Polls ───────────────────────────────────────────────────────────────────────────────────
+// POST /messages/:id/poll — a new poll in a conversation (JSON body, lib/polls.js validates).
+router.post('/:id(\\d+)/poll', rateLimit('send', 25, 10000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const lang = normalizeLang(req.session.lang);
+        const convId = parseInt(req.params.id);
+        const membership = await pool.query('SELECT 1 FROM conversation_members WHERE conversation_id = $1 AND user_id = $2', [convId, userId]);
+        if (!membership.rows.length) return res.status(403).json({ error: 'Not a member' });
+        const blockedUntil = await postingBlockFor(userId, convId);
+        if (blockedUntil) return res.status(403).json({ error: blockedNotice(blockedUntil, lang, readerTimeZone(req)), blocked: true });
+        const dmBlocked = await dmBlockNotice(userId, { convId }, lang);
+        if (dmBlocked) return res.status(403).json({ error: dmBlocked, blocked: true });
+
+        const v = pollRules.validatePollInput(req.body);
+        if (!v.ok) return res.status(400).json({ error: v.error });
+        const p = v.poll;
+
+        const client = await pool.connect();
+        let pollId, inserted;
+        try {
+            await client.query('BEGIN');
+            const created = await client.query(
+                `INSERT INTO polls (created_by, question, anonymous, multiple, revote, shuffle, quiz, closes_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+                [userId, p.question, p.anonymous, p.multiple, p.revote, p.shuffle, p.quiz, p.closesAt]);
+            pollId = created.rows[0].id;
+            const optionIds = [];
+            for (let i = 0; i < p.options.length; i++) {
+                const o = await client.query('INSERT INTO poll_options (poll_id, position, text) VALUES ($1, $2, $3) RETURNING id', [pollId, i, p.options[i]]);
+                optionIds.push(o.rows[0].id);
+            }
+            if (p.quiz) await client.query('UPDATE polls SET correct_option_id = $2 WHERE id = $1', [pollId, optionIds[p.correctIndex]]);
+            inserted = await client.query(
+                `INSERT INTO messages (conversation_id, sender_id, content, poll_id) VALUES ($1, $2, '', $3) RETURNING id, created_at`,
+                [convId, userId, pollId]);
+            await client.query('UPDATE conversations SET last_message_at = NOW() WHERE id = $1', [convId]);
+            await client.query('UPDATE conversation_members SET last_read_at = NOW() WHERE conversation_id = $1 AND user_id = $2', [convId, userId]);
+            await client.query('COMMIT');
+        } catch (e) {
+            await client.query('ROLLBACK').catch(() => {});
+            throw e;
+        } finally {
+            client.release();
+        }
+        clearTyping(convId, userId);
+        await notifications.createMessageNotifications(convId, userId, `New message from ${req.session.username}`,
+            (lang === 'ru' ? 'Опрос: ' : 'Poll: ') + p.question.substring(0, 80), `/messages/${convId}`, inserted.rows[0].id);
+
+        const full = await pool.query(`SELECT ${MESSAGE_COLUMNS} ${MESSAGE_JOINS} WHERE m.id = $1`, [inserted.rows[0].id]);
+        attachReplyInfo(full.rows, userId, lang);
+        full.rows[0].reactions = [];
+        try {
+            const forOthers = { ...full.rows[0] };
+            await attachPolls([forOthers], null);
+            await broadcastToConversation(convId, 'msg:new', { conversationId: convId, message: forOthers }, userId);
+        } catch (e) { console.error('SSE broadcast (poll) error:', e); }
+        await attachPolls(full.rows, userId, { isModerator: await moderatesConversation(convId, userId, req.session.username) });
+        res.json({ ok: true, message: full.rows[0] });
+    } catch (err) {
+        console.error('Create poll error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// The poll and the conversation a member reaches it through (the newest message showing it).
+async function pollForMember(pollId, userId) {
+    const r = await pool.query(
+        `SELECT p.*, m.conversation_id, m.id AS message_id FROM polls p
+         JOIN messages m ON m.poll_id = p.id AND m.deleted_at IS NULL
+         JOIN conversation_members cm ON cm.conversation_id = m.conversation_id AND cm.user_id = $2
+         WHERE p.id = $1 ORDER BY m.id DESC LIMIT 1`, [pollId, userId]);
+    return r.rows[0] || null;
+}
+
+// Every message showing the poll, in every chat it was forwarded to, gets the new counts.
+async function announcePoll(pollId) {
+    const msgs = await pool.query('SELECT id, conversation_id FROM messages WHERE poll_id = $1 AND deleted_at IS NULL', [pollId]);
+    const state = (await loadPollState([pollId], null))[pollId];
+    if (!state) return;
+    delete state.mine; delete state.voted; delete state.canRetract; delete state.canClose;
+    for (const m of msgs.rows) {
+        await broadcastToConversation(m.conversation_id, 'poll:update', { conversationId: m.conversation_id, messageId: m.id, poll: state }).catch(() => {});
+    }
+}
+
+async function respondPoll(res, poll, userId, username) {
+    const isModerator = await moderatesConversation(poll.conversation_id, userId, username);
+    const state = (await loadPollState([poll.id], userId, { managerOf: isModerator ? new Set([poll.id]) : new Set() }))[poll.id];
+    res.json({ ok: true, poll: state });
+}
+
+// POST /messages/poll/:pollId/vote — { optionIds: [] }
+router.post('/poll/:pollId(\\d+)/vote', rateLimit('react', 40, 10000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const poll = await pollForMember(parseInt(req.params.pollId), userId);
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+        const blockedUntil = await postingBlockFor(userId, poll.conversation_id);
+        if (blockedUntil) return res.status(403).json({ error: blockedNotice(blockedUntil, normalizeLang(req.session.lang), readerTimeZone(req)), blocked: true });
+        const [mine, options] = await Promise.all([
+            pool.query('SELECT option_id FROM poll_votes WHERE poll_id = $1 AND user_id = $2', [poll.id, userId]),
+            pool.query('SELECT id FROM poll_options WHERE poll_id = $1', [poll.id]),
+        ]);
+        const v = pollRules.canVote(poll, mine.rows.map((r) => r.option_id), req.body.optionIds, { optionIdsInPoll: options.rows.map((o) => o.id) });
+        if (!v.ok) return res.status(v.error === 'closed' ? 409 : 400).json({ error: v.error });
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('DELETE FROM poll_votes WHERE poll_id = $1 AND user_id = $2', [poll.id, userId]);
+            for (const id of v.ids) await client.query('INSERT INTO poll_votes (poll_id, option_id, user_id) VALUES ($1, $2, $3)', [poll.id, id, userId]);
+            await client.query('COMMIT');
+        } catch (e) { await client.query('ROLLBACK').catch(() => {}); throw e; } finally { client.release(); }
+        announcePoll(poll.id).catch(() => {});
+        await respondPoll(res, poll, userId, req.session.username);
+    } catch (err) {
+        console.error('Poll vote error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /messages/poll/:pollId/retract — take one's vote back (revoting allowed, still open)
+router.post('/poll/:pollId(\\d+)/retract', rateLimit('react', 40, 10000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const poll = await pollForMember(parseInt(req.params.pollId), userId);
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+        const mine = await pool.query('SELECT option_id FROM poll_votes WHERE poll_id = $1 AND user_id = $2', [poll.id, userId]);
+        const v = pollRules.canRetract(poll, mine.rows.map((r) => r.option_id));
+        if (!v.ok) return res.status(400).json({ error: v.error });
+        await pool.query('DELETE FROM poll_votes WHERE poll_id = $1 AND user_id = $2', [poll.id, userId]);
+        announcePoll(poll.id).catch(() => {});
+        await respondPoll(res, poll, userId, req.session.username);
+    } catch (err) {
+        console.error('Poll retract error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// POST /messages/poll/:pollId/close — the creator or a moderator ends it
+router.post('/poll/:pollId(\\d+)/close', rateLimit('react', 40, 10000), async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const poll = await pollForMember(parseInt(req.params.pollId), userId);
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+        const isModerator = await moderatesConversation(poll.conversation_id, userId, req.session.username);
+        const v = pollRules.canClose(poll, userId, { isModerator });
+        if (!v.ok) return res.status(v.error === 'owner' ? 403 : 400).json({ error: v.error });
+        await pool.query('UPDATE polls SET closed_at = NOW() WHERE id = $1', [poll.id]);
+        poll.closed_at = new Date();
+        announcePoll(poll.id).catch(() => {});
+        await respondPoll(res, poll, userId, req.session.username);
+    } catch (err) {
+        console.error('Poll close error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// GET /messages/poll/:pollId/voters?option= — who chose an option, in a public poll only
+router.get('/poll/:pollId(\\d+)/voters', async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const poll = await pollForMember(parseInt(req.params.pollId), userId);
+        if (!poll) return res.status(404).json({ error: 'Poll not found' });
+        if (poll.anonymous) return res.status(403).json({ error: 'anonymous' });
+        const optionId = parseInt(req.query.option) || null;
+        const r = await pool.query(
+            `SELECT pv.option_id, u.username, u.profile_picture FROM poll_votes pv JOIN users u ON u.id = pv.user_id
+             WHERE pv.poll_id = $1 ${optionId ? 'AND pv.option_id = $2' : ''} ORDER BY pv.created_at LIMIT 200`,
+            optionId ? [poll.id, optionId] : [poll.id]);
+        res.json({ voters: r.rows });
+    } catch (err) {
+        console.error('Poll voters error:', err);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // POST /messages/block/:userId and /unblock/:userId — user_blocks (migration 064). The
 // blocked person can no longer write to this one; nothing about the messages changes.
 router.post('/block/:userId(\\d+)', rateLimit('block', 20, 60000), async (req, res) => {
@@ -2215,6 +2447,7 @@ router.get('/:id(\\d+)/poll', async (req, res) => {
         const newMsgIds = result.rows.map(m => m.id);
         const newReactions = await getReactionsForMessages(newMsgIds, userId);
         attachReplyInfo(result.rows, userId, lang);
+        await attachPolls(result.rows, userId, { isModerator: await moderatesConversation(convId, userId, req.session.username) });
         for (const m of result.rows) {
             m.reactions = newReactions[m.id] || [];
         }

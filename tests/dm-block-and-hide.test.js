@@ -32,7 +32,7 @@ test('every query that shows a member a chat keeps only what came after their hi
 });
 
 test('a blocked person is refused on send, forward and a new DM, and told why in place of the composer', () => {
-    assert.equal((src.match(/dmBlockNotice\(userId, \{ convId \}/g) || []).length, 2, 'page render and send');
+    assert.equal((src.match(/dmBlockNotice\(userId, \{ convId \}/g) || []).length, 3, 'page render, send and a new poll');
     assert.match(src, /dmBlockNotice\(userId, \{ convId: targetId \}/, 'forward');
     assert.match(src, /dmBlockNotice\(userId, \{ otherId: parseInt\(recipientId\) \}/, 'new DM');
     const notice = src.slice(src.indexOf('async function dmBlockNotice'), src.indexOf('async function dmBlockNotice') + 1200);

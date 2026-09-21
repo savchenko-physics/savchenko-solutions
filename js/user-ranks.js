@@ -32,7 +32,10 @@
         if (!text || text.length > name.length + 4 || text.indexOf(name) === -1) return;
         const key = ranks[name] || 'newbie';
         if (KEYS.indexOf(key) === -1) return;
-        el.classList.add('ss-rank-c-' + key, 'ss-rank-' + key, 'ss-ranked');
+        el.classList.add('ss-rank-c-' + key, 'ss-rank-' + key);
+        // ::first-letter needs a block box; an inline link gets one, a block (a sidebar row's
+        // name with its ellipsis) already has one and keeps its layout.
+        if (getComputedStyle(el).display === 'inline') el.classList.add('ss-ranked');
         el.__ranked = true;
     }
 

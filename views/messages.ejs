@@ -241,7 +241,7 @@
     .msg-conv-name {
       font-size: var(--ss-fs-14);
       font-weight: var(--ss-fw-strong);
-      color: var(--msg-text);
+      color: var(--ss-rank-current, var(--msg-text));   /* a person's name in their rank's colour */
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2392,7 +2392,7 @@
                 </span>
               <% } %>
               <div class="msg-conv-info">
-                <div class="msg-conv-name"><%= c.displayName %></div>
+                <div class="msg-conv-name"<% if (!c.is_group && !c.isSaved && c.otherUser) { %> data-username="<%= c.otherUser.username %>"<% } %>><%= c.displayName %></div>
                 <div class="msg-conv-preview">
                   <% if (c.last_message_content || c.last_message_image || c.last_message_file) { %>
                     <% if (c.last_message_sender_id === userId) { %><%= lang === 'ru' ? 'Вы: ' : 'You: ' %><% } %>
@@ -5794,7 +5794,7 @@
     return '<a href="/' + LANG + '/messages/' + c.id + '" class="msg-conv-item' + (isActive ? ' active' : '') +
       '" data-name="' + escAttr((c.displayName || '').toLowerCase()) + '">' +
       avatar +
-      '<div class="msg-conv-info"><div class="msg-conv-name">' + esc(c.displayName || '') + '</div>' +
+      '<div class="msg-conv-info"><div class="msg-conv-name"' + (!c.is_group && !c.isSaved && c.displayName ? ' data-username="' + escAttr(c.displayName) + '"' : '') + '>' + esc(c.displayName || '') + '</div>' +
       '<div class="msg-conv-preview">' + preview + '</div></div>' +
       '<div class="msg-conv-meta"><span class="msg-conv-time" data-iso="' + escAttr(c.last_message_at || '') + '">' + esc(convTimeText(c.last_message_at)) + '</span>' +
       badge + '</div>' +
